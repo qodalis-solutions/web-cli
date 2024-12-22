@@ -1,0 +1,24 @@
+{
+  "name": "@qodalis/angular-cli",
+  "version": "0.0.4",
+  "description": "Angular CLI",
+  "author": "Nicolae Lupei, Qodalis Solutions",
+  "license": "MIT",
+  "keywords": [
+    "angular",
+    "cli",
+    "qodalis",
+    "terminal"
+  ],
+  "peerDependencies": {
+    "@angular/common": "^16.2.0",
+    "@angular/core": "^16.2.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@microsoft/signalr": "^8.0.7",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0"
+  },
+  "sideEffects": false
+}

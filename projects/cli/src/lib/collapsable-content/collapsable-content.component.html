@@ -1,0 +1,16 @@
+<div class="terminal-wrapper" [class.collapsed]="isCollapsed">
+  <div class="terminal-header" (click)="toggleTerminal()">
+    <span>Cli</span>
+    <button pButton>
+      <span
+        class="p-button-icon pe-2"
+        aria-hidden="true"
+        [ngClass]="isCollapsed ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+      ></span>
+      {{ isCollapsed ? "Expand" : "Collapse" }}
+    </button>
+  </div>
+  <div class="terminal-content" *ngIf="!isCollapsed">
+    <ng-content></ng-content>
+  </div>
+</div>
