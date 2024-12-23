@@ -1,9 +1,14 @@
 {
   "name": "@qodalis/angular-cli",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A lightweight and flexible command-line interface (CLI) tool designed to streamline workflows and automate tasks for developers.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Qodalis-Solutions/qodalis-angular-cli"
+  },
+  "homepage": "https://qodalis.com",
   "keywords": [
     "angular",
     "cli",
