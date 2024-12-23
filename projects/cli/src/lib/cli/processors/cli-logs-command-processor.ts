@@ -5,9 +5,13 @@ import {
     CliProcessCommand,
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
+    ICliCommandAuthor,
+    CliBackgroundColor,
+    CliForegroundColor,
 } from '../models';
 import { CliBaseProcessor } from './cli-base-processor';
-import { toQueryString } from '../../utils';
+import { highlightTextWithBg, toQueryString } from '../../utils';
+import { DefaultLibraryAuthor } from '../../constants';
 
 const levels = ['verbose', 'debug', 'information', 'warning', 'error', 'fatal'];
 
@@ -59,6 +63,8 @@ export class CliLogsCommandProcessor
             },
         },
     ];
+
+    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
     private hubConnection!: signalR.HubConnection;
 
@@ -112,7 +118,7 @@ export class CliLogsCommandProcessor
                     context.writer.writeln(
                         `\x1b[33m${++index}\x1b[0m. ` +
                             (command.args['pattern']
-                                ? this.highlightTextWithBg(
+                                ? highlightTextWithBg(
                                       log,
                                       new RegExp(command.args['pattern'], 'g'),
                                   )
@@ -136,20 +142,6 @@ export class CliLogsCommandProcessor
 
     writeDescription(context: ICliExecutionContext): void {
         context.writer.writeln('Show live logs');
-    }
-
-    private highlightTextWithBg(
-        log: string,
-        pattern: RegExp,
-        bgColor: string = '\x1b[43m',
-    ): string {
-        const resetColor = '\x1b[0m';
-
-        // Replace matches with background-colored text
-        return log.replace(
-            pattern,
-            (match) => `${bgColor}${match}${resetColor}`,
-        );
     }
 
     private isValidRegex(pattern: string): boolean {

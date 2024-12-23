@@ -1,9 +1,9 @@
 <div class="terminal-wrapper" [class.collapsed]="isCollapsed">
   <div class="terminal-header" (click)="toggleTerminal()">
-    <span>Cli</span>
-    <button pButton>
+    <span class="terminal-title">CLI</span>
+    <button class="toggle-button">
       <span
-        class="p-button-icon pe-2"
+        class="p-button-icon"
         aria-hidden="true"
         [ngClass]="isCollapsed ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
       ></span>

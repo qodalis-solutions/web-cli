@@ -1,3 +1,8 @@
-<app-cli />
+<div style="display: flex; justify-content: space-between">
+  <app-cli
+    [options]="options"
+    style="display: flex; width: 50vw; margin: auto"
+  />
+</div>
 
-<app-cli-panel />
+<app-cli-panel [options]="options" />

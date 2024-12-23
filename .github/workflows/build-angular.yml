@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: 'npm'
+          cache: "npm"
 
       # Step 3: Install dependencies
       - name: Install dependencies
@@ -58,8 +58,33 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: 'npm'
+          cache: "npm"
+          registry-url: https://registry.npmjs.org/
 
       # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
+
+      # Step 4: Build applications and libraries
+      - name: Build all projects
+        run: npm run "build all"
+
+      # Step 5: Publish to NPM
+      - name: Publish to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # Define an array of library names to publish: "lib1" "lib2"
+          LIBRARIES=("cli")
+
+          for LIB_NAME in "${LIBRARIES[@]}"; do
+            DIR="./dist/$LIB_NAME"
+            if [ -f "$DIR/package.json" ]; then
+              echo "Publishing $LIB_NAME..."
+              cd $DIR
+              npm publish --access public
+              cd ..
+            else
+              echo "Skipping $LIB_NAME: package.json not found in $DIR"
+            fi
+          done

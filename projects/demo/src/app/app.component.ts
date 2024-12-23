@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CliOptions } from '@qodalis/angular-cli';
 
 @Component({
     selector: 'app-root',
@@ -7,4 +8,10 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
     title = 'demo';
+
+    options: CliOptions = {
+        //hideUserName: true,
+        welcomeMessage:
+            'Welcome to demo CLI' + '\n\rType "help" to get started',
+    };
 }

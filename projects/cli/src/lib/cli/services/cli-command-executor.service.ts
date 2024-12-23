@@ -75,6 +75,12 @@ export class CliCommandExecutorService {
         }
     }
 
+    public async initializeProcessors(
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        await this.initializeProcessorsInternal(context, this.processors);
+    }
+
     public listCommands(): string[] {
         return this.processors.map((p) => p.command);
     }
@@ -84,6 +90,28 @@ export class CliCommandExecutorService {
         chainCommands: string[],
     ): ICliCommandProcessor | undefined {
         return this._findProcessor(mainCommand, chainCommands, this.processors);
+    }
+
+    private async initializeProcessorsInternal(
+        context: ICliExecutionContext,
+        processors: ICliCommandProcessor[],
+    ): Promise<void> {
+        try {
+            processors.forEach(async (p) => {
+                if (p.initialize) {
+                    await p.initialize(context);
+                }
+
+                if (p.processors) {
+                    await this.initializeProcessorsInternal(
+                        context,
+                        p.processors,
+                    );
+                }
+            });
+        } catch (e) {
+            context.writer.writeError(`Error initializing processors: ${e}`);
+        }
     }
 
     private versionRequested(

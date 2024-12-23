@@ -1,5 +1,9 @@
 import { Terminal } from '@xterm/xterm';
-import { ICliTerminalWriter } from '../models';
+import {
+    CliBackgroundColor,
+    CliForegroundColor,
+    ICliTerminalWriter,
+} from '../models';
 
 export class CliTerminalWriter implements ICliTerminalWriter {
     constructor(public readonly terminal: Terminal) {}
@@ -12,14 +16,34 @@ export class CliTerminalWriter implements ICliTerminalWriter {
     }
 
     public writeSuccess(message: string) {
-        this.terminal.writeln('\x1b[32m' + message + '\x1b[0m');
+        this.terminal.writeln(
+            this.wrapInColor(message, CliForegroundColor.Green),
+        );
+    }
+
+    public writeInfo(message: string) {
+        this.terminal.writeln(
+            this.wrapInColor(message, CliForegroundColor.Blue),
+        );
     }
 
     public writeWarning(message: string) {
-        this.terminal.writeln('\x1b[33m' + message + '\x1b[0m');
+        this.terminal.writeln(
+            this.wrapInColor(message, CliForegroundColor.Yellow),
+        );
     }
 
     public writeError(message: string) {
-        this.terminal.writeln('\x1b[31m' + message + '\x1b[0m');
+        this.terminal.writeln(
+            this.wrapInColor(message, CliForegroundColor.Red),
+        );
+    }
+
+    public wrapInColor(text: string, color: CliForegroundColor): string {
+        return color + text + CliForegroundColor.Reset;
+    }
+
+    public wrapInBackgroundColor(text: string, color: CliBackgroundColor) {
+        return color + text + CliForegroundColor.Reset;
     }
 }

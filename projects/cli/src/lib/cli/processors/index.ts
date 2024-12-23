@@ -1,5 +1,7 @@
+import { DefaultLibraryAuthor } from '../../constants';
 import {
     CliProcessCommand,
+    ICliCommandAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '../models';
@@ -8,6 +10,8 @@ export class CliPingCommandProcessor implements ICliCommandProcessor {
     command = 'ping';
 
     description?: string | undefined = 'Pings the server';
+
+    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
     async processCommand(
         _: CliProcessCommand,
@@ -23,6 +27,8 @@ export class CliClearCommandProcessor implements ICliCommandProcessor {
 
     description?: string | undefined = 'Clears the terminal';
 
+    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
+
     async processCommand(
         _: CliProcessCommand,
         context: ICliExecutionContext,
@@ -37,6 +43,8 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
     description?: string | undefined = 'Prints the specified text';
 
     allowPartialCommands?: boolean | undefined = true;
+
+    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
     async processCommand(
         command: CliProcessCommand,
@@ -60,3 +68,14 @@ export { CliVersionCommandProcessor } from './cli-version-command-processor';
 export { CliLogsCommandProcessor } from './cli-logs-command-processor';
 
 export { CliHistoryCommandProcessor } from './cli-history-command-processor';
+
+export { CliLocalStorageCommandProcessor } from './cli-local-storage-command-processor';
+
+export { CliCookiesCommandProcessor } from './cli-cookies-command-processor';
+
+export { CliWhoamiCommandProcessor } from './cli-whoami-command-processor';
+
+export { CliThemeCommandProcessor } from './cli-theme-command-processor';
+
+export { CliRegexCommandProcessor } from './cli-regex-command-processor';
+

@@ -3,9 +3,11 @@ import {
     ICliExecutionContext,
     CliProcessCommand,
     ICliCommandProcessor,
+    ICliCommandAuthor,
 } from '../models';
 import { CliBaseProcessor } from './cli-base-processor';
 import { CommandHistoryService } from '../services/command-history.service';
+import { DefaultLibraryAuthor } from '../../constants';
 
 @Injectable({
     providedIn: 'root',
@@ -20,6 +22,8 @@ export class CliHistoryCommandProcessor
         'Prints the command history of the current session';
 
     processors?: ICliCommandProcessor[] | undefined = [];
+
+    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
     constructor(private readonly commandHistoryService: CommandHistoryService) {
         super();

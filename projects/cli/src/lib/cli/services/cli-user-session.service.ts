@@ -1,7 +1,11 @@
-import { Injectable } from '@angular/core';
-import { ICliUserSessionService, ICliUserSession } from '../models';
+import { Inject, Injectable } from '@angular/core';
+import {
+    ICliUserSessionService,
+    ICliUserSession,
+    ICliUsersStoreService,
+} from '../models';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { CliUsersStoreService } from './cli-users-store.service';
+import { ICliUsersStoreService_TOKEN } from '../tokens';
 
 @Injectable({
     providedIn: 'root',
@@ -11,9 +15,12 @@ export class CliUserSessionService implements ICliUserSessionService {
         ICliUserSession | undefined
     >(undefined);
 
-    constructor(private readonly usersService: CliUsersStoreService) {
+    constructor(
+        @Inject(ICliUsersStoreService_TOKEN)
+        private readonly usersService: ICliUsersStoreService,
+    ) {
         this.usersService.getUsers().subscribe((users) => {
-            const user = users.find((u) => u.id === 'guest');
+            const user = users.find((u) => u.id === 'root');
             if (user) {
                 this.setUserSession({
                     user,

@@ -9,7 +9,11 @@ import {
     ViewChild,
     ViewEncapsulation,
 } from '@angular/core';
-import { Terminal } from '@xterm/xterm';
+import {
+    ITerminalInitOnlyOptions,
+    ITerminalOptions,
+    Terminal,
+} from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { CliCommandExecutorService } from './services/cli-command-executor.service';
 import { CommandHistoryService } from './services/command-history.service';
@@ -48,8 +52,13 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         private readonly commandHistoryService: CommandHistoryService,
     ) {
         this.userManagementService.getUserSession().subscribe((session) => {
+            const isInit = this.currentUserSession === undefined;
             this.currentUserSession = session;
             this.executionContext?.setSession(session!);
+
+            if (!isInit) {
+                this.terminal.clear();
+            }
         });
     }
 
@@ -71,7 +80,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
                 `Web CLI [Version ${CliVersion}]`,
                 '(c) 2024 Qodalis Solutions. All rights reserved.',
                 '',
-                'Type \'help\' to get started.',
+                "Type 'help' to get started.",
                 '',
             ];
 
@@ -84,14 +93,21 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     private initializeTerminal(): void {
-        this.terminal = new Terminal({
+        const terminalOptions: ITerminalOptions & ITerminalInitOnlyOptions = {
             cursorBlink: true,
             allowProposedApi: true,
+            fontSize: 20,
             theme: {
-                background: '#1e1e1e',
-                foreground: '#ffffff',
+                background: '#0c0c0c',
+                foreground: '#cccccc',
+                green: '#16c60c',
+                blue: '#3b78ff',
+                yellow: '#FFA500',
             },
-        });
+            ...(this.options?.terminalOptions ?? {}),
+        };
+
+        this.terminal = new Terminal(terminalOptions);
 
         this.fitAddon = new FitAddon();
 
@@ -116,9 +132,14 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
                 show: () => this.startLoading(),
                 hide: () => this.stopLoading(),
             },
+            {
+                ...(this.options ?? {}),
+                terminalOptions: terminalOptions,
+            },
         );
 
         this.executionContext.setSession(this.currentUserSession!);
+        this.commandExecutor.initializeProcessors(this.executionContext);
     }
 
     private handleResize(): void {
@@ -142,9 +163,15 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
     private printPrompt(): void {
         this.currentLine = '';
         this.cursorPosition = 0;
-        this.terminal.write(
-            `\x1b[32m${this.currentUserSession?.user.email}\x1b[0m:\x1b[34m~\x1b[0m$ `,
-        );
+
+        const promtStartMessage = this.options?.hideUserName
+            ? ''
+            : `\x1b[32m${this.currentUserSession?.user.email}\x1b[0m:`;
+        const promtEndMessage = `\x1b[34m~\x1b[0m$ `;
+
+        const prompt = `${promtStartMessage}${promtEndMessage}`;
+
+        this.terminal.write(prompt);
     }
 
     private historyIndex: number = this.commandHistoryService.getLastIndex();

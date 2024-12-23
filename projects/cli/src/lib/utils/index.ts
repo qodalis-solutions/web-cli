@@ -1,4 +1,8 @@
-import { ICliCommandParameterDescriptor } from '../cli/models';
+import {
+    CliBackgroundColor,
+    CliForegroundColor,
+    ICliCommandParameterDescriptor,
+} from '../cli/models';
 
 export const getParameterValue = (
     p: ICliCommandParameterDescriptor,
@@ -42,6 +46,18 @@ export const toQueryString = (params: Record<string, any>): string => {
     }
 
     return searchParams.toString();
+};
+
+export const highlightTextWithBg = (
+    text: string,
+    pattern: RegExp,
+    bgColor: CliBackgroundColor = CliBackgroundColor.Yellow,
+): string => {
+    // Replace matches with background-colored text
+    return text.replace(
+        pattern,
+        (match) => `${bgColor}${match}${CliForegroundColor.Reset}`,
+    );
 };
 
 export { CommandParser } from './command-parser';

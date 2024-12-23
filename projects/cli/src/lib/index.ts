@@ -10,6 +10,11 @@ import {
     CliSwitchUserCommandProcessor,
     CliHistoryCommandProcessor,
     CliLogsCommandProcessor,
+    CliLocalStorageCommandProcessor,
+    CliWhoamiCommandProcessor,
+    CliCookiesCommandProcessor,
+    CliThemeCommandProcessor,
+    CliRegexCommandProcessor,
 } from './cli/processors';
 
 export const CliVersion = '1.0.1';
@@ -27,6 +32,11 @@ export const resolveCliProviders = (): Provider[] => {
         resolveCommandProcessorProvider(CliSwitchUserCommandProcessor),
         resolveCommandProcessorProvider(CliHistoryCommandProcessor),
         resolveCommandProcessorProvider(CliLogsCommandProcessor),
+        resolveCommandProcessorProvider(CliLocalStorageCommandProcessor),
+        resolveCommandProcessorProvider(CliCookiesCommandProcessor),
+        resolveCommandProcessorProvider(CliWhoamiCommandProcessor),
+        resolveCommandProcessorProvider(CliThemeCommandProcessor),
+        resolveCommandProcessorProvider(CliRegexCommandProcessor),
     ];
 };
 

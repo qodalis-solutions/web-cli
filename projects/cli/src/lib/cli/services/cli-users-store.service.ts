@@ -6,11 +6,11 @@ import { BehaviorSubject, map, Observable } from 'rxjs';
     providedIn: 'root',
 })
 export class CliUsersStoreService implements ICliUsersStoreService {
-    private usersSubject = new BehaviorSubject<ICliUser[]>([
+    protected usersSubject = new BehaviorSubject<ICliUser[]>([
         {
-            id: 'guest',
-            name: 'guest',
-            email: 'guest@guest.com',
+            id: 'root',
+            name: 'root',
+            email: 'root@domain.com',
         },
     ]);
 
@@ -28,6 +28,12 @@ export class CliUsersStoreService implements ICliUsersStoreService {
     getUser(id: string): Observable<ICliUser | undefined> {
         return this.usersSubject
             .asObservable()
-            .pipe(map((users) => users.find((u) => u.id === id)));
+            .pipe(
+                map((users) =>
+                    users.find(
+                        (u) => u.id === id || u.name === id || u.email === id,
+                    ),
+                ),
+            );
     }
 }

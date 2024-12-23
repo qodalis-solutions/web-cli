@@ -7,9 +7,9 @@
   width: 100vw
   transition: transform 0.3s ease-in-out
   transform: translateY(0)
-  background-color: #1e1e1e
+  background-color: #0c0c0c
   color: white
-  border-top: 1px solid #ccc
+  border-top: 1px solid #444
   display: flex
   flex-direction: column
   z-index: 1000
@@ -18,15 +18,53 @@
     transform: translateY(calc(100% - 50px))
 
 .terminal-header
-  background-color: #3C3C3B
+  background-color: #3c3c3b
   color: white
-  padding: 10px
+  padding: 10px 15px
   cursor: pointer
   display: flex
   justify-content: space-between
   align-items: center
   border-bottom: 1px solid #444
 
+  .terminal-title
+    font-size: 1rem
+
+  .toggle-button
+    background-color: #007ad9
+    color: white
+    font-size: 0.9rem
+    border: none
+    border-radius: 4px
+    padding: 6px 12px
+    display: flex
+    align-items: center
+    gap: 5px
+    cursor: pointer
+    transition: background-color 0.3s ease, transform 0.1s ease
+
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2)
+
+    &:hover
+      background-color: #005bb5
+
+    &:active
+      transform: scale(0.98)
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3)
+
+    &:focus
+      outline: 2px solid #80bdff
+      outline-offset: 2px
+
+    &:disabled
+      background-color: #d3d3d3
+      color: #808080
+      cursor: not-allowed
+      box-shadow: none
+
+.toggle-icon
+  font-size: 1rem
+
 .terminal-content
-  padding: 10px
-  width: 100vw
+  flex: 1
+  width: calc( 100% - 8px)

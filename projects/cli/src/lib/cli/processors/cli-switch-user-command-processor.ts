@@ -6,6 +6,7 @@ import {
     ICliCommandParameterDescriptor,
     ICliUsersStoreService,
     ICliUserSessionService,
+    ICliCommandAuthor,
 } from '../models';
 import { CliBaseProcessor } from './cli-base-processor';
 import { firstValueFrom } from 'rxjs';
@@ -13,6 +14,7 @@ import {
     ICliUserSessionService_TOKEN,
     ICliUsersStoreService_TOKEN,
 } from '../tokens';
+import { DefaultLibraryAuthor } from '../../constants';
 
 @Injectable({
     providedIn: 'root',
@@ -36,6 +38,8 @@ export class CliSwitchUserCommandProcessor
             aliases: ['r'],
         },
     ];
+
+    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
     constructor(
         @Inject(ICliUserSessionService_TOKEN)

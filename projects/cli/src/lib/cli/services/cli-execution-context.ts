@@ -5,6 +5,7 @@ import {
     CliLoaderProps,
     ICliTerminalWriter,
     ICliUserSession,
+    CliOptions,
 } from '../models';
 import { CliCommandExecutorService } from './cli-command-executor.service';
 import { CliTerminalWriter } from './cli-terminal-writer';
@@ -21,13 +22,17 @@ export class CliExecutionContext implements ICliExecutionContext {
         hide: () => {},
     };
 
+    public cliOptions?: CliOptions;
+
     public onAbort = new Subject<void>();
 
     constructor(
         public terminal: Terminal,
         public executor: CliCommandExecutorService,
         loader?: CliLoaderProps,
+        cliOptions?: CliOptions,
     ) {
+        this.cliOptions = cliOptions;
         this.writer = new CliTerminalWriter(terminal);
 
         if (loader) {

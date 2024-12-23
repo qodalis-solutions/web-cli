@@ -1,4 +1,8 @@
-import { Terminal } from '@xterm/xterm';
+import {
+    ITerminalInitOnlyOptions,
+    ITerminalOptions,
+    Terminal,
+} from '@xterm/xterm';
 import { CliCommandExecutorService } from '../services/cli-command-executor.service';
 import { Observable, Subject } from 'rxjs';
 
@@ -69,6 +73,12 @@ export interface ICliCommandProcessor {
      * @param context The context in which the command is executed
      */
     writeDescription?(context: ICliExecutionContext): void;
+
+    /**
+     * Initialize the command processor
+     * @param context The context in which the command is executed
+     */
+    initialize?(context: ICliExecutionContext): Promise<void>;
 }
 
 /**
@@ -144,6 +154,29 @@ export type CliLoaderProps = {
     hide: () => void;
 };
 
+export enum CliForegroundColor {
+    Black = '\x1b[30m',
+    Red = '\x1b[31m',
+    Green = '\x1b[32m',
+    Yellow = '\x1b[33m',
+    Blue = '\x1b[34m',
+    Magenta = '\x1b[35m',
+    Cyan = '\x1b[36m',
+    White = '\x1b[37m',
+    Reset = '\x1b[0m',
+}
+
+export enum CliBackgroundColor {
+    Black = '\x1b[40m',
+    Red = '\x1b[41m',
+    Green = '\x1b[42m',
+    Yellow = '\x1b[43m',
+    Blue = '\x1b[44m',
+    Magenta = '\x1b[45m',
+    Cyan = '\x1b[46m',
+    White = '\x1b[47m',
+}
+
 export interface ICliTerminalWriter {
     /**
      * Write text to the terminal
@@ -165,6 +198,13 @@ export interface ICliTerminalWriter {
     writeSuccess: (message: string) => void;
 
     /**
+     * Write an info message to the terminal
+     * @param messag The message to write
+     * @returns void
+     */
+    writeInfo: (message: string) => void;
+
+    /**
      * Write an error message to the terminal
      * @param message The message to write
      * @returns void
@@ -177,6 +217,22 @@ export interface ICliTerminalWriter {
      * @returns void
      */
     writeWarning: (message: string) => void;
+
+    /**
+     * Write a message to the terminal with the specified color
+     * @param message The message to write
+     * @param color The color to use
+     * @returns void
+     */
+    wrapInColor: (text: string, color: CliForegroundColor) => string;
+
+    /**
+     * Write a message to the terminal with the specified background color
+     * @param message The message to write
+     * @param color The background color to use
+     * @returns void
+     */
+    wrapInBackgroundColor: (text: string, color: CliBackgroundColor) => string;
 }
 
 export interface ICliUser extends Record<string, any> {
@@ -246,6 +302,11 @@ export interface ICliExecutionContext {
      * The command executor to use for executing commands
      */
     executor: CliCommandExecutorService;
+
+    /**
+     * The options for the CLI
+     */
+    options?: CliOptions;
 }
 
 /**
@@ -256,6 +317,16 @@ export type CliOptions = {
      * The welcome message to display when the CLI starts
      */
     welcomeMessage?: string;
+
+    /**
+     * Hide the prompt to display when the CLI is ready to accept input
+     */
+    hideUserName?: boolean;
+
+    /**
+     * Custom terminal options
+     */
+    terminalOptions?: ITerminalOptions & ITerminalInitOnlyOptions;
 };
 
 /**

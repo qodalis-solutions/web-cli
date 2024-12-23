@@ -4,7 +4,10 @@ import {
     CliProcessCommand,
     ICliCommandProcessor,
     ICliCommandParameterDescriptor,
+    ICliCommandAuthor,
+    CliForegroundColor,
 } from '../models';
+import { DefaultLibraryAuthor } from '../../constants';
 
 @Injectable({
     providedIn: 'root',
@@ -15,6 +18,8 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
     description?: string | undefined = 'Displays help for a command';
 
     allowPartialCommands?: boolean | undefined = true;
+
+    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
     constructor() {}
 
@@ -35,6 +40,10 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                     }`,
                 );
             });
+
+            context.writer.writeln(
+                '\nType `help <command>` to get more information about a specific command',
+            );
         } else {
             const processor = context.executor.findProcessor(
                 commands[0],
@@ -43,24 +52,50 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
             if (processor) {
                 context.writer.writeln(
-                    `\x1b[33mCommand:\x1b[0m ${processor.command} @${
+                    `\x1b[33mCommand:\x1b[0m ${context.writer.wrapInColor(
+                        processor.command,
+                        CliForegroundColor.Blue,
+                    )} @${
                         processor.version || '1.0.0'
                     } - ${processor.description}`,
                 );
 
+                if (processor.author) {
+                    context.writer.writeln(
+                        `\x1b[33mAuthor:\x1b[0m ${processor.author.name}<${processor.author.email}>`,
+                    );
+                }
+
                 if (processor.writeDescription) {
                     processor.writeDescription(context);
+                } else if (processor.description) {
+                    context.writer.writeln(
+                        `${context.writer.wrapInColor('Description:', CliForegroundColor.Yellow)} ${processor.description}`,
+                    );
                 } else {
                     context.writer.writeln(
-                        '\x1b[33mNo description available\x1b[0m',
+                        context.writer.wrapInColor(
+                            'No description available',
+                            CliForegroundColor.Yellow,
+                        ),
                     );
                 }
 
                 if (processor.processors?.length) {
-                    context.writer.writeln('\x1b[33mSubcommands:\x1b[0m');
+                    context.writer.writeln(
+                        context.writer.wrapInColor(
+                            'Subcommands:',
+                            CliForegroundColor.Yellow,
+                        ),
+                    );
 
                     processor.processors.forEach((subprocessor) => {
-                        context.writer.writeln(`- ${subprocessor.command}`);
+                        context.writer.writeln(
+                            `- ${context.writer.wrapInColor(
+                                subprocessor.command,
+                                CliForegroundColor.Blue,
+                            )} - ${subprocessor.description}`,
+                        );
                     });
                 }
 
@@ -79,11 +114,19 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                     ...defaultParameters,
                 ];
 
-                context.writer.writeln('\x1b[33mParameters:\x1b[0m');
+                context.writer.writeln(
+                    context.writer.wrapInColor(
+                        'Parameters:',
+                        CliForegroundColor.Yellow,
+                    ),
+                );
 
                 parameters.forEach((parameter) => {
                     context.writer.writeln(
-                        `--${parameter.name} (${parameter.type}) ${
+                        `--${context.writer.wrapInColor(
+                            parameter.name,
+                            CliForegroundColor.Blue,
+                        )} (${parameter.type}) ${
                             parameter.aliases
                                 ? `(${parameter.aliases.join(', ')})`
                                 : ''
@@ -98,5 +141,21 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 );
             }
         }
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        context.writer.writeln('Displays help for a command');
+
+        context.writer.writeln(
+            'If no command is specified, it will display a list of available commands',
+        );
+
+        context.writer.writeln(
+            'If a command is specified, it will display information about that command',
+        );
+
+        context.writer.writeln(
+            'If a command is specified with a subcommand, it will display information about that subcommand',
+        );
     }
 }
