@@ -6,9 +6,13 @@ import { CliPanelComponent } from './cli-panel/cli-panel.component';
 import { resolveCliProviders } from '.';
 
 @NgModule({
-  declarations: [CliComponent, CollapsableContentComponent, CliPanelComponent],
-  imports: [CommonModule],
-  providers: [resolveCliProviders()],
-  exports: [CliPanelComponent, CliComponent],
+    declarations: [
+        CliComponent,
+        CollapsableContentComponent,
+        CliPanelComponent,
+    ],
+    imports: [CommonModule],
+    providers: [resolveCliProviders()],
+    exports: [CliPanelComponent, CliComponent],
 })
 export class CliModule {}

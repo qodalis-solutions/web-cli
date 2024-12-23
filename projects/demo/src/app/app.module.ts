@@ -5,9 +5,9 @@ import { AppComponent } from './app.component';
 import { CliModule } from '@qodalis/angular-cli';
 
 @NgModule({
-  declarations: [AppComponent],
-  imports: [BrowserModule, CliModule],
-  providers: [],
-  bootstrap: [AppComponent],
+    declarations: [AppComponent],
+    imports: [BrowserModule, CliModule],
+    providers: [],
+    bootstrap: [AppComponent],
 })
 export class AppModule {}

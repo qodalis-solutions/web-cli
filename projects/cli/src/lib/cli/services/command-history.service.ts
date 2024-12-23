@@ -46,7 +46,7 @@ export class CommandHistoryService {
     private saveHistory(): void {
         localStorage.setItem(
             this.storageKey,
-            JSON.stringify(this.commandHistory)
+            JSON.stringify(this.commandHistory),
         );
     }
 

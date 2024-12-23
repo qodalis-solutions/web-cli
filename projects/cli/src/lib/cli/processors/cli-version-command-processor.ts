@@ -1,37 +1,37 @@
 import { Injectable } from '@angular/core';
 import {
-  ICliExecutionContext,
-  CliProcessCommand,
-  ICliCommandProcessor,
+    ICliExecutionContext,
+    CliProcessCommand,
+    ICliCommandProcessor,
 } from '../models';
 import { CliBaseProcessor } from './cli-base-processor';
 import { CliVersion } from '../..';
 
 @Injectable({
-  providedIn: 'root',
+    providedIn: 'root',
 })
 export class CliVersionCommandProcessor
-  extends CliBaseProcessor
-  implements ICliCommandProcessor
+    extends CliBaseProcessor
+    implements ICliCommandProcessor
 {
-  command = 'version';
+    command = 'version';
 
-  description?: string | undefined = 'Prints the version information';
+    description?: string | undefined = 'Prints the version information';
 
-  processors?: ICliCommandProcessor[] | undefined = [];
+    processors?: ICliCommandProcessor[] | undefined = [];
 
-  constructor() {
-    super();
-  }
+    constructor() {
+        super();
+    }
 
-  async processCommand(
-    _: CliProcessCommand,
-    context: ICliExecutionContext
-  ): Promise<void> {
-    context.writer.writeln(`CLI Version: ${CliVersion}`);
-  }
+    async processCommand(
+        _: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        context.writer.writeln(`CLI Version: ${CliVersion}`);
+    }
 
-  writeDescription(context: ICliExecutionContext): void {
-    context.writer.writeln('Prints the current version of the CLI');
-  }
+    writeDescription(context: ICliExecutionContext): void {
+        context.writer.writeln('Prints the current version of the CLI');
+    }
 }

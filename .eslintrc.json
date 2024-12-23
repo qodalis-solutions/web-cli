@@ -1,0 +1,19 @@
+{
+  "extends": ["eslint:recommended", "plugin:@angular-eslint/recommended", "prettier"],
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "@angular-eslint/no-empty-lifecycle-method": "off",
+        "quotes": ["error", "single"],
+        "semi": ["error", "always"]
+      }
+    },
+    {
+      "files": ["*.html"],
+      "rules": {
+        "@angular-eslint/template/no-any": "error"
+      }
+    }
+  ]
+}

@@ -35,6 +35,15 @@
             "tsConfig": "projects/cli/tsconfig.spec.json",
             "polyfills": ["zone.js", "zone.js/testing"]
           }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/cli/**/*.ts",
+              "projects/cli/**/*.html"
+            ]
+          }
         }
       }
     },
@@ -64,7 +73,7 @@
             ],
             "styles": [
               "projects/demo/src/styles.sass",
-              "projects/cli/src/styles/styles.sass"
+              "projects/cli/src/assets/styles.sass"
             ],
             "scripts": []
           },

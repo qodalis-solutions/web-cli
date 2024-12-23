@@ -41,14 +41,14 @@ export class CliSwitchUserCommandProcessor
         @Inject(ICliUserSessionService_TOKEN)
         private readonly userSessionService: ICliUserSessionService,
         @Inject(ICliUsersStoreService_TOKEN)
-        private readonly usersStore: ICliUsersStoreService
+        private readonly usersStore: ICliUsersStoreService,
     ) {
         super();
     }
 
     async processCommand(
         command: CliProcessCommand,
-        context: ICliExecutionContext
+        context: ICliExecutionContext,
     ): Promise<void> {
         try {
             const fromUser = context.userSession?.user;
