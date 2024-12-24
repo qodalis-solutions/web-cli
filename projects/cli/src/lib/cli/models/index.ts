@@ -155,11 +155,6 @@ export type CliProcessCommand = {
     args: Record<string, any>;
 };
 
-export type CliLoaderProps = {
-    show: () => void;
-    hide: () => void;
-};
-
 export enum CliForegroundColor {
     Black = '\x1b[30m',
     Red = '\x1b[31m',
@@ -239,6 +234,21 @@ export interface ICliTerminalWriter {
      * @returns void
      */
     wrapInBackgroundColor: (text: string, color: CliBackgroundColor) => string;
+
+    /**
+     * Write a JSON object to the terminal
+     * @param json The JSON object to write
+     * @returns void
+     */
+    writeJson: (json: any) => void;
+
+    /**
+     * Write content to a file
+     * @param fileName The name of the file to write to
+     * @param content The content to write to the file
+     * @returns void
+     */
+    writeToFileFile: (fileName: string, content: string) => void;
 }
 
 export interface ICliUser extends Record<string, any> {
@@ -270,6 +280,46 @@ export interface ICliUserSession {
     data?: Record<string, any>;
 }
 
+export interface ICliProgressBar {
+    /**
+     * Indicates if the progress bar is running
+     */
+    isRunning: boolean;
+
+    /**
+     * Show the progress bar
+     */
+    show: () => void;
+
+    /**
+     * Hide the progress bar
+     */
+    hide: () => void;
+}
+
+/**
+ * Represents a spinner for the CLI
+ */
+export interface ICliSpinner extends ICliProgressBar {}
+
+/**
+ * Represents a progress bar for the CLI
+ */
+export interface ICliPercentageProgressBar extends ICliProgressBar {
+    /**
+     * Update the progress of the progress bar
+     * @param progress The progress to update to
+     * @returns void
+     */
+    update: (progress: number) => void;
+
+    /**
+     * Complete the progress bar
+     * @returns void
+     */
+    complete: () => void;
+}
+
 /**
  * Represents the context in which a command is executed
  */
@@ -285,9 +335,14 @@ export interface ICliExecutionContext {
     userSession?: ICliUserSession;
 
     /**
-     * The loader to use for showing/hiding the loader
+     * The spinner to use for showing/hiding the loader
      */
-    loader?: CliLoaderProps;
+    spinner?: ICliSpinner;
+
+    /**
+     * The progress bar to use for showing progress
+     */
+    progressBar: ICliPercentageProgressBar;
 
     /**
      * A subject that emits when the command is aborted
@@ -313,6 +368,11 @@ export interface ICliExecutionContext {
      * The options for the CLI
      */
     options?: CliOptions;
+
+    /**
+     * The prompt to use for prompting the user for input
+     */
+    showPrompt: () => void;
 }
 
 /**
@@ -374,4 +434,14 @@ export interface ICliUsersStoreService {
      * @returns An observable that emits the user with the specified id
      */
     getUser(id: string): Observable<ICliUser | undefined>;
+}
+
+/**
+ * Represents a service that pings the server
+ */
+export interface ICliPingServerService {
+    /**
+     * Pings the server
+     */
+    ping(): Promise<void>;
 }

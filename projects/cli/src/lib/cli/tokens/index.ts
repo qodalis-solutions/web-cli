@@ -1,6 +1,7 @@
 import { InjectionToken } from '@angular/core';
 import {
     ICliCommandProcessor,
+    ICliPingServerService,
     ICliUserSessionService,
     ICliUsersStoreService,
 } from '../models';
@@ -25,3 +26,10 @@ export const ICliUserSessionService_TOKEN = new InjectionToken<
 export const ICliUsersStoreService_TOKEN = new InjectionToken<
     ICliUsersStoreService[]
 >('ICliUsersStoreService implementation');
+
+/**
+ * Represents a ping server service token for dependency injection
+ */
+export const ICliPingServerService_TOKEN = new InjectionToken<
+    ICliPingServerService[]
+>('ICliPingServerService implementation');

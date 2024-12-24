@@ -4,6 +4,7 @@ import {
     CliForegroundColor,
     ICliTerminalWriter,
 } from '../models';
+import { formatJson } from '../../utils';
 
 export class CliTerminalWriter implements ICliTerminalWriter {
     constructor(public readonly terminal: Terminal) {}
@@ -45,5 +46,20 @@ export class CliTerminalWriter implements ICliTerminalWriter {
 
     public wrapInBackgroundColor(text: string, color: CliBackgroundColor) {
         return color + text + CliForegroundColor.Reset;
+    }
+
+    public writeJson(json: any) {
+        this.terminal.writeln(formatJson(json));
+    }
+
+    public writeToFileFile(fileName: string, content: string): void {
+        const blob = new Blob([content], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 }

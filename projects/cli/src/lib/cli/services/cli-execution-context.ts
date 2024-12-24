@@ -2,13 +2,16 @@ import { Terminal } from '@xterm/xterm';
 import { Subject } from 'rxjs';
 import {
     ICliExecutionContext,
-    CliLoaderProps,
     ICliTerminalWriter,
     ICliUserSession,
     CliOptions,
+    ICliSpinner,
+    ICliPercentageProgressBar,
 } from '../models';
 import { CliCommandExecutorService } from './cli-command-executor.service';
 import { CliTerminalWriter } from './cli-terminal-writer';
+import { CliTerminalSpinner } from './cli-terminal-spinner';
+import { CliTerminalProgressBar } from './cli-terminal-progress-bar';
 
 export class CliExecutionContext implements ICliExecutionContext {
     public data: Record<string, Record<string, any>> = {};
@@ -17,10 +20,8 @@ export class CliExecutionContext implements ICliExecutionContext {
 
     public writer: ICliTerminalWriter;
 
-    public loader?: CliLoaderProps = {
-        show: () => {},
-        hide: () => {},
-    };
+    public spinner: ICliSpinner;
+    public progressBar: ICliPercentageProgressBar;
 
     public cliOptions?: CliOptions;
 
@@ -29,15 +30,22 @@ export class CliExecutionContext implements ICliExecutionContext {
     constructor(
         public terminal: Terminal,
         public executor: CliCommandExecutorService,
-        loader?: CliLoaderProps,
+        public showPrompt: () => void,
         cliOptions?: CliOptions,
     ) {
         this.cliOptions = cliOptions;
         this.writer = new CliTerminalWriter(terminal);
+        this.spinner = new CliTerminalSpinner(terminal);
+        this.progressBar = new CliTerminalProgressBar(terminal);
+    }
 
-        if (loader) {
-            this.loader = loader;
-        }
+    /**
+     * Checks if there is a progress running
+     * @returns true if there is a progress running
+     * @returns false if there is no progress running
+     */
+    public isProgressRunning(): boolean {
+        return this.progressBar.isRunning || this.spinner.isRunning;
     }
 
     /**

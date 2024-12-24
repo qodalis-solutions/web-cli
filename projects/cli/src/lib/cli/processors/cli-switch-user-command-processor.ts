@@ -69,14 +69,14 @@ export class CliSwitchUserCommandProcessor
                 return;
             }
 
-            context.loader?.show();
+            context.spinner?.show();
 
             const user = await firstValueFrom(this.usersStore.getUser(toUser));
 
             if (!user) {
                 context.writer.writeError(`User ${toUser} not found`);
 
-                context.loader?.hide();
+                context.spinner?.hide();
                 return;
             }
 
@@ -84,7 +84,7 @@ export class CliSwitchUserCommandProcessor
                 user,
             });
 
-            context.loader?.hide();
+            context.spinner?.hide();
 
             context.writer.writeSuccess(`Switch to ${toUser} was successfully`);
 
@@ -96,7 +96,7 @@ export class CliSwitchUserCommandProcessor
             }
         } catch (e) {
             console.error(e);
-            context.loader?.hide();
+            context.spinner?.hide();
             context.writer.writeError('Failed to switch user');
         }
     }

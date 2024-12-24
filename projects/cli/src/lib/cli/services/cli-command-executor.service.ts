@@ -25,7 +25,6 @@ export class CliCommandExecutorService {
         cliVersionCommandProcessor: CliVersionCommandProcessor,
     ) {
         this.registerProcessor(new CliClearCommandProcessor());
-        this.registerProcessor(new CliPingCommandProcessor());
         this.registerProcessor(new CliEchoCommandProcessor());
         this.registerProcessor(cliHelpCommandProcessor);
         this.registerProcessor(cliVersionCommandProcessor);
@@ -71,7 +70,7 @@ export class CliCommandExecutorService {
                 context,
             );
         } catch (e) {
-            context.loader?.hide();
+            context.spinner?.hide();
             context.writer.writeError(`Error executing command: ${e}`);
         }
     }

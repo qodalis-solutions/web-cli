@@ -6,22 +6,6 @@ import {
     ICliExecutionContext,
 } from '../models';
 
-export class CliPingCommandProcessor implements ICliCommandProcessor {
-    command = 'ping';
-
-    description?: string | undefined = 'Pings the server';
-
-    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
-
-    async processCommand(
-        _: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        //TODO: Implement ping
-        context.writer.writeln('pong');
-    }
-}
-
 export class CliClearCommandProcessor implements ICliCommandProcessor {
     command = 'clear';
 
@@ -58,6 +42,8 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
         context.writer.writeln('Prints the specified text');
     }
 }
+
+export { CliPingCommandProcessor } from './cli-ping-command-processor';
 
 export { CliHelpCommandProcessor } from './cli-help-command-processor';
 

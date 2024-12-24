@@ -1,5 +1,6 @@
 import { Provider } from '@angular/core';
 import {
+    ICliPingServerService_TOKEN,
     ICliUserSessionService_TOKEN,
     ICliUsersStoreService_TOKEN,
 } from './cli/tokens';
@@ -15,7 +16,9 @@ import {
     CliCookiesCommandProcessor,
     CliThemeCommandProcessor,
     CliRegexCommandProcessor,
+    CliPingCommandProcessor,
 } from './cli/processors';
+import { CliDefaultPingServerService } from './cli/services';
 
 export const CliVersion = '1.0.1';
 
@@ -29,6 +32,11 @@ export const resolveCliProviders = (): Provider[] => {
             useClass: CliUsersStoreService,
             provide: ICliUsersStoreService_TOKEN,
         },
+        {
+            useClass: CliDefaultPingServerService,
+            provide: ICliPingServerService_TOKEN,
+        },
+        resolveCommandProcessorProvider(CliPingCommandProcessor),
         resolveCommandProcessorProvider(CliSwitchUserCommandProcessor),
         resolveCommandProcessorProvider(CliHistoryCommandProcessor),
         resolveCommandProcessorProvider(CliLogsCommandProcessor),

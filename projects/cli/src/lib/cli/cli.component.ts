@@ -128,10 +128,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         this.executionContext = new CliExecutionContext(
             this.terminal,
             this.commandExecutor,
-            {
-                show: () => this.startLoading(),
-                hide: () => this.stopLoading(),
-            },
+            () => this.printPrompt(),
             {
                 ...(this.options ?? {}),
                 terminalOptions: terminalOptions,
@@ -178,6 +175,10 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
     private cursorPosition: number = 0;
 
     private async handleInput(data: string): Promise<void> {
+        if (this.executionContext?.isProgressRunning()) {
+            return;
+        }
+
         if (data === '\r') {
             // Enter key: Process the current command
             this.terminal.write('\r\n'); // Move to the next line
@@ -274,32 +275,6 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         this.handleInput(pasteData);
 
         event.preventDefault(); // Prevent the default paste behavior
-    }
-
-    private spinnerInterval?: ReturnType<typeof setInterval> | null;
-    private spinnerFrames = ['|', '/', '-', '\\'];
-    private spinnerIndex = 0;
-
-    private startLoading(): void {
-        this.spinnerInterval = setInterval(() => {
-            // Clear the current line
-            this.terminal.write('\x1b[2K\r');
-            // Write the spinner frame
-            this.terminal.write(this.spinnerFrames[this.spinnerIndex]);
-            // Update the frame index
-            this.spinnerIndex =
-                (this.spinnerIndex + 1) % this.spinnerFrames.length;
-        }, 100);
-    }
-
-    private stopLoading(): void {
-        if (this.spinnerInterval) {
-            clearInterval(this.spinnerInterval);
-            this.spinnerInterval = null;
-        }
-
-        // Clear the spinner character and reset the line
-        this.terminal.write('\x1b[2K\r');
     }
 
     private showPreviousCommand(): void {
