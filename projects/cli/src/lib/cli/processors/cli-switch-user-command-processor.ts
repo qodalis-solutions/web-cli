@@ -27,7 +27,7 @@ export class CliSwitchUserCommandProcessor
 
     description?: string | undefined = 'Switch user';
 
-    allowPartialCommands?: boolean | undefined = true;
+    allowUnlistedCommands?: boolean | undefined = true;
 
     parameters?: ICliCommandParameterDescriptor[] | undefined = [
         {
@@ -57,7 +57,7 @@ export class CliSwitchUserCommandProcessor
         try {
             const fromUser = context.userSession?.user;
 
-            const toUser = command.command.split(' ').at(1);
+            const toUser = command.chainCommands.at(1);
 
             if (!fromUser) {
                 context.writer.writeError('Missing user to switch from');

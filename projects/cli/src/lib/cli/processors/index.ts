@@ -42,7 +42,7 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
 
     description?: string | undefined = 'Prints the specified text';
 
-    allowPartialCommands?: boolean | undefined = true;
+    allowUnlistedCommands?: boolean | undefined = true;
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 

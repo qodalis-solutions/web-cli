@@ -17,7 +17,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
     description?: string | undefined = 'Displays help for a command';
 
-    allowPartialCommands?: boolean | undefined = true;
+    allowUnlistedCommands?: boolean | undefined = true;
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 

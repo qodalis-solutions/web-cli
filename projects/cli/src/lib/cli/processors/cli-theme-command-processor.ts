@@ -63,7 +63,7 @@ export class CliThemeCommandProcessor
         this.processors = [
             {
                 command: 'set',
-                allowPartialCommands: true,
+                allowUnlistedCommands: true,
                 description: 'Set a theme variable',
                 parameters: [
                     {

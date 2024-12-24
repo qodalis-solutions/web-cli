@@ -38,9 +38,9 @@ export interface ICliCommandProcessor {
     author?: ICliCommandAuthor;
 
     /**
-     * If true, the processor can handle partial commands
+     * If true, the processor can handle unlisted commands
      */
-    allowPartialCommands?: boolean;
+    allowUnlistedCommands?: boolean;
 
     /**
      * The version of the command processor
@@ -138,6 +138,12 @@ export type CliProcessCommand = {
      * The command that was entered
      */
     command: string;
+
+    /**
+     * The chain of commands that were entered
+     */
+    chainCommands: string[];
+
     /**
      * The raw command that was entered
      */

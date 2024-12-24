@@ -52,11 +52,11 @@ export class CliCommandExecutorService {
             return;
         }
 
-        if (!this.validateBeforeExecution(context, processor, args)) {
+        if (this.versionRequested(context, processor, args)) {
             return;
         }
 
-        if (this.versionRequested(context, processor, args)) {
+        if (!this.validateBeforeExecution(context, processor, args)) {
             return;
         }
 
@@ -64,6 +64,7 @@ export class CliCommandExecutorService {
             await processor.processCommand(
                 {
                     command: commandName,
+                    chainCommands: chainCommands,
                     rawCommand: command,
                     args: args,
                 },
@@ -228,7 +229,7 @@ export class CliCommandExecutorService {
                 chainCommands.slice(1),
                 processor.processors,
             );
-        } else if (processor.allowPartialCommands) {
+        } else if (processor.allowUnlistedCommands) {
             return processor;
         }
 

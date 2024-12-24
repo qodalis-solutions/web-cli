@@ -29,13 +29,13 @@ export class CliLocalStorageCommandProcessor
         this.processors = [
             {
                 command: 'get',
-                allowPartialCommands: true,
+                allowUnlistedCommands: true,
                 description: 'Get the value of a key',
                 processCommand: async (
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key] = command.command.split(' ').slice(2);
+                    const [key] = command.chainCommands.slice(2);
 
                     const value = localStorage.getItem(key);
                     context.writer.writeln(value || 'null');
@@ -43,13 +43,13 @@ export class CliLocalStorageCommandProcessor
             },
             {
                 command: 'set',
-                allowPartialCommands: true,
+                allowUnlistedCommands: true,
                 description: 'Set the value of a key',
                 processCommand: async (
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key, ...value] = command.command.split(' ').slice(2);
+                    const [key, ...value] = command.chainCommands.slice(2);
 
                     localStorage.setItem(key, value.join(' '));
                     context.writer.writeSuccess('Value set successfully');
@@ -57,13 +57,13 @@ export class CliLocalStorageCommandProcessor
             },
             {
                 command: 'remove',
-                allowPartialCommands: true,
+                allowUnlistedCommands: true,
                 description: 'Remove a key',
                 processCommand: async (
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key] = command.command.split(' ').slice(2);
+                    const [key] = command.chainCommands.slice(2);
 
                     localStorage.removeItem(key);
                     context.writer.writeSuccess('Key removed successfully');

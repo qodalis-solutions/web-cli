@@ -29,7 +29,7 @@ export class CliCookiesCommandProcessor
         this.processors = [
             {
                 command: 'list',
-                allowPartialCommands: true,
+                allowUnlistedCommands: true,
                 description: 'List all cookies',
                 processCommand: async (
                     command: CliProcessCommand,
@@ -53,13 +53,13 @@ export class CliCookiesCommandProcessor
             },
             {
                 command: 'get',
-                allowPartialCommands: true,
+                allowUnlistedCommands: true,
                 description: 'Get the value of a key',
                 processCommand: async (
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key] = command.command.split(' ').slice(2);
+                    const [key] = command.chainCommands.slice(2);
 
                     const cookies = document.cookie.split('; ').reduce(
                         (acc, cookie) => {
@@ -79,13 +79,13 @@ export class CliCookiesCommandProcessor
             },
             {
                 command: 'set',
-                allowPartialCommands: true,
+                allowUnlistedCommands: true,
                 description: 'Set the value of a key',
                 processCommand: async (
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key, ...value] = command.command.split(' ').slice(2);
+                    const [key, ...value] = command.chainCommands.slice(2);
 
                     const expires = new Date();
                     expires.setFullYear(expires.getFullYear() + 1);
@@ -96,13 +96,13 @@ export class CliCookiesCommandProcessor
             },
             {
                 command: 'remove',
-                allowPartialCommands: true,
+                allowUnlistedCommands: true,
                 description: 'Remove a key',
                 processCommand: async (
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key] = command.command.split(' ').slice(2);
+                    const [key] = command.chainCommands.slice(2);
 
                     document.cookie = `${key}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
                     context.writer.writeSuccess('Cookie removed successfully');
