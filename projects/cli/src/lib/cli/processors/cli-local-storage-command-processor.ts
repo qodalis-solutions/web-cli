@@ -49,9 +49,9 @@ export class CliLocalStorageCommandProcessor
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key, value] = command.command.split(' ').slice(2);
+                    const [key, ...value] = command.command.split(' ').slice(2);
 
-                    localStorage.setItem(key, value);
+                    localStorage.setItem(key, value.join(' '));
                     context.writer.writeSuccess('Value set successfully');
                 },
             },

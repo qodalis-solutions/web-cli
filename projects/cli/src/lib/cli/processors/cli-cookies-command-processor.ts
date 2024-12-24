@@ -35,8 +35,6 @@ export class CliCookiesCommandProcessor
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key] = command.command.split(' ').slice(2);
-
                     const cookies = document.cookie.split('; ').reduce(
                         (acc, cookie) => {
                             const [cookieKey, cookieValue] = cookie.split('=');
@@ -87,12 +85,12 @@ export class CliCookiesCommandProcessor
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key, value] = command.command.split(' ').slice(2);
+                    const [key, ...value] = command.command.split(' ').slice(2);
 
                     const expires = new Date();
                     expires.setFullYear(expires.getFullYear() + 1);
 
-                    document.cookie = `${key}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/`;
+                    document.cookie = `${key}=${encodeURIComponent(value.join(' '))};expires=${expires.toUTCString()};path=/`;
                     context.writer.writeSuccess('Cookie set successfully');
                 },
             },

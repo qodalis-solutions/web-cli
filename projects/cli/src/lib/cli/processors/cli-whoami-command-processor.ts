@@ -16,7 +16,7 @@ import { firstValueFrom } from 'rxjs';
 export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
     command = 'whoami';
 
-    description?: string | undefined = 'Switch user';
+    description?: string | undefined = 'Display current user information';
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
