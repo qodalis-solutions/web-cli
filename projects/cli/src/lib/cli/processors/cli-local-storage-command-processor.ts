@@ -5,16 +5,13 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '../models';
-import { CliBaseProcessor } from './cli-base-processor';
+
 import { DefaultLibraryAuthor } from '../../constants';
 
 @Injectable({
     providedIn: 'root',
 })
-export class CliLocalStorageCommandProcessor
-    extends CliBaseProcessor
-    implements ICliCommandProcessor
-{
+export class CliLocalStorageCommandProcessor implements ICliCommandProcessor {
     command = 'local-storage';
 
     description = 'Interact with the local storage';
@@ -24,8 +21,6 @@ export class CliLocalStorageCommandProcessor
     processors?: ICliCommandProcessor[] | undefined = [];
 
     constructor() {
-        super();
-
         this.processors = [
             {
                 command: 'get',

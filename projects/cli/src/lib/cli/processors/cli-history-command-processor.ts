@@ -5,17 +5,14 @@ import {
     ICliCommandProcessor,
     ICliCommandAuthor,
 } from '../models';
-import { CliBaseProcessor } from './cli-base-processor';
+
 import { CommandHistoryService } from '../services/command-history.service';
 import { DefaultLibraryAuthor } from '../../constants';
 
 @Injectable({
     providedIn: 'root',
 })
-export class CliHistoryCommandProcessor
-    extends CliBaseProcessor
-    implements ICliCommandProcessor
-{
+export class CliHistoryCommandProcessor implements ICliCommandProcessor {
     command = 'history';
 
     description?: string | undefined =
@@ -26,8 +23,6 @@ export class CliHistoryCommandProcessor
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
     constructor(private readonly commandHistoryService: CommandHistoryService) {
-        super();
-
         this.processors?.push({
             command: 'list',
             description: this.description,

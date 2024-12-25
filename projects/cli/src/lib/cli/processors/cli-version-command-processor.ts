@@ -5,17 +5,14 @@ import {
     ICliCommandProcessor,
     ICliCommandAuthor,
 } from '../models';
-import { CliBaseProcessor } from './cli-base-processor';
+
 import { CliVersion } from '../..';
 import { DefaultLibraryAuthor } from '../../constants';
 
 @Injectable({
     providedIn: 'root',
 })
-export class CliVersionCommandProcessor
-    extends CliBaseProcessor
-    implements ICliCommandProcessor
-{
+export class CliVersionCommandProcessor implements ICliCommandProcessor {
     command = 'version';
 
     description?: string | undefined = 'Prints the version information';
@@ -23,10 +20,6 @@ export class CliVersionCommandProcessor
     processors?: ICliCommandProcessor[] | undefined = [];
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
-
-    constructor() {
-        super();
-    }
 
     async processCommand(
         _: CliProcessCommand,

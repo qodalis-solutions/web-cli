@@ -150,6 +150,11 @@ export type CliProcessCommand = {
     rawCommand: string;
 
     /**
+     * The value of the command
+     */
+    value?: string;
+
+    /**
      * The arguments that were entered
      */
     args: Record<string, any>;
@@ -325,11 +330,6 @@ export interface ICliPercentageProgressBar extends ICliProgressBar {
  */
 export interface ICliExecutionContext {
     /**
-     * The data store
-     */
-    data: Record<string, Record<string, any>>;
-
-    /**
      * The current user session
      */
     userSession?: ICliUserSession;
@@ -365,6 +365,11 @@ export interface ICliExecutionContext {
     executor: CliCommandExecutorService;
 
     /**
+     * The data store to use for storing data
+     */
+    dataStore: ICliCommandDataStore;
+
+    /**
      * The options for the CLI
      */
     options?: CliOptions;
@@ -373,6 +378,31 @@ export interface ICliExecutionContext {
      * The prompt to use for prompting the user for input
      */
     showPrompt: () => void;
+}
+
+/**
+ * Represents a data store for storing data associated with commands
+ */
+export interface ICliCommandDataStore {
+    /**
+     * The data store
+     */
+    data: Record<string, Record<string, any>>;
+
+    /**
+     * Append data to the data store
+     * @param command
+     * @param key
+     * @param data
+     */
+    appendData(command: string, key: string, data: any): void;
+
+    /**
+     * Get data from the data store
+     * @param command
+     * @param key
+     */
+    getData<T = any>(command: string, key: string): T;
 }
 
 /**

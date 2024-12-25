@@ -64,9 +64,10 @@ import { ICliCommandProcessor, CliProcessCommand, ICliExecutionContext } from "@
 export class MyCustomCommandProcessor implements ICliCommandProcessor {
   command = "greet";
   description = "Greet the user with a custom message";
+  allowUnlistedCommands = true;
 
   async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
-    const [name] = command.command.split(" ").slice(1);
+    const name = command.value;
     const message = name ? `Hello, ${name}!` : "Hello!";
     context.writer.writeln(message);
   }

@@ -6,7 +6,7 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '../models';
-import { CliBaseProcessor } from './cli-base-processor';
+
 import { DefaultLibraryAuthor } from '../../constants';
 import { ITheme } from '@xterm/xterm';
 
@@ -39,10 +39,7 @@ const themeOptions: ITheme = {
 @Injectable({
     providedIn: 'root',
 })
-export class CliThemeCommandProcessor
-    extends CliBaseProcessor
-    implements ICliCommandProcessor
-{
+export class CliThemeCommandProcessor implements ICliCommandProcessor {
     command = 'theme';
 
     description = 'Interact with the theme';
@@ -58,8 +55,6 @@ export class CliThemeCommandProcessor
     private defaultTheme: ITheme = themeOptions;
 
     constructor() {
-        super();
-
         this.processors = [
             {
                 command: 'set',

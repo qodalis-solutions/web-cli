@@ -60,6 +60,22 @@ export const highlightTextWithBg = (
     );
 };
 
+export const getRightOfWord = (
+    command: string,
+    word: string,
+): string | undefined => {
+    // Find the position of the word in the command
+    const index = command.indexOf(word);
+
+    // If the word is found, extract the substring to the right
+    if (index !== -1) {
+        return command.slice(index + word.length).trim();
+    }
+
+    // If the word is not found, return null
+    return undefined;
+};
+
 export { CommandParser } from './command-parser';
 
 export * from './dependency-injection';

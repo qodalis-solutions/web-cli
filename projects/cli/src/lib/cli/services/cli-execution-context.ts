@@ -7,15 +7,15 @@ import {
     CliOptions,
     ICliSpinner,
     ICliPercentageProgressBar,
+    ICliCommandDataStore,
 } from '../models';
 import { CliCommandExecutorService } from './cli-command-executor.service';
 import { CliTerminalWriter } from './cli-terminal-writer';
 import { CliTerminalSpinner } from './cli-terminal-spinner';
 import { CliTerminalProgressBar } from './cli-terminal-progress-bar';
+import { CliCommandDataStore } from './cli-command-data-store';
 
 export class CliExecutionContext implements ICliExecutionContext {
-    public data: Record<string, Record<string, any>> = {};
-
     public userSession?: ICliUserSession;
 
     public writer: ICliTerminalWriter;
@@ -27,6 +27,8 @@ export class CliExecutionContext implements ICliExecutionContext {
 
     public onAbort = new Subject<void>();
 
+    public dataStore: ICliCommandDataStore;
+
     constructor(
         public terminal: Terminal,
         public executor: CliCommandExecutorService,
@@ -35,6 +37,7 @@ export class CliExecutionContext implements ICliExecutionContext {
     ) {
         this.cliOptions = cliOptions;
         this.writer = new CliTerminalWriter(terminal);
+        this.dataStore = new CliCommandDataStore(this);
         this.spinner = new CliTerminalSpinner(terminal);
         this.progressBar = new CliTerminalProgressBar(terminal);
     }

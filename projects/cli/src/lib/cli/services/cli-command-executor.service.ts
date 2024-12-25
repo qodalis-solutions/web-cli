@@ -4,10 +4,9 @@ import {
     CliClearCommandProcessor,
     CliEchoCommandProcessor,
     CliHelpCommandProcessor,
-    CliPingCommandProcessor,
 } from '../processors';
 import { CliVersionCommandProcessor } from '../processors/cli-version-command-processor';
-import { CommandParser, getParameterValue } from '../../utils';
+import { CommandParser, getParameterValue, getRightOfWord } from '../../utils';
 import { CliCommandProcessor_TOKEN } from '../tokens';
 
 @Injectable({
@@ -59,6 +58,10 @@ export class CliCommandExecutorService {
             return;
         }
 
+        const value = processor.allowUnlistedCommands
+            ? getRightOfWord(commandName, processor.command)
+            : undefined;
+
         try {
             await processor.processCommand(
                 {
@@ -66,6 +69,7 @@ export class CliCommandExecutorService {
                     chainCommands: chainCommands,
                     rawCommand: command,
                     args: args,
+                    value: value,
                 },
                 context,
             );

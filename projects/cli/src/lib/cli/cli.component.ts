@@ -80,7 +80,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
                 `Web CLI [Version ${CliVersion}]`,
                 '(c) 2024 Qodalis Solutions. All rights reserved.',
                 '',
-                "Type 'help' to get started.",
+                'Type \'help\' to get started.',
                 '',
             ];
 
@@ -164,7 +164,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         const promtStartMessage = this.options?.hideUserName
             ? ''
             : `\x1b[32m${this.currentUserSession?.user.email}\x1b[0m:`;
-        const promtEndMessage = `\x1b[34m~\x1b[0m$ `;
+        const promtEndMessage = '\x1b[34m~\x1b[0m$ ';
 
         const prompt = `${promtStartMessage}${promtEndMessage}`;
 

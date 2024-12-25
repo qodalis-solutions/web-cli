@@ -8,7 +8,7 @@ import {
     ICliUserSessionService,
     ICliCommandAuthor,
 } from '../models';
-import { CliBaseProcessor } from './cli-base-processor';
+
 import { firstValueFrom } from 'rxjs';
 import {
     ICliUserSessionService_TOKEN,
@@ -19,10 +19,7 @@ import { DefaultLibraryAuthor } from '../../constants';
 @Injectable({
     providedIn: 'root',
 })
-export class CliSwitchUserCommandProcessor
-    extends CliBaseProcessor
-    implements ICliCommandProcessor
-{
+export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
     command = 'su';
 
     description?: string | undefined = 'Switch user';
@@ -46,9 +43,7 @@ export class CliSwitchUserCommandProcessor
         private readonly userSessionService: ICliUserSessionService,
         @Inject(ICliUsersStoreService_TOKEN)
         private readonly usersStore: ICliUsersStoreService,
-    ) {
-        super();
-    }
+    ) {}
 
     async processCommand(
         command: CliProcessCommand,

@@ -9,7 +9,7 @@ import {
     CliBackgroundColor,
     CliForegroundColor,
 } from '../models';
-import { CliBaseProcessor } from './cli-base-processor';
+
 import { highlightTextWithBg, toQueryString } from '../../utils';
 import { DefaultLibraryAuthor } from '../../constants';
 
@@ -18,10 +18,7 @@ const levels = ['verbose', 'debug', 'information', 'warning', 'error', 'fatal'];
 @Injectable({
     providedIn: 'root',
 })
-export class CliLogsCommandProcessor
-    extends CliBaseProcessor
-    implements ICliCommandProcessor
-{
+export class CliLogsCommandProcessor implements ICliCommandProcessor {
     command = 'logs';
 
     description?: string | undefined = 'Show live logs';
@@ -69,8 +66,6 @@ export class CliLogsCommandProcessor
     private hubConnection!: signalR.HubConnection;
 
     constructor() {
-        super();
-
         this.processors?.push({
             command: 'live',
             description: this.description,

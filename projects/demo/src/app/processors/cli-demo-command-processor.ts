@@ -33,6 +33,17 @@ export class CliDemoCommandProcessor implements ICliCommandProcessor {
                     context.writer.writeln('demo subcommand executed');
                 },
             },
+            {
+                command: 'input',
+                description: 'Show input',
+                allowUnlistedCommands: true,
+                processCommand: async (
+                    command: CliProcessCommand,
+                    context: ICliExecutionContext,
+                ) => {
+                    context.writer.writeln('Input: ' + command.value);
+                },
+            },
         ];
     }
 

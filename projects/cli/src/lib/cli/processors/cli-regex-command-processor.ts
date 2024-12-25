@@ -48,6 +48,6 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
         _: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.writer.writeError("Use 'regex' command with a subcommand");
+        context.writer.writeError('Use \'regex\' command with a subcommand');
     }
 }

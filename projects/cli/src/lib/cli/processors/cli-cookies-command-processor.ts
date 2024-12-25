@@ -5,16 +5,13 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '../models';
-import { CliBaseProcessor } from './cli-base-processor';
+
 import { DefaultLibraryAuthor } from '../../constants';
 
 @Injectable({
     providedIn: 'root',
 })
-export class CliCookiesCommandProcessor
-    extends CliBaseProcessor
-    implements ICliCommandProcessor
-{
+export class CliCookiesCommandProcessor implements ICliCommandProcessor {
     command = 'cookies';
 
     description = 'Interact with the cookies';
@@ -24,8 +21,6 @@ export class CliCookiesCommandProcessor
     processors?: ICliCommandProcessor[] | undefined = [];
 
     constructor() {
-        super();
-
         this.processors = [
             {
                 command: 'list',
