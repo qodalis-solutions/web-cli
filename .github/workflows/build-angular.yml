@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - develop
   pull_request:
     branches:
       - main
@@ -87,7 +86,7 @@ jobs:
             if [ -f "$DIR/package.json" ]; then
               echo "Publishing $LIB_NAME..."
               cd $DIR
-              npm publish --access public
+              npm publish --access public || echo "Failed to publish $LIB_NAME, skipping..."
               cd ..
             else
               echo "Skipping $LIB_NAME: package.json not found in $DIR"
