@@ -69,7 +69,12 @@ jobs:
       - name: Build all projects
         run: npm run "build all"
 
-      # Step 5: Publish to NPM
+      # Step 5: Replace README.md in dist/cli
+      - name: Replace README.md in dist/cli
+        run: |
+          cp README.md dist/cli/
+
+      # Step 6: Publish to NPM
       - name: Publish to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
