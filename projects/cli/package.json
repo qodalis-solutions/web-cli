@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "tslib": "^2.3.0",
-    "@microsoft/signalr": "^8.0.7",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0"
   },

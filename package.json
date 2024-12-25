@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "scripts": {
     "ng": "ng",
-    "build all": "ng build cli && ng build demo",
+    "build all": "ng build cli && ng build server-logs && ng build demo",
     "start demo": "ng serve demo",
     "build demo": "ng build demo",
     "build cli": "ng build cli",

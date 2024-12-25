@@ -6,12 +6,10 @@ import {
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliCommandAuthor,
-    CliBackgroundColor,
-    CliForegroundColor,
-} from '../models';
-
-import { highlightTextWithBg, toQueryString } from '../../utils';
-import { DefaultLibraryAuthor } from '../../constants';
+    highlightTextWithBg,
+    toQueryString,
+    DefaultLibraryAuthor,
+} from '@qodalis/angular-cli';
 
 const levels = ['verbose', 'debug', 'information', 'warning', 'error', 'fatal'];
 

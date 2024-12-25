@@ -80,7 +80,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           # Define an array of library names to publish: "lib1" "lib2"
-          LIBRARIES=("cli")
+          LIBRARIES=("cli" "server-logs")
 
           for LIB_NAME in "${LIBRARIES[@]}"; do
             DIR="./dist/$LIB_NAME"

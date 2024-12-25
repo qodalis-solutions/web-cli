@@ -51,8 +51,6 @@ export { CliSwitchUserCommandProcessor } from './cli-switch-user-command-process
 
 export { CliVersionCommandProcessor } from './cli-version-command-processor';
 
-export { CliLogsCommandProcessor } from './cli-logs-command-processor';
-
 export { CliHistoryCommandProcessor } from './cli-history-command-processor';
 
 export { CliLocalStorageCommandProcessor } from './cli-local-storage-command-processor';

@@ -1,0 +1,14 @@
+{
+  "name": "@qodalis/ng-cli-server-logs-ext",
+  "version": "1.0.1",
+  "peerDependencies": {
+    "@angular/common": "^16.2.0",
+    "@angular/core": "^16.2.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@qodalis/angular-cli": "^1.0.7",
+    "@microsoft/signalr": "^8.0.7"
+  },
+  "sideEffects": false
+}

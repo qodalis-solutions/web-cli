@@ -5,6 +5,9 @@
     "paths": {
       "@qodalis/angular-cli": [
         "dist/cli"
+      ],
+      "@qodalis/ng-cli-server-logs-ext": [
+        "dist/server-logs"
       ]
     },
     "outDir": "./dist/out-tsc",
