@@ -1,4 +1,4 @@
-name: Angular Workspace CI/CD
+name: CLI Workspace CI/CD
 
 on:
   push:
@@ -81,6 +81,8 @@ jobs:
           # Define an array of library names to publish: "lib1" "lib2"
           LIBRARIES=("cli" "server-logs")
 
+          ls dist
+
           for LIB_NAME in "${LIBRARIES[@]}"; do
             DIR="./dist/$LIB_NAME"
             if [ -f "$DIR/package.json" ]; then
@@ -90,5 +92,6 @@ jobs:
               cd ..
             else
               echo "Skipping $LIB_NAME: package.json not found in $DIR"
+              ls
             fi
           done

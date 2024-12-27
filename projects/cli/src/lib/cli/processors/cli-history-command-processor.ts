@@ -38,7 +38,7 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
                 context: ICliExecutionContext,
             ) => {
                 this.commandHistoryService.clearHistory();
-                context.writer.writeln('Command history cleared');
+                context.writer.writeInfo('Command history cleared');
             },
             writeDescription: (context: ICliExecutionContext) => {
                 context.writer.writeln('Clears the command history');

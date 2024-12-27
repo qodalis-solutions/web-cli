@@ -118,12 +118,9 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         // Handle user input
         this.terminal.onData(async (data) => await this.handleInput(data));
 
-        this.terminal.onKey(async (event) => {
-            console.log('event:', event);
-        });
+        this.terminal.onKey(async (event) => {});
 
         this.terminal.attachCustomKeyEventHandler((event) => {
-            console.log('event:', event);
             if (event.type === 'keydown') {
                 if (event.code === 'KeyC' && event.ctrlKey) {
                     // Handle Ctrl+C
@@ -210,7 +207,6 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
     private cursorPosition: number = 0;
 
     private async handleInput(data: string): Promise<void> {
-        console.log('input:', data);
         if (this.executionContext?.isProgressRunning()) {
             return;
         }
@@ -265,8 +261,19 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         }
     }
 
+    private normalizeText(text: string): string {
+        //handle tab
+        if (text === '\u0009') {
+            return '    ';
+        }
+
+        return text;
+    }
+
     private handleInputText(text: string): void {
-        const textLength = text === '/t' ? 4 : text.length;
+        text = this.normalizeText(text);
+
+        const textLength = text.length;
         this.cursorPosition += textLength;
 
         if (this.cursorPosition <= this.currentLine.length) {
