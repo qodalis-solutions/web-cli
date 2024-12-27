@@ -8,26 +8,31 @@ import {
     ICliSpinner,
     ICliPercentageProgressBar,
     ICliCommandDataStore,
+    ICliClipboard,
 } from '../models';
 import { CliCommandExecutorService } from './cli-command-executor.service';
 import { CliTerminalWriter } from './cli-terminal-writer';
 import { CliTerminalSpinner } from './cli-terminal-spinner';
 import { CliTerminalProgressBar } from './cli-terminal-progress-bar';
 import { CliCommandDataStore } from './cli-command-data-store';
+import { CliClipboard } from './cli-clipboard';
 
 export class CliExecutionContext implements ICliExecutionContext {
     public userSession?: ICliUserSession;
 
-    public writer: ICliTerminalWriter;
+    public readonly writer: ICliTerminalWriter;
 
-    public spinner: ICliSpinner;
-    public progressBar: ICliPercentageProgressBar;
+    public readonly spinner: ICliSpinner;
 
-    public cliOptions?: CliOptions;
+    public readonly progressBar: ICliPercentageProgressBar;
 
-    public onAbort = new Subject<void>();
+    public readonly cliOptions?: CliOptions;
 
-    public dataStore: ICliCommandDataStore;
+    public readonly onAbort = new Subject<void>();
+
+    public readonly dataStore: ICliCommandDataStore;
+
+    public readonly clipboard: ICliClipboard;
 
     constructor(
         public terminal: Terminal,
@@ -40,6 +45,7 @@ export class CliExecutionContext implements ICliExecutionContext {
         this.dataStore = new CliCommandDataStore(this);
         this.spinner = new CliTerminalSpinner(terminal);
         this.progressBar = new CliTerminalProgressBar(terminal);
+        this.clipboard = new CliClipboard(this);
     }
 
     /**

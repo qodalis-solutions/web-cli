@@ -326,6 +326,24 @@ export interface ICliPercentageProgressBar extends ICliProgressBar {
 }
 
 /**
+ * Represents a clipboard for the CLI
+ */
+export interface ICliClipboard {
+    /**
+     * Write text to the clipboard
+     * @param text The text to write to the clipboard
+     * @returns void
+     */
+    write: (text: string) => Promise<void>;
+
+    /**
+     * Read text from the clipboard
+     * @returns The text read from the clipboard
+     */
+    read: () => Promise<string>;
+}
+
+/**
  * Represents the context in which a command is executed
  */
 export interface ICliExecutionContext {
@@ -363,6 +381,11 @@ export interface ICliExecutionContext {
      * The command executor to use for executing commands
      */
     executor: CliCommandExecutorService;
+
+    /**
+     * The clipboard to use for copying/pasting
+     */
+    clipboard: ICliClipboard;
 
     /**
      * The data store to use for storing data
