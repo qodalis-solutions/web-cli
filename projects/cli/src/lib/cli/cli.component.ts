@@ -80,7 +80,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
                 `Web CLI [Version ${CliVersion}]`,
                 '(c) 2024 Qodalis Solutions. All rights reserved.',
                 '',
-                'Type \'help\' to get started.',
+                "Type 'help' to get started.",
                 '',
             ];
 
@@ -114,8 +114,43 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         this.terminal.loadAddon(this.fitAddon);
 
         this.terminal.open(this.terminalDiv.nativeElement);
+
         // Handle user input
         this.terminal.onData(async (data) => await this.handleInput(data));
+
+        this.terminal.onKey(async (event) => {
+            console.log('event:', event);
+        });
+
+        this.terminal.attachCustomKeyEventHandler((event) => {
+            console.log('event:', event);
+            if (event.type === 'keydown') {
+                if (event.code === 'KeyC' && event.ctrlKey) {
+                    // Handle Ctrl+C
+                    this.executionContext?.abort();
+                    this.terminal.writeln('Ctrl+C');
+                    this.printPrompt();
+
+                    return false;
+                }
+
+                if (event.code === 'Escape') {
+                    // Handle Escape
+                    this.executionContext?.abort();
+                    this.terminal.writeln('');
+                    this.printPrompt();
+
+                    return false;
+                }
+
+                if (event.code === 'KeyV' && event.ctrlKey) {
+                    //Handle Ctrl+V
+                    return false;
+                }
+            }
+
+            return true;
+        });
 
         // Handle paste events
         this.terminalDiv.nativeElement.addEventListener(
@@ -175,6 +210,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
     private cursorPosition: number = 0;
 
     private async handleInput(data: string): Promise<void> {
+        console.log('input:', data);
         if (this.executionContext?.isProgressRunning()) {
             return;
         }
@@ -205,11 +241,6 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
             }
 
             this.printPrompt();
-        } else if (data === '\u0003') {
-            // Handle Ctrl+C
-            this.executionContext?.abort();
-            this.terminal.writeln('Ctrl+C');
-            this.printPrompt();
         } else if (data === '\u001B[A') {
             // Arrow Up
             this.showPreviousCommand();
@@ -222,27 +253,6 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         } else if (data === '\u001B[C') {
             // Right Arrow
             this.moveCursorRight(data);
-        } else if (data === '\u0003') {
-            // Ctrl + C (ASCII code for Ctrl + C is \u0003)
-            const selectedText =
-                this.terminal.getSelection() || this.currentLine;
-
-            console.log('selectedText:', selectedText);
-            if (selectedText) {
-                // Copy the selected text to the clipboard
-                navigator.clipboard.writeText(selectedText).then(
-                    () => {
-                        console.log('Text copied to clipboard:', selectedText);
-                    },
-                    (err) => {
-                        console.error('Failed to copy text to clipboard:', err);
-                    },
-                );
-            } else {
-                console.warn('No text is selected');
-                // No text is selected, handle it as an interrupt (optional)
-                this.terminal.write('^C\r\n');
-            }
         } else if (data === '\u000C') {
             // CTRL + L
             this.terminal.clear();
@@ -251,21 +261,23 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
             this.handleBackspace();
         } else {
             // Append character at cursor position
-            this.insertCharacter(data);
+            this.handleInputText(data);
         }
     }
 
-    private insertCharacter(character: string): void {
-        this.cursorPosition++;
+    private handleInputText(text: string): void {
+        const textLength = text === '/t' ? 4 : text.length;
+        this.cursorPosition += textLength;
+
         if (this.cursorPosition <= this.currentLine.length) {
             this.currentLine =
                 this.currentLine.substring(0, this.cursorPosition - 1) +
-                character +
+                text +
                 this.currentLine.substring(this.cursorPosition);
         } else {
-            this.currentLine += character;
+            this.currentLine += text;
         }
-        this.terminal.write(character);
+        this.terminal.write(text);
     }
 
     private handlePaste(event: ClipboardEvent): void {
@@ -338,5 +350,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
         }
+
+        this.terminal.dispose();
     }
 }
