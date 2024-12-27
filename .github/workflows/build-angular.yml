@@ -89,7 +89,7 @@ jobs:
               echo "Publishing $LIB_NAME..."
               cd $DIR
               npm publish --access public || echo "Failed to publish $LIB_NAME, skipping..."
-              cd ..
+              cd ../..
             else
               echo "Skipping $LIB_NAME: package.json not found in $DIR"
               ls
