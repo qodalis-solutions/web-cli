@@ -66,3 +66,5 @@ export { CliRegexCommandProcessor } from './cli-regex-command-processor';
 export { CliGuidCommandProcessor } from './cli-guid-command-processor';
 
 export { CliEvalCommandProcessor } from './cli-eval-command-processor';
+
+export { CliPackagesCommandProcessor } from './cli-packages-command-processor';

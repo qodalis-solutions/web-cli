@@ -16,8 +16,21 @@ export class CliEvalCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         try {
-            const ev = eval(command.value ?? '');
-            context.writer.writeln('Output: ' + ev?.toString());
+            const output = eval(command.value ?? '');
+
+            if (Array.isArray(output)) {
+                context.writer.writeln('Output:');
+                context.writer.writeJson(output);
+                return;
+            }
+
+            if (typeof output === 'object') {
+                context.writer.writeln('Output:');
+                context.writer.writeJson(output);
+                return;
+            }
+
+            context.writer.writeln('Output: ' + output?.toString());
         } catch (e) {
             context.writer.writeError(e!.toString());
         }

@@ -17,13 +17,18 @@ import {
     CliRegexCommandProcessor,
     CliPingCommandProcessor,
     CliGuidCommandProcessor,
+    CliPackagesCommandProcessor,
 } from './cli/processors';
-import { CliDefaultPingServerService } from './cli/services';
+import {
+    CliDefaultPingServerService,
+    ScriptLoaderService,
+} from './cli/services';
 
 export const CliVersion = '1.0.1';
 
 export const resolveCliProviders = (): Provider[] => {
     return [
+        ScriptLoaderService,
         {
             useClass: CliUserSessionService,
             provide: ICliUserSessionService_TOKEN,
@@ -45,6 +50,7 @@ export const resolveCliProviders = (): Provider[] => {
         resolveCommandProcessorProvider(CliThemeCommandProcessor),
         resolveCommandProcessorProvider(CliRegexCommandProcessor),
         resolveCommandProcessorProvider(CliGuidCommandProcessor),
+        resolveCommandProcessorProvider(CliPackagesCommandProcessor),
     ];
 };
 

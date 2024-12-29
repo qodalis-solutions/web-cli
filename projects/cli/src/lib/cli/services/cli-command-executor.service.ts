@@ -128,6 +128,25 @@ export class CliCommandExecutorService {
         return this._findProcessor(mainCommand, chainCommands, this.processors);
     }
 
+    public async showHelp(
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        const helpProcessor = this.findProcessor('help', [])!;
+
+        try {
+            await helpProcessor.processCommand(
+                {
+                    ...command,
+                    command: 'help ' + command.command,
+                },
+                context,
+            );
+        } catch (e) {
+            context.writer.writeError(`Error executing command: ${e}`);
+        }
+    }
+
     private async initializeProcessorsInternal(
         context: ICliExecutionContext,
         processors: ICliCommandProcessor[],
@@ -138,7 +157,7 @@ export class CliCommandExecutorService {
                     await p.initialize(context);
                 }
 
-                if (p.processors) {
+                if (p.processors && p.processors.length > 0) {
                     await this.initializeProcessorsInternal(
                         context,
                         p.processors,
@@ -172,19 +191,7 @@ export class CliCommandExecutorService {
         context: ICliExecutionContext,
     ): Promise<boolean> {
         if (commandToProcess.args['h'] || commandToProcess.args['help']) {
-            const helpProcessor = this.findProcessor('help', [])!;
-
-            try {
-                await helpProcessor.processCommand(
-                    {
-                        ...commandToProcess,
-                        command: 'help ' + commandToProcess.command,
-                    },
-                    context,
-                );
-            } catch (e) {
-                context.writer.writeError(`Error executing command: ${e}`);
-            }
+            await this.showHelp(commandToProcess, context);
 
             return true;
         }

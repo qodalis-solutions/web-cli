@@ -168,6 +168,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         );
 
         this.executionContext.setSession(this.currentUserSession!);
+
         this.commandExecutor.initializeProcessors(this.executionContext);
     }
 

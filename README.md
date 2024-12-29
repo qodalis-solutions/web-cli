@@ -50,6 +50,73 @@ export class AppModule {}
 cliOptions = {};
 ```
 
+## Example Commands
+
+### Built-in Commands
+
+- **help**: Displays available commands and their descriptions.
+- **clear**: Clears the terminal screen.
+- **echo \<message\>**: Prints the provided message to the terminal.
+- **ping**: Pings the server
+- **theme**: Interact with the cli theme
+- **cookies**: Interact with the cookies
+- **history**: Prints the command history of the current session
+- **local-storage**: Interact with the local storage
+- **regex**: Provide utilities for working with regular expressions
+- **su**: Switch user
+- **version**: Prints the version information
+- **whoami**: Display current user information
+- **eval**: Evaluate a JavaScript expression
+- **packages**: Manage packages in the cli
+
+## Cli Packages
+
+- Add JavaScript packages dynamically.
+- Evaluate JavaScript expressions using added packages.
+- Display results in a structured format.
+
+### Usage
+
+### Add a Package
+
+To add a package, use the packages add command:
+
+```bash
+root:~$ packages add <package-name>
+```
+
+Example:
+
+```bash
+root:~$ packages add lodash
+```
+
+This command downloads and makes the package available for evaluation.
+
+### Remove a Package
+
+Remove a package using the `packages remove` command:
+
+```bash
+root:~$ packages remove lodash
+```
+
+### Example
+
+```bash
+root:~$ packages add lodash
+root:~$ eval _.map([1, 2, 3, 4, 5], (n) => n * 2);
+Output:
+[
+  2,
+  4,
+  6,
+  8,
+  10
+]
+root:~$
+```
+
 ## Extending with Custom Commands
 
 You can extend the CLI by creating a class that implements the ICliCommandProcessor interface. This allows you to define new commands and their behavior.
@@ -85,24 +152,6 @@ import { CliModule, resolveCommandProcessorProvider } from "@qodalis/angular-cli
 })
 export class AppModule {}
 ```
-
-## Example Commands
-
-### Built-in Commands
-
-- **help**: Displays available commands and their descriptions.
-- **clear**: Clears the terminal screen.
-- **echo \<message\>**: Prints the provided message to the terminal.
-- **ping**: Pings the server
-- **theme**: Interact with the cli theme
-- **cookies**: Interact with the cookies
-- **history**: Prints the command history of the current session
-- **local-storage**: Interact with the local storage
-- **regex**: Provide utilities for working with regular expressions
-- **su**: Switch user
-- **version**: Prints the version information
-- **whoami**: Display current user information
-- **eval**: Evaluate a JavaScript expression
 
 ### Custom Command Example
 
