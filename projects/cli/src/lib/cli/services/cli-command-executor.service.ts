@@ -51,7 +51,9 @@ export class CliCommandExecutorService {
         );
 
         if (!processor) {
-            context.writer.writeError(`Unknown command: ${commandName}`);
+            context.writer.writeError(
+                `Command: ${commandName} not found or not installed`,
+            );
 
             return;
         }
@@ -303,7 +305,7 @@ export class CliCommandExecutorService {
         return undefined;
     }
 
-    private registerProcessor(processor: ICliCommandProcessor): void {
+    public registerProcessor(processor: ICliCommandProcessor): void {
         const existingIndex = this.processors.findIndex(
             (p) => p.command === processor.command,
         );

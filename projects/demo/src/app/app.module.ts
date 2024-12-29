@@ -9,7 +9,7 @@ import {
 } from '@qodalis/angular-cli';
 import { CliDemoCommandProcessor } from './processors/cli-demo-command-processor';
 import { CliCustomUsersStoreService } from './services/custom-users-store.service';
-import { CliServerLogsModule } from '@qodalis/ng-cli-server-logs-ext';
+import { CliServerLogsModule } from '@qodalis/cli-server-logs';
 
 @NgModule({
     declarations: [AppComponent],

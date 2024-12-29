@@ -53,7 +53,7 @@ export class ScriptLoaderService {
                 } else {
                     reject(
                         new Error(
-                            `Failed to load package: ${src}, Status: ${xhr.status}`,
+                            `Failed to load package: ${src}, Status: ${xhr.status}, Message: ${xhr.responseText}`,
                         ),
                     );
                 }

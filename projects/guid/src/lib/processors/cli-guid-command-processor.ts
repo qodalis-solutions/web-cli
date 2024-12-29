@@ -1,4 +1,3 @@
-import { DefaultLibraryAuthor } from '../../constants';
 import {
     CliProcessCommand,
     ICliCommandProcessor,
@@ -11,7 +10,10 @@ import {
 export class CliGuidCommandProcessor implements ICliCommandProcessor {
     command = 'guid';
     description = 'Generate and validate GUIDs';
-    author = DefaultLibraryAuthor;
+    author = {
+        name: 'Nicolae Lupei',
+        email: 'nicolae.lupei@qodalis.com',
+    };
 
     processors?: ICliCommandProcessor[] | undefined = [];
 

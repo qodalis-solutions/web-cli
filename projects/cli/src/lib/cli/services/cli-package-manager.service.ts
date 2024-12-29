@@ -1,10 +1,5 @@
 import { Injectable } from '@angular/core';
-
-export interface Package {
-    name: string;
-    version: string;
-    url: string;
-}
+import { Package } from '@qodalis/cli-core';
 
 @Injectable({
     providedIn: 'root',

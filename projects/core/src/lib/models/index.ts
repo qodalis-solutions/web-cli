@@ -98,3 +98,12 @@ export type CliOptions = {
      */
     terminalOptions?: ITerminalOptions & ITerminalInitOnlyOptions;
 };
+
+/**
+ * Represents a package that can be installed
+ */
+export interface Package {
+    name: string;
+    version: string;
+    url: string;
+}

@@ -16,7 +16,6 @@ import {
     CliThemeCommandProcessor,
     CliRegexCommandProcessor,
     CliPingCommandProcessor,
-    CliGuidCommandProcessor,
     CliPackagesCommandProcessor,
 } from './cli/processors';
 import {
@@ -49,7 +48,6 @@ export const resolveCliProviders = (): Provider[] => {
         resolveCommandProcessorProvider(CliWhoamiCommandProcessor),
         resolveCommandProcessorProvider(CliThemeCommandProcessor),
         resolveCommandProcessorProvider(CliRegexCommandProcessor),
-        resolveCommandProcessorProvider(CliGuidCommandProcessor),
         resolveCommandProcessorProvider(CliPackagesCommandProcessor),
     ];
 };

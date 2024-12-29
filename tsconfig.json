@@ -9,8 +9,11 @@
       "@qodalis/angular-cli": [
         "dist/cli"
       ],
-      "@qodalis/ng-cli-server-logs-ext": [
+      "@qodalis/cli-server-logs": [
         "dist/server-logs"
+      ],
+      "@qodalis/cli-guid": [
+        "dist/guid"
       ]
     },
     "outDir": "./dist/out-tsc",

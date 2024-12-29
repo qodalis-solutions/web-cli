@@ -7,6 +7,7 @@ import {
     CliProcessCommand,
     ICliUser,
     ICliUserSession,
+    Package,
 } from '../models';
 
 export interface ICliCommandAuthor {
@@ -329,6 +330,12 @@ export interface ICliCommandExecutorService {
         mainCommand: string,
         chainCommands: string[],
     ): ICliCommandProcessor | undefined;
+
+    /**
+     * Register a processor
+     * @param processor
+     */
+    registerProcessor(processor: ICliCommandProcessor): void;
 }
 
 /**
@@ -465,4 +472,19 @@ export interface ICliPingServerService {
      * Pings the server
      */
     ping(): Promise<void>;
+}
+
+/**
+ * Represents a module for the CLI
+ */
+export interface ICliUmdModule {
+    /**
+     * The processors for the module
+     */
+    processors: ICliCommandProcessor[];
+
+    /**
+     * The dependencies for the module
+     */
+    dependencies?: Package[];
 }

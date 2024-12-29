@@ -4,6 +4,8 @@ import {
     CliProcessCommand,
     ICliCommandProcessor,
     ICliExecutionContext,
+    ICliUmdModule,
+    Package,
 } from '@qodalis/cli-core';
 import { ScriptLoaderService } from '../services/script-loader.service';
 import { CliPackageManagerService } from '../services/cli-package-manager.service';
@@ -50,6 +52,9 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         );
                     });
                 },
+                writeDescription(context) {
+                    context.writer.writeln('  packages ls');
+                },
             },
             {
                 command: 'add',
@@ -83,11 +88,16 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                             response.xhr.responseURL,
                         );
 
-                        packagesManager.addPackage({
+                        const pkg: Package = {
                             name: command.value!,
                             version: version || 'latest',
                             url: response.xhr.responseURL,
-                        });
+                        };
+
+                        packagesManager.addPackage(pkg);
+
+                        await scope.registerLibraryServices(pkg, context);
+
                         context.progressBar.complete();
                     } catch (e) {
                         context.progressBar.complete();
@@ -95,6 +105,13 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                             e?.toString() || 'Unknown error',
                         );
                     }
+                },
+                writeDescription(context) {
+                    context.writer.writeln('  packages add <package>');
+                    context.writer.writeln('  packages add @qodalis/cli-guid');
+                    context.writer.writeln(
+                        '  packages add @qodalis/cli-server-logs',
+                    );
                 },
             },
             {
@@ -134,10 +151,13 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
     }
 
     async initialize(context: ICliExecutionContext): Promise<void> {
+        this.initializeBrowserEnvironment();
+
         const packages = this.packagesManager.getPackages();
 
         packages.forEach(async (pkg) => {
             await this.scriptsLoader.injectScript(pkg.url);
+            await this.registerLibraryServices(pkg, context);
         });
     }
 
@@ -145,5 +165,46 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         const versionRegex = /@([\d.]+)\//; // Matches "@<version>/"
         const match = url.match(versionRegex);
         return match ? match[1] : null;
+    }
+
+    private async registerLibraryServices(
+        pkg: Package,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        setTimeout(() => {
+            const global = window as any;
+
+            if (!global[pkg.name]) {
+                return;
+            }
+
+            const module = global[pkg.name] as ICliUmdModule;
+
+            if (!module) {
+                return;
+            }
+
+            if (module.dependencies && module.dependencies.length > 0) {
+                module.dependencies.forEach(async (dependency) => {
+                    await this.scriptsLoader.injectScript(dependency.url);
+                });
+            }
+
+            if (module.processors) {
+                module.processors.forEach((processor: ICliCommandProcessor) => {
+                    context.executor.registerProcessor(processor);
+                });
+            }
+        }, 50);
+    }
+
+    private initializeBrowserEnvironment(): void {
+        (window as any).core = {
+            Injectable: () => {},
+        };
+
+        (window as any).angularCli = {
+            DefaultLibraryAuthor,
+        };
     }
 }
