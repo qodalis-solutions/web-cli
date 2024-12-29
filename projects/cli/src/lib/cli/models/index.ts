@@ -43,20 +43,15 @@ export interface ICliCommandProcessor {
     allowUnlistedCommands?: boolean;
 
     /**
+     * If true, the value is required
+     */
+    valueRequired?: boolean;
+
+    /**
      * The version of the command processor
      * @default '1.0.0'
      */
     version?: string;
-
-    /**
-     * Process the command
-     * @param command The command to process
-     * @param context The context in which the command is executed
-     */
-    processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void>;
 
     /**
      * Processors that are nested under this processor
@@ -69,10 +64,33 @@ export interface ICliCommandProcessor {
     parameters?: ICliCommandParameterDescriptor[];
 
     /**
+     * Process the command
+     * @param command The command to process
+     * @param context The context in which the command is executed
+     */
+    processCommand(
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise<void>;
+
+    /**
      * Write the description of the command
      * @param context The context in which the command is executed
      */
     writeDescription?(context: ICliExecutionContext): void;
+
+    /**
+     * A function that validates the command before execution
+     * @param value The value to validate
+     * @returns An object with a valid property that indicates if the value is valid and an optional message property that contains a message to display if the value is not valid
+     */
+    validateBeforeExecution?: (
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+    ) => {
+        valid: boolean;
+        message?: string;
+    };
 
     /**
      * Initialize the command processor
@@ -253,7 +271,22 @@ export interface ICliTerminalWriter {
      * @param content The content to write to the file
      * @returns void
      */
-    writeToFileFile: (fileName: string, content: string) => void;
+    writeToFile: (fileName: string, content: string) => void;
+
+    /**
+     * Write an object array as a table to the terminal
+     * @param objects The objects to write to the table
+     * @returns void
+     */
+    writeObjectArrayTable(objects: any[]): void;
+
+    /**
+     * Write a table to the terminal
+     * @param headers The headers of the table
+     * @param rows The rows of the table
+     * @returns void
+     */
+    writeTable(headers: string[], rows: string[][]): void;
 }
 
 export interface ICliUser extends Record<string, any> {

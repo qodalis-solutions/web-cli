@@ -1,8 +1,13 @@
 import { Inject, Injectable } from '@angular/core';
-import { ICliExecutionContext, ICliCommandProcessor } from '../models';
+import {
+    ICliExecutionContext,
+    ICliCommandProcessor,
+    CliProcessCommand,
+} from '../models';
 import {
     CliClearCommandProcessor,
     CliEchoCommandProcessor,
+    CliEvalCommandProcessor,
     CliHelpCommandProcessor,
 } from '../processors';
 import { CliVersionCommandProcessor } from '../processors/cli-version-command-processor';
@@ -25,6 +30,7 @@ export class CliCommandExecutorService {
     ) {
         this.registerProcessor(new CliClearCommandProcessor());
         this.registerProcessor(new CliEchoCommandProcessor());
+        this.registerProcessor(new CliEvalCommandProcessor());
         this.registerProcessor(cliHelpCommandProcessor);
         this.registerProcessor(cliVersionCommandProcessor);
 
@@ -50,7 +56,18 @@ export class CliCommandExecutorService {
             return;
         }
 
+        const commandToProcess: CliProcessCommand = {
+            command: commandName,
+            chainCommands: chainCommands,
+            rawCommand: command,
+            args: args,
+        };
+
         if (this.versionRequested(context, processor, args)) {
+            return;
+        }
+
+        if (await this.helpRequested(commandToProcess, context)) {
             return;
         }
 
@@ -62,17 +79,32 @@ export class CliCommandExecutorService {
             ? getRightOfWord(commandName, processor.command)
             : undefined;
 
-        try {
-            await processor.processCommand(
-                {
-                    command: commandName,
-                    chainCommands: chainCommands,
-                    rawCommand: command,
-                    args: args,
-                    value: value,
-                },
+        commandToProcess.value = value;
+
+        if (processor.valueRequired && !value) {
+            context.writer.writeError(
+                `Value required for command: ${commandName} <value>`,
+            );
+            return;
+        }
+
+        if (processor.validateBeforeExecution) {
+            const validationResult = processor.validateBeforeExecution(
+                commandToProcess,
                 context,
             );
+
+            if (validationResult.valid === false) {
+                context.writer.writeError(
+                    validationResult?.message ||
+                        'An error occurred while validating the command.',
+                );
+                return;
+            }
+        }
+
+        try {
+            await processor.processCommand(commandToProcess, context);
         } catch (e) {
             context.spinner?.hide();
             context.writer.writeError(`Error executing command: ${e}`);
@@ -129,6 +161,31 @@ export class CliCommandExecutorService {
                     processor.description || 'No description'
                 }`,
             );
+            return true;
+        }
+
+        return false;
+    }
+
+    private async helpRequested(
+        commandToProcess: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise<boolean> {
+        if (commandToProcess.args['h'] || commandToProcess.args['help']) {
+            const helpProcessor = this.findProcessor('help', [])!;
+
+            try {
+                await helpProcessor.processCommand(
+                    {
+                        ...commandToProcess,
+                        command: 'help ' + commandToProcess.command,
+                    },
+                    context,
+                );
+            } catch (e) {
+                context.writer.writeError(`Error executing command: ${e}`);
+            }
+
             return true;
         }
 

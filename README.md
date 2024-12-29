@@ -102,6 +102,7 @@ export class AppModule {}
 - **su**: Switch user
 - **version**: Prints the version information
 - **whoami**: Display current user information
+- **eval**: Evaluate a JavaScript expression
 
 ### Custom Command Example
 
