@@ -3,7 +3,7 @@ import {
     CliProcessCommand,
     ICliCommandProcessor,
     ICliExecutionContext,
-} from '../models';
+} from '@qodalis/cli-core';
 
 export class CliEvalCommandProcessor implements ICliCommandProcessor {
     command = 'eval';

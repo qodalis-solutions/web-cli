@@ -19,12 +19,12 @@ import { CliCommandExecutorService } from './services/cli-command-executor.servi
 import { CommandHistoryService } from './services/command-history.service';
 import {
     CliOptions,
-    CliVersion,
     ICliUserSession,
     ICliUserSessionService,
-} from '..';
+} from '@qodalis/cli-core';
 import { CliExecutionContext } from './services/cli-execution-context';
 import { ICliUserSessionService_TOKEN } from './tokens';
+import { CliVersion } from '..';
 
 @Component({
     selector: 'app-cli',

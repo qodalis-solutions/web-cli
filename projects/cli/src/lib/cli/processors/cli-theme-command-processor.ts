@@ -5,7 +5,7 @@ import {
     ICliCommandAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
-} from '../models';
+} from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '../../constants';
 import { ITheme } from '@xterm/xterm';

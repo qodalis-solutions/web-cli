@@ -3,9 +3,11 @@
   "version": "1.0.1",
   "scripts": {
     "ng": "ng",
-    "build all": "ng build cli && ng build server-logs && ng build demo",
+    "build all": "ng build core && ng build cli && ng build server-logs && ng build demo",
     "start demo": "ng serve demo",
     "build demo": "ng build demo",
+    "build core": "ng build core",
+    "watch core": "ng build core --watch --configuration development",
     "build cli": "ng build cli",
     "watch cli": "ng build cli --watch --configuration development",
     "test": "ng test",

@@ -4,7 +4,7 @@ import {
     ICliPingServerService,
     ICliUserSessionService,
     ICliUsersStoreService,
-} from '../models';
+} from '@qodalis/cli-core';
 
 /**
  * Represents a command processor token for dependency injection

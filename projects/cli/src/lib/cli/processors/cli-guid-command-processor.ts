@@ -3,7 +3,7 @@ import {
     CliProcessCommand,
     ICliCommandProcessor,
     ICliExecutionContext,
-} from '../models';
+} from '@qodalis/cli-core';
 
 /**
  * A command processor for generating and validating GUIDs.

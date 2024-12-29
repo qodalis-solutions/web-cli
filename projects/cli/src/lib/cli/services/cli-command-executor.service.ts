@@ -3,7 +3,7 @@ import {
     ICliExecutionContext,
     ICliCommandProcessor,
     CliProcessCommand,
-} from '../models';
+} from '@qodalis/cli-core';
 import {
     CliClearCommandProcessor,
     CliEchoCommandProcessor,

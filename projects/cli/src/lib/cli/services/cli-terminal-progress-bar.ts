@@ -1,5 +1,5 @@
 import { Terminal } from '@xterm/xterm';
-import { ICliPercentageProgressBar } from '../models';
+import { ICliPercentageProgressBar } from '@qodalis/cli-core';
 
 export class CliTerminalProgressBar implements ICliPercentageProgressBar {
     isRunning: boolean = false;

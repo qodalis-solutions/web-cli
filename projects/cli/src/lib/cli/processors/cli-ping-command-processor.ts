@@ -6,7 +6,7 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     ICliPingServerService,
-} from '../models';
+} from '@qodalis/cli-core';
 import { ICliPingServerService_TOKEN } from '../tokens';
 
 @Injectable()

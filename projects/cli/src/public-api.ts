@@ -4,8 +4,6 @@
 
 export * from './lib/cli.module';
 
-export * from './lib/cli/models';
-
 export * from './lib/cli/services';
 
 export * from './lib/utils';

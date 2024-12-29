@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CliOptions } from '@qodalis/angular-cli';
+import { CliOptions } from '@qodalis/cli-core';
 
 @Component({
     selector: 'app-root',

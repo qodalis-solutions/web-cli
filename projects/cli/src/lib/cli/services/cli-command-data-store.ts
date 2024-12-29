@@ -1,4 +1,4 @@
-import { ICliCommandDataStore, ICliExecutionContext } from '../models';
+import { ICliCommandDataStore, ICliExecutionContext } from '@qodalis/cli-core';
 
 export class CliCommandDataStore implements ICliCommandDataStore {
     public data: Record<string, Record<string, any>> = {};

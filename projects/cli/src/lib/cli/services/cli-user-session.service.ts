@@ -3,7 +3,7 @@ import {
     ICliUserSessionService,
     ICliUserSession,
     ICliUsersStoreService,
-} from '../models';
+} from '@qodalis/cli-core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ICliUsersStoreService_TOKEN } from '../tokens';
 

@@ -1,5 +1,5 @@
 import { Terminal } from '@xterm/xterm';
-import { ICliSpinner } from '../models';
+import { ICliSpinner } from '@qodalis/cli-core';
 
 export class CliTerminalSpinner implements ICliSpinner {
     isRunning: boolean = false;

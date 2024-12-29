@@ -3,6 +3,9 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
+      "@qodalis/cli-core": [
+        "dist/core"
+      ],
       "@qodalis/angular-cli": [
         "dist/cli"
       ],

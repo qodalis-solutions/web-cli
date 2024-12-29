@@ -4,7 +4,7 @@ import {
     CliProcessCommand,
     ICliCommandProcessor,
     ICliExecutionContext,
-} from '../models';
+} from '@qodalis/cli-core';
 import { ScriptLoaderService } from '../services/script-loader.service';
 import { CliPackageManagerService } from '../services/cli-package-manager.service';
 

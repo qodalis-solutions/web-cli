@@ -4,7 +4,7 @@ import {
     ICliCommandAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
-} from '@qodalis/angular-cli';
+} from '@qodalis/cli-core';
 
 @Injectable({
     providedIn: 'root',

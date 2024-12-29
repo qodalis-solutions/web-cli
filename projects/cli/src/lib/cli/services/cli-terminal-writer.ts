@@ -3,7 +3,7 @@ import {
     CliBackgroundColor,
     CliForegroundColor,
     ICliTerminalWriter,
-} from '../models';
+} from '@qodalis/cli-core';
 import { formatJson } from '../../utils';
 
 export class CliTerminalWriter implements ICliTerminalWriter {

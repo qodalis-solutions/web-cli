@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { CliOptions } from '../cli/models';
+import { CliOptions } from '@qodalis/cli-core';
 
 export type CliPanelOptions = CliOptions & {
     /**

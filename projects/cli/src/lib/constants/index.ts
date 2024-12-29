@@ -1,4 +1,4 @@
-import { ICliCommandAuthor } from '../cli/models';
+import { ICliCommandAuthor } from '@qodalis/cli-core';
 
 export const DefaultLibraryAuthor: ICliCommandAuthor = {
     name: 'Nicolae Lupei',

@@ -2,7 +2,7 @@ import {
     CliBackgroundColor,
     CliForegroundColor,
     ICliCommandParameterDescriptor,
-} from '../cli/models';
+} from '@qodalis/cli-core';
 
 export const getParameterValue = (
     p: ICliCommandParameterDescriptor,

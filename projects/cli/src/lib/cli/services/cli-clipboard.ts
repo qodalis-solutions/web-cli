@@ -1,4 +1,4 @@
-import { ICliClipboard, ICliExecutionContext } from '../models';
+import { ICliClipboard, ICliExecutionContext } from '@qodalis/cli-core';
 
 export class CliClipboard implements ICliClipboard {
     constructor(private readonly context: ICliExecutionContext) {}

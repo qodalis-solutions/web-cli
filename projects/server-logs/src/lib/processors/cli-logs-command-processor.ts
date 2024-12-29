@@ -1,15 +1,17 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import {
-    ICliExecutionContext,
-    CliProcessCommand,
-    ICliCommandParameterDescriptor,
-    ICliCommandProcessor,
-    ICliCommandAuthor,
     highlightTextWithBg,
     toQueryString,
     DefaultLibraryAuthor,
 } from '@qodalis/angular-cli';
+import {
+    CliProcessCommand,
+    ICliCommandAuthor,
+    ICliCommandParameterDescriptor,
+    ICliCommandProcessor,
+    ICliExecutionContext,
+} from '@qodalis/cli-core';
 
 const levels = ['verbose', 'debug', 'information', 'warning', 'error', 'fatal'];
 

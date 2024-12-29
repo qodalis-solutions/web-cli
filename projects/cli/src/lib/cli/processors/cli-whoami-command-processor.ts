@@ -5,7 +5,7 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     ICliUserSessionService,
-} from '../models';
+} from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '../../constants';
 import { ICliUserSessionService_TOKEN } from '../tokens';
 import { firstValueFrom } from 'rxjs';

@@ -4,7 +4,7 @@ import {
     CliProcessCommand,
     ICliCommandProcessor,
     ICliExecutionContext,
-} from '../models';
+} from '@qodalis/cli-core';
 
 export class CliRegexCommandProcessor implements ICliCommandProcessor {
     command = 'regex';
@@ -48,6 +48,6 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
         _: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.writer.writeError('Use \'regex\' command with a subcommand');
+        context.writer.writeError("Use 'regex' command with a subcommand");
     }
 }

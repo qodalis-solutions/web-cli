@@ -6,7 +6,7 @@ import {
     ICliCommandParameterDescriptor,
     ICliCommandAuthor,
     CliForegroundColor,
-} from '../models';
+} from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '../../constants';
 
 @Injectable({

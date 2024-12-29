@@ -68,10 +68,11 @@ jobs:
       - name: Build all projects
         run: npm run "build all"
 
-      # Step 5: Replace README.md in dist/cli
-      - name: Replace README.md in dist/cli
+      # Step 5: Replace README.md in main libraries
+      - name: Replace README.md in main libraries
         run: |
           cp README.md dist/cli/
+          cp README.md dist/core/
 
       # Step 6: Publish to NPM
       - name: Publish to NPM
@@ -79,7 +80,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           # Define an array of library names to publish: "lib1" "lib2"
-          LIBRARIES=("cli" "server-logs")
+          LIBRARIES=("core" "cli" "server-logs")
 
           ls dist
 

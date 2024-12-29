@@ -4,7 +4,7 @@ import {
     CliProcessCommand,
     ICliCommandProcessor,
     ICliCommandAuthor,
-} from '../models';
+} from '@qodalis/cli-core';
 
 import { CommandHistoryService } from '../services/command-history.service';
 import { DefaultLibraryAuthor } from '../../constants';

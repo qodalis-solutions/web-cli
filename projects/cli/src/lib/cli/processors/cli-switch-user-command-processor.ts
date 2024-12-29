@@ -7,7 +7,7 @@ import {
     ICliUsersStoreService,
     ICliUserSessionService,
     ICliCommandAuthor,
-} from '../models';
+} from '@qodalis/cli-core';
 
 import { firstValueFrom } from 'rxjs';
 import {

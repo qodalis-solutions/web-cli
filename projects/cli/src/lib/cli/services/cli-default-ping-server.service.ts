@@ -1,4 +1,4 @@
-import { ICliPingServerService } from '../models';
+import { ICliPingServerService } from '@qodalis/cli-core';
 
 export class CliDefaultPingServerService implements ICliPingServerService {
     ping(): Promise<void> {

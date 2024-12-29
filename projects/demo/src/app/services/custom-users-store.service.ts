@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { CliUsersStoreService, ICliUser } from '@qodalis/angular-cli';
+import { CliUsersStoreService } from '@qodalis/angular-cli';
+import { ICliUser } from '@qodalis/cli-core';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable()

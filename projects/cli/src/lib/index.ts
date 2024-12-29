@@ -53,5 +53,3 @@ export const resolveCliProviders = (): Provider[] => {
         resolveCommandProcessorProvider(CliPackagesCommandProcessor),
     ];
 };
-
-export * from './cli/models';

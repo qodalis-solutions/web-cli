@@ -1,10 +1,13 @@
-import {
-    ITerminalInitOnlyOptions,
-    ITerminalOptions,
-    Terminal,
-} from '@xterm/xterm';
-import { CliCommandExecutorService } from '../services/cli-command-executor.service';
+import { Terminal } from '@xterm/xterm';
 import { Observable, Subject } from 'rxjs';
+import {
+    CliBackgroundColor,
+    CliForegroundColor,
+    CliOptions,
+    CliProcessCommand,
+    ICliUser,
+    ICliUserSession,
+} from '../models';
 
 export interface ICliCommandAuthor {
     /**
@@ -151,56 +154,6 @@ export interface ICliCommandParameterDescriptor {
     };
 }
 
-export type CliProcessCommand = {
-    /**
-     * The command that was entered
-     */
-    command: string;
-
-    /**
-     * The chain of commands that were entered
-     */
-    chainCommands: string[];
-
-    /**
-     * The raw command that was entered
-     */
-    rawCommand: string;
-
-    /**
-     * The value of the command
-     */
-    value?: string;
-
-    /**
-     * The arguments that were entered
-     */
-    args: Record<string, any>;
-};
-
-export enum CliForegroundColor {
-    Black = '\x1b[30m',
-    Red = '\x1b[31m',
-    Green = '\x1b[32m',
-    Yellow = '\x1b[33m',
-    Blue = '\x1b[34m',
-    Magenta = '\x1b[35m',
-    Cyan = '\x1b[36m',
-    White = '\x1b[37m',
-    Reset = '\x1b[0m',
-}
-
-export enum CliBackgroundColor {
-    Black = '\x1b[40m',
-    Red = '\x1b[41m',
-    Green = '\x1b[42m',
-    Yellow = '\x1b[43m',
-    Blue = '\x1b[44m',
-    Magenta = '\x1b[45m',
-    Cyan = '\x1b[46m',
-    White = '\x1b[47m',
-}
-
 export interface ICliTerminalWriter {
     /**
      * Write text to the terminal
@@ -289,35 +242,6 @@ export interface ICliTerminalWriter {
     writeTable(headers: string[], rows: string[][]): void;
 }
 
-export interface ICliUser extends Record<string, any> {
-    /**
-     * The id of the user
-     */
-    id: string;
-
-    /**
-     * The name of the user
-     */
-    name: string;
-
-    /**
-     * The email of the user
-     */
-    email: string;
-}
-
-export interface ICliUserSession {
-    /**
-     * The user associated with the session
-     */
-    user: ICliUser;
-
-    /**
-     * The data associated with the user session
-     */
-    data?: Record<string, any>;
-}
-
 export interface ICliProgressBar {
     /**
      * Indicates if the progress bar is running
@@ -377,6 +301,37 @@ export interface ICliClipboard {
 }
 
 /**
+ * Represents a service that executes commands
+ */
+export interface ICliCommandExecutorService {
+    /**
+     *
+     * @param command
+     * @param context
+     */
+    showHelp(
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise<void>;
+
+    /**
+     * List all commands
+     * @returns An array of all commands
+     */
+    listCommands(): string[];
+
+    /**
+     * Find a processor for a command
+     * @param mainCommand
+     * @param chainCommands
+     */
+    findProcessor(
+        mainCommand: string,
+        chainCommands: string[],
+    ): ICliCommandProcessor | undefined;
+}
+
+/**
  * Represents the context in which a command is executed
  */
 export interface ICliExecutionContext {
@@ -413,7 +368,7 @@ export interface ICliExecutionContext {
     /**
      * The command executor to use for executing commands
      */
-    executor: CliCommandExecutorService;
+    executor: ICliCommandExecutorService;
 
     /**
      * The clipboard to use for copying/pasting
@@ -460,26 +415,6 @@ export interface ICliCommandDataStore {
      */
     getData<T = any>(command: string, key: string): T;
 }
-
-/**
- * Options for the CLI
- */
-export type CliOptions = {
-    /**
-     * The welcome message to display when the CLI starts
-     */
-    welcomeMessage?: string;
-
-    /**
-     * Hide the prompt to display when the CLI is ready to accept input
-     */
-    hideUserName?: boolean;
-
-    /**
-     * Custom terminal options
-     */
-    terminalOptions?: ITerminalOptions & ITerminalInitOnlyOptions;
-};
 
 /**
  * Represents a service that manages user sessions in the CLI

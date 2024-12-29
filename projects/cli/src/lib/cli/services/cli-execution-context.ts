@@ -9,7 +9,7 @@ import {
     ICliPercentageProgressBar,
     ICliCommandDataStore,
     ICliClipboard,
-} from '../models';
+} from '@qodalis/cli-core';
 import { CliCommandExecutorService } from './cli-command-executor.service';
 import { CliTerminalWriter } from './cli-terminal-writer';
 import { CliTerminalSpinner } from './cli-terminal-spinner';
