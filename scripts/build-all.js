@@ -54,13 +54,17 @@ async function buildProjects() {
     for (const folder of subfolders) {
       const folderPath = path.join(projectsFolder, folder);
       const command = `cd ${rootFolder} && ng build ${folder}`;
-      await runCommand(command, folderPath).then(() => {
-        if (fs.existsSync(path.join(folderPath, "rollup.config.js"))) {
-          console.log(`Running rollup for ${folder}`);
-          const rollupCommand = `cd ${folderPath} && npx rollup -c`;
-          return runCommand(rollupCommand, folderPath);
-        }
-      });
+      await runCommand(command, folderPath);
+    }
+
+    for (const folder of subfolders) {
+      const folderPath = path.join(projectsFolder, folder);
+
+      if (fs.existsSync(path.join(folderPath, "rollup.config.mjs"))) {
+        console.log(`Running rollup for ${folder}`);
+        const rollupCommand = `cd ${folderPath} && npx rollup -c`;
+        await runCommand(rollupCommand, folderPath);
+      }
     }
 
     console.log("All projects built successfully.");
