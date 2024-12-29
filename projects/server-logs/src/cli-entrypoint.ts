@@ -15,7 +15,7 @@ if (typeof window !== 'undefined') {
 
     (module as any).Injectable = () => {};
 
-    (window as any)['server-logs'] = module;
+    (window as any)['@qodalis/cli-server-logs'] = module;
 } else {
     console.log('window is undefined');
 }

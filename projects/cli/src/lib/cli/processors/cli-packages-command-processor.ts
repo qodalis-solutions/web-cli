@@ -157,6 +157,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
         packages.forEach(async (pkg) => {
             await this.scriptsLoader.injectScript(pkg.url);
+
             await this.registerLibraryServices(pkg, context);
         });
     }
@@ -175,27 +176,36 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             const global = window as any;
 
             if (!global[pkg.name]) {
+                console.warn(`Package ${pkg.name} not found in global scope`);
                 return;
             }
 
             const module = global[pkg.name] as ICliUmdModule;
 
             if (!module) {
+                console.warn(`Module not found in package ${pkg.name}`);
                 return;
             }
 
             if (module.dependencies && module.dependencies.length > 0) {
+                console.info("Injecting module's dependencies");
+
                 module.dependencies.forEach(async (dependency) => {
                     await this.scriptsLoader.injectScript(dependency.url);
                 });
+            } else {
+                console.info(`Module ${pkg.name} has no dependencies`);
             }
 
             if (module.processors) {
+                console.info('Registering processors from module ' + pkg.name);
                 module.processors.forEach((processor: ICliCommandProcessor) => {
                     context.executor.registerProcessor(processor);
                 });
+            } else {
+                console.warn(`Module ${pkg.name} has no processors`);
             }
-        }, 50);
+        }, 100);
     }
 
     private initializeBrowserEnvironment(): void {

@@ -6,7 +6,7 @@ if (typeof window !== 'undefined') {
         processors: [new CliGuidCommandProcessor()],
     };
 
-    (window as any).guid = module;
+    (window as any)['@qodalis/cli-guid'] = module;
 } else {
     console.log('window is undefined');
 }
