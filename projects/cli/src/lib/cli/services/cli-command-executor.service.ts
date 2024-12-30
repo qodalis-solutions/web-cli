@@ -5,6 +5,7 @@ import {
     CliProcessCommand,
     getRightOfWord,
     getParameterValue,
+    ICliCommandExecutorService,
 } from '@qodalis/cli-core';
 import {
     CliClearCommandProcessor,
@@ -19,7 +20,7 @@ import { CliCommandProcessor_TOKEN } from '../tokens';
 @Injectable({
     providedIn: 'root',
 })
-export class CliCommandExecutorService {
+export class CliCommandExecutorService implements ICliCommandExecutorService {
     private processors: ICliCommandProcessor[] = [];
 
     private commandParser: CommandParser = new CommandParser();
@@ -308,15 +309,50 @@ export class CliCommandExecutorService {
     }
 
     public registerProcessor(processor: ICliCommandProcessor): void {
-        const existingIndex = this.processors.findIndex(
-            (p) => p.command === processor.command,
-        );
+        const existingProcessor = this.getProcessorByName(processor.command);
 
-        if (existingIndex !== -1) {
+        if (existingProcessor) {
+            if (existingProcessor.sealed) {
+                console.warn(
+                    `Processor with command: ${processor.command} is sealed and cannot be replaced.`,
+                );
+
+                return;
+            }
+
+            const existingIndex = this.processors.findIndex(
+                (p) => p.command === processor.command,
+            );
+
             // Replace the existing processor
             this.processors[existingIndex] = processor;
         } else {
             this.processors.push(processor);
         }
+    }
+
+    public unregisterProcessor(processor: ICliCommandProcessor): void {
+        const existingProcessor = this.getProcessorByName(processor.command);
+
+        if (existingProcessor) {
+            if (existingProcessor.sealed) {
+                console.warn(
+                    `Processor with command: ${processor.command} is sealed and cannot be removed.`,
+                );
+                return;
+            }
+        }
+
+        const index = this.processors.findIndex(
+            (p) => p.command === processor.command,
+        );
+
+        if (index !== -1) {
+            this.processors.splice(index, 1);
+        }
+    }
+
+    private getProcessorByName(name: string): ICliCommandProcessor | undefined {
+        return this.processors.find((p) => p.command === name);
     }
 }

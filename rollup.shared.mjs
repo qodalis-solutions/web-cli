@@ -7,11 +7,12 @@ export const baseConfig = {
       clean: true, // Remove previous caches
     }),
   ],
-  external: ["@qodalis/cli-core"],
+  external: ["@qodalis/cli-core", "@angular/core"],
 };
 
 export const sharedGlobals = {
   "@qodalis/cli-core": "core",
+  "@angular/core": "ngCore",
 };
 
 export const buildLibraryOutputConfig = (libName) => {

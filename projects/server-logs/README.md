@@ -1,24 +1,18 @@
-# ServerLogs
+# Cli extension
 
-This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.0.
+The `@qodalis/cli-server-logs` package is a CLI extension designed to provide seamless server log management and analysis capabilities for the Qodalis CLI.
 
-## Code scaffolding
+# Features
 
-Run `ng generate component component-name --project server-logs` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module --project server-logs`.
-> Note: Don't forget to add `--project server-logs` or else it will be added to the default project in your `angular.json` file. 
+    View Logs: Fetch and display server logs directly in the CLI.
+    Filter Logs: Apply filters based on date, severity, or keywords.
+    Download Logs: Download logs to a local file for further analysis.
+    Integration: Integrates seamlessly with Qodalis CLI for server monitoring.
 
-## Build
+# Installation
 
-Run `ng build server-logs` to build the project. The build artifacts will be stored in the `dist/` directory.
+```bash
+packages add @qodalis/cli-server-logs
+```
 
-## Publishing
-
-After building your library with `ng build server-logs`, go to the dist folder `cd dist/server-logs` and run `npm publish`.
-
-## Running unit tests
-
-Run `ng test server-logs` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+This command downloads and registers the extension for use within the CLI environment.

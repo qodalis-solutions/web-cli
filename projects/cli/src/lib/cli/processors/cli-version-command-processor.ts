@@ -21,6 +21,8 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
+    sealed = true;
+
     async processCommand(
         _: CliProcessCommand,
         context: ICliExecutionContext,

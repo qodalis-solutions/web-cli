@@ -1,0 +1,9 @@
+{
+  "/loghub/*": {
+    "target": "https://localhost:7189/",
+    "changeOrigin": true,
+    "secure": false,
+    "ws": true,
+    "logLevel": "debug"
+  }
+}

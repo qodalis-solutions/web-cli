@@ -57,6 +57,20 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
                 };
             },
         },
+        {
+            name: 'server',
+            type: 'string',
+            description:
+                'The server to connect to, e.g. "http://localhost:5000"',
+            required: false,
+        },
+        {
+            name: 'hub',
+            type: 'string',
+            description:
+                'The hub to connect to, e.g. "loghub" (default) or "loghub2"',
+            required: false,
+        },
     ];
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
@@ -78,12 +92,24 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         let qs = '?';
-        if (Object.keys(command.args).length > 0) {
-            qs += toQueryString(command.args);
+
+        const args = this.excludeKeys(command.args, ['server', 'hub']);
+
+        if (Object.keys(args).length > 0) {
+            qs += toQueryString(args);
         }
 
+        const hub = command.args['hub'] || 'loghub';
+
+        let server = command.args['server'] || '';
+        server = server.replace(/\/+$/, '');
+
+        const url = `${server}/${hub}${qs}`;
+
+        console.log('Connecting to:', url);
+
         this.hubConnection = new signalR.HubConnectionBuilder()
-            .withUrl('/loghub' + qs)
+            .withUrl(url)
             .build();
 
         await this.hubConnection
@@ -93,7 +119,7 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
 
                 context.writer.writeWarning('Connected to live logs');
                 if (qs.length) {
-                    Object.keys(command.args).forEach((key) => {
+                    Object.keys(args).forEach((key) => {
                         context.writer.writeWarning(
                             `Filtering logs by: ${key}=${command.args[key]}`,
                         );
@@ -130,11 +156,23 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
             .catch((err) => {
                 console.error('Error starting SignalR connection:', err);
                 context.writer.writeError('Failed to connect to live logs');
+                context.writer.writeError(err?.toString());
             });
     }
 
     writeDescription(context: ICliExecutionContext): void {
         context.writer.writeln('Show live logs');
+    }
+
+    private excludeKeys<T extends Record<string, any>>(
+        record: T,
+        keysToExclude: string[],
+    ): Partial<T> {
+        return Object.fromEntries(
+            Object.entries(record).filter(
+                ([key]) => !keysToExclude.includes(key),
+            ),
+        ) as Partial<T>;
     }
 
     private isValidRegex(pattern: string): boolean {

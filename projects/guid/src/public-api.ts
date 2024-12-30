@@ -2,4 +2,4 @@
  * Public API Surface of guid
  */
 
-export * from './lib/guid.module';
+export * from './lib/cli-guid.module';

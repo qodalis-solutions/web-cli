@@ -8,4 +8,4 @@ import { resolveCommandProcessorProvider } from '@qodalis/angular-cli';
     exports: [],
     providers: [resolveCommandProcessorProvider(CliGuidCommandProcessor)],
 })
-export class GuidModule {}
+export class CliGuidModule {}

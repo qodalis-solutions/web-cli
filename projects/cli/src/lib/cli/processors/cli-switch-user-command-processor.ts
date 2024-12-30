@@ -36,7 +36,9 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
         },
     ];
 
-    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
+    author = DefaultLibraryAuthor;
+
+    sealed = true;
 
     constructor(
         @Inject(ICliUserSessionService_TOKEN)

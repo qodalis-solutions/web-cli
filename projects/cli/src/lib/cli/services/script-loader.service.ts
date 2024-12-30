@@ -25,6 +25,7 @@ export class ScriptLoaderService {
         },
     ): Promise<{
         xhr: XMLHttpRequest;
+        content?: string;
     }> {
         const { onProgress } = options || {};
 
@@ -43,12 +44,10 @@ export class ScriptLoaderService {
 
             xhr.onload = () => {
                 if (xhr.status === 200) {
-                    const script = document.createElement('script');
-                    script.text = xhr.responseText;
-                    document.head.appendChild(script);
                     onProgress?.(100);
                     resolve({
                         xhr,
+                        content: xhr.responseText,
                     });
                 } else {
                     reject(
@@ -65,5 +64,11 @@ export class ScriptLoaderService {
 
             xhr.send();
         });
+    }
+
+    injectBodyScript(code: string): void {
+        const script = document.createElement('script');
+        script.text = code;
+        document.head.appendChild(script);
     }
 }

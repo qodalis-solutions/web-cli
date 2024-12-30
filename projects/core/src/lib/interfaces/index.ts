@@ -58,6 +58,11 @@ export interface ICliCommandProcessor {
     version?: string;
 
     /**
+     * If true, the processor is sealed and cannot be extended
+     */
+    sealed?: boolean;
+
+    /**
      * Processors that are nested under this processor
      */
     processors?: ICliCommandProcessor[];
@@ -336,6 +341,12 @@ export interface ICliCommandExecutorService {
      * @param processor
      */
     registerProcessor(processor: ICliCommandProcessor): void;
+
+    /**
+     * Unregister a processor
+     * @param processor
+     */
+    unregisterProcessor(processor: ICliCommandProcessor): void;
 }
 
 /**
@@ -487,9 +498,4 @@ export interface ICliUmdModule {
      * The processors for the module
      */
     processors: ICliCommandProcessor[];
-
-    /**
-     * The dependencies for the module
-     */
-    dependencies?: Package[];
 }

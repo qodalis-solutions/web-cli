@@ -117,6 +117,11 @@ Output:
 root:~$
 ```
 
+## Available packages
+
+- [@qodalis/cli-guid](https://www.npmjs.com/package/@qodalis/cli-guid) - utility for guid
+- [@qodalis/cli-server-logs](https://www.npmjs.com/package/@qodalis/cli-server-logs) - utility for live server logs
+
 ## Extending with Custom Commands
 
 You can extend the CLI by creating a class that implements the ICliCommandProcessor interface. This allows you to define new commands and their behavior.

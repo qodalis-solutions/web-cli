@@ -13,13 +13,15 @@ import { CliPackageManagerService } from '../services/cli-package-manager.servic
 
 @Injectable()
 export class CliPackagesCommandProcessor implements ICliCommandProcessor {
-    command = 'packages';
+    readonly command = 'packages';
 
     description = 'Manage packages in the cli';
 
     author = DefaultLibraryAuthor;
 
-    version = '1.0.1';
+    readonly version = '1.0.1';
+
+    readonly sealed = true;
 
     processors?: ICliCommandProcessor[] | undefined = [];
 
@@ -75,9 +77,18 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     context.progressBar.show();
 
                     try {
-                        const requestUrl = `https://unpkg.com/${command.value!}`;
+                        const packageUrl = `https://unpkg.com/${command.value!}`;
+
+                        const packageInfo = await scriptsLoader.getScript(
+                            packageUrl + '/package.json',
+                        );
+
+                        const packgeInfo = JSON.parse(
+                            packageInfo.content || '{}',
+                        );
+
                         const response = await scriptsLoader.getScript(
-                            requestUrl,
+                            packageUrl,
                             {
                                 onProgress: (progress) => {
                                     context.progressBar.update(progress);
@@ -85,23 +96,28 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                             },
                         );
 
-                        const version = scope.extractVersionFromUnpkg(
-                            response.xhr.responseURL,
-                        );
-
                         const pkg: Package = {
                             name: command.value!,
-                            version: version || 'latest',
+                            version: packgeInfo.version || 'latest',
                             url: response.xhr.responseURL,
+                            dependencies: packgeInfo.cliDependencies || [],
                         };
 
+                        await scope.registerPackageDependencies(pkg);
+
+                        if (response.content) {
+                            await scope.scriptsLoader.injectBodyScript(
+                                response.content,
+                            );
+                        }
+
                         packagesManager.addPackage(pkg);
+
+                        context.progressBar.complete();
 
                         context.writer.writeSuccess(
                             'Package added successfully',
                         );
-
-                        context.progressBar.complete();
                     } catch (e) {
                         context.progressBar.complete();
                         context.writer.writeError(
@@ -126,7 +142,23 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     context.progressBar.show();
 
                     try {
-                        packagesManager.removePackage(command.value!);
+                        const pkg = packagesManager.removePackage(
+                            command.value!,
+                        );
+
+                        if (pkg) {
+                            const module = (window as any)[
+                                pkg.name
+                            ] as ICliUmdModule;
+                            if (module) {
+                                module.processors?.forEach((processor) => {
+                                    context.executor.unregisterProcessor(
+                                        processor,
+                                    );
+                                });
+                            }
+                        }
+
                         context.progressBar.complete();
                         context.writer.writeSuccess(
                             `Package ${command.value!} removed successfully`,
@@ -168,14 +200,10 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         const packages = this.packagesManager.getPackages();
 
         packages.forEach(async (pkg) => {
+            await this.registerPackageDependencies(pkg);
+
             await this.scriptsLoader.injectScript(pkg.url);
         });
-    }
-
-    private extractVersionFromUnpkg(url: string): string | null {
-        const versionRegex = /@([\d.]+)\//; // Matches "@<version>/"
-        const match = url.match(versionRegex);
-        return match ? match[1] : null;
     }
 
     private async registerUmdModule(
@@ -186,10 +214,21 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        if (module.dependencies && module.dependencies.length > 0) {
-            console.info("Injecting module's dependencies");
+        if (!!module.processors) {
+            console.info('Registering processors from module ' + module.name);
+            module.processors.forEach((processor: ICliCommandProcessor) => {
+                context.executor.registerProcessor(processor);
+            });
+        } else {
+            console.warn(`Module ${module.name} has no processors`);
+        }
+    }
 
-            module.dependencies.forEach(async (dependency) => {
+    private async registerPackageDependencies(pkg: Package): Promise<void> {
+        if (pkg.dependencies && pkg.dependencies.length > 0) {
+            console.info(`Injecting package ${pkg.name} dependencies`);
+
+            pkg.dependencies.forEach(async (dependency) => {
                 await this.scriptsLoader.injectScript(dependency.url);
 
                 if (dependency.globalName) {
@@ -212,16 +251,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                 }
             });
         } else {
-            console.info(`Module ${module.name} has no dependencies`);
-        }
-
-        if (module.processors) {
-            console.info('Registering processors from module ' + module.name);
-            module.processors.forEach((processor: ICliCommandProcessor) => {
-                context.executor.registerProcessor(processor);
-            });
-        } else {
-            console.warn(`Module ${module.name} has no processors`);
+            console.info(`Package ${pkg.name} has no dependencies`);
         }
     }
 

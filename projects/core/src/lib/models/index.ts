@@ -122,4 +122,9 @@ export interface Package {
      * The unpkg url to the package
      */
     url: string;
+
+    /**
+     * The dependencies for the module
+     */
+    dependencies?: Package[];
 }

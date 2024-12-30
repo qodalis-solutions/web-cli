@@ -4,7 +4,6 @@ import {
     CliProcessCommand,
     ICliCommandProcessor,
     ICliCommandParameterDescriptor,
-    ICliCommandAuthor,
     CliForegroundColor,
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
@@ -15,11 +14,13 @@ import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 export class CliHelpCommandProcessor implements ICliCommandProcessor {
     command = 'help';
 
-    description?: string | undefined = 'Displays help for a command';
+    description = 'Displays help for a command';
 
     allowUnlistedCommands?: boolean | undefined = true;
 
-    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
+    author = DefaultLibraryAuthor;
+
+    sealed = true;
 
     constructor() {}
 

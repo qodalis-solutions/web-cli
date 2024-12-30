@@ -1,24 +1,18 @@
-# Guid
+# Cli extension
 
-This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.2.0.
+The `@qodalis/cli-guid` package is a CLI extension designed to provide GUID (Globally Unique Identifier) generation and management capabilities to the Qodalis CLI.
 
-## Code scaffolding
+# Features
 
-Run `ng generate component component-name --project guid` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module --project guid`.
-> Note: Don't forget to add `--project guid` or else it will be added to the default project in your `angular.json` file. 
+    Generate GUIDs: Quickly generate unique GUIDs for various use cases.
+    Validate GUIDs: Verify if a given string is a valid GUID.
+    Custom Formats: Support for different GUID formats and patterns.
+    Integration: Seamlessly integrates with the Qodalis CLI environment.
 
-## Build
+# Installation
 
-Run `ng build guid` to build the project. The build artifacts will be stored in the `dist/` directory.
+```bash
+packages add @qodalis/cli-guid
+```
 
-## Publishing
-
-After building your library with `ng build guid`, go to the dist folder `cd dist/guid` and run `npm publish`.
-
-## Running unit tests
-
-Run `ng test guid` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+This command downloads and registers the extension for use within the CLI environment.

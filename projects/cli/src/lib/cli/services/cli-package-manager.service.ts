@@ -46,13 +46,16 @@ export class CliPackageManagerService {
      * Removes a package by name and saves the updated list in localStorage.
      * @param packageName {string} The name of the package to remove
      */
-    removePackage(packageName: string): void {
+    removePackage(packageName: string): Package {
         const packages = this.getPackages();
+        const packageToRemove = packages.find((p) => p.name === packageName);
         const updatedPackages = packages.filter((p) => p.name !== packageName);
         if (packages.length === updatedPackages.length) {
             throw new Error(`Package with name "${packageName}" not found.`);
         }
         this.savePackages(updatedPackages);
+
+        return packageToRemove!;
     }
 
     /**

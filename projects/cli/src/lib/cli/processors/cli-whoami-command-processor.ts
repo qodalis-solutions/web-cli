@@ -20,6 +20,8 @@ export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
+    sealed = true;
+
     constructor(
         @Inject(ICliUserSessionService_TOKEN)
         private readonly userSessionService: ICliUserSessionService,

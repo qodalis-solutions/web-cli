@@ -1,7 +1,7 @@
 {
   "name": "@qodalis/cli-server-logs",
-  "version": "1.0.3",
-  "description": "An Angular CLI extension for generating and validating GUIDs.",
+  "version": "1.0.4",
+  "description": "An Angular CLI extension for server logs.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
   "repository": {
@@ -30,5 +30,13 @@
   "sideEffects": false,
   "scripts": {
     "rollup-compile": "npx rollup -c"
-  }
+  },
+  "cliDependencies": [
+    {
+      "name": "signalR",
+      "globalName": "signalR",
+      "version": "latest",
+      "url": "https://unpkg.com/@microsoft/signalr@8.0.7/dist/browser/signalr.js"
+    }
+  ]
 }
