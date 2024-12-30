@@ -11,7 +11,7 @@ export const baseConfig = {
 };
 
 export const sharedGlobals = {
-  "@qodalis/cli-core": "core",
+  "@qodalis/cli-core": "cliCore",
   "@angular/core": "ngCore",
 };
 
