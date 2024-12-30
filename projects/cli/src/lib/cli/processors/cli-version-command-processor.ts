@@ -7,7 +7,7 @@ import {
 } from '@qodalis/cli-core';
 
 import { CliVersion } from '../..';
-import { DefaultLibraryAuthor } from '../../constants';
+import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 
 @Injectable({
     providedIn: 'root',

@@ -14,7 +14,7 @@ import {
     ICliUserSessionService_TOKEN,
     ICliUsersStoreService_TOKEN,
 } from '../tokens';
-import { DefaultLibraryAuthor } from '../../constants';
+import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 
 @Injectable({
     providedIn: 'root',

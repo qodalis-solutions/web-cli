@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@angular/core';
-import { DefaultLibraryAuthor } from '../../constants';
+import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import {
     CliProcessCommand,
     ICliCommandAuthor,

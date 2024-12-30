@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-server-logs",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "An Angular CLI extension for generating and validating GUIDs.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
@@ -23,8 +23,8 @@
   },
   "dependencies": {
     "tslib": "^2.3.0",
-    "@qodalis/cli-core": "^0.0.1",
-    "@qodalis/angular-cli": "^1.0.10",
+    "@qodalis/cli-core": "^0.0.3",
+    "@qodalis/angular-cli": "^1.0.11",
     "@microsoft/signalr": "^8.0.7"
   },
   "sideEffects": false,

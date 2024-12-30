@@ -13,7 +13,7 @@ import { CliServerLogsModule } from '@qodalis/cli-server-logs';
 
 @NgModule({
     declarations: [AppComponent],
-    imports: [BrowserModule, CliModule, CliServerLogsModule],
+    imports: [BrowserModule, CliModule],
     providers: [
         {
             useClass: CliCustomUsersStoreService,

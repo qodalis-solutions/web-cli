@@ -1,5 +1,4 @@
-import { DefaultLibraryAuthor } from '../../constants';
-import { highlightTextWithBg } from '../../utils';
+import { DefaultLibraryAuthor, highlightTextWithBg } from '@qodalis/cli-core';
 import {
     CliProcessCommand,
     ICliCommandProcessor,

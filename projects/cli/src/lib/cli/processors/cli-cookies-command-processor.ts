@@ -6,7 +6,7 @@ import {
     ICliExecutionContext,
 } from '@qodalis/cli-core';
 
-import { DefaultLibraryAuthor } from '../../constants';
+import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 
 @Injectable({
     providedIn: 'root',

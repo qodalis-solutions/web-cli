@@ -7,7 +7,7 @@ import {
 } from '@qodalis/cli-core';
 
 import { CommandHistoryService } from '../services/command-history.service';
-import { DefaultLibraryAuthor } from '../../constants';
+import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 
 @Injectable({
     providedIn: 'root',

@@ -103,7 +103,23 @@ export type CliOptions = {
  * Represents a package that can be installed
  */
 export interface Package {
+    /**
+     * The name of the package
+     */
     name: string;
+
+    /**
+     * The global name used to access the package
+     */
+    globalName?: string;
+
+    /**
+     * The version of the package
+     */
     version: string;
+
+    /**
+     * The unpkg url to the package
+     */
     url: string;
 }

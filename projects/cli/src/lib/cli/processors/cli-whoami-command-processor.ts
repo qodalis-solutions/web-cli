@@ -6,7 +6,7 @@ import {
     ICliExecutionContext,
     ICliUserSessionService,
 } from '@qodalis/cli-core';
-import { DefaultLibraryAuthor } from '../../constants';
+import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { ICliUserSessionService_TOKEN } from '../tokens';
 import { firstValueFrom } from 'rxjs';
 

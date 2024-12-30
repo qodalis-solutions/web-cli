@@ -7,7 +7,7 @@ import {
     ICliExecutionContext,
 } from '@qodalis/cli-core';
 
-import { DefaultLibraryAuthor } from '../../constants';
+import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { ITheme } from '@xterm/xterm';
 
 const themeOptions: ITheme = {

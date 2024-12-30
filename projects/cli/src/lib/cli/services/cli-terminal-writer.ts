@@ -2,9 +2,9 @@ import { Terminal } from '@xterm/xterm';
 import {
     CliBackgroundColor,
     CliForegroundColor,
+    formatJson,
     ICliTerminalWriter,
 } from '@qodalis/cli-core';
-import { formatJson } from '../../utils';
 
 export class CliTerminalWriter implements ICliTerminalWriter {
     constructor(public readonly terminal: Terminal) {}

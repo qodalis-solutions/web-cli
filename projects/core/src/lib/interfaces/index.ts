@@ -479,6 +479,11 @@ export interface ICliPingServerService {
  */
 export interface ICliUmdModule {
     /**
+     * The name of the module
+     */
+    name: string;
+
+    /**
      * The processors for the module
      */
     processors: ICliCommandProcessor[];

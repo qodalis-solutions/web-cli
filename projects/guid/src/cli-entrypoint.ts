@@ -1,12 +1,9 @@
-import { ICliUmdModule } from '@qodalis/cli-core';
+import { bootUmdModule, ICliUmdModule } from '@qodalis/cli-core';
 import { CliGuidCommandProcessor } from './lib';
 
-if (typeof window !== 'undefined') {
-    const module: ICliUmdModule = {
-        processors: [new CliGuidCommandProcessor()],
-    };
+const module: ICliUmdModule = {
+    name: '@qodalis/cli-guid',
+    processors: [new CliGuidCommandProcessor()],
+};
 
-    (window as any)['@qodalis/cli-guid'] = module;
-} else {
-    console.log('window is undefined');
-}
+bootUmdModule(module);

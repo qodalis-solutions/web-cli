@@ -3,6 +3,8 @@ import {
     ICliExecutionContext,
     ICliCommandProcessor,
     CliProcessCommand,
+    getRightOfWord,
+    getParameterValue,
 } from '@qodalis/cli-core';
 import {
     CliClearCommandProcessor,
@@ -11,7 +13,7 @@ import {
     CliHelpCommandProcessor,
 } from '../processors';
 import { CliVersionCommandProcessor } from '../processors/cli-version-command-processor';
-import { CommandParser, getParameterValue, getRightOfWord } from '../../utils';
+import { CommandParser } from '../../utils';
 import { CliCommandProcessor_TOKEN } from '../tokens';
 
 @Injectable({

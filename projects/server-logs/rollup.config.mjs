@@ -1,11 +1,9 @@
-import typescript from 'rollup-plugin-typescript2';
+import { baseConfig, buildLibraryOutputConfig } from "../../rollup.shared.mjs";
 
 export default {
-    input: 'src/cli-entrypoint.ts',
-    output: {
-        file: '../../dist/server-logs/umd/index.js',
-        format: 'umd',
-        name: 'guid',
-    },
-    plugins: [typescript()],
+  ...baseConfig,
+  input: "src/cli-entrypoint.ts",
+  output: {
+    ...buildLibraryOutputConfig("server-logs"),
+  },
 };

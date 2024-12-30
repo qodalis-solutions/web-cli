@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { DefaultLibraryAuthor } from '../../constants';
+import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import {
     CliProcessCommand,
     ICliCommandProcessor,
     ICliExecutionContext,
     ICliUmdModule,
+    initializeBrowserEnvironment,
     Package,
 } from '@qodalis/cli-core';
 import { ScriptLoaderService } from '../services/script-loader.service';
@@ -96,7 +97,9 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
                         packagesManager.addPackage(pkg);
 
-                        await scope.registerLibraryServices(pkg, context);
+                        context.writer.writeSuccess(
+                            'Package added successfully',
+                        );
 
                         context.progressBar.complete();
                     } catch (e) {
@@ -125,6 +128,9 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     try {
                         packagesManager.removePackage(command.value!);
                         context.progressBar.complete();
+                        context.writer.writeSuccess(
+                            `Package ${command.value!} removed successfully`,
+                        );
                     } catch (e) {
                         context.progressBar.complete();
                         context.writer.writeError(
@@ -151,14 +157,18 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
     }
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.initializeBrowserEnvironment();
+        initializeBrowserEnvironment({
+            handlers: [
+                async (module: ICliUmdModule) => {
+                    await this.registerUmdModule(module, context);
+                },
+            ],
+        });
 
         const packages = this.packagesManager.getPackages();
 
         packages.forEach(async (pkg) => {
             await this.scriptsLoader.injectScript(pkg.url);
-
-            await this.registerLibraryServices(pkg, context);
         });
     }
 
@@ -168,53 +178,79 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         return match ? match[1] : null;
     }
 
-    private async registerLibraryServices(
-        pkg: Package,
+    private async registerUmdModule(
+        module: ICliUmdModule,
         context: ICliExecutionContext,
     ): Promise<void> {
-        setTimeout(() => {
-            const global = window as any;
+        if (!module) {
+            return;
+        }
 
-            if (!global[pkg.name]) {
-                console.warn(`Package ${pkg.name} not found in global scope`);
-                return;
-            }
+        if (module.dependencies && module.dependencies.length > 0) {
+            console.info("Injecting module's dependencies");
 
-            const module = global[pkg.name] as ICliUmdModule;
+            module.dependencies.forEach(async (dependency) => {
+                await this.scriptsLoader.injectScript(dependency.url);
 
-            if (!module) {
-                console.warn(`Module not found in package ${pkg.name}`);
-                return;
-            }
+                if (dependency.globalName) {
+                    const isAvailable = await this.waitForGlobal(
+                        dependency.globalName,
+                        3000,
+                    );
 
-            if (module.dependencies && module.dependencies.length > 0) {
-                console.info("Injecting module's dependencies");
+                    if (!isAvailable) {
+                        console.error(
+                            `Dependency ${dependency.globalName} not found in global scope within timeout`,
+                        );
 
-                module.dependencies.forEach(async (dependency) => {
-                    await this.scriptsLoader.injectScript(dependency.url);
-                });
-            } else {
-                console.info(`Module ${pkg.name} has no dependencies`);
-            }
+                        return;
+                    } else {
+                        console.info(
+                            `Dependency ${dependency.globalName} is available in global scope`,
+                        );
+                    }
+                }
+            });
+        } else {
+            console.info(`Module ${module.name} has no dependencies`);
+        }
 
-            if (module.processors) {
-                console.info('Registering processors from module ' + pkg.name);
-                module.processors.forEach((processor: ICliCommandProcessor) => {
-                    context.executor.registerProcessor(processor);
-                });
-            } else {
-                console.warn(`Module ${pkg.name} has no processors`);
-            }
-        }, 100);
+        if (module.processors) {
+            console.info('Registering processors from module ' + module.name);
+            module.processors.forEach((processor: ICliCommandProcessor) => {
+                context.executor.registerProcessor(processor);
+            });
+        } else {
+            console.warn(`Module ${module.name} has no processors`);
+        }
     }
 
-    private initializeBrowserEnvironment(): void {
-        (window as any).core = {
-            Injectable: () => {},
-        };
+    /**
+     * Waits until a global variable is available on the `window` object.
+     * @param globalName {string} The name of the global variable to check.
+     * @param timeout {number} The maximum time to wait in milliseconds.
+     * @returns {Promise<boolean>} Resolves to `true` if the variable is found, `false` otherwise.
+     */
+    private waitForGlobal(
+        globalName: string,
+        timeout: number,
+    ): Promise<boolean> {
+        return new Promise((resolve) => {
+            const interval = 50; // Check every 50ms
+            let elapsed = 0;
 
-        (window as any).angularCli = {
-            DefaultLibraryAuthor,
-        };
+            const check = () => {
+                if ((window as any)[globalName]) {
+                    resolve(true);
+                } else if (elapsed >= timeout) {
+                    resolve(false);
+                } else {
+                    elapsed += interval;
+                    setTimeout(check, interval);
+                }
+            };
+
+            check();
+        });
     }
 }
