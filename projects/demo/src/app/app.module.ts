@@ -15,13 +15,7 @@ import { CliTextToImageModule } from '@qodalis/cli-text-to-image';
 
 @NgModule({
     declarations: [AppComponent],
-    imports: [
-        BrowserModule,
-        CliModule,
-        CliServerLogsModule,
-        CliGuidModule,
-        CliTextToImageModule,
-    ],
+    imports: [BrowserModule, CliModule, CliServerLogsModule, CliGuidModule],
     providers: [
         {
             useClass: CliCustomUsersStoreService,
