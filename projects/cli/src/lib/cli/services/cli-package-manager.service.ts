@@ -19,6 +19,15 @@ export class CliPackageManagerService {
     }
 
     /**
+     * Retrieves a package by name from the list.
+     * @param packageName {string} The name of the package to retrieve
+     * @returns {Package | undefined} The package if found, undefined otherwise
+     */
+    getPackage(packageName: string): Package | undefined {
+        return this.getPackages().find((p) => p.name === packageName);
+    }
+
+    /**
      * Checks if a package with the given name exists in the list.
      * @param packageName {string} The name of the package to check
      * @returns {boolean} True if the package exists, false otherwise
@@ -56,6 +65,24 @@ export class CliPackageManagerService {
         this.savePackages(updatedPackages);
 
         return packageToRemove!;
+    }
+
+    /**
+     * Updates an existing package in the list and saves the updated list in localStorage.
+     * @param pkg {Package} The updated package
+     * @throws {Error} If the package to update is not found
+     * @returns {void}
+     * @throws {Error} If the package to update is not found
+     * @returns {void}
+     */
+    updatePackage(pkg: Package): void {
+        const packages = this.getPackages();
+        const index = packages.findIndex((p) => p.name === pkg.name);
+        if (index === -1) {
+            throw new Error(`Package with name "${pkg.name}" not found.`);
+        }
+        packages[index] = pkg;
+        this.savePackages(packages);
     }
 
     /**

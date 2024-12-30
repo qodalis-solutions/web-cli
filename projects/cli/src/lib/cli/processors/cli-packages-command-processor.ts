@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { DefaultLibraryAuthor } from '@qodalis/cli-core';
+import { CliForegroundColor, DefaultLibraryAuthor } from '@qodalis/cli-core';
 import {
     CliProcessCommand,
     ICliCommandProcessor,
@@ -83,6 +83,8 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                             packageUrl + '/package.json',
                         );
 
+                        context.progressBar.update(20);
+
                         const packgeInfo = JSON.parse(
                             packageInfo.content || '{}',
                         );
@@ -96,6 +98,8 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                             },
                         );
 
+                        context.progressBar.update(70);
+
                         const pkg: Package = {
                             name: command.value!,
                             version: packgeInfo.version || 'latest',
@@ -104,6 +108,8 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         };
 
                         await scope.registerPackageDependencies(pkg);
+
+                        context.progressBar.update(90);
 
                         if (response.content) {
                             await scope.scriptsLoader.injectBodyScript(
@@ -126,7 +132,13 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     }
                 },
                 writeDescription(context) {
-                    context.writer.writeln('  packages add <package>');
+                    context.writer.writeln(
+                        '  packages add <package> ' +
+                            context.writer.wrapInColor(
+                                '# Add a package',
+                                CliForegroundColor.Green,
+                            ),
+                    );
                     context.writer.writeln('  packages add @qodalis/cli-guid');
                     context.writer.writeln(
                         '  packages add @qodalis/cli-server-logs',
@@ -171,6 +183,41 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     }
                 },
             },
+            {
+                command: 'update',
+                description:
+                    'Update a package in the cli to the latest version or update all packages',
+                allowUnlistedCommands: true,
+                valueRequired: false,
+                async processCommand(command, context) {
+                    if (!!command.value) {
+                        await scope.updatePackage(command.value!, context);
+                    } else {
+                        const packages = packagesManager.getPackages();
+                        for (const pkg of packages) {
+                            await scope.updatePackage(pkg.name, context);
+                        }
+
+                        context.writer.writeSuccess('All packages updated');
+                    }
+                },
+                writeDescription(context) {
+                    context.writer.writeln(
+                        '  packages update <package> ' +
+                            context.writer.wrapInColor(
+                                '# Update a specific package',
+                                CliForegroundColor.Green,
+                            ),
+                    );
+                    context.writer.writeln(
+                        '  packages update ' +
+                            context.writer.wrapInColor(
+                                '# Update all packages',
+                                CliForegroundColor.Green,
+                            ),
+                    );
+                },
+            },
         ];
     }
 
@@ -199,11 +246,79 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
         const packages = this.packagesManager.getPackages();
 
-        packages.forEach(async (pkg) => {
+        for (const pkg of packages) {
             await this.registerPackageDependencies(pkg);
 
             await this.scriptsLoader.injectScript(pkg.url);
-        });
+        }
+    }
+
+    private async updatePackage(
+        name: string,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        context.progressBar.show();
+
+        try {
+            context.progressBar.update(10);
+            const pkg = this.packagesManager.getPackage(name);
+
+            if (!pkg) {
+                context.progressBar.complete();
+                context.writer.writeError(`Package ${name} not found`);
+                return;
+            }
+
+            const packageUrl = `https://unpkg.com/${name!}`;
+
+            const packageInfo = await this.scriptsLoader.getScript(
+                packageUrl + '/package.json',
+            );
+
+            context.progressBar.update(20);
+
+            const packgeInfo = JSON.parse(packageInfo.content || '{}');
+
+            if (packgeInfo.version === pkg.version) {
+                context.progressBar.complete();
+                context.writer.writeInfo(
+                    `Package ${name} is already up to date`,
+                );
+                return;
+            }
+
+            const response = await this.scriptsLoader.getScript(packageUrl, {
+                onProgress: (progress) => {
+                    context.progressBar.update(progress);
+                },
+            });
+
+            context.progressBar.update(70);
+
+            const updatedPkg: Package = {
+                name: name,
+                version: packgeInfo.version || 'latest',
+                url: response.xhr.responseURL,
+                dependencies: packgeInfo.cliDependencies || [],
+            };
+
+            await this.registerPackageDependencies(updatedPkg);
+
+            context.progressBar.update(90);
+
+            if (response.content) {
+                await this.scriptsLoader.injectBodyScript(response.content);
+            }
+
+            this.packagesManager.updatePackage(updatedPkg);
+
+            context.progressBar.complete();
+
+            context.writer.writeSuccess('Package updated successfully');
+        } catch (e) {
+            context.progressBar.complete();
+            context.writer.writeError(e?.toString() || 'Unknown error');
+        }
     }
 
     private async registerUmdModule(
