@@ -71,6 +71,12 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
                 'The hub to connect to, e.g. "loghub" (default) or "loghub2"',
             required: false,
         },
+        {
+            name: 'file',
+            type: 'boolean',
+            description: 'Export logs to a file',
+            required: false,
+        },
     ];
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
@@ -93,7 +99,7 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         let qs = '?';
 
-        const args = this.excludeKeys(command.args, ['server', 'hub']);
+        const args = this.excludeKeys(command.args, ['server', 'hub', 'file']);
 
         if (Object.keys(args).length > 0) {
             qs += toQueryString(args);
@@ -111,6 +117,8 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
         this.hubConnection = new signalR.HubConnectionBuilder()
             .withUrl(url)
             .build();
+
+        const buffer: string[] = [];
 
         await this.hubConnection
             .start()
@@ -134,6 +142,8 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
                         context.writer.writeln('');
                     }
 
+                    buffer.push(log);
+
                     context.writer.writeln(
                         `\x1b[33m${++index}\x1b[0m. ` +
                             (command.args['pattern']
@@ -149,6 +159,11 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
                 const subscription = context.onAbort.subscribe(() => {
                     this.hubConnection.stop();
                     context.writer.writeWarning('Disconnected from live logs');
+
+                    if (command.args['file']) {
+                        const filename = `logs-${new Date().toISOString()}.txt`;
+                        context.writer.writeToFile(filename, buffer.join('\n'));
+                    }
 
                     subscription.unsubscribe();
                 });

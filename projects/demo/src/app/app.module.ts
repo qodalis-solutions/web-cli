@@ -10,10 +10,11 @@ import {
 import { CliDemoCommandProcessor } from './processors/cli-demo-command-processor';
 import { CliCustomUsersStoreService } from './services/custom-users-store.service';
 import { CliServerLogsModule } from '@qodalis/cli-server-logs';
+import { CliGuidModule } from '@qodalis/cli-guid';
 
 @NgModule({
     declarations: [AppComponent],
-    imports: [BrowserModule, CliModule],
+    imports: [BrowserModule, CliModule, CliServerLogsModule, CliGuidModule],
     providers: [
         {
             useClass: CliCustomUsersStoreService,
