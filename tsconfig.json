@@ -3,18 +3,11 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "@qodalis/cli-core": [
-        "dist/core"
-      ],
-      "@qodalis/angular-cli": [
-        "dist/cli"
-      ],
-      "@qodalis/cli-server-logs": [
-        "dist/server-logs"
-      ],
-      "@qodalis/cli-guid": [
-        "dist/guid"
-      ]
+      "@qodalis/cli-core": ["dist/core"],
+      "@qodalis/angular-cli": ["dist/cli"],
+      "@qodalis/cli-server-logs": ["dist/server-logs"],
+      "@qodalis/cli-guid": ["dist/guid"],
+      "@qodalis/cli-text-to-image": ["dist/text-to-image"]
     },
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
@@ -32,10 +25,7 @@
     "target": "ES2022",
     "module": "ES2022",
     "useDefineForClassFields": false,
-    "lib": [
-      "ES2022",
-      "dom"
-    ]
+    "lib": ["ES2022", "dom"]
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

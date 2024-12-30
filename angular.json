@@ -230,6 +230,39 @@
           }
         }
       }
+    },
+    "text-to-image": {
+      "projectType": "library",
+      "root": "projects/text-to-image",
+      "sourceRoot": "projects/text-to-image/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/text-to-image/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/text-to-image/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/text-to-image/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "projects/text-to-image/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
     }
   }
 }

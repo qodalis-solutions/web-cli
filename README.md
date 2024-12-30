@@ -121,6 +121,7 @@ root:~$
 
 - [@qodalis/cli-guid](https://www.npmjs.com/package/@qodalis/cli-guid) - utility for guid
 - [@qodalis/cli-server-logs](https://www.npmjs.com/package/@qodalis/cli-server-logs) - utility for live server logs
+- [@qodalis/cli-text-to-image](https://www.npmjs.com/package/@qodalis/cli-text-to-image) - utility to generate images from text
 
 ## Extending with Custom Commands
 
