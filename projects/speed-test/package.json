@@ -1,7 +1,7 @@
 {
-  "name": "@qodalis/cli-guid",
-  "version": "1.0.6",
-  "description": "An Angular CLI extension for generating and validating GUIDs.",
+  "name": "@qodalis/cli-speed-test",
+  "version": "0.0.1",
+  "description": "An Angular CLI extension that provides speed test utilities",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
   "repository": {
@@ -14,7 +14,7 @@
     "cli",
     "qodalis",
     "terminal",
-    "guid"
+    "speed-test"
   ],
   "umd": "./umd/index.js",
   "unpkg": "./umd/index.js",
@@ -25,11 +25,18 @@
   "dependencies": {
     "tslib": "^2.3.0",
     "@qodalis/cli-core": "^0.0.5",
-    "@qodalis/angular-cli": "^1.0.14"
+    "@qodalis/angular-cli": "^1.0.17"
   },
   "sideEffects": false,
   "scripts": {
-    "tsc-compilejs": "tsc -p tsconfig.browser.json",
     "rollup-compile": "npx rollup -c"
-  }
+  },
+  "cliDependencies": [
+    {
+      "name": "axios",
+      "globalName": "axios",
+      "version": "1.7.9",
+      "url": "https://unpkg.com/axios@1.7.9/dist/axios.min.js"
+    }
+  ]
 }

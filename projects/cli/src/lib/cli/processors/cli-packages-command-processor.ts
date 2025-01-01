@@ -44,7 +44,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     if (packages.length === 0) {
                         context.writer.writeInfo('No packages installed');
                         context.writer.writeInfo(
-                            "Use 'packages add <package>' to add a package",
+                            'Use \'packages add <package>\' to add a package',
                         );
                         return;
                     }
@@ -190,7 +190,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                 allowUnlistedCommands: true,
                 valueRequired: false,
                 async processCommand(command, context) {
-                    if (!!command.value) {
+                    if (command.value) {
                         await scope.updatePackage(command.value!, context);
                     } else {
                         const packages = packagesManager.getPackages();
@@ -329,7 +329,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        if (!!module.processors) {
+        if (module.processors) {
             console.info('Registering processors from module ' + module.name);
             module.processors.forEach((processor: ICliCommandProcessor) => {
                 context.executor.registerProcessor(processor);

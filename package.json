@@ -10,7 +10,7 @@
     "watch core": "ng build core --watch --configuration development",
     "build cli": "ng build cli",
     "watch cli": "ng build cli --watch --configuration development",
-    "test": "ng test",
+    "test": "ng test --watch=false --browsers=ChromeHeadless",
     "lint": "ng lint",
     "lint fix": "ng lint --fix",
     "format": "prettier --write \"projects/**/*.{ts,html,css,scss}\""
@@ -28,6 +28,7 @@
     "@microsoft/signalr": "^8.0.7",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
+    "axios": "^1.7.9",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.13.0"

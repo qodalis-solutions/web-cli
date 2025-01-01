@@ -5,5 +5,14 @@
     "secure": false,
     "ws": true,
     "logLevel": "debug"
+  },
+  "/speed-test/*": {
+    "target": "https://nbg1-speed.hetzner.com/100MB.bin",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/speed-test": ""
+    }
   }
 }

@@ -3,6 +3,7 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
+import { generateGUID, validateGUID } from '../utilities';
 
 /**
  * A command processor for generating and validating GUIDs.
@@ -30,15 +31,34 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
                         required: false,
                         type: 'boolean',
                     },
+                    {
+                        name: 'count',
+                        description:
+                            'Number of GUIDs to generate, default is 1',
+                        defaultValue: '1',
+                        required: false,
+                        type: 'number',
+                    },
                 ],
                 processCommand: async (command, context) => {
+                    const count = command.args['count']
+                        ? parseInt(command.args['count'])
+                        : 1;
+
                     const copyToClipboard =
                         command.args['copy'] || command.args['c'];
-                    const guid = CliGuidCommandProcessor.generateGUID();
-                    context.writer.writeln(guid);
+
+                    const items = [];
+
+                    for (let i = 0; i < count; i++) {
+                        const guid = generateGUID();
+                        context.writer.writeln(guid);
+
+                        items.push(guid);
+                    }
 
                     if (copyToClipboard) {
-                        await context.clipboard.write(guid);
+                        await context.clipboard.write(items.join('\n'));
                         context.writer.writeInfo(
                             'The GUID has been copied to the clipboard',
                         );
@@ -57,9 +77,7 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
                         return;
                     }
 
-                    const isValid = CliGuidCommandProcessor.validateGUID(
-                        command.value,
-                    );
+                    const isValid = validateGUID(command.value);
 
                     if (isValid) {
                         context.writer.writeSuccess('Yes, that is GUID!');
@@ -89,24 +107,5 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
         context.writer.writeln(
             '  guid validate 123e4567-e89b-12d3-a456-426614174000',
         );
-    }
-
-    public static generateGUID(): string {
-        // Generate a GUID in the format of xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
-            /[xy]/g,
-            (char) => {
-                const random = (Math.random() * 16) | 0; // Random integer between 0 and 15
-                const value = char === 'x' ? random : (random & 0x3) | 0x8; // Ensure 'y' starts with 8, 9, A, or B
-                return value.toString(16); // Convert to hexadecimal
-            },
-        );
-    }
-
-    public static validateGUID(guid: string): boolean {
-        // Regular expression to match a valid GUID format
-        const guidRegex =
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
-        return guidRegex.test(guid);
     }
 }

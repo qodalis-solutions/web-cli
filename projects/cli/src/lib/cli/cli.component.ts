@@ -359,6 +359,6 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
             this.resizeObserver.disconnect();
         }
 
-        this.terminal.dispose();
+        this.terminal?.dispose();
     }
 }

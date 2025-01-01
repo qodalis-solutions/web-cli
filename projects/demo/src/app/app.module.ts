@@ -12,10 +12,20 @@ import { CliCustomUsersStoreService } from './services/custom-users-store.servic
 import { CliServerLogsModule } from '@qodalis/cli-server-logs';
 import { CliGuidModule } from '@qodalis/cli-guid';
 import { CliTextToImageModule } from '@qodalis/cli-text-to-image';
+import { CliRegexModule } from '@qodalis/cli-regex';
+import { CliSpeedTestModule } from '@qodalis/cli-speed-test';
 
 @NgModule({
     declarations: [AppComponent],
-    imports: [BrowserModule, CliModule, CliServerLogsModule, CliGuidModule],
+    imports: [
+        BrowserModule,
+        CliModule,
+        CliServerLogsModule,
+        CliGuidModule,
+        CliTextToImageModule,
+        CliRegexModule,
+        CliSpeedTestModule,
+    ],
     providers: [
         {
             useClass: CliCustomUsersStoreService,

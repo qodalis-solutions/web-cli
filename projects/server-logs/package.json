@@ -35,7 +35,7 @@
     {
       "name": "signalR",
       "globalName": "signalR",
-      "version": "latest",
+      "version": "8.0.7",
       "url": "https://unpkg.com/@microsoft/signalr@8.0.7/dist/browser/signalr.js"
     }
   ]
