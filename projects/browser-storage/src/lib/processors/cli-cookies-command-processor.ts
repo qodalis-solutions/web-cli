@@ -80,7 +80,7 @@ export class CliCookiesCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key, ...value] = command.chainCommands.slice(2);
+                    const [key, ...value] = command.chainCommands.slice(1);
 
                     const expires = new Date();
                     expires.setFullYear(expires.getFullYear() + 1);
@@ -97,7 +97,7 @@ export class CliCookiesCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key] = command.chainCommands.slice(2);
+                    const [key] = command.chainCommands.slice(1);
 
                     document.cookie = `${key}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
                     context.writer.writeSuccess('Cookie removed successfully');

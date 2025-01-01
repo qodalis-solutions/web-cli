@@ -30,7 +30,7 @@ export class CliLocalStorageCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key] = command.chainCommands.slice(2);
+                    const [key] = command.chainCommands.slice(1);
 
                     const value = localStorage.getItem(key);
                     context.writer.writeln(value || 'null');
@@ -44,7 +44,7 @@ export class CliLocalStorageCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key, ...value] = command.chainCommands.slice(2);
+                    const [key, ...value] = command.chainCommands.slice(1);
 
                     localStorage.setItem(key, value.join(' '));
                     context.writer.writeSuccess('Value set successfully');

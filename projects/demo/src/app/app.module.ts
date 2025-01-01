@@ -14,6 +14,7 @@ import { CliGuidModule } from '@qodalis/cli-guid';
 import { CliTextToImageModule } from '@qodalis/cli-text-to-image';
 import { CliRegexModule } from '@qodalis/cli-regex';
 import { CliSpeedTestModule } from '@qodalis/cli-speed-test';
+import { CliBrowserStorageModule } from '@qodalis/cli-browser-storage';
 
 @NgModule({
     declarations: [AppComponent],
@@ -25,6 +26,7 @@ import { CliSpeedTestModule } from '@qodalis/cli-speed-test';
         CliTextToImageModule,
         CliRegexModule,
         CliSpeedTestModule,
+        CliBrowserStorageModule,
     ],
     providers: [
         {

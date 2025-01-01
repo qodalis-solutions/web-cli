@@ -53,10 +53,6 @@ export { CliVersionCommandProcessor } from './cli-version-command-processor';
 
 export { CliHistoryCommandProcessor } from './cli-history-command-processor';
 
-export { CliLocalStorageCommandProcessor } from './cli-local-storage-command-processor';
-
-export { CliCookiesCommandProcessor } from './cli-cookies-command-processor';
-
 export { CliWhoamiCommandProcessor } from './cli-whoami-command-processor';
 
 export { CliThemeCommandProcessor } from './cli-theme-command-processor';

@@ -1,6 +1,6 @@
 import { generateGUID, validateGUID } from '../lib/utilities';
 
-describe('CliGuidNodule', () => {
+describe('CliGuidModule', () => {
     const guid = generateGUID();
 
     it('guid should have a value', () => {

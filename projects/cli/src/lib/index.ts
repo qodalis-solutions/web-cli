@@ -10,9 +10,7 @@ import { resolveCommandProcessorProvider } from './utils';
 import {
     CliSwitchUserCommandProcessor,
     CliHistoryCommandProcessor,
-    CliLocalStorageCommandProcessor,
     CliWhoamiCommandProcessor,
-    CliCookiesCommandProcessor,
     CliThemeCommandProcessor,
     CliPingCommandProcessor,
     CliPackagesCommandProcessor,
@@ -42,8 +40,6 @@ export const resolveCliProviders = (): Provider[] => {
         resolveCommandProcessorProvider(CliPingCommandProcessor),
         resolveCommandProcessorProvider(CliSwitchUserCommandProcessor),
         resolveCommandProcessorProvider(CliHistoryCommandProcessor),
-        resolveCommandProcessorProvider(CliLocalStorageCommandProcessor),
-        resolveCommandProcessorProvider(CliCookiesCommandProcessor),
         resolveCommandProcessorProvider(CliWhoamiCommandProcessor),
         resolveCommandProcessorProvider(CliThemeCommandProcessor),
         resolveCommandProcessorProvider(CliPackagesCommandProcessor),

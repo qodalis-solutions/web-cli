@@ -9,7 +9,8 @@
       "@qodalis/cli-guid": ["dist/guid"],
       "@qodalis/cli-text-to-image": ["dist/text-to-image"],
       "@qodalis/cli-regex": ["dist/regex"],
-      "@qodalis/cli-speed-test": ["dist/speed-test"]
+      "@qodalis/cli-speed-test": ["dist/speed-test"],
+      "@qodalis/cli-browser-storage": ["dist/browser-storage"]
     },
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
