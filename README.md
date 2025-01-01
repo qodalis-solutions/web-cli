@@ -62,7 +62,6 @@ cliOptions = {};
 - **cookies**: Interact with the cookies
 - **history**: Prints the command history of the current session
 - **local-storage**: Interact with the local storage
-- **regex**: Provide utilities for working with regular expressions
 - **su**: Switch user
 - **version**: Prints the version information
 - **whoami**: Display current user information
@@ -122,6 +121,7 @@ root:~$
 - [@qodalis/cli-guid](https://www.npmjs.com/package/@qodalis/cli-guid) - utility for guid
 - [@qodalis/cli-server-logs](https://www.npmjs.com/package/@qodalis/cli-server-logs) - utility for live server logs
 - [@qodalis/cli-text-to-image](https://www.npmjs.com/package/@qodalis/cli-text-to-image) - utility to generate images from text
+- [@qodalis/cli-regex](https://www.npmjs.com/package/@qodalis/cli-regex) - provide utilities for working with regular expressions
 
 ## Extending with Custom Commands
 

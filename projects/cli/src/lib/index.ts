@@ -14,7 +14,6 @@ import {
     CliWhoamiCommandProcessor,
     CliCookiesCommandProcessor,
     CliThemeCommandProcessor,
-    CliRegexCommandProcessor,
     CliPingCommandProcessor,
     CliPackagesCommandProcessor,
 } from './cli/processors';
@@ -47,7 +46,6 @@ export const resolveCliProviders = (): Provider[] => {
         resolveCommandProcessorProvider(CliCookiesCommandProcessor),
         resolveCommandProcessorProvider(CliWhoamiCommandProcessor),
         resolveCommandProcessorProvider(CliThemeCommandProcessor),
-        resolveCommandProcessorProvider(CliRegexCommandProcessor),
         resolveCommandProcessorProvider(CliPackagesCommandProcessor),
     ];
 };

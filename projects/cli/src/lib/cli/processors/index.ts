@@ -61,8 +61,6 @@ export { CliWhoamiCommandProcessor } from './cli-whoami-command-processor';
 
 export { CliThemeCommandProcessor } from './cli-theme-command-processor';
 
-export { CliRegexCommandProcessor } from './cli-regex-command-processor';
-
 export { CliEvalCommandProcessor } from './cli-eval-command-processor';
 
 export { CliPackagesCommandProcessor } from './cli-packages-command-processor';

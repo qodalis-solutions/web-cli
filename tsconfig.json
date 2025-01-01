@@ -7,7 +7,8 @@
       "@qodalis/angular-cli": ["dist/cli"],
       "@qodalis/cli-server-logs": ["dist/server-logs"],
       "@qodalis/cli-guid": ["dist/guid"],
-      "@qodalis/cli-text-to-image": ["dist/text-to-image"]
+      "@qodalis/cli-text-to-image": ["dist/text-to-image"],
+      "@qodalis/cli-regex": ["dist/regex"]
     },
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
