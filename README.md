@@ -23,6 +23,8 @@ npm install @qodalis/angular-cli
 
 ## Usage
 
+![Install packages](docs/assets/help_command.gif)
+
 After installing, you can integrate the CLI component into your Angular application:
 
 ## Basic Setup
@@ -41,13 +43,24 @@ export class AppModule {}
 2. Add the CLI Component to Your Template:
 
 ```html
-<app-cli [options]="cliOptions"></app-cli>
+<!-- 
+    Show a terminal
+ -->
+<app-cli [options]="cliOptions" />
+
+<!-- 
+    Show a terminal wrapped in a container that is located at the bottom of the page and can be collapsed/expanded
+ -->
+<app-cli-panel />
 ```
 
 3. Configure the CLI:
 
 ```typescript
-cliOptions = {};
+cliOptions = {
+  welcomeMessage: "-- your custom welcome message --",
+  //TODO: supports multiple customizations
+};
 ```
 
 ## Example Commands
@@ -59,9 +72,7 @@ cliOptions = {};
 - **echo \<message\>**: Prints the provided message to the terminal.
 - **ping**: Pings the server
 - **theme**: Interact with the cli theme
-- **cookies**: Interact with the cookies
 - **history**: Prints the command history of the current session
-- **local-storage**: Interact with the local storage
 - **su**: Switch user
 - **version**: Prints the version information
 - **whoami**: Display current user information
@@ -75,6 +86,8 @@ cliOptions = {};
 - Display results in a structured format.
 
 ### Usage
+
+![Install packages](docs/assets/install_packages.gif)
 
 ### Add a Package
 
@@ -124,6 +137,7 @@ root:~$
 - [@qodalis/cli-regex](https://www.npmjs.com/package/@qodalis/cli-regex) - provide utilities for working with regular expressions
 - [@qodalis/cli-speed-test](https://www.npmjs.com/package/@qodalis/cli-speed-test) - run the internet speed test
 - [@qodalis/cli-browser-storage](https://www.npmjs.com/package/@qodalis/cli-browser-storage) - provide commands to operate with browser storage like cookie, localStorage etc.
+- More will be implemented ...
 
 ## Extending with Custom Commands
 
