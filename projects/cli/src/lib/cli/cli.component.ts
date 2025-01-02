@@ -33,17 +33,17 @@ import { CliVersion } from '..';
     encapsulation: ViewEncapsulation.None,
 })
 export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
-    @ViewChild('terminal', { static: true }) terminalDiv!: ElementRef;
-
     @Input() options?: CliOptions;
 
+    private currentLine = '';
+    private executionContext?: CliExecutionContext;
+    private currentUserSession: ICliUserSession | undefined;
+
+    // xterm dependencies
+    @ViewChild('terminal', { static: true }) terminalDiv!: ElementRef;
     private terminal!: Terminal;
     private fitAddon!: FitAddon;
     private resizeObserver!: ResizeObserver;
-
-    private executionContext?: CliExecutionContext;
-
-    private currentUserSession: ICliUserSession | undefined;
 
     constructor(
         @Inject(ICliUserSessionService_TOKEN)
@@ -52,12 +52,13 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         private readonly commandHistoryService: CommandHistoryService,
     ) {
         this.userManagementService.getUserSession().subscribe((session) => {
-            const isInit = this.currentUserSession === undefined;
             this.currentUserSession = session;
             this.executionContext?.setSession(session!);
 
-            if (!isInit) {
-                this.terminal.clear();
+            if (this.terminal) {
+                this.printPrompt({
+                    reset: true,
+                });
             }
         });
     }
@@ -134,8 +135,9 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
                 if (event.code === 'Escape') {
                     // Handle Escape
                     this.executionContext?.abort();
-                    this.terminal.writeln('');
-                    this.printPrompt();
+                    this.printPrompt({
+                        newLine: true,
+                    });
 
                     return false;
                 }
@@ -188,9 +190,20 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         this.resizeObserver.observe(this.terminalDiv.nativeElement);
     }
 
-    private currentLine = '';
+    private printPrompt(options?: {
+        reset?: boolean;
+        newLine?: boolean;
+    }): void {
+        const { reset, newLine } = options || {};
 
-    private printPrompt(): void {
+        if (reset) {
+            this.terminal.write('\x1b[2K\r');
+        }
+
+        if (newLine) {
+            this.terminal.write('\r\n');
+        }
+
         this.currentLine = '';
         this.cursorPosition = 0;
 

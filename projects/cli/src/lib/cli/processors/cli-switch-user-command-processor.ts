@@ -6,7 +6,6 @@ import {
     ICliCommandParameterDescriptor,
     ICliUsersStoreService,
     ICliUserSessionService,
-    ICliCommandAuthor,
 } from '@qodalis/cli-core';
 
 import { firstValueFrom } from 'rxjs';
@@ -40,6 +39,8 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
 
     sealed = true;
 
+    valueRequired = true;
+
     constructor(
         @Inject(ICliUserSessionService_TOKEN)
         private readonly userSessionService: ICliUserSessionService,
@@ -54,7 +55,7 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
         try {
             const fromUser = context.userSession?.user;
 
-            const toUser = command.chainCommands.at(1);
+            const toUser = command.value;
 
             if (!fromUser) {
                 context.writer.writeError('Missing user to switch from');

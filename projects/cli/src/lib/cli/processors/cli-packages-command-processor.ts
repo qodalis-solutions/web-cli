@@ -44,7 +44,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     if (packages.length === 0) {
                         context.writer.writeInfo('No packages installed');
                         context.writer.writeInfo(
-                            'Use \'packages add <package>\' to add a package',
+                            "Use 'packages add <package>' to add a package",
                         );
                         return;
                     }
@@ -343,7 +343,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         if (pkg.dependencies && pkg.dependencies.length > 0) {
             console.info(`Injecting package ${pkg.name} dependencies`);
 
-            pkg.dependencies.forEach(async (dependency) => {
+            for (const dependency of pkg.dependencies) {
                 await this.scriptsLoader.injectScript(dependency.url);
 
                 if (dependency.globalName) {
@@ -364,7 +364,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         );
                     }
                 }
-            });
+            }
         } else {
             console.info(`Package ${pkg.name} has no dependencies`);
         }

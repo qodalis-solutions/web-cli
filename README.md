@@ -35,12 +35,33 @@ After installing, you can integrate the CLI component into your Angular applicat
 import { CliModule } from "@qodalis/angular-cli";
 
 @NgModule({
-  imports: [CliModule],
+  imports: [CliModule, Cli***Module],
 })
 export class AppModule {}
 ```
 
-2. Add the CLI Component to Your Template:
+2. Set the styles in the **angular.json**
+
+```json
+{
+  "projects": {
+    "your-project": {
+      "architect": {
+        //...
+        "options": {
+          //...
+          "styles": [
+            //styles
+            "node_modules/@qodalis/angular-cli/src/assets/styles.sass"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+3. Add the CLI Component to Your Template:
 
 ```html
 <!-- 
@@ -54,7 +75,7 @@ export class AppModule {}
 <app-cli-panel />
 ```
 
-3. Configure the CLI:
+4. Configure the CLI:
 
 ```typescript
 cliOptions = {

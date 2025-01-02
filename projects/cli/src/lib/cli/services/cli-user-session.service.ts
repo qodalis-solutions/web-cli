@@ -13,7 +13,13 @@ import { ICliUsersStoreService_TOKEN } from '../tokens';
 export class CliUserSessionService implements ICliUserSessionService {
     private userSessionSubject = new BehaviorSubject<
         ICliUserSession | undefined
-    >(undefined);
+    >({
+        user: {
+            id: 'anonymous',
+            name: 'Anonymous',
+            email: 'anonymous',
+        },
+    });
 
     constructor(
         @Inject(ICliUsersStoreService_TOKEN)
