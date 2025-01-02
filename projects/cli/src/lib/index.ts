@@ -20,8 +20,6 @@ import {
     ScriptLoaderService,
 } from './cli/services';
 
-export const CliVersion = '1.0.1';
-
 export const resolveCliProviders = (): Provider[] => {
     return [
         ScriptLoaderService,

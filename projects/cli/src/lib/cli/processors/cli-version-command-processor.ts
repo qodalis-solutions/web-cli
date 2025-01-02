@@ -6,8 +6,8 @@ import {
     ICliCommandAuthor,
 } from '@qodalis/cli-core';
 
-import { CliVersion } from '../..';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
+import { LIBRARY_VERSION } from '../../version';
 
 @Injectable({
     providedIn: 'root',
@@ -27,7 +27,7 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
         _: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.writer.writeln(`CLI Version: ${CliVersion}`);
+        context.writer.writeln(`CLI Version: ${LIBRARY_VERSION}`);
     }
 
     writeDescription(context: ICliExecutionContext): void {

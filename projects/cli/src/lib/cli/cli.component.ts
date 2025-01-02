@@ -24,7 +24,7 @@ import {
 } from '@qodalis/cli-core';
 import { CliExecutionContext } from './services/cli-execution-context';
 import { ICliUserSessionService_TOKEN } from './tokens';
-import { CliVersion } from '..';
+import { LIBRARY_VERSION } from '../version';
 
 @Component({
     selector: 'app-cli',
@@ -78,7 +78,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
             this.terminal.writeln(this.options.welcomeMessage);
         } else {
             const welcomeMessage = [
-                `Web CLI [Version ${CliVersion}]`,
+                `Web CLI [Version ${LIBRARY_VERSION}]`,
                 '(c) 2024 Qodalis Solutions. All rights reserved.',
                 '',
                 "Type 'help' to get started.",

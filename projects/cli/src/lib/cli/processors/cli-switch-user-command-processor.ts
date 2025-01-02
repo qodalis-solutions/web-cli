@@ -86,7 +86,7 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
 
             context.writer.writeSuccess(`Switch to ${toUser} was successfully`);
 
-            if (command.args['reload']) {
+            if (command.args['reload'] || command.args['r']) {
                 context.writer.writeln('Reloading the page in 3 seconds...');
                 setTimeout(() => {
                     window.location.reload();
