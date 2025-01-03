@@ -1,5 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CliOptions } from '@qodalis/cli-core';
+import { CliCanViewService } from '../services';
+import { Subscription } from 'rxjs';
 
 export type CliPanelOptions = CliOptions & {
     /**
@@ -17,7 +19,7 @@ export type TerminalTab = {
  * A component that displays the CLI on the bottom of page.
  */
 @Component({
-    selector: 'app-cli-panel',
+    selector: 'cli-panel',
     templateUrl: './cli-panel.component.html',
     styleUrls: ['./cli-panel.component.sass'],
 })
@@ -31,6 +33,18 @@ export class CliPanelComponent {
     activeTabId: number | null = null; // ID of the currently active tab
 
     private nextTabId = 1; // To generate unique IDs for tabs
+
+    visible = false;
+
+    private subscriptions: Subscription = new Subscription();
+
+    constructor(private readonly canView: CliCanViewService) {
+        this.subscriptions.add(
+            this.canView.canView().subscribe((canView) => {
+                this.visible = canView;
+            }),
+        );
+    }
 
     addTab(): void {
         const newTab: TerminalTab = {

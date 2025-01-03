@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "build all": "node ./scripts/inject-versions.js && node ./scripts/build-all.js",
-    "start demo": "ng serve demo",
+    "start demo": "ng serve demo --port 4300",
     "build demo": "ng build demo",
     "build core": "ng build core",
     "watch core": "ng build core --watch --configuration development",

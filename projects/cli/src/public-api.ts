@@ -10,6 +10,8 @@ export * from './lib/utils';
 
 export * from './lib/cli/tokens';
 
+export * from './lib/services';
+
 export {
     CliPanelComponent,
     CliPanelOptions,

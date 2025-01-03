@@ -7,6 +7,8 @@ import { Package } from '@qodalis/cli-core';
 export class CliPackageManagerService {
     private readonly storageKey = 'cliPackages';
 
+    public QODALIS_COMMAND_PREFIX = '@qodalis/cli-';
+
     constructor() {}
 
     /**
@@ -24,7 +26,11 @@ export class CliPackageManagerService {
      * @returns {Package | undefined} The package if found, undefined otherwise
      */
     getPackage(packageName: string): Package | undefined {
-        return this.getPackages().find((p) => p.name === packageName);
+        return this.getPackages().find(
+            (p) =>
+                p.name === packageName ||
+                p.name === this.QODALIS_COMMAND_PREFIX + packageName,
+        );
     }
 
     /**
@@ -33,9 +39,7 @@ export class CliPackageManagerService {
      * @returns {boolean} True if the package exists, false otherwise
      */
     hasPackage(packageName: string): boolean {
-        return (
-            this.getPackages().find((p) => p.name === packageName) !== undefined
-        );
+        return this.getPackage(packageName) !== undefined;
     }
 
     /**
@@ -57,11 +61,24 @@ export class CliPackageManagerService {
      */
     removePackage(packageName: string): Package {
         const packages = this.getPackages();
-        const packageToRemove = packages.find((p) => p.name === packageName);
-        const updatedPackages = packages.filter((p) => p.name !== packageName);
+        const packageToRemove = packages.find(
+            (p) =>
+                p.name === packageName ||
+                p.name === this.QODALIS_COMMAND_PREFIX + packageName,
+        );
+
+        if (!packageToRemove) {
+            throw new Error(`Package with name "${packageName}" not found.`);
+        }
+
+        const updatedPackages = packages.filter(
+            (p) => p.name !== packageToRemove.name,
+        );
+
         if (packages.length === updatedPackages.length) {
             throw new Error(`Package with name "${packageName}" not found.`);
         }
+
         this.savePackages(updatedPackages);
 
         return packageToRemove!;

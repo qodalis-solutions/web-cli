@@ -27,7 +27,7 @@ import { ICliUserSessionService_TOKEN } from './tokens';
 import { LIBRARY_VERSION } from '../version';
 
 @Component({
-    selector: 'app-cli',
+    selector: 'cli',
     templateUrl: './cli.component.html',
     styleUrls: ['./cli.component.sass'],
     encapsulation: ViewEncapsulation.None,

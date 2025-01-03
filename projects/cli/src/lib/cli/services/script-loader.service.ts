@@ -26,8 +26,11 @@ export class ScriptLoaderService {
     ): Promise<{
         xhr: XMLHttpRequest;
         content?: string;
+        error?: any;
     }> {
         const { onProgress } = options || {};
+
+        let fetchProgress = 0;
 
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
@@ -38,13 +41,19 @@ export class ScriptLoaderService {
                     const progress = Math.round(
                         (event.loaded / event.total) * 100,
                     );
+                    fetchProgress = progress;
+
                     onProgress?.(progress);
+                } else {
+                    fetchProgress += 20;
+                    onProgress?.(fetchProgress);
                 }
             };
 
             xhr.onload = () => {
                 if (xhr.status === 200) {
                     onProgress?.(100);
+                    fetchProgress = 100;
                     resolve({
                         xhr,
                         content: xhr.responseText,

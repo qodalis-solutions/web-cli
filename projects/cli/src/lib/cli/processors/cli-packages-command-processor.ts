@@ -25,6 +25,8 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
     processors?: ICliCommandProcessor[] | undefined = [];
 
+    private registeredDependencies: string[] = [];
+
     constructor(
         private readonly scriptsLoader: ScriptLoaderService,
         private readonly packagesManager: CliPackageManagerService,
@@ -77,20 +79,64 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     context.progressBar.show();
 
                     try {
-                        const packageUrl = `https://unpkg.com/${command.value!}`;
+                        const promises = [
+                            scriptsLoader
+                                .getScript(
+                                    `https://unpkg.com/${command.value!}` +
+                                        '/package.json',
+                                )
+                                .catch((error) => ({
+                                    error,
+                                    content: null,
+                                    xhr: null,
+                                })),
+                        ];
 
-                        const packageInfo = await scriptsLoader.getScript(
-                            packageUrl + '/package.json',
-                        );
+                        if (
+                            !command.value!.startsWith(
+                                packagesManager.QODALIS_COMMAND_PREFIX,
+                            )
+                        ) {
+                            promises.push(
+                                scriptsLoader
+                                    .getScript(
+                                        `https://unpkg.com/${packagesManager.QODALIS_COMMAND_PREFIX}${command.value!}` +
+                                            '/package.json',
+                                    )
+                                    .catch((error) => ({
+                                        error,
+                                        content: null,
+                                        xhr: null,
+                                    })),
+                            );
+                        }
+
+                        const packages = await Promise.all(promises);
+
+                        if (packages.every((p) => p.error)) {
+                            throw packages[0].error;
+                        }
+
+                        const validResponses = packages
+                            .filter((p) => p.content)
+                            .map((p) => JSON.parse(p.content || '{}'));
 
                         context.progressBar.update(20);
 
-                        const packgeInfo = JSON.parse(
-                            packageInfo.content || '{}',
-                        );
+                        const packgeInfo = validResponses.some((x) =>
+                            x.name.startsWith(
+                                packagesManager.QODALIS_COMMAND_PREFIX,
+                            ),
+                        )
+                            ? validResponses.find((x) =>
+                                  x.name.startsWith(
+                                      packagesManager.QODALIS_COMMAND_PREFIX,
+                                  ),
+                              )
+                            : validResponses[0];
 
                         const response = await scriptsLoader.getScript(
-                            packageUrl,
+                            `https://unpkg.com/${packgeInfo.name}`,
                             {
                                 onProgress: (progress) => {
                                     context.progressBar.update(progress);
@@ -101,7 +147,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         context.progressBar.update(70);
 
                         const pkg: Package = {
-                            name: command.value!,
+                            name: packgeInfo.name,
                             version: packgeInfo.version || 'latest',
                             url: response.xhr.responseURL,
                             dependencies: packgeInfo.cliDependencies || [],
@@ -122,7 +168,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         context.progressBar.complete();
 
                         context.writer.writeSuccess(
-                            'Package added successfully',
+                            `Package ${packgeInfo.name}@${packgeInfo.version} added successfully`,
                         );
                     } catch (e) {
                         context.progressBar.complete();
@@ -173,7 +219,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
                         context.progressBar.complete();
                         context.writer.writeSuccess(
-                            `Package ${command.value!} removed successfully`,
+                            `Package ${pkg.name}@${pkg.version} removed successfully`,
                         );
                     } catch (e) {
                         context.progressBar.complete();
@@ -269,7 +315,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                 return;
             }
 
-            const packageUrl = `https://unpkg.com/${name!}`;
+            const packageUrl = `https://unpkg.com/${pkg.name}`;
 
             const packageInfo = await this.scriptsLoader.getScript(
                 packageUrl + '/package.json',
@@ -282,7 +328,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             if (packgeInfo.version === pkg.version) {
                 context.progressBar.complete();
                 context.writer.writeInfo(
-                    `Package ${name} is already up to date`,
+                    `Package ${pkg.name} is already up to date with version ${pkg.version}`,
                 );
                 return;
             }
@@ -296,7 +342,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             context.progressBar.update(70);
 
             const updatedPkg: Package = {
-                name: name,
+                name: packgeInfo.name,
                 version: packgeInfo.version || 'latest',
                 url: response.xhr.responseURL,
                 dependencies: packgeInfo.cliDependencies || [],
@@ -344,6 +390,13 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             console.info(`Injecting package ${pkg.name} dependencies`);
 
             for (const dependency of pkg.dependencies) {
+                if (this.registeredDependencies.includes(dependency.name!)) {
+                    console.info(
+                        `Dependency ${dependency.globalName} already registered`,
+                    );
+                    continue;
+                }
+
                 await this.scriptsLoader.injectScript(dependency.url);
 
                 if (dependency.globalName) {
@@ -364,6 +417,8 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         );
                     }
                 }
+
+                this.registeredDependencies.push(dependency.name);
             }
         } else {
             console.info(`Package ${pkg.name} has no dependencies`);

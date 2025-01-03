@@ -19,10 +19,12 @@ import {
     CliDefaultPingServerService,
     ScriptLoaderService,
 } from './cli/services';
+import { CliCanViewService } from './services';
 
 export const resolveCliProviders = (): Provider[] => {
     return [
         ScriptLoaderService,
+        CliCanViewService,
         {
             useClass: CliUserSessionService,
             provide: ICliUserSessionService_TOKEN,

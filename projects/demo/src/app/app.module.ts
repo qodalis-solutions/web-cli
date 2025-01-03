@@ -3,6 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppComponent } from './app.component';
 import {
+    CliCanViewService,
     CliModule,
     ICliUsersStoreService_TOKEN,
     resolveCommandProcessorProvider,
@@ -15,6 +16,7 @@ import { CliTextToImageModule } from '@qodalis/cli-text-to-image';
 import { CliRegexModule } from '@qodalis/cli-regex';
 import { CliSpeedTestModule } from '@qodalis/cli-speed-test';
 import { CliBrowserStorageModule } from '@qodalis/cli-browser-storage';
+import { CustomCliCanViewService } from './services/custom-cli-can-view.service';
 
 @NgModule({
     declarations: [AppComponent],
@@ -32,6 +34,10 @@ import { CliBrowserStorageModule } from '@qodalis/cli-browser-storage';
         {
             useClass: CliCustomUsersStoreService,
             provide: ICliUsersStoreService_TOKEN,
+        },
+        {
+            useClass: CustomCliCanViewService,
+            provide: CliCanViewService,
         },
         resolveCommandProcessorProvider(CliDemoCommandProcessor),
     ],

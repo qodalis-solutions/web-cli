@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 
 @Component({
-    selector: 'app-collapsable-content',
+    selector: 'collapsable-content',
     templateUrl: './collapsable-content.component.html',
     styleUrls: ['./collapsable-content.component.sass'],
 })

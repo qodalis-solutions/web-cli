@@ -47,13 +47,8 @@ export class AppModule {}
   "projects": {
     "your-project": {
       "architect": {
-        //...
         "options": {
-          //...
-          "styles": [
-            //styles
-            "node_modules/@qodalis/angular-cli/src/assets/styles.sass"
-          ]
+          "styles": ["node_modules/@qodalis/angular-cli/src/assets/styles.sass"]
         }
       }
     }
@@ -67,12 +62,12 @@ export class AppModule {}
 <!-- 
     Show a terminal
  -->
-<app-cli [options]="cliOptions" />
+<cli [options]="cliOptions" />
 
 <!-- 
     Show a terminal wrapped in a container that is located at the bottom of the page and can be collapsed/expanded
  -->
-<app-cli-panel />
+<cli-panel />
 ```
 
 4. Configure the CLI:
@@ -121,6 +116,8 @@ root:~$ packages add <package-name>
 Example:
 
 ```bash
+root:~$ packages add guid
+root:~$ packages add regex
 root:~$ packages add lodash
 ```
 

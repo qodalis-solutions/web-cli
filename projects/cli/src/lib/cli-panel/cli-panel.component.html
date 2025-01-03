@@ -1,8 +1,11 @@
-<app-collapsable-content [isCollapsed]="options?.isCollapsed ?? true">
+<collapsable-content
+  [isCollapsed]="options?.isCollapsed ?? true"
+  *ngIf="visible"
+>
   <ng-container *ngIf="true; else tabsTemplate">
-    <app-cli [options]="options" />
+    <cli [options]="options" />
   </ng-container>
-</app-collapsable-content>
+</collapsable-content>
 
 <ng-template #tabsTemplate>
   <div class="terminal-tabs">
@@ -33,7 +36,7 @@
         display: tab.id === activeTabId ? 'block' : 'none',
       }"
     >
-      <app-cli [options]="options" />
+      <cli [options]="options" />
     </div>
   </div>
 </ng-template>

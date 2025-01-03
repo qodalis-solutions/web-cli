@@ -40,7 +40,7 @@ export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        context.writer.writeln(`${user?.user.id}<${user?.user.email}>`);
+        context.writer.writeln(user?.user.email);
     }
 
     writeDescription(context: ICliExecutionContext): void {}
