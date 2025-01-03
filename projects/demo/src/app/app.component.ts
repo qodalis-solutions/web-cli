@@ -11,7 +11,7 @@ export class AppComponent {
 
     options: CliOptions = {
         //hideUserName: true,
-        welcomeMessage:
-            'Welcome to demo CLI' + '\n\rType "help" to get started',
+        // welcomeMessage:
+        //     'Welcome to demo CLI' + '\n\rType "help" to get started',
     };
 }

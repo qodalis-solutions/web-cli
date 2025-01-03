@@ -25,6 +25,7 @@ import {
 import { CliExecutionContext } from './services/cli-execution-context';
 import { ICliUserSessionService_TOKEN } from './tokens';
 import { LIBRARY_VERSION } from '../version';
+import { CLi_Name_Art } from './constants';
 
 @Component({
     selector: 'cli',
@@ -78,9 +79,9 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
             this.terminal.writeln(this.options.welcomeMessage);
         } else {
             const welcomeMessage = [
-                `Web CLI [Version ${LIBRARY_VERSION}]`,
+                `Welcome to Web CLI [Version ${LIBRARY_VERSION}]`,
                 '(c) 2024 Qodalis Solutions. All rights reserved.',
-                '',
+                CLi_Name_Art,
                 "Type 'help' to get started.",
                 '',
             ];
@@ -105,6 +106,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
                 blue: '#3b78ff',
                 yellow: '#FFA500',
             },
+            convertEol: true,
             ...(this.options?.terminalOptions ?? {}),
         };
 
@@ -144,6 +146,18 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
 
                 if (event.code === 'KeyV' && event.ctrlKey) {
                     //Handle Ctrl+V
+                    return false;
+                }
+
+                if (event.code === 'KeyL' && event.ctrlKey) {
+                    // Prevent the browser's default action (e.g., focusing the address bar)
+                    event.preventDefault();
+
+                    this.clearCurrentLine();
+
+                    // Clear the terminal screen
+                    this.terminal.clear();
+
                     return false;
                 }
             }
@@ -263,9 +277,6 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         } else if (data === '\u001B[C') {
             // Right Arrow
             this.moveCursorRight(data);
-        } else if (data === '\u000C') {
-            // CTRL + L
-            this.terminal.clear();
         } else if (data === '\u007F') {
             // Backspace key
             this.handleBackspace();
@@ -336,11 +347,23 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     private clearCurrentLine(): void {
-        const currentLength = this.currentLine.length;
-        if (currentLength > 0) {
-            // Erase the current line
-            this.terminal.write('\b \b'.repeat(currentLength));
+        const wrappedLines = Math.ceil(
+            this.currentLine.length / this.terminal.cols,
+        );
+
+        for (let i = 0; i < wrappedLines; i++) {
+            this.terminal.write('\x1b[2K'); // Clear the current line
+            this.terminal.write('\r'); // Move the cursor to the start of the line
+            if (i <= wrappedLines - 1) {
+                this.terminal.write('\x1b[F'); // Move the cursor up for all but the last line
+            }
+
+            if (i === wrappedLines - 1) {
+                this.terminal.write('\r');
+                this.printPrompt();
+            }
         }
+
         this.currentLine = '';
         this.cursorPosition = 0;
     }

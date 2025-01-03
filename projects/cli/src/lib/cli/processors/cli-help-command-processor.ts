@@ -7,6 +7,8 @@ import {
     CliForegroundColor,
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
+import { hotkeysInfo } from '../constants';
+import { CliHotKeysCommandProcessor } from './cli-hot-keys-command-processor';
 
 @Injectable({
     providedIn: 'root',
@@ -22,7 +24,9 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
     sealed = true;
 
-    constructor() {}
+    constructor(
+        private readonly hotKeysProcessor: CliHotKeysCommandProcessor,
+    ) {}
 
     async processCommand(
         command: CliProcessCommand,
@@ -30,9 +34,20 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         const [_, ...commands] = command.command.split(' ');
 
+        const writeSeparator = () => {
+            context.writer.writeln(
+                '-----------------------------------------------',
+            );
+        };
+
         if (commands.length === 0) {
             const commands = context.executor.listCommands();
-            context.writer.writeln('\x1b[33mAvailable commands:\x1b[0m');
+            context.writer.writeln(
+                context.writer.wrapInColor(
+                    'Available commands:',
+                    CliForegroundColor.Yellow,
+                ),
+            );
             commands.forEach((command) => {
                 const processor = context.executor.findProcessor(command, []);
                 context.writer.writeln(
@@ -41,6 +56,12 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                     }`,
                 );
             });
+
+            writeSeparator();
+
+            await this.hotKeysProcessor.processCommand(command, context);
+
+            writeSeparator();
 
             context.writer.writeln(
                 '\nType `help <command>` to get more information about a specific command',

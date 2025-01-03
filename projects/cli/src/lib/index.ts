@@ -14,6 +14,7 @@ import {
     CliThemeCommandProcessor,
     CliPingCommandProcessor,
     CliPackagesCommandProcessor,
+    CliHotKeysCommandProcessor,
 } from './cli/processors';
 import {
     CliDefaultPingServerService,
@@ -43,5 +44,6 @@ export const resolveCliProviders = (): Provider[] => {
         resolveCommandProcessorProvider(CliWhoamiCommandProcessor),
         resolveCommandProcessorProvider(CliThemeCommandProcessor),
         resolveCommandProcessorProvider(CliPackagesCommandProcessor),
+        resolveCommandProcessorProvider(CliHotKeysCommandProcessor),
     ];
 };

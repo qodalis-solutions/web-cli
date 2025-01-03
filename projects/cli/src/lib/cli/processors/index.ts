@@ -60,3 +60,5 @@ export { CliThemeCommandProcessor } from './cli-theme-command-processor';
 export { CliEvalCommandProcessor } from './cli-eval-command-processor';
 
 export { CliPackagesCommandProcessor } from './cli-packages-command-processor';
+
+export { CliHotKeysCommandProcessor } from './cli-hot-keys-command-processor';
