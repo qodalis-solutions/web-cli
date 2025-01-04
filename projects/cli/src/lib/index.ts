@@ -8,9 +8,7 @@ import { CliUserSessionService } from './cli/services/cli-user-session.service';
 import { CliUsersStoreService } from './cli/services/cli-users-store.service';
 import { resolveCommandProcessorProvider } from './utils';
 import {
-    CliSwitchUserCommandProcessor,
     CliHistoryCommandProcessor,
-    CliWhoamiCommandProcessor,
     CliThemeCommandProcessor,
     CliPingCommandProcessor,
     CliPackagesCommandProcessor,
@@ -21,6 +19,7 @@ import {
     ScriptLoaderService,
 } from './cli/services';
 import { CliCanViewService } from './services';
+import { providers as usersProviders } from './cli/processors/users';
 
 export const resolveCliProviders = (): Provider[] => {
     return [
@@ -38,10 +37,9 @@ export const resolveCliProviders = (): Provider[] => {
             useClass: CliDefaultPingServerService,
             provide: ICliPingServerService_TOKEN,
         },
+        ...usersProviders,
         resolveCommandProcessorProvider(CliPingCommandProcessor),
-        resolveCommandProcessorProvider(CliSwitchUserCommandProcessor),
         resolveCommandProcessorProvider(CliHistoryCommandProcessor),
-        resolveCommandProcessorProvider(CliWhoamiCommandProcessor),
         resolveCommandProcessorProvider(CliThemeCommandProcessor),
         resolveCommandProcessorProvider(CliPackagesCommandProcessor),
         resolveCommandProcessorProvider(CliHotKeysCommandProcessor),

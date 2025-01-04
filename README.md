@@ -83,17 +83,24 @@ cliOptions = {
 
 ### Built-in Commands
 
+### System
+
 - **help**: Displays available commands and their descriptions.
 - **clear**: Clears the terminal screen.
 - **echo \<message\>**: Prints the provided message to the terminal.
 - **ping**: Pings the server
 - **theme**: Interact with the cli theme
 - **history**: Prints the command history of the current session
-- **su**: Switch user
 - **version**: Prints the version information
-- **whoami**: Display current user information
 - **eval**: Evaluate a JavaScript expression
 - **packages**: Manage packages in the cli
+
+### Users
+
+- **whoami**: Display current user information
+- **su**: Switch user
+- **adduser**: Add a new user
+- **listusers**: List all users
 
 ## Cli Packages
 

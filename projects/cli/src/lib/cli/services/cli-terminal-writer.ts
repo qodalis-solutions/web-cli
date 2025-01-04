@@ -88,7 +88,7 @@ export class CliTerminalWriter implements ICliTerminalWriter {
 
         // Function to pad text to a specific width
         const padText = (text: string, width: number) =>
-            text.padEnd(width, ' ');
+            text?.toString()?.padEnd(width, ' ');
 
         // Write the header
         this.write(

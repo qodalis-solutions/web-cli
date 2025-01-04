@@ -84,11 +84,22 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                     } - ${processor.description}`,
                 );
 
+                writeSeparator();
+
                 if (processor.author) {
                     writer.writeln(
                         `\x1b[33mAuthor:\x1b[0m ${processor.author.name}<${processor.author.email}>`,
                     );
+
+                    writeSeparator();
                 }
+
+                writer.write(
+                    writer.wrapInColor(
+                        'Description: ',
+                        CliForegroundColor.Yellow,
+                    ),
+                );
 
                 if (processor.writeDescription) {
                     processor.writeDescription(context);
@@ -104,6 +115,8 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                         ),
                     );
                 }
+
+                writeSeparator();
 
                 if (processor.processors?.length) {
                     writer.writeln(
@@ -121,6 +134,8 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                             )} - ${subprocessor.description}`,
                         );
                     });
+
+                    writeSeparator();
                 }
 
                 const defaultParameters: ICliCommandParameterDescriptor[] = [
@@ -159,6 +174,8 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                         }`,
                     );
                 });
+
+                writeSeparator();
 
                 if (processor.metadata?.requireServer) {
                     writer.writeln(

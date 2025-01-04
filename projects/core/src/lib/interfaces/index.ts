@@ -460,13 +460,17 @@ export interface ICliUsersStoreService {
      * Gets the current users
      * @returns An observable that emits the current users
      */
-    getUsers(): Observable<ICliUser[]>;
+    getUsers(options?: {
+        query?: string;
+        skip?: number;
+        take?: number;
+    }): Observable<ICliUser[]>;
 
     /**
-     * Sets the current users
-     * @param users The users to set
+     * Creates a user
+     * @param user The user to create
      */
-    setUsers(users: ICliUser[]): Promise<void>;
+    createUser(user: Omit<ICliUser, 'id'>): Promise<ICliUser>;
 
     /**
      * Gets a user by id

@@ -50,7 +50,7 @@ export enum CliBackgroundColor {
     White = '\x1b[47m',
 }
 
-export interface ICliUser extends Record<string, any> {
+export type ICliUser = {
     /**
      * The id of the user
      */
@@ -65,7 +65,13 @@ export interface ICliUser extends Record<string, any> {
      * The email of the user
      */
     email: string;
-}
+
+    /**
+     * The groups the user belongs to
+     * @default []
+     */
+    groups?: string[];
+};
 
 export interface ICliUserSession {
     /**

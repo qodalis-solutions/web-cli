@@ -3,6 +3,7 @@ import {
     CliProcessCommand,
     CliProcessorMetadata,
     ICliCommandAuthor,
+    ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliExecutionContext,
     ICliUserSessionService,
@@ -26,6 +27,16 @@ export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
         module: 'users',
     };
 
+    parameters?: ICliCommandParameterDescriptor[] | undefined = [
+        {
+            name: 'info',
+            description: 'Display user information',
+            type: 'boolean',
+            required: false,
+            aliases: ['i'],
+        },
+    ];
+
     constructor(
         @Inject(ICliUserSessionService_TOKEN)
         private readonly userSessionService: ICliUserSessionService,
@@ -44,8 +55,15 @@ export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        context.writer.writeln(user?.user.email);
+        if (command.args['info'] || command.args['i']) {
+            context.writer.writeln('User information:');
+            context.writer.writeObjectArrayTable([user.user]);
+        } else {
+            context.writer.writeln(user?.user.email);
+        }
     }
 
-    writeDescription(context: ICliExecutionContext): void {}
+    writeDescription(context: ICliExecutionContext): void {
+        context.writer.writeln(this.description!);
+    }
 }
