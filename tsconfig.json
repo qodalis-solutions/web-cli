@@ -10,7 +10,8 @@
       "@qodalis/cli-text-to-image": ["dist/text-to-image"],
       "@qodalis/cli-regex": ["dist/regex"],
       "@qodalis/cli-speed-test": ["dist/speed-test"],
-      "@qodalis/cli-browser-storage": ["dist/browser-storage"]
+      "@qodalis/cli-browser-storage": ["dist/browser-storage"],
+      "@qodalis/cli-string": ["dist/string"]
     },
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,

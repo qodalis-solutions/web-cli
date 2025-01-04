@@ -46,7 +46,9 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
     ): Promise<void> {
         const { commandName, args } = this.commandParser.parse(command);
 
-        const [mainCommand, ...chainCommands] = commandName.split(' ');
+        const [mainCommand, ...other] = commandName.split(' ');
+
+        const chainCommands = other.map((c) => c.toLowerCase());
 
         const processor = this.findProcessor(
             mainCommand.toLowerCase(),
@@ -285,7 +287,9 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         chainCommands: string[],
         processors: ICliCommandProcessor[],
     ): ICliCommandProcessor | undefined {
-        const processor = processors.find((p) => p.command === mainCommand);
+        const processor = processors.find(
+            (p) => p.command.toLowerCase() === mainCommand.toLowerCase(),
+        );
 
         if (!processor) {
             return undefined;
@@ -297,7 +301,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
         if (processor.processors) {
             return this._findProcessor(
-                chainCommands[0].toLowerCase(),
+                chainCommands[0],
                 chainCommands.slice(1),
                 processor.processors,
             );
@@ -353,6 +357,8 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
     }
 
     private getProcessorByName(name: string): ICliCommandProcessor | undefined {
-        return this.processors.find((p) => p.command === name);
+        return this.processors.find(
+            (p) => p.command.toLowerCase() === name.toLowerCase(),
+        );
     }
 }

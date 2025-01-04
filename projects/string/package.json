@@ -1,0 +1,46 @@
+{
+  "name": "@qodalis/cli-string",
+  "version": "0.0.1",
+  "description": "An Angular CLI extension that provides speed test utilities",
+  "author": "Nicolae Lupei, Qodalis Solutions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qodalis-solutions/angular-web-cli"
+  },
+  "homepage": "https://qodalis.com",
+  "keywords": [
+    "angular",
+    "cli",
+    "qodalis",
+    "terminal",
+    "string"
+  ],
+  "umd": "./umd/index.js",
+  "unpkg": "./umd/index.js",
+  "peerDependencies": {
+    "@angular/common": "^16.2.0",
+    "@angular/core": "^16.2.0"
+  },
+  "dependencies": {
+    "@qodalis/angular-cli": "^1.0.17",
+    "@qodalis/cli-core": "^0.0.5",
+    "lodash": "^4.17.21",
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "rollup-compile": "npx rollup -c"
+  },
+  "cliDependencies": [
+    {
+      "name": "lodash",
+      "globalName": "_",
+      "version": "4.17.21",
+      "url": "https://unpkg.com/lodash@4.17.21/lodash.js"
+    }
+  ],
+  "devDependencies": {
+    "@types/lodash": "^4.17.14"
+  }
+}

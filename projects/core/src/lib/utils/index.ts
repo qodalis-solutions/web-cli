@@ -1,5 +1,6 @@
 import { ICliCommandParameterDescriptor } from '../interfaces';
 import { CliBackgroundColor, CliForegroundColor } from '../models';
+import { ObjectDescriber } from './object-describer';
 
 export const getParameterValue = (
     p: ICliCommandParameterDescriptor,
@@ -73,6 +74,8 @@ export const getRightOfWord = (
     return undefined;
 };
 
+export * from './object-describer';
+
 export const utils = {
     getParameterValue,
     formatJson,
@@ -80,4 +83,5 @@ export const utils = {
     toQueryString,
     highlightTextWithBg,
     getRightOfWord,
+    ObjectDescriber,
 };

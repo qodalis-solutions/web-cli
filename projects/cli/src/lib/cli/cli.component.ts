@@ -354,7 +354,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         for (let i = 0; i < wrappedLines; i++) {
             this.terminal.write('\x1b[2K'); // Clear the current line
             this.terminal.write('\r'); // Move the cursor to the start of the line
-            if (i <= wrappedLines - 1) {
+            if (i < wrappedLines - 1) {
                 this.terminal.write('\x1b[F'); // Move the cursor up for all but the last line
             }
 
