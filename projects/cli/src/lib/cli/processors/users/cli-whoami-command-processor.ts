@@ -8,7 +8,7 @@ import {
     ICliUserSessionService,
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
-import { ICliUserSessionService_TOKEN } from '../tokens';
+import { ICliUserSessionService_TOKEN } from '../../tokens';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable({

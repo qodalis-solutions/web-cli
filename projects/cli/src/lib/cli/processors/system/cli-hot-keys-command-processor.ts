@@ -7,7 +7,7 @@ import {
     CliProcessorMetadata,
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
-import { hotkeysInfo } from '../constants';
+import { hotkeysInfo } from '../../constants';
 
 @Injectable({
     providedIn: 'root',

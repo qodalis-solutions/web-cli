@@ -8,8 +8,8 @@ import {
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
-import { LIBRARY_VERSION } from '../../version';
-import { CLi_Name_Art } from '../constants';
+import { LIBRARY_VERSION } from '../../../version';
+import { CLi_Name_Art } from '../../constants';
 
 @Injectable({
     providedIn: 'root',

@@ -13,7 +13,7 @@ import { firstValueFrom } from 'rxjs';
 import {
     ICliUserSessionService_TOKEN,
     ICliUsersStoreService_TOKEN,
-} from '../tokens';
+} from '../../tokens';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 
 @Injectable({

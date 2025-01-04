@@ -12,8 +12,8 @@ import {
     CliEchoCommandProcessor,
     CliEvalCommandProcessor,
     CliHelpCommandProcessor,
+    CliVersionCommandProcessor,
 } from '../processors';
-import { CliVersionCommandProcessor } from '../processors/cli-version-command-processor';
 import { CommandParser } from '../../utils';
 import { CliCommandProcessor_TOKEN } from '../tokens';
 
