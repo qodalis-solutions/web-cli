@@ -82,16 +82,32 @@ export interface ICliUserSession {
 /**
  * Options for the CLI
  */
-export type CliOptions = {
+export type CliOptions = Record<string, any> & {
     /**
      * The welcome message to display when the CLI starts
      */
     welcomeMessage?: string;
 
     /**
-     * Hide the prompt to display when the CLI is ready to accept input
+     * If true, the welcome message is hidden
+     * @default false
      */
-    hideUserName?: boolean;
+    hideWelcomeMessage?: boolean;
+
+    /**
+     * Users module options
+     */
+    usersModule?: {
+        /**
+         * If true, the users module is enabled
+         */
+        enabled: boolean;
+
+        /**
+         * Hide the prompt to display when the CLI is ready to accept input
+         */
+        hideUserName?: boolean;
+    };
 
     /**
      * Custom terminal options
@@ -142,4 +158,9 @@ export type CliProcessorMetadata = Record<string, any> & {
      * If true, the processor requires the server to be running
      */
     requireServer?: boolean;
+
+    /**
+     * The module the processor belongs to
+     */
+    module?: string;
 };

@@ -26,7 +26,7 @@ export class CliExecutionContext implements ICliExecutionContext {
 
     public readonly progressBar: ICliPercentageProgressBar;
 
-    public readonly cliOptions?: CliOptions;
+    public readonly options?: CliOptions;
 
     public readonly onAbort = new Subject<void>();
 
@@ -40,7 +40,7 @@ export class CliExecutionContext implements ICliExecutionContext {
         public showPrompt: () => void,
         cliOptions?: CliOptions,
     ) {
-        this.cliOptions = cliOptions;
+        this.options = cliOptions;
         this.writer = new CliTerminalWriter(terminal);
         this.dataStore = new CliCommandDataStore(this);
         this.spinner = new CliTerminalSpinner(terminal);

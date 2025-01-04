@@ -27,7 +27,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
     constructor(
         @Inject(CliCommandProcessor_TOKEN)
-        implementations: ICliCommandProcessor[],
+        private readonly implementations: ICliCommandProcessor[],
         cliHelpCommandProcessor: CliHelpCommandProcessor,
         cliVersionCommandProcessor: CliVersionCommandProcessor,
     ) {
@@ -36,8 +36,6 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         this.registerProcessor(new CliEvalCommandProcessor());
         this.registerProcessor(cliHelpCommandProcessor);
         this.registerProcessor(cliVersionCommandProcessor);
-
-        implementations.forEach((impl) => this.registerProcessor(impl));
     }
 
     public async executeCommand(
@@ -121,6 +119,16 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
     public async initializeProcessors(
         context: ICliExecutionContext,
     ): Promise<void> {
+        let processors = this.implementations;
+
+        if (!context.options?.usersModule?.enabled) {
+            processors = processors.filter(
+                (p) => p.metadata?.module !== 'users',
+            );
+        }
+
+        processors.forEach((impl) => this.registerProcessor(impl));
+
         await this.initializeProcessorsInternal(context, this.processors);
     }
 

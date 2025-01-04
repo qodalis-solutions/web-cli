@@ -23,6 +23,7 @@ export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
+        module: 'users',
     };
 
     constructor(

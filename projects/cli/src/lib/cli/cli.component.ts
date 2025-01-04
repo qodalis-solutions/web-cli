@@ -221,9 +221,11 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         this.currentLine = '';
         this.cursorPosition = 0;
 
-        const promtStartMessage = this.options?.hideUserName
-            ? ''
-            : `\x1b[32m${this.currentUserSession?.user.email}\x1b[0m:`;
+        const promtStartMessage =
+            this.options?.usersModule?.hideUserName ||
+            !this.options?.usersModule?.enabled
+                ? ''
+                : `\x1b[32m${this.currentUserSession?.user.email}\x1b[0m:`;
         const promtEndMessage = '\x1b[34m~\x1b[0m$ ';
 
         const prompt = `${promtStartMessage}${promtEndMessage}`;

@@ -40,6 +40,7 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
+        module: 'users',
     };
 
     valueRequired = true;
