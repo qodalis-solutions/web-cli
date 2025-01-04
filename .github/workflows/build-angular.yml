@@ -29,6 +29,9 @@ jobs:
       #- name: Lint the code
       #  run: npm run lint
 
+      - name: Install projects deps
+        run: npm run "install projects deps"
+
       - name: Build all projects
         run: npm run "build all"
 
@@ -42,11 +45,9 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-      # Step 1: Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -54,21 +55,20 @@ jobs:
           cache: "npm"
           registry-url: https://registry.npmjs.org/
 
-      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # Step 4: Build applications and libraries
+      - name: Install projects deps
+        run: npm run "install projects deps"
+
       - name: Build all projects
         run: npm run "build all"
 
-      # Step 5: Replace README.md in main libraries
       - name: Replace README.md in main libraries
         run: |
           cp README.md dist/cli/
           cp README.md dist/core/
 
-      # Step 6: Publish to NPM
       - name: Publish to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

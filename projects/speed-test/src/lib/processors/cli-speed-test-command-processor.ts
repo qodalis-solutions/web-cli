@@ -5,6 +5,7 @@ import {
     ICliExecutionContext,
 } from '@qodalis/cli-core';
 import axios, { CancelToken, CancelTokenSource } from 'axios';
+import { LIBRARY_VERSION } from '../version';
 
 export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
     command = 'speed-test';
@@ -14,6 +15,8 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
     author = DefaultLibraryAuthor;
 
     processors?: ICliCommandProcessor[] | undefined = [];
+
+    version = LIBRARY_VERSION;
 
     constructor() {
         this.processors = [

@@ -346,31 +346,34 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                 type: 'increment',
             });
             progressBar.setText(`Updating package ${name}`);
-            const pkg = this.packagesManager.getPackage(name);
+            const currentPackage = this.packagesManager.getPackage(name);
 
-            if (!pkg) {
+            if (!currentPackage) {
                 progressBar.complete();
                 writer.writeError(`Package ${name} not found`);
                 return;
             }
 
-            const packageUrl = `https://unpkg.com/${pkg.name}`;
+            const packageUrl = `https://unpkg.com/${currentPackage.name}`;
 
-            const packageInfo = await this.scriptsLoader.getScript(
-                packageUrl + '/package.json',
-            );
+            const newPackage = await this.scriptsLoader
+                .getScript(packageUrl + '/package.json')
+                .then((response) => {
+                    return JSON.parse(response.content || '{}');
+                });
 
             progressBar.update(20, {
                 type: 'increment',
             });
-            progressBar.setText(`Checking for updates for package ${pkg.name}`);
 
-            const packgeInfo = JSON.parse(packageInfo.content || '{}');
+            progressBar.setText(
+                `Checking for updates for package ${currentPackage.name}`,
+            );
 
-            if (packgeInfo.version === pkg.version) {
+            if (newPackage.version === currentPackage.version) {
                 context.progressBar.complete();
                 context.writer.writeInfo(
-                    `Package ${pkg.name} is already up to date with version ${pkg.version}`,
+                    `Package ${currentPackage.name} is already up to date with version ${currentPackage.version}`,
                 );
                 return;
             }
@@ -384,19 +387,19 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             progressBar.update(20, {
                 type: 'increment',
             });
-            progressBar.setText(`Updating package ${pkg.name}`);
+            progressBar.setText(`Updating package ${currentPackage.name}`);
 
             const updatedPkg: Package = {
-                name: packgeInfo.name,
-                version: packgeInfo.version || 'latest',
+                name: newPackage.name,
+                version: newPackage.version || 'latest',
                 url: response.xhr.responseURL,
-                dependencies: packgeInfo.cliDependencies || [],
+                dependencies: newPackage.cliDependencies || [],
             };
 
             await this.registerPackageDependencies(updatedPkg);
 
             progressBar.update(90);
-            progressBar.setText(`Injecting package ${pkg.name}`);
+            progressBar.setText(`Injecting package ${currentPackage.name}`);
 
             if (response.content) {
                 await this.scriptsLoader.injectBodyScript(response.content);
@@ -404,10 +407,14 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
             this.packagesManager.updatePackage(updatedPkg);
 
-            progressBar.setText(`Package ${pkg.name} updated successfully`);
+            progressBar.setText(
+                `Package ${currentPackage.name} updated successfully`,
+            );
             progressBar.complete();
 
-            writer.writeSuccess('Package updated successfully');
+            writer.writeSuccess(
+                `Package ${currentPackage.name} updated successfully to version ${newPackage.version} from ${currentPackage.version}`,
+            );
         } catch (e) {
             progressBar.complete();
             writer.writeError(e?.toString() || 'Unknown error');

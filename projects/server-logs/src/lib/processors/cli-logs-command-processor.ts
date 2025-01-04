@@ -11,6 +11,7 @@ import {
     ICliExecutionContext,
     toQueryString,
 } from '@qodalis/cli-core';
+import { LIBRARY_VERSION } from '../version';
 
 const levels = ['verbose', 'debug', 'information', 'warning', 'error', 'fatal'];
 
@@ -85,6 +86,8 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
     ];
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
+
+    version = LIBRARY_VERSION;
 
     private hubConnection!: signalR.HubConnection;
 

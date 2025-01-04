@@ -7,6 +7,7 @@ import {
     ObjectDescriber,
 } from '@qodalis/cli-core';
 import * as _ from 'lodash';
+import { LIBRARY_VERSION } from '../version';
 
 @Injectable()
 export class CliStringCommandProcessor implements ICliCommandProcessor {
@@ -15,6 +16,8 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
     description = 'String commands';
 
     author = DefaultLibraryAuthor;
+
+    version = LIBRARY_VERSION;
 
     processors?: ICliCommandProcessor[] | undefined = [];
 

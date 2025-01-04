@@ -1,28 +1,13 @@
 #!/usr/bin/env node
 
+const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
-const { exec } = require("child_process");
+const { runCommand } = require("./shared");
 
 // Root folder containing subfolders
 const rootFolder = path.resolve(__dirname, "../");
 const projectsFolder = path.resolve(__dirname, "../projects");
-
-// Promisified exec function
-function runCommand(command, folder) {
-  return new Promise((resolve, reject) => {
-    console.log(`Running command: "${command}" in folder: ${folder}`);
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error in folder ${folder}:`, error.message);
-        return reject(error);
-      }
-      if (stdout) console.log(`Output from ${folder}:\n${stdout}`);
-      if (stderr) console.error(`Error output from ${folder}:\n${stderr}`);
-      resolve();
-    });
-  });
-}
 
 // Main function to process folders sequentially
 async function buildProjects() {
@@ -55,10 +40,10 @@ async function buildProjects() {
       const folderPath = path.join(projectsFolder, folder);
 
       await runCommand(
-        `cd ${folderPath} && npm i || echo 'Skip install'`,
+        exec,
+        `cd ${rootFolder} && ng build ${folder}`,
         folderPath,
       );
-      await runCommand(`cd ${rootFolder} && ng build ${folder}`, folderPath);
     }
 
     for (const folder of subfolders) {
@@ -67,7 +52,7 @@ async function buildProjects() {
       if (fs.existsSync(path.join(folderPath, "rollup.config.mjs"))) {
         console.log(`Running rollup for ${folder}`);
         const rollupCommand = `cd ${folderPath} && npx rollup -c`;
-        await runCommand(rollupCommand, folderPath);
+        await runCommand(exec, rollupCommand, folderPath);
       }
     }
 

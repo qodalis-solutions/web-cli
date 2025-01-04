@@ -4,6 +4,7 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
+import { LIBRARY_VERSION } from '../version';
 
 export class CliRegexCommandProcessor implements ICliCommandProcessor {
     command = 'regex';
@@ -13,6 +14,8 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
     author = DefaultLibraryAuthor;
 
     processors?: ICliCommandProcessor[] | undefined = [];
+
+    version = LIBRARY_VERSION;
 
     constructor() {
         this.processors = [

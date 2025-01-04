@@ -4,6 +4,7 @@ import {
     ICliExecutionContext,
 } from '@qodalis/cli-core';
 import { generateGUID, validateGUID } from '../utilities';
+import { LIBRARY_VERSION } from '../version';
 
 /**
  * A command processor for generating and validating GUIDs.
@@ -15,6 +16,7 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
         name: 'Nicolae Lupei',
         email: 'nicolae.lupei@qodalis.com',
     };
+    version = LIBRARY_VERSION;
 
     processors?: ICliCommandProcessor[] | undefined = [];
 

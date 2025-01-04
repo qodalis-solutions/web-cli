@@ -7,6 +7,7 @@ import {
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
+import { LIBRARY_VERSION } from '../version';
 
 @Injectable({
     providedIn: 'root',
@@ -19,6 +20,8 @@ export class CliLocalStorageCommandProcessor implements ICliCommandProcessor {
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
     processors?: ICliCommandProcessor[] | undefined = [];
+
+    version = LIBRARY_VERSION;
 
     constructor() {
         this.processors = [

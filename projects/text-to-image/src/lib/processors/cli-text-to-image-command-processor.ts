@@ -6,6 +6,7 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
+import { LIBRARY_VERSION } from '../version';
 
 export class CliTextToImageCommandProcessor implements ICliCommandProcessor {
     command = 'text-to-image';
@@ -52,6 +53,8 @@ export class CliTextToImageCommandProcessor implements ICliCommandProcessor {
     ];
 
     allowUnlistedCommands = true;
+
+    version = LIBRARY_VERSION;
 
     constructor() {}
 
