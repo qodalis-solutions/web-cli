@@ -27,6 +27,7 @@ export class CliPingCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         context.spinner?.show();
+        context?.spinner?.setText('Pinging server...');
         this.pingServerService
             .ping()
             .then(() => {

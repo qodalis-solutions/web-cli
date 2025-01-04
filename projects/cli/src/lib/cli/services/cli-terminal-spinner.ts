@@ -4,6 +4,8 @@ import { ICliSpinner } from '@qodalis/cli-core';
 export class CliTerminalSpinner implements ICliSpinner {
     isRunning: boolean = false;
 
+    text: string = '';
+
     constructor(private terminal: Terminal) {}
 
     private spinnerInterval?: ReturnType<typeof setInterval> | null;
@@ -16,7 +18,10 @@ export class CliTerminalSpinner implements ICliSpinner {
             // Clear the current line
             this.terminal.write('\x1b[2K\r');
             // Write the spinner frame
-            this.terminal.write(this.spinnerFrames[this.spinnerIndex]);
+            this.terminal.write(
+                this.spinnerFrames[this.spinnerIndex] +
+                    (this.text.length > 0 ? ` ${this.text}` : ''),
+            );
             // Update the frame index
             this.spinnerIndex =
                 (this.spinnerIndex + 1) % this.spinnerFrames.length;
@@ -32,5 +37,11 @@ export class CliTerminalSpinner implements ICliSpinner {
 
         // Clear the spinner character and reset the line
         this.terminal.write('\x1b[2K\r');
+
+        this.text = '';
+    }
+
+    public setText(text: string) {
+        this.text = text;
     }
 }

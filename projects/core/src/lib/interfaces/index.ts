@@ -269,7 +269,21 @@ export interface ICliProgressBar {
 /**
  * Represents a spinner for the CLI
  */
-export interface ICliSpinner extends ICliProgressBar {}
+export interface ICliSpinner extends ICliProgressBar {
+    /**
+     * Set the text of the spinner
+     * @param text The text to set
+     */
+    setText: (text: string) => void;
+}
+
+export type CliPercentageProgressBarUpdateValueOptions = {
+    /**
+     * The type of update to perform
+     * @default 'replace'
+     */
+    type?: 'replace' | 'increment';
+};
 
 /**
  * Represents a progress bar for the CLI
@@ -280,13 +294,22 @@ export interface ICliPercentageProgressBar extends ICliProgressBar {
      * @param progress The progress to update to
      * @returns void
      */
-    update: (progress: number) => void;
+    update: (
+        progress: number,
+        options?: CliPercentageProgressBarUpdateValueOptions,
+    ) => void;
 
     /**
      * Complete the progress bar
      * @returns void
      */
     complete: () => void;
+
+    /**
+     * Set the text of the spinner
+     * @param text The text to set
+     */
+    setText: (text: string) => void;
 }
 
 /**

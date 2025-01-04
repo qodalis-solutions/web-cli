@@ -74,15 +74,17 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                 allowUnlistedCommands: true,
                 valueRequired: true,
                 async processCommand(command, context) {
+                    const { progressBar, writer } = context;
                     if (packagesManager.hasPackage(command.value!)) {
-                        context.writer.writeInfo(
+                        writer.writeInfo(
                             `Package ${command.value!} already installed`,
                         );
 
                         return;
                     }
 
-                    context.progressBar.show();
+                    progressBar.show();
+                    progressBar.setText(`Fetching package ${command.value!}`);
 
                     try {
                         const promises = [
@@ -95,7 +97,12 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                                     error,
                                     content: null,
                                     xhr: null,
-                                })),
+                                }))
+                                .finally(() => {
+                                    progressBar.update(10, {
+                                        type: 'increment',
+                                    });
+                                }),
                         ];
 
                         if (
@@ -113,13 +120,21 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                                         error,
                                         content: null,
                                         xhr: null,
-                                    })),
+                                    }))
+                                    .finally(() => {
+                                        progressBar.update(10, {
+                                            type: 'increment',
+                                        });
+                                    }),
                             );
                         }
+
+                        progressBar.update(10);
 
                         const packages = await Promise.all(promises);
 
                         if (packages.every((p) => p.error)) {
+                            progressBar.setText('Package not found');
                             throw packages[0].error;
                         }
 
@@ -127,7 +142,10 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                             .filter((p) => p.content)
                             .map((p) => JSON.parse(p.content || '{}'));
 
-                        context.progressBar.update(20);
+                        progressBar.update(20, {
+                            type: 'increment',
+                        });
+                        progressBar.setText("Checking package's dependencies");
 
                         const packgeInfo = validResponses.some((x) =>
                             x.name.startsWith(
@@ -150,7 +168,10 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                             },
                         );
 
-                        context.progressBar.update(70);
+                        progressBar.update(20, {
+                            type: 'increment',
+                        });
+                        progressBar.setText('Injecting package');
 
                         const pkg: Package = {
                             name: packgeInfo.name,
@@ -159,15 +180,22 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                             dependencies: packgeInfo.cliDependencies || [],
                         };
 
+                        progressBar.update(80);
+                        progressBar.setText('Registering dependencies');
+
                         await scope.registerPackageDependencies(pkg);
 
-                        context.progressBar.update(90);
+                        progressBar.update(90);
+                        progressBar.setText('Dependencies registered');
 
                         if (response.content) {
                             await scope.scriptsLoader.injectBodyScript(
                                 response.content,
                             );
                         }
+
+                        progressBar.update(95);
+                        progressBar.setText('Saving package');
 
                         packagesManager.addPackage(pkg);
 
@@ -309,15 +337,20 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         name: string,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.progressBar.show();
+        const { progressBar, writer } = context;
+
+        progressBar.show();
 
         try {
-            context.progressBar.update(10);
+            progressBar.update(10, {
+                type: 'increment',
+            });
+            progressBar.setText(`Updating package ${name}`);
             const pkg = this.packagesManager.getPackage(name);
 
             if (!pkg) {
-                context.progressBar.complete();
-                context.writer.writeError(`Package ${name} not found`);
+                progressBar.complete();
+                writer.writeError(`Package ${name} not found`);
                 return;
             }
 
@@ -327,7 +360,10 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                 packageUrl + '/package.json',
             );
 
-            context.progressBar.update(20);
+            progressBar.update(20, {
+                type: 'increment',
+            });
+            progressBar.setText(`Checking for updates for package ${pkg.name}`);
 
             const packgeInfo = JSON.parse(packageInfo.content || '{}');
 
@@ -345,7 +381,10 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                 },
             });
 
-            context.progressBar.update(70);
+            progressBar.update(20, {
+                type: 'increment',
+            });
+            progressBar.setText(`Updating package ${pkg.name}`);
 
             const updatedPkg: Package = {
                 name: packgeInfo.name,
@@ -356,7 +395,8 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
             await this.registerPackageDependencies(updatedPkg);
 
-            context.progressBar.update(90);
+            progressBar.update(90);
+            progressBar.setText(`Injecting package ${pkg.name}`);
 
             if (response.content) {
                 await this.scriptsLoader.injectBodyScript(response.content);
@@ -364,12 +404,13 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
             this.packagesManager.updatePackage(updatedPkg);
 
-            context.progressBar.complete();
+            progressBar.setText(`Package ${pkg.name} updated successfully`);
+            progressBar.complete();
 
-            context.writer.writeSuccess('Package updated successfully');
+            writer.writeSuccess('Package updated successfully');
         } catch (e) {
-            context.progressBar.complete();
-            context.writer.writeError(e?.toString() || 'Unknown error');
+            progressBar.complete();
+            writer.writeError(e?.toString() || 'Unknown error');
         }
     }
 

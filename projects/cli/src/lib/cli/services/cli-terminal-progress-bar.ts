@@ -1,14 +1,19 @@
 import { Terminal } from '@xterm/xterm';
-import { ICliPercentageProgressBar } from '@qodalis/cli-core';
+import {
+    CliPercentageProgressBarUpdateValueOptions,
+    ICliPercentageProgressBar,
+} from '@qodalis/cli-core';
 
 export class CliTerminalProgressBar implements ICliPercentageProgressBar {
     isRunning: boolean = false;
 
-    constructor(private terminal: Terminal) {}
-
+    private text: string = '';
     private progressBarInterval?: ReturnType<typeof setInterval> | null;
     private progress = 0;
     private total = 100;
+    private progressText = '';
+
+    constructor(private terminal: Terminal) {}
 
     public show(): void {
         this.isRunning = true;
@@ -33,12 +38,21 @@ export class CliTerminalProgressBar implements ICliPercentageProgressBar {
             this.progressBarInterval = null;
         }
 
-        // Clear the progress bar and reset the line
-        this.terminal.write('\x1b[2K\r');
+        this.clearCurrentLine();
+
+        this.text = '';
+        this.progressText = '';
     }
 
-    public update(progress: number) {
-        this.progress = progress;
+    public update(
+        progress: number,
+        options?: CliPercentageProgressBarUpdateValueOptions,
+    ) {
+        if (options?.type === 'increment') {
+            this.progress += progress;
+        } else {
+            this.progress = progress;
+        }
 
         if (this.progress > this.total) {
             this.progress = this.total;
@@ -52,6 +66,12 @@ export class CliTerminalProgressBar implements ICliPercentageProgressBar {
         this.hide();
     }
 
+    public setText(text: string) {
+        this.text = text;
+
+        this.updateProgressBar();
+    }
+
     private updateProgressBar(): void {
         const totalBars = 50; // Length of the progress bar
         const filledBars = Math.round((this.progress / this.total) * totalBars);
@@ -59,9 +79,29 @@ export class CliTerminalProgressBar implements ICliPercentageProgressBar {
 
         const progressBar = `[${'#'.repeat(filledBars)}${'.'.repeat(emptyBars)}]`;
         const percentage = `${this.progress}%`.padStart(4, ' ');
+        const text = this.text.length > 0 ? ` ${this.text}` : '';
 
-        // Clear the current line and render the progress bar
-        this.terminal.write('\x1b[2K\r'); // Clear the current line
-        this.terminal.write(`${progressBar} ${percentage}`); // Write progress bar
+        this.clearCurrentLine();
+        this.progressText = `${progressBar} ${percentage} ${text}`;
+
+        this.terminal.write(this.progressText); // Write progress bar
+    }
+
+    private clearCurrentLine(): void {
+        const wrappedLines = Math.ceil(
+            this.progressText.length / this.terminal.cols,
+        );
+
+        for (let i = 0; i < wrappedLines; i++) {
+            this.terminal.write('\x1b[2K'); // Clear the current line
+            this.terminal.write('\r'); // Move the cursor to the start of the line
+            if (i < wrappedLines - 1) {
+                this.terminal.write('\x1b[F'); // Move the cursor up for all but the last line
+            }
+
+            if (i === wrappedLines - 1) {
+                this.terminal.write('\r');
+            }
+        }
     }
 }
