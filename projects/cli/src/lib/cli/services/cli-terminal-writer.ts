@@ -66,7 +66,7 @@ export class CliTerminalWriter implements ICliTerminalWriter {
         document.body.removeChild(link);
     }
 
-    public writeObjectArrayTable(objects: any[]): void {
+    public writeObjectsAsTable(objects: any[]): void {
         if (objects.length === 0) {
             this.writeInfo('No objects to display');
             return;

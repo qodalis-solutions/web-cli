@@ -57,7 +57,7 @@ export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
 
         if (command.args['info'] || command.args['i']) {
             context.writer.writeln('User information:');
-            context.writer.writeObjectArrayTable([user.user]);
+            context.writer.writeObjectsAsTable([user.user]);
         } else {
             context.writer.writeln(user?.user.email);
         }

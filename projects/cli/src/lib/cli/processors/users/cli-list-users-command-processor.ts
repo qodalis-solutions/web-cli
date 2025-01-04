@@ -65,7 +65,7 @@ export class CliListUsersCommandProcessor implements ICliCommandProcessor {
         );
 
         writer.writeln('Users:');
-        writer.writeObjectArrayTable(users);
+        writer.writeObjectsAsTable(users);
     }
 
     writeDescription({ writer }: ICliExecutionContext): void {

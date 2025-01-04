@@ -238,7 +238,7 @@ export interface ICliTerminalWriter {
      * @param objects The objects to write to the table
      * @returns void
      */
-    writeObjectArrayTable(objects: any[]): void;
+    writeObjectsAsTable(objects: any[]): void;
 
     /**
      * Write a table to the terminal
