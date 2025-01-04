@@ -383,9 +383,10 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
         if (module.processors) {
             console.info('Registering processors from module ' + module.name);
-            module.processors.forEach((processor: ICliCommandProcessor) => {
+            for (const processor of module.processors) {
                 context.executor.registerProcessor(processor);
-            });
+                await processor.initialize?.(context);
+            }
         } else {
             console.warn(`Module ${module.name} has no processors`);
         }

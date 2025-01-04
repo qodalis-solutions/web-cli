@@ -25,6 +25,9 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
     private commandParser: CommandParser = new CommandParser();
 
+    private initialized = false;
+    private initializing = false;
+
     constructor(
         @Inject(CliCommandProcessor_TOKEN)
         private readonly implementations: ICliCommandProcessor[],
@@ -119,6 +122,11 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
     public async initializeProcessors(
         context: ICliExecutionContext,
     ): Promise<void> {
+        if (this.initialized || this.initializing) {
+            return;
+        }
+        this.initializing = true;
+
         let processors = this.implementations;
 
         if (!context.options?.usersModule?.enabled) {
@@ -130,6 +138,8 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         processors.forEach((impl) => this.registerProcessor(impl));
 
         await this.initializeProcessorsInternal(context, this.processors);
+
+        this.initialized = true;
     }
 
     public listCommands(): string[] {
