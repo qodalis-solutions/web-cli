@@ -2,6 +2,7 @@ import { Terminal } from '@xterm/xterm';
 import {
     CliBackgroundColor,
     CliForegroundColor,
+    CliIcon,
     formatJson,
     ICliTerminalWriter,
 } from '@qodalis/cli-core';
@@ -17,26 +18,28 @@ export class CliTerminalWriter implements ICliTerminalWriter {
     }
 
     public writeSuccess(message: string) {
-        this.terminal.writeln(
-            this.wrapInColor(message, CliForegroundColor.Green),
-        );
+        this.writeLog(message, CliForegroundColor.Green, CliIcon.CheckIcon);
     }
 
     public writeInfo(message: string) {
-        this.terminal.writeln(
-            this.wrapInColor(message, CliForegroundColor.Blue),
-        );
+        this.writeLog(message, CliForegroundColor.Cyan, CliIcon.InfoIcon);
     }
 
     public writeWarning(message: string) {
-        this.terminal.writeln(
-            this.wrapInColor(message, CliForegroundColor.Yellow),
-        );
+        this.writeLog(message, CliForegroundColor.Yellow, CliIcon.WarningIcon);
     }
 
     public writeError(message: string) {
+        this.writeLog(message, CliForegroundColor.Red, CliIcon.CrossIcon);
+    }
+
+    private writeLog(
+        message: string,
+        color: CliForegroundColor,
+        icon?: CliIcon,
+    ) {
         this.terminal.writeln(
-            this.wrapInColor(message, CliForegroundColor.Red),
+            this.wrapInColor(icon ? icon + ' ' + message : message, color),
         );
     }
 

@@ -50,6 +50,13 @@ export enum CliBackgroundColor {
     White = '\x1b[47m',
 }
 
+export enum CliIcon {
+    CheckIcon = '✔',
+    CrossIcon = '✘',
+    InfoIcon = 'ℹ',
+    WarningIcon = '⚠',
+}
+
 export type ICliUser = {
     /**
      * The id of the user
@@ -169,4 +176,10 @@ export type CliProcessorMetadata = Record<string, any> & {
      * The module the processor belongs to
      */
     module?: string;
+};
+
+export const enums = {
+    CliForegroundColor,
+    CliBackgroundColor,
+    CliIcon,
 };

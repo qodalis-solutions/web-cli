@@ -1,4 +1,4 @@
-import { CliBackgroundColor, CliForegroundColor } from '../models';
+import { enums } from '../models';
 import { constants } from '../constants';
 import { ICliUmdModule } from '../interfaces';
 import { utils } from '../utils';
@@ -17,8 +17,7 @@ export const initializeBrowserEnvironment = ({
         },
         ...constants,
         ...utils,
-        CliForegroundColor: CliForegroundColor,
-        CliBackgroundColor: CliBackgroundColor,
+        ...enums,
     };
 
     (window as any).ngCore = {
