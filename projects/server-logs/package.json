@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-server-logs",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "An Angular CLI extension for server logs.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
@@ -23,8 +23,8 @@
   },
   "dependencies": {
     "tslib": "^2.3.0",
-    "@qodalis/cli-core": "^0.0.5",
-    "@qodalis/angular-cli": "^1.0.14",
+    "@qodalis/cli-core": "^0.0.7",
+    "@qodalis/angular-cli": "^1.0.22",
     "@microsoft/signalr": "^8.0.7"
   },
   "sideEffects": false,

@@ -128,3 +128,18 @@ export interface Package {
      */
     dependencies?: Package[];
 }
+
+/**
+ * Represents command processor metadata
+ */
+export type CliProcessorMetadata = Record<string, any> & {
+    /**
+     * If true, the processor is sealed and cannot be extended
+     */
+    sealed?: boolean;
+
+    /**
+     * If true, the processor requires the server to be running
+     */
+    requireServer?: boolean;
+};

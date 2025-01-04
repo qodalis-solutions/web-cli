@@ -1,5 +1,9 @@
 import { Injectable } from '@angular/core';
-import { CliForegroundColor, DefaultLibraryAuthor } from '@qodalis/cli-core';
+import {
+    CliForegroundColor,
+    CliProcessorMetadata,
+    DefaultLibraryAuthor,
+} from '@qodalis/cli-core';
 import {
     CliProcessCommand,
     ICliCommandProcessor,
@@ -21,9 +25,11 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
     readonly version = '1.0.1';
 
-    readonly sealed = true;
+    readonly processors?: ICliCommandProcessor[] | undefined = [];
 
-    processors?: ICliCommandProcessor[] | undefined = [];
+    readonly metadata?: CliProcessorMetadata | undefined = {
+        sealed: true,
+    };
 
     private registeredDependencies: string[] = [];
 

@@ -4,6 +4,7 @@ import {
     CliProcessCommand,
     ICliCommandProcessor,
     ICliCommandAuthor,
+    CliProcessorMetadata,
 } from '@qodalis/cli-core';
 
 import { CommandHistoryService } from '../services/command-history.service';
@@ -21,6 +22,10 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
     processors?: ICliCommandProcessor[] | undefined = [];
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
+
+    metadata?: CliProcessorMetadata | undefined = {
+        sealed: true,
+    };
 
     constructor(private readonly commandHistoryService: CommandHistoryService) {
         this.processors?.push({

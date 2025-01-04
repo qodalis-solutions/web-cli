@@ -6,6 +6,7 @@ import {
     ICliCommandParameterDescriptor,
     ICliUsersStoreService,
     ICliUserSessionService,
+    CliProcessorMetadata,
 } from '@qodalis/cli-core';
 
 import { firstValueFrom } from 'rxjs';
@@ -37,7 +38,9 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
 
     author = DefaultLibraryAuthor;
 
-    sealed = true;
+    metadata?: CliProcessorMetadata | undefined = {
+        sealed: true,
+    };
 
     valueRequired = true;
 

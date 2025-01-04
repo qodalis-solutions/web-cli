@@ -5,6 +5,7 @@ import {
     CliForegroundColor,
     CliOptions,
     CliProcessCommand,
+    CliProcessorMetadata,
     ICliUser,
     ICliUserSession,
     Package,
@@ -58,9 +59,9 @@ export interface ICliCommandProcessor {
     version?: string;
 
     /**
-     * If true, the processor is sealed and cannot be extended
+     * The metadata for the command processor
      */
-    sealed?: boolean;
+    metadata?: CliProcessorMetadata;
 
     /**
      * Processors that are nested under this processor

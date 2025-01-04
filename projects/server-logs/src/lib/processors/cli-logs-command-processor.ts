@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import {
     CliProcessCommand,
+    CliProcessorMetadata,
     DefaultLibraryAuthor,
     highlightTextWithBg,
     ICliCommandAuthor,
@@ -17,11 +18,15 @@ const levels = ['verbose', 'debug', 'information', 'warning', 'error', 'fatal'];
     providedIn: 'root',
 })
 export class CliLogsCommandProcessor implements ICliCommandProcessor {
-    command = 'logs';
+    command = 'server-logs';
 
     description?: string | undefined = 'Show live logs';
 
     processors?: ICliCommandProcessor[] | undefined = [];
+
+    metadata?: CliProcessorMetadata | undefined = {
+        requireServer: true,
+    };
 
     parameters?: ICliCommandParameterDescriptor[] | undefined = [
         {

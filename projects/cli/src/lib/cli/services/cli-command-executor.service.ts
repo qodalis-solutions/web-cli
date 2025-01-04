@@ -316,7 +316,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         const existingProcessor = this.getProcessorByName(processor.command);
 
         if (existingProcessor) {
-            if (existingProcessor.sealed) {
+            if (existingProcessor.metadata?.sealed) {
                 console.warn(
                     `Processor with command: ${processor.command} is sealed and cannot be replaced.`,
                 );
@@ -339,7 +339,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         const existingProcessor = this.getProcessorByName(processor.command);
 
         if (existingProcessor) {
-            if (existingProcessor.sealed) {
+            if (existingProcessor.metadata?.sealed) {
                 console.warn(
                     `Processor with command: ${processor.command} is sealed and cannot be removed.`,
                 );

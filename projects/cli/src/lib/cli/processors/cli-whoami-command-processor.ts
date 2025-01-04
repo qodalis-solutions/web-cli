@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@angular/core';
 import {
     CliProcessCommand,
+    CliProcessorMetadata,
     ICliCommandAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
@@ -20,7 +21,9 @@ export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
-    sealed = true;
+    metadata?: CliProcessorMetadata | undefined = {
+        sealed: true,
+    };
 
     constructor(
         @Inject(ICliUserSessionService_TOKEN)

@@ -16,3 +16,18 @@ packages add @qodalis/cli-server-logs
 ```
 
 This command downloads and registers the extension for use within the CLI environment.
+
+# Usage
+
+```bash
+server-logs live
+server-logs live --level=error
+server-logs live --file # on Ctrl + C the logs are downloaded in a file
+server-logs live --pattern=text-to-search # supports regex
+
+server-logs --help # for more options
+```
+
+# Dependencies
+
+This extension is dependent on a server which use signalR as a transport layer.

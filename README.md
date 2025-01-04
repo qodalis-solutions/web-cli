@@ -118,6 +118,7 @@ Example:
 ```bash
 root:~$ packages add guid
 root:~$ packages add regex
+root:~$ packages add string
 root:~$ packages add lodash
 ```
 
@@ -155,6 +156,7 @@ root:~$
 - [@qodalis/cli-regex](https://www.npmjs.com/package/@qodalis/cli-regex) - provide utilities for working with regular expressions
 - [@qodalis/cli-speed-test](https://www.npmjs.com/package/@qodalis/cli-speed-test) - run the internet speed test
 - [@qodalis/cli-browser-storage](https://www.npmjs.com/package/@qodalis/cli-browser-storage) - provide commands to operate with browser storage like cookie, localStorage etc.
+- [@qodalis/cli-string](https://www.npmjs.com/package/@qodalis/cli-browser-storage) - provide commands to operate with strings.
 - More will be implemented ...
 
 ## Extending with Custom Commands

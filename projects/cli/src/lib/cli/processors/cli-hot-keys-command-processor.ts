@@ -4,6 +4,7 @@ import {
     CliProcessCommand,
     ICliCommandProcessor,
     CliForegroundColor,
+    CliProcessorMetadata,
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { hotkeysInfo } from '../constants';
@@ -20,7 +21,9 @@ export class CliHotKeysCommandProcessor implements ICliCommandProcessor {
 
     author = DefaultLibraryAuthor;
 
-    sealed = true;
+    metadata?: CliProcessorMetadata | undefined = {
+        sealed: true,
+    };
 
     async processCommand(
         _: CliProcessCommand,

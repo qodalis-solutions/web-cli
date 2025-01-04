@@ -4,6 +4,7 @@ import {
     CliProcessCommand,
     ICliCommandProcessor,
     ICliCommandAuthor,
+    CliProcessorMetadata,
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
@@ -22,7 +23,9 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
-    sealed = true;
+    metadata?: CliProcessorMetadata | undefined = {
+        sealed: true,
+    };
 
     async processCommand(
         _: CliProcessCommand,
