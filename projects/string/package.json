@@ -26,6 +26,7 @@
     "@qodalis/angular-cli": "^1.0.17",
     "@qodalis/cli-core": "^0.0.5",
     "lodash": "^4.17.21",
+    "@types/lodash": "^4.17.14",
     "tslib": "^2.3.0"
   },
   "sideEffects": false,
@@ -40,7 +41,5 @@
       "url": "https://unpkg.com/lodash@4.17.21/lodash.js"
     }
   ],
-  "devDependencies": {
-    "@types/lodash": "^4.17.14"
-  }
+  "devDependencies": {}
 }

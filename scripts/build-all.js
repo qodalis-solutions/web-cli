@@ -53,8 +53,12 @@ async function buildProjects() {
     // Sequentially execute the build command for each folder
     for (const folder of subfolders) {
       const folderPath = path.join(projectsFolder, folder);
-      const command = `cd ${rootFolder} && ng build ${folder}`;
-      await runCommand(command, folderPath);
+
+      await runCommand(
+        `cd ${folderPath} && npm i || echo 'Skip install'`,
+        folderPath,
+      );
+      await runCommand(`cd ${rootFolder} && ng build ${folder}`, folderPath);
     }
 
     for (const folder of subfolders) {
