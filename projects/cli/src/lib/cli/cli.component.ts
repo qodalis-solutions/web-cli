@@ -26,6 +26,7 @@ import { CliExecutionContext } from './services/cli-execution-context';
 import { ICliUserSessionService_TOKEN } from './tokens';
 import { LIBRARY_VERSION } from '../version';
 import { CLi_Name_Art } from './constants';
+import { WebLinksAddon } from 'xterm-addon-web-links';
 
 @Component({
     selector: 'cli',
@@ -115,6 +116,9 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         this.fitAddon = new FitAddon();
 
         this.terminal.loadAddon(this.fitAddon);
+
+        const webLinksAddon = new WebLinksAddon();
+        this.terminal.loadAddon(webLinksAddon);
 
         this.terminal.open(this.terminalDiv.nativeElement);
 

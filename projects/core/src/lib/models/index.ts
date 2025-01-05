@@ -51,10 +51,43 @@ export enum CliBackgroundColor {
 }
 
 export enum CliIcon {
-    CheckIcon = '✔',
-    CrossIcon = '✘',
-    InfoIcon = 'ℹ',
-    WarningIcon = '⚠',
+    CheckIcon = '✔', // Success, completion
+    CrossIcon = '✘', // Failure, error
+    InfoIcon = 'ℹ', // Information
+    WarningIcon = '⚠', // Warning
+
+    // Additional icons
+    ArrowRight = '→', // Navigation or next step
+    ArrowLeft = '←', // Previous step or navigation
+    ArrowUp = '↑', // Up direction
+    ArrowDown = '↓', // Down direction
+    Star = '★', // Highlight or favorite
+    Dot = '•', // List item
+    Ellipsis = '…', // Loading or truncated text
+    QuestionMark = '?', // Help or unknown state
+    Exclamation = '❗', // Emphasis or alert
+    Plus = '+', // Addition or increment
+    Minus = '-', // Subtraction or decrement
+    Progress = '⏳', // Indicating progress
+    Clock = '⏰', // Time-related
+    Folder = '📁', // Directory or file grouping
+    File = '📄', // File or document
+    Edit = '✏', // Edit or modify
+    Trash = '🗑', // Deletion or removal
+    Lock = '🔒', // Secured or locked
+    Unlock = '🔓', // Unlocked or accessible
+    Heart = '❤', // Love or favorite
+    Gear = '⚙', // Settings or configuration
+    Sun = '☀', // Brightness or day
+    Moon = '🌙', // Night or dark mode
+    Search = '🔍', // Search or find
+    Power = '⏻', // On/Off state
+    Reload = '🔄', // Refresh or reload
+    Play = '▶', // Start or play
+    Pause = '⏸', // Pause or stop temporarily
+    Stop = '⏹', // Stop or end
+    Success = '✅', // Success (alternative to CheckIcon)
+    Failure = '❌', // Failure (alternative to CrossIcon)
 }
 
 export type ICliUser = {

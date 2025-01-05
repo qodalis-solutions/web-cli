@@ -312,7 +312,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         context.writer.writeln(this.description);
 
         context.writer.writeInfo(
-            'Available packages can be found at https://www.npmjs.com/settings/qodalis/packages',
+            'Available packages can be found at https://www.npmjs.com/org/qodalis',
         );
 
         context.writer.writeln('  packages ls');
