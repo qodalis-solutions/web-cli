@@ -96,6 +96,7 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         context.writer.writeln(
                             'Use "todo add <text>" to add a new TODO item.',
                         );
+                        context.process.output(JSON.stringify(this.todos));
                         return;
                     }
                     this.todos.forEach((todo) => {
@@ -103,6 +104,8 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                             `[${todo.completed ? context.writer.wrapInColor(CliIcon.CheckIcon, CliForegroundColor.Green) : ' '}] #${todo.id} - ${todo.completed ? this.lineThroughText(todo.text) : todo.text}`,
                         );
                     });
+
+                    context.process.output(JSON.stringify(this.todos));
                 },
             },
             {
@@ -118,15 +121,20 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         );
                         return;
                     }
-                    this.todos.push({
+
+                    const newItem = {
                         id: this.nextId++,
                         text,
                         completed: false,
-                    });
+                    };
+
+                    this.todos.push(newItem);
 
                     this.saveToStorage();
 
                     context.writer.writeSuccess(`Added TODO: "${text}"`);
+
+                    context.process.output(newItem.id.toString());
                 },
             },
             {

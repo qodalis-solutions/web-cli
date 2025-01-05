@@ -374,11 +374,49 @@ export interface ICliCommandExecutorService {
 
 export interface ICliExecutionProcess {
     /**
+     * Indicates if the process has exited
+     */
+    exited?: boolean;
+
+    /**
+     * The exit code of the process
+     */
+    exitCode?: number;
+
+    /**
+     * Indicates if the process is running
+     */
+    running: boolean;
+
+    /**
+     * The data of the process
+     */
+    data: string | undefined;
+
+    /**
      * Exit the process
      * @param code The exit code
      * @returns void
      */
     exit: (code?: number) => void;
+
+    /**
+     * Output data from the process
+     * @param data The data to output
+     */
+    output(data: string): void;
+
+    /**
+     * Start the process
+     * @returns void
+     */
+    start: () => void;
+
+    /**
+     * End the process
+     * @returns void
+     */
+    end: () => void;
 }
 
 /**

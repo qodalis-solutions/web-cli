@@ -129,6 +129,8 @@ export class ObjectDescriber {
                     } else {
                         context.writer.writeln(result?.toString());
                     }
+
+                    context.process.output(result?.toString());
                 },
                 writeDescription: (context: ICliExecutionContext) => {
                     context.writer.writeln(func);

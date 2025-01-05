@@ -49,6 +49,57 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         command: string,
         context: ICliExecutionContext,
     ): Promise<void> {
+        // Split commands by logical operators
+        const parts = command.split(/(&&|\|\|)/).map((part) => part.trim());
+        let shouldRunNextCommand = true; // Tracks whether to execute the next command
+
+        for (let i = 0; i < parts.length; i++) {
+            const current = parts[i];
+
+            // If the current part is a logical operator, adjust the shouldRunNextCommand flag
+            if (current === '&&') {
+                shouldRunNextCommand = shouldRunNextCommand && true;
+                continue;
+            } else if (current === '||') {
+                shouldRunNextCommand = !shouldRunNextCommand;
+                continue;
+            }
+
+            // Skip execution based on previous command's result and operator
+            if (!shouldRunNextCommand) {
+                shouldRunNextCommand = true; // Reset for next iteration
+                continue;
+            }
+
+            // Execute the command
+            let commandSuccess = true;
+            try {
+                const data = context.process.data;
+                const command = current;
+
+                context.process.start();
+
+                await this.executeSingleCommand(command, data, context);
+
+                commandSuccess = context.process.exitCode === 0;
+
+                context.process.end();
+            } catch (e) {
+                context.process.end();
+                commandSuccess = false;
+
+                context.writer.writeError(`Command ${current} failed: ${e}`);
+            }
+
+            shouldRunNextCommand = commandSuccess;
+        }
+    }
+
+    private async executeSingleCommand(
+        command: string,
+        data: string | undefined,
+        context: ICliExecutionContext,
+    ): Promise<void> {
         const { commandName, args } = this.commandParser.parse(command);
 
         const [mainCommand, ...other] = commandName.split(' ');
@@ -79,6 +130,8 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                 'Use packages to install additional commands.',
             );
 
+            context.process.exit(-1);
+
             return;
         }
 
@@ -87,6 +140,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
             chainCommands: chainCommands,
             rawCommand: command,
             args: args,
+            data: data,
         };
 
         if (this.versionRequested(context, processor, args)) {
@@ -112,10 +166,22 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         commandToProcess.value = value;
 
         if (processor.valueRequired && !value) {
-            context.writer.writeError(
-                `Value required for command: ${commandName} <value>`,
-            );
-            return;
+            // Check if the value is provided in the command and set it for chaining
+            if (data) {
+                commandToProcess.value = data;
+            } else {
+                context.writer.writeError(
+                    `Value required for command: ${commandName} <value>`,
+                );
+
+                context.process.exit(-1);
+
+                return;
+            }
+        } else if (processor.allowUnlistedCommands && !value) {
+            if (data) {
+                commandToProcess.value = data;
+            }
         }
 
         if (processor.validateBeforeExecution) {
@@ -129,6 +195,9 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                     validationResult?.message ||
                         'An error occurred while validating the command.',
                 );
+
+                context.process.exit(-1);
+
                 return;
             }
         }
@@ -167,6 +236,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                 }
             } else {
                 context.writer.writeError(`Error executing command: ${e}`);
+                context.process.exit(-1);
             }
         }
     }

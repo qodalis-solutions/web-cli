@@ -28,11 +28,11 @@ export class CliClearCommandProcessor implements ICliCommandProcessor {
 export class CliEchoCommandProcessor implements ICliCommandProcessor {
     command = 'echo';
 
-    description?: string | undefined = 'Prints the specified text';
+    description = 'Prints the specified text';
 
-    allowUnlistedCommands?: boolean | undefined = true;
+    allowUnlistedCommands = true;
 
-    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
+    author = DefaultLibraryAuthor;
 
     metadata?: CliProcessorMetadata | undefined = {
         icon: '📢',
@@ -42,7 +42,9 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.writer.writeln(command.command.replace('echo ', '').trim());
+        const text = command.value ?? '';
+        context.process.output(text);
+        context.writer.writeln(text);
     }
 
     writeDescription(context: ICliExecutionContext): void {
