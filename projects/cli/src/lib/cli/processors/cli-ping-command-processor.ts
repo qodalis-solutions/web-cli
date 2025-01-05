@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@angular/core';
-import { DefaultLibraryAuthor } from '@qodalis/cli-core';
+import { CliProcessorMetadata, DefaultLibraryAuthor } from '@qodalis/cli-core';
 import {
     CliProcessCommand,
     ICliCommandAuthor,
@@ -16,6 +16,10 @@ export class CliPingCommandProcessor implements ICliCommandProcessor {
     description?: string | undefined = 'Pings the server';
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
+
+    metadata?: CliProcessorMetadata | undefined = {
+        icon: '🏓',
+    };
 
     constructor(
         @Inject(ICliPingServerService_TOKEN)

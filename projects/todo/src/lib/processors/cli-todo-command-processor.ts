@@ -3,6 +3,7 @@ import {
     CliForegroundColor,
     CliIcon,
     CliProcessCommand,
+    CliProcessorMetadata,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
@@ -21,6 +22,10 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
     version = LIBRARY_VERSION;
 
     processors?: ICliCommandProcessor[] | undefined = [];
+
+    metadata?: CliProcessorMetadata | undefined = {
+        icon: '📝',
+    };
 
     private todos: { id: number; text: string; completed: boolean }[] = [];
 

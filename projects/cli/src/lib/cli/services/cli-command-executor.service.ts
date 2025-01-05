@@ -6,6 +6,7 @@ import {
     getRightOfWord,
     getParameterValue,
     ICliCommandExecutorService,
+    CliIcon,
 } from '@qodalis/cli-core';
 import {
     CliClearCommandProcessor,
@@ -144,7 +145,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
         context.spinner?.show();
 
-        context.spinner?.setText('Booting...');
+        context.spinner?.setText(CliIcon.Rocket + '  Booting...');
 
         processors.forEach((impl) => this.registerProcessor(impl));
 

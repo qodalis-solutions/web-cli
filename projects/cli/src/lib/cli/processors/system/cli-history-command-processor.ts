@@ -5,6 +5,7 @@ import {
     ICliCommandProcessor,
     ICliCommandAuthor,
     CliProcessorMetadata,
+    CliIcon,
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
@@ -25,6 +26,7 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
+        icon: CliIcon.Code,
     };
 
     constructor(private readonly commandHistoryService: CommandHistoryService) {

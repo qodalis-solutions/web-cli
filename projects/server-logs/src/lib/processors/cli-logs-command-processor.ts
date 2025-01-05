@@ -27,6 +27,7 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata | undefined = {
         requireServer: true,
+        icon: '📜',
     };
 
     parameters?: ICliCommandParameterDescriptor[] | undefined = [

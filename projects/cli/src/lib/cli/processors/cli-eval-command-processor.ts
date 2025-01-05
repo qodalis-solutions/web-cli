@@ -1,4 +1,4 @@
-import { DefaultLibraryAuthor } from '@qodalis/cli-core';
+import { CliProcessorMetadata, DefaultLibraryAuthor } from '@qodalis/cli-core';
 import {
     CliProcessCommand,
     ICliCommandProcessor,
@@ -10,6 +10,10 @@ export class CliEvalCommandProcessor implements ICliCommandProcessor {
     description = 'Evaluate a JavaScript expression';
     author = DefaultLibraryAuthor;
     allowUnlistedCommands = true;
+
+    metadata?: CliProcessorMetadata | undefined = {
+        icon: '🧮',
+    };
 
     async processCommand(
         command: CliProcessCommand,

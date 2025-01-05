@@ -1,4 +1,8 @@
-import { DefaultLibraryAuthor, highlightTextWithBg } from '@qodalis/cli-core';
+import {
+    CliProcessorMetadata,
+    DefaultLibraryAuthor,
+    highlightTextWithBg,
+} from '@qodalis/cli-core';
 import {
     CliProcessCommand,
     ICliCommandProcessor,
@@ -16,6 +20,10 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
     processors?: ICliCommandProcessor[] | undefined = [];
 
     version = LIBRARY_VERSION;
+
+    metadata?: CliProcessorMetadata | undefined = {
+        icon: '🔍',
+    };
 
     constructor() {
         this.processors = [

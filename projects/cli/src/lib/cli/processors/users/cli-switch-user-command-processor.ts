@@ -7,6 +7,7 @@ import {
     ICliUsersStoreService,
     ICliUserSessionService,
     CliProcessorMetadata,
+    CliIcon,
 } from '@qodalis/cli-core';
 
 import { firstValueFrom } from 'rxjs';
@@ -41,6 +42,7 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
         module: 'users',
+        icon: CliIcon.User,
     };
 
     valueRequired = true;

@@ -1,4 +1,4 @@
-import { DefaultLibraryAuthor } from '@qodalis/cli-core';
+import { CliProcessorMetadata, DefaultLibraryAuthor } from '@qodalis/cli-core';
 import {
     CliProcessCommand,
     ICliCommandProcessor,
@@ -17,6 +17,10 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
     processors?: ICliCommandProcessor[] | undefined = [];
 
     version = LIBRARY_VERSION;
+
+    metadata?: CliProcessorMetadata | undefined = {
+        icon: '🚀',
+    };
 
     constructor() {
         this.processors = [

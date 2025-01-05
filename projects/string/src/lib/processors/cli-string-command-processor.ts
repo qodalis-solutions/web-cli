@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {
     CliProcessCommand,
+    CliProcessorMetadata,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
@@ -20,6 +21,10 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
     version = LIBRARY_VERSION;
 
     processors?: ICliCommandProcessor[] | undefined = [];
+
+    metadata?: CliProcessorMetadata | undefined = {
+        icon: '🔤',
+    };
 
     constructor() {
         this.processors = ObjectDescriber.describe((_ as any).default, {

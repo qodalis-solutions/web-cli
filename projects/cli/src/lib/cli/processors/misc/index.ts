@@ -1,4 +1,4 @@
-import { DefaultLibraryAuthor } from '@qodalis/cli-core';
+import { CliProcessorMetadata, DefaultLibraryAuthor } from '@qodalis/cli-core';
 import {
     CliProcessCommand,
     ICliCommandAuthor,
@@ -12,6 +12,10 @@ export class CliClearCommandProcessor implements ICliCommandProcessor {
     description?: string | undefined = 'Clears the terminal';
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
+
+    metadata?: CliProcessorMetadata | undefined = {
+        icon: '🧹',
+    };
 
     async processCommand(
         _: CliProcessCommand,
@@ -29,6 +33,10 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
     allowUnlistedCommands?: boolean | undefined = true;
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
+
+    metadata?: CliProcessorMetadata | undefined = {
+        icon: '📢',
+    };
 
     async processCommand(
         command: CliProcessCommand,

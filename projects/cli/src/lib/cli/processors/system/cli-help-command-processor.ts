@@ -6,6 +6,7 @@ import {
     ICliCommandParameterDescriptor,
     CliForegroundColor,
     CliProcessorMetadata,
+    CliIcon,
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { CliHotKeysCommandProcessor } from './cli-hot-keys-command-processor';
@@ -24,6 +25,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
+        icon: CliIcon.Help,
     };
 
     constructor(
@@ -53,7 +55,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             commands.forEach((command) => {
                 const processor = executor.findProcessor(command, []);
                 writer.writeln(
-                    `- \x1b[31m${command}\x1b[0m - ${
+                    `- ${processor?.metadata?.icon ? processor.metadata.icon : CliIcon.Extension}  ${writer.wrapInColor(command, CliForegroundColor.Cyan)} - ${
                         processor?.description || 'Missing description'
                     }`,
                 );
@@ -75,10 +77,16 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             if (processor) {
+                writer.write('\x1b[33mCommand: \x1b[0m');
+
+                if (processor.metadata?.icon) {
+                    writer.write(`${processor.metadata.icon}  `);
+                }
+
                 writer.writeln(
-                    `\x1b[33mCommand:\x1b[0m ${writer.wrapInColor(
+                    `${writer.wrapInColor(
                         processor.command,
-                        CliForegroundColor.Blue,
+                        CliForegroundColor.Cyan,
                     )} @${
                         processor.version || '1.0.0'
                     } - ${processor.description}`,
@@ -130,7 +138,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                         writer.writeln(
                             `- ${writer.wrapInColor(
                                 subprocessor.command,
-                                CliForegroundColor.Blue,
+                                CliForegroundColor.Cyan,
                             )} - ${subprocessor.description}`,
                         );
                     });
@@ -164,7 +172,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                     writer.writeln(
                         `--${writer.wrapInColor(
                             parameter.name,
-                            CliForegroundColor.Blue,
+                            CliForegroundColor.Cyan,
                         )} (${parameter.type}) ${
                             parameter.aliases
                                 ? `(${parameter.aliases.join(', ')})`

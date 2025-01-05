@@ -23,6 +23,7 @@ export class CliHotKeysCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
+        icon: '🔥',
     };
 
     async processCommand(

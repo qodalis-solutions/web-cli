@@ -29,6 +29,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
     readonly metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
+        icon: '📦',
     };
 
     private registeredDependencies: string[] = [];

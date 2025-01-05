@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
 import {
+    CliIcon,
     CliProcessCommand,
     CliProcessorMetadata,
     ICliCommandParameterDescriptor,
@@ -24,6 +25,7 @@ export class CliListUsersCommandProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
         module: 'users',
+        icon: CliIcon.User,
     };
 
     parameters?: ICliCommandParameterDescriptor[] | undefined = [

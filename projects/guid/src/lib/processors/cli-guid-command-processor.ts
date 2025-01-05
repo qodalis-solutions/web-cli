@@ -1,5 +1,7 @@
 import {
     CliProcessCommand,
+    CliProcessorMetadata,
+    DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
@@ -12,13 +14,15 @@ import { LIBRARY_VERSION } from '../version';
 export class CliGuidCommandProcessor implements ICliCommandProcessor {
     command = 'guid';
     description = 'Generate and validate GUIDs';
-    author = {
-        name: 'Nicolae Lupei',
-        email: 'nicolae.lupei@qodalis.com',
-    };
+    author = DefaultLibraryAuthor;
+
     version = LIBRARY_VERSION;
 
     processors?: ICliCommandProcessor[] | undefined = [];
+
+    metadata?: CliProcessorMetadata | undefined = {
+        icon: '🆔',
+    };
 
     constructor() {
         this.processors = [

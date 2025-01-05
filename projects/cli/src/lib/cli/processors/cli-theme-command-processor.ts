@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {
     CliForegroundColor,
     CliProcessCommand,
+    CliProcessorMetadata,
     ICliCommandAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
@@ -49,6 +50,11 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
     version?: string | undefined = '1.0.1';
 
     processors?: ICliCommandProcessor[] | undefined = [];
+
+    metadata?: CliProcessorMetadata | undefined = {
+        sealed: true,
+        icon: '🎨',
+    };
 
     private themeOptions: string[] = Object.keys(themeOptions);
 

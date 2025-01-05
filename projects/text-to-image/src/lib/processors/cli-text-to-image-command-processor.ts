@@ -1,6 +1,7 @@
 import {
     CliForegroundColor,
     CliProcessCommand,
+    CliProcessorMetadata,
     DefaultLibraryAuthor,
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
@@ -13,6 +14,11 @@ export class CliTextToImageCommandProcessor implements ICliCommandProcessor {
     description = 'Convert text to image';
     author = DefaultLibraryAuthor;
     valueRequired = true;
+
+    metadata?: CliProcessorMetadata | undefined = {
+        icon: '🖼️',
+    };
+
     parameters?: ICliCommandParameterDescriptor[] | undefined = [
         {
             name: 'fileName',
