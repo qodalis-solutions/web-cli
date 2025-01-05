@@ -7,6 +7,7 @@ import {
     getParameterValue,
     ICliCommandExecutorService,
     CliIcon,
+    CancellablePromise,
 } from '@qodalis/cli-core';
 import {
     CliClearCommandProcessor,
@@ -17,6 +18,8 @@ import {
 } from '../processors';
 import { CommandParser } from '../../utils';
 import { CliCommandProcessor_TOKEN } from '../tokens';
+import { ProcessExitedError } from './cli-execution-process';
+import { CliExecutionContext } from './cli-execution-context';
 
 @Injectable({
     providedIn: 'root',
@@ -119,11 +122,41 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
             }
         }
 
+        let cancellable: CancellablePromise<void> = null!;
+
         try {
-            await processor.processCommand(commandToProcess, context);
+            cancellable = new CancellablePromise<void>(
+                async (resolve, reject) => {
+                    processor
+                        .processCommand(commandToProcess, context)
+                        .then(() => {
+                            resolve();
+                        })
+                        .catch((e) => {
+                            reject(e);
+                        });
+                },
+            );
+
+            await cancellable.promise;
         } catch (e) {
             context.spinner?.hide();
-            context.writer.writeError(`Error executing command: ${e}`);
+
+            if (e instanceof ProcessExitedError) {
+                cancellable?.cancel();
+
+                (context as CliExecutionContext)?.abort();
+
+                if (e.code !== 0) {
+                    context.writer.writeError(
+                        `Process exited with code ${e.code}`,
+                    );
+                } else {
+                    context.writer.writeInfo('Process exited successfully');
+                }
+            } else {
+                context.writer.writeError(`Error executing command: ${e}`);
+            }
         }
     }
 

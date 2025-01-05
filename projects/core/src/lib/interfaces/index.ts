@@ -8,7 +8,6 @@ import {
     CliProcessorMetadata,
     ICliUser,
     ICliUserSession,
-    Package,
 } from '../models';
 
 export interface ICliCommandAuthor {
@@ -373,6 +372,15 @@ export interface ICliCommandExecutorService {
     unregisterProcessor(processor: ICliCommandProcessor): void;
 }
 
+export interface ICliExecutionProcess {
+    /**
+     * Exit the process
+     * @param code The exit code
+     * @returns void
+     */
+    exit: (code?: number) => void;
+}
+
 /**
  * Represents the context in which a command is executed
  */
@@ -431,6 +439,11 @@ export interface ICliExecutionContext {
      * The prompt to use for prompting the user for input
      */
     showPrompt: () => void;
+
+    /**
+     * The process to use for exiting the CLI
+     */
+    process: ICliExecutionProcess;
 }
 
 /**

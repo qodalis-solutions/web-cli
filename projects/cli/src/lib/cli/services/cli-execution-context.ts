@@ -9,6 +9,7 @@ import {
     ICliPercentageProgressBar,
     ICliCommandDataStore,
     ICliClipboard,
+    ICliExecutionProcess,
 } from '@qodalis/cli-core';
 import { CliCommandExecutorService } from './cli-command-executor.service';
 import { CliTerminalWriter } from './cli-terminal-writer';
@@ -16,6 +17,7 @@ import { CliTerminalSpinner } from './cli-terminal-spinner';
 import { CliTerminalProgressBar } from './cli-terminal-progress-bar';
 import { CliCommandDataStore } from './cli-command-data-store';
 import { CliClipboard } from './cli-clipboard';
+import { CliExecutionProcess } from './cli-execution-process';
 
 export class CliExecutionContext implements ICliExecutionContext {
     public userSession?: ICliUserSession;
@@ -34,6 +36,8 @@ export class CliExecutionContext implements ICliExecutionContext {
 
     public readonly clipboard: ICliClipboard;
 
+    public readonly process: ICliExecutionProcess;
+
     constructor(
         public terminal: Terminal,
         public executor: CliCommandExecutorService,
@@ -46,6 +50,7 @@ export class CliExecutionContext implements ICliExecutionContext {
         this.spinner = new CliTerminalSpinner(terminal);
         this.progressBar = new CliTerminalProgressBar(terminal);
         this.clipboard = new CliClipboard(this);
+        this.process = new CliExecutionProcess(this);
     }
 
     /**

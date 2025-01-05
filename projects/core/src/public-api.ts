@@ -11,3 +11,5 @@ export * from './lib/modules';
 export * from './lib/utils';
 
 export * from './lib/constants';
+
+export * from './lib/types';
