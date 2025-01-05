@@ -3,7 +3,20 @@ const path = require("path");
 const readline = require("readline");
 const { exec } = require("child_process");
 
-const { runCommand } = require("./shared");
+function runCommand(command, folder) {
+  return new Promise((resolve, reject) => {
+    console.log(`Running command: "${command}" in folder: ${folder}`);
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error in folder ${folder}:`, error.message);
+        return reject(error);
+      }
+      if (stdout) console.log(`Output from ${folder}:\n${stdout}`);
+      if (stderr) console.error(`Error output from ${folder}:\n${stderr}`);
+      resolve();
+    });
+  });
+}
 
 async function prompt(question) {
   const rl = readline.createInterface({
@@ -109,7 +122,7 @@ async function main() {
 
   console.log(`Creating ${name} library...`);
 
-  await runCommand(exec, `ng generate library ${name}`, process.cwd());
+  await runCommand(`ng generate library ${name}`, process.cwd());
 
   const projectDirectory = "./projects/" + name;
 
@@ -186,7 +199,7 @@ export const LIBRARY_VERSION = '${version}';
     tsConfig.replace(name, "@qodalis/cli-" + name),
   );
 
-  await runCommand(exec, `ng build ${name}`, process.cwd());
+  await runCommand(`ng build ${name}`, process.cwd());
 }
 
 main();
