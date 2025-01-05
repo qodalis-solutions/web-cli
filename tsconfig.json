@@ -11,7 +11,12 @@
       "@qodalis/cli-regex": ["dist/regex"],
       "@qodalis/cli-speed-test": ["dist/speed-test"],
       "@qodalis/cli-browser-storage": ["dist/browser-storage"],
-      "@qodalis/cli-string": ["dist/string"]
+      "@qodalis/cli-string": [
+        "dist/string"
+      ],
+      "@qodalis/cli-todo": [
+        "dist/todo"
+      ]
     },
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,

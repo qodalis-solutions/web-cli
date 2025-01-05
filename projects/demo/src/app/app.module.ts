@@ -18,6 +18,7 @@ import { CliSpeedTestModule } from '@qodalis/cli-speed-test';
 import { CliBrowserStorageModule } from '@qodalis/cli-browser-storage';
 import { CustomCliCanViewService } from './services/custom-cli-can-view.service';
 import { CliStringModule } from '@qodalis/cli-string';
+import { CliTodoModule } from '@qodalis/cli-todo';
 
 @NgModule({
     declarations: [AppComponent],
@@ -31,6 +32,7 @@ import { CliStringModule } from '@qodalis/cli-string';
         CliSpeedTestModule,
         CliBrowserStorageModule,
         CliStringModule,
+        CliTodoModule,
     ],
     providers: [
         {

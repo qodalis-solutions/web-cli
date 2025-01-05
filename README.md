@@ -164,6 +164,7 @@ root:~$
 - [@qodalis/cli-speed-test](https://www.npmjs.com/package/@qodalis/cli-speed-test) - run the internet speed test
 - [@qodalis/cli-browser-storage](https://www.npmjs.com/package/@qodalis/cli-browser-storage) - provide commands to operate with browser storage like cookie, localStorage etc.
 - [@qodalis/cli-string](https://www.npmjs.com/package/@qodalis/cli-browser-storage) - provide commands to operate with strings.
+- [@qodalis/cli-todo](https://www.npmjs.com/package/@qodalis/cli-todo) - A command-line tool for managing your tasks efficiently. Add, list, complete, and remove TODO items with simple commands.
 - More will be implemented ...
 
 ## Extending with Custom Commands

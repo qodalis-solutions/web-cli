@@ -61,6 +61,13 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                 `Command: ${commandName} not found or not installed`,
             );
 
+            context.writer.writeInfo(
+                'Type "help" for a list of available commands.',
+            );
+            context.writer.writeInfo(
+                'Use packages to install additional commands.',
+            );
+
             return;
         }
 
