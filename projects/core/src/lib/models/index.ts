@@ -262,6 +262,11 @@ export type CliOptions = Record<string, any> & {
          * Hide the prompt to display when the CLI is ready to accept input
          */
         hideUserName?: boolean;
+
+        /**
+         * Reload the page when the user changes
+         */
+        reloadPageOnUserChange?: boolean;
     };
 
     /**

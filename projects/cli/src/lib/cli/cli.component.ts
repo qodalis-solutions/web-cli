@@ -15,6 +15,7 @@ import {
     Terminal,
 } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
+import { WebLinksAddon } from '@xterm/addon-web-links';
 import { CliCommandExecutorService } from './services/cli-command-executor.service';
 import { CommandHistoryService } from './services/command-history.service';
 import {
@@ -26,7 +27,6 @@ import { CliExecutionContext } from './services/cli-execution-context';
 import { ICliUserSessionService_TOKEN } from './tokens';
 import { LIBRARY_VERSION } from '../version';
 import { CLi_Name_Art } from './constants';
-import { WebLinksAddon } from 'xterm-addon-web-links';
 
 @Component({
     selector: 'cli',

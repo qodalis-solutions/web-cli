@@ -8,6 +8,7 @@
   "allowedNonPeerDependencies": [
     "@qodalis/cli-core",
     "@xterm/xterm",
-    "@xterm/addon-fit"
+    "@xterm/addon-fit",
+    "@xterm/addon-web-links"
   ]
 }
