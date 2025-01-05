@@ -27,8 +27,13 @@ async function installDeps() {
     // Read all subfolders
     const entries = fs.readdirSync(projectsFolder, { withFileTypes: true });
 
+    const excludedFolders = ["cli"];
+
     const subfolders = entries
       .filter((entry) => entry.isDirectory())
+      .filter(
+        (entry) => entry.isDirectory() && !excludedFolders.includes(entry.name),
+      )
       .map((entry) => entry.name);
 
     if (subfolders.length === 0) {
