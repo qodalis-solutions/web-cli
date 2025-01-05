@@ -72,7 +72,11 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
     ngAfterViewInit(): void {
         this.handleResize();
 
-        this.displayWelcomeMessage();
+        this.commandExecutor
+            .initializeProcessors(this.executionContext!)
+            .then(() => {
+                this.displayWelcomeMessage();
+            });
     }
 
     private displayWelcomeMessage() {
@@ -188,8 +192,6 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         );
 
         this.executionContext.setSession(this.currentUserSession!);
-
-        this.commandExecutor.initializeProcessors(this.executionContext);
     }
 
     private handleResize(): void {

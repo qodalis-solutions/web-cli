@@ -142,9 +142,15 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
             );
         }
 
+        context.spinner?.show();
+
+        context.spinner?.setText('Booting...');
+
         processors.forEach((impl) => this.registerProcessor(impl));
 
         await this.initializeProcessorsInternal(context, this.processors);
+
+        context.spinner?.hide();
 
         this.initialized = true;
     }
@@ -184,7 +190,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         processors: ICliCommandProcessor[],
     ): Promise<void> {
         try {
-            processors.forEach(async (p) => {
+            for (const p of processors) {
                 if (p.initialize) {
                     await p.initialize(context);
                 }
@@ -195,7 +201,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                         p.processors,
                     );
                 }
-            });
+            }
         } catch (e) {
             context.writer.writeError(`Error initializing processors: ${e}`);
         }
