@@ -1,0 +1,36 @@
+import { Injectable } from '@angular/core';
+import {
+    CliProcessCommand,
+    DefaultLibraryAuthor,
+    ICliCommandProcessor,
+    ICliExecutionContext
+} from '@qodalis/cli-core';
+import { LIBRARY_VERSION } from '../version';
+
+@Injectable()
+export class Cli{{processorName}}CommandProcessor implements ICliCommandProcessor {
+    command = '{{name}}';
+
+    description = '{{description}}';
+
+    author = DefaultLibraryAuthor;
+
+    version = LIBRARY_VERSION;
+
+    processors?: ICliCommandProcessor[] | undefined = [];
+
+    constructor() {
+
+    }
+
+    async processCommand(
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        context.executor.showHelp(command, context);
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        context.writer.writeln(this.description!);
+    }
+}

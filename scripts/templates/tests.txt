@@ -1,0 +1,9 @@
+import { Cli{{processorName}}CommandProcessor } from '../lib/processors/cli-{{name}}-command-processor';
+
+describe('Cli{{processorName}}Module', () => {
+    it('processor instance should be created', () => {
+        const processor = new Cli{{processorName}}CommandProcessor();
+
+        expect(processor).toBeDefined();
+    });
+});

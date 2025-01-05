@@ -1,0 +1,7 @@
+/*
+ * Public API Surface of string
+ */
+
+export * from './lib/cli-{{name}}.module';
+
+export * from './lib/processors/cli-{{name}}-command-processor';

@@ -3,6 +3,7 @@
   "version": "1.0.1",
   "scripts": {
     "ng": "ng",
+    "create lib": "node ./scripts/create-library.js",
     "install projects deps": "node ./scripts/install-projects-deps.js",
     "build all": "node ./scripts/inject-versions.js && node ./scripts/build-all.js",
     "start demo": "ng serve demo --port 4300",
