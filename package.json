@@ -15,7 +15,8 @@
     "test": "ng test --watch=false --browsers=ChromeHeadless",
     "lint": "ng lint",
     "lint fix": "ng lint --fix",
-    "format": "prettier --write \"projects/**/*.{ts,html,css,scss}\""
+    "format": "prettier --write \"projects/**/*.{ts,html,css,scss}\"",
+    "docs": "typedoc"
   },
   "private": true,
   "dependencies": {
@@ -54,6 +55,7 @@
     "prettier": "^3.4.2",
     "rollup": "^4.29.1",
     "rollup-plugin-typescript2": "^0.36.0",
+    "typedoc": "^0.27.6",
     "typescript": "~5.1.3",
     "typescript-eslint": "8.18.0"
   }
