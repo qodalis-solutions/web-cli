@@ -10,6 +10,7 @@ import {
     ICliCommandDataStore,
     ICliClipboard,
     ICliExecutionProcess,
+    ICliCommandProcessor,
 } from '@qodalis/cli-core';
 import { CliCommandExecutorService } from './cli-command-executor.service';
 import { CliTerminalWriter } from './cli-terminal-writer';
@@ -21,6 +22,8 @@ import { CliExecutionProcess } from './cli-execution-process';
 
 export class CliExecutionContext implements ICliExecutionContext {
     public userSession?: ICliUserSession;
+
+    public mainProcessor?: ICliCommandProcessor;
 
     public readonly writer: ICliTerminalWriter;
 
@@ -41,7 +44,10 @@ export class CliExecutionContext implements ICliExecutionContext {
     constructor(
         public terminal: Terminal,
         public executor: CliCommandExecutorService,
-        public showPrompt: () => void,
+        public showPrompt: (options?: {
+            reset?: boolean;
+            newLine?: boolean;
+        }) => void,
         cliOptions?: CliOptions,
     ) {
         this.options = cliOptions;
@@ -51,6 +57,22 @@ export class CliExecutionContext implements ICliExecutionContext {
         this.progressBar = new CliTerminalProgressBar(terminal);
         this.clipboard = new CliClipboard(this);
         this.process = new CliExecutionProcess(this);
+    }
+
+    setMainProcessor(processor: ICliCommandProcessor | undefined): void {
+        if (!processor) {
+            this.mainProcessor = processor;
+
+            return;
+        }
+
+        this.writer.writeInfo(
+            'Set ' +
+                processor?.command +
+                ' as main processor, press Ctrl+C to exit',
+        );
+
+        this.mainProcessor = processor;
     }
 
     /**

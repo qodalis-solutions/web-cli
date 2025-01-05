@@ -55,9 +55,16 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
         const chainCommands = other.map((c) => c.toLowerCase());
 
-        const processor = this.findProcessor(
-            mainCommand.toLowerCase(),
+        const executionContext = context as CliExecutionContext;
+
+        const searchableProcessors = executionContext.mainProcessor
+            ? (executionContext.mainProcessor.processors ?? [])
+            : this.processors;
+
+        const processor = this._findProcessor(
+            mainCommand,
             chainCommands,
+            searchableProcessors,
         );
 
         if (!processor) {
@@ -87,6 +94,10 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         }
 
         if (await this.helpRequested(commandToProcess, context)) {
+            return;
+        }
+
+        if (this.setMainProcessorRequested(context, processor, args)) {
             return;
         }
 
@@ -252,6 +263,19 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                     processor.description || 'No description'
                 }`,
             );
+            return true;
+        }
+
+        return false;
+    }
+
+    private setMainProcessorRequested(
+        context: ICliExecutionContext,
+        processor: ICliCommandProcessor,
+        args: Record<string, any>,
+    ): boolean {
+        if (args['main']) {
+            context.setMainProcessor(processor);
             return true;
         }
 

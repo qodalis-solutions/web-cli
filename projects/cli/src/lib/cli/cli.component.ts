@@ -136,6 +136,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
                 if (event.code === 'KeyC' && event.ctrlKey) {
                     // Handle Ctrl+C
                     this.executionContext?.abort();
+                    this.executionContext?.setMainProcessor(undefined);
                     this.terminal.writeln('Ctrl+C');
                     this.printPrompt();
 
@@ -184,7 +185,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         this.executionContext = new CliExecutionContext(
             this.terminal,
             this.commandExecutor,
-            () => this.printPrompt(),
+            (o) => this.printPrompt(o),
             {
                 ...(this.options ?? {}),
                 terminalOptions: terminalOptions,
@@ -227,11 +228,16 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         this.currentLine = '';
         this.cursorPosition = 0;
 
-        const promtStartMessage =
+        let promtStartMessage =
             this.options?.usersModule?.hideUserName ||
             !this.options?.usersModule?.enabled
                 ? ''
                 : `\x1b[32m${this.currentUserSession?.user.email}\x1b[0m:`;
+
+        if (this.executionContext?.mainProcessor) {
+            promtStartMessage = `${this.executionContext.mainProcessor.command}`;
+        }
+
         const promtEndMessage = '\x1b[34m~\x1b[0m$ ';
 
         const prompt = `${promtStartMessage}${promtEndMessage}`;

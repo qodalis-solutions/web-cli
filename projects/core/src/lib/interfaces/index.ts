@@ -441,6 +441,12 @@ export interface ICliExecutionContext {
     showPrompt: () => void;
 
     /**
+     * Set the current main processor
+     * @param processor The processor to set
+     */
+    setMainProcessor(processor: ICliCommandProcessor): void;
+
+    /**
      * The process to use for exiting the CLI
      */
     process: ICliExecutionProcess;
