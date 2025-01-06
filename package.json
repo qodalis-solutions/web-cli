@@ -16,7 +16,7 @@
     "lint": "ng lint",
     "lint fix": "ng lint --fix",
     "format": "prettier --write \"projects/**/*.{ts,html,css,scss}\"",
-    "docs": "typedoc"
+    "docs": "typedoc && node ./scripts/typedoc-post-script.js"
   },
   "private": true,
   "dependencies": {

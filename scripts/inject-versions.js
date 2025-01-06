@@ -24,8 +24,8 @@ libraryDirs.forEach((lib) => {
   const version = packageJson.version;
 
   const versionFileContent = `
-  // Automatically generated during build
-  export const LIBRARY_VERSION = '${version}';
+// Automatically generated during build
+export const LIBRARY_VERSION = '${version}';
   `;
 
   fs.writeFileSync(versionFilePath, versionFileContent, { encoding: "utf8" });
