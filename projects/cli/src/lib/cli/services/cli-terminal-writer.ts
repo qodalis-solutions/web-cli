@@ -43,6 +43,29 @@ export class CliTerminalWriter implements ICliTerminalWriter {
         );
     }
 
+    public writeDivider(options?: {
+        color?: CliForegroundColor;
+        length?: number;
+        char?: string;
+    }) {
+        const { color, length: oLength, char: oChar } = options || {};
+
+        let length = oLength ?? 80;
+        let char = oChar ?? '-';
+
+        if (this.terminal.cols < length) {
+            length = this.terminal.cols;
+        }
+
+        let text = char.repeat(length);
+
+        if (color) {
+            text = this.wrapInColor(text, color);
+        }
+
+        this.writeln(text);
+    }
+
     public wrapInColor(text: string, color: CliForegroundColor): string {
         return color + text + CliForegroundColor.Reset;
     }

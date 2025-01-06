@@ -10,7 +10,6 @@ import {
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { CliHotKeysCommandProcessor } from './cli-hot-keys-command-processor';
-import { CliCommandExecutorService } from '../../services';
 import { CliCommandProcessorRegistry } from '../../services/cli-command-processor-registry';
 
 @Injectable({
@@ -43,8 +42,9 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         const registry = this.injector.get(CliCommandProcessorRegistry);
 
         if (commandsToHelp.length === 0) {
-            const executor = this.injector.get(CliCommandExecutorService);
-            await executor.executeCommand('version', context);
+            await context.executor.executeCommand('version', context);
+
+            this.writeSeparator(context);
 
             const rootCommands = registry.processors.map((p) => p.command);
 
@@ -55,7 +55,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 ),
             );
             rootCommands.forEach((command) => {
-                const processor = executor.registry.findProcessor(command, []);
+                const processor = registry.findProcessor(command, []);
                 writer.writeln(
                     `- ${processor?.metadata?.icon ? processor.metadata.icon : CliIcon.Extension}  ${writer.wrapInColor(command, CliForegroundColor.Cyan)} - ${
                         processor?.description || 'Missing description'
@@ -63,12 +63,11 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 );
             });
 
+            context.writer.writeln();
+
             this.writeSeparator(context);
 
-            const hotKeysProcessor = this.injector.get(
-                CliHotKeysCommandProcessor,
-            );
-            await hotKeysProcessor.processCommand(command, context);
+            await context.executor.executeCommand('hotkeys', context);
 
             this.writeSeparator(context);
 
@@ -207,7 +206,9 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
     }
 
     private writeSeparator({ writer }: ICliExecutionContext) {
-        writer.writeln('-----------------------------------------------');
+        writer.writeDivider({
+            char: '=',
+        });
     }
 }
 

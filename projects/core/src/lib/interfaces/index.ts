@@ -250,6 +250,17 @@ export interface ICliTerminalWriter {
      * @returns void
      */
     writeTable(headers: string[], rows: string[][]): void;
+
+    /**
+     * Write a divider to the terminal
+     * @param options The options for the divider
+     * @returns void
+     */
+    writeDivider(options?: {
+        color?: CliForegroundColor;
+        length?: number;
+        char?: string;
+    }): void;
 }
 
 export interface ICliProgressBar {
@@ -614,7 +625,7 @@ export interface ICliLogger {
      * Set the log level of the logger
      * @param level The log level to set
      * @returns void
-     * @default CliLogLevel.INFO
+     * @default CliLogLevel.ERROR
      */
     setCliLogLevel(level: CliLogLevel): void;
 

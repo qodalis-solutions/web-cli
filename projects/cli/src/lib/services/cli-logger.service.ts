@@ -1,7 +1,7 @@
 import { CliLogLevel, ICliLogger } from '@qodalis/cli-core';
 
 export class CliLogger implements ICliLogger {
-    private CliLogLevel: CliLogLevel = CliLogLevel.LOG;
+    private CliLogLevel: CliLogLevel = CliLogLevel.ERROR;
 
     constructor() {}
 

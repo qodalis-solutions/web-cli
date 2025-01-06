@@ -8,6 +8,7 @@ import {
     ICliUserSessionService,
     CliProcessorMetadata,
     CliIcon,
+    CliForegroundColor,
 } from '@qodalis/cli-core';
 
 import { firstValueFrom } from 'rxjs';
@@ -65,11 +66,13 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
 
             if (!fromUser) {
                 context.writer.writeError('Missing user to switch from');
+                context.process.exit(-1);
                 return;
             }
 
             if (!toUser) {
                 context.writer.writeError('Missing user to switch to');
+                context.process.exit(-1);
                 return;
             }
 
@@ -81,6 +84,14 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
                 context.writer.writeError(`User ${toUser} not found`);
 
                 context.spinner?.hide();
+                context.process.exit(-1);
+                return;
+            }
+
+            if (user.id === fromUser.id) {
+                context.writer.writeError('Already on the user');
+                context.spinner?.hide();
+                context.process.exit(-1);
                 return;
             }
 
@@ -90,7 +101,9 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
 
             context.spinner?.hide();
 
-            context.writer.writeSuccess(`Switch to ${toUser} was successfully`);
+            context.writer.writeSuccess(
+                `Switch to ${context.writer.wrapInColor(toUser, CliForegroundColor.Cyan)} was successfully`,
+            );
 
             const reload =
                 command.args['reload'] ||
@@ -107,6 +120,9 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
             console.error(e);
             context.spinner?.hide();
             context.writer.writeError('Failed to switch user');
+
+            context.process.exit(-1);
+            return;
         }
     }
 

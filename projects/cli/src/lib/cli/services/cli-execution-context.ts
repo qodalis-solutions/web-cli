@@ -65,7 +65,7 @@ export class CliExecutionContext implements ICliExecutionContext {
         this.clipboard = new CliClipboard(this);
         this.process = new CliExecutionProcess(this);
         this.logger = injector.get(CliLogger_TOKEN);
-        this.logger.setCliLogLevel(cliOptions?.logLevel || CliLogLevel.INFO);
+        this.logger.setCliLogLevel(cliOptions?.logLevel || CliLogLevel.ERROR);
     }
 
     setMainProcessor(processor: ICliCommandProcessor | undefined): void {

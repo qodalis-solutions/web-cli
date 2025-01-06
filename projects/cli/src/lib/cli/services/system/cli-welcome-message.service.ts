@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { LIBRARY_VERSION } from '../../../version';
 import { CLi_Name_Art } from '../../constants';
 import { CliExecutionContext } from '../cli-execution-context';
+import { CliForegroundColor } from '@qodalis/cli-core';
 
 /**
  * Service that displays the welcome message to the user.
@@ -33,9 +34,15 @@ export class CliWelcomeMessageService {
             context.terminal.writeln(welcomeConfig?.message);
         } else {
             const welcomeMessage = [
-                `Welcome to Web CLI [Version ${LIBRARY_VERSION}]`,
+                `Welcome to Web CLI [Version ${context.writer.wrapInColor(LIBRARY_VERSION, CliForegroundColor.Green)}]`,
                 '(c) 2024 Qodalis Solutions. All rights reserved.',
                 CLi_Name_Art,
+                '',
+                context.writer.wrapInColor(
+                    'Documentation: ',
+                    CliForegroundColor.Green,
+                ) + 'https://cli-docs.qodalis.com/',
+                '',
                 "Type 'help' to get started.",
                 '',
             ];
