@@ -6,6 +6,7 @@ import {
     ICliCommandAuthor,
     CliProcessorMetadata,
     CliIcon,
+    CliForegroundColor,
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
@@ -31,10 +32,20 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
 
     async processCommand(
         _: CliProcessCommand,
-        context: ICliExecutionContext,
+        { writer }: ICliExecutionContext,
     ): Promise<void> {
-        context.writer.writeln(CLi_Name_Art);
-        context.writer.writeln(`CLI Version: ${LIBRARY_VERSION}`);
+        writer.writeln(
+            `CLI Version@${writer.wrapInColor(LIBRARY_VERSION, CliForegroundColor.Green)}`,
+        );
+
+        writer.writeln(CLi_Name_Art);
+
+        writer.writeln(
+            writer.wrapInColor('Documentation: ', CliForegroundColor.Green) +
+                'https://cli-docs.qodalis.com/',
+        );
+
+        writer.writeln();
     }
 
     writeDescription(context: ICliExecutionContext): void {
