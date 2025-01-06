@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 @Injectable({
     providedIn: 'root',
 })
-export class CommandHistoryService {
+export class CLiCommandHistoryService {
     private readonly storageKey = 'cliCommandHistory';
     private commandHistory: string[] = [];
 

@@ -13,8 +13,8 @@ export class CliTerminalWriter implements ICliTerminalWriter {
     write(text: string): void {
         this.terminal.write(text);
     }
-    writeln(text: string): void {
-        this.terminal.writeln(text);
+    writeln(text?: string): void {
+        this.terminal.writeln(text || '');
     }
 
     public writeSuccess(message: string) {

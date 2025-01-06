@@ -15,20 +15,27 @@ export class CliExecutionProcess implements ICliExecutionProcess {
     exited?: boolean | undefined;
     exitCode?: number | undefined;
     running: boolean = false;
-    data: string | undefined;
+    data: any | undefined;
 
     constructor(private readonly context: ICliExecutionContext) {}
 
-    exit(code?: number) {
+    exit(
+        code?: number,
+        options?: {
+            silent?: boolean;
+        },
+    ) {
         code = code ?? 0;
 
         this.exited = true;
         this.exitCode = code;
 
-        throw new ProcessExitedError(code);
+        if (!options?.silent) {
+            throw new ProcessExitedError(code);
+        }
     }
 
-    output(data: string) {
+    output(data: any) {
         this.data = data;
     }
 

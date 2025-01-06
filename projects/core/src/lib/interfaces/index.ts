@@ -3,6 +3,7 @@ import { Observable, Subject } from 'rxjs';
 import {
     CliBackgroundColor,
     CliForegroundColor,
+    CliLogLevel,
     CliOptions,
     CliProcessCommand,
     CliProcessorMetadata,
@@ -43,6 +44,9 @@ export interface ICliCommandProcessor {
 
     /**
      * If true, the processor can handle unlisted commands
+     * @default false
+     * @remarks If true, the processor can handle unlisted commands. If false, the processor will only handle commands that are explicitly listed in the processors property
+     * @remarks Optional if valueRequired is true
      */
     allowUnlistedCommands?: boolean;
 
@@ -171,7 +175,7 @@ export interface ICliTerminalWriter {
      * Write text to the terminal followed by a newline
      * @param text The text to write
      */
-    writeln(text: string): void;
+    writeln(text?: string): void;
 
     /**
      * Write a success message to the terminal
@@ -344,11 +348,20 @@ export interface ICliCommandExecutorService {
     ): Promise<void>;
 
     /**
-     * List all commands
-     * @returns An array of all commands
+     * Execute a command
+     * @param command The command to execute
+     * @param context The context in which the command is executed
      */
-    listCommands(): string[];
+    executeCommand(
+        command: string,
+        context: ICliExecutionContext,
+    ): Promise<void>;
+}
 
+/**
+ * Represents a registry for command processors
+ */
+export interface ICliCommandProcessorRegistry {
     /**
      * Find a processor for a command
      * @param mainCommand
@@ -391,32 +404,35 @@ export interface ICliExecutionProcess {
     /**
      * The data of the process
      */
-    data: string | undefined;
+    data: any | undefined;
 
     /**
      * Exit the process
      * @param code The exit code
      * @returns void
      */
-    exit: (code?: number) => void;
+    exit: (
+        /**
+         * The exit code
+         */
+        code?: number,
+
+        /**
+         * Options for exiting the process
+         */
+        options?: {
+            /**
+             * Indicates if the exit should be silent, i.e. not throw an error
+             */
+            silent?: boolean;
+        },
+    ) => void;
 
     /**
      * Output data from the process
      * @param data The data to output
      */
-    output(data: string): void;
-
-    /**
-     * Start the process
-     * @returns void
-     */
-    start: () => void;
-
-    /**
-     * End the process
-     * @returns void
-     */
-    end: () => void;
+    output(data: any): void;
 }
 
 /**
@@ -488,6 +504,11 @@ export interface ICliExecutionContext {
      * The process to use for exiting the CLI
      */
     process: ICliExecutionProcess;
+
+    /**
+     * The logger to use for logging
+     */
+    logger: ICliLogger;
 }
 
 /**
@@ -583,4 +604,47 @@ export interface ICliUmdModule {
      * The processors for the module
      */
     processors: ICliCommandProcessor[];
+}
+
+/**
+ * Represents a logger for the CLI
+ */
+export interface ICliLogger {
+    /**
+     * Set the log level of the logger
+     * @param level The log level to set
+     * @returns void
+     * @default CliLogLevel.INFO
+     */
+    setCliLogLevel(level: CliLogLevel): void;
+
+    /**
+     * Log a message
+     * @param args The arguments to log
+     */
+    log(...args: any[]): void;
+
+    /**
+     * Log a message
+     * @param args The arguments to log
+     */
+    info(...args: any[]): void;
+
+    /**
+     * Log a message
+     * @param args The arguments to log
+     */
+    warn(...args: any[]): void;
+
+    /**
+     * Log a message
+     * @param args The arguments to log
+     */
+    error(...args: any[]): void;
+
+    /**
+     * Log a message
+     * @param args The arguments to log
+     */
+    debug(...args: any[]): void;
 }

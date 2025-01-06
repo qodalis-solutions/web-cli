@@ -1,4 +1,4 @@
-export * from './command-history.service';
+export * from './cli-command-history.service';
 
 export * from './cli-user-session.service';
 

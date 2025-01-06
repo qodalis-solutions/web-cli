@@ -148,7 +148,7 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
 
                 this.hubConnection.on('log', (log: string) => {
                     if (firstLog) {
-                        context.writer.writeln('');
+                        context.writer.writeln();
                     }
 
                     buffer.push(log);

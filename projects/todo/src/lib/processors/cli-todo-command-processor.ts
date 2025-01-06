@@ -46,10 +46,10 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
 
     writeDescription(context: ICliExecutionContext): void {
         context.writer.writeln(this.description!);
-        context.writer.writeln('');
+        context.writer.writeln();
         context.writer.writeln('Usage:');
         context.writer.writeln('  todo <command> [options]');
-        context.writer.writeln('');
+        context.writer.writeln();
         context.writer.writeln('Commands:');
         context.writer.writeln('  ls               List all TODO items');
         context.writer.writeln(
@@ -61,13 +61,13 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
         context.writer.writeln(
             '  complete <id>    Mark a TODO item as completed by its ID',
         );
-        context.writer.writeln('');
+        context.writer.writeln();
         context.writer.writeln('Examples:');
         context.writer.writeln('  todo add Buy milk');
         context.writer.writeln('  todo ls');
         context.writer.writeln('  todo complete 1');
         context.writer.writeln('  todo rm 2');
-        context.writer.writeln('');
+        context.writer.writeln();
     }
 
     async initialize(context: ICliExecutionContext): Promise<void> {

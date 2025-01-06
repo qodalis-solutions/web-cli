@@ -4,6 +4,10 @@
 
 ---
 
+## Docs
+
+Cli docs [link](https://cli-docs.qodalis.com/)
+
 ## Features
 
 - **Web-Based Terminal**: A terminal interface integrated into your Angular applications.

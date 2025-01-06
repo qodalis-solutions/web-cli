@@ -9,7 +9,7 @@ import {
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
-import { CommandHistoryService } from '../../services';
+import { CLiCommandHistoryService } from '../../services';
 
 @Injectable({
     providedIn: 'root',
@@ -29,7 +29,9 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
         icon: CliIcon.Code,
     };
 
-    constructor(private readonly commandHistoryService: CommandHistoryService) {
+    constructor(
+        private readonly commandHistoryService: CLiCommandHistoryService,
+    ) {
         this.processors?.push({
             command: 'list',
             description: this.description,
@@ -55,24 +57,22 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
 
     async processCommand(
         _: CliProcessCommand,
-        context: ICliExecutionContext,
+        { writer }: ICliExecutionContext,
     ): Promise<void> {
         const history = this.commandHistoryService.getHistory();
 
         if (history.length === 0) {
-            context.writer.writeln('No history available');
+            writer.writeln('No history available');
             return;
         } else {
-            context.writer.writeln('Command history:');
+            writer.writeln('Command history:');
             history.forEach((command, index) => {
-                context.writer.writeln(`${index + 1}. ${command}`);
+                writer.writeln(`${index + 1}. ${command}`);
             });
         }
     }
 
-    writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln(
-            'Prints the command history of the current session',
-        );
+    writeDescription({ writer }: ICliExecutionContext): void {
+        writer.writeln('Prints the command history of the current session');
     }
 }

@@ -3,6 +3,7 @@ import {
     Component,
     ElementRef,
     Inject,
+    Injector,
     Input,
     OnDestroy,
     OnInit,
@@ -17,7 +18,7 @@ import {
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { CliCommandExecutorService } from './services/cli-command-executor.service';
-import { CommandHistoryService } from './services/command-history.service';
+import { CLiCommandHistoryService } from './services/cli-command-history.service';
 import {
     CliOptions,
     ICliUserSession,
@@ -25,8 +26,8 @@ import {
 } from '@qodalis/cli-core';
 import { CliExecutionContext } from './services/cli-execution-context';
 import { ICliUserSessionService_TOKEN } from './tokens';
-import { LIBRARY_VERSION } from '../version';
-import { CLi_Name_Art } from './constants';
+import { CliBoot } from './services/system/cli-boot';
+import { CliWelcomeMessageService } from './services/system/cli-welcome-message.service';
 
 @Component({
     selector: 'cli',
@@ -48,10 +49,11 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
     private resizeObserver!: ResizeObserver;
 
     constructor(
+        private injector: Injector,
         @Inject(ICliUserSessionService_TOKEN)
         private readonly userManagementService: ICliUserSessionService,
         private commandExecutor: CliCommandExecutorService,
-        private readonly commandHistoryService: CommandHistoryService,
+        private readonly commandHistoryService: CLiCommandHistoryService,
     ) {
         this.userManagementService.getUserSession().subscribe((session) => {
             this.currentUserSession = session;
@@ -71,32 +73,6 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
 
     ngAfterViewInit(): void {
         this.handleResize();
-
-        this.commandExecutor
-            .initializeProcessors(this.executionContext!)
-            .then(() => {
-                this.displayWelcomeMessage();
-            });
-    }
-
-    private displayWelcomeMessage() {
-        if (this.options?.welcomeMessage) {
-            this.terminal.writeln(this.options.welcomeMessage);
-        } else {
-            const welcomeMessage = [
-                `Welcome to Web CLI [Version ${LIBRARY_VERSION}]`,
-                '(c) 2024 Qodalis Solutions. All rights reserved.',
-                CLi_Name_Art,
-                "Type 'help' to get started.",
-                '',
-            ];
-
-            welcomeMessage.forEach((line, index) => {
-                this.terminal.write(line + '\r\n');
-            });
-        }
-
-        this.printPrompt();
     }
 
     private initializeTerminal(): void {
@@ -183,6 +159,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         );
 
         this.executionContext = new CliExecutionContext(
+            this.injector,
             this.terminal,
             this.commandExecutor,
             (o) => this.printPrompt(o),
@@ -193,6 +170,15 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
         );
 
         this.executionContext.setSession(this.currentUserSession!);
+
+        this.injector
+            .get(CliBoot)
+            .boot(this.executionContext)
+            .then(() => {
+                this.injector
+                    .get(CliWelcomeMessageService)
+                    .displayWelcomeMessage(this.executionContext!);
+            });
     }
 
     private handleResize(): void {

@@ -11,14 +11,18 @@ import {
     ICliClipboard,
     ICliExecutionProcess,
     ICliCommandProcessor,
+    ICliLogger,
+    CliLogLevel,
 } from '@qodalis/cli-core';
 import { CliCommandExecutorService } from './cli-command-executor.service';
 import { CliTerminalWriter } from './cli-terminal-writer';
-import { CliTerminalSpinner } from './cli-terminal-spinner';
-import { CliTerminalProgressBar } from './cli-terminal-progress-bar';
+import { CliTerminalSpinner } from './progress-bars/cli-terminal-spinner';
+import { CliTerminalProgressBar } from './progress-bars/cli-terminal-progress-bar';
 import { CliCommandDataStore } from './cli-command-data-store';
 import { CliClipboard } from './cli-clipboard';
 import { CliExecutionProcess } from './cli-execution-process';
+import { Injector } from '@angular/core';
+import { CliLogger_TOKEN } from '../tokens';
 
 export class CliExecutionContext implements ICliExecutionContext {
     public userSession?: ICliUserSession;
@@ -41,7 +45,10 @@ export class CliExecutionContext implements ICliExecutionContext {
 
     public readonly process: ICliExecutionProcess;
 
+    public readonly logger: ICliLogger;
+
     constructor(
+        injector: Injector,
         public terminal: Terminal,
         public executor: CliCommandExecutorService,
         public showPrompt: (options?: {
@@ -57,6 +64,8 @@ export class CliExecutionContext implements ICliExecutionContext {
         this.progressBar = new CliTerminalProgressBar(terminal);
         this.clipboard = new CliClipboard(this);
         this.process = new CliExecutionProcess(this);
+        this.logger = injector.get(CliLogger_TOKEN);
+        this.logger.setCliLogLevel(cliOptions?.logLevel || CliLogLevel.INFO);
     }
 
     setMainProcessor(processor: ICliCommandProcessor | undefined): void {

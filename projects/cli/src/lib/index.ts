@@ -1,5 +1,6 @@
 import { Provider } from '@angular/core';
 import {
+    CliLogger_TOKEN,
     ICliPingServerService_TOKEN,
     ICliUserSessionService_TOKEN,
     ICliUsersStoreService_TOKEN,
@@ -20,6 +21,7 @@ import {
 } from './cli/services';
 import { CliCanViewService } from './services';
 import { providers as usersProviders } from './cli/processors/users';
+import { CliLogger } from './services/cli-logger.service';
 
 export const resolveCliProviders = (): Provider[] => {
     return [
@@ -36,6 +38,10 @@ export const resolveCliProviders = (): Provider[] => {
         {
             useClass: CliDefaultPingServerService,
             provide: ICliPingServerService_TOKEN,
+        },
+        {
+            useClass: CliLogger,
+            provide: CliLogger_TOKEN,
         },
         ...usersProviders,
         resolveCommandProcessorProvider(CliPingCommandProcessor),

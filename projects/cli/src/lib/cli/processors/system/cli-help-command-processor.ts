@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import {
     ICliExecutionContext,
     CliProcessCommand,
@@ -10,6 +10,8 @@ import {
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { CliHotKeysCommandProcessor } from './cli-hot-keys-command-processor';
+import { CliCommandExecutorService } from '../../services';
+import { CliCommandProcessorRegistry } from '../../services/cli-command-processor-registry';
 
 @Injectable({
     providedIn: 'root',
@@ -28,28 +30,32 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         icon: CliIcon.Help,
     };
 
-    constructor(
-        private readonly hotKeysProcessor: CliHotKeysCommandProcessor,
-    ) {}
+    constructor(private readonly injector: Injector) {}
 
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const { writer, executor } = context;
+        const { writer } = context;
 
-        const [_, ...commands] = command.command.split(' ');
+        const [_, ...commandsToHelp] = command.command.split(' ');
 
-        if (commands.length === 0) {
-            const commands = executor.listCommands();
+        const registry = this.injector.get(CliCommandProcessorRegistry);
+
+        if (commandsToHelp.length === 0) {
+            const executor = this.injector.get(CliCommandExecutorService);
+            await executor.executeCommand('version', context);
+
+            const rootCommands = registry.processors.map((p) => p.command);
+
             writer.writeln(
                 writer.wrapInColor(
                     'Available commands:',
                     CliForegroundColor.Yellow,
                 ),
             );
-            commands.forEach((command) => {
-                const processor = executor.findProcessor(command, []);
+            rootCommands.forEach((command) => {
+                const processor = executor.registry.findProcessor(command, []);
                 writer.writeln(
                     `- ${processor?.metadata?.icon ? processor.metadata.icon : CliIcon.Extension}  ${writer.wrapInColor(command, CliForegroundColor.Cyan)} - ${
                         processor?.description || 'Missing description'
@@ -59,7 +65,10 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
             this.writeSeparator(context);
 
-            await this.hotKeysProcessor.processCommand(command, context);
+            const hotKeysProcessor = this.injector.get(
+                CliHotKeysCommandProcessor,
+            );
+            await hotKeysProcessor.processCommand(command, context);
 
             this.writeSeparator(context);
 
@@ -67,15 +76,15 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 '\nType `help <command>` to get more information about a specific command',
             );
         } else {
-            const processor = executor.findProcessor(
-                commands[0],
-                commands.slice(1),
+            const processor = registry.findProcessor(
+                commandsToHelp[0],
+                commandsToHelp.slice(1),
             );
 
             if (processor) {
                 this.writeProcessorDescription(processor, context);
             } else {
-                writer.writeln(`\x1b[33mUnknown command: ${commands[0]}`);
+                writer.writeln(`\x1b[33mUnknown command: ${commandsToHelp[0]}`);
             }
         }
     }

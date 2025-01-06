@@ -1,4 +1,2 @@
-
-  // Automatically generated during build
-  export const LIBRARY_VERSION = '0.0.7';
-  
+// Automatically generated during build
+export const LIBRARY_VERSION = '0.0.10';

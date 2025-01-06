@@ -1,6 +1,7 @@
 import { InjectionToken } from '@angular/core';
 import {
     ICliCommandProcessor,
+    ICliLogger,
     ICliPingServerService,
     ICliUserSessionService,
     ICliUsersStoreService,
@@ -33,3 +34,10 @@ export const ICliUsersStoreService_TOKEN = new InjectionToken<
 export const ICliPingServerService_TOKEN = new InjectionToken<
     ICliPingServerService[]
 >('ICliPingServerService implementation');
+
+/**
+ * Represents a logger token for dependency injection
+ */
+export const CliLogger_TOKEN = new InjectionToken<ICliLogger>(
+    'ICliLogger implementation',
+);

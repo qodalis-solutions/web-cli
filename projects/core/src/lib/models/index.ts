@@ -239,9 +239,20 @@ export interface ICliUserSession {
  */
 export type CliOptions = Record<string, any> & {
     /**
-     * The welcome message to display when the CLI starts
+     * The welcome message options
      */
-    welcomeMessage?: string;
+    welcomeMessage?: {
+        /**
+         * The message to display
+         */
+        message?: string;
+
+        /**
+         * When to show the welcome message
+         * @default 'always'
+         */
+        show?: 'always' | 'once' | 'daily' | 'never';
+    };
 
     /**
      * If true, the welcome message is hidden
@@ -273,6 +284,11 @@ export type CliOptions = Record<string, any> & {
      * Custom terminal options
      */
     terminalOptions?: ITerminalOptions & ITerminalInitOnlyOptions;
+
+    /**
+     * The minimum log level to display
+     */
+    logLevel?: CliLogLevel;
 };
 
 /**
@@ -330,8 +346,21 @@ export type CliProcessorMetadata = Record<string, any> & {
     icon?: CliIcon | string;
 };
 
+/**
+ * Represents a log level for the CLI
+ */
+export enum CliLogLevel {
+    None = 0,
+    DEBUG = 1,
+    LOG = 2,
+    INFO = 3,
+    WARN = 4,
+    ERROR = 5,
+}
+
 export const enums = {
     CliForegroundColor,
     CliBackgroundColor,
     CliIcon,
+    CliLogLevel,
 };

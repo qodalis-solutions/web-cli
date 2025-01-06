@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
     ICliExecutionContext,
     ICliCommandProcessor,
@@ -6,43 +6,28 @@ import {
     getRightOfWord,
     getParameterValue,
     ICliCommandExecutorService,
-    CliIcon,
     CancellablePromise,
+    CliIcon,
+    CliForegroundColor,
 } from '@qodalis/cli-core';
-import {
-    CliClearCommandProcessor,
-    CliEchoCommandProcessor,
-    CliEvalCommandProcessor,
-    CliHelpCommandProcessor,
-    CliVersionCommandProcessor,
-} from '../processors';
 import { CommandParser } from '../../utils';
-import { CliCommandProcessor_TOKEN } from '../tokens';
-import { ProcessExitedError } from './cli-execution-process';
+import {
+    CliExecutionProcess,
+    ProcessExitedError,
+} from './cli-execution-process';
 import { CliExecutionContext } from './cli-execution-context';
+import { CliCommandProcessorRegistry } from './cli-command-processor-registry';
 
 @Injectable({
     providedIn: 'root',
 })
 export class CliCommandExecutorService implements ICliCommandExecutorService {
-    private processors: ICliCommandProcessor[] = [];
-
     private commandParser: CommandParser = new CommandParser();
 
-    private initialized = false;
-    private initializing = false;
+    public registry: CliCommandProcessorRegistry;
 
-    constructor(
-        @Inject(CliCommandProcessor_TOKEN)
-        private readonly implementations: ICliCommandProcessor[],
-        cliHelpCommandProcessor: CliHelpCommandProcessor,
-        cliVersionCommandProcessor: CliVersionCommandProcessor,
-    ) {
-        this.registerProcessor(new CliClearCommandProcessor());
-        this.registerProcessor(new CliEchoCommandProcessor());
-        this.registerProcessor(new CliEvalCommandProcessor());
-        this.registerProcessor(cliHelpCommandProcessor);
-        this.registerProcessor(cliVersionCommandProcessor);
+    constructor(registry: CliCommandProcessorRegistry) {
+        this.registry = registry;
     }
 
     public async executeCommand(
@@ -77,15 +62,10 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                 const data = context.process.data;
                 const command = current;
 
-                context.process.start();
-
                 await this.executeSingleCommand(command, data, context);
 
                 commandSuccess = context.process.exitCode === 0;
-
-                context.process.end();
             } catch (e) {
-                context.process.end();
                 commandSuccess = false;
 
                 context.writer.writeError(`Command ${current} failed: ${e}`);
@@ -97,9 +77,13 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
     private async executeSingleCommand(
         command: string,
-        data: string | undefined,
+        data: any | undefined,
         context: ICliExecutionContext,
     ): Promise<void> {
+        const process = context.process as CliExecutionProcess;
+
+        process.start();
+
         const { commandName, args } = this.commandParser.parse(command);
 
         const [mainCommand, ...other] = commandName.split(' ');
@@ -110,9 +94,9 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
         const searchableProcessors = executionContext.mainProcessor
             ? (executionContext.mainProcessor.processors ?? [])
-            : this.processors;
+            : this.registry.processors;
 
-        const processor = this._findProcessor(
+        const processor = this.registry.findProcessorInCollection(
             mainCommand,
             chainCommands,
             searchableProcessors,
@@ -123,6 +107,8 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                 `Command: ${commandName} not found or not installed`,
             );
 
+            context.writer.writeln();
+
             context.writer.writeInfo(
                 'Type "help" for a list of available commands.',
             );
@@ -130,7 +116,9 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                 'Use packages to install additional commands.',
             );
 
-            context.process.exit(-1);
+            context.process.exit(-1, {
+                silent: true,
+            });
 
             return;
         }
@@ -144,44 +132,42 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         };
 
         if (this.versionRequested(context, processor, args)) {
+            process.end();
             return;
         }
 
         if (await this.helpRequested(commandToProcess, context)) {
+            process.end();
             return;
         }
 
         if (this.setMainProcessorRequested(context, processor, args)) {
+            process.end();
             return;
         }
 
         if (!this.validateBeforeExecution(context, processor, args)) {
+            process.end();
             return;
         }
 
-        const value = processor.allowUnlistedCommands
-            ? getRightOfWord(commandName, processor.command)
-            : undefined;
+        const value =
+            processor.allowUnlistedCommands || processor.valueRequired
+                ? getRightOfWord(commandName, processor.command)
+                : undefined;
 
         commandToProcess.value = value;
 
-        if (processor.valueRequired && !value) {
-            // Check if the value is provided in the command and set it for chaining
-            if (data) {
-                commandToProcess.value = data;
-            } else {
-                context.writer.writeError(
-                    `Value required for command: ${commandName} <value>`,
-                );
+        const missingValue = processor.valueRequired && !value;
 
-                context.process.exit(-1);
+        if (missingValue) {
+            context.writer.writeError(
+                `Value required for command: ${commandName} <value>`,
+            );
 
-                return;
-            }
-        } else if (processor.allowUnlistedCommands && !value) {
-            if (data) {
-                commandToProcess.value = data;
-            }
+            context.process.exit(-1);
+
+            return;
         }
 
         if (processor.validateBeforeExecution) {
@@ -219,6 +205,8 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
             );
 
             await cancellable.promise;
+
+            process.end();
         } catch (e) {
             context.spinner?.hide();
 
@@ -232,7 +220,9 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                         `Process exited with code ${e.code}`,
                     );
                 } else {
-                    context.writer.writeInfo('Process exited successfully');
+                    context.writer.writeInfo(
+                        'Process exited successfully with code 0',
+                    );
                 }
             } else {
                 context.writer.writeError(`Error executing command: ${e}`);
@@ -241,84 +231,14 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         }
     }
 
-    public async initializeProcessors(
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        if (this.initialized || this.initializing) {
-            return;
-        }
-        this.initializing = true;
-
-        let processors = this.implementations;
-
-        if (!context.options?.usersModule?.enabled) {
-            processors = processors.filter(
-                (p) => p.metadata?.module !== 'users',
-            );
-        }
-
-        context.spinner?.show();
-
-        context.spinner?.setText(CliIcon.Rocket + '  Booting...');
-
-        processors.forEach((impl) => this.registerProcessor(impl));
-
-        await this.initializeProcessorsInternal(context, this.processors);
-
-        context.spinner?.hide();
-
-        this.initialized = true;
-    }
-
-    public listCommands(): string[] {
-        return this.processors.map((p) => p.command);
-    }
-
-    public findProcessor(
-        mainCommand: string,
-        chainCommands: string[],
-    ): ICliCommandProcessor | undefined {
-        return this._findProcessor(mainCommand, chainCommands, this.processors);
-    }
-
     public async showHelp(
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const helpProcessor = this.findProcessor('help', [])!;
-
         try {
-            await helpProcessor.processCommand(
-                {
-                    ...command,
-                    command: 'help ' + command.command,
-                },
-                context,
-            );
+            await this.executeCommand('help ' + command.rawCommand, context);
         } catch (e) {
             context.writer.writeError(`Error executing command: ${e}`);
-        }
-    }
-
-    private async initializeProcessorsInternal(
-        context: ICliExecutionContext,
-        processors: ICliCommandProcessor[],
-    ): Promise<void> {
-        try {
-            for (const p of processors) {
-                if (p.initialize) {
-                    await p.initialize(context);
-                }
-
-                if (p.processors && p.processors.length > 0) {
-                    await this.initializeProcessorsInternal(
-                        context,
-                        p.processors,
-                    );
-                }
-            }
-        } catch (e) {
-            context.writer.writeError(`Error initializing processors: ${e}`);
         }
     }
 
@@ -328,8 +248,12 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         args: Record<string, any>,
     ): boolean {
         if (args['v'] || args['version']) {
+            context.writer.write(processor.metadata?.icon || CliIcon.Extension);
+
+            context.writer.write('  ');
+
             context.writer.writeln(
-                `${processor.command} version: ${processor.version || '1.0.0'} - ${
+                `Command: ${context.writer.wrapInColor(processor.command, CliForegroundColor.Cyan)} version: ${context.writer.wrapInColor(processor.version || '1.0.0', CliForegroundColor.Cyan)} - ${
                     processor.description || 'No description'
                 }`,
             );
@@ -432,92 +356,5 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         }
 
         return true;
-    }
-
-    /**
-     * Recursively searches for a processor matching the given command.
-     * @param mainCommand The main command name.
-     * @param chainCommands The remaining chain commands (if any).
-     * @param processors The list of available processors.
-     * @returns The matching processor or undefined if not found.
-     */
-    private _findProcessor(
-        mainCommand: string,
-        chainCommands: string[],
-        processors: ICliCommandProcessor[],
-    ): ICliCommandProcessor | undefined {
-        const processor = processors.find(
-            (p) => p.command.toLowerCase() === mainCommand.toLowerCase(),
-        );
-
-        if (!processor) {
-            return undefined;
-        }
-
-        if (chainCommands.length === 0) {
-            return processor;
-        }
-
-        if (processor.processors) {
-            return this._findProcessor(
-                chainCommands[0],
-                chainCommands.slice(1),
-                processor.processors,
-            );
-        } else if (processor.allowUnlistedCommands) {
-            return processor;
-        }
-
-        return undefined;
-    }
-
-    public registerProcessor(processor: ICliCommandProcessor): void {
-        const existingProcessor = this.getProcessorByName(processor.command);
-
-        if (existingProcessor) {
-            if (existingProcessor.metadata?.sealed) {
-                console.warn(
-                    `Processor with command: ${processor.command} is sealed and cannot be replaced.`,
-                );
-
-                return;
-            }
-
-            const existingIndex = this.processors.findIndex(
-                (p) => p.command === processor.command,
-            );
-
-            // Replace the existing processor
-            this.processors[existingIndex] = processor;
-        } else {
-            this.processors.push(processor);
-        }
-    }
-
-    public unregisterProcessor(processor: ICliCommandProcessor): void {
-        const existingProcessor = this.getProcessorByName(processor.command);
-
-        if (existingProcessor) {
-            if (existingProcessor.metadata?.sealed) {
-                console.warn(
-                    `Processor with command: ${processor.command} is sealed and cannot be removed.`,
-                );
-                return;
-            }
-        }
-
-        const index = this.processors.findIndex(
-            (p) => p.command === processor.command,
-        );
-
-        if (index !== -1) {
-            this.processors.splice(index, 1);
-        }
-    }
-
-    private getProcessorByName(name: string): ICliCommandProcessor | undefined {
-        return this.processors.find(
-            (p) => p.command.toLowerCase() === name.toLowerCase(),
-        );
     }
 }
