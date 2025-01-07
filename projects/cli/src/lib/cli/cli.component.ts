@@ -112,7 +112,7 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
                 if (event.code === 'KeyC' && event.ctrlKey) {
                     // Handle Ctrl+C
                     this.executionContext?.abort();
-                    this.executionContext?.setMainProcessor(undefined);
+                    this.executionContext?.setContextProcessor(undefined);
                     this.terminal.writeln('Ctrl+C');
                     this.printPrompt();
 
@@ -220,8 +220,8 @@ export class CliComponent implements OnInit, AfterViewInit, OnDestroy {
                 ? ''
                 : `\x1b[32m${this.currentUserSession?.user.email}\x1b[0m:`;
 
-        if (this.executionContext?.mainProcessor) {
-            promtStartMessage = `${this.executionContext.mainProcessor.command}`;
+        if (this.executionContext?.contextProcessor) {
+            promtStartMessage = `${this.executionContext.contextProcessor.command}`;
         }
 
         const promtEndMessage = '\x1b[34m~\x1b[0m$ ';

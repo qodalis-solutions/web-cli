@@ -1,7 +1,7 @@
 {
-  "name": "@qodalis/cli-core",
-  "version": "0.0.11",
-  "description": "Core Angular CLI for @qodalis extensions.",
+  "name": "@qodalis/cli-curl",
+  "version": "0.0.1",
+  "description": "Provide utility functions for the library curl",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
   "repository": {
@@ -10,20 +10,25 @@
   },
   "homepage": "https://qodalis.com",
   "keywords": [
-    "core",
+    "angular",
     "cli",
     "qodalis",
     "terminal",
-    "angular",
-    "extensions"
+    "curl"
   ],
+  "umd": "./umd/index.js",
+  "unpkg": "./umd/index.js",
   "peerDependencies": {
     "@angular/common": "^16.2.0",
     "@angular/core": "^16.2.0"
   },
   "dependencies": {
     "tslib": "^2.3.0",
-    "@xterm/xterm": "^5.5.0"
+    "@qodalis/cli-core": "^0.0.11",
+    "@qodalis/angular-cli": "^1.0.26"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "scripts": {
+    "rollup-compile": "npx rollup -c"
+  }
 }

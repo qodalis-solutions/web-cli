@@ -1,168 +1,15 @@
-import { Terminal } from '@xterm/xterm';
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs';
 import {
     CliBackgroundColor,
     CliForegroundColor,
     CliLogLevel,
-    CliOptions,
     CliProcessCommand,
-    CliProcessorMetadata,
+    CliProvider,
     ICliUser,
     ICliUserSession,
 } from '../models';
-
-export interface ICliCommandAuthor {
-    /**
-     * The name of the author
-     */
-    name: string;
-
-    /**
-     * The email of the author
-     */
-    email: string;
-}
-
-/**
- * Represents a command processor
- */
-export interface ICliCommandProcessor {
-    /**
-     * The command that this processor handles
-     */
-    command: string;
-
-    /**
-     * A description of the command
-     */
-    description?: string;
-
-    /**
-     * The author of the command
-     */
-    author?: ICliCommandAuthor;
-
-    /**
-     * If true, the processor can handle unlisted commands
-     * @default false
-     * @remarks If true, the processor can handle unlisted commands. If false, the processor will only handle commands that are explicitly listed in the processors property
-     * @remarks Optional if valueRequired is true
-     */
-    allowUnlistedCommands?: boolean;
-
-    /**
-     * If true, the value is required
-     */
-    valueRequired?: boolean;
-
-    /**
-     * The version of the command processor
-     * @default '1.0.0'
-     */
-    version?: string;
-
-    /**
-     * The metadata for the command processor
-     */
-    metadata?: CliProcessorMetadata;
-
-    /**
-     * Processors that are nested under this processor
-     */
-    processors?: ICliCommandProcessor[];
-
-    /**
-     * Parameters that the command accepts
-     */
-    parameters?: ICliCommandParameterDescriptor[];
-
-    /**
-     * Process the command
-     * @param command The command to process
-     * @param context The context in which the command is executed
-     */
-    processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void>;
-
-    /**
-     * Write the description of the command
-     * @param context The context in which the command is executed
-     */
-    writeDescription?(context: ICliExecutionContext): void;
-
-    /**
-     * A function that validates the command before execution
-     * @param value The value to validate
-     * @returns An object with a valid property that indicates if the value is valid and an optional message property that contains a message to display if the value is not valid
-     */
-    validateBeforeExecution?: (
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ) => {
-        valid: boolean;
-        message?: string;
-    };
-
-    /**
-     * Initialize the command processor
-     * @param context The context in which the command is executed
-     */
-    initialize?(context: ICliExecutionContext): Promise<void>;
-}
-
-/**
- * Represents a command parameter
- */
-export interface ICliCommandParameterDescriptor {
-    /**
-     * The name of the parameter
-     */
-    name: string;
-
-    /**
-     * Aliases for the parameter
-     */
-    aliases?: string[];
-
-    /**
-     * A description of the parameter
-     */
-    description: string;
-
-    /**
-     * If true, the parameter is required
-     */
-    required: boolean;
-
-    /**
-     * The type of the parameter
-     */
-    type: string;
-
-    /**
-     * The default value of the parameter
-     */
-    defaultValue?: any;
-
-    /**
-     * A validator function that validates the value of the parameter
-     * @param value The value to validate
-     * @returns An object with a valid property that indicates if the value is valid and an optional message property that contains a message to display if the value is not valid
-     */
-    validator?: (value: any) => {
-        /**
-         * Indicates if the value is valid
-         */
-        valid: boolean;
-
-        /**
-         * An optional message to display if the value is not valid
-         */
-        message?: string;
-    };
-}
+import { ICliExecutionContext } from './execution-context';
+import { ICliCommandProcessor } from './command-processor';
 
 export interface ICliTerminalWriter {
     /**
@@ -261,69 +108,6 @@ export interface ICliTerminalWriter {
         length?: number;
         char?: string;
     }): void;
-}
-
-export interface ICliProgressBar {
-    /**
-     * Indicates if the progress bar is running
-     */
-    isRunning: boolean;
-
-    /**
-     * Show the progress bar
-     */
-    show: () => void;
-
-    /**
-     * Hide the progress bar
-     */
-    hide: () => void;
-}
-
-/**
- * Represents a spinner for the CLI
- */
-export interface ICliSpinner extends ICliProgressBar {
-    /**
-     * Set the text of the spinner
-     * @param text The text to set
-     */
-    setText: (text: string) => void;
-}
-
-export type CliPercentageProgressBarUpdateValueOptions = {
-    /**
-     * The type of update to perform
-     * @default 'replace'
-     */
-    type?: 'replace' | 'increment';
-};
-
-/**
- * Represents a progress bar for the CLI
- */
-export interface ICliPercentageProgressBar extends ICliProgressBar {
-    /**
-     * Update the progress of the progress bar
-     * @param progress The progress to update to
-     * @returns void
-     */
-    update: (
-        progress: number,
-        options?: CliPercentageProgressBarUpdateValueOptions,
-    ) => void;
-
-    /**
-     * Complete the progress bar
-     * @returns void
-     */
-    complete: () => void;
-
-    /**
-     * Set the text of the spinner
-     * @param text The text to set
-     */
-    setText: (text: string) => void;
 }
 
 /**
@@ -444,82 +228,6 @@ export interface ICliExecutionProcess {
      * @param data The data to output
      */
     output(data: any): void;
-}
-
-/**
- * Represents the context in which a command is executed
- */
-export interface ICliExecutionContext {
-    /**
-     * The current user session
-     */
-    userSession?: ICliUserSession;
-
-    /**
-     * The spinner to use for showing/hiding the loader
-     */
-    spinner?: ICliSpinner;
-
-    /**
-     * The progress bar to use for showing progress
-     */
-    progressBar: ICliPercentageProgressBar;
-
-    /**
-     * A subject that emits when the command is aborted
-     */
-    onAbort: Subject<void>;
-
-    /**
-     * The terminal to use for writing
-     */
-    terminal: Terminal;
-
-    /**
-     * The writer to use for writing to the terminal
-     */
-    writer: ICliTerminalWriter;
-
-    /**
-     * The command executor to use for executing commands
-     */
-    executor: ICliCommandExecutorService;
-
-    /**
-     * The clipboard to use for copying/pasting
-     */
-    clipboard: ICliClipboard;
-
-    /**
-     * The data store to use for storing data
-     */
-    dataStore: ICliCommandDataStore;
-
-    /**
-     * The options for the CLI
-     */
-    options?: CliOptions;
-
-    /**
-     * The prompt to use for prompting the user for input
-     */
-    showPrompt: () => void;
-
-    /**
-     * Set the current main processor
-     * @param processor The processor to set
-     */
-    setMainProcessor(processor: ICliCommandProcessor): void;
-
-    /**
-     * The process to use for exiting the CLI
-     */
-    process: ICliExecutionProcess;
-
-    /**
-     * The logger to use for logging
-     */
-    logger: ICliLogger;
 }
 
 /**
@@ -659,3 +367,26 @@ export interface ICliLogger {
      */
     debug(...args: any[]): void;
 }
+
+/**
+ * Represents a services for the CLI context
+ */
+export interface ICliContextServices {
+    /**
+     * Get a service
+     * @param service The service to get
+     */
+    get<T>(service: any): T;
+
+    /**
+     * Set a service
+     * @param definition The definition of the service
+     */
+    set(definition: CliProvider | CliProvider[]): void;
+}
+
+export * from './execution-context';
+
+export * from './command-processor';
+
+export * from './progress-bars';

@@ -16,6 +16,9 @@
       ],
       "@qodalis/cli-todo": [
         "dist/todo"
+      ],
+      "@qodalis/cli-curl": [
+        "dist/curl"
       ]
     },
     "outDir": "./dist/out-tsc",

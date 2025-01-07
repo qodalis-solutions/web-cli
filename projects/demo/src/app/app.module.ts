@@ -19,6 +19,7 @@ import { CliBrowserStorageModule } from '@qodalis/cli-browser-storage';
 import { CustomCliCanViewService } from './services/custom-cli-can-view.service';
 import { CliStringModule } from '@qodalis/cli-string';
 import { CliTodoModule } from '@qodalis/cli-todo';
+import { CliCurlModule } from '@qodalis/cli-curl';
 
 @NgModule({
     declarations: [AppComponent],
@@ -33,6 +34,7 @@ import { CliTodoModule } from '@qodalis/cli-todo';
         CliBrowserStorageModule,
         CliStringModule,
         CliTodoModule,
+        CliCurlModule,
     ],
     providers: [
         {

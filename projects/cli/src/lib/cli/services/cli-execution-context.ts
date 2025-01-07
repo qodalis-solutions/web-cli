@@ -13,6 +13,7 @@ import {
     ICliCommandProcessor,
     ICliLogger,
     CliLogLevel,
+    ICliContextServices,
 } from '@qodalis/cli-core';
 import { CliCommandExecutorService } from './cli-command-executor.service';
 import { CliTerminalWriter } from './cli-terminal-writer';
@@ -23,11 +24,12 @@ import { CliClipboard } from './cli-clipboard';
 import { CliExecutionProcess } from './cli-execution-process';
 import { Injector } from '@angular/core';
 import { CliLogger_TOKEN } from '../tokens';
+import { CliContextServices } from './system/cli-context-services';
 
 export class CliExecutionContext implements ICliExecutionContext {
     public userSession?: ICliUserSession;
 
-    public mainProcessor?: ICliCommandProcessor;
+    public contextProcessor?: ICliCommandProcessor;
 
     public readonly writer: ICliTerminalWriter;
 
@@ -47,6 +49,8 @@ export class CliExecutionContext implements ICliExecutionContext {
 
     public readonly logger: ICliLogger;
 
+    public readonly services: ICliContextServices;
+
     constructor(
         injector: Injector,
         public terminal: Terminal,
@@ -57,6 +61,9 @@ export class CliExecutionContext implements ICliExecutionContext {
         }) => void,
         cliOptions?: CliOptions,
     ) {
+        //initialize services
+        this.services = injector.get(CliContextServices);
+
         this.options = cliOptions;
         this.writer = new CliTerminalWriter(terminal);
         this.dataStore = new CliCommandDataStore(this);
@@ -64,24 +71,35 @@ export class CliExecutionContext implements ICliExecutionContext {
         this.progressBar = new CliTerminalProgressBar(terminal);
         this.clipboard = new CliClipboard(this);
         this.process = new CliExecutionProcess(this);
+
         this.logger = injector.get(CliLogger_TOKEN);
         this.logger.setCliLogLevel(cliOptions?.logLevel || CliLogLevel.ERROR);
+
+        this.services.set({
+            provide: 'logger',
+            useValue: this.logger,
+        });
     }
 
-    setMainProcessor(processor: ICliCommandProcessor | undefined): void {
+    setContextProcessor(
+        processor: ICliCommandProcessor | undefined,
+        silent?: boolean,
+    ): void {
         if (!processor) {
-            this.mainProcessor = processor;
+            this.contextProcessor = processor;
 
             return;
         }
 
-        this.writer.writeInfo(
-            'Set ' +
-                processor?.command +
-                ' as main processor, press Ctrl+C to exit',
-        );
+        if (!silent) {
+            this.writer.writeInfo(
+                'Set ' +
+                    processor?.command +
+                    ' as context processor, press Ctrl+C to exit',
+            );
+        }
 
-        this.mainProcessor = processor;
+        this.contextProcessor = processor;
     }
 
     /**

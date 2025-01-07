@@ -4,18 +4,25 @@
 
 ---
 
-## Docs
-
-Cli docs [link](https://cli-docs.qodalis.com/)
-
 ## Features
 
 - **Web-Based Terminal**: A terminal interface integrated into your Angular applications.
 - **Custom Command Processors**: Easily extend functionality by creating custom command processors.
 - **Lightweight and Flexible**: Designed to work seamlessly with your existing Angular project.
 - **Interactive Interface**: Enables command execution and response handling in a terminal-like UI.
+- **Extensibility**: The CLI is designed with extensibility in mind, allowing you to enhance its functionality through custom extensions. These extensions can be installed directly from npm and seamlessly integrated into your Angular project by adding them to the imports array in your Angular module.
+- **Package Installation Support**: The CLI allows you to install packages directly from the terminal using the packages add <package> command. This streamlined approach enables you to quickly add dependencies without leaving your terminal, enhancing productivity and simplifying package management.
+- **Logical operators**: Our CLI supports the use of logical operators `&&` and `||`, allowing you to combine multiple commands in a single execution, similar to how they work in Unix-like shells or scripting environments. This feature enhances productivity by chaining commands with conditional logic.
 
 ---
+
+## Live Example
+
+Check out a live example of the Qodalis Angular CLI on StackBlitz: [Live Example on StackBlitz](https://stackblitz.com/~/github.com/qodalis-nicolae-lupei/stackblitz-qodalis-cli-example)
+
+## Docs
+
+Cli docs [link](https://cli-docs.qodalis.com/)
 
 ## Installation
 
@@ -78,8 +85,13 @@ export class AppModule {}
 
 ```typescript
 cliOptions = {
-  welcomeMessage: "-- your custom welcome message --",
-  //TODO: supports multiple customizations
+  welcomeMessage: {
+    message: "-- your custom welcome message --",
+    show: "daily", //never, once
+  },
+  usersModule: {
+    enabled: true,
+  },
 };
 ```
 
@@ -106,22 +118,28 @@ cliOptions = {
 - **adduser**: Add a new user
 - **listusers**: List all users
 
-## Cli Packages
+### Custom
 
-- Add JavaScript packages dynamically.
-- Evaluate JavaScript expressions using added packages.
+See the available packages section.
+
+## Package Installation Support
+
+The CLI allows you to install packages directly from the terminal using the packages add <package> command. This streamlined approach enables you to quickly add dependencies without leaving your terminal, enhancing productivity and simplifying package management.
+
+- Installs the specified package seamlessly.
+- Automatically resolves dependencies and integrates the package into cli.
 - Display results in a structured format.
 
 ### Usage
 
 ![Install packages](docs/assets/install_packages.gif)
 
-### Add a Package
+### Add a package
 
 To add a package, use the packages add command:
 
 ```bash
-root:~$ packages add <package-name>
+root:~$ packages add <package-name1> <package-name2> <package-namen>
 ```
 
 Example:
@@ -130,20 +148,42 @@ Example:
 root:~$ packages add guid
 root:~$ packages add regex
 root:~$ packages add string
-root:~$ packages add lodash
+root:~$ packages add curl
+root:~$ packages add <any npm package that support umd>
 ```
 
 This command downloads and makes the package available for evaluation.
 
-### Remove a Package
+### Remove a package
 
 Remove a package using the `packages remove` command:
 
 ```bash
-root:~$ packages remove lodash
+root:~$ packages remove guid
 ```
 
-### Example
+### Update a package
+
+Update a package using the `packages update` command:
+
+```bash
+root:~$ packages update guid # update 1 package
+
+root:~$ packages update guid todo # update 2 packages
+
+root:~$ packages update # update all packages
+```
+
+### Example with guid package
+
+```bash
+packages add guid
+guid new # output a19a7be4-8818-41b2-b0c2-1c82f8c21826
+guid new -c # copy to the clipboard
+guid new --count=3 # output 3 guid's
+```
+
+### Example with a npm package
 
 ```bash
 root:~$ packages add lodash
@@ -168,6 +208,7 @@ root:~$
 - [@qodalis/cli-speed-test](https://www.npmjs.com/package/@qodalis/cli-speed-test) - run the internet speed test
 - [@qodalis/cli-browser-storage](https://www.npmjs.com/package/@qodalis/cli-browser-storage) - provide commands to operate with browser storage like cookie, localStorage etc.
 - [@qodalis/cli-string](https://www.npmjs.com/package/@qodalis/cli-browser-storage) - provide commands to operate with strings.
+- [@qodalis/cli-curl](https://www.npmjs.com/package/@qodalis/cli-curl) - A command-line tool to execute HTTP requests on your server. Supports GET, POST, PUT, DELETE, headers, and body data.
 - [@qodalis/cli-todo](https://www.npmjs.com/package/@qodalis/cli-todo) - A command-line tool for managing your tasks efficiently. Add, list, complete, and remove TODO items with simple commands.
 - More will be implemented ...
 
@@ -221,9 +262,57 @@ Output:
 Hello, John!
 ```
 
-## Live Example
+## Extensibility
 
-Check out a live example of the Qodalis Angular CLI on StackBlitz: [Live Example on StackBlitz](https://stackblitz.com/~/github.com/qodalis-nicolae-lupei/stackblitz-qodalis-cli-example)
+The CLI is designed with extensibility in mind, allowing you to enhance its functionality through custom extensions. These extensions can be installed directly from npm and seamlessly integrated into your Angular project by adding them to the imports array in your Angular module.
+
+How It Works:
+
+1. Install the extension from npm:
+
+```bash
+npm install @qodalis/cli-extension-name
+```
+
+2. Import and add it to your Angular module:
+
+```typescript
+import { ExtensionModule } from "@qodalis/cli-extension-name";
+
+@NgModule({
+  imports: [
+    CliModule,
+    ExtensionModule,
+    // other imports
+  ],
+})
+export class AppModule {}
+```
+
+Benefits:
+
+- Easily extend the CLI with new commands or features.
+- Leverage the rich ecosystem of npm packages to customize your workflow.
+- Keep your CLI lightweight while enabling project-specific functionality through extensions.
+- This flexibility ensures the CLI adapts to your project's needs, fostering scalability and customization.
+
+## Logical operators
+
+- These logical operators rely on the exit codes of commands:
+
+  - `0` indicates success.
+  - Non-zero values indicate failure.
+
+- Commands are executed sequentially in the order specified.
+- Logical operators provide flexibility to handle conditional execution efficiently in automation scripts or complex workflows.
+
+```bash
+# Example with &&
+packages add guid && echo Package installed
+
+# Example with ||
+packages add invalid-package || echo Package not installed
+```
 
 ## Contributing
 

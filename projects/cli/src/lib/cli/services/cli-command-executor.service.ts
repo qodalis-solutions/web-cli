@@ -9,6 +9,7 @@ import {
     CancellablePromise,
     CliIcon,
     CliForegroundColor,
+    ICliCommandParameterDescriptor,
 } from '@qodalis/cli-core';
 import { CommandParser } from '../../utils';
 import {
@@ -17,6 +18,8 @@ import {
 } from './cli-execution-process';
 import { CliExecutionContext } from './cli-execution-context';
 import { CliCommandProcessorRegistry } from './cli-command-processor-registry';
+import { ParsedArg } from '../../utils/command-parser';
+import { CliArgsParser } from '../../utils/args-parser';
 
 @Injectable({
     providedIn: 'root',
@@ -84,7 +87,8 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
         process.start();
 
-        const { commandName, args } = this.commandParser.parse(command);
+        const { commandName, args: parsedArgs } =
+            this.commandParser.parse(command);
 
         const [mainCommand, ...other] = commandName.split(' ');
 
@@ -92,8 +96,8 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
         const executionContext = context as CliExecutionContext;
 
-        const searchableProcessors = executionContext.mainProcessor
-            ? (executionContext.mainProcessor.processors ?? [])
+        const searchableProcessors = executionContext.contextProcessor
+            ? (executionContext.contextProcessor.processors ?? [])
             : this.registry.processors;
 
         const processor = this.registry.findProcessorInCollection(
@@ -123,6 +127,8 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
             return;
         }
 
+        const args = CliArgsParser.convertToRecord(parsedArgs, processor);
+
         const commandToProcess: CliProcessCommand = {
             command: commandName,
             chainCommands: chainCommands,
@@ -141,7 +147,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
             return;
         }
 
-        if (this.setMainProcessorRequested(context, processor, args)) {
+        if (this.setContextProcessorRequested(context, processor, args)) {
             process.end();
             return;
         }
@@ -248,14 +254,8 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         args: Record<string, any>,
     ): boolean {
         if (args['v'] || args['version']) {
-            context.writer.write(processor.metadata?.icon || CliIcon.Extension);
-
-            context.writer.write('  ');
-
             context.writer.writeln(
-                `Command: ${context.writer.wrapInColor(processor.command, CliForegroundColor.Cyan)} version: ${context.writer.wrapInColor(processor.version || '1.0.0', CliForegroundColor.Cyan)} - ${
-                    processor.description || 'No description'
-                }`,
+                `${context.writer.wrapInColor(processor.version || '1.0.0', CliForegroundColor.Cyan)}`,
             );
             return true;
         }
@@ -263,13 +263,13 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         return false;
     }
 
-    private setMainProcessorRequested(
+    private setContextProcessorRequested(
         context: ICliExecutionContext,
         processor: ICliCommandProcessor,
         args: Record<string, any>,
     ): boolean {
-        if (args['main']) {
-            context.setMainProcessor(processor);
+        if (args['context']) {
+            context.setContextProcessor(processor);
             return true;
         }
 
@@ -280,6 +280,10 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         commandToProcess: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<boolean> {
+        if (commandToProcess.command?.startsWith('help')) {
+            return false;
+        }
+
         if (commandToProcess.args['h'] || commandToProcess.args['help']) {
             await this.showHelp(commandToProcess, context);
 

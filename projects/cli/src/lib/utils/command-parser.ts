@@ -1,3 +1,13 @@
+export type ParsedArg = {
+    name: string;
+    value: any;
+};
+
+export type CommandParserOutput = {
+    commandName: string;
+    args: ParsedArg[];
+};
+
 /**
  * A utility class for parsing command strings into command names and arguments.
  */
@@ -7,7 +17,7 @@ export class CommandParser {
      * @param command - The full command string.
      * @returns An object containing the full command name and arguments.
      */
-    parse(command: string): { commandName: string; args: Record<string, any> } {
+    parse(command: string): CommandParserOutput {
         try {
             // Match quoted strings, single-quoted strings, or unquoted words
             const regex =
@@ -20,7 +30,7 @@ export class CommandParser {
             }
 
             const commandParts: string[] = [];
-            const args: Record<string, any> = {};
+            const args: ParsedArg[] = [];
 
             // Process matches
             matches.forEach((match) => {
@@ -35,7 +45,10 @@ export class CommandParser {
                         // Flag without a value
                         value = true;
                     }
-                    args[key] = this.parseValue(value);
+                    args.push({
+                        name: key,
+                        value: this.parseValue(value),
+                    });
                 } else if (!match[0].startsWith('--')) {
                     // Command name
                     commandParts.push(match[0]);
@@ -53,7 +66,7 @@ export class CommandParser {
 
             return {
                 commandName: '',
-                args: {},
+                args: [],
             };
         }
     }
