@@ -1,4 +1,13 @@
-# Qodalis Angular CLI
+<h2 align="center">
+    Qodalis Angular Web CLI
+</h2>
+
+<div align="center">
+
+[![npm version](https://img.shields.io/npm/v/@qodalis/angular-cli.svg)](https://www.npmjs.com/package/@qodalis/angular-cli)
+[![Build Status](https://github.com/qodalis-solutions/angular-web-cli/actions/workflows/build-angular.yml/badge.svg?branch=main)](https://github.com/qodalis-solutions/angular-web-cli/actions)
+
+</div>
 
 **Qodalis Angular CLI** is a web-based terminal CLI component for Angular applications. It provides a powerful and extensible interface to execute commands and streamline workflows directly within your web application. The CLI can be extended with custom command processors to suit your specific needs.
 
