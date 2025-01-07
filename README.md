@@ -34,7 +34,7 @@ npm install @qodalis/angular-cli
 
 ## Usage
 
-![Install packages](docs/assets/help_command.gif)
+![Install packages](assets/help_command.gif)
 
 After installing, you can integrate the CLI component into your Angular application:
 
@@ -132,7 +132,7 @@ The CLI allows you to install packages directly from the terminal using the pack
 
 ### Usage
 
-![Install packages](docs/assets/install_packages.gif)
+![Install packages](assets/install_packages.gif)
 
 ### Add a package
 
