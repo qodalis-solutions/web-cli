@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-todo",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A command-line tool for managing your tasks efficiently. Add, list, complete, and remove TODO items with simple commands.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

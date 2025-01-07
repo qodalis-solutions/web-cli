@@ -101,7 +101,7 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                     }
                     this.todos.forEach((todo) => {
                         context.writer.writeln(
-                            `[${todo.completed ? context.writer.wrapInColor(CliIcon.CheckIcon, CliForegroundColor.Green) : ' '}] #${todo.id} - ${todo.completed ? this.lineThroughText(todo.text) : todo.text}`,
+                            `[${todo.completed ? context.writer.wrapInColor(CliIcon.CheckIcon, CliForegroundColor.Green) : ' '}] #${todo.id} - ${todo.text}`,
                         );
                     });
 

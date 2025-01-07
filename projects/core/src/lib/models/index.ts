@@ -9,7 +9,7 @@ export type CliProcessCommand = {
     /**
      * The data that was entered
      */
-    data?: string;
+    data?: any;
 
     /**
      * The chain of commands that were entered
