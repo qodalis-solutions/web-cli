@@ -24,7 +24,7 @@ import {
     ICliUserSession,
     ICliUserSessionService,
 } from '@qodalis/cli-core';
-import { CliExecutionContext } from './services/cli-execution-context';
+import { CliExecutionContext } from './context/cli-execution-context';
 import { ICliUserSessionService_TOKEN } from './tokens';
 import { CliBoot } from './services/system/cli-boot';
 import { CliWelcomeMessageService } from './services/system/cli-welcome-message.service';

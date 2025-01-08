@@ -7,19 +7,16 @@ import {
     getParameterValue,
     ICliCommandExecutorService,
     CancellablePromise,
-    CliIcon,
     CliForegroundColor,
-    ICliCommandParameterDescriptor,
 } from '@qodalis/cli-core';
 import { CommandParser } from '../../utils';
-import {
-    CliExecutionProcess,
-    ProcessExitedError,
-} from './cli-execution-process';
-import { CliExecutionContext } from './cli-execution-context';
+import { CliExecutionProcess } from '../context/cli-execution-process';
+import { CliExecutionContext } from '../context/cli-execution-context';
 import { CliCommandProcessorRegistry } from './cli-command-processor-registry';
-import { ParsedArg } from '../../utils/command-parser';
 import { CliArgsParser } from '../../utils/args-parser';
+import { ProcessExitedError } from '../context/errors';
+import { CliCommandExecutionContext } from '../context/cli-command-executution-context';
+import { CliAliasCommandProcessor } from '../processors';
 
 @Injectable({
     providedIn: 'root',
@@ -40,6 +37,13 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         // Split commands by logical operators
         const parts = command.split(/(&&|\|\|)/).map((part) => part.trim());
         let shouldRunNextCommand = true; // Tracks whether to execute the next command
+
+        let rootContext: CliExecutionContext;
+        if (context instanceof CliCommandExecutionContext) {
+            rootContext = context.context;
+        } else {
+            rootContext = context as CliExecutionContext;
+        }
 
         for (let i = 0; i < parts.length; i++) {
             const current = parts[i];
@@ -65,7 +69,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                 const data = context.process.data;
                 const command = current;
 
-                await this.executeSingleCommand(command, data, context);
+                await this.executeSingleCommand(command, data, rootContext);
 
                 commandSuccess = context.process.exitCode === 0;
             } catch (e) {
@@ -81,7 +85,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
     private async executeSingleCommand(
         command: string,
         data: any | undefined,
-        context: ICliExecutionContext,
+        context: CliExecutionContext,
     ): Promise<void> {
         const process = context.process as CliExecutionProcess;
 
@@ -94,10 +98,8 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
         const chainCommands = other.map((c) => c.toLowerCase());
 
-        const executionContext = context as CliExecutionContext;
-
-        const searchableProcessors = executionContext.contextProcessor
-            ? (executionContext.contextProcessor.processors ?? [])
+        const searchableProcessors = context.contextProcessor
+            ? (context.contextProcessor.processors ?? [])
             : this.registry.processors;
 
         const processor = this.registry.findProcessorInCollection(
@@ -107,6 +109,19 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
         );
 
         if (!processor) {
+            const aliases =
+                (
+                    this.registry.findProcessor(
+                        'alias',
+                        [],
+                    ) as CliAliasCommandProcessor
+                ).aliases ?? {};
+
+            if (aliases[mainCommand]) {
+                const alias = aliases[mainCommand];
+                return await this.executeSingleCommand(alias, data, context);
+            }
+
             context.writer.writeError(
                 `Command: ${commandName} not found or not installed`,
             );
@@ -196,11 +211,22 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
         let cancellable: CancellablePromise<void> = null!;
 
+        const commandContext = new CliCommandExecutionContext(
+            context,
+            processor,
+        );
+
         try {
+            const hooks = processor.hooks ?? [];
+
+            for (const hook of hooks.filter((h) => h.when === 'before')) {
+                await hook.execute(commandContext);
+            }
+
             cancellable = new CancellablePromise<void>(
                 async (resolve, reject) => {
                     processor
-                        .processCommand(commandToProcess, context)
+                        .processCommand(commandToProcess, commandContext)
                         .then(() => {
                             resolve();
                         })
@@ -210,7 +236,11 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                 },
             );
 
-            await cancellable.promise;
+            await cancellable.execute();
+
+            for (const hook of hooks.filter((h) => h.when === 'after')) {
+                await hook.execute(commandContext);
+            }
 
             process.end();
         } catch (e) {

@@ -6,6 +6,8 @@ export * from './lib/cli.module';
 
 export * from './lib/cli/services';
 
+export * from './lib/cli/context';
+
 export * from './lib/utils';
 
 export * from './lib/cli/tokens';

@@ -1,10 +1,11 @@
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import {
     CliBackgroundColor,
     CliForegroundColor,
     CliLogLevel,
     CliProcessCommand,
     CliProvider,
+    CliState,
     ICliUser,
     ICliUserSession,
 } from '../models';
@@ -231,28 +232,81 @@ export interface ICliExecutionProcess {
 }
 
 /**
- * Represents a data store for storing data associated with commands
+ * Represents a key-value store for the CLI
  */
-export interface ICliCommandDataStore {
+export interface ICliKeyValueStore {
     /**
-     * The data store
+     * Retrieves a value by key.
+     * @param key - The key to retrieve the value for.
+     * @returns A promise resolving to the value or undefined if not found.
      */
-    data: Record<string, Record<string, any>>;
+    get<T = any>(key: string): Promise<T | undefined>;
 
     /**
-     * Append data to the data store
-     * @param command
-     * @param key
-     * @param data
+     * Sets a key-value pair in the store.
+     * @param key - The key to set.
+     * @param value - The value to store.
+     * @returns A promise resolving when the value is stored.
      */
-    appendData(command: string, key: string, data: any): void;
+    set(key: string, value: any): Promise<void>;
 
     /**
-     * Get data from the data store
-     * @param command
-     * @param key
+     * Removes a key-value pair by key.
+     * @param key - The key to remove.
+     * @returns A promise resolving when the key is removed.
      */
-    getData<T = any>(command: string, key: string): T;
+    remove(key: string): Promise<void>;
+
+    /**
+     * Clears all key-value pairs from the store.
+     * @returns A promise resolving when the store is cleared.
+     */
+    clear(): Promise<void>;
+}
+
+/**
+ * Represents a store for storing data associated with commands
+ */
+export interface ICliStateStore {
+    /**
+     * Get the current state as an object.
+     */
+    getState(): CliState;
+
+    /**
+     * Update the state with new values. Supports partial updates.
+     * @param newState Partial state to merge with the current state.
+     */
+    updateState(newState: Partial<CliState>): void;
+
+    /**
+     * Select a specific property or computed value from the state.
+     * @param selector A function to project a slice of the state.
+     * @returns Observable of the selected value.
+     */
+    select<K>(selector: (state: CliState) => K): Observable<K>;
+
+    /**
+     * Subscribe to state changes.
+     * @param callback Callback function to handle state changes.
+     * @returns Subscription object to manage the subscription.
+     */
+    subscribe(callback: (state: CliState) => void): Subscription;
+
+    /**
+     * Reset the state to its initial value.
+     */
+    reset(): void;
+
+    /**
+     * Persist the state to storage.
+     */
+    persist(): Promise<void>;
+
+    /**
+     * Initialize the state from storage.
+     */
+    initialize(): Promise<void>;
 }
 
 /**
@@ -390,3 +444,5 @@ export * from './execution-context';
 export * from './command-processor';
 
 export * from './progress-bars';
+
+export * from './command-hooks';

@@ -7,24 +7,25 @@ import {
     CliOptions,
     ICliSpinner,
     ICliPercentageProgressBar,
-    ICliCommandDataStore,
     ICliClipboard,
     ICliExecutionProcess,
     ICliCommandProcessor,
     ICliLogger,
     CliLogLevel,
     ICliContextServices,
+    ICliStateStore,
 } from '@qodalis/cli-core';
-import { CliCommandExecutorService } from './cli-command-executor.service';
-import { CliTerminalWriter } from './cli-terminal-writer';
-import { CliTerminalSpinner } from './progress-bars/cli-terminal-spinner';
-import { CliTerminalProgressBar } from './progress-bars/cli-terminal-progress-bar';
-import { CliCommandDataStore } from './cli-command-data-store';
-import { CliClipboard } from './cli-clipboard';
+import { CliCommandExecutorService } from '../services/cli-command-executor.service';
+import { CliTerminalWriter } from '../services/cli-terminal-writer';
+import { CliTerminalSpinner } from '../services/progress-bars/cli-terminal-spinner';
+import { CliTerminalProgressBar } from '../services/progress-bars/cli-terminal-progress-bar';
+import { CliClipboard } from '../services/cli-clipboard';
 import { CliExecutionProcess } from './cli-execution-process';
 import { Injector } from '@angular/core';
 import { CliLogger_TOKEN } from '../tokens';
-import { CliContextServices } from './system/cli-context-services';
+import { CliContextServices } from '../services/system/cli-context-services';
+import { CliStateStoreManager } from '../state/cli-state-store-manager';
+import { CliKeyValueStore } from '../storage/cli-key-value-store';
 
 export class CliExecutionContext implements ICliExecutionContext {
     public userSession?: ICliUserSession;
@@ -41,7 +42,7 @@ export class CliExecutionContext implements ICliExecutionContext {
 
     public readonly onAbort = new Subject<void>();
 
-    public readonly dataStore: ICliCommandDataStore;
+    public readonly state: ICliStateStore;
 
     public readonly clipboard: ICliClipboard;
 
@@ -50,6 +51,8 @@ export class CliExecutionContext implements ICliExecutionContext {
     public readonly logger: ICliLogger;
 
     public readonly services: ICliContextServices;
+
+    public readonly stateStoreManager: CliStateStoreManager;
 
     constructor(
         injector: Injector,
@@ -64,20 +67,29 @@ export class CliExecutionContext implements ICliExecutionContext {
         //initialize services
         this.services = injector.get(CliContextServices);
 
+        //initialize state store
+        this.stateStoreManager = new CliStateStoreManager(this.services);
+        this.state = this.stateStoreManager.getStateStore('shared');
+
         this.options = cliOptions;
         this.writer = new CliTerminalWriter(terminal);
-        this.dataStore = new CliCommandDataStore(this);
         this.spinner = new CliTerminalSpinner(terminal);
         this.progressBar = new CliTerminalProgressBar(terminal);
         this.clipboard = new CliClipboard(this);
         this.process = new CliExecutionProcess(this);
 
+        //initialize logger
         this.logger = injector.get(CliLogger_TOKEN);
         this.logger.setCliLogLevel(cliOptions?.logLevel || CliLogLevel.ERROR);
 
         this.services.set({
             provide: 'logger',
             useValue: this.logger,
+        });
+
+        this.services.set({
+            provide: 'key-value-store',
+            useValue: injector.get(CliKeyValueStore),
         });
     }
 

@@ -344,6 +344,12 @@ export type CliProcessorMetadata = Record<string, any> & {
      * An icon to display for the processor
      */
     icon?: CliIcon | string;
+
+    /**
+     * The store identifier for the processor, if any
+     * @remarks If the store identifier is not set, the processor command name is used
+     */
+    storeName?: string;
 };
 
 /**
@@ -357,6 +363,8 @@ export enum CliLogLevel {
     WARN = 4,
     ERROR = 5,
 }
+
+export type CliState = Record<string, any>;
 
 export const enums = {
     CliForegroundColor,

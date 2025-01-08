@@ -1,4 +1,5 @@
 import { CliProcessCommand, CliProcessorMetadata } from '../models';
+import { ICliProcessorHook } from './command-hooks';
 import { ICliExecutionContext } from './execution-context';
 
 export interface ICliCommandAuthor {
@@ -117,6 +118,11 @@ export interface ICliCommandProcessor {
      * Parameters that the command accepts
      */
     parameters?: ICliCommandParameterDescriptor[];
+
+    /**
+     * Hooks that are executed before and after the command is processed
+     */
+    hooks?: ICliProcessorHook[];
 
     /**
      * Process the command

@@ -1,12 +1,9 @@
 import { Inject, Injectable } from '@angular/core';
 import { CliCommandProcessorRegistry } from '../cli-command-processor-registry';
-import {
-    CliIcon,
-    delay,
-    ICliCommandProcessor,
-    ICliExecutionContext,
-} from '@qodalis/cli-core';
+import { CliIcon, delay, ICliCommandProcessor } from '@qodalis/cli-core';
 import { CliCommandProcessor_TOKEN } from '../../tokens';
+import { CliCommandExecutionContext, CliExecutionContext } from '../../context';
+import { CliKeyValueStore } from '../../storage/cli-key-value-store';
 
 @Injectable({
     providedIn: 'root',
@@ -21,23 +18,27 @@ export class CliBoot {
         private readonly registry: CliCommandProcessorRegistry,
     ) {}
 
-    public async boot(context: ICliExecutionContext): Promise<void> {
+    public async boot(context: CliExecutionContext): Promise<void> {
         if (this.initialized || this.initializing) {
             return;
         }
+
         this.initializing = true;
+
+        context.spinner?.show();
+        context.spinner?.setText(CliIcon.Rocket + '  Booting...');
+
+        const store = context.services.get<CliKeyValueStore>(CliKeyValueStore);
+        await store.initialize();
 
         let processors = this.implementations;
 
+        //TODO: refactor in a better way
         if (!context.options?.usersModule?.enabled) {
             processors = processors.filter(
                 (p) => p.metadata?.module !== 'users',
             );
         }
-
-        context.spinner?.show();
-
-        context.spinner?.setText(CliIcon.Rocket + '  Booting...');
 
         processors.forEach((impl) => this.registry.registerProcessor(impl));
 
@@ -54,13 +55,20 @@ export class CliBoot {
     }
 
     private async initializeProcessorsInternal(
-        context: ICliExecutionContext,
+        context: CliExecutionContext,
         processors: ICliCommandProcessor[],
     ): Promise<void> {
         try {
             for (const p of processors) {
                 if (p.initialize) {
-                    await p.initialize(context);
+                    const processorContext = new CliCommandExecutionContext(
+                        context,
+                        p,
+                    );
+
+                    await processorContext.state.initialize();
+
+                    await p.initialize(processorContext);
                 }
 
                 if (p.processors && p.processors.length > 0) {

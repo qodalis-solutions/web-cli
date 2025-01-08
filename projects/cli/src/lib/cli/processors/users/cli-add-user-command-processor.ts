@@ -25,6 +25,7 @@ export class CliAddUserCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         module: 'users',
         icon: CliIcon.User,
+        storeName: 'users',
     };
 
     allowUnlistedCommands?: boolean | undefined = true;

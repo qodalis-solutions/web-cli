@@ -44,6 +44,7 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         module: 'users',
         icon: CliIcon.User,
+        storeName: 'users',
     };
 
     valueRequired = true;

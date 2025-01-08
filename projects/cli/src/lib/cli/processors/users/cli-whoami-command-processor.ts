@@ -27,6 +27,7 @@ export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         module: 'users',
         icon: CliIcon.User,
+        storeName: 'users',
     };
 
     parameters?: ICliCommandParameterDescriptor[] | undefined = [

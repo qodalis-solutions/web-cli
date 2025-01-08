@@ -10,24 +10,26 @@ export class CancellablePromise<T> {
         ) => void,
     ) {}
 
-    public promise: Promise<T> = new Promise<T>((resolve, reject) => {
-        this.abortController.signal.onabort = () => {
-            reject(new Error('Promise cancelled'));
-        };
+    public execute(): Promise<T> {
+        return new Promise<T>((resolve, reject) => {
+            this.abortController.signal.onabort = () => {
+                reject(new Error('Promise cancelled'));
+            };
 
-        this.executor(
-            (value) => {
-                if (!this.hasCancelled) {
-                    resolve(value);
-                }
-            },
-            (reason) => {
-                if (!this.hasCancelled) {
-                    reject(reason);
-                }
-            },
-        );
-    });
+            this.executor(
+                (value) => {
+                    if (!this.hasCancelled) {
+                        resolve(value);
+                    }
+                },
+                (reason) => {
+                    if (!this.hasCancelled) {
+                        reject(reason);
+                    }
+                },
+            );
+        });
+    }
 
     cancel() {
         this.hasCancelled = true;

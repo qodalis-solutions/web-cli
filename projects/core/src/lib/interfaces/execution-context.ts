@@ -2,7 +2,6 @@ import { Terminal } from '@xterm/xterm';
 import { Subject } from 'rxjs';
 import {
     ICliClipboard,
-    ICliCommandDataStore,
     ICliCommandExecutorService,
     ICliCommandProcessor,
     ICliContextServices,
@@ -10,6 +9,7 @@ import {
     ICliLogger,
     ICliPercentageProgressBar,
     ICliSpinner,
+    ICliStateStore,
     ICliTerminalWriter,
 } from '.';
 import { CliOptions, ICliUserSession } from '../models';
@@ -59,9 +59,9 @@ export interface ICliExecutionContext {
     clipboard: ICliClipboard;
 
     /**
-     * The data store to use for storing data
+     * The state store to use for storing state
      */
-    dataStore: ICliCommandDataStore;
+    state: ICliStateStore;
 
     /**
      * The options for the CLI
@@ -78,10 +78,10 @@ export interface ICliExecutionContext {
      * @param processor The processor to set
      * @param silent Indicates if the setting should be silent, i.e. not write to the terminal
      */
-    setContextProcessor(
+    setContextProcessor: (
         processor: ICliCommandProcessor,
         silent?: boolean,
-    ): void;
+    ) => void;
 
     /**
      * The process to use for exiting the CLI

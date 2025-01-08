@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { LIBRARY_VERSION } from '../../../version';
 import { CLi_Name_Art } from '../../constants';
-import { CliExecutionContext } from '../cli-execution-context';
-import { CliForegroundColor } from '@qodalis/cli-core';
+import { CliForegroundColor, ICliExecutionContext } from '@qodalis/cli-core';
 
 /**
  * Service that displays the welcome message to the user.
@@ -16,7 +15,7 @@ export class CliWelcomeMessageService {
      * @param context
      * @returns void
      */
-    public displayWelcomeMessage(context: CliExecutionContext) {
+    public displayWelcomeMessage(context: ICliExecutionContext) {
         const welcomeConfig = context.options?.welcomeMessage;
 
         // Handle the 'show' property

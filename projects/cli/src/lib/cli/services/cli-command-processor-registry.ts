@@ -4,11 +4,9 @@ import {
     ICliCommandProcessorRegistry,
 } from '@qodalis/cli-core';
 import {
-    CliClearCommandProcessor,
-    CliEchoCommandProcessor,
-    CliEvalCommandProcessor,
     CliHelpCommandProcessor,
     CliVersionCommandProcessor,
+    miscProcessors,
 } from '../processors';
 
 @Injectable({
@@ -17,11 +15,7 @@ import {
 export class CliCommandProcessorRegistry
     implements ICliCommandProcessorRegistry
 {
-    public readonly processors: ICliCommandProcessor[] = [
-        new CliClearCommandProcessor(),
-        new CliEchoCommandProcessor(),
-        new CliEvalCommandProcessor(),
-    ];
+    public readonly processors: ICliCommandProcessor[] = [...miscProcessors];
 
     constructor(injector: Injector) {
         this.registerProcessor(injector.get(CliHelpCommandProcessor));
