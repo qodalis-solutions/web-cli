@@ -11,25 +11,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 16 # Adjust based on your project's Node.js version
 
-      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # Step 4: Generate documentation using TypeDoc
+      - name: Install projects deps
+        run: npm run "install projects deps"
+
+      - name: Build all projects
+        run: npm run "build all"
+
       - name: Generate TypeDoc documentation
         run: npx typedoc --out docs # Adjust the command based on your TypeDoc config
 
-      # Step 5: Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
