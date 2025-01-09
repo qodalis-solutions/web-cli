@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CliComponent } from './cli.component';
 import { resolveCliProviders } from '..';
+import { CliTerminalComponent } from '../cli-terminal/cli-terminal.component';
 
 describe('CliComponent', () => {
     let component: CliComponent;
@@ -9,7 +10,7 @@ describe('CliComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [CliComponent],
+            declarations: [CliComponent, CliTerminalComponent],
             providers: [resolveCliProviders()],
         }).compileComponents();
 
