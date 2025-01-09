@@ -10,7 +10,10 @@ import {
     ICliUserSession,
 } from '../models';
 import { ICliExecutionContext } from './execution-context';
-import { ICliCommandProcessor } from './command-processor';
+import {
+    ICliCommandChildProcessor,
+    ICliCommandProcessor,
+} from './command-processor';
 
 export interface ICliTerminalWriter {
     /**
@@ -159,6 +162,11 @@ export interface ICliCommandExecutorService {
  */
 export interface ICliCommandProcessorRegistry {
     /**
+     * The processors registered with the registry
+     */
+    readonly processors: ICliCommandProcessor[];
+
+    /**
      * Find a processor for a command
      * @param mainCommand
      * @param chainCommands
@@ -167,6 +175,25 @@ export interface ICliCommandProcessorRegistry {
         mainCommand: string,
         chainCommands: string[],
     ): ICliCommandProcessor | undefined;
+
+    /**
+     * Recursively searches for a processor matching the given command.
+     * @param mainCommand The main command name.
+     * @param chainCommands The remaining chain commands (if any).
+     * @param processors The list of available processors.
+     * @returns The matching processor or undefined if not found.
+     */
+    findProcessorInCollection(
+        mainCommand: string,
+        chainCommands: string[],
+        processors: ICliCommandProcessor[],
+    ): ICliCommandProcessor | undefined;
+
+    /**
+     * Get the root processor for a child processor
+     * @param child The child processor
+     */
+    getRootProcessor(child: ICliCommandChildProcessor): ICliCommandProcessor;
 
     /**
      * Register a processor
@@ -423,9 +450,9 @@ export interface ICliLogger {
 }
 
 /**
- * Represents a services for the CLI context
+ * Represents a service provider for the CLI
  */
-export interface ICliContextServices {
+export interface ICliServiceProvider {
     /**
      * Get a service
      * @param service The service to get

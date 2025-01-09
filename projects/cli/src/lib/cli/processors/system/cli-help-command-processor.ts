@@ -7,10 +7,10 @@ import {
     CliForegroundColor,
     CliProcessorMetadata,
     CliIcon,
+    ICliCommandProcessorRegistry,
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
-import { CliHotKeysCommandProcessor } from './cli-hot-keys-command-processor';
-import { CliCommandProcessorRegistry } from '../../services/cli-command-processor-registry';
+import { CliProcessorsRegistry_TOKEN } from '../../tokens';
 
 @Injectable({
     providedIn: 'root',
@@ -29,7 +29,13 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         icon: CliIcon.Help,
     };
 
-    constructor(private readonly injector: Injector) {}
+    private readonly registry: ICliCommandProcessorRegistry;
+
+    constructor(private readonly injector: Injector) {
+        this.registry = this.injector.get<ICliCommandProcessorRegistry>(
+            CliProcessorsRegistry_TOKEN,
+        );
+    }
 
     async processCommand(
         command: CliProcessCommand,
@@ -39,14 +45,12 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
         const [_, ...commandsToHelp] = command.command.split(' ');
 
-        const registry = this.injector.get(CliCommandProcessorRegistry);
-
         if (commandsToHelp.length === 0) {
             await context.executor.executeCommand('version', context);
 
             this.writeSeparator(context);
 
-            const rootCommands = registry.processors.map((p) => p.command);
+            const rootCommands = this.registry.processors.map((p) => p.command);
 
             writer.writeln(
                 writer.wrapInColor(
@@ -55,7 +59,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 ),
             );
             rootCommands.forEach((command) => {
-                const processor = registry.findProcessor(command, []);
+                const processor = this.registry.findProcessor(command, []);
                 writer.writeln(
                     `- ${processor?.metadata?.icon ? processor.metadata.icon : CliIcon.Extension}  ${writer.wrapInColor(command, CliForegroundColor.Cyan)} - ${
                         processor?.description || 'Missing description'
@@ -75,7 +79,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 '\nType `help <command>` to get more information about a specific command',
             );
         } else {
-            const processor = registry.findProcessor(
+            const processor = this.registry.findProcessor(
                 commandsToHelp[0],
                 commandsToHelp.slice(1),
             );

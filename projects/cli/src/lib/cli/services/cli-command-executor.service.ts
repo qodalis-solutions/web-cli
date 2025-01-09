@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import {
     ICliExecutionContext,
     ICliCommandProcessor,
@@ -8,15 +8,16 @@ import {
     ICliCommandExecutorService,
     CancellablePromise,
     CliForegroundColor,
+    ICliCommandProcessorRegistry,
 } from '@qodalis/cli-core';
 import { CommandParser } from '../../utils';
 import { CliExecutionProcess } from '../context/cli-execution-process';
 import { CliExecutionContext } from '../context/cli-execution-context';
-import { CliCommandProcessorRegistry } from './cli-command-processor-registry';
 import { CliArgsParser } from '../../utils/args-parser';
 import { ProcessExitedError } from '../context/errors';
 import { CliCommandExecutionContext } from '../context/cli-command-executution-context';
 import { CliAliasCommandProcessor } from '../processors';
+import { CliProcessorsRegistry_TOKEN } from '../tokens';
 
 @Injectable({
     providedIn: 'root',
@@ -24,11 +25,10 @@ import { CliAliasCommandProcessor } from '../processors';
 export class CliCommandExecutorService implements ICliCommandExecutorService {
     private commandParser: CommandParser = new CommandParser();
 
-    public registry: CliCommandProcessorRegistry;
-
-    constructor(registry: CliCommandProcessorRegistry) {
-        this.registry = registry;
-    }
+    constructor(
+        @Inject(CliProcessorsRegistry_TOKEN)
+        private readonly registry: ICliCommandProcessorRegistry,
+    ) {}
 
     public async executeCommand(
         command: string,

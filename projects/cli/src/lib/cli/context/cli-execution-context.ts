@@ -12,7 +12,7 @@ import {
     ICliCommandProcessor,
     ICliLogger,
     CliLogLevel,
-    ICliContextServices,
+    ICliServiceProvider,
     ICliStateStore,
 } from '@qodalis/cli-core';
 import { CliCommandExecutorService } from '../services/cli-command-executor.service';
@@ -22,10 +22,8 @@ import { CliTerminalProgressBar } from '../services/progress-bars/cli-terminal-p
 import { CliClipboard } from '../services/cli-clipboard';
 import { CliExecutionProcess } from './cli-execution-process';
 import { Injector } from '@angular/core';
-import { CliLogger_TOKEN } from '../tokens';
-import { CliContextServices } from '../services/system/cli-context-services';
+import { CliLogger_TOKEN, CliServiceProvider_TOKEN } from '../tokens';
 import { CliStateStoreManager } from '../state/cli-state-store-manager';
-import { CliKeyValueStore } from '../storage/cli-key-value-store';
 
 export class CliExecutionContext implements ICliExecutionContext {
     public userSession?: ICliUserSession;
@@ -50,9 +48,7 @@ export class CliExecutionContext implements ICliExecutionContext {
 
     public readonly logger: ICliLogger;
 
-    public readonly services: ICliContextServices;
-
-    public readonly stateStoreManager: CliStateStoreManager;
+    public readonly services: ICliServiceProvider;
 
     constructor(
         injector: Injector,
@@ -65,11 +61,11 @@ export class CliExecutionContext implements ICliExecutionContext {
         cliOptions?: CliOptions,
     ) {
         //initialize services
-        this.services = injector.get(CliContextServices);
+        this.services = injector.get(CliServiceProvider_TOKEN);
 
         //initialize state store
-        this.stateStoreManager = new CliStateStoreManager(this.services);
-        this.state = this.stateStoreManager.getStateStore('shared');
+        const stateStoreManager = injector.get(CliStateStoreManager);
+        this.state = stateStoreManager.getStateStore('shared');
 
         this.options = cliOptions;
         this.writer = new CliTerminalWriter(terminal);
@@ -81,16 +77,6 @@ export class CliExecutionContext implements ICliExecutionContext {
         //initialize logger
         this.logger = injector.get(CliLogger_TOKEN);
         this.logger.setCliLogLevel(cliOptions?.logLevel || CliLogLevel.ERROR);
-
-        this.services.set({
-            provide: 'logger',
-            useValue: this.logger,
-        });
-
-        this.services.set({
-            provide: 'key-value-store',
-            useValue: injector.get(CliKeyValueStore),
-        });
     }
 
     setContextProcessor(

@@ -7,12 +7,10 @@ import {
     StaticProvider,
     ValueProvider,
 } from '@angular/core';
-import { CliProvider, ICliContextServices } from '@qodalis/cli-core';
+import { CliProvider, ICliServiceProvider } from '@qodalis/cli-core';
 
-@Injectable({
-    providedIn: 'root',
-})
-export class CliContextServices implements ICliContextServices {
+@Injectable()
+export class CliServiceProvider implements ICliServiceProvider {
     private providers: StaticProvider[] = [];
     private currentInjector: Injector;
 

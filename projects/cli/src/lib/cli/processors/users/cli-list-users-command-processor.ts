@@ -3,6 +3,7 @@ import {
     CliIcon,
     CliProcessCommand,
     CliProcessorMetadata,
+    CliStateConfiguration,
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliExecutionContext,
@@ -26,6 +27,10 @@ export class CliListUsersCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         module: 'users',
         icon: CliIcon.User,
+    };
+
+    stateConfiguration?: CliStateConfiguration | undefined = {
+        initialState: {},
         storeName: 'users',
     };
 

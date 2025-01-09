@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
     selector: 'collapsable-content',
@@ -8,7 +8,12 @@ import { Component, Input } from '@angular/core';
 export class CollapsableContentComponent {
     @Input() isCollapsed: boolean = true;
 
+    @Output()
+    public onToggle = new EventEmitter<boolean>();
+
     toggleTerminal(): void {
         this.isCollapsed = !this.isCollapsed;
+
+        this.onToggle.emit(this.isCollapsed);
     }
 }

@@ -1,17 +1,16 @@
 import { Injectable } from '@angular/core';
+import { CliKeyValueStore } from '../storage/cli-key-value-store';
 
 @Injectable({
     providedIn: 'root',
 })
-export class CLiCommandHistoryService {
-    private readonly storageKey = 'cliCommandHistory';
+export class CliCommandHistoryService {
+    private readonly storageKey = 'cli-command-history';
     private commandHistory: string[] = [];
 
-    constructor() {
-        this.loadHistory();
-    }
+    constructor(private readonly store: CliKeyValueStore) {}
 
-    public addCommand(command: string): void {
+    public async addCommand(command: string): Promise<void> {
         const normalizedCommand = command.trim();
         if (normalizedCommand) {
             if (this.commandHistory.length > 0) {
@@ -22,7 +21,7 @@ export class CLiCommandHistoryService {
                 }
             }
             this.commandHistory.push(command);
-            this.saveHistory();
+            await this.saveHistory();
         }
     }
 
@@ -34,26 +33,34 @@ export class CLiCommandHistoryService {
         return [...this.commandHistory];
     }
 
-    public clearHistory(): void {
+    public async clearHistory(): Promise<void> {
         this.commandHistory = [];
-        this.saveHistory();
+        await this.saveHistory();
     }
 
     public getCommand(index: number): string | undefined {
         return this.commandHistory[index];
     }
 
-    private saveHistory(): void {
-        localStorage.setItem(
-            this.storageKey,
-            JSON.stringify(this.commandHistory),
-        );
+    private async saveHistory(): Promise<void> {
+        return await this.store.set(this.storageKey, this.commandHistory);
     }
 
-    private loadHistory(): void {
-        const savedHistory = localStorage.getItem(this.storageKey);
-        if (savedHistory) {
-            this.commandHistory = JSON.parse(savedHistory);
+    private async loadHistory(): Promise<void> {
+        const savedOldHistory = localStorage.getItem('cliCommandHistory');
+        if (savedOldHistory) {
+            localStorage.removeItem('cliCommandHistory');
+            await this.store.set(this.storageKey, JSON.parse(savedOldHistory));
         }
+
+        const savedHistory = await this.store.get<string[]>(this.storageKey);
+
+        if (savedHistory) {
+            this.commandHistory = savedHistory;
+        }
+    }
+
+    public async initialize(): Promise<void> {
+        await this.loadHistory();
     }
 }

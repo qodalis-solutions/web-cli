@@ -1,11 +1,13 @@
 import {
     CliProcessCommand,
     CliProcessorMetadata,
+    CliStateConfiguration,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
+    ICliCommandProcessorRegistry,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
-import { CliCommandProcessorRegistry } from '../../services/cli-command-processor-registry';
+import { CliProcessorsRegistry_TOKEN } from '../../tokens';
 
 export class CliAliasCommandProcessor implements ICliCommandProcessor {
     command = 'alias';
@@ -20,6 +22,12 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
         icon: '🔥',
         module: 'misc',
         sealed: true,
+    };
+
+    stateConfiguration?: CliStateConfiguration | undefined = {
+        initialState: {
+            aliases: {},
+        },
         storeName: 'aliases',
     };
 
@@ -50,8 +58,8 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const registry = context.services.get<CliCommandProcessorRegistry>(
-            CliCommandProcessorRegistry,
+        const registry = context.services.get<ICliCommandProcessorRegistry>(
+            CliProcessorsRegistry_TOKEN,
         );
 
         const { writer } = context;

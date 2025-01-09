@@ -9,6 +9,7 @@ import {
     CliProcessorMetadata,
     CliIcon,
     CliForegroundColor,
+    CliStateConfiguration,
 } from '@qodalis/cli-core';
 
 import { firstValueFrom } from 'rxjs';
@@ -44,6 +45,10 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         module: 'users',
         icon: CliIcon.User,
+    };
+
+    stateConfiguration?: CliStateConfiguration | undefined = {
+        initialState: {},
         storeName: 'users',
     };
 

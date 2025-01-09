@@ -3,7 +3,7 @@ import {
     ICliClipboard,
     ICliCommandExecutorService,
     ICliCommandProcessor,
-    ICliContextServices,
+    ICliServiceProvider,
     ICliExecutionContext,
     ICliExecutionProcess,
     ICliLogger,
@@ -16,6 +16,7 @@ import {
 import { Terminal } from '@xterm/xterm';
 import { Subject } from 'rxjs';
 import { CliExecutionContext } from './cli-execution-context';
+import { CliStateStoreManager } from '../state/cli-state-store-manager';
 
 export class CliCommandExecutionContext implements ICliExecutionContext {
     userSession?: ICliUserSession | undefined;
@@ -35,7 +36,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     ) => void;
     process: ICliExecutionProcess;
     logger: ICliLogger;
-    services: ICliContextServices;
+    services: ICliServiceProvider;
 
     constructor(
         public readonly context: CliExecutionContext,
@@ -56,7 +57,8 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
         this.logger = context.logger;
         this.services = context.services;
 
-        this.state =
-            context.stateStoreManager.getProcessorStateStore(processor);
+        this.state = context.services
+            .get<CliStateStoreManager>(CliStateStoreManager)
+            .getProcessorStateStore(processor);
     }
 }

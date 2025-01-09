@@ -1,7 +1,15 @@
 import { Inject, Injectable } from '@angular/core';
-import { CliCommandProcessorRegistry } from '../cli-command-processor-registry';
-import { CliIcon, delay, ICliCommandProcessor } from '@qodalis/cli-core';
-import { CliCommandProcessor_TOKEN } from '../../tokens';
+import {
+    CliIcon,
+    delay,
+    ICliCommandChildProcessor,
+    ICliCommandProcessor,
+    ICliCommandProcessorRegistry,
+} from '@qodalis/cli-core';
+import {
+    CliCommandProcessor_TOKEN,
+    CliProcessorsRegistry_TOKEN,
+} from '../../tokens';
 import { CliCommandExecutionContext, CliExecutionContext } from '../../context';
 import { CliKeyValueStore } from '../../storage/cli-key-value-store';
 
@@ -15,7 +23,9 @@ export class CliBoot {
     constructor(
         @Inject(CliCommandProcessor_TOKEN)
         private readonly implementations: ICliCommandProcessor[],
-        private readonly registry: CliCommandProcessorRegistry,
+
+        @Inject(CliProcessorsRegistry_TOKEN)
+        private readonly registry: ICliCommandProcessorRegistry,
     ) {}
 
     public async boot(context: CliExecutionContext): Promise<void> {
@@ -28,8 +38,7 @@ export class CliBoot {
         context.spinner?.show();
         context.spinner?.setText(CliIcon.Rocket + '  Booting...');
 
-        const store = context.services.get<CliKeyValueStore>(CliKeyValueStore);
-        await store.initialize();
+        await this.registerServices(context);
 
         let processors = this.implementations;
 
@@ -47,7 +56,7 @@ export class CliBoot {
             this.registry.processors,
         );
 
-        await delay(500);
+        await delay(300);
 
         context.spinner?.hide();
 
@@ -57,9 +66,12 @@ export class CliBoot {
     private async initializeProcessorsInternal(
         context: CliExecutionContext,
         processors: ICliCommandProcessor[],
+        parent?: ICliCommandProcessor,
     ): Promise<void> {
         try {
             for (const p of processors) {
+                (p as ICliCommandChildProcessor).parent = parent;
+
                 if (p.initialize) {
                     const processorContext = new CliCommandExecutionContext(
                         context,
@@ -75,11 +87,23 @@ export class CliBoot {
                     await this.initializeProcessorsInternal(
                         context,
                         p.processors,
+                        p,
                     );
                 }
             }
         } catch (e) {
             context.writer.writeError(`Error initializing processors: ${e}`);
         }
+    }
+
+    private async registerServices(
+        context: CliExecutionContext,
+    ): Promise<void> {
+        context.services.set([
+            {
+                provide: 'cli-key-value-store',
+                useValue: context.services.get(CliKeyValueStore),
+            },
+        ]);
     }
 }

@@ -344,6 +344,16 @@ export type CliProcessorMetadata = Record<string, any> & {
      * An icon to display for the processor
      */
     icon?: CliIcon | string;
+};
+
+/**
+ * Represents a state configuration for the CLI processor
+ */
+export type CliStateConfiguration = {
+    /**
+     * The initial state for the processor
+     */
+    initialState: Record<string, any>;
 
     /**
      * The store identifier for the processor, if any

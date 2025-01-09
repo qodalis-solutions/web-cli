@@ -1,4 +1,8 @@
-import { CliProcessCommand, CliProcessorMetadata } from '../models';
+import {
+    CliProcessCommand,
+    CliProcessorMetadata,
+    CliStateConfiguration,
+} from '../models';
 import { ICliProcessorHook } from './command-hooks';
 import { ICliExecutionContext } from './execution-context';
 
@@ -112,7 +116,7 @@ export interface ICliCommandProcessor {
     /**
      * Processors that are nested under this processor
      */
-    processors?: ICliCommandProcessor[];
+    processors?: ICliCommandChildProcessor[];
 
     /**
      * Parameters that the command accepts
@@ -123,6 +127,14 @@ export interface ICliCommandProcessor {
      * Hooks that are executed before and after the command is processed
      */
     hooks?: ICliProcessorHook[];
+
+    /**
+     * Represents the state configuration for the command processor
+     * @remarks The state configuration is used to store and retrieve state information for the command processor
+     * @remarks State confihuration is optional and can be used to store and retrieve state information for the command processor
+     * @remarks The state configuration is used only for root command processors and not for child command processors
+     */
+    stateConfiguration?: CliStateConfiguration;
 
     /**
      * Process the command
@@ -158,4 +170,14 @@ export interface ICliCommandProcessor {
      * @param context The context in which the command is executed
      */
     initialize?(context: ICliExecutionContext): Promise<void>;
+}
+
+/**
+ * Represents a child command processor
+ */
+export interface ICliCommandChildProcessor extends ICliCommandProcessor {
+    /**
+     * The parent processor, it is populated by the processor manager
+     */
+    parent?: ICliCommandProcessor;
 }

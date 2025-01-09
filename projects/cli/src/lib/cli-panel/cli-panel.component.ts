@@ -10,11 +10,6 @@ export type CliPanelOptions = CliOptions & {
     isCollapsed?: boolean;
 };
 
-export type TerminalTab = {
-    id: number;
-    title: string;
-};
-
 /**
  * A component that displays the CLI on the bottom of page.
  */
@@ -29,12 +24,9 @@ export class CliPanelComponent {
      */
     @Input() options?: CliPanelOptions;
 
-    tabs: TerminalTab[] = []; // Array to hold all terminal tabs
-    activeTabId: number | null = null; // ID of the currently active tab
-
-    private nextTabId = 1; // To generate unique IDs for tabs
-
     visible = false;
+
+    protected initialized: boolean = false;
 
     private subscriptions: Subscription = new Subscription();
 
@@ -46,24 +38,9 @@ export class CliPanelComponent {
         );
     }
 
-    addTab(): void {
-        const newTab: TerminalTab = {
-            id: this.nextTabId++,
-            title: `Terminal ${this.tabs.length + 1}`,
-        };
-        this.tabs.push(newTab);
-        this.activeTabId = newTab.id;
-    }
-
-    closeTab(tabId: number): void {
-        this.tabs = this.tabs.filter((tab) => tab.id !== tabId);
-        if (this.activeTabId === tabId) {
-            // Switch to another tab or none if all are closed
-            this.activeTabId = this.tabs.length > 0 ? this.tabs[0].id : null;
+    onToggle($event: boolean) {
+        if (!$event && !this.initialized) {
+            this.initialized = true;
         }
-    }
-
-    setActiveTab(tabId: number): void {
-        this.activeTabId = tabId;
     }
 }

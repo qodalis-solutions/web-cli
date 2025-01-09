@@ -9,7 +9,7 @@ import {
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
-import { CLiCommandHistoryService } from '../../services';
+import { CliCommandHistoryService } from '../../services';
 
 @Injectable({
     providedIn: 'root',
@@ -30,7 +30,7 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
     };
 
     constructor(
-        private readonly commandHistoryService: CLiCommandHistoryService,
+        private readonly commandHistoryService: CliCommandHistoryService,
     ) {
         this.processors?.push({
             command: 'list',
@@ -46,7 +46,7 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
                 _: CliProcessCommand,
                 context: ICliExecutionContext,
             ) => {
-                this.commandHistoryService.clearHistory();
+                await this.commandHistoryService.clearHistory();
                 context.writer.writeInfo('Command history cleared');
             },
             writeDescription: (context: ICliExecutionContext) => {

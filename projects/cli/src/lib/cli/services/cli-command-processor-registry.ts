@@ -1,26 +1,18 @@
-import { Injectable, Injector } from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
+    ICliCommandChildProcessor,
     ICliCommandProcessor,
     ICliCommandProcessorRegistry,
 } from '@qodalis/cli-core';
-import {
-    CliHelpCommandProcessor,
-    CliVersionCommandProcessor,
-    miscProcessors,
-} from '../processors';
+import { miscProcessors } from '../processors';
 
-@Injectable({
-    providedIn: 'root',
-})
+@Injectable()
 export class CliCommandProcessorRegistry
     implements ICliCommandProcessorRegistry
 {
     public readonly processors: ICliCommandProcessor[] = [...miscProcessors];
 
-    constructor(injector: Injector) {
-        this.registerProcessor(injector.get(CliHelpCommandProcessor));
-        this.registerProcessor(injector.get(CliVersionCommandProcessor));
-    }
+    constructor() {}
 
     public registerProcessor(processor: ICliCommandProcessor): void {
         const existingProcessor = this.getProcessorByName(processor.command);
@@ -112,6 +104,12 @@ export class CliCommandProcessorRegistry
         }
 
         return undefined;
+    }
+
+    public getRootProcessor(
+        child: ICliCommandChildProcessor,
+    ): ICliCommandProcessor {
+        return child.parent ? this.getRootProcessor(child.parent) : child;
     }
 
     private getProcessorByName(name: string): ICliCommandProcessor | undefined {

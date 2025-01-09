@@ -1,23 +1,31 @@
 import { Injectable } from '@angular/core';
 import { Package } from '@qodalis/cli-core';
+import { CliKeyValueStore } from '../storage/cli-key-value-store';
 
 @Injectable({
     providedIn: 'root',
 })
 export class CliPackageManagerService {
-    private readonly storageKey = 'cliPackages';
+    private readonly storageKey = 'cli-packages';
 
     public QODALIS_COMMAND_PREFIX = '@qodalis/cli-';
 
-    constructor() {}
+    constructor(private readonly store: CliKeyValueStore) {}
 
     /**
-     * Retrieves the list of packages from localStorage.
+     * Retrieves the list of packages
      * @returns {Package[]} Array of packages
      */
-    getPackages(): Package[] {
-        const packages = localStorage.getItem(this.storageKey);
-        return packages ? JSON.parse(packages) : [];
+    async getPackages(): Promise<Package[]> {
+        const oldPackages = localStorage.getItem('cliPackages');
+        if (oldPackages) {
+            localStorage.removeItem('cliPackages');
+            await this.store.set(this.storageKey, JSON.parse(oldPackages));
+        }
+
+        const packages = await this.store.get<Package[]>(this.storageKey);
+
+        return packages ? packages : [];
     }
 
     /**
@@ -25,8 +33,8 @@ export class CliPackageManagerService {
      * @param packageName {string} The name of the package to retrieve
      * @returns {Package | undefined} The package if found, undefined otherwise
      */
-    getPackage(packageName: string): Package | undefined {
-        return this.getPackages().find(
+    async getPackage(packageName: string): Promise<Package | undefined> {
+        return (await this.getPackages()).find(
             (p) =>
                 p.name === packageName ||
                 p.name === this.QODALIS_COMMAND_PREFIX + packageName,
@@ -38,29 +46,29 @@ export class CliPackageManagerService {
      * @param packageName {string} The name of the package to check
      * @returns {boolean} True if the package exists, false otherwise
      */
-    hasPackage(packageName: string): boolean {
-        return this.getPackage(packageName) !== undefined;
+    async hasPackage(packageName: string): Promise<boolean> {
+        return (await this.getPackage(packageName)) !== undefined;
     }
 
     /**
-     * Adds a new package to the list and saves it in localStorage.
+     * Adds a new package to the list and saves it in storage.
      * @param pkg {Package} The package to add
      */
-    addPackage(pkg: Package): void {
-        const packages = this.getPackages();
+    async addPackage(pkg: Package): Promise<void> {
+        const packages = await this.getPackages();
         if (packages.find((p) => p.name === pkg.name)) {
             throw new Error(`Package with name "${pkg.name}" already exists.`);
         }
         packages.push(pkg);
-        this.savePackages(packages);
+        await this.savePackages(packages);
     }
 
     /**
-     * Removes a package by name and saves the updated list in localStorage.
+     * Removes a package by name and saves the updated list in storage
      * @param packageName {string} The name of the package to remove
      */
-    removePackage(packageName: string): Package {
-        const packages = this.getPackages();
+    async removePackage(packageName: string): Promise<Package> {
+        const packages = await this.getPackages();
         const packageToRemove = packages.find(
             (p) =>
                 p.name === packageName ||
@@ -85,28 +93,28 @@ export class CliPackageManagerService {
     }
 
     /**
-     * Updates an existing package in the list and saves the updated list in localStorage.
+     * Updates an existing package in the list and saves the updated list in storage.
      * @param pkg {Package} The updated package
      * @throws {Error} If the package to update is not found
      * @returns {void}
      * @throws {Error} If the package to update is not found
      * @returns {void}
      */
-    updatePackage(pkg: Package): void {
-        const packages = this.getPackages();
+    async updatePackage(pkg: Package): Promise<void> {
+        const packages = await this.getPackages();
         const index = packages.findIndex((p) => p.name === pkg.name);
         if (index === -1) {
             throw new Error(`Package with name "${pkg.name}" not found.`);
         }
         packages[index] = pkg;
-        this.savePackages(packages);
+        await this.savePackages(packages);
     }
 
     /**
-     * Saves the list of packages to localStorage.
+     * Saves the list of packages to storage.
      * @param packages {Package[]} The list of packages to save
      */
-    private savePackages(packages: Package[]): void {
-        localStorage.setItem(this.storageKey, JSON.stringify(packages));
+    private async savePackages(packages: Package[]): Promise<void> {
+        await this.store.set(this.storageKey, packages);
     }
 }

@@ -1,14 +1,24 @@
 import {
     ICliCommandProcessor,
-    ICliContextServices,
+    ICliCommandProcessorRegistry,
+    ICliServiceProvider,
     ICliStateStore,
 } from '@qodalis/cli-core';
 import { CliStateStore } from './cli-state-store';
+import { Inject, Injectable } from '@angular/core';
+import {
+    CliProcessorsRegistry_TOKEN,
+    CliServiceProvider_TOKEN,
+} from '../tokens';
 
+@Injectable()
 export class CliStateStoreManager {
     private stores = new Map<string, ICliStateStore>();
 
-    constructor(private readonly services: ICliContextServices) {}
+    constructor(
+        @Inject(CliServiceProvider_TOKEN)
+        private readonly services: ICliServiceProvider,
+    ) {}
 
     public getStateStore(
         name: string,
@@ -27,8 +37,16 @@ export class CliStateStoreManager {
     public getProcessorStateStore(
         processor: ICliCommandProcessor,
     ): ICliStateStore {
+        const registry = this.services.get<ICliCommandProcessorRegistry>(
+            CliProcessorsRegistry_TOKEN,
+        );
+
+        const rootProcessor = registry.getRootProcessor(processor);
+
         return this.getStateStore(
-            processor.metadata?.storeName || processor.command,
+            rootProcessor.stateConfiguration?.storeName ||
+                rootProcessor.command,
+            rootProcessor.stateConfiguration?.initialState,
         );
     }
 }

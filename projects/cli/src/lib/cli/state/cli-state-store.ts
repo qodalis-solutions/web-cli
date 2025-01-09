@@ -1,6 +1,6 @@
 import {
     CliState,
-    ICliContextServices,
+    ICliServiceProvider,
     ICliKeyValueStore,
     ICliStateStore,
 } from '@qodalis/cli-core';
@@ -13,7 +13,7 @@ export class CliStateStore implements ICliStateStore {
     private storageKey: string;
 
     constructor(
-        private readonly services: ICliContextServices,
+        private readonly services: ICliServiceProvider,
         public readonly name: string,
         private readonly initialState: CliState,
     ) {
@@ -46,15 +46,17 @@ export class CliStateStore implements ICliStateStore {
     }
 
     async persist(): Promise<void> {
-        const keyValueStore =
-            this.services.get<ICliKeyValueStore>('key-value-store');
+        const keyValueStore = this.services.get<ICliKeyValueStore>(
+            'cli-key-value-store',
+        );
 
         await keyValueStore.set(this.storageKey, this.getState());
     }
 
     async initialize(): Promise<void> {
-        const keyValueStore =
-            this.services.get<ICliKeyValueStore>('key-value-store');
+        const keyValueStore = this.services.get<ICliKeyValueStore>(
+            'cli-key-value-store',
+        );
 
         const state = await keyValueStore.get<CliState>(this.storageKey);
 

@@ -1,42 +1,9 @@
 <collapsable-content
   [isCollapsed]="options?.isCollapsed ?? true"
+  (onToggle)="onToggle($event)"
   *ngIf="visible"
 >
-  <ng-container *ngIf="true; else tabsTemplate">
+  <ng-container *ngIf="initialized">
     <cli [options]="options" />
   </ng-container>
 </collapsable-content>
-
-<ng-template #tabsTemplate>
-  <div class="terminal-tabs">
-    <ul class="tab-list">
-      <li
-        *ngFor="let tab of tabs"
-        [class.active]="tab.id === activeTabId"
-        (click)="setActiveTab(tab.id)"
-      >
-        {{ tab.title }}
-        <button
-          class="close-btn"
-          (click)="closeTab(tab.id); $event.stopPropagation()"
-        >
-          ×
-        </button>
-      </li>
-      <li class="add-tab" (click)="addTab()">+ Add Tab</li>
-    </ul>
-  </div>
-
-  <div class="terminal-content">
-    <div
-      *ngFor="let tab of tabs"
-      [hidden]="tab.id !== activeTabId"
-      class="terminal-instance"
-      [ngStyle]="{
-        display: tab.id === activeTabId ? 'block' : 'none',
-      }"
-    >
-      <cli [options]="options" />
-    </div>
-  </div>
-</ng-template>

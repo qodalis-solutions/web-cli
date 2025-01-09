@@ -4,7 +4,7 @@ import {
     ICliClipboard,
     ICliCommandExecutorService,
     ICliCommandProcessor,
-    ICliContextServices,
+    ICliServiceProvider,
     ICliExecutionProcess,
     ICliLogger,
     ICliPercentageProgressBar,
@@ -96,5 +96,5 @@ export interface ICliExecutionContext {
     /**
      * The services to use for the CLI context
      */
-    services: ICliContextServices;
+    services: ICliServiceProvider;
 }

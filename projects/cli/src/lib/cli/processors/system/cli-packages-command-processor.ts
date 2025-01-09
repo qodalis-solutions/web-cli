@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import {
     CliForegroundColor,
     CliProcessorMetadata,
     DefaultLibraryAuthor,
+    ICliCommandProcessorRegistry,
 } from '@qodalis/cli-core';
 import {
     CliProcessCommand,
@@ -14,7 +15,7 @@ import {
 } from '@qodalis/cli-core';
 import { ScriptLoaderService } from '../../services/script-loader.service';
 import { CliPackageManagerService } from '../../services/cli-package-manager.service';
-import { CliCommandProcessorRegistry } from '../../services/cli-command-processor-registry';
+import { CliProcessorsRegistry_TOKEN } from '../../tokens';
 
 @Injectable()
 export class CliPackagesCommandProcessor implements ICliCommandProcessor {
@@ -38,7 +39,8 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
     constructor(
         private readonly scriptsLoader: ScriptLoaderService,
         private readonly packagesManager: CliPackageManagerService,
-        private readonly registry: CliCommandProcessorRegistry,
+        @Inject(CliProcessorsRegistry_TOKEN)
+        private readonly registry: ICliCommandProcessorRegistry,
     ) {
         const scope = this;
 
@@ -48,7 +50,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                 description: 'List all packages in the cli',
                 author: DefaultLibraryAuthor,
                 async processCommand(_, context) {
-                    const packages = packagesManager.getPackages();
+                    const packages = await packagesManager.getPackages();
 
                     context.writer.writeln('Packages:');
 
@@ -119,7 +121,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     if (command.value) {
                         await scope.updatePackage(command.value!, context);
                     } else {
-                        const packages = packagesManager.getPackages();
+                        const packages = await packagesManager.getPackages();
                         for (const pkg of packages) {
                             await scope.updatePackage(pkg.name, context);
                         }
@@ -175,7 +177,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             ],
         });
 
-        const packages = this.packagesManager.getPackages();
+        const packages = await this.packagesManager.getPackages();
 
         for (const pkg of packages) {
             await this.registerPackageDependencies(pkg, context);
@@ -188,7 +190,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         context.progressBar.show();
 
         try {
-            const pkg = this.packagesManager.removePackage(name);
+            const pkg = await this.packagesManager.removePackage(name);
 
             if (pkg) {
                 const module = (window as any)[pkg.name] as ICliUmdModule;
@@ -211,7 +213,9 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
     private async addPackage(name: string, context: ICliExecutionContext) {
         const { progressBar, writer } = context;
-        if (this.packagesManager.hasPackage(name)) {
+
+        const hasPackage = await this.packagesManager.hasPackage(name);
+        if (hasPackage) {
             writer.writeInfo(`Package ${name} already installed`);
 
             return;
@@ -320,7 +324,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             progressBar.update(95);
             progressBar.setText('Saving package');
 
-            this.packagesManager.addPackage(pkg);
+            await this.packagesManager.addPackage(pkg);
 
             context.progressBar.complete();
 
@@ -346,7 +350,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                 type: 'increment',
             });
             progressBar.setText(`Updating package ${name}`);
-            const currentPackage = this.packagesManager.getPackage(name);
+            const currentPackage = await this.packagesManager.getPackage(name);
 
             if (!currentPackage) {
                 progressBar.complete();
@@ -405,7 +409,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                 await this.scriptsLoader.injectBodyScript(response.content);
             }
 
-            this.packagesManager.updatePackage(updatedPkg);
+            await this.packagesManager.updatePackage(updatedPkg);
 
             progressBar.setText(
                 `Package ${currentPackage.name} updated successfully`,

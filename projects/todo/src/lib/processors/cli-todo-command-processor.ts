@@ -4,11 +4,14 @@ import {
     CliIcon,
     CliProcessCommand,
     CliProcessorMetadata,
+    CliStateConfiguration,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
+
+type TodoItem = { id: number; text: string; completed: boolean };
 
 @Injectable()
 export class CliTodoCommandProcessor implements ICliCommandProcessor {
@@ -27,11 +30,15 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
         icon: '📝',
     };
 
-    private todos: { id: number; text: string; completed: boolean }[] = [];
+    stateConfiguration?: CliStateConfiguration | undefined = {
+        initialState: {
+            todos: this.loadFromOldStorage() ?? [],
+        },
+    };
+
+    private todos: TodoItem[] = [];
 
     private nextId = 1;
-
-    private storageKey = 'todo-items';
 
     constructor() {
         this.registerSubProcessors();
@@ -71,11 +78,16 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
     }
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.todos = this.loadFromStorage();
-        this.nextId =
-            this.todos.length > 0
-                ? Math.max(...this.todos.map((t) => t.id)) + 1
-                : 1;
+        context.state
+            .select<TodoItem[]>((x) => x['todos'])
+            .subscribe((todos) => {
+                this.todos = todos;
+
+                this.nextId =
+                    this.todos.length > 0
+                        ? Math.max(...this.todos.map((t) => t.id)) + 1
+                        : 1;
+            });
     }
 
     private lineThroughText(text: string): string {
@@ -105,7 +117,7 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         );
                     });
 
-                    context.process.output(JSON.stringify(this.todos));
+                    context.process.output(this.todos);
                 },
             },
             {
@@ -130,7 +142,7 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
 
                     this.todos.push(newItem);
 
-                    this.saveToStorage();
+                    await this.saveToStorage(context);
 
                     context.writer.writeSuccess(`Added TODO: "${text}"`);
 
@@ -154,7 +166,7 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                 processCommand: async (command, context) => {
                     if (command.args['all'] || command.args['a']) {
                         this.todos = [];
-                        this.saveToStorage();
+                        await this.saveToStorage(context);
                         context.writer.writeSuccess('Removed all TODO items.');
                         return;
                     }
@@ -176,7 +188,7 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         return;
                     }
                     this.todos.splice(index, 1);
-                    this.saveToStorage();
+                    await this.saveToStorage(context);
                     context.writer.writeSuccess(
                         `Removed TODO item with ID ${id}.`,
                     );
@@ -202,8 +214,16 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         );
                         return;
                     }
+
+                    if (todo.completed) {
+                        context.writer.writeInfo(
+                            `TODO item with ID ${id} is already completed.`,
+                        );
+                        return;
+                    }
+
                     todo.completed = true;
-                    this.saveToStorage();
+                    await this.saveToStorage(context);
                     context.writer.writeSuccess(
                         `Marked TODO item with ID ${id} as completed.`,
                     );
@@ -212,16 +232,15 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
         ];
     }
 
-    private loadFromStorage(): {
-        id: number;
-        text: string;
-        completed: boolean;
-    }[] {
-        const data = localStorage.getItem(this.storageKey);
+    private loadFromOldStorage(): TodoItem[] {
+        const data = localStorage.getItem('todo-items');
         return data ? JSON.parse(data) : [];
     }
 
-    private saveToStorage(): void {
-        localStorage.setItem(this.storageKey, JSON.stringify(this.todos));
+    private async saveToStorage(context: ICliExecutionContext): Promise<void> {
+        context.state.updateState({ todos: this.todos });
+
+        await context.state.persist();
+        localStorage.removeItem('todo-items');
     }
 }

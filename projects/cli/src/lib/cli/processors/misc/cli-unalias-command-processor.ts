@@ -1,6 +1,7 @@
 import {
     CliProcessCommand,
     CliProcessorMetadata,
+    CliStateConfiguration,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
@@ -15,10 +16,8 @@ export class CliUnAliasCommandProcessor implements ICliCommandProcessor {
 
     valueRequired?: boolean | undefined = true;
 
-    metadata?: CliProcessorMetadata | undefined = {
-        icon: '🔥',
-        module: 'misc',
-        sealed: true,
+    stateConfiguration?: CliStateConfiguration | undefined = {
+        initialState: {},
         storeName: 'aliases',
     };
 
