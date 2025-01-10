@@ -21,7 +21,11 @@ export class CliUnAliasCommandProcessor implements ICliCommandProcessor {
         storeName: 'aliases',
     };
 
-    private aliases: Record<string, string> = {};
+    metadata?: CliProcessorMetadata | undefined = {
+        icon: '🔥',
+        module: 'misc',
+        sealed: true,
+    };
 
     public async processCommand(
         command: CliProcessCommand,
@@ -31,7 +35,9 @@ export class CliUnAliasCommandProcessor implements ICliCommandProcessor {
 
         const aliasToRemove = command.value!;
 
-        if (!this.aliases[aliasToRemove]) {
+        const { aliases } = context.state.getState();
+
+        if (!aliases[aliasToRemove]) {
             writer.writeError(`Alias ${aliasToRemove} not found`);
             context.process.exit(-1);
             return;
@@ -39,10 +45,10 @@ export class CliUnAliasCommandProcessor implements ICliCommandProcessor {
 
         const updated: Record<string, any> = {};
 
-        Object.keys(this.aliases)
+        Object.keys(aliases)
             .filter((alias) => alias !== aliasToRemove)
             .forEach((alias) => {
-                updated[alias] = this.aliases[alias];
+                updated[alias] = aliases[alias];
             });
 
         context.state.updateState({
@@ -50,13 +56,5 @@ export class CliUnAliasCommandProcessor implements ICliCommandProcessor {
         });
 
         await context.state.persist();
-    }
-
-    async initialize(context: ICliExecutionContext): Promise<void> {
-        context.state
-            .select((x) => x['aliases'])
-            .subscribe((aliases) => {
-                this.aliases = aliases ?? {};
-            });
     }
 }

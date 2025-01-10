@@ -17,6 +17,7 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata | undefined = {
         icon: '📢',
+        module: 'misc',
     };
 
     async processCommand(

@@ -27,6 +27,7 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
         icon: CliIcon.Code,
+        module: 'system',
     };
 
     constructor(

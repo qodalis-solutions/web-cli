@@ -15,6 +15,7 @@ export class CliClearCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata | undefined = {
         icon: '🧹',
+        module: 'misc',
     };
 
     async processCommand(

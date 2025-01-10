@@ -11,6 +11,7 @@ import {
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { CliProcessorsRegistry_TOKEN } from '../../tokens';
+import { groupBy } from '../../../utils/arrays';
 
 @Injectable({
     providedIn: 'root',
@@ -27,6 +28,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
         icon: CliIcon.Help,
+        module: 'system',
     };
 
     private readonly registry: ICliCommandProcessorRegistry;
@@ -50,26 +52,35 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
             this.writeSeparator(context);
 
-            const rootCommands = this.registry.processors.map((p) => p.command);
-
             writer.writeln(
                 writer.wrapInColor(
                     'Available commands:',
                     CliForegroundColor.Yellow,
                 ),
             );
-            rootCommands.forEach((command) => {
-                const processor = this.registry.findProcessor(command, []);
+
+            const groupedCommands = groupBy<ICliCommandProcessor, string>(
+                this.registry.processors,
+                (x) => x.metadata?.module || 'uncategorized',
+            );
+
+            groupedCommands.forEach((processors, module) => {
                 writer.writeln(
-                    `- ${processor?.metadata?.icon ? processor.metadata.icon : CliIcon.Extension}  ${writer.wrapInColor(command, CliForegroundColor.Cyan)} - ${
-                        processor?.description || 'Missing description'
-                    }`,
+                    writer.wrapInColor(module, CliForegroundColor.Yellow),
                 );
+
+                processors.forEach((processor) => {
+                    writer.writeln(
+                        `- ${processor?.metadata?.icon ? processor.metadata.icon : CliIcon.Extension}  ${writer.wrapInColor(processor.command, CliForegroundColor.Cyan)} - ${
+                            processor?.description || 'Missing description'
+                        }`,
+                    );
+                });
+
+                this.writeSeparator(context);
             });
 
             context.writer.writeln();
-
-            this.writeSeparator(context);
 
             await context.executor.executeCommand('hotkeys', context);
 

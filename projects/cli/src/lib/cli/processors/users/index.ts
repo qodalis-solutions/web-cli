@@ -9,7 +9,7 @@ export * from './cli-whoami-command-processor';
 export * from './cli-add-user-command-processor';
 export * from './cli-list-users-command-processor';
 
-export const providers = [
+export const usersProviders = [
     resolveCommandProcessorProvider(CliSwitchUserCommandProcessor),
     resolveCommandProcessorProvider(CliWhoamiCommandProcessor),
     resolveCommandProcessorProvider(CliAddUserCommandProcessor),

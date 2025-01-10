@@ -54,6 +54,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
         icon: '🎨',
+        module: 'system',
     };
 
     private themeOptions: string[] = Object.keys(themeOptions);

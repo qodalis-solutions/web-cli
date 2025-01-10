@@ -28,6 +28,7 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
         icon: CliIcon.Settings,
+        module: 'system',
     };
 
     async processCommand(
