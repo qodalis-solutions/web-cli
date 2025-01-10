@@ -29,7 +29,7 @@ jobs:
         run: npm run "build all"
 
       - name: Generate TypeDoc documentation
-        run: npx typedoc --out docs # Adjust the command based on your TypeDoc config
+        run: npx typedoc --out docs && node ./scripts/typedoc-post-script.js
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
