@@ -6,6 +6,7 @@ import {
     CliUnAliasCommandProcessor,
 } from '..';
 import { CliClearCommandProcessor } from './cli-clear-command-processor';
+import { CliUnameCommandProcessor } from './cli-uname-command-processor';
 
 export * from './cli-echo-command-processor';
 export * from './cli-clear-command-processor';
@@ -20,4 +21,5 @@ export const miscProcessors = [
     new CliAliasCommandProcessor(),
     new CliUnAliasCommandProcessor(),
     new CliSleepCommandProcessor(),
+    new CliUnameCommandProcessor(),
 ];
