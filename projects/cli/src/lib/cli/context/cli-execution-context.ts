@@ -14,6 +14,7 @@ import {
     CliLogLevel,
     ICliServiceProvider,
     ICliStateStore,
+    ICliTextAnimator,
 } from '@qodalis/cli-core';
 import { CliCommandExecutorService } from '../services/cli-command-executor.service';
 import { CliTerminalWriter } from '../services/cli-terminal-writer';
@@ -24,6 +25,7 @@ import { CliExecutionProcess } from './cli-execution-process';
 import { Injector } from '@angular/core';
 import { CliLogger_TOKEN, CliServiceProvider_TOKEN } from '../tokens';
 import { CliStateStoreManager } from '../state/cli-state-store-manager';
+import { CliTerminalTextAnimator } from '../services/progress-bars/cli-terminal-text-animator';
 
 export class CliExecutionContext implements ICliExecutionContext {
     public userSession?: ICliUserSession;
@@ -33,6 +35,8 @@ export class CliExecutionContext implements ICliExecutionContext {
     public readonly writer: ICliTerminalWriter;
 
     public readonly spinner: ICliSpinner;
+
+    public readonly textAnimator: ICliTextAnimator;
 
     public readonly progressBar: ICliPercentageProgressBar;
 
@@ -69,8 +73,11 @@ export class CliExecutionContext implements ICliExecutionContext {
 
         this.options = cliOptions;
         this.writer = new CliTerminalWriter(terminal);
+
         this.spinner = new CliTerminalSpinner(terminal);
         this.progressBar = new CliTerminalProgressBar(terminal);
+        this.textAnimator = new CliTerminalTextAnimator(terminal);
+
         this.clipboard = new CliClipboard(this);
         this.process = new CliExecutionProcess(this);
 
@@ -106,7 +113,11 @@ export class CliExecutionContext implements ICliExecutionContext {
      * @returns false if there is no progress running
      */
     public isProgressRunning(): boolean {
-        return this.progressBar.isRunning || this.spinner.isRunning;
+        return (
+            this.progressBar.isRunning ||
+            this.spinner.isRunning ||
+            this.textAnimator.isRunning
+        );
     }
 
     /**

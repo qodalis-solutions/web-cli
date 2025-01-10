@@ -5,6 +5,8 @@ import {
     ICliCommandChildProcessor,
     ICliCommandProcessor,
     ICliCommandProcessorRegistry,
+    ICliUmdModule,
+    initializeBrowserEnvironment,
 } from '@qodalis/cli-core';
 import {
     CliCommandProcessor_TOKEN,
@@ -35,10 +37,18 @@ export class CliBoot {
 
         this.initializing = true;
 
-        context.spinner?.show();
-        context.spinner?.setText(CliIcon.Rocket + '  Booting...');
+        context.spinner?.show(CliIcon.Rocket + '  Booting...');
 
         await this.registerServices(context);
+
+        initializeBrowserEnvironment({
+            context,
+            handlers: [
+                async (module: ICliUmdModule) => {
+                    await this.registerUmdModule(module, context);
+                },
+            ],
+        });
 
         let processors = this.implementations;
 
@@ -105,5 +115,26 @@ export class CliBoot {
                 useValue: context.services.get(CliKeyValueStore),
             },
         ]);
+    }
+
+    private async registerUmdModule(
+        module: ICliUmdModule,
+        context: CliExecutionContext,
+    ): Promise<void> {
+        const { logger } = context;
+        if (!module) {
+            return;
+        }
+
+        if (module.processors) {
+            logger.info('Registering processors from module ' + module.name);
+            for (const processor of module.processors) {
+                this.registry.registerProcessor(processor);
+            }
+
+            await this.initializeProcessorsInternal(context, module.processors);
+        } else {
+            logger.warn(`Module ${module.name} has no processors`);
+        }
     }
 }

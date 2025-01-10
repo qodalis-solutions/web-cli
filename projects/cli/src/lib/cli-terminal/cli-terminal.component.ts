@@ -55,6 +55,8 @@ export class CliTerminalComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.terminal.open(this.terminalDiv.nativeElement);
 
+        this.terminal.focus();
+
         this.onTerminalReady.emit(this.terminal);
     }
 

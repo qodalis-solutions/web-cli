@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { LIBRARY_VERSION } from '../../../version';
 import { CLi_Name_Art } from '../../constants';
 import { CliForegroundColor, ICliExecutionContext } from '@qodalis/cli-core';
+import { getGreetingBasedOnTime } from '../../../utils';
 
 /**
  * Service that displays the welcome message to the user.
@@ -53,6 +54,10 @@ export class CliWelcomeMessageService {
 
         this.recordWelcomeMessageDisplay();
         context.showPrompt();
+        context.textAnimator?.showText(getGreetingBasedOnTime(), {
+            speed: 60,
+            removeAfterTyping: true,
+        });
     }
 
     /**

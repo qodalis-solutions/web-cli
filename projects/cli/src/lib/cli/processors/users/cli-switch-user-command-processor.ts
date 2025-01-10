@@ -82,7 +82,7 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
                 return;
             }
 
-            context.spinner?.show();
+            context.spinner?.show(CliIcon.User + '  Switching...');
 
             const user = await firstValueFrom(this.usersStore.getUser(toUser));
 

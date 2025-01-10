@@ -11,6 +11,7 @@ import {
     ICliSpinner,
     ICliStateStore,
     ICliTerminalWriter,
+    ICliTextAnimator,
 } from '.';
 import { CliOptions, ICliUserSession } from '../models';
 
@@ -27,6 +28,11 @@ export interface ICliExecutionContext {
      * The spinner to use for showing/hiding the loader
      */
     spinner?: ICliSpinner;
+
+    /**
+     * The text animator to use for showing/hiding text
+     */
+    textAnimator?: ICliTextAnimator;
 
     /**
      * The progress bar to use for showing progress

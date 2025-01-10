@@ -15,9 +15,10 @@ export class CliTerminalProgressBar implements ICliPercentageProgressBar {
 
     constructor(private terminal: Terminal) {}
 
-    public show(): void {
+    public show(text?: string): void {
         this.isRunning = true;
         this.progress = 0;
+        this.text = text || '';
 
         // Update progress bar every 100ms
         this.progressBarInterval = setInterval(() => {

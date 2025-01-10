@@ -7,7 +7,7 @@ export interface ICliProgressBar {
     /**
      * Show the progress bar
      */
-    show: () => void;
+    show: (text?: string) => void;
 
     /**
      * Hide the progress bar
@@ -59,4 +59,27 @@ export interface ICliPercentageProgressBar extends ICliProgressBar {
      * @param text The text to set
      */
     setText: (text: string) => void;
+}
+
+export type CliTextAnimatorOptions = {
+    /**
+     * The speed of the animation
+     * @default 100
+     */
+    speed?: number;
+
+    /**
+     * The text will be removed after typing
+     */
+    removeAfterTyping?: boolean;
+};
+
+export interface ICliTextAnimator extends ICliProgressBar {
+    /**
+     * Show animated text in a typing and erasing effect.
+     * @param text
+     * @param options
+     * @returns
+     */
+    showText: (text: string, options?: CliTextAnimatorOptions) => void;
 }

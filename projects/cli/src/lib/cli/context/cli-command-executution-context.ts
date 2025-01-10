@@ -12,6 +12,7 @@ import {
     ICliStateStore,
     ICliTerminalWriter,
     ICliUserSession,
+    ICliTextAnimator,
 } from '@qodalis/cli-core';
 import { Terminal } from '@xterm/xterm';
 import { Subject } from 'rxjs';
@@ -22,6 +23,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     userSession?: ICliUserSession | undefined;
     spinner?: ICliSpinner | undefined;
     progressBar: ICliPercentageProgressBar;
+    textAnimator?: ICliTextAnimator | undefined;
     onAbort: Subject<void>;
     terminal: Terminal;
     writer: ICliTerminalWriter;
@@ -45,6 +47,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
         this.userSession = context.userSession;
         this.spinner = context.spinner;
         this.progressBar = context.progressBar;
+        this.textAnimator = context.textAnimator;
         this.onAbort = context.onAbort;
         this.terminal = context.terminal;
         this.writer = context.writer;

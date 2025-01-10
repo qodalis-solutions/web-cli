@@ -10,7 +10,6 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     ICliUmdModule,
-    initializeBrowserEnvironment,
     Package,
 } from '@qodalis/cli-core';
 import { ScriptLoaderService } from '../../services/script-loader.service';
@@ -168,15 +167,6 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
     }
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        initializeBrowserEnvironment({
-            context,
-            handlers: [
-                async (module: ICliUmdModule) => {
-                    await this.registerUmdModule(module, context);
-                },
-            ],
-        });
-
         const packages = await this.packagesManager.getPackages();
 
         for (const pkg of packages) {
@@ -422,26 +412,6 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         } catch (e) {
             progressBar.complete();
             writer.writeError(e?.toString() || 'Unknown error');
-        }
-    }
-
-    private async registerUmdModule(
-        module: ICliUmdModule,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        const { logger } = context;
-        if (!module) {
-            return;
-        }
-
-        if (module.processors) {
-            logger.info('Registering processors from module ' + module.name);
-            for (const processor of module.processors) {
-                this.registry.registerProcessor(processor);
-                await processor.initialize?.(context);
-            }
-        } else {
-            logger.warn(`Module ${module.name} has no processors`);
         }
     }
 

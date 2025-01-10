@@ -12,7 +12,11 @@ export class CliTerminalSpinner implements ICliSpinner {
     private spinnerFrames = ['|', '/', '-', '\\'];
     private spinnerIndex = 0;
 
-    public show(): void {
+    public show(text?: string): void {
+        if (text) {
+            this.text = text;
+        }
+
         this.isRunning = true;
         this.spinnerInterval = setInterval(() => {
             // Clear the current line

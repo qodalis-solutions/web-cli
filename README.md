@@ -5,7 +5,7 @@
 <div align="center">
 
 [![npm version](https://img.shields.io/npm/v/@qodalis/angular-cli.svg)](https://www.npmjs.com/package/@qodalis/angular-cli)
-[![Build Status](https://github.com/qodalis-solutions/angular-web-cli/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/qodalis-solutions/angular-web-cli/actions)
+[![Build Status](https://github.com/qodalis-solutions/angular-web-cli/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/qodalis-solutions/angular-web-cli/actions)
 
 </div>
 
