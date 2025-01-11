@@ -16,6 +16,15 @@ import {
 } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
+import { OverlayAddon } from '../addons/overlay';
+import { WebglAddon } from '@xterm/addon-webgl';
+import { Unicode11Addon } from '@xterm/addon-unicode11';
+
+export type ContainerSize =
+    | `${number}%`
+    | `${number}vh`
+    | `${number}px`
+    | `${number}rem`;
 
 @Component({
     selector: 'cli-terminal',
@@ -24,6 +33,9 @@ import { WebLinksAddon } from '@xterm/addon-web-links';
 })
 export class CliTerminalComponent implements OnInit, AfterViewInit, OnDestroy {
     @Input() options!: ITerminalOptions & ITerminalInitOnlyOptions;
+
+    @Input()
+    height?: ContainerSize;
 
     @Output() onTerminalReady = new EventEmitter<Terminal>();
 
@@ -44,16 +56,34 @@ export class CliTerminalComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     private initializeTerminal(): void {
+        if (!this.options) {
+            this.options = {
+                allowProposedApi: true,
+            };
+        }
+
         this.terminal = new Terminal(this.options);
 
         this.fitAddon = new FitAddon();
-
         this.terminal.loadAddon(this.fitAddon);
 
         const webLinksAddon = new WebLinksAddon();
         this.terminal.loadAddon(webLinksAddon);
 
+        const overlayAddon = new OverlayAddon();
+        this.terminal.loadAddon(overlayAddon);
+
+        // const webGlAddon = new WebglAddon();
+        // webGlAddon.onContextLoss((e) => {
+        //     webGlAddon.dispose();
+        // });
+        // this.terminal.loadAddon(webGlAddon);
+
+        const unicode11Addon = new Unicode11Addon();
+        this.terminal.loadAddon(unicode11Addon);
+
         this.terminal.open(this.terminalDiv.nativeElement);
+        this.fitAddon.fit();
 
         this.terminal.focus();
 

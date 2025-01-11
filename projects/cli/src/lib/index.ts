@@ -22,6 +22,7 @@ import { CliLogger } from './services/cli-logger.service';
 import { CliCommandProcessorRegistry } from './cli/services/cli-command-processor-registry';
 import { CliStateStoreManager } from './cli/state/cli-state-store-manager';
 import { CliServiceProvider } from './cli/services/system/cli-service-provider';
+import { CliThemeCommandProcessor } from './cli/processors/theme/cli-theme-command-processor';
 
 export const resolveCliProviders = (): Provider[] => {
     return [
@@ -54,6 +55,7 @@ export const resolveCliProviders = (): Provider[] => {
         },
         ...systemProviders,
         ...usersProviders,
+        resolveCommandProcessorProvider(CliThemeCommandProcessor),
         resolveCommandProcessorProvider(CliPingCommandProcessor),
     ];
 };

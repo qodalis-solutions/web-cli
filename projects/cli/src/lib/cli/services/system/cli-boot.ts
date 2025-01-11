@@ -31,13 +31,17 @@ export class CliBoot {
     ) {}
 
     public async boot(context: CliExecutionContext): Promise<void> {
+        context.spinner?.show(CliIcon.Rocket + '  Booting...');
+
         if (this.initialized || this.initializing) {
+            await this.bootShared(context);
+
+            context.spinner?.hide();
+
             return;
         }
 
         this.initializing = true;
-
-        context.spinner?.show(CliIcon.Rocket + '  Booting...');
 
         await this.registerServices(context);
 
@@ -61,16 +65,20 @@ export class CliBoot {
 
         processors.forEach((impl) => this.registry.registerProcessor(impl));
 
+        await this.bootShared(context);
+
+        context.spinner?.hide();
+
+        this.initialized = true;
+    }
+
+    private async bootShared(context: CliExecutionContext): Promise<void> {
         await this.initializeProcessorsInternal(
             context,
             this.registry.processors,
         );
 
         await delay(300);
-
-        context.spinner?.hide();
-
-        this.initialized = true;
     }
 
     private async initializeProcessorsInternal(

@@ -22,8 +22,8 @@ export class CliStateStore implements ICliStateStore {
         this.storageKey = `store-state-${name}`;
     }
 
-    getState(): CliState {
-        return this.state$.getValue();
+    getState<T extends CliState = CliState>(): T {
+        return this.state$.getValue() as T;
     }
 
     updateState(newState: Partial<CliState>): void {

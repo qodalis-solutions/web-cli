@@ -298,7 +298,7 @@ export interface ICliStateStore {
     /**
      * Get the current state as an object.
      */
-    getState(): CliState;
+    getState<T extends CliState = CliState>(): T;
 
     /**
      * Update the state with new values. Supports partial updates.

@@ -20,7 +20,7 @@ export class CliUnameCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata | undefined = {
         sealed: true,
-        icon: CliIcon.InfoIcon,
+        icon: CliIcon.Flame,
         module: 'misc',
     };
 

@@ -26,6 +26,8 @@ import { CliExecutionContext } from './context';
 import { CliBoot } from './services/system/cli-boot';
 import { CliWelcomeMessageService } from './services/system/cli-welcome-message.service';
 import { BehaviorSubject, combineLatest, filter } from 'rxjs';
+import { themes } from './processors/theme/types';
+import { ContainerSize } from '../cli-terminal/cli-terminal.component';
 
 @Component({
     selector: 'cli',
@@ -35,6 +37,8 @@ import { BehaviorSubject, combineLatest, filter } from 'rxjs';
 })
 export class CliComponent implements OnInit {
     @Input() options?: CliOptions;
+
+    @Input() height?: ContainerSize;
 
     protected terminalOptions!: ITerminalOptions & ITerminalInitOnlyOptions;
     private terminal!: Terminal;
@@ -77,13 +81,7 @@ export class CliComponent implements OnInit {
             cursorBlink: true,
             allowProposedApi: true,
             fontSize: 20,
-            theme: {
-                background: '#0c0c0c',
-                foreground: '#cccccc',
-                green: '#16c60c',
-                blue: '#3b78ff',
-                yellow: '#FFA500',
-            },
+            theme: themes.default,
             convertEol: true,
             ...(this.options?.terminalOptions ?? {}),
         };
