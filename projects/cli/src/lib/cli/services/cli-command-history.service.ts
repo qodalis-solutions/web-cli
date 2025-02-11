@@ -43,7 +43,9 @@ export class CliCommandHistoryService {
     }
 
     private async saveHistory(): Promise<void> {
-        return await this.store.set(this.storageKey, this.commandHistory);
+        //save only last 500 commands
+        const trimmedHistory = this.commandHistory.slice(-500);
+        return await this.store.set(this.storageKey, trimmedHistory);
     }
 
     private async loadHistory(): Promise<void> {

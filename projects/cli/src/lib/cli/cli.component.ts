@@ -127,6 +127,19 @@ export class CliComponent implements OnInit {
             });
     }
 
+    private getTerminalCursorPosition() {
+        const x: number = (this.terminal as any)._core.buffer.x;
+        const y: number = (this.terminal as any)._core.buffer.y;
+
+        return {
+            x,
+            y,
+        };
+    }
+
+    private selectionStart: { x: number; y: number } | null = null;
+    private selectionEnd: { x: number; y: number } | null = null;
+
     private addTerminalEventListeners(): void {
         // Handle user input
         this.terminal.onData(async (data) => await this.handleInput(data));
@@ -171,17 +184,74 @@ export class CliComponent implements OnInit {
 
                     return false;
                 }
+
+                if (
+                    event.shiftKey &&
+                    (event.code === 'ArrowLeft' || event.code === 'ArrowRight')
+                ) {
+                    if (!this.selectionStart) {
+                        this.selectionStart = this.getTerminalCursorPosition();
+                    }
+
+                    switch (event.code) {
+                        case 'ArrowLeft':
+                            this.moveCursorLeft();
+                            break;
+                        case 'ArrowRight':
+                            this.moveCursorRight();
+                            break;
+                    }
+
+                    this.selectionEnd = this.getTerminalCursorPosition();
+
+                    this.updateSelection();
+                    return false;
+                } else {
+                    this.selectionStart = null;
+                }
             }
 
             return true;
         });
     }
 
+    private updateSelection(): void {
+        if (this.selectionStart && this.selectionEnd) {
+            const startRow = Math.min(
+                this.selectionStart.y,
+                this.selectionEnd.y,
+            );
+            const endRow = Math.max(this.selectionStart.y, this.selectionEnd.y);
+
+            if (startRow === endRow) {
+                const startCol = Math.min(
+                    this.selectionStart.x,
+                    this.selectionEnd.x,
+                );
+                const endCol = Math.max(
+                    this.selectionStart.x,
+                    this.selectionEnd.x,
+                );
+
+                // Select text on the same line
+                this.terminal.select(
+                    startCol,
+                    startRow,
+                    Math.abs(endCol - startCol),
+                );
+            } else {
+                // Select multiple lines
+                this.terminal.selectLines(startRow, endRow);
+            }
+        }
+    }
+
     private printPrompt(options?: {
         reset?: boolean;
         newLine?: boolean;
+        keepCurrentLine?: boolean;
     }): void {
-        const { reset, newLine } = options || {};
+        const { reset, newLine, keepCurrentLine } = options || {};
 
         if (reset) {
             this.terminal.write('\x1b[2K\r');
@@ -191,8 +261,10 @@ export class CliComponent implements OnInit {
             this.terminal.write('\r\n');
         }
 
-        this.currentLine = '';
-        this.cursorPosition = 0;
+        if (!keepCurrentLine) {
+            this.currentLine = '';
+            this.cursorPosition = 0;
+        }
 
         let promtStartMessage =
             this.options?.usersModule?.hideUserName ||
@@ -272,24 +344,38 @@ export class CliComponent implements OnInit {
             return '    ';
         }
 
-        return text;
+        return text.replace(/[\r\n]+/g, '');
     }
 
     private handleInputText(text: string): void {
         text = this.normalizeText(text);
 
-        const textLength = text.length;
-        this.cursorPosition += textLength;
+        this.currentLine =
+            this.currentLine.slice(0, this.cursorPosition) +
+            text +
+            this.currentLine.slice(this.cursorPosition);
 
-        if (this.cursorPosition <= this.currentLine.length) {
-            this.currentLine =
-                this.currentLine.substring(0, this.cursorPosition - 1) +
-                text +
-                this.currentLine.substring(this.cursorPosition);
-        } else {
-            this.currentLine += text;
+        this.cursorPosition += text.length;
+
+        this.refreshCurrentLine();
+    }
+
+    private refreshCurrentLine(): void {
+        this.terminal.write('\x1b[2K'); // Clear the current line
+        this.terminal.write('\r'); // Move the cursor to the start
+
+        this.printPrompt({
+            keepCurrentLine: true,
+        });
+
+        // Redraw the prompt
+        this.terminal.write(this.currentLine); // Redraw the current line
+
+        // Move cursor to the correct position
+        const cursorOffset = this.currentLine.length - this.cursorPosition;
+        if (cursorOffset > 0) {
+            this.terminal.write(`\x1b[${cursorOffset}D`);
         }
-        this.terminal.write(text);
     }
 
     private showPreviousCommand(): void {
@@ -339,14 +425,14 @@ export class CliComponent implements OnInit {
         this.cursorPosition = 0;
     }
 
-    private moveCursorLeft(key: string): void {
+    private moveCursorLeft(key: string = '\x1b[D'): void {
         if (this.cursorPosition > 0) {
             this.cursorPosition--;
             this.terminal.write(key);
         }
     }
 
-    private moveCursorRight(key: string): void {
+    private moveCursorRight(key: string = '\x1b[C'): void {
         if (this.cursorPosition < this.currentLine.length) {
             this.cursorPosition++;
             this.terminal.write(key);
@@ -355,9 +441,12 @@ export class CliComponent implements OnInit {
 
     private handleBackspace(): void {
         if (this.cursorPosition > 0) {
-            this.currentLine = this.currentLine.slice(0, -1);
+            this.currentLine =
+                this.currentLine.slice(0, this.cursorPosition - 1) +
+                this.currentLine.slice(this.cursorPosition);
             this.cursorPosition--;
-            this.terminal.write('\b \b');
+
+            this.refreshCurrentLine();
         }
     }
 }
