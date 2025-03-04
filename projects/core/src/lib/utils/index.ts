@@ -75,6 +75,26 @@ export const getRightOfWord = (
     return undefined;
 };
 
+export const colorFirstWord = (
+    text: string,
+    colorFunction: (word: string) => string,
+) => {
+    if (!text) return text;
+
+    // Match leading spaces and first word separately
+    const match = text.match(/^(\s*)(\S+)(.*)$/);
+
+    if (!match) return text; // If no match, return original text
+
+    const [, leadingSpaces, firstWord, restOfText] = match;
+
+    // Apply color only to the first word
+    const firstWordColored = colorFunction(firstWord);
+
+    // Reconstruct string: Keep spaces, color first word, and append rest
+    return `${leadingSpaces}${firstWordColored}${restOfText}`;
+};
+
 export * from './object-describer';
 
 export * from './delay';
@@ -86,6 +106,7 @@ export const utils = {
     toQueryString,
     highlightTextWithBg,
     getRightOfWord,
+    colorFirstWord,
     ObjectDescriber,
     delay,
 };

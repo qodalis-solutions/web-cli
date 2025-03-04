@@ -7,7 +7,9 @@ import {
     ViewEncapsulation,
 } from '@angular/core';
 import {
+    CliForegroundColor,
     CliOptions,
+    colorFirstWord,
     ICliUserSession,
     ICliUserSessionService,
 } from '@qodalis/cli-core';
@@ -369,13 +371,26 @@ export class CliComponent implements OnInit {
         });
 
         // Redraw the prompt
-        this.terminal.write(this.currentLine); // Redraw the current line
+        this.writeCurrentLine();
 
         // Move cursor to the correct position
         const cursorOffset = this.currentLine.length - this.cursorPosition;
         if (cursorOffset > 0) {
             this.terminal.write(`\x1b[${cursorOffset}D`);
         }
+    }
+
+    private writeCurrentLine() {
+        this.terminal.write(
+            colorFirstWord(
+                this.currentLine,
+                (word) =>
+                    this.executionContext?.writer.wrapInColor(
+                        word,
+                        CliForegroundColor.Yellow,
+                    ) ?? this.currentLine,
+            ),
+        );
     }
 
     private showPreviousCommand(): void {
@@ -399,7 +414,7 @@ export class CliComponent implements OnInit {
         this.clearCurrentLine();
         this.currentLine =
             this.commandHistoryService.getCommand(this.historyIndex) || '';
-        this.terminal.write(this.currentLine);
+        this.writeCurrentLine();
         this.cursorPosition = this.currentLine.length;
     }
 

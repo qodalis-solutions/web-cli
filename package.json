@@ -1,6 +1,6 @@
 {
   "name": "qodalis-angular-workspace",
-  "version": "1.0.28",
+  "version": "1.0.31",
   "scripts": {
     "ng": "ng",
     "create lib": "node ./scripts/create-library.js",
@@ -35,6 +35,8 @@
     "@xterm/addon-webgl": "^0.18.0",
     "@xterm/xterm": "^5.5.0",
     "axios": "^1.7.9",
+    "primeicons": "^7.0.0",
+    "primeng": "^16.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.13.0"
