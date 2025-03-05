@@ -1,14 +1,49 @@
-<div class="terminal-wrapper" [class.collapsed]="isCollapsed">
-  <div class="terminal-header" (click)="toggleTerminal()">
-    <span class="terminal-title">CLI</span>
-    <button class="toggle-button">
-      <span
-        class="p-button-icon"
-        aria-hidden="true"
-        [ngClass]="isCollapsed ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
-      ></span>
-      {{ isCollapsed ? "Expand" : "Collapse" }}
-    </button>
+<div
+  *ngIf="visible"
+  class="terminal-wrapper"
+  [class.collapsed]="isCollapsed"
+  [style]="{
+    height: panelHeight + 'px',
+  }"
+>
+  <div class="card terminal-header">
+    <div class="divider">
+      <i class="pi pi-minus" (mousedown)="onResizeStart($event)"></i>
+    </div>
+    <div class="header-content">
+      <p class="terminal-title">
+        <i class="pi pi-desktop" style="font-size: 2rem"></i>
+        CLI
+      </p>
+      <div class="action-buttons">
+        <p-button
+          [icon]="
+            isMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'
+          "
+          class="p-button-rounded p-button-text p-button-secondary"
+          [pTooltip]="isCollapsed ? 'Maximize' : 'Minimize'"
+          tooltipPosition="top"
+          [disabled]="isCollapsed"
+          (onClick)="toggleMaximizationTerminal()"
+        />
+
+        <p-button
+          [icon]="isCollapsed ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+          class="p-button-rounded p-button-text p-button-secondary"
+          [pTooltip]="isCollapsed ? 'Expand' : 'Collapse'"
+          tooltipPosition="top"
+          (onClick)="toggleTerminal()"
+        />
+
+        <p-button
+          [icon]="'pi pi-eye-slash'"
+          class="p-button-rounded p-button-text p-button-secondary"
+          [pTooltip]="'Close'"
+          tooltipPosition="top"
+          (onClick)="closeTerminal()"
+        />
+      </div>
+    </div>
   </div>
   <div class="terminal-content" *ngIf="!isCollapsed">
     <ng-content></ng-content>

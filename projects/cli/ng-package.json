@@ -11,6 +11,8 @@
     "@xterm/addon-fit",
     "@xterm/addon-web-links",
     "@xterm/addon-webgl",
-    "@xterm/addon-unicode11"
+    "@xterm/addon-unicode11",
+    "primeicons",
+    "primeng"
   ]
 }

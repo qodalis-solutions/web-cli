@@ -1,9 +1,10 @@
 <collapsable-content
   [isCollapsed]="options?.isCollapsed ?? true"
   (onToggle)="onToggle($event)"
+  (onContentSizeChange)="onContentSizeChange($event)"
   *ngIf="visible"
 >
   <ng-container *ngIf="initialized">
-    <cli [options]="options" height="450px" />
+    <cli [options]="options" [height]="terminalHeight" />
   </ng-container>
 </collapsable-content>

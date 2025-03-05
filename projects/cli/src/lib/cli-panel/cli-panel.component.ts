@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CliOptions } from '@qodalis/cli-core';
 import { CliCanViewService } from '../services';
 import { Subscription } from 'rxjs';
+import { ContainerSize } from '../cli-terminal/cli-terminal.component';
 
 export type CliPanelOptions = CliOptions & {
     /**
@@ -26,6 +27,8 @@ export class CliPanelComponent {
 
     visible = false;
 
+    protected terminalHeight: ContainerSize = `${450 - 8}px`;
+
     protected initialized: boolean = false;
 
     private subscriptions: Subscription = new Subscription();
@@ -42,5 +45,9 @@ export class CliPanelComponent {
         if (!$event && !this.initialized) {
             this.initialized = true;
         }
+    }
+
+    onContentSizeChange($event: number) {
+        this.terminalHeight = `${$event}px`;
     }
 }
