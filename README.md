@@ -27,7 +27,7 @@
 
 ## Live Example
 
-Check out a live example of the Qodalis Angular CLI on [StackBlitz](https://stackblitz.com/edit/stackblitz-qodalis-cli-example)
+Check out a live example of the Qodalis Angular CLI on [StackBlitz](https://stackblitz.com/~/github.com/n1colae-lupei/stackblitz-qodalis-cli-example)
 
 ## Docs
 

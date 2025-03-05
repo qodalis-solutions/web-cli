@@ -1,8 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { BrowserModule } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
 import { TabMenuModule } from 'primeng/tabmenu';
 import { MenuModule } from 'primeng/menu';
@@ -22,8 +20,6 @@ import { resolveCliProviders } from '.';
         CliTerminalComponent,
     ],
     imports: [
-        BrowserModule,
-        BrowserAnimationsModule,
         CommonModule,
         //PrimeNG
         ButtonModule,

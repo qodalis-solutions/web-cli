@@ -21,7 +21,7 @@
             isMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'
           "
           class="p-button-rounded p-button-text p-button-secondary"
-          [pTooltip]="isCollapsed ? 'Maximize' : 'Minimize'"
+          [pTooltip]="!isMaximized ? 'Maximize' : 'Minimize'"
           tooltipPosition="top"
           [disabled]="isCollapsed"
           (onClick)="toggleMaximizationTerminal()"
