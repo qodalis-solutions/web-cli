@@ -68,7 +68,11 @@ export class AppModule {}
     "your-project": {
       "architect": {
         "options": {
-          "styles": ["node_modules/@qodalis/angular-cli/src/assets/styles.sass"]
+          "styles": [
+            "node_modules/primeng/resources/primeng.min.css",
+            "node_modules/primeicons/primeicons.css",
+            "node_modules/primeng/resources/themes/lara-dark-indigo/theme.css"
+            "node_modules/@qodalis/angular-cli/src/assets/styles.sass"]
         }
       }
     }

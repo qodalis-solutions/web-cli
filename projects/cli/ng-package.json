@@ -2,10 +2,9 @@
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/cli",
   "lib": {
-    "entryFile": "src/public-api.ts",
-    "styleIncludePaths": ["src/assets"]
+    "entryFile": "src/public-api.ts"
   },
-  "assets": ["src/assets/styles.sass"],
+  "assets": ["src/assets/styles.sass", "src/assets/styles.css"],
   "allowedNonPeerDependencies": [
     "@qodalis/cli-core",
     "@xterm/xterm",
