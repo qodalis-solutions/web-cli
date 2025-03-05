@@ -1,4 +1,4 @@
 
 // Automatically generated during build
-export const LIBRARY_VERSION = '0.0.13';
+export const LIBRARY_VERSION = '0.0.14';
   
