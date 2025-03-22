@@ -36,31 +36,6 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
         context.executor.showHelp(command, context);
     }
 
-    writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln(this.description!);
-        context.writer.writeln();
-        context.writer.writeln('Usage:');
-        context.writer.writeln('  curl <method> <url> [options]');
-        context.writer.writeln();
-        context.writer.writeln('Options:');
-        context.writer.writeln(
-            '  -H, --header     Add custom headers (e.g., -H="Authorization: Bearer <token>")',
-        );
-        context.writer.writeln('  -d, --data       Add request body');
-        context.writer.writeln('  --verbose    Print detailed response');
-        context.writer.writeln();
-        context.writer.writeln('Examples:');
-        context.writer.writeln('  curl get https://api.example.com/users');
-        context.writer.writeln(
-            '  curl post https://api.example.com/users -d=\'{"name":"John"}\' -H="Content-Type: application/json"',
-        );
-        context.writer.writeln();
-
-        context.writer.writeWarning(
-            'Note: The server must allow CORS for this tool to work.',
-        );
-    }
-
     async initialize(context: ICliExecutionContext): Promise<void> {}
 
     private registerSubProcessors(): void {
@@ -76,6 +51,12 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
                         type: 'array',
                         description:
                             'Add custom headers. Accept multiple headers.',
+                        required: false,
+                    },
+                    {
+                        name: 'proxy',
+                        type: 'boolean',
+                        description: 'Use procy',
                         required: false,
                     },
                 ],
@@ -102,6 +83,12 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
                         description: 'Request body',
                         required: false,
                     },
+                    {
+                        name: 'proxy',
+                        type: 'boolean',
+                        description: 'Use procy',
+                        required: false,
+                    },
                 ],
                 processCommand: async (command, context) => {
                     await this.executeRequest('POST', command, context);
@@ -126,6 +113,12 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
                         description: 'Request body',
                         required: false,
                     },
+                    {
+                        name: 'proxy',
+                        type: 'boolean',
+                        description: 'Use procy',
+                        required: false,
+                    },
                 ],
                 processCommand: async (command, context) => {
                     await this.executeRequest('PUT', command, context);
@@ -141,6 +134,12 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
                         aliases: ['H'],
                         type: 'array',
                         description: 'Add custom headers',
+                        required: false,
+                    },
+                    {
+                        name: 'proxy',
+                        type: 'boolean',
+                        description: 'Use procy',
                         required: false,
                     },
                 ],
@@ -160,6 +159,7 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
         const headers = command.args['header'] || command.args['H'] || [];
         const data = command.args['data'] || command.args['d'];
         const verbose = !!command.args['verbose'];
+        const useProxy = !!command.args['proxy'];
 
         if (!url) {
             context.writer.writeError('URL is required.');
@@ -184,7 +184,9 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
         };
 
         try {
-            const response = await fetch(url, options);
+            const requestUrl = useProxy ? this.rewriteUrlToProxy(url) : url;
+
+            const response = await fetch(requestUrl, options);
             const text = await response.text();
 
             context.writer.writeSuccess('Request successful:');
@@ -218,5 +220,46 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
         const headerString = headers.map((h) => `-H "${h}"`).join(' ');
         const dataString = data ? `-d '${data}'` : '';
         return `curl -X ${method} ${headerString} ${dataString} "${url}"`;
+    }
+
+    private rewriteUrlToProxy(originalUrl: string): string {
+        const regex = /^(https?):\/\/([^\/]+)(\/.*)?$/i;
+
+        const match = originalUrl.match(regex);
+
+        if (!match) {
+            throw new Error('Invalid URL provided');
+        }
+
+        const scheme = match[1]; // 'http' or 'https'
+        const domain = match[2]; // domain.com
+        const path = match[3] || '/'; // /path or '/'
+
+        return `https://proxy.qodalis.com/proxy/${scheme}/${domain}${path}`;
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        context.writer.writeln(this.description!);
+        context.writer.writeln();
+        context.writer.writeln('Usage:');
+        context.writer.writeln('  curl <method> <url> [options]');
+        context.writer.writeln();
+        context.writer.writeln('Options:');
+        context.writer.writeln(
+            '  -H, --header     Add custom headers (e.g., -H="Authorization: Bearer <token>")',
+        );
+        context.writer.writeln('  -d, --data       Add request body');
+        context.writer.writeln('  --verbose    Print detailed response');
+        context.writer.writeln();
+        context.writer.writeln('Examples:');
+        context.writer.writeln('  curl get https://api.example.com/users');
+        context.writer.writeln(
+            '  curl post https://api.example.com/users -d=\'{"name":"John"}\' -H="Content-Type: application/json"',
+        );
+        context.writer.writeln();
+
+        context.writer.writeWarning(
+            'Note: The server must allow CORS for this tool to work.',
+        );
     }
 }

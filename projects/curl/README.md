@@ -13,6 +13,9 @@ packages add curl #short version
 
 ```bash
 curl post https://api.example.com/users -d='{"name":"John"}' -H="Content-Type: application/json"
+
+#Using proxy
+curl post https://api.example.com/users -d='{"name":"John"}' -H="Content-Type: application/json" --proxy
 ```
 
 This command downloads and registers the extension for use within the CLI environment.

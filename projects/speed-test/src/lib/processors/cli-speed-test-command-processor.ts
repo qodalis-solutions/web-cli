@@ -29,19 +29,6 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
                 description: 'Run the internet speed test',
                 parameters: [
                     {
-                        name: 'proxy',
-                        description: 'Use a proxy server for the test',
-                        type: 'boolean',
-                        required: false,
-                    },
-                    {
-                        name: 'proxy-url',
-                        description: 'URL of the proxy server',
-                        type: 'string',
-                        required: false,
-                        defaultValue: '/proxy',
-                    },
-                    {
                         name: 'download-url',
                         description: 'URL to download the file',
                         type: 'string',
@@ -67,14 +54,9 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
                     new Promise<void>(async (resolve, reject) => {
                         context.writer.writeInfo('Starting live speed test...');
 
-                        const proxyUrl =
-                            command.args['proxy-url'] || '/speed-test';
-
                         const downloadUrl =
                             command.args['download-url'] ||
-                            (command.args['proxy']
-                                ? proxyUrl
-                                : 'https://nbg1-speed.hetzner.com/100MB.bin');
+                            'https://proxy.qodalis.com/proxy/https/nbg1-speed.hetzner.com/100MB.bin';
 
                         const uploadUrl =
                             command.args['upload-url'] ||

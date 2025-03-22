@@ -13,7 +13,7 @@
     "build core": "ng build core",
     "watch core": "ng build core --watch --configuration development",
     "build cli": "npm run build:styles && ng build cli",
-    "watch cli": "npm run build:styles:watch && ng build cli --watch --configuration development",
+    "watch cli": "npm run build:styles:watch & ng build cli --watch --configuration development",
     "test": "ng test --watch=false --browsers=ChromeHeadless",
     "lint": "ng lint",
     "lint fix": "ng lint --fix",

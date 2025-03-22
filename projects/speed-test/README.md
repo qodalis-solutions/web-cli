@@ -8,4 +8,10 @@ The `@qodalis/cli-speed-test` package is a CLI extension designed to provide uti
 packages add @qodalis/cli-speed-test
 ```
 
+# Usage
+
+```bash
+speed-test run
+```
+
 This command downloads and registers the extension for use within the CLI environment.
