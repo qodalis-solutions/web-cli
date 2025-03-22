@@ -79,6 +79,8 @@ export class CliPasswordGeneratorCommandProcessor
         context.writer.writeSuccess(
             `Generated Password: ${context.writer.wrapInColor(password, CliForegroundColor.White)}`,
         );
+
+        context.process.output(password);
     }
 
     private generatePassword(
