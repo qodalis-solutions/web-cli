@@ -20,6 +20,7 @@ import { CustomCliCanViewService } from './services/custom-cli-can-view.service'
 import { CliStringModule } from '@qodalis/cli-string';
 import { CliTodoModule } from '@qodalis/cli-todo';
 import { CliCurlModule } from '@qodalis/cli-curl';
+import { CliPasswordGeneratorModule } from '@qodalis/cli-password-generator';
 
 @NgModule({
     declarations: [AppComponent],
@@ -36,6 +37,7 @@ import { CliCurlModule } from '@qodalis/cli-curl';
         CliStringModule,
         CliTodoModule,
         CliCurlModule,
+        CliPasswordGeneratorModule,
     ],
     providers: [
         {

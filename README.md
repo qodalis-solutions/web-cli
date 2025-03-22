@@ -223,6 +223,7 @@ root:~$
 - [@qodalis/cli-string](https://www.npmjs.com/package/@qodalis/cli-browser-storage) - provide commands to operate with strings.
 - [@qodalis/cli-curl](https://www.npmjs.com/package/@qodalis/cli-curl) - A command-line tool to execute HTTP requests on your server. Supports GET, POST, PUT, DELETE, headers, and body data.
 - [@qodalis/cli-todo](https://www.npmjs.com/package/@qodalis/cli-todo) - A command-line tool for managing your tasks efficiently. Add, list, complete, and remove TODO items with simple commands.
+- [@qodalis/cli-password-generator](https://www.npmjs.com/package/@qodalis/cli-password-generator) - provide utilities for password generation.
 - More will be implemented ...
 
 ## Extending with Custom Commands
