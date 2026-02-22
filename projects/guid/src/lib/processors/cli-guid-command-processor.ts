@@ -1,4 +1,5 @@
 import {
+    CliForegroundColor,
     CliProcessCommand,
     CliProcessorMetadata,
     DefaultLibraryAuthor,
@@ -101,17 +102,22 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.writer.writeln('Please specify a subcommand');
+        await context.executor.showHelp(command, context);
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln(this.description);
-        //examples
-        context.writer.writeln('Examples:');
-        context.writer.writeln('  guid new');
-        context.writer.writeln('  guid new --copy');
-        context.writer.writeln(
-            '  guid validate 123e4567-e89b-12d3-a456-426614174000',
-        );
+        const { writer } = context;
+        writer.writeln(this.description);
+        writer.writeln();
+        writer.writeln('📋 Commands:');
+        writer.writeln(`  ${writer.wrapInColor('guid new', CliForegroundColor.Cyan)}                        Generate a new GUID`);
+        writer.writeln(`  ${writer.wrapInColor('guid new --copy', CliForegroundColor.Cyan)}                  Generate and copy to clipboard`);
+        writer.writeln(`  ${writer.wrapInColor('guid new --count=5', CliForegroundColor.Cyan)}               Generate multiple GUIDs`);
+        writer.writeln(`  ${writer.wrapInColor('guid validate <guid>', CliForegroundColor.Cyan)}              Validate a GUID`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  guid new                                                 ${writer.wrapInColor('# Single GUID', CliForegroundColor.Green)}`);
+        writer.writeln(`  guid new --copy --count=3                                ${writer.wrapInColor('# 3 GUIDs, copied', CliForegroundColor.Green)}`);
+        writer.writeln(`  guid validate 123e4567-e89b-12d3-a456-426614174000       ${writer.wrapInColor('# Validate', CliForegroundColor.Green)}`);
     }
 }

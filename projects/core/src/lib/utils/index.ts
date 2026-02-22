@@ -99,6 +99,8 @@ export * from './object-describer';
 
 export * from './delay';
 
+export * from './terminal-utils';
+
 export const utils = {
     getParameterValue,
     formatJson,

@@ -134,4 +134,24 @@ export class CliTextToImageCommandProcessor implements ICliCommandProcessor {
 
         context.writer.writeSuccess('Image created successfully');
     }
+
+    writeDescription(context: ICliExecutionContext): void {
+        const { writer } = context;
+        writer.writeln('Convert text into a downloadable PNG image');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('text-to-image <text> [options]', CliForegroundColor.Cyan)}`);
+        writer.writeln();
+        writer.writeln('⚙️  Options:');
+        writer.writeln(`  ${writer.wrapInColor('--width', CliForegroundColor.Yellow)}          Image width (default: window width)`);
+        writer.writeln(`  ${writer.wrapInColor('--height', CliForegroundColor.Yellow)}         Image height (default: window height)`);
+        writer.writeln(`  ${writer.wrapInColor('--bgColor', CliForegroundColor.Yellow)}        Background color in hex (default: #ffffff)`);
+        writer.writeln(`  ${writer.wrapInColor('--textColor', CliForegroundColor.Yellow)}      Text color in hex (default: #000000)`);
+        writer.writeln(`  ${writer.wrapInColor('--font', CliForegroundColor.Yellow)}           Font style (default: 30px Arial)`);
+        writer.writeln(`  ${writer.wrapInColor('--fileName', CliForegroundColor.Yellow)}       Output filename (default: text-image.png)`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  text-to-image "Hello World"                                      ${writer.wrapInColor('# Basic', CliForegroundColor.Green)}`);
+        writer.writeln(`  text-to-image "Banner" --bgColor=#1a1a2e --textColor=#e0e0e0     ${writer.wrapInColor('# Custom colors', CliForegroundColor.Green)}`);
+    }
 }

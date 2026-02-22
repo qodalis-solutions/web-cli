@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {
+    CliForegroundColor,
     CliProcessCommand,
     ICliCommandAuthor,
     ICliCommandProcessor,
@@ -113,10 +114,22 @@ export class CliCookiesCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.writer.writeError('Choose a sub-command');
+        await context.executor.showHelp(command, context);
     }
 
     writeDescription?(context: ICliExecutionContext): void {
-        context.writer.writeln(this.description);
+        const { writer } = context;
+        writer.writeln('Read, write, and delete browser cookies');
+        writer.writeln();
+        writer.writeln('📋 Commands:');
+        writer.writeln(`  ${writer.wrapInColor('cookies list', CliForegroundColor.Cyan)}                    🍪 List all cookies`);
+        writer.writeln(`  ${writer.wrapInColor('cookies get <key>', CliForegroundColor.Cyan)}                Read a cookie value`);
+        writer.writeln(`  ${writer.wrapInColor('cookies set <key> <value>', CliForegroundColor.Cyan)}        Write a cookie`);
+        writer.writeln(`  ${writer.wrapInColor('cookies remove <key>', CliForegroundColor.Cyan)}             Delete a cookie`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  cookies set lang en              ${writer.wrapInColor('# Set a cookie', CliForegroundColor.Green)}`);
+        writer.writeln(`  cookies get lang                 ${writer.wrapInColor('# Read a cookie', CliForegroundColor.Green)}`);
+        writer.writeln(`  cookies list                     ${writer.wrapInColor('# Show all cookies', CliForegroundColor.Green)}`);
     }
 }

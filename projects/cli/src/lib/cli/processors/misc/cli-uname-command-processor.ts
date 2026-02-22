@@ -13,6 +13,8 @@ import { LIBRARY_VERSION as CLI_Version } from '../../../version';
 export class CliUnameCommandProcessor implements ICliCommandProcessor {
     command = 'uname';
 
+    aliases = ['sysinfo'];
+
     description?: string | undefined =
         'Prints detailed system and browser information';
 
@@ -23,6 +25,17 @@ export class CliUnameCommandProcessor implements ICliCommandProcessor {
         icon: CliIcon.Flame,
         module: 'misc',
     };
+
+    writeDescription(context: ICliExecutionContext): void {
+        const { writer } = context;
+        writer.writeln('Prints detailed system and browser information including:');
+        writer.writeln('  💾 CLI core and library versions');
+        writer.writeln('  🌐 Browser name, version, user agent, language, and platform');
+        writer.writeln('  🖥  Operating system');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('uname', CliForegroundColor.Cyan)}`);
+    }
 
     async processCommand(
         _: CliProcessCommand,

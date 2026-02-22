@@ -15,6 +15,8 @@ import { hotkeysInfo } from '../../constants';
 export class CliHotKeysCommandProcessor implements ICliCommandProcessor {
     command = 'hotkeys';
 
+    aliases = ['shortcuts', 'keys'];
+
     description = 'Displays the hotkeys information';
 
     processors?: ICliCommandProcessor[] | undefined = [];
@@ -31,26 +33,32 @@ export class CliHotKeysCommandProcessor implements ICliCommandProcessor {
         _: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.writer.writeln(
-            context.writer.wrapInColor(
-                'Available hotkeys:',
+        const { writer } = context;
+
+        writer.writeln(
+            writer.wrapInColor(
+                '⌨️  Keyboard Shortcuts:',
                 CliForegroundColor.Yellow,
             ),
         );
 
         hotkeysInfo.forEach((hotkey) => {
-            context.writer.writeln(
-                `- ${context.writer.wrapInColor(
-                    hotkey.key,
+            writer.writeln(
+                `  ${writer.wrapInColor(
+                    hotkey.key.padEnd(12),
                     CliForegroundColor.Yellow,
-                )} - ${hotkey.description}`,
+                )} ${hotkey.description}`,
             );
         });
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln(
-            this.description || 'Displays the hotkeys information',
-        );
+        const { writer } = context;
+        writer.writeln('Displays all available keyboard shortcuts and hotkeys');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('hotkeys', CliForegroundColor.Cyan)}`);
+        writer.writeln();
+        writer.writeln('💡 Hotkeys help you navigate and control the terminal faster');
     }
 }

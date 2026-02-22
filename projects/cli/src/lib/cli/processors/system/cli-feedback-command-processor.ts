@@ -21,6 +21,8 @@ const githubUrl = 'https://github.com/qodalis-solutions/angular-web-cli';
 export class CliFeedbackCommandProcessor implements ICliCommandProcessor {
     command = 'feedback';
 
+    aliases = ['support'];
+
     description?: string | undefined =
         'Allows users to report bugs or request features';
 
@@ -49,9 +51,10 @@ export class CliFeedbackCommandProcessor implements ICliCommandProcessor {
                     );
                 },
                 writeDescription({ writer }: ICliExecutionContext): void {
-                    writer.writeln(
-                        'Reports a bug on GitHub. Usage: feedback report-bug <description>',
-                    );
+                    writer.writeln('🐞 Opens a new bug report on GitHub');
+                    writer.writeln();
+                    writer.writeln('📋 Usage:');
+                    writer.writeln(`  ${writer.wrapInColor('feedback report-bug <title>', CliForegroundColor.Cyan)}`);
                 },
             },
             {
@@ -67,9 +70,10 @@ export class CliFeedbackCommandProcessor implements ICliCommandProcessor {
                     );
                 },
                 writeDescription({ writer }: ICliExecutionContext): void {
-                    writer.writeln(
-                        'Requests a new feature on GitHub. Usage: feedback request-feature <description>',
-                    );
+                    writer.writeln('✨ Opens a new feature request on GitHub');
+                    writer.writeln();
+                    writer.writeln('📋 Usage:');
+                    writer.writeln(`  ${writer.wrapInColor('feedback request-feature <title>', CliForegroundColor.Cyan)}`);
                 },
             },
             {
@@ -85,9 +89,10 @@ export class CliFeedbackCommandProcessor implements ICliCommandProcessor {
                     );
                 },
                 writeDescription({ writer }: ICliExecutionContext): void {
-                    writer.writeln(
-                        'Requests a new command on GitHub. Usage: feedback request-command <description>',
-                    );
+                    writer.writeln('🧩 Opens a new command request on GitHub');
+                    writer.writeln();
+                    writer.writeln('📋 Usage:');
+                    writer.writeln(`  ${writer.wrapInColor('feedback request-command <title>', CliForegroundColor.Cyan)}`);
                 },
             },
         );
@@ -97,17 +102,25 @@ export class CliFeedbackCommandProcessor implements ICliCommandProcessor {
         _: CliProcessCommand,
         { writer }: ICliExecutionContext,
     ): Promise<void> {
-        writer.writeln('Use one of the following subcommands:');
+        writer.writeln('📣 Available feedback options:');
+        writer.writeln();
         this.processors?.forEach((processor) => {
             writer.writeln(
-                `- ${writer.wrapInColor(`feedback ${processor.command}`, CliForegroundColor.Cyan)}: ${processor.description}`,
+                `  ${writer.wrapInColor(`feedback ${processor.command}`, CliForegroundColor.Cyan)}  ${processor.description}`,
             );
         });
     }
 
     writeDescription({ writer }: ICliExecutionContext): void {
-        writer.writeln(
-            'Allows users to report bugs or request features on GitHub.',
-        );
+        writer.writeln('Allows users to report bugs or request features on GitHub');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('feedback report-bug <title>', CliForegroundColor.Cyan)}         🐞 Report a bug`);
+        writer.writeln(`  ${writer.wrapInColor('feedback request-feature <title>', CliForegroundColor.Cyan)}     ✨ Request a feature`);
+        writer.writeln(`  ${writer.wrapInColor('feedback request-command <title>', CliForegroundColor.Cyan)}     🧩 Request a new command`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  feedback report-bug "Login page crashes"          ${writer.wrapInColor('# Opens GitHub issue', CliForegroundColor.Green)}`);
+        writer.writeln(`  feedback request-feature "Dark mode support"      ${writer.wrapInColor('# Opens feature request', CliForegroundColor.Green)}`);
     }
 }

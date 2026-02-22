@@ -19,6 +19,8 @@ import { groupBy } from '../../../utils/arrays';
 export class CliHelpCommandProcessor implements ICliCommandProcessor {
     command = 'help';
 
+    aliases = ['man'];
+
     description = 'Displays help for a command';
 
     allowUnlistedCommands?: boolean | undefined = true;
@@ -54,10 +56,11 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
             writer.writeln(
                 writer.wrapInColor(
-                    'Available commands:',
+                    '📚 Available commands:',
                     CliForegroundColor.Yellow,
                 ),
             );
+            writer.writeln();
 
             const groupedCommands = groupBy<ICliCommandProcessor, string>(
                 this.registry.processors,
@@ -66,28 +69,31 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
             groupedCommands.forEach((processors, module) => {
                 writer.writeln(
-                    writer.wrapInColor(module, CliForegroundColor.Yellow),
+                    `📂 ${writer.wrapInColor(module.charAt(0).toUpperCase() + module.slice(1), CliForegroundColor.Yellow)}`,
                 );
 
                 processors.forEach((processor) => {
+                    const aliasText = processor.aliases?.length
+                        ? ` ${writer.wrapInColor(`(${processor.aliases.join(', ')})`, CliForegroundColor.Magenta)}`
+                        : '';
                     writer.writeln(
-                        `- ${processor?.metadata?.icon ? processor.metadata.icon : CliIcon.Extension}  ${writer.wrapInColor(processor.command, CliForegroundColor.Cyan)} - ${
+                        `  ${processor?.metadata?.icon ? processor.metadata.icon : CliIcon.Extension}  ${writer.wrapInColor(processor.command, CliForegroundColor.Cyan)}${aliasText} - ${
                             processor?.description || 'Missing description'
                         }`,
                     );
                 });
 
-                this.writeSeparator(context);
+                writer.writeln();
             });
 
-            context.writer.writeln();
+            this.writeSeparator(context);
 
             await context.executor.executeCommand('hotkeys', context);
 
             this.writeSeparator(context);
 
             writer.writeln(
-                '\nType `help <command>` to get more information about a specific command',
+                `\n💡 Type ${writer.wrapInColor('help <command>', CliForegroundColor.Cyan)} to get more information about a specific command`,
             );
         } else {
             const processor = this.registry.findProcessor(
@@ -98,25 +104,24 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             if (processor) {
                 this.writeProcessorDescription(processor, context);
             } else {
-                writer.writeln(`\x1b[33mUnknown command: ${commandsToHelp[0]}`);
+                writer.writeError(`Unknown command: ${commandsToHelp[0]}`);
+                writer.writeln();
+                writer.writeln(`💡 Type ${writer.wrapInColor('help', CliForegroundColor.Cyan)} to see all available commands`);
             }
         }
     }
 
     writeDescription({ writer }: ICliExecutionContext): void {
-        writer.writeln('Displays help for a command');
-
-        writer.writeln(
-            'If no command is specified, it will display a list of available commands',
-        );
-
-        writer.writeln(
-            'If a command is specified, it will display information about that command',
-        );
-
-        writer.writeln(
-            'If a command is specified with a subcommand, it will display information about that subcommand',
-        );
+        writer.writeln('Displays help information for commands');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('help', CliForegroundColor.Cyan)}                    Show all available commands`);
+        writer.writeln(`  ${writer.wrapInColor('help <command>', CliForegroundColor.Cyan)}            Show details for a command`);
+        writer.writeln(`  ${writer.wrapInColor('help <command> <sub>', CliForegroundColor.Cyan)}      Show details for a subcommand`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  help pkg                         ${writer.wrapInColor('# Package manager help', CliForegroundColor.Green)}`);
+        writer.writeln(`  help theme apply                 ${writer.wrapInColor('# Theme apply subcommand help', CliForegroundColor.Green)}`);
     }
 
     private writeProcessorDescription(
@@ -125,7 +130,10 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
     ) {
         const { writer } = context;
 
-        writer.write('\x1b[33mCommand: \x1b[0m');
+        // Header
+        writer.write(
+            writer.wrapInColor('⌘  Command: ', CliForegroundColor.Yellow),
+        );
 
         if (processor.metadata?.icon) {
             writer.write(`${processor.metadata.icon}  `);
@@ -135,87 +143,94 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             `${writer.wrapInColor(
                 processor.command,
                 CliForegroundColor.Cyan,
-            )} @${processor.version || '1.0.0'} - ${processor.description}`,
+            )} ${writer.wrapInColor(`v${processor.version || '1.0.0'}`, CliForegroundColor.Green)}`,
         );
+
+        writer.writeln(`   ${processor.description}`);
+
+        if (processor.aliases?.length) {
+            writer.writeln(
+                `   ${writer.wrapInColor('Aliases:', CliForegroundColor.Yellow)} ${processor.aliases.map((a: string) => writer.wrapInColor(a, CliForegroundColor.Magenta)).join(', ')}`,
+            );
+        }
 
         this.writeSeparator(context);
 
+        // Author
         if (processor.author) {
             writer.writeln(
-                `\x1b[33mAuthor:\x1b[0m ${processor.author.name}<${processor.author.email}>`,
+                `👤 ${writer.wrapInColor('Author:', CliForegroundColor.Yellow)} ${processor.author.name} <${processor.author.email}>`,
             );
 
             this.writeSeparator(context);
         }
 
-        writer.write(
-            writer.wrapInColor('Description: ', CliForegroundColor.Yellow),
-        );
-
+        // Description
         if (processor.writeDescription) {
+            writer.writeln(
+                writer.wrapInColor('📖 Description:', CliForegroundColor.Yellow),
+            );
             processor.writeDescription(context);
         } else if (processor.description) {
             writer.writeln(
-                `${writer.wrapInColor('Description:', CliForegroundColor.Yellow)} ${processor.description}`,
-            );
-        } else {
-            writer.writeln(
-                writer.wrapInColor(
-                    'No description available',
-                    CliForegroundColor.Yellow,
-                ),
+                `${writer.wrapInColor('📖 Description:', CliForegroundColor.Yellow)} ${processor.description}`,
             );
         }
 
         this.writeSeparator(context);
 
+        // Subcommands
         if (processor.processors?.length) {
             writer.writeln(
-                writer.wrapInColor('Subcommands:', CliForegroundColor.Yellow),
+                writer.wrapInColor('🔧 Subcommands:', CliForegroundColor.Yellow),
             );
 
             processor.processors.forEach((subprocessor) => {
                 writer.writeln(
-                    `- ${writer.wrapInColor(
+                    `  ${writer.wrapInColor(
                         subprocessor.command,
                         CliForegroundColor.Cyan,
-                    )} - ${subprocessor.description}`,
+                    )}  ${subprocessor.description}`,
                 );
             });
 
             this.writeSeparator(context);
         }
 
+        // Parameters
         const parameters = [
             ...(processor.parameters || []),
             ...defaultParameters,
         ];
 
         writer.writeln(
-            writer.wrapInColor('Parameters:', CliForegroundColor.Yellow),
+            writer.wrapInColor('⚙️  Parameters:', CliForegroundColor.Yellow),
         );
 
         parameters.forEach((parameter) => {
+            const aliases = parameter.aliases?.length
+                ? ` ${writer.wrapInColor(`(-${parameter.aliases.join(', -')})`, CliForegroundColor.Magenta)}`
+                : '';
+            const required = parameter.required
+                ? ` ${writer.wrapInColor('(required)', CliForegroundColor.Red)}`
+                : '';
             writer.writeln(
-                `--${writer.wrapInColor(
+                `  --${writer.wrapInColor(
                     parameter.name,
                     CliForegroundColor.Cyan,
-                )} (${parameter.type}) ${
-                    parameter.aliases ? `(${parameter.aliases.join(', ')})` : ''
-                } - ${parameter.description}${
-                    parameter.required ? ' (required)' : ''
-                }`,
+                )}${aliases}  ${writer.wrapInColor(`<${parameter.type}>`, CliForegroundColor.Yellow)} ${parameter.description}${required}`,
             );
         });
 
         this.writeSeparator(context);
 
+        // Server requirement notice
         if (processor.metadata?.requireServer) {
             writer.writeln(
-                writer.wrapInColor(
+                `🖥  ${writer.wrapInColor(
                     'Requires server to be running',
                     CliForegroundColor.Red,
-                ),
+                )}`,
             );
         }
     }

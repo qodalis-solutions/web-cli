@@ -81,8 +81,13 @@ export class CliCommandProcessorRegistry
         chainCommands: string[],
         processors: ICliCommandProcessor[],
     ): ICliCommandProcessor | undefined {
+        const lowerCommand = mainCommand.toLowerCase();
         const processor = processors.find(
-            (p) => p.command.toLowerCase() === mainCommand.toLowerCase(),
+            (p) =>
+                p.command.toLowerCase() === lowerCommand ||
+                p.aliases?.some(
+                    (a) => a.toLowerCase() === lowerCommand,
+                ),
         );
 
         if (!processor) {

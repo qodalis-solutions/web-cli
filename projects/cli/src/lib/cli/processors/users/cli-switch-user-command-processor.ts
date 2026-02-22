@@ -25,6 +25,8 @@ import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
     command = 'su';
 
+    aliases = ['switch-user'];
+
     description?: string | undefined = 'Switch user';
 
     allowUnlistedCommands?: boolean | undefined = true;
@@ -133,8 +135,15 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln('Switch user command');
-        context.writer.writeln('Usage: su <user email>');
-        context.writer.writeln('Example: su user@domain.com');
+        const { writer } = context;
+        writer.writeln('Switch to a different user session');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('su <user email>', CliForegroundColor.Cyan)}`);
+        writer.writeln(`  ${writer.wrapInColor('su <user email> --reload', CliForegroundColor.Cyan)}    Reload page after switching`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  su admin@example.com             ${writer.wrapInColor('# Switch to admin', CliForegroundColor.Green)}`);
+        writer.writeln(`  su user@test.com --reload        ${writer.wrapInColor('# Switch and reload', CliForegroundColor.Green)}`);
     }
 }

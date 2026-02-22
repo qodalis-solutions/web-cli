@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
 import {
+    CliForegroundColor,
     CliIcon,
     CliProcessCommand,
     CliProcessorMetadata,
@@ -19,6 +20,8 @@ import { firstValueFrom } from 'rxjs';
 })
 export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
     command = 'whoami';
+
+    aliases = ['me'];
 
     description?: string | undefined = 'Display current user information';
 
@@ -72,6 +75,11 @@ export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln(this.description!);
+        const { writer } = context;
+        writer.writeln('Display the current logged-in user information');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('whoami', CliForegroundColor.Cyan)}                 Show current user email`);
+        writer.writeln(`  ${writer.wrapInColor('whoami --info', CliForegroundColor.Cyan)}           Show detailed user information`);
     }
 }

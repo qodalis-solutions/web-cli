@@ -13,6 +13,8 @@ import { ICliPingServerService_TOKEN } from '../tokens';
 export class CliPingCommandProcessor implements ICliCommandProcessor {
     command = 'ping';
 
+    aliases = ['pong'];
+
     description?: string | undefined = 'Pings the server';
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
@@ -25,6 +27,15 @@ export class CliPingCommandProcessor implements ICliCommandProcessor {
         @Inject(ICliPingServerService_TOKEN)
         private pingServerService: ICliPingServerService,
     ) {}
+
+    writeDescription(context: ICliExecutionContext): void {
+        context.writer.writeln('Pings the server to check connectivity');
+        context.writer.writeln();
+        context.writer.writeln('📡 Usage:');
+        context.writer.writeln('  ping');
+        context.writer.writeln();
+        context.writer.writeln('💡 Returns "pong" if the server is reachable');
+    }
 
     async processCommand(
         _: CliProcessCommand,

@@ -109,6 +109,20 @@ export class CliPasswordGeneratorCommandProcessor
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln(this.description!);
+        const { writer } = context;
+        writer.writeln(this.description!);
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('generate-password [options]', CliForegroundColor.Cyan)}`);
+        writer.writeln();
+        writer.writeln('⚙️  Options:');
+        writer.writeln(`  ${writer.wrapInColor('--length=<n>', CliForegroundColor.Yellow)}          Password length (default: 16)`);
+        writer.writeln(`  ${writer.wrapInColor('--symbols', CliForegroundColor.Yellow)}             Include symbols (!@#$%)`);
+        writer.writeln(`  ${writer.wrapInColor('--uppercase', CliForegroundColor.Yellow)}           Include uppercase (default: true)`);
+        writer.writeln(`  ${writer.wrapInColor('--numbers', CliForegroundColor.Yellow)}             Include numbers (default: true)`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  generate-password                            ${writer.wrapInColor('# 16-char password', CliForegroundColor.Green)}`);
+        writer.writeln(`  generate-password --length=32 --symbols      ${writer.wrapInColor('# 32-char with symbols', CliForegroundColor.Green)}`);
     }
 }

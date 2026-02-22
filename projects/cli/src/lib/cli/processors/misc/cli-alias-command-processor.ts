@@ -1,4 +1,5 @@
 import {
+    CliForegroundColor,
     CliProcessCommand,
     CliProcessorMetadata,
     CliStateConfiguration,
@@ -32,7 +33,7 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
         storeName: 'aliases',
     };
 
-    public aliases: Record<string, string> = {};
+    public userAliases: Record<string, string> = {};
 
     private stateSubscription?: Subscription;
 
@@ -45,16 +46,31 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
 
                     writer.writeln('Aliases:');
-                    Object.entries(this.aliases).forEach(([alias, command]) => {
+                    Object.entries(this.userAliases).forEach(([alias, command]) => {
                         writer.writeInfo(`  ${alias} -> ${command}`);
                     });
 
-                    if (Object.keys(this.aliases).length === 0) {
+                    if (Object.keys(this.userAliases).length === 0) {
                         writer.writeInfo('  No aliases defined');
                     }
                 },
             },
         ];
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        const { writer } = context;
+        writer.writeln('Create shortcut aliases for frequently used commands');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('alias --<name>=<command>', CliForegroundColor.Cyan)}    Create a new alias`);
+        writer.writeln(`  ${writer.wrapInColor('alias ls', CliForegroundColor.Cyan)}                    List all aliases`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  alias --h=help               ${writer.wrapInColor('# "h" → runs "help"', CliForegroundColor.Green)}`);
+        writer.writeln(`  alias --cls=clear             ${writer.wrapInColor('# "cls" → runs "clear"', CliForegroundColor.Green)}`);
+        writer.writeln();
+        writer.writeln(`💡 Use ${writer.wrapInColor('unalias <name>', CliForegroundColor.Yellow)} to remove an alias`);
     }
 
     public async processCommand(
@@ -88,7 +104,7 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
 
         context.state.updateState({
             aliases: {
-                ...this.aliases,
+                ...this.userAliases,
                 ...command.args,
             },
         });
@@ -101,7 +117,7 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
         this.stateSubscription = context.state
             .select((x) => x['aliases'])
             .subscribe((aliases) => {
-                this.aliases = aliases ?? {};
+                this.userAliases = aliases ?? {};
             });
     }
 }

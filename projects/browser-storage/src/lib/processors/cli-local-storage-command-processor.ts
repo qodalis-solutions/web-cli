@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {
+    CliForegroundColor,
     CliProcessCommand,
     ICliCommandAuthor,
     ICliCommandProcessor,
@@ -74,17 +75,21 @@ export class CliLocalStorageCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.writer.writeError('Choose a sub-command');
+        await context.executor.showHelp(command, context);
     }
 
     writeDescription?(context: ICliExecutionContext): void {
-        context.writer.writeln('local-storage get <key>');
-        context.writer.writeln('Gets the value of the specified key');
-
-        context.writer.writeln('local-storage set <key> <value>');
-        context.writer.writeln('Sets the value of the specified key');
-
-        context.writer.writeln('local-storage remove <key>');
-        context.writer.writeln('Removes the specified key');
+        const { writer } = context;
+        writer.writeln('Read, write, and delete keys from the browser local storage');
+        writer.writeln();
+        writer.writeln('📋 Commands:');
+        writer.writeln(`  ${writer.wrapInColor('local-storage get <key>', CliForegroundColor.Cyan)}             Read a value`);
+        writer.writeln(`  ${writer.wrapInColor('local-storage set <key> <value>', CliForegroundColor.Cyan)}     Write a value`);
+        writer.writeln(`  ${writer.wrapInColor('local-storage remove <key>', CliForegroundColor.Cyan)}          Delete a key`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  local-storage set theme dark          ${writer.wrapInColor('# Store a value', CliForegroundColor.Green)}`);
+        writer.writeln(`  local-storage get theme               ${writer.wrapInColor('# Read a value', CliForegroundColor.Green)}`);
+        writer.writeln(`  local-storage remove theme            ${writer.wrapInColor('# Delete a key', CliForegroundColor.Green)}`);
     }
 }

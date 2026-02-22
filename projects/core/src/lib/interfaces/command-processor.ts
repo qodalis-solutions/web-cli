@@ -80,6 +80,11 @@ export interface ICliCommandProcessor {
     command: string;
 
     /**
+     * Alternative names for the command
+     */
+    aliases?: string[];
+
+    /**
      * A description of the command
      */
     description?: string;

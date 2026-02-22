@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { LIBRARY_VERSION } from '../../../version';
-import { CLi_Name_Art } from '../../constants';
+import { getCliNameArt } from '../../constants';
 import { CliForegroundColor, ICliExecutionContext } from '@qodalis/cli-core';
 import { getGreetingBasedOnTime } from '../../../utils';
 
@@ -34,16 +34,13 @@ export class CliWelcomeMessageService {
             context.terminal.writeln(welcomeConfig?.message);
         } else {
             const welcomeMessage = [
-                `Welcome to Web CLI [Version ${context.writer.wrapInColor(LIBRARY_VERSION, CliForegroundColor.Green)}]`,
+                `🚀 Welcome to Web CLI [Version ${context.writer.wrapInColor(LIBRARY_VERSION, CliForegroundColor.Green)}]`,
                 '(c) 2024 Qodalis Solutions. All rights reserved.',
-                CLi_Name_Art,
+                getCliNameArt(context.terminal.cols),
                 '',
-                context.writer.wrapInColor(
-                    'Documentation: ',
-                    CliForegroundColor.Green,
-                ) + 'https://cli-docs.qodalis.com/',
+                `📖 ${context.writer.wrapInColor('Documentation:', CliForegroundColor.Green)} https://cli-docs.qodalis.com/`,
                 '',
-                'Type \'help\' to get started.',
+                `💡 Type ${context.writer.wrapInColor('\'help\'', CliForegroundColor.Cyan)} to see available commands`,
                 '',
             ];
 

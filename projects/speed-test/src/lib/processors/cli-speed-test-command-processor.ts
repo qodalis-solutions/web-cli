@@ -1,4 +1,8 @@
-import { CliProcessorMetadata, DefaultLibraryAuthor } from '@qodalis/cli-core';
+import {
+    CliForegroundColor,
+    CliProcessorMetadata,
+    DefaultLibraryAuthor,
+} from '@qodalis/cli-core';
 import {
     CliProcessCommand,
     ICliCommandProcessor,
@@ -96,17 +100,22 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
     }
 
     async processCommand(
-        _: CliProcessCommand,
+        command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.writer.writeError("Use 'speed-test' command with a subcommand");
+        await context.executor.showHelp(command, context);
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln(this.description);
-        // Examples
-        context.writer.writeln('Examples:');
-        context.writer.writeln('  speed-test run');
+        const { writer } = context;
+        writer.writeln(this.description);
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('speed-test run', CliForegroundColor.Cyan)}                          Run download & upload test`);
+        writer.writeln(`  ${writer.wrapInColor('speed-test run --download-url=<url>', CliForegroundColor.Cyan)}     Custom download URL`);
+        writer.writeln(`  ${writer.wrapInColor('speed-test run --upload-url=<url>', CliForegroundColor.Cyan)}       Custom upload URL`);
+        writer.writeln();
+        writer.writeln(`💡 Press ${writer.wrapInColor('Ctrl+C', CliForegroundColor.Yellow)} to abort the test`);
     }
 
     /**

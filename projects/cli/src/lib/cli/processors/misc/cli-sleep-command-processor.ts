@@ -1,4 +1,5 @@
 import {
+    CliForegroundColor,
     CliIcon,
     CliProcessCommand,
     CliProcessorMetadata,
@@ -10,6 +11,8 @@ import {
 
 export class CliSleepCommandProcessor implements ICliCommandProcessor {
     command = 'sleep';
+
+    aliases = ['wait'];
 
     description?: string | undefined = 'Sleep for a specified amount of time';
 
@@ -44,8 +47,14 @@ export class CliSleepCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln('Sleep for a specified amount of time');
-        context.writer.writeln('Usage: sleep <time>');
-        context.writer.writeln('Usage: sleep 5000 # Sleep for 5 seconds');
+        const { writer } = context;
+        writer.writeln('Pauses execution for the specified duration (in milliseconds)');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('sleep <milliseconds>', CliForegroundColor.Cyan)}`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  sleep 1000                   ${writer.wrapInColor('# Sleep for 1 second', CliForegroundColor.Green)}`);
+        writer.writeln(`  sleep 5000                   ${writer.wrapInColor('# Sleep for 5 seconds', CliForegroundColor.Green)}`);
     }
 }

@@ -11,13 +11,15 @@ import {
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../../../version';
-import { CLi_Name_Art } from '../../constants';
+import { getCliNameArt } from '../../constants';
 
 @Injectable({
     providedIn: 'root',
 })
 export class CliVersionCommandProcessor implements ICliCommandProcessor {
     command = 'version';
+
+    aliases = ['ver'];
 
     description?: string | undefined = 'Prints the version information';
 
@@ -33,23 +35,30 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
 
     async processCommand(
         _: CliProcessCommand,
-        { writer }: ICliExecutionContext,
+        context: ICliExecutionContext,
     ): Promise<void> {
+        const { writer } = context;
+
         writer.writeln(
-            `CLI Version@${writer.wrapInColor(LIBRARY_VERSION, CliForegroundColor.Green)}`,
+            `⚙️  Qodalis CLI ${writer.wrapInColor(`v${LIBRARY_VERSION}`, CliForegroundColor.Green)}`,
         );
 
-        writer.writeln(CLi_Name_Art);
+        writer.writeln(getCliNameArt(context.terminal.cols));
 
         writer.writeln(
-            writer.wrapInColor('Documentation: ', CliForegroundColor.Green) +
-                'https://cli-docs.qodalis.com/',
+            `📖 ${writer.wrapInColor('Documentation:', CliForegroundColor.Green)} https://cli-docs.qodalis.com/`,
         );
 
         writer.writeln();
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln('Prints the current version of the CLI');
+        const { writer } = context;
+        writer.writeln('Prints the current version of the CLI and documentation link');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('version', CliForegroundColor.Cyan)}`);
+        writer.writeln();
+        writer.writeln(`📖 Documentation: ${writer.wrapInColor('https://cli-docs.qodalis.com/', CliForegroundColor.Blue)}`);
     }
 }

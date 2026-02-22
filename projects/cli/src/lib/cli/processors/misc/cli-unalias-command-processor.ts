@@ -1,4 +1,5 @@
 import {
+    CliForegroundColor,
     CliProcessCommand,
     CliProcessorMetadata,
     CliStateConfiguration,
@@ -26,6 +27,18 @@ export class CliUnAliasCommandProcessor implements ICliCommandProcessor {
         module: 'misc',
         sealed: true,
     };
+
+    writeDescription(context: ICliExecutionContext): void {
+        const { writer } = context;
+        writer.writeln('Remove a previously defined command alias');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('unalias <name>', CliForegroundColor.Cyan)}`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  unalias h                    ${writer.wrapInColor('# Remove the "h" alias', CliForegroundColor.Green)}`);
+        writer.writeln(`  unalias cls                  ${writer.wrapInColor('# Remove the "cls" alias', CliForegroundColor.Green)}`);
+    }
 
     public async processCommand(
         command: CliProcessCommand,

@@ -31,7 +31,6 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     clipboard: ICliClipboard;
     state: ICliStateStore;
     options?: CliOptions | undefined;
-    showPrompt: () => void;
     setContextProcessor: (
         processor: ICliCommandProcessor,
         silent?: boolean,
@@ -39,6 +38,37 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     process: ICliExecutionProcess;
     logger: ICliLogger;
     services: ICliServiceProvider;
+
+    get promptLength(): number {
+        return this.context.promptLength;
+    }
+    set promptLength(value: number) {
+        this.context.promptLength = value;
+    }
+
+    get currentLine(): string {
+        return this.context.currentLine;
+    }
+
+    setCurrentLine = (line: string): void => {
+        this.context.setCurrentLine(line);
+    };
+
+    get cursorPosition(): number {
+        return this.context.cursorPosition;
+    }
+    set cursorPosition(value: number) {
+        this.context.cursorPosition = value;
+    }
+
+    clearLine: () => void;
+    showPrompt: (options?: {
+        reset?: boolean;
+        newLine?: boolean;
+        keepCurrentLine?: boolean;
+    }) => void;
+    clearCurrentLine: () => void;
+    refreshCurrentLine: () => void;
 
     constructor(
         public readonly context: CliExecutionContext,
@@ -54,8 +84,11 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
         this.executor = context.executor;
         this.clipboard = context.clipboard;
         this.options = context.options;
-        this.showPrompt = context.showPrompt;
         this.setContextProcessor = context.setContextProcessor;
+        this.clearLine = () => context.clearLine();
+        this.showPrompt = (options) => context.showPrompt(options);
+        this.clearCurrentLine = () => context.clearCurrentLine();
+        this.refreshCurrentLine = () => context.refreshCurrentLine();
         this.process = context.process;
         this.logger = context.logger;
         this.services = context.services;

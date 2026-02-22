@@ -6,6 +6,7 @@ import {
     ICliCommandAuthor,
     CliProcessorMetadata,
     CliIcon,
+    CliForegroundColor,
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
@@ -16,6 +17,8 @@ import { CliCommandHistoryService } from '../../services';
 })
 export class CliHistoryCommandProcessor implements ICliCommandProcessor {
     command = 'history';
+
+    aliases = ['hist'];
 
     description?: string | undefined =
         'Prints the command history of the current session';
@@ -63,17 +66,27 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
         const history = this.commandHistoryService.getHistory();
 
         if (history.length === 0) {
-            writer.writeln('No history available');
+            writer.writeInfo('📜 No command history yet');
             return;
         } else {
-            writer.writeln('Command history:');
+            writer.writeln(
+                writer.wrapInColor('📜 Command history:', CliForegroundColor.Yellow),
+            );
             history.forEach((command, index) => {
-                writer.writeln(`${index + 1}. ${command}`);
+                writer.writeln(
+                    `  ${writer.wrapInColor(String(index + 1).padStart(3), CliForegroundColor.Yellow)}  ${command}`,
+                );
             });
         }
     }
 
     writeDescription({ writer }: ICliExecutionContext): void {
         writer.writeln('Prints the command history of the current session');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('history', CliForegroundColor.Cyan)}                Show command history`);
+        writer.writeln(`  ${writer.wrapInColor('history clear', CliForegroundColor.Cyan)}          Clear all history`);
+        writer.writeln();
+        writer.writeln(`💡 Use ${writer.wrapInColor('↑/↓', CliForegroundColor.Yellow)} arrow keys to navigate through history`);
     }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-curl",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Provide utility functions for the library curl",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

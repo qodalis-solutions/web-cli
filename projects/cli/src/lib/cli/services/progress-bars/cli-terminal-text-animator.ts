@@ -2,11 +2,14 @@ import { Terminal } from '@xterm/xterm';
 import {
     CliTextAnimatorOptions,
     delay,
+    ICliExecutionContext,
     ICliTextAnimator,
 } from '@qodalis/cli-core';
 
 export class CliTerminalTextAnimator implements ICliTextAnimator {
     isRunning: boolean = false;
+
+    context?: ICliExecutionContext;
 
     private animationInterval?: ReturnType<typeof setInterval> | null;
     private text: string = '';
@@ -27,6 +30,7 @@ export class CliTerminalTextAnimator implements ICliTextAnimator {
         this.isRunning = true;
         this.text = text || this.text;
 
+        const savedCurrentLine = this.context?.currentLine || '';
         let index = 0;
         let isTyping = true;
 
@@ -45,15 +49,18 @@ export class CliTerminalTextAnimator implements ICliTextAnimator {
                 this.animationInterval = null;
 
                 delay(1000).then(() => {
-                    for (let i = 0; i < this.text.length; i++) {
-                        this.terminal.write('\b \b');
+                    if (this.context) {
+                        this.context.setCurrentLine(
+                            savedCurrentLine + this.text,
+                        );
+                        this.context.clearCurrentLine();
                     }
                 });
 
                 this.isRunning = false;
             } else {
                 // Erase text character by character
-                this.terminal.write('\b \b'); // Backspace, overwrite with space, and backspace again
+                this.terminal.write('\b \b');
                 index--;
 
                 // Stop animation once all characters are erased

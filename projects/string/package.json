@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-string",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An Angular CLI extension that provides speed test utilities",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

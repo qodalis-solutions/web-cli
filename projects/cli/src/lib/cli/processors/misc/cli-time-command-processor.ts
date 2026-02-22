@@ -12,6 +12,8 @@ import { LIBRARY_VERSION } from '../../../version';
 export class CliTimeCommandProcessor implements ICliCommandProcessor {
     command = 'time';
 
+    aliases = ['date'];
+
     description = 'Display the current local and UTC time';
 
     author = DefaultLibraryAuthor;
@@ -58,6 +60,10 @@ export class CliTimeCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln(this.description!);
+        const { writer } = context;
+        writer.writeln('Display the current local and UTC time');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('time now', CliForegroundColor.Cyan)}              🕒 Show current local and UTC time`);
     }
 }

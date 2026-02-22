@@ -19,6 +19,8 @@ import { themes, ThemeState } from './types';
 export class CliThemeCommandProcessor implements ICliCommandProcessor {
     command = 'theme';
 
+    aliases = ['themes'];
+
     description = 'Interact with the theme';
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
@@ -227,41 +229,23 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription?(context: ICliExecutionContext): void {
-        context.writer.writeln('Interact with the theme');
-
-        context.writer.writeln('Examples:');
-        context.writer.writeln(
-            context.writer.wrapInColor(
-                'theme apply dracula',
-                CliForegroundColor.Magenta,
-            ),
-        );
-        context.writer.writeln(
-            context.writer.wrapInColor(
-                'theme reset',
-                CliForegroundColor.Magenta,
-            ),
-        );
-        context.writer.writeln(
-            context.writer.wrapInColor(
-                'theme set background red',
-                CliForegroundColor.Magenta,
-            ),
-        );
-        context.writer.writeln(
-            context.writer.wrapInColor(
-                'theme set foreground red',
-                CliForegroundColor.Magenta,
-            ),
-        );
-
-        context.writer.write('Available theme options: ');
-        context.writer.writeln(
-            context.writer.wrapInColor(
-                this.themeOptions.join(', ') ?? '',
-                CliForegroundColor.Blue,
-            ),
-        );
+        const { writer } = context;
+        writer.writeln('Customize the terminal appearance with themes and colors');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('theme list', CliForegroundColor.Cyan)}                     🎨 List available themes`);
+        writer.writeln(`  ${writer.wrapInColor('theme apply <name>', CliForegroundColor.Cyan)}               Apply a theme`);
+        writer.writeln(`  ${writer.wrapInColor('theme current', CliForegroundColor.Cyan)}                    Show active theme`);
+        writer.writeln(`  ${writer.wrapInColor('theme set <key> <value>', CliForegroundColor.Cyan)}          Set a theme variable`);
+        writer.writeln(`  ${writer.wrapInColor('theme save', CliForegroundColor.Cyan)}                       💾 Save current settings`);
+        writer.writeln(`  ${writer.wrapInColor('theme reset', CliForegroundColor.Cyan)}                      🔄 Reset to default`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  theme apply dracula              ${writer.wrapInColor('# Apply the Dracula theme', CliForegroundColor.Green)}`);
+        writer.writeln(`  theme set background #1a1a2e     ${writer.wrapInColor('# Change background color', CliForegroundColor.Green)}`);
+        writer.writeln(`  theme set foreground #e0e0e0     ${writer.wrapInColor('# Change text color', CliForegroundColor.Green)}`);
+        writer.writeln();
+        writer.writeln(`⚙️  Available options: ${writer.wrapInColor(this.themeOptions.join(', ') ?? '', CliForegroundColor.Blue)}`);
     }
 }
 

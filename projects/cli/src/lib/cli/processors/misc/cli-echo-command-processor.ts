@@ -1,4 +1,5 @@
 import {
+    CliForegroundColor,
     CliProcessCommand,
     CliProcessorMetadata,
     DefaultLibraryAuthor,
@@ -8,6 +9,8 @@ import {
 
 export class CliEchoCommandProcessor implements ICliCommandProcessor {
     command = 'echo';
+
+    aliases = ['print'];
 
     description = 'Prints the specified text';
 
@@ -36,7 +39,15 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln('echo <text>');
-        context.writer.writeln('Prints the specified text');
+        const { writer } = context;
+        writer.writeln('Prints the specified text to the terminal');
+        writer.writeln('Supports text and JSON object output via piping');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('echo <text>', CliForegroundColor.Cyan)}`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  echo Hello World                 ${writer.wrapInColor('# Print text', CliForegroundColor.Green)}`);
+        writer.writeln(`  echo "Hello, World!"             ${writer.wrapInColor('# Print quoted text', CliForegroundColor.Green)}`);
     }
 }

@@ -22,19 +22,32 @@ export class ScriptLoaderService {
         src: string,
         options?: {
             onProgress?: (progress: number) => void;
+            signal?: AbortSignal;
         },
     ): Promise<{
         xhr: XMLHttpRequest;
         content?: string;
         error?: any;
     }> {
-        const { onProgress } = options || {};
+        const { onProgress, signal } = options || {};
 
         let fetchProgress = 0;
 
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open('GET', src, true);
+
+            if (signal) {
+                if (signal.aborted) {
+                    reject(new Error('Aborted'));
+                    return;
+                }
+
+                signal.addEventListener('abort', () => {
+                    xhr.abort();
+                    reject(new Error('Aborted'));
+                });
+            }
 
             xhr.onprogress = (event) => {
                 if (event.lengthComputable) {

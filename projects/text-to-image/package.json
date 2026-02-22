@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-text-to-image",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "An Angular CLI extension.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

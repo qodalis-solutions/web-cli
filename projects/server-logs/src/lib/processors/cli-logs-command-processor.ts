@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import {
+    CliForegroundColor,
     CliProcessCommand,
     CliProcessorMetadata,
     DefaultLibraryAuthor,
@@ -185,7 +186,23 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln('Show live logs');
+        const { writer } = context;
+        writer.writeln('Stream live server logs via SignalR');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('server-logs', CliForegroundColor.Cyan)}                                     Start streaming`);
+        writer.writeln(`  ${writer.wrapInColor('server-logs --level=error', CliForegroundColor.Cyan)}                        Filter by level`);
+        writer.writeln(`  ${writer.wrapInColor('server-logs --pattern="Exception"', CliForegroundColor.Cyan)}                Filter by regex`);
+        writer.writeln(`  ${writer.wrapInColor('server-logs --server=http://localhost:5000', CliForegroundColor.Cyan)}       Custom server`);
+        writer.writeln();
+        writer.writeln(`⚙️  Options:`);
+        writer.writeln(`  ${writer.wrapInColor('--level', CliForegroundColor.Yellow)}      Log level: verbose, debug, information, warning, error, fatal`);
+        writer.writeln(`  ${writer.wrapInColor('--pattern', CliForegroundColor.Yellow)}    Regex pattern to highlight matches`);
+        writer.writeln(`  ${writer.wrapInColor('--server', CliForegroundColor.Yellow)}     Server URL to connect to`);
+        writer.writeln(`  ${writer.wrapInColor('--hub', CliForegroundColor.Yellow)}        Hub name (default: loghub)`);
+        writer.writeln(`  ${writer.wrapInColor('--file', CliForegroundColor.Yellow)}       Export logs to a file on disconnect`);
+        writer.writeln();
+        writer.writeln(`💡 Press ${writer.wrapInColor('Ctrl+C', CliForegroundColor.Yellow)} to stop streaming`);
     }
 
     private excludeKeys<T extends Record<string, any>>(

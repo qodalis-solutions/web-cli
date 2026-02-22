@@ -118,7 +118,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
                         'alias',
                         [],
                     ) as CliAliasCommandProcessor
-                ).aliases ?? {};
+                ).userAliases ?? {};
 
             if (aliases[mainCommand]) {
                 const alias = aliases[mainCommand];
@@ -126,16 +126,16 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
             }
 
             context.writer.writeError(
-                `Command: ${commandName} not found or not installed`,
+                `Command not found: ${context.writer.wrapInColor(commandName, CliForegroundColor.Cyan)}`,
             );
 
             context.writer.writeln();
 
             context.writer.writeInfo(
-                'Type "help" for a list of available commands.',
+                `💡 Type ${context.writer.wrapInColor('help', CliForegroundColor.Cyan)} for a list of available commands`,
             );
             context.writer.writeInfo(
-                'Use packages to install additional commands.',
+                `📦 Use ${context.writer.wrapInColor('pkg add <name>', CliForegroundColor.Cyan)} to install additional commands`,
             );
 
             context.process.exit(-1, {
@@ -186,7 +186,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
         if (missingValue) {
             context.writer.writeError(
-                `Value required for command: ${commandName} <value>`,
+                `Value required: ${context.writer.wrapInColor(`${commandName} <value>`, CliForegroundColor.Cyan)}`,
             );
 
             context.process.exit(-1);
@@ -350,7 +350,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
             if (missingParams?.length) {
                 context.writer.writeError(
                     `Missing required parameters: ${missingParams
-                        .map((p) => p.name)
+                        .map((p) => context.writer.wrapInColor(`--${p.name}`, CliForegroundColor.Cyan))
                         .join(', ')}`,
                 );
 
@@ -385,9 +385,7 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
                 invalidParams.forEach((p, index) => {
                     context.writer.writeln(
-                        `${index + 1}. Invalid value for ${p.name}: ${args[p.name]} -> ${
-                            p.message
-                        }`,
+                        `  ${index + 1}. ${context.writer.wrapInColor(`--${p.name}`, CliForegroundColor.Cyan)} = "${args[p.name]}" → ${p.message}`,
                     );
                 });
 

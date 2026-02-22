@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {
+    CliForegroundColor,
     CliProcessCommand,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
@@ -87,6 +88,18 @@ export class CliQrCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln(this.description!);
+        const { writer } = context;
+        writer.writeln('Generate QR codes from text or URLs and download as PNG');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('qr generate --text="<content>"', CliForegroundColor.Cyan)}`);
+        writer.writeln();
+        writer.writeln('⚙️  Options:');
+        writer.writeln(`  ${writer.wrapInColor('--text', CliForegroundColor.Yellow)}          Text or URL to encode (required)`);
+        writer.writeln(`  ${writer.wrapInColor('--fileName', CliForegroundColor.Yellow)}      Output filename (default: qr-code)`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  qr generate --text="https://example.com"                ${writer.wrapInColor('# URL QR code', CliForegroundColor.Green)}`);
+        writer.writeln(`  qr generate --text="Hello!" --fileName="my-qr"          ${writer.wrapInColor('# Custom filename', CliForegroundColor.Green)}`);
     }
 }

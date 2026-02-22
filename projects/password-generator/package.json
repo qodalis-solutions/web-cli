@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-password-generator",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Provide utility functions for the library password-generator",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

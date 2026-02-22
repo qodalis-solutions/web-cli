@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
 import {
+    CliForegroundColor,
     CliIcon,
     CliProcessCommand,
     CliProcessorMetadata,
@@ -17,6 +18,8 @@ import { ICliUsersStoreService_TOKEN } from '../../tokens';
 })
 export class CliAddUserCommandProcessor implements ICliCommandProcessor {
     command = 'adduser';
+
+    aliases = ['useradd'];
 
     description?: string | undefined = 'Add a new user';
 
@@ -97,9 +100,14 @@ export class CliAddUserCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln('Add a new user');
-        context.writer.writeln(
-            'Usage: adduser <name> --email=<email> --groups=<groups>',
-        );
+        const { writer } = context;
+        writer.writeln('Add a new user to the system');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('adduser <name> --email=<email> [--groups=<groups>]', CliForegroundColor.Cyan)}`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  adduser John --email=john@example.com                   ${writer.wrapInColor('# Basic', CliForegroundColor.Green)}`);
+        writer.writeln(`  adduser Jane --email=jane@test.com --groups=admin,dev   ${writer.wrapInColor('# With groups', CliForegroundColor.Green)}`);
     }
 }

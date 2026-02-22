@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
 import {
+    CliForegroundColor,
     CliIcon,
     CliProcessCommand,
     CliProcessorMetadata,
@@ -18,6 +19,8 @@ import { firstValueFrom } from 'rxjs';
 })
 export class CliListUsersCommandProcessor implements ICliCommandProcessor {
     command = 'listusers';
+
+    aliases = ['users'];
 
     description?: string | undefined = 'List all users';
 
@@ -77,7 +80,11 @@ export class CliListUsersCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription({ writer }: ICliExecutionContext): void {
-        writer.writeln(this.description!);
-        writer.writeln('Usage: listusers');
+        writer.writeln('List all users in the system');
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('listusers', CliForegroundColor.Cyan)}                              List all users`);
+        writer.writeln(`  ${writer.wrapInColor('listusers --query=<search>', CliForegroundColor.Cyan)}              Filter users by name/email`);
+        writer.writeln(`  ${writer.wrapInColor('listusers --skip=5 --take=10', CliForegroundColor.Cyan)}            Paginate results`);
     }
 }

@@ -11,7 +11,7 @@ export class AppComponent {
 
     options: CliOptions = {
         welcomeMessage: {
-            show: 'daily',
+            show: 'always',
         },
         usersModule: {
             enabled: true,

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {
+    CliForegroundColor,
     CliProcessCommand,
     CliProcessorMetadata,
     DefaultLibraryAuthor,
@@ -239,27 +240,23 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln(this.description!);
-        context.writer.writeln();
-        context.writer.writeln('Usage:');
-        context.writer.writeln('  curl <method> <url> [options]');
-        context.writer.writeln();
-        context.writer.writeln('Options:');
-        context.writer.writeln(
-            '  -H, --header     Add custom headers (e.g., -H="Authorization: Bearer <token>")',
-        );
-        context.writer.writeln('  -d, --data       Add request body');
-        context.writer.writeln('  --verbose    Print detailed response');
-        context.writer.writeln();
-        context.writer.writeln('Examples:');
-        context.writer.writeln('  curl get https://api.example.com/users');
-        context.writer.writeln(
-            '  curl post https://api.example.com/users -d=\'{"name":"John"}\' -H="Content-Type: application/json"',
-        );
-        context.writer.writeln();
-
-        context.writer.writeWarning(
-            'Note: The server must allow CORS for this tool to work.',
-        );
+        const { writer } = context;
+        writer.writeln(this.description!);
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('curl <method> <url> [options]', CliForegroundColor.Cyan)}`);
+        writer.writeln();
+        writer.writeln('⚙️  Options:');
+        writer.writeln(`  ${writer.wrapInColor('-H, --header', CliForegroundColor.Yellow)}     Add custom headers`);
+        writer.writeln(`  ${writer.wrapInColor('-d, --data', CliForegroundColor.Yellow)}       Add request body (JSON)`);
+        writer.writeln(`  ${writer.wrapInColor('--verbose', CliForegroundColor.Yellow)}        Print detailed response (status, headers)`);
+        writer.writeln(`  ${writer.wrapInColor('--proxy', CliForegroundColor.Yellow)}          Route request through proxy`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  curl get https://api.example.com/users`);
+        writer.writeln(`  curl post https://api.example.com/users -d='{"name":"John"}' -H="Content-Type: application/json"`);
+        writer.writeln(`  curl delete https://api.example.com/users/1 --proxy`);
+        writer.writeln();
+        writer.writeWarning('⚠️  The server must allow CORS for this tool to work');
     }
 }

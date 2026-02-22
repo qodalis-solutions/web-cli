@@ -1,4 +1,5 @@
 import {
+    CliForegroundColor,
     CliProcessorMetadata,
     DefaultLibraryAuthor,
     highlightTextWithBg,
@@ -55,9 +56,23 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
     }
 
     async processCommand(
-        _: CliProcessCommand,
+        command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.writer.writeError("Use 'regex' command with a subcommand");
+        await context.executor.showHelp(command, context);
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        const { writer } = context;
+        writer.writeln(this.description);
+        writer.writeln();
+        writer.writeln('📋 Usage:');
+        writer.writeln(`  ${writer.wrapInColor('regex match <pattern> <text>', CliForegroundColor.Cyan)}`);
+        writer.writeln();
+        writer.writeln('📝 Examples:');
+        writer.writeln(`  regex match "\\d+" "abc123def"        ${writer.wrapInColor('# Match numbers', CliForegroundColor.Green)}`);
+        writer.writeln(`  regex match "hello" "hello world"    ${writer.wrapInColor('# Match text', CliForegroundColor.Green)}`);
+        writer.writeln();
+        writer.writeln('💡 Matches are highlighted in the output');
     }
 }
