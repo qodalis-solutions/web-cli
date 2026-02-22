@@ -3,18 +3,17 @@ import {
     EventEmitter,
     Input,
     Output,
-    OnInit,
     HostListener,
-    ElementRef,
 } from '@angular/core';
-import { MenuItem } from 'primeng/api';
+
+const HEADER_HEIGHT = 60;
 
 @Component({
     selector: 'collapsable-content',
     templateUrl: './collapsable-content.component.html',
     styleUrls: ['./collapsable-content.component.sass'],
 })
-export class CollapsableContentComponent implements OnInit {
+export class CollapsableContentComponent {
     previousPanelHeight = 500;
     panelHeight = 500;
 
@@ -32,25 +31,6 @@ export class CollapsableContentComponent implements OnInit {
     @Output()
     public onContentSizeChange = new EventEmitter<number>();
 
-    items: MenuItem[] | undefined;
-
-    activeItem: MenuItem | undefined;
-
-    constructor(private el: ElementRef) {}
-
-    ngOnInit() {
-        this.items = [
-            {
-                label: 'Tab 1',
-                icon: 'pi pi-plus',
-            },
-        ];
-    }
-
-    onActiveItemChange(event: MenuItem) {
-        this.activeItem = event;
-    }
-
     toggleTerminal(): void {
         this.isCollapsed = !this.isCollapsed;
 
@@ -62,11 +42,9 @@ export class CollapsableContentComponent implements OnInit {
     }
 
     toggleMaximizationTerminal(): void {
-        //check next
         if (!this.isMaximized) {
             this.previousPanelHeight = this.panelHeight;
-            const windowHeight = window.innerHeight;
-            this.panelHeight = windowHeight;
+            this.panelHeight = window.innerHeight;
         } else {
             this.panelHeight = this.previousPanelHeight;
         }
@@ -107,6 +85,8 @@ export class CollapsableContentComponent implements OnInit {
     }
 
     private updateTerminalSize() {
-        this.onContentSizeChange.emit(this.panelHeight - 60 - 8);
+        this.onContentSizeChange.emit(
+            this.panelHeight - HEADER_HEIGHT,
+        );
     }
 }

@@ -72,9 +72,6 @@
               "projects/demo/src/assets"
             ],
             "styles": [
-              "node_modules/primeng/resources/primeng.min.css",
-              "node_modules/primeicons/primeicons.css",
-              "node_modules/primeng/resources/themes/lara-dark-indigo/theme.css",
               "projects/demo/src/styles.sass",
               "projects/cli/src/assets/styles.sass"
             ],

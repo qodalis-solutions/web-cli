@@ -5,6 +5,66 @@
   *ngIf="visible"
 >
   <ng-container *ngIf="initialized">
-    <cli [options]="options" [height]="terminalHeight" />
+    <div class="terminal-tabs">
+      <ul class="tab-list">
+        <li
+          *ngFor="let tab of tabs; trackBy: trackByTabId"
+          class="tab"
+          [class.active]="tab.id === activeTabId"
+          (click)="selectTab(tab.id)"
+          (dblclick)="onTabDoubleClick(tab)"
+          (contextmenu)="onTabContextMenu($event, tab)"
+        >
+          <input
+            *ngIf="tab.isEditing"
+            class="tab-rename-input"
+            type="text"
+            [value]="tab.title"
+            (keydown)="onRenameKeydown($event, tab)"
+            (blur)="onRenameBlur($event, tab)"
+            (click)="$event.stopPropagation()"
+            (dblclick)="$event.stopPropagation()"
+            #renameInput
+          />
+          <span *ngIf="!tab.isEditing" class="tab-title">{{ tab.title }}</span>
+          <button
+            *ngIf="!tab.isEditing"
+            class="close-btn"
+            title="Close tab"
+            (click)="closeTab(tab.id); $event.stopPropagation()"
+          >
+            &times;
+          </button>
+        </li>
+      </ul>
+      <button class="add-tab" title="New terminal" (click)="addTab()">+</button>
+    </div>
+    <div class="terminal-instances">
+      <div
+        *ngFor="let tab of tabs; trackBy: trackByTabId"
+        class="terminal-instance"
+        [hidden]="tab.id !== activeTabId"
+      >
+        <cli [options]="options" [height]="terminalHeight" />
+      </div>
+    </div>
   </ng-container>
 </collapsable-content>
+
+<!-- Context menu rendered outside collapsable-content to escape transform/overflow clipping -->
+<div
+  class="tab-context-menu"
+  *ngIf="contextMenu.visible"
+  [style.left.px]="contextMenu.x"
+  [style.top.px]="contextMenu.y"
+  (click)="$event.stopPropagation()"
+>
+  <button class="context-menu-item" (click)="contextMenuRename()">Rename</button>
+  <button class="context-menu-item" (click)="contextMenuDuplicate()">Duplicate</button>
+  <div class="context-menu-separator"></div>
+  <button class="context-menu-item" (click)="contextMenuClose()">Close</button>
+  <button class="context-menu-item" (click)="contextMenuCloseOthers()" [disabled]="tabs.length <= 1">Close Others</button>
+  <button class="context-menu-item" (click)="contextMenuCloseToTheRight()">Close to the Right</button>
+  <div class="context-menu-separator"></div>
+  <button class="context-menu-item destructive" (click)="contextMenuCloseAll()">Close All</button>
+</div>

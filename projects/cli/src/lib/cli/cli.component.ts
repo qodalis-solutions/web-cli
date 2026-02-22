@@ -5,6 +5,7 @@ import {
     Input,
     OnDestroy,
     OnInit,
+    ViewChild,
     ViewEncapsulation,
 } from '@angular/core';
 import {
@@ -25,7 +26,7 @@ import { CliBoot } from './services/system/cli-boot';
 import { CliWelcomeMessageService } from './services/system/cli-welcome-message.service';
 import { BehaviorSubject, combineLatest, filter, Subscription } from 'rxjs';
 import { themes } from './processors/theme/types';
-import { ContainerSize } from '../cli-terminal/cli-terminal.component';
+import { CliTerminalComponent, ContainerSize } from '../cli-terminal/cli-terminal.component';
 
 @Component({
     selector: 'cli',
@@ -37,6 +38,8 @@ export class CliComponent implements OnInit, OnDestroy {
     @Input() options?: CliOptions;
 
     @Input() height?: ContainerSize;
+
+    @ViewChild(CliTerminalComponent) private terminalComponent!: CliTerminalComponent;
 
     protected terminalOptions!: ITerminalOptions & ITerminalInitOnlyOptions;
     private terminal!: Terminal;
@@ -97,6 +100,10 @@ export class CliComponent implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
         this.subscriptions.unsubscribe();
+    }
+
+    public focus(): void {
+        this.terminalComponent?.fitTerminal();
     }
 
     protected onTerminalReady(terminal: Terminal): void {

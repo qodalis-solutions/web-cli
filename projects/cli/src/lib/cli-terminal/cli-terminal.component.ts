@@ -108,6 +108,13 @@ export class CliTerminalComponent implements OnInit, AfterViewInit, OnDestroy {
         this.resizeObserver.observe(this.terminalDiv.nativeElement);
     }
 
+    public fitTerminal(): void {
+        requestAnimationFrame(() => {
+            this.fitAddon.fit();
+            this.terminal.focus();
+        });
+    }
+
     ngOnDestroy(): void {
         window.removeEventListener('resize', this.resizeListener);
 
