@@ -82,7 +82,7 @@ export class CliPanelComponent implements OnDestroy {
 
     private static readonly MIN_PANE_WIDTH_PERCENT = 10;
 
-    protected terminalHeight: ContainerSize = `${450 - 8}px`;
+    protected terminalHeight: ContainerSize = `${600 - 60 - 38}px`;
 
     protected initialized: boolean = false;
 

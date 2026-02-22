@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-regex",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "An Angular CLI extension that provides regex utilities",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
@@ -24,8 +24,8 @@
   },
   "dependencies": {
     "tslib": "^2.3.0",
-    "@qodalis/cli-core": "^0.0.5",
-    "@qodalis/angular-cli": "^1.0.14"
+    "@qodalis/cli-core": "^0.0.16",
+    "@qodalis/angular-cli": "^1.0.37"
   },
   "sideEffects": false,
   "scripts": {

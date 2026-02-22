@@ -11,7 +11,19 @@ export class CliTerminalSpinner implements ICliSpinner {
     constructor(private terminal: Terminal) {}
 
     private spinnerInterval?: ReturnType<typeof setInterval> | null;
-    private spinnerFrames = ['|', '/', '-', '\\'];
+    private spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    private spinnerColors = [
+        '\x1b[38;5;39m',  // blue
+        '\x1b[38;5;45m',  // cyan
+        '\x1b[38;5;49m',  // teal
+        '\x1b[38;5;48m',  // green-cyan
+        '\x1b[38;5;83m',  // green
+        '\x1b[38;5;118m', // lime
+        '\x1b[38;5;154m', // yellow-green
+        '\x1b[38;5;220m', // yellow
+        '\x1b[38;5;214m', // orange
+        '\x1b[38;5;171m', // purple
+    ];
     private spinnerIndex = 0;
     private savedCurrentLine = '';
     private lastContentLength = 0;
@@ -41,20 +53,26 @@ export class CliTerminalSpinner implements ICliSpinner {
 
         this.spinnerInterval = setInterval(() => {
             this.clearCurrentLine();
-            // Write the spinner frame
-            const content =
-                this.spinnerFrames[this.spinnerIndex] +
-                (this.text.length > 0 ? ` ${this.text}` : '');
+
+            const RESET = '\x1b[0m';
+            const frame = this.spinnerFrames[this.spinnerIndex];
+            const color = this.spinnerColors[this.spinnerIndex % this.spinnerColors.length];
+            const textSuffix = this.text.length > 0 ? ` ${this.text}` : '';
+
+            const content = `${color}${frame}${RESET}${textSuffix}`;
+            // Plain length: 1 char for frame + text suffix
+            const plainLength = 1 + textSuffix.length;
+
             this.terminal.write(content);
-            this.lastContentLength = content.length;
-            this.lastLineCount = this.calcLineCount(content.length);
+            this.lastContentLength = plainLength;
+            this.lastLineCount = this.calcLineCount(plainLength);
             if (this.context) {
                 this.context.setCurrentLine(content);
             }
-            // Update the frame index
+
             this.spinnerIndex =
                 (this.spinnerIndex + 1) % this.spinnerFrames.length;
-        }, 100);
+        }, 80);
     }
 
     public hide(): void {

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {
     CliForegroundColor,
     CliProcessCommand,
+    CliProcessorMetadata,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
@@ -21,6 +22,11 @@ export class CliQrCommandProcessor implements ICliCommandProcessor {
     version = LIBRARY_VERSION;
 
     processors?: ICliCommandProcessor[] | undefined = [];
+
+    metadata?: CliProcessorMetadata | undefined = {
+        requiredCoreVersion: '0.0.16',
+        requiredCliVersion: '1.0.37',
+    };
 
     constructor() {
         this.processors = [

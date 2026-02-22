@@ -7,6 +7,7 @@ import {
     CliProcessorMetadata,
     CliIcon,
     CliForegroundColor,
+    LIBRARY_VERSION as CORE_VERSION,
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
@@ -41,6 +42,10 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
 
         writer.writeln(
             `⚙️  Qodalis CLI ${writer.wrapInColor(`v${LIBRARY_VERSION}`, CliForegroundColor.Green)}`,
+        );
+
+        writer.writeln(
+            `📦  Core ${writer.wrapInColor(`v${CORE_VERSION}`, CliForegroundColor.Green)}`,
         );
 
         writer.writeln(getCliNameArt(context.terminal.cols));

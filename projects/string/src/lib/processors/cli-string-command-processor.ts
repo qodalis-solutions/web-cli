@@ -76,6 +76,8 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata = {
         icon: '🔤',
+        requiredCoreVersion: '0.0.16',
+        requiredCliVersion: '1.0.37',
     };
 
     constructor() {

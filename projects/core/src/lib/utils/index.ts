@@ -101,6 +101,8 @@ export * from './delay';
 
 export * from './terminal-utils';
 
+export * from './version-utils';
+
 export const utils = {
     getParameterValue,
     formatJson,

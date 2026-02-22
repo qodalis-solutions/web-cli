@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {
     CliForegroundColor,
     CliProcessCommand,
+    CliProcessorMetadata,
     ICliCommandAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
@@ -23,6 +24,11 @@ export class CliLocalStorageCommandProcessor implements ICliCommandProcessor {
     processors?: ICliCommandProcessor[] | undefined = [];
 
     version = LIBRARY_VERSION;
+
+    metadata?: CliProcessorMetadata | undefined = {
+        requiredCoreVersion: '0.0.16',
+        requiredCliVersion: '1.0.37',
+    };
 
     constructor() {
         this.processors = [

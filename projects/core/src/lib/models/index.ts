@@ -309,6 +309,18 @@ export type CliProcessorMetadata = Record<string, any> & {
      * An icon to display for the processor
      */
     icon?: CliIcon | string;
+
+    /**
+     * The minimum required version of @qodalis/cli-core for this processor.
+     * If the installed core version is lower, the processor will be skipped during boot.
+     */
+    requiredCoreVersion?: string;
+
+    /**
+     * The minimum required version of @qodalis/angular-cli for this processor.
+     * If the installed CLI version is lower, the processor will be skipped during boot.
+     */
+    requiredCliVersion?: string;
 };
 
 /**

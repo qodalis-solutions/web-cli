@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-core",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "Core Angular CLI for @qodalis extensions.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

@@ -7,7 +7,10 @@ import {
     ICliCommandProcessorRegistry,
     ICliUmdModule,
     initializeBrowserEnvironment,
+    LIBRARY_VERSION as CORE_VERSION,
+    satisfiesMinVersion,
 } from '@qodalis/cli-core';
+import { LIBRARY_VERSION as CLI_VERSION } from '../../../version';
 import {
     CliCommandProcessor_TOKEN,
     CliProcessorsRegistry_TOKEN,
@@ -62,6 +65,29 @@ export class CliBoot {
                 (p) => p.metadata?.module !== 'users',
             );
         }
+
+        processors = processors.filter((p) => {
+            const meta = p.metadata;
+            if (
+                meta?.requiredCoreVersion &&
+                !satisfiesMinVersion(CORE_VERSION, meta.requiredCoreVersion)
+            ) {
+                context.writer.writeWarning(
+                    `Plugin "${p.command}" requires cli-core >=${meta.requiredCoreVersion} but ${CORE_VERSION} is installed. Skipping.`,
+                );
+                return false;
+            }
+            if (
+                meta?.requiredCliVersion &&
+                !satisfiesMinVersion(CLI_VERSION, meta.requiredCliVersion)
+            ) {
+                context.writer.writeWarning(
+                    `Plugin "${p.command}" requires angular-cli >=${meta.requiredCliVersion} but ${CLI_VERSION} is installed. Skipping.`,
+                );
+                return false;
+            }
+            return true;
+        });
 
         processors.forEach((impl) => this.registry.registerProcessor(impl));
 

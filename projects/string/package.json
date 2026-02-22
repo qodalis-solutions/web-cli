@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-string",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "An Angular CLI extension that provides speed test utilities",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
@@ -23,8 +23,8 @@
     "@angular/core": "^16.2.0"
   },
   "dependencies": {
-    "@qodalis/angular-cli": "^1.0.17",
-    "@qodalis/cli-core": "^0.0.5",
+    "@qodalis/angular-cli": "^1.0.37",
+    "@qodalis/cli-core": "^0.0.16",
     "lodash": "^4.17.21",
     "@types/lodash": "^4.17.14",
     "tslib": "^2.3.0"

@@ -45,6 +45,7 @@ export class CliTerminalComponent implements OnInit, AfterViewInit, OnDestroy {
     private fitAddon!: FitAddon;
     private resizeObserver!: ResizeObserver;
     private resizeListener!: () => void;
+    private wheelListener!: (e: WheelEvent) => void;
 
     constructor() {}
 
@@ -86,6 +87,16 @@ export class CliTerminalComponent implements OnInit, AfterViewInit, OnDestroy {
         this.terminal.open(this.terminalDiv.nativeElement);
         this.fitAddon.fit();
 
+        // Prevent wheel events from scrolling the host page.
+        // xterm.js handles its own buffer scrolling programmatically,
+        // so suppressing the default is safe.
+        this.wheelListener = (e: WheelEvent) => e.preventDefault();
+        this.terminalDiv.nativeElement.addEventListener(
+            'wheel',
+            this.wheelListener,
+            { passive: false },
+        );
+
         this.terminal.focus();
 
         this.onTerminalReady.emit(this.terminal);
@@ -117,6 +128,10 @@ export class CliTerminalComponent implements OnInit, AfterViewInit, OnDestroy {
 
     ngOnDestroy(): void {
         window.removeEventListener('resize', this.resizeListener);
+        this.terminalDiv.nativeElement.removeEventListener(
+            'wheel',
+            this.wheelListener,
+        );
 
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();

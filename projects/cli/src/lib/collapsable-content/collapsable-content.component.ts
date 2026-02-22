@@ -14,8 +14,8 @@ const HEADER_HEIGHT = 60;
     styleUrls: ['./collapsable-content.component.sass'],
 })
 export class CollapsableContentComponent {
-    previousPanelHeight = 500;
-    panelHeight = 500;
+    previousPanelHeight = 600;
+    panelHeight = 600;
 
     isResizing = false;
     startY = 0;

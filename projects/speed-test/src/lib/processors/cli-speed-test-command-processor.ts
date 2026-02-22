@@ -24,6 +24,8 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata | undefined = {
         icon: '🚀',
+        requiredCoreVersion: '0.0.16',
+        requiredCliVersion: '1.0.37',
     };
 
     constructor() {

@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-curl",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Provide utility functions for the library curl",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
@@ -24,8 +24,8 @@
   },
   "dependencies": {
     "tslib": "^2.3.0",
-    "@qodalis/cli-core": "^0.0.11",
-    "@qodalis/angular-cli": "^1.0.26"
+    "@qodalis/cli-core": "^0.0.16",
+    "@qodalis/angular-cli": "^1.0.37"
   },
   "sideEffects": false,
   "scripts": {
