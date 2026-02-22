@@ -1,3 +1,159 @@
-<cli [options]="options" height="93vh" />
+<!-- ===== NAV ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <span class="brand-icon">&#x2759;</span>
+      <span class="brand-text">Qodalis <strong>CLI</strong></span>
+    </div>
+    <div class="nav-links">
+      <a
+        href="https://cli-docs.qodalis.com/"
+        target="_blank"
+        rel="noopener"
+        class="nav-link"
+        >Docs</a
+      >
+      <a
+        href="https://www.npmjs.com/package/@qodalis/angular-cli"
+        target="_blank"
+        rel="noopener"
+        class="nav-link"
+        >npm</a
+      >
+      <a
+        href="https://github.com/qodalis-solutions/angular-web-cli"
+        target="_blank"
+        rel="noopener"
+        class="nav-link gh-link"
+        >GitHub <span class="arrow">&nearr;</span></a
+      >
+    </div>
+  </div>
+</nav>
 
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Open Source &middot; Angular 16+</div>
+    <h1 class="hero-title">
+      A web terminal framework<br />
+      <span class="accent">built for Angular.</span>
+    </h1>
+    <p class="hero-subtitle">
+      Drop a fully-featured CLI into any Angular app. Tabs, split panes,
+      a plugin ecosystem, themes, autocomplete — everything you need,
+      nothing you don't.
+    </p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" (click)="scrollToTerminal()">
+        Try it live
+      </button>
+      <a
+        href="https://cli-docs.qodalis.com/"
+        target="_blank"
+        rel="noopener"
+        class="btn btn-ghost"
+        >Read the docs</a
+      >
+    </div>
+    <div class="install-bar">
+      <code class="install-command">{{ installCommand }}</code>
+      <button class="install-copy" (click)="copyInstall()">
+        {{ copied ? 'Copied!' : 'Copy' }}
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ===== FEATURES ===== -->
+<section class="features-section">
+  <div class="section-inner">
+    <div class="features-grid">
+      <div class="feature-card" *ngFor="let f of features">
+        <div class="feature-icon">{{ f.icon }}</div>
+        <h3 class="feature-title">{{ f.title }}</h3>
+        <p class="feature-desc">{{ f.description }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== LIVE TERMINAL ===== -->
+<section class="terminal-section" #terminalSection>
+  <div class="section-inner">
+    <h2 class="section-heading">Live Terminal</h2>
+    <p class="section-subheading">
+      This is the real component running below. Type
+      <code>help</code> to explore available commands.
+    </p>
+    <div class="terminal-wrapper">
+      <div class="terminal-chrome">
+        <span class="chrome-dot red"></span>
+        <span class="chrome-dot yellow"></span>
+        <span class="chrome-dot green"></span>
+        <span class="chrome-title">qodalis-cli</span>
+      </div>
+      <div class="terminal-body">
+        <cli [options]="options" height="420px" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PLUGINS ===== -->
+<section class="plugins-section">
+  <div class="section-inner">
+    <h2 class="section-heading">Plugin Ecosystem</h2>
+    <p class="section-subheading">
+      Each plugin is a standalone Angular module. Install only what you need.
+    </p>
+    <div class="plugins-grid">
+      <div class="plugin-card" *ngFor="let p of plugins">
+        <div class="plugin-header">
+          <span class="plugin-name">{{ p.name }}</span>
+          <code class="plugin-cmd">{{ p.command }}</code>
+        </div>
+        <p class="plugin-desc">{{ p.description }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="cta-section">
+  <div class="section-inner cta-inner">
+    <h2 class="cta-title">Ready to add a terminal to your app?</h2>
+    <div class="cta-actions">
+      <a
+        href="https://cli-docs.qodalis.com/"
+        target="_blank"
+        rel="noopener"
+        class="btn btn-primary"
+        >Get started</a
+      >
+      <a
+        href="https://github.com/qodalis-solutions/angular-web-cli"
+        target="_blank"
+        rel="noopener"
+        class="btn btn-ghost"
+        >View on GitHub</a
+      >
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="section-inner footer-inner">
+    <span class="footer-brand">Qodalis CLI</span>
+    <span class="footer-copy">&copy; 2024 Qodalis Solutions. MIT License.</span>
+    <div class="footer-links">
+      <a href="https://qodalis.com" target="_blank" rel="noopener">qodalis.com</a>
+      <a href="https://github.com/qodalis-solutions/angular-web-cli" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ===== PANEL (collapsible bottom) ===== -->
 <cli-panel [options]="options" />

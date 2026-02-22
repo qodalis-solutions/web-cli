@@ -158,3 +158,72 @@ $tab-bar-height: 38px
 
 .terminal-instance
   height: 100%
+
+.terminal-panes-container
+  display: flex
+  height: 100%
+
+  &.resizing
+    user-select: none
+    cursor: ew-resize
+
+.terminal-pane
+  position: relative
+  height: 100%
+  min-width: 0
+  overflow: hidden
+
+  &.active-pane
+    outline: 1px solid var(--cli-panel-accent, #818cf8)
+    outline-offset: -1px
+
+  &:hover .pane-close-btn
+    opacity: 1
+
+.pane-close-btn
+  appearance: none
+  position: absolute
+  top: 4px
+  right: 4px
+  z-index: 10
+  background: var(--cli-panel-header-bg, #1f2937)
+  border: 1px solid var(--cli-panel-border, #374151)
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6))
+  cursor: pointer
+  font-size: 0.9rem
+  line-height: 1
+  width: 22px
+  height: 22px
+  border-radius: 3px
+  display: flex
+  align-items: center
+  justify-content: center
+  opacity: 0
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease
+
+  &:hover
+    color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+    background-color: rgba(255, 255, 255, 0.1)
+
+.pane-divider
+  width: 6px
+  cursor: ew-resize
+  display: flex
+  align-items: center
+  justify-content: center
+  flex-shrink: 0
+  background: transparent
+  transition: background-color 0.15s ease
+
+  &:hover
+    background-color: var(--cli-panel-accent, #818cf8)
+
+  .pane-divider-grip
+    width: 2px
+    height: 24px
+    border-radius: 1px
+    background-color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.3))
+    transition: background-color 0.15s ease
+
+  &:hover .pane-divider-grip
+    background-color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
