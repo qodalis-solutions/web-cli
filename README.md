@@ -11,8 +11,8 @@
 </div>
 
 <p align="center">
-  <a href="https://cli-docs.qodalis.com/">Documentation</a> &middot;
-  <a href="https://stackblitz.com/~/github.com/n1colae-lupei/stackblitz-qodalis-cli-example">Live Demo</a> &middot;
+  <a href="https://cli.qodalis.com/">Live Demo</a> &middot;
+  <a href="https://cli.qodalis.com/docs/">Documentation</a> &middot;
   <a href="https://www.npmjs.com/package/@qodalis/angular-cli">npm</a>
 </p>
 

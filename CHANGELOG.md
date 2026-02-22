@@ -1,6 +1,6 @@
 # Change Log
 
-This document records all notable changes to [@qodalis/angular-cli](https://cli-docs.qodalis.com/).
+This document records all notable changes to [@qodalis/angular-cli](https://cli.qodalis.com/docs/).
 This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [v1.0.26](https://github.com/qodalis-solutions/angular-web-cli/compare/v1.0.22...v1.0.26) (2025-01-07)
