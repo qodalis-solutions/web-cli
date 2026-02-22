@@ -3,8 +3,8 @@ name: Deploy TypeDoc to GitHub Pages
 on:
   push:
     branches:
-      - main # Trigger on pushes to the main branch
-  workflow_dispatch: # Allow manual triggering of the workflow
+      - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -12,15 +12,16 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16 # Adjust based on your project's Node.js version
+          node-version: 18
+          cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Install projects deps
         run: npm run "install projects deps"
@@ -32,7 +33,7 @@ jobs:
         run: npx typedoc --out docs && node ./scripts/typedoc-post-script.js
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs # Directory where TypeDoc output is generated
+          publish_dir: docs
