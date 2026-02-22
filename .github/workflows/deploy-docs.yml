@@ -1,4 +1,4 @@
-name: Deploy TypeDoc to GitHub Pages
+name: Deploy Demo & Docs to GitHub Pages
 
 on:
   push:
@@ -26,14 +26,26 @@ jobs:
       - name: Install projects deps
         run: npm run "install projects deps"
 
-      - name: Build all projects
+      - name: Build all libraries
         run: npm run "build all"
 
+      - name: Build demo application
+        run: npx ng build demo --configuration production
+
       - name: Generate TypeDoc documentation
-        run: npx typedoc --out docs && node ./scripts/typedoc-post-script.js
+        run: npx typedoc --out typedoc-output
+
+      - name: Assemble deployment directory
+        run: |
+          mkdir -p deploy/docs
+          cp -r dist/demo/* deploy/
+          cp -r typedoc-output/* deploy/docs/
+          cp deploy/index.html deploy/404.html
+          cp assets/github/CNAME deploy/CNAME
+          touch deploy/.nojekyll
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs
+          publish_dir: deploy
