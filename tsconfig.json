@@ -22,6 +22,9 @@
       ],
       "@qodalis/cli-password-generator": [
         "dist/password-generator"
+      ],
+      "@qodalis/cli-qr": [
+        "dist/qr"
       ]
     },
     "outDir": "./dist/out-tsc",
