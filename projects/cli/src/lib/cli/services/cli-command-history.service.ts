@@ -20,7 +20,7 @@ export class CliCommandHistoryService {
                     return;
                 }
             }
-            this.commandHistory.push(command);
+            this.commandHistory.push(normalizedCommand);
             await this.saveHistory();
         }
     }

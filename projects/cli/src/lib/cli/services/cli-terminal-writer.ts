@@ -51,7 +51,7 @@ export class CliTerminalWriter implements ICliTerminalWriter {
         const { color, length: oLength, char: oChar } = options || {};
 
         let length = oLength ?? 80;
-        let char = oChar ?? '-';
+        const char = oChar ?? '-';
 
         if (this.terminal.cols < length) {
             length = this.terminal.cols;

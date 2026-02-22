@@ -7,6 +7,7 @@ import {
     ICliCommandProcessorRegistry,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
+import { Subscription } from 'rxjs';
 import { CliProcessorsRegistry_TOKEN } from '../../tokens';
 
 export class CliAliasCommandProcessor implements ICliCommandProcessor {
@@ -32,6 +33,8 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
     };
 
     public aliases: Record<string, string> = {};
+
+    private stateSubscription?: Subscription;
 
     constructor() {
         this.processors = [
@@ -94,7 +97,8 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
     }
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        context.state
+        this.stateSubscription?.unsubscribe();
+        this.stateSubscription = context.state
             .select((x) => x['aliases'])
             .subscribe((aliases) => {
                 this.aliases = aliases ?? {};

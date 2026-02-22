@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnDestroy } from '@angular/core';
 import { CliOptions } from '@qodalis/cli-core';
 import { CliCanViewService } from '../services';
 import { Subscription } from 'rxjs';
@@ -19,7 +19,7 @@ export type CliPanelOptions = CliOptions & {
     templateUrl: './cli-panel.component.html',
     styleUrls: ['./cli-panel.component.sass'],
 })
-export class CliPanelComponent {
+export class CliPanelComponent implements OnDestroy {
     /**
      * The options for the CLI.
      */
@@ -39,6 +39,10 @@ export class CliPanelComponent {
                 this.visible = canView;
             }),
         );
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.unsubscribe();
     }
 
     onToggle($event: boolean) {

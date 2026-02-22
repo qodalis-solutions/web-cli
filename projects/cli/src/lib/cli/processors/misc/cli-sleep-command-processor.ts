@@ -31,6 +31,13 @@ export class CliSleepCommandProcessor implements ICliCommandProcessor {
     ) {
         const time = parseInt(command.value!);
 
+        if (isNaN(time) || time < 0) {
+            writer.writeError(
+                `Invalid time value: "${command.value}". Please provide a positive number in milliseconds.`,
+            );
+            return;
+        }
+
         await delay(time);
 
         writer.writeInfo(`Slept for ${time}ms`);

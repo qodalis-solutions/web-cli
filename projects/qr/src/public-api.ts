@@ -1,5 +1,5 @@
 /*
- * Public API Surface of string
+ * Public API Surface of qr
  */
 
 export * from './lib/cli-qr.module';

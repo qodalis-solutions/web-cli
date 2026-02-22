@@ -1,7 +1,7 @@
 {
   "name": "@qodalis/cli-qr",
   "version": "0.0.1",
-  "description": "Provide utility functions for the library qr",
+  "description": "QR code generation plugin for @qodalis/angular-cli",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
   "repository": {

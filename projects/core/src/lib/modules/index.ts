@@ -15,7 +15,9 @@ export const initializeBrowserEnvironment = ({
         bootUmdModule: async (module: ICliUmdModule) => {
             context.logger.log('Booting UMD module', module.name);
             (window as any)[module.name] = module;
-            handlers.forEach(async (handler) => await handler(module));
+            for (const handler of handlers) {
+                await handler(module);
+            }
         },
         ...constants,
         ...utils,

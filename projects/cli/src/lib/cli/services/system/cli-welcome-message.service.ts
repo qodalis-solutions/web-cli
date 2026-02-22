@@ -43,7 +43,7 @@ export class CliWelcomeMessageService {
                     CliForegroundColor.Green,
                 ) + 'https://cli-docs.qodalis.com/',
                 '',
-                "Type 'help' to get started.",
+                'Type \'help\' to get started.',
                 '',
             ];
 

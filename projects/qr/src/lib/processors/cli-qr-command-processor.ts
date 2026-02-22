@@ -61,7 +61,7 @@ export class CliQrCommandProcessor implements ICliCommandProcessor {
                             type: 'svg',
                         });
 
-                        qrCode.download({
+                        await qrCode.download({
                             name: fileName,
                             extension: 'png',
                         });

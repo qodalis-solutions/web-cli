@@ -3,6 +3,7 @@ import {
     Inject,
     Injector,
     Input,
+    OnDestroy,
     OnInit,
     ViewEncapsulation,
 } from '@angular/core';
@@ -27,7 +28,7 @@ import { ICliUserSessionService_TOKEN } from './tokens';
 import { CliExecutionContext } from './context';
 import { CliBoot } from './services/system/cli-boot';
 import { CliWelcomeMessageService } from './services/system/cli-welcome-message.service';
-import { BehaviorSubject, combineLatest, filter } from 'rxjs';
+import { BehaviorSubject, combineLatest, filter, Subscription } from 'rxjs';
 import { themes } from './processors/theme/types';
 import { ContainerSize } from '../cli-terminal/cli-terminal.component';
 
@@ -37,7 +38,7 @@ import { ContainerSize } from '../cli-terminal/cli-terminal.component';
     styleUrls: ['./cli.component.sass'],
     encapsulation: ViewEncapsulation.None,
 })
-export class CliComponent implements OnInit {
+export class CliComponent implements OnInit, OnDestroy {
     @Input() options?: CliOptions;
 
     @Input() height?: ContainerSize;
@@ -52,6 +53,8 @@ export class CliComponent implements OnInit {
     protected minDepsInitialized = new BehaviorSubject<boolean>(false);
     protected terminalInitialized = new BehaviorSubject<boolean>(false);
 
+    private subscriptions = new Subscription();
+
     constructor(
         private injector: Injector,
         @Inject(ICliUserSessionService_TOKEN)
@@ -60,24 +63,30 @@ export class CliComponent implements OnInit {
         private readonly commandHistoryService: CliCommandHistoryService,
         private readonly store: CliKeyValueStore,
     ) {
-        this.userManagementService.getUserSession().subscribe((session) => {
-            this.currentUserSession = session;
-            this.executionContext?.setSession(session!);
+        this.subscriptions.add(
+            this.userManagementService
+                .getUserSession()
+                .subscribe((session) => {
+                    this.currentUserSession = session;
+                    this.executionContext?.setSession(session!);
 
-            if (this.terminal) {
-                this.printPrompt({
-                    reset: true,
-                });
-            }
-        });
+                    if (this.terminal) {
+                        this.printPrompt({
+                            reset: true,
+                        });
+                    }
+                }),
+        );
     }
 
     ngOnInit(): void {
-        combineLatest([this.minDepsInitialized, this.terminalInitialized])
-            .pipe(filter(([x, y]) => x && y))
-            .subscribe(() => {
-                this.initialize();
-            });
+        this.subscriptions.add(
+            combineLatest([this.minDepsInitialized, this.terminalInitialized])
+                .pipe(filter(([x, y]) => x && y))
+                .subscribe(() => {
+                    this.initialize();
+                }),
+        );
 
         this.terminalOptions = {
             cursorBlink: true,
@@ -91,6 +100,10 @@ export class CliComponent implements OnInit {
         this.store.initialize().then(() => {
             this.minDepsInitialized.next(true);
         });
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.unsubscribe();
     }
 
     protected onTerminalReady(terminal: Terminal): void {

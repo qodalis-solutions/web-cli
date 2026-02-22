@@ -104,7 +104,7 @@ export class CliUsersStoreService implements ICliUsersStoreService {
             return JSON.parse(data) as ICliUser[];
         } catch (error) {
             console.error('Failed to parse user data from localStorage', error);
-            return [];
+            return fallbackUsers;
         }
     }
 }

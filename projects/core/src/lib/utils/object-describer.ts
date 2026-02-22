@@ -88,9 +88,9 @@ export class ObjectDescriber {
                         }
                     }
 
-                    if (supportsDynamicArgs) {
+                    if (supportsDynamicArgs && command.value) {
                         const delimiter = command.args['delimiter'] || ',';
-                        argsToCallF.push(...command.value!.split(delimiter));
+                        argsToCallF.push(...command.value.split(delimiter));
                     }
 
                     if (debug) {

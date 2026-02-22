@@ -7,11 +7,11 @@ export const getParameterValue = (
     p: ICliCommandParameterDescriptor,
     args: Record<string, any>,
 ): any | undefined => {
-    return (
-        args[p.name] ??
-        (p.aliases?.find((alias) => args[alias]) &&
-            args[p.aliases!.find((alias) => args[alias])!])
-    );
+    if (args[p.name] !== undefined) {
+        return args[p.name];
+    }
+    const matchedAlias = p.aliases?.find((alias) => args[alias] !== undefined);
+    return matchedAlias ? args[matchedAlias] : undefined;
 };
 
 export const formatJson = (json: any): string => {

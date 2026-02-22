@@ -57,7 +57,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     if (packages.length === 0) {
                         context.writer.writeInfo('No packages installed');
                         context.writer.writeInfo(
-                            "Use 'packages add <package>' to add a package",
+                            'Use \'packages add <package>\' to add a package',
                         );
                         return;
                     }
@@ -85,7 +85,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                 },
                 writeDescription({ writer }) {
                     writer.writeInfo(
-                        "Supoorts multiple packages, e.g. 'packages add guid server-logs'",
+                        'Supports multiple packages, e.g. \'packages add guid server-logs\'',
                     );
                     writer.writeln(
                         '  packages add <package> ' +
@@ -267,7 +267,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             progressBar.update(20, {
                 type: 'increment',
             });
-            progressBar.setText("Checking package's dependencies");
+            progressBar.setText('Checking package\'s dependencies');
 
             const packgeInfo = validResponses.some((x) =>
                 x.name.startsWith(this.packagesManager.QODALIS_COMMAND_PREFIX),

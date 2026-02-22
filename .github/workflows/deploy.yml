@@ -47,14 +47,31 @@ jobs:
 
           echo "Libraries to publish: ${LIBRARIES[@]}"
 
+          FAILED=()
+
           for LIB_NAME in "${LIBRARIES[@]}"; do
             DIR="./dist/$LIB_NAME"
             if [ -f "$DIR/package.json" ]; then
               echo "Publishing $LIB_NAME..."
               cd $DIR
-              npm publish --access public || echo "Failed to publish $LIB_NAME, skipping..."
+              OUTPUT=$(npm publish --access public 2>&1) && true
+              EXIT_CODE=$?
+              if [ $EXIT_CODE -ne 0 ]; then
+                if echo "$OUTPUT" | grep -q "You cannot publish over the previously published versions"; then
+                  echo "$LIB_NAME version already exists on npm, skipping."
+                else
+                  echo "$OUTPUT"
+                  echo "::error::Failed to publish $LIB_NAME"
+                  FAILED+=("$LIB_NAME")
+                fi
+              fi
               cd ../..
             else
               echo "Skipping $LIB_NAME: package.json not found in $DIR"
             fi
           done
+
+          if [ ${#FAILED[@]} -ne 0 ]; then
+            echo "::error::Failed to publish: ${FAILED[*]}"
+            exit 1
+          fi

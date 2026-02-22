@@ -4,7 +4,7 @@ import {
     ICliUserSession,
     ICliUsersStoreService,
 } from '@qodalis/cli-core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, take } from 'rxjs';
 import { ICliUsersStoreService_TOKEN } from '../tokens';
 
 @Injectable({
@@ -25,14 +25,17 @@ export class CliUserSessionService implements ICliUserSessionService {
         @Inject(ICliUsersStoreService_TOKEN)
         private readonly usersService: ICliUsersStoreService,
     ) {
-        this.usersService.getUsers().subscribe((users) => {
-            const user = users.find((u) => u.id === 'root');
-            if (user) {
-                this.setUserSession({
-                    user,
-                });
-            }
-        });
+        this.usersService
+            .getUsers()
+            .pipe(take(1))
+            .subscribe((users) => {
+                const user = users.find((u) => u.id === 'root');
+                if (user) {
+                    this.setUserSession({
+                        user,
+                    });
+                }
+            });
     }
 
     async setUserSession(session: ICliUserSession): Promise<void> {

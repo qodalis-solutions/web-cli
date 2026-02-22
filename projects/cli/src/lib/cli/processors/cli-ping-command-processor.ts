@@ -32,17 +32,13 @@ export class CliPingCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         context.spinner?.show();
         context?.spinner?.setText('Pinging server...');
-        this.pingServerService
-            .ping()
-            .then(() => {
-                context.spinner?.hide();
-                context.writer.writeln('pong');
-                context.showPrompt();
-            })
-            .catch(() => {
-                context.spinner?.hide();
-                context.writer.writeError('Failed to ping the server');
-                context.showPrompt();
-            });
+        try {
+            await this.pingServerService.ping();
+            context.spinner?.hide();
+            context.writer.writeln('pong');
+        } catch {
+            context.spinner?.hide();
+            context.writer.writeError('Failed to ping the server');
+        }
     }
 }

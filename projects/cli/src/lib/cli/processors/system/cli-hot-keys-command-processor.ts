@@ -33,7 +33,7 @@ export class CliHotKeysCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         context.writer.writeln(
             context.writer.wrapInColor(
-                'Avalaible hotkeys:',
+                'Available hotkeys:',
                 CliForegroundColor.Yellow,
             ),
         );

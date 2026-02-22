@@ -50,9 +50,10 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
             // If the current part is a logical operator, adjust the shouldRunNextCommand flag
             if (current === '&&') {
-                shouldRunNextCommand = shouldRunNextCommand && true;
+                // Run next only if previous succeeded
                 continue;
             } else if (current === '||') {
+                // Run next only if previous failed
                 shouldRunNextCommand = !shouldRunNextCommand;
                 continue;
             }
@@ -71,7 +72,9 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
                 await this.executeSingleCommand(command, data, rootContext);
 
-                commandSuccess = context.process.exitCode === 0;
+                commandSuccess =
+                    context.process.exitCode === undefined ||
+                    context.process.exitCode === 0;
             } catch (e) {
                 commandSuccess = false;
 
@@ -367,11 +370,14 @@ export class CliCommandExecutorService implements ICliCommandExecutorService {
 
         if (parametersToValidate.length > 0) {
             const invalidParams = parametersToValidate
-                .filter((x) => !x.parameter.validator!(x.value).valid)
                 .map((p) => ({
                     name: p.parameter.name,
-                    message: p.parameter.validator!(args[p.parameter.name])
-                        .message,
+                    result: p.parameter.validator!(p.value),
+                }))
+                .filter((p) => !p.result.valid)
+                .map((p) => ({
+                    name: p.name,
+                    message: p.result.message,
                 }));
 
             if (invalidParams?.length) {

@@ -44,6 +44,7 @@ export class CliTerminalComponent implements OnInit, AfterViewInit, OnDestroy {
     private terminal!: Terminal;
     private fitAddon!: FitAddon;
     private resizeObserver!: ResizeObserver;
+    private resizeListener!: () => void;
 
     constructor() {}
 
@@ -91,9 +92,10 @@ export class CliTerminalComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     private handleResize(): void {
-        window.addEventListener('resize', () => {
+        this.resizeListener = () => {
             this.fitAddon.fit();
-        });
+        };
+        window.addEventListener('resize', this.resizeListener);
 
         this.observeContainerSize();
     }
@@ -107,6 +109,8 @@ export class CliTerminalComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
+        window.removeEventListener('resize', this.resizeListener);
+
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
         }
