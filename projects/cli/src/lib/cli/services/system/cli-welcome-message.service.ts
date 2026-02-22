@@ -38,7 +38,7 @@ export class CliWelcomeMessageService {
                 '(c) 2024 Qodalis Solutions. All rights reserved.',
                 getCliNameArt(context.terminal.cols),
                 '',
-                `📖 ${context.writer.wrapInColor('Documentation:', CliForegroundColor.Green)} https://cli-docs.qodalis.com/`,
+                `📖 ${context.writer.wrapInColor('Documentation:', CliForegroundColor.Green)} https://cli.qodalis.com/docs/`,
                 '',
                 `💡 Type ${context.writer.wrapInColor('\'help\'', CliForegroundColor.Cyan)} to see available commands`,
                 '',

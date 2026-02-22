@@ -51,7 +51,7 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
         writer.writeln(getCliNameArt(context.terminal.cols));
 
         writer.writeln(
-            `📖 ${writer.wrapInColor('Documentation:', CliForegroundColor.Green)} https://cli-docs.qodalis.com/`,
+            `📖 ${writer.wrapInColor('Documentation:', CliForegroundColor.Green)} https://cli.qodalis.com/docs/`,
         );
 
         writer.writeln();
@@ -64,6 +64,6 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
         writer.writeln('📋 Usage:');
         writer.writeln(`  ${writer.wrapInColor('version', CliForegroundColor.Cyan)}`);
         writer.writeln();
-        writer.writeln(`📖 Documentation: ${writer.wrapInColor('https://cli-docs.qodalis.com/', CliForegroundColor.Blue)}`);
+        writer.writeln(`📖 Documentation: ${writer.wrapInColor('https://cli.qodalis.com/docs/', CliForegroundColor.Blue)}`);
     }
 }

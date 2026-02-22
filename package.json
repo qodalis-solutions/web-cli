@@ -1,6 +1,6 @@
 {
   "name": "qodalis-angular-workspace",
-  "version": "1.0.38",
+  "version": "1.0.39",
   "scripts": {
     "ng": "ng",
     "create lib": "node ./scripts/create-library.js",
