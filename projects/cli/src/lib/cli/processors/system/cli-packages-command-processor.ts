@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@angular/core';
 import {
     CliForegroundColor,
     CliProcessorMetadata,
+    CliStateConfiguration,
     DefaultLibraryAuthor,
     ICliCommandProcessorRegistry,
 } from '@qodalis/cli-core';
@@ -12,7 +13,7 @@ import {
     ICliUmdModule,
     Package,
 } from '@qodalis/cli-core';
-import { ScriptLoaderService } from '../../services/script-loader.service';
+import { CdnSourceName, ScriptLoaderService } from '../../services/script-loader.service';
 import { CliPackageManagerService } from '../../services/cli-package-manager.service';
 import { CliProcessorsRegistry_TOKEN } from '../../tokens';
 
@@ -34,6 +35,12 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         icon: '📦',
         module: 'system',
+    };
+
+    stateConfiguration?: CliStateConfiguration | undefined = {
+        initialState: {
+            cdnSource: 'unpkg' as CdnSourceName,
+        },
     };
 
     private registeredDependencies: string[] = [];
@@ -185,8 +192,8 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                             try {
                                 const packageInfo =
                                     await scope.scriptsLoader
-                                        .getScript(
-                                            `https://unpkg.com/${fullName}/package.json`,
+                                        .getScriptWithFallback(
+                                            `${fullName}/package.json`,
                                             { signal },
                                         )
                                         .then((r) =>
@@ -542,8 +549,8 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
                         try {
                             const packageInfo = await scope.scriptsLoader
-                                .getScript(
-                                    `https://unpkg.com/${pkg.name}/package.json`,
+                                .getScriptWithFallback(
+                                    `${pkg.name}/package.json`,
                                     { signal },
                                 )
                                 .then((response) =>
@@ -716,6 +723,94 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     context.writer.writeln(`  pkg update guid@1.0.2       ${context.writer.wrapInColor('# Install specific version', CliForegroundColor.Green)}`);
                 },
             },
+            {
+                command: 'source',
+                description:
+                    'Get or set the CDN source for package downloads',
+                allowUnlistedCommands: true,
+                processors: [
+                    {
+                        command: 'get',
+                        description: 'Show the current CDN source',
+                        async processCommand(_, context) {
+                            const current = scope.scriptsLoader.getCdnSource();
+                            context.writer.writeln(
+                                `🌐 Current CDN source: ${context.writer.wrapInColor(current, CliForegroundColor.Cyan)}`,
+                            );
+                            const fallback = current === 'unpkg' ? 'jsdelivr' : 'unpkg';
+                            context.writer.writeln(
+                                `   Fallback: ${context.writer.wrapInColor(fallback, CliForegroundColor.Yellow)}`,
+                            );
+                        },
+                    },
+                    {
+                        command: 'set',
+                        description: 'Set the preferred CDN source',
+                        valueRequired: true,
+                        allowUnlistedCommands: true,
+                        async processCommand(command, context) {
+                            const value = (command.value || '').trim().toLowerCase();
+
+                            if (value !== 'unpkg' && value !== 'jsdelivr') {
+                                context.writer.writeError(
+                                    `Invalid source "${value}". Use "unpkg" or "jsdelivr".`,
+                                );
+                                return;
+                            }
+
+                            scope.scriptsLoader.setCdnSource(value as CdnSourceName);
+                            context.state.updateState({ cdnSource: value });
+                            await context.state.persist();
+
+                            context.writer.writeSuccess(
+                                `CDN source set to ${context.writer.wrapInColor(value, CliForegroundColor.Cyan)}`,
+                            );
+                            const fallback = value === 'unpkg' ? 'jsdelivr' : 'unpkg';
+                            context.writer.writeln(
+                                `   Fallback: ${context.writer.wrapInColor(fallback, CliForegroundColor.Yellow)}`,
+                            );
+                        },
+                        writeDescription(context) {
+                            context.writer.writeln('Set the preferred CDN source for package downloads');
+                            context.writer.writeln();
+                            context.writer.writeln('📋 Usage:');
+                            context.writer.writeln(`  ${context.writer.wrapInColor('pkg source set <unpkg|jsdelivr>', CliForegroundColor.Cyan)}`);
+                            context.writer.writeln();
+                            context.writer.writeln('📝 Examples:');
+                            context.writer.writeln(`  pkg source set unpkg        ${context.writer.wrapInColor('# Use unpkg (default)', CliForegroundColor.Green)}`);
+                            context.writer.writeln(`  pkg source set jsdelivr     ${context.writer.wrapInColor('# Use jsDelivr', CliForegroundColor.Green)}`);
+                        },
+                    },
+                ],
+                async processCommand(_, context) {
+                    const current = scope.scriptsLoader.getCdnSource();
+                    context.writer.writeln(
+                        `🌐 Current CDN source: ${context.writer.wrapInColor(current, CliForegroundColor.Cyan)}`,
+                    );
+                    const fallback = current === 'unpkg' ? 'jsdelivr' : 'unpkg';
+                    context.writer.writeln(
+                        `   Fallback: ${context.writer.wrapInColor(fallback, CliForegroundColor.Yellow)}`,
+                    );
+                    context.writer.writeln();
+                    context.writer.writeInfo(
+                        `💡 Use ${context.writer.wrapInColor('pkg source set <unpkg|jsdelivr>', CliForegroundColor.Cyan)} to change`,
+                    );
+                },
+                writeDescription(context) {
+                    context.writer.writeln('Manage the CDN source used for downloading packages');
+                    context.writer.writeln();
+                    context.writer.writeln('📋 Commands:');
+                    context.writer.writeln(`  ${context.writer.wrapInColor('pkg source', CliForegroundColor.Cyan)}                  Show current CDN source`);
+                    context.writer.writeln(`  ${context.writer.wrapInColor('pkg source get', CliForegroundColor.Cyan)}              Show current CDN source`);
+                    context.writer.writeln(`  ${context.writer.wrapInColor('pkg source set <name>', CliForegroundColor.Cyan)}       Set preferred CDN source`);
+                    context.writer.writeln();
+                    context.writer.writeln('🌐 Available sources:');
+                    context.writer.writeln(`  ${context.writer.wrapInColor('unpkg', CliForegroundColor.Cyan)}       https://unpkg.com (default)`);
+                    context.writer.writeln(`  ${context.writer.wrapInColor('jsdelivr', CliForegroundColor.Cyan)}    https://cdn.jsdelivr.net`);
+                    context.writer.writeln();
+                    context.writer.writeInfo('The non-selected source is used as a fallback.');
+                },
+            },
         ];
     }
 
@@ -737,6 +832,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         writer.writeln(`  ${writer.wrapInColor('pkg versions <package>', CliForegroundColor.Cyan)}         Show all published versions`);
         writer.writeln(`  ${writer.wrapInColor('pkg check', CliForegroundColor.Cyan)}                        Check for available updates`);
         writer.writeln(`  ${writer.wrapInColor('pkg update [package]', CliForegroundColor.Cyan)}                 Update one or all packages`);
+        writer.writeln(`  ${writer.wrapInColor('pkg source [get|set <name>]', CliForegroundColor.Cyan)}          Get or set CDN source`);
         writer.writeln();
         writer.writeln(`🌐 Browse packages: ${writer.wrapInColor('https://www.npmjs.com/org/qodalis', CliForegroundColor.Blue)}`);
         writer.writeln();
@@ -747,12 +843,21 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
     }
 
     async initialize(context: ICliExecutionContext): Promise<void> {
+        // Restore persisted CDN source preference
+        context.state
+            .select<CdnSourceName>((s) => s['cdnSource'])
+            .subscribe((cdnSource) => {
+                if (cdnSource) {
+                    this.scriptsLoader.setCdnSource(cdnSource);
+                }
+            });
+
         const packages = await this.packagesManager.getPackages();
 
         for (const pkg of packages) {
             await this.registerPackageDependencies(pkg, context);
 
-            await this.scriptsLoader.injectScript(pkg.url);
+            await this.injectScriptWithCdnFallback(pkg.url);
         }
     }
 
@@ -805,7 +910,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                 : `${this.packagesManager.QODALIS_COMMAND_PREFIX}${name}`;
 
             let packageInfo: any = await this.scriptsLoader
-                .getScript(`https://unpkg.com/${primaryName}/package.json`, {
+                .getScriptWithFallback(`${primaryName}/package.json`, {
                     signal,
                 })
                 .then((response) => JSON.parse(response.content || '{}'))
@@ -816,7 +921,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             if (!packageInfo && primaryName !== name) {
                 progressBar.setText(`Trying ${name}`);
                 packageInfo = await this.scriptsLoader
-                    .getScript(`https://unpkg.com/${name}/package.json`, {
+                    .getScriptWithFallback(`${name}/package.json`, {
                         signal,
                     })
                     .then((response) => JSON.parse(response.content || '{}'))
@@ -832,8 +937,9 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
             progressBar.setText('Downloading package');
 
-            const response = await this.scriptsLoader.getScript(
-                `https://unpkg.com/${packageInfo.name}`,
+            const cdnPath = this.resolvePackageCdnPath(packageInfo);
+            const response = await this.scriptsLoader.getScriptWithFallback(
+                cdnPath,
                 { signal },
             );
 
@@ -895,7 +1001,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             const versionSuffix = targetVersion
                 ? `@${targetVersion}`
                 : '';
-            const packageUrl = `https://unpkg.com/${currentPackage.name}${versionSuffix}`;
+            const packagePath = `${currentPackage.name}${versionSuffix}`;
 
             progressBar.setText(
                 targetVersion
@@ -904,7 +1010,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             );
 
             const newPackage = await this.scriptsLoader
-                .getScript(packageUrl + '/package.json', { signal })
+                .getScriptWithFallback(packagePath + '/package.json', { signal })
                 .then((response) => {
                     return JSON.parse(response.content || '{}');
                 });
@@ -921,9 +1027,11 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
             progressBar.setText(`Downloading package ${currentPackage.name}@${newPackage.version}`);
 
-            const response = await this.scriptsLoader.getScript(packageUrl, {
-                signal,
-            });
+            const cdnPath = this.resolvePackageCdnPath(newPackage, versionSuffix);
+            const response = await this.scriptsLoader.getScriptWithFallback(
+                cdnPath,
+                { signal },
+            );
 
             if (signal?.aborted) return;
 
@@ -960,6 +1068,15 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         }
     }
 
+    private async injectScriptWithCdnFallback(url: string): Promise<void> {
+        // Extract the package path from the stored URL and use CDN fallback
+        const packagePath = url
+            .replace('https://unpkg.com/', '')
+            .replace('https://cdn.jsdelivr.net/npm/', '');
+
+        await this.scriptsLoader.injectScriptWithFallback(packagePath);
+    }
+
     private async registerPackageDependencies(
         pkg: Package,
         { logger }: ICliExecutionContext,
@@ -975,7 +1092,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     continue;
                 }
 
-                await this.scriptsLoader.injectScript(dependency.url);
+                await this.injectScriptWithCdnFallback(dependency.url);
 
                 if (dependency.globalName) {
                     const isAvailable = await this.waitForGlobal(
@@ -1001,6 +1118,23 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         } else {
             logger.info(`Package ${pkg.name} has no dependencies`);
         }
+    }
+
+    /**
+     * Resolves the CDN-compatible package path from package.json metadata.
+     * unpkg auto-resolves via the "unpkg" field, but jsDelivr needs an explicit file path.
+     * Returns e.g. "@qodalis/cli-todo/umd/index.js" instead of just "@qodalis/cli-todo".
+     */
+    private resolvePackageCdnPath(packageInfo: any, versionSuffix = ''): string {
+        const entryPoint = packageInfo.unpkg || packageInfo.umd || packageInfo.main;
+        const basePath = `${packageInfo.name}${versionSuffix}`;
+
+        if (entryPoint) {
+            const cleanEntry = entryPoint.replace(/^\.\//, '');
+            return `${basePath}/${cleanEntry}`;
+        }
+
+        return basePath;
     }
 
     /**
