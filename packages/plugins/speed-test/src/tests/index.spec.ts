@@ -56,24 +56,21 @@ describe('CliSpeedTestCommandProcessor', () => {
             expect(sub!.description!.length).toBeGreaterThan(0);
         });
 
-        it('"run" sub-processor should have parameters defined', () => {
-            const sub = processor.processors!.find((p) => p.command === 'run');
-            expect(sub!.parameters).toBeDefined();
-            expect(sub!.parameters!.length).toBeGreaterThanOrEqual(2);
+        it('parent processor should have parameters defined', () => {
+            expect(processor.parameters).toBeDefined();
+            expect(processor.parameters!.length).toBeGreaterThanOrEqual(2);
         });
 
-        it('"run" should have a "download-url" parameter of type string', () => {
-            const sub = processor.processors!.find((p) => p.command === 'run');
-            const param = sub!.parameters!.find(
+        it('parent should have a "download-url" parameter of type string', () => {
+            const param = processor.parameters!.find(
                 (p) => p.name === 'download-url',
             );
             expect(param).toBeDefined();
             expect(param!.type).toBe('string');
         });
 
-        it('"run" should have an "upload-url" parameter of type string', () => {
-            const sub = processor.processors!.find((p) => p.command === 'run');
-            const param = sub!.parameters!.find((p) => p.name === 'upload-url');
+        it('parent should have an "upload-url" parameter of type string', () => {
+            const param = processor.parameters!.find((p) => p.name === 'upload-url');
             expect(param).toBeDefined();
             expect(param!.type).toBe('string');
         });
