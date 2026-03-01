@@ -14,6 +14,7 @@ import {
     ICliTextAnimator,
 } from '.';
 import { ICliInputReader } from './input-reader';
+import { ICliBackgroundServiceRegistry } from './background-service';
 import { CliOptions, ICliUserSession } from '../models';
 
 /**
@@ -212,4 +213,11 @@ export interface ICliExecutionContext {
      * @returns A managed timer handle with a clear() method
      */
     createTimeout: (callback: () => void, ms: number) => ICliManagedTimer;
+
+    /**
+     * Registry for managing background services and jobs.
+     * Each CLI session owns its own isolated registry. Services registered here
+     * are scoped to this session and destroyed when the engine shuts down.
+     */
+    backgroundServices: ICliBackgroundServiceRegistry;
 }
