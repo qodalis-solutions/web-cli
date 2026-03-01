@@ -15,7 +15,7 @@ export class CliScpDownloadProcessor implements ICliCommandChildProcessor {
     aliases = ['get'];
     description = 'Download a file from a remote server';
     acceptsRawInput = true;
-    valueRequired = false;
+    valueRequired = true;
     parent?: ICliCommandProcessor;
 
     parameters: ICliCommandParameterDescriptor[] = [

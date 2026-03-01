@@ -11,7 +11,7 @@ export class CliScpLsProcessor implements ICliCommandChildProcessor {
     command = 'ls';
     description = 'List files and directories on a remote server';
     acceptsRawInput = true;
-    valueRequired = false;
+    valueRequired = true;
     parent?: ICliCommandProcessor;
 
     parameters = [

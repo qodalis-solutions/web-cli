@@ -11,7 +11,7 @@ export class CliScpMkdirProcessor implements ICliCommandChildProcessor {
     command = 'mkdir';
     description = 'Create a directory on a remote server';
     acceptsRawInput = true;
-    valueRequired = false;
+    valueRequired = true;
     parent?: ICliCommandProcessor;
 
     parameters = [

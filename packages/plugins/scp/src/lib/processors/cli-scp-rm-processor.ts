@@ -11,7 +11,7 @@ export class CliScpRmProcessor implements ICliCommandChildProcessor {
     command = 'rm';
     description = 'Delete a file on a remote server';
     acceptsRawInput = true;
-    valueRequired = false;
+    valueRequired = true;
     parent?: ICliCommandProcessor;
 
     parameters = [

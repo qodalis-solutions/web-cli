@@ -277,7 +277,9 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
         commandToProcess.value = value;
 
-        const missingValue = processor.valueRequired && !value && !data;
+        // valueRequired is satisfied by: positional value, piped data, or named args
+        const hasNamedArgs = Object.keys(args).length > 0;
+        const missingValue = processor.valueRequired && !value && !data && !hasNamedArgs;
 
         if (missingValue) {
             context.writer.writeError(
