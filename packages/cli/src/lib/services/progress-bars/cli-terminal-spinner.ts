@@ -35,6 +35,12 @@ export class CliTerminalSpinner implements ICliSpinner {
             this.text = text;
         }
 
+        // If already running, just update the text — the existing
+        // interval will pick it up on the next tick.
+        if (this.isRunning) {
+            return;
+        }
+
         if (this.context) {
             this.savedCurrentLine = this.context.currentLine;
             this.context.setCurrentLine('');
