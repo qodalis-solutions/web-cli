@@ -284,6 +284,9 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
 
                     while ((m = regex.exec(text)) !== null) {
                         results.push(formatMatchResult(m));
+                        if (m[0].length === 0) {
+                            regex.lastIndex++;
+                        }
                     }
 
                     if (results.length === 0) {
@@ -292,10 +295,8 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
                         return;
                     }
 
-                    const displayRegex = createRegex(pattern, flags);
-                    const highlighted = typeof displayRegex !== 'string'
-                        ? highlightTextWithBg(text, displayRegex)
-                        : text;
+                    regex.lastIndex = 0;
+                    const highlighted = highlightTextWithBg(text, regex);
 
                     context.writer.writeln(
                         `${context.writer.wrapInColor(`${results.length} match${results.length > 1 ? 'es' : ''}:`, CliForegroundColor.Yellow)}`,
@@ -368,7 +369,7 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
                 ) => {
                     const text = (command.value || '') as string;
                     const pattern = command.args['pattern'] || command.args['p'] || '';
-                    const replacement = command.args['with'] ?? command.args['w'] ?? '';
+                    const replacement = command.args['with'] ?? command.args['w'];
 
                     if (!pattern) {
                         context.writer.writeError('--pattern is required');
@@ -469,7 +470,7 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
                     }
 
                     const limitStr = command.args['limit'] || command.args['n'];
-                    const limit = limitStr ? parseInt(limitStr) : undefined;
+                    const limit = limitStr ? parseInt(limitStr, 10) : undefined;
                     const parts = text.split(regex, limit);
 
                     context.writer.writeln(
@@ -556,6 +557,9 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
 
                     while ((m = regex.exec(text)) !== null) {
                         allResults.push(formatMatchResult(m));
+                        if (m[0].length === 0) {
+                            regex.lastIndex++;
+                        }
                     }
 
                     if (allResults.length === 0) {
