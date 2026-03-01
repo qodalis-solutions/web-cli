@@ -150,7 +150,22 @@ export interface ICliCommandProcessor {
     acceptsRawInput?: boolean;
 
     /**
-     * If true, the value is required
+     * If true, the command requires some form of input before it can execute.
+     *
+     * The requirement is satisfied by **any** of:
+     * - A positional value (text after the command name, available via `command.value`)
+     * - Piped data from a previous command (available via `command.data`)
+     * - Named arguments (e.g. `--server=node --path=/app`)
+     *
+     * When set, `command.value` is automatically extracted from the raw input
+     * (equivalent to setting `acceptsRawInput`).
+     *
+     * Additionally, when positional input is present the engine skips
+     * required-parameter validation — the processor is responsible for
+     * parsing positional text into individual values.  Required-parameter
+     * checks still apply when the user provides only named arguments.
+     *
+     * @default false
      */
     valueRequired?: boolean;
 

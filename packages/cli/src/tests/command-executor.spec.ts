@@ -695,6 +695,98 @@ describe('CliCommandExecutor', () => {
                 writer.written.some((w) => w.includes('Value required')),
             ).toBeTrue();
         });
+
+        it('should satisfy valueRequired when named args are provided', async () => {
+            const spy = jasmine
+                .createSpy('processCommand')
+                .and.returnValue(Promise.resolve());
+            const params: ICliCommandParameterDescriptor[] = [
+                {
+                    name: 'server',
+                    description: 'Server name',
+                    required: true,
+                    type: 'string',
+                },
+            ];
+            registry.registerProcessor(
+                createTestProcessor('cmd', spy, {
+                    valueRequired: true,
+                    parameters: params,
+                }),
+            );
+
+            await executor.executeCommand('cmd --server=node', context);
+
+            expect(spy).toHaveBeenCalledTimes(1);
+        });
+
+        it('should skip required parameter check when positional input is present', async () => {
+            const spy = jasmine
+                .createSpy('processCommand')
+                .and.returnValue(Promise.resolve());
+            const params: ICliCommandParameterDescriptor[] = [
+                {
+                    name: 'server',
+                    description: 'Server name',
+                    required: true,
+                    type: 'string',
+                },
+                {
+                    name: 'path',
+                    description: 'Path',
+                    required: true,
+                    type: 'string',
+                },
+            ];
+            registry.registerProcessor(
+                createTestProcessor('cmd', spy, {
+                    valueRequired: true,
+                    parameters: params,
+                }),
+            );
+
+            // Positional input "node /app" — processor will parse it,
+            // engine should NOT reject for missing --server / --path.
+            await executor.executeCommand('cmd node /app', context);
+
+            expect(spy).toHaveBeenCalledTimes(1);
+        });
+
+        it('should enforce required parameters in named-arg mode when positional input is absent', async () => {
+            const spy = jasmine
+                .createSpy('processCommand')
+                .and.returnValue(Promise.resolve());
+            const params: ICliCommandParameterDescriptor[] = [
+                {
+                    name: 'server',
+                    description: 'Server name',
+                    required: true,
+                    type: 'string',
+                },
+                {
+                    name: 'path',
+                    description: 'Path',
+                    required: true,
+                    type: 'string',
+                },
+            ];
+            registry.registerProcessor(
+                createTestProcessor('cmd', spy, {
+                    valueRequired: true,
+                    parameters: params,
+                }),
+            );
+
+            // Only --server provided, --path is missing, no positional input
+            await executor.executeCommand('cmd --server=node', context);
+
+            expect(spy).not.toHaveBeenCalled();
+            expect(
+                writer.written.some((w) =>
+                    w.includes('Missing required parameters'),
+                ),
+            ).toBeTrue();
+        });
     });
 
     // -----------------------------------------------------------------------

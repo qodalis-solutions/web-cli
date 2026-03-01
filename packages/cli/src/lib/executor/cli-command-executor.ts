@@ -265,11 +265,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             }
         }
 
-        if (!this.validateBeforeExecution(context, processor, args)) {
-            process.end();
-            return;
-        }
-
+        // Extract positional value BEFORE parameter validation so that
+        // we can distinguish positional-mode from named-arg-mode.
         const value =
             processor.acceptsRawInput || processor.valueRequired
                 ? getRightOfWord(commandName, processor.command)
@@ -277,17 +274,24 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
         commandToProcess.value = value;
 
-        // valueRequired is satisfied by: positional value, piped data, or named args
+        const hasPositionalInput = !!value || !!data;
         const hasNamedArgs = Object.keys(args).length > 0;
-        const missingValue = processor.valueRequired && !value && !data && !hasNamedArgs;
 
-        if (missingValue) {
+        // valueRequired is satisfied by: positional value, piped data, or named args
+        if (processor.valueRequired && !hasPositionalInput && !hasNamedArgs) {
             context.writer.writeError(
                 `Value required: ${context.writer.wrapInColor(`${commandName} <value>`, CliForegroundColor.Cyan)}`,
             );
 
             context.process.exit(-1);
 
+            return;
+        }
+
+        // Required parameter validation only applies in named-arg mode.
+        // When positional input is present the processor parses it internally.
+        if (!this.validateBeforeExecution(context, processor, args, hasPositionalInput)) {
+            process.end();
             return;
         }
 
@@ -397,15 +401,22 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
      * @param context The current CLI execution context.
      * @param processor The processor to validate.
      * @param args The command arguments.
+     * @param hasPositionalInput Whether the command has positional or piped input.
+     *   When true, required-parameter checks are skipped because the processor
+     *   will parse the positional text itself.
      * @returns True if the arguments are valid, false otherwise.
      */
     private validateBeforeExecution(
         context: ICliExecutionContext,
         processor: ICliCommandProcessor,
         args: Record<string, any>,
+        hasPositionalInput: boolean,
     ): boolean {
-        // Check for required parameters
-        if (processor.parameters?.some((p) => p.required)) {
+        // When the user provides positional input (e.g. `scp cat node /app`)
+        // the processor is responsible for parsing that text into individual
+        // values.  Required-parameter checks only apply in named-arg mode
+        // (e.g. `scp cat --server=node --path=/app`).
+        if (!hasPositionalInput && processor.parameters?.some((p) => p.required)) {
             const missingParams = processor.parameters?.filter(
                 (p) =>
                     p.required &&
