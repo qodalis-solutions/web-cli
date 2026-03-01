@@ -11,6 +11,8 @@ import { tetrisModule } from '@qodalis/cli-tetris';
 import { game2048Module } from '@qodalis/cli-2048';
 import { minesweeperModule } from '@qodalis/cli-minesweeper';
 import { wordleModule } from '@qodalis/cli-wordle';
+import { scpModule } from '@qodalis/cli-scp';
+import { wgetModule } from '@qodalis/cli-wget';
 import { CliInputDemoCommandProcessor } from './processors/cli-input-demo-command-processor';
 import { CliPanelOptions } from '@qodalis/angular-cli';
 
@@ -35,6 +37,8 @@ export class AppComponent {
         game2048Module,
         minesweeperModule,
         wordleModule,
+        scpModule,
+        wgetModule,
         {
             apiVersion: 2,
             name: 'input-demo',

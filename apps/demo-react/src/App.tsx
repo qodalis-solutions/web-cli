@@ -24,6 +24,8 @@ import { tetrisModule } from "@qodalis/cli-tetris";
 import { game2048Module } from "@qodalis/cli-2048";
 import { minesweeperModule } from "@qodalis/cli-minesweeper";
 import { wordleModule } from "@qodalis/cli-wordle";
+import { scpModule } from "@qodalis/cli-scp";
+import { wgetModule } from "@qodalis/cli-wget";
 import {
   CliLogLevel,
   type CliOptions,
@@ -107,6 +109,8 @@ const modules: ICliModule[] = [
   game2048Module,
   minesweeperModule,
   wordleModule,
+  scpModule,
+  wgetModule,
   usersModule.configure({
     seedUsers: [{ name: "root1", email: "root1@root.com", groups: ["admin"] }],
     defaultPassword: "root",
