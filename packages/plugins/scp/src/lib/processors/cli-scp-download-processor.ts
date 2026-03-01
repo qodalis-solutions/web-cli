@@ -20,7 +20,26 @@ export class CliScpDownloadProcessor implements ICliCommandChildProcessor {
 
     parameters: ICliCommandParameterDescriptor[] = [
         {
-            name: '--save',
+            name: 'server',
+            description: 'Server name',
+            required: false,
+            type: 'string',
+        },
+        {
+            name: 'remote-path',
+            aliases: ['path'],
+            description: 'Remote file path',
+            required: false,
+            type: 'string',
+        },
+        {
+            name: 'local-path',
+            description: 'Local destination path',
+            required: false,
+            type: 'string',
+        },
+        {
+            name: 'save',
             description: 'Save directly to browser downloads instead of virtual filesystem',
             required: false,
             type: 'boolean',
@@ -31,21 +50,39 @@ export class CliScpDownloadProcessor implements ICliCommandChildProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const value = command.value?.trim();
-        if (!value) {
+        const args = command.args || {};
+        let serverName: string | undefined;
+        let remotePath: string | undefined;
+        let localPath: string | undefined;
+
+        // Try named args first (--server, --remote-path / --path, --local-path)
+        if (args['server'] && (args['remote-path'] || args['path'])) {
+            serverName = String(args['server']);
+            remotePath = String(args['remote-path'] || args['path']);
+            localPath = args['local-path'] ? String(args['local-path']) : undefined;
+        } else {
+            // Fall back to positional
+            const value = command.value?.trim();
+            if (!value) {
+                context.writer.writeError('Usage: scp download <server> <remote-path> [local-path]');
+                return;
+            }
+            const parts = value.split(/\s+/);
+            if (parts.length < 2) {
+                context.writer.writeError('Usage: scp download <server> <remote-path> [local-path]');
+                return;
+            }
+            serverName = parts[0];
+            remotePath = parts[1];
+            localPath = parts[2];
+        }
+
+        if (!serverName || !remotePath) {
             context.writer.writeError('Usage: scp download <server> <remote-path> [local-path]');
             return;
         }
 
-        const parts = value.split(/\s+/);
-        if (parts.length < 2) {
-            context.writer.writeError('Usage: scp download <server> <remote-path> [local-path]');
-            return;
-        }
-
-        const serverName = parts[0];
-        const remotePath = parts[1];
-        const localPath = parts[2] || remotePath.split('/').pop() || 'download';
+        localPath = localPath || remotePath.split('/').pop() || 'download';
 
         const server = resolveServer(serverName, context);
         if (!server) return;

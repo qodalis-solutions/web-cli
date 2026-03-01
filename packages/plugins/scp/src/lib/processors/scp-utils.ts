@@ -41,18 +41,39 @@ export function formatBytes(bytes: number): string {
 }
 
 /**
- * Parse "serverName /remote/path" from command.value
- * Returns [serverName, remotePath] or null on error.
+ * Parse server and path from either positional args (command.value)
+ * or named args (--server, --path).
+ *
+ * Supports:
+ *   scp ls node /app           (positional)
+ *   scp ls --server node --path /app  (named, space-separated)
+ *   scp ls --server="node" --path="/app"  (named, equals syntax)
  */
 export function parseServerAndPath(
     value: string | undefined,
     context: ICliExecutionContext,
+    args?: Record<string, any>,
 ): [string, string] | null {
+    // Try named args first (--server, --path)
+    const serverArg = args?.['server'];
+    const pathArg = args?.['path'];
+    if (serverArg && pathArg) {
+        return [String(serverArg), String(pathArg)];
+    }
+
+    // Fall back to positional from command.value
     if (!value?.trim()) {
         return null;
     }
     const parts = value.trim().split(/\s+/);
     if (parts.length < 2) {
+        // If only one positional, maybe server is from --server and path is positional
+        if (serverArg && parts.length >= 1) {
+            return [String(serverArg), parts.join(' ')];
+        }
+        if (pathArg && parts.length >= 1) {
+            return [parts[0], String(pathArg)];
+        }
         return null;
     }
     return [parts[0], parts.slice(1).join(' ')];

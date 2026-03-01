@@ -42,21 +42,37 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const value = command.value?.trim();
-        if (!value) {
+        const args = command.args || {};
+        let serverName: string | undefined;
+        let localPath: string | undefined;
+        let remotePath: string | undefined;
+
+        // Try named args first
+        if (args['server'] && args['local-path'] && args['remote-path']) {
+            serverName = String(args['server']);
+            localPath = String(args['local-path']);
+            remotePath = String(args['remote-path']);
+        } else {
+            // Fall back to positional
+            const value = command.value?.trim();
+            if (!value) {
+                context.writer.writeError('Usage: scp upload <server> <local-path> <remote-path>');
+                return;
+            }
+            const parts = value.split(/\s+/);
+            if (parts.length < 3) {
+                context.writer.writeError('Usage: scp upload <server> <local-path> <remote-path>');
+                return;
+            }
+            serverName = parts[0];
+            localPath = parts[1];
+            remotePath = parts[2];
+        }
+
+        if (!serverName || !localPath || !remotePath) {
             context.writer.writeError('Usage: scp upload <server> <local-path> <remote-path>');
             return;
         }
-
-        const parts = value.split(/\s+/);
-        if (parts.length < 3) {
-            context.writer.writeError('Usage: scp upload <server> <local-path> <remote-path>');
-            return;
-        }
-
-        const serverName = parts[0];
-        const localPath = parts[1];
-        const remotePath = parts[2];
 
         const server = resolveServer(serverName, context);
         if (!server) return;

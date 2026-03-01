@@ -33,7 +33,7 @@ export class CliScpMkdirProcessor implements ICliCommandChildProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const parsed = parseServerAndPath(command.value, context);
+        const parsed = parseServerAndPath(command.value, context, command.args);
         if (!parsed) {
             context.writer.writeError('Usage: scp mkdir <server> <path>');
             return;

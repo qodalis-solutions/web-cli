@@ -33,7 +33,7 @@ export class CliScpRmProcessor implements ICliCommandChildProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const parsed = parseServerAndPath(command.value, context);
+        const parsed = parseServerAndPath(command.value, context, command.args);
         if (!parsed) {
             context.writer.writeError('Usage: scp rm <server> <path>');
             return;
