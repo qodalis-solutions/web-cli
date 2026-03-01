@@ -1,34 +1,64 @@
-# Cli extension
+# @qodalis/cli-todo
 
-The `@qodalis/cli-todo` package is a powerful CLI extension designed to help you manage your tasks efficiently. With a simple and intuitive command structure, you can add, list, complete, and remove TODO items directly from your command line.
+A practical CLI task manager. Add, list, edit, complete, and remove tasks with due dates.
 
-# Features
+## Installation
 
-    Add tasks with a single command.
-    View all your TODO items in a clear, organized list.
-    Mark tasks as complete to keep track of your progress.
-    Remove tasks when they are no longer needed.
-    Persistent storage for your tasks across CLI sessions.
-
-# Installation
-
-```bash
+```
 packages add @qodalis/cli-todo
+packages add todo
 ```
 
-This command downloads and registers the extension for use within the CLI environment.
-
-# Usage
+## Commands
 
 ```bash
-todo ls
-todo add <task description>
+# Add tasks
 todo add Buy groceries
-todo add Finish the project report
-todo complete <task ID>
-todo complete 1
-todo rm <task ID>
+todo add Submit report --due tomorrow
+todo add Call dentist --due friday
+todo add Pay rent --due 2026-03-15
 
-todo ls
-[ ] #2 - Finish the project report
+# List tasks
+todo ls                    # all tasks with progress
+todo ls --pending          # pending only
+todo ls --completed        # completed only
+todo ls --overdue          # overdue only
+
+# Edit tasks
+todo edit 3 Buy organic groceries
+todo edit 3 --due next week
+todo edit 3 New text --due monday
+todo edit 3 --due none     # remove due date
+
+# Complete tasks
+todo done 1                # mark as done
+todo toggle 2              # toggle done/undone
+
+# Remove tasks
+todo rm 3                  # remove by ID
+todo rm --all              # remove all (with confirmation)
 ```
+
+## Due Date Formats
+
+| Format | Example |
+|--------|---------|
+| `today` | Due today |
+| `tomorrow` | Due tomorrow |
+| Day name | `monday`, `friday` (next occurrence) |
+| `next week` | 7 days from now |
+| `next month` | 1 month from now |
+| `YYYY-MM-DD` | `2026-03-15` |
+
+## Display
+
+```
+Todos (2/5 done)
+  [ ] #1 - Buy groceries            due: tomorrow
+  [x] #2 - Finish report            done
+  [ ] #3 - Call dentist              overdue: 2 days ago
+  [x] #4 - Send email               done
+  [ ] #5 - Clean kitchen
+```
+
+Overdue tasks are highlighted in red. Completed tasks show strikethrough text.
