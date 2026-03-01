@@ -21,6 +21,7 @@ interface ICliWelcomeModule extends ICliModule {
 }
 
 export const welcomeModule: ICliWelcomeModule = {
+    apiVersion: 2,
     name: '@qodalis/cli-welcome',
     priority: -1,
 

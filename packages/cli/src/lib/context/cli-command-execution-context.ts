@@ -9,6 +9,8 @@ import {
     ICliExecutionProcess,
     ICliLogger,
     ICliInputReader,
+    ICliManagedInterval,
+    ICliManagedTimer,
     ICliPercentageProgressBar,
     ICliSpinner,
     ICliStateStore,
@@ -77,6 +79,8 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     refreshCurrentLine: () => void;
     enterFullScreenMode: (processor: ICliCommandProcessor) => void;
     exitFullScreenMode: () => void;
+    createInterval: (callback: () => void, ms: number) => ICliManagedInterval;
+    createTimeout: (callback: () => void, ms: number) => ICliManagedTimer;
 
     constructor(
         public readonly context: ICliExecutionContext,
@@ -104,6 +108,8 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
 
         this.enterFullScreenMode = (p) => context.enterFullScreenMode(p);
         this.exitFullScreenMode = () => context.exitFullScreenMode();
+        this.createInterval = (cb, ms) => context.createInterval(cb, ms);
+        this.createTimeout = (cb, ms) => context.createTimeout(cb, ms);
 
         this.state = context.services
             .get<ICliStateStoreManager>(CliStateStoreManager_TOKEN)

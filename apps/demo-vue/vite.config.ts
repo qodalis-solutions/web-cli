@@ -83,6 +83,26 @@ export default defineConfig({
                 __dirname,
                 '../../dist/files/public-api.mjs',
             ),
+            '@qodalis/cli-snake': path.resolve(
+                __dirname,
+                '../../dist/snake/public-api.mjs',
+            ),
+            '@qodalis/cli-tetris': path.resolve(
+                __dirname,
+                '../../dist/tetris/public-api.mjs',
+            ),
+            '@qodalis/cli-2048': path.resolve(
+                __dirname,
+                '../../dist/2048/public-api.mjs',
+            ),
+            '@qodalis/cli-minesweeper': path.resolve(
+                __dirname,
+                '../../dist/minesweeper/public-api.mjs',
+            ),
+            '@qodalis/cli-wordle': path.resolve(
+                __dirname,
+                '../../dist/wordle/public-api.mjs',
+            ),
         },
     },
 });

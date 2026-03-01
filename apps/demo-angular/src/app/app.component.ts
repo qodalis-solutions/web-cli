@@ -6,6 +6,11 @@ import { qrModule } from '@qodalis/cli-qr';
 import { yesnoModule } from '@qodalis/cli-yesno';
 import { serverLogsModule } from '@qodalis/cli-server-logs';
 import { filesModule } from '@qodalis/cli-files';
+import { snakeModule } from '@qodalis/cli-snake';
+import { tetrisModule } from '@qodalis/cli-tetris';
+import { game2048Module } from '@qodalis/cli-2048';
+import { minesweeperModule } from '@qodalis/cli-minesweeper';
+import { wordleModule } from '@qodalis/cli-wordle';
 import { CliInputDemoCommandProcessor } from './processors/cli-input-demo-command-processor';
 import { CliPanelOptions } from '@qodalis/angular-cli';
 
@@ -25,7 +30,13 @@ export class AppComponent {
         qrModule,
         yesnoModule,
         serverLogsModule,
+        snakeModule,
+        tetrisModule,
+        game2048Module,
+        minesweeperModule,
+        wordleModule,
         {
+            apiVersion: 2,
             name: 'input-demo',
             processors: [new CliInputDemoCommandProcessor()],
         },

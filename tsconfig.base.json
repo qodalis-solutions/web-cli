@@ -19,7 +19,12 @@
       "@qodalis/cli-qr": ["dist/qr"],
       "@qodalis/cli-yesno": ["dist/yesno"],
       "@qodalis/cli-users": ["dist/users"],
-      "@qodalis/cli-files": ["dist/files"]
+      "@qodalis/cli-files": ["dist/files"],
+      "@qodalis/cli-snake": ["dist/snake"],
+      "@qodalis/cli-tetris": ["dist/tetris"],
+      "@qodalis/cli-2048": ["dist/2048"],
+      "@qodalis/cli-minesweeper": ["dist/minesweeper"],
+      "@qodalis/cli-wordle": ["dist/wordle"]
     },
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,

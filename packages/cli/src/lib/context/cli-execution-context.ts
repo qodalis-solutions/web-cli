@@ -2,6 +2,8 @@ import { Terminal } from '@xterm/xterm';
 import { Subject } from 'rxjs';
 import {
     ICliExecutionContext,
+    ICliManagedInterval,
+    ICliManagedTimer,
     ICliTerminalWriter,
     ICliUserSession,
     CliOptions,
@@ -101,6 +103,10 @@ export class CliExecutionContext
     private _activeInputRequest: ActiveInputRequest | null = null;
 
     private readonly modeStack: IInputMode[] = [];
+
+    private readonly managedTimers = new Set<{ clear(): void }>();
+
+    private resizeDisposable: { dispose(): void } | null = null;
 
     constructor(
         deps: CliExecutionContextDeps,
@@ -298,6 +304,16 @@ export class CliExecutionContext
      * simple `ceil(contentLength / cols)` calculation would miss.
      */
     handleTerminalResize(): void {
+        // When in raw/fullscreen mode, forward to the processor's onResize
+        if (this.isRawModeActive() && this.contextProcessor?.onResize) {
+            this.contextProcessor.onResize(
+                this.terminal.cols,
+                this.terminal.rows,
+                this,
+            );
+            return;
+        }
+
         if (
             this.isProgressRunning() ||
             this.isRawModeActive() ||
@@ -326,13 +342,77 @@ export class CliExecutionContext
         this.terminal.write('\x1b[?1049h'); // alternate screen buffer
         this.terminal.write('\x1b[?25l'); // hide cursor
         this.setContextProcessor(processor, true);
+
+        // Subscribe to terminal resize events and forward to the processor
+        if (processor.onResize) {
+            this.resizeDisposable = this.terminal.onResize(
+                ({ cols, rows }) => {
+                    processor.onResize!(cols, rows, this);
+                },
+            );
+        }
     }
 
     public exitFullScreenMode(): void {
+        const processor = this.contextProcessor;
+
+        // Clean up managed timers
+        this.clearAllManagedTimers();
+
+        // Dispose resize subscription
+        this.resizeDisposable?.dispose();
+        this.resizeDisposable = null;
+
+        // Notify processor of disposal
+        if (processor?.onDispose) {
+            processor.onDispose(this);
+        }
+
         this.terminal.write('\x1b[?25h'); // show cursor
         this.terminal.write('\x1b[?1049l'); // leave alternate screen buffer
         this.setContextProcessor(undefined);
         this.showPrompt();
+    }
+
+    public createInterval(
+        callback: () => void,
+        ms: number,
+    ): ICliManagedInterval {
+        let timerId = setInterval(callback, ms);
+
+        const handle: ICliManagedInterval = {
+            clear: () => {
+                clearInterval(timerId);
+                this.managedTimers.delete(handle);
+            },
+            setDelay: (newMs: number) => {
+                clearInterval(timerId);
+                timerId = setInterval(callback, newMs);
+            },
+        };
+
+        this.managedTimers.add(handle);
+        return handle;
+    }
+
+    public createTimeout(
+        callback: () => void,
+        ms: number,
+    ): ICliManagedTimer {
+        const timerId = setTimeout(() => {
+            this.managedTimers.delete(handle);
+            callback();
+        }, ms);
+
+        const handle: ICliManagedTimer = {
+            clear: () => {
+                clearTimeout(timerId);
+                this.managedTimers.delete(handle);
+            },
+        };
+
+        this.managedTimers.add(handle);
+        return handle;
     }
 
     public isProgressRunning(): boolean {
@@ -398,6 +478,30 @@ export class CliExecutionContext
 
     getActiveInputRequest(): ActiveInputRequest | null {
         return this._activeInputRequest;
+    }
+
+    // -- Managed timer cleanup --
+
+    private clearAllManagedTimers(): void {
+        for (const timer of this.managedTimers) {
+            timer.clear();
+        }
+        this.managedTimers.clear();
+    }
+
+    /**
+     * Dispose all resources. Called by CliEngine.destroy() when the
+     * CLI component is being torn down.
+     */
+    public dispose(): void {
+        // Notify the active fullscreen processor
+        if (this.contextProcessor?.onDispose) {
+            this.contextProcessor.onDispose(this);
+        }
+
+        this.clearAllManagedTimers();
+        this.resizeDisposable?.dispose();
+        this.resizeDisposable = null;
     }
 
     // -- Mode stack management --

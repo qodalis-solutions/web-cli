@@ -15,6 +15,11 @@ import { yesnoModule } from '@qodalis/cli-yesno';
 import { serverLogsModule } from '@qodalis/cli-server-logs';
 import { usersModule } from '@qodalis/cli-users';
 import { filesModule } from '@qodalis/cli-files';
+import { snakeModule } from '@qodalis/cli-snake';
+import { tetrisModule } from '@qodalis/cli-tetris';
+import { game2048Module } from '@qodalis/cli-2048';
+import { minesweeperModule } from '@qodalis/cli-minesweeper';
+import { wordleModule } from '@qodalis/cli-wordle';
 import { CliLogLevel, type CliOptions, type ICliModule } from '@qodalis/cli-core';
 import { CliInputDemoCommandProcessor } from './processors/cli-input-demo-command-processor';
 
@@ -32,6 +37,11 @@ const modules: ICliModule[] = [
     qrModule,
     yesnoModule,
     serverLogsModule,
+    snakeModule,
+    tetrisModule,
+    game2048Module,
+    minesweeperModule,
+    wordleModule,
     usersModule.configure({
         seedUsers: [
             { name: 'root1', email: 'root1@root.com', groups: ['admin'] },
@@ -40,6 +50,7 @@ const modules: ICliModule[] = [
         requirePassword: true,
     }),
     {
+        apiVersion: 2,
         name: 'input-demo',
         processors: [new CliInputDemoCommandProcessor()],
     },

@@ -252,6 +252,28 @@ export interface ICliCommandProcessor {
      * @param context The execution context
      */
     onData?(data: string, context: ICliExecutionContext): Promise<void>;
+
+    /**
+     * Called when the terminal is resized while this processor is the active
+     * full-screen context processor. Allows processors to adapt their rendering
+     * to the new terminal dimensions.
+     * @param cols The new number of columns
+     * @param rows The new number of rows
+     * @param context The execution context
+     */
+    onResize?(
+        cols: number,
+        rows: number,
+        context: ICliExecutionContext,
+    ): void;
+
+    /**
+     * Called when the processor is being disposed — either because full-screen
+     * mode ended, the terminal disconnected, or the CLI component is being
+     * destroyed. Use this to clean up resources (timers, subscriptions, etc.).
+     * @param context The execution context
+     */
+    onDispose?(context: ICliExecutionContext): void;
 }
 
 /**

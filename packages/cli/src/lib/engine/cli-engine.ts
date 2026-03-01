@@ -95,6 +95,7 @@ export class CliEngine {
      */
     registerProcessor(processor: ICliCommandProcessor): void {
         this.userModules.push({
+            apiVersion: 2,
             name: `__inline_${processor.command}`,
             processors: [processor],
         });
@@ -106,6 +107,7 @@ export class CliEngine {
      */
     registerProcessors(processors: ICliCommandProcessor[]): void {
         this.userModules.push({
+            apiVersion: 2,
             name: '__inline_processors',
             processors,
         });
@@ -268,6 +270,9 @@ export class CliEngine {
      * Clean up terminal and event listeners.
      */
     destroy(): void {
+        // Dispose execution context (cleans up managed timers, notifies processors)
+        this.executionContext?.dispose();
+
         if (this.resizeListener) {
             window.removeEventListener('resize', this.resizeListener);
         }

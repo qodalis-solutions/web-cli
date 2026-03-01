@@ -1,0 +1,25 @@
+{
+  "name": "minesweeper",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/plugins/minesweeper/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsup",
+          "cp package.json ../../../dist/minesweeper/package.json"
+        ],
+        "cwd": "packages/plugins/minesweeper",
+        "parallel": false
+      },
+      "inputs": [
+        "production",
+        "sharedGlobals"
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/minesweeper"
+      ]
+    }
+  }
+}

@@ -17,6 +17,24 @@ import { ICliInputReader } from './input-reader';
 import { CliOptions, ICliUserSession } from '../models';
 
 /**
+ * A managed timer handle returned by createInterval/createTimeout.
+ * Managed timers are automatically cleared when full-screen mode exits
+ * or the CLI component is destroyed.
+ */
+export interface ICliManagedTimer {
+    /** Clear this timer immediately. */
+    clear(): void;
+}
+
+/**
+ * A managed interval handle with the ability to change the delay.
+ */
+export interface ICliManagedInterval extends ICliManagedTimer {
+    /** Change the interval delay. Restarts the interval with the new delay. */
+    setDelay(ms: number): void;
+}
+
+/**
  * Represents the context in which a command is executed
  */
 export interface ICliExecutionContext {
@@ -173,4 +191,25 @@ export interface ICliExecutionContext {
      * clears the context processor, and re-displays the prompt.
      */
     exitFullScreenMode: () => void;
+
+    /**
+     * Creates a managed interval that is automatically cleared when full-screen
+     * mode exits or the CLI component is destroyed.
+     * @param callback The function to call on each interval tick
+     * @param ms The interval delay in milliseconds
+     * @returns A managed interval handle with clear() and setDelay() methods
+     */
+    createInterval: (
+        callback: () => void,
+        ms: number,
+    ) => ICliManagedInterval;
+
+    /**
+     * Creates a managed timeout that is automatically cleared when full-screen
+     * mode exits or the CLI component is destroyed.
+     * @param callback The function to call when the timeout fires
+     * @param ms The timeout delay in milliseconds
+     * @returns A managed timer handle with a clear() method
+     */
+    createTimeout: (callback: () => void, ms: number) => ICliManagedTimer;
 }
