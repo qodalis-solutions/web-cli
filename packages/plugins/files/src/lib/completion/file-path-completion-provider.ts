@@ -19,6 +19,11 @@ const FILE_COMMANDS = new Set([
     'echo',
     'nano',
     'edit',
+    'grep',
+    'find',
+    'head',
+    'tail',
+    'wc',
 ]);
 
 /**

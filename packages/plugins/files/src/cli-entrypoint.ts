@@ -20,7 +20,9 @@ import { CliRmCommandProcessor } from './lib/processors/cli-rm-command-processor
 import { CliCpCommandProcessor } from './lib/processors/cli-cp-command-processor';
 import { CliMvCommandProcessor } from './lib/processors/cli-mv-command-processor';
 import { CliTreeCommandProcessor } from './lib/processors/cli-tree-command-processor';
+import { CliHeadCommandProcessor } from './lib/processors/cli-head-command-processor';
 import { CliTailCommandProcessor } from './lib/processors/cli-tail-command-processor';
+import { CliWcCommandProcessor } from './lib/processors/cli-wc-command-processor';
 import { CliFindCommandProcessor } from './lib/processors/cli-find-command-processor';
 import { CliGrepCommandProcessor } from './lib/processors/cli-grep-command-processor';
 
@@ -42,7 +44,9 @@ const module: ICliModule = {
         new CliCpCommandProcessor(),
         new CliMvCommandProcessor(),
         new CliTreeCommandProcessor(),
+        new CliHeadCommandProcessor(),
         new CliTailCommandProcessor(),
+        new CliWcCommandProcessor(),
         new CliFindCommandProcessor(),
         new CliGrepCommandProcessor(),
     ],
