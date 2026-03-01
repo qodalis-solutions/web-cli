@@ -3,6 +3,7 @@ import {
     ICliModule,
     ICliCompletionProvider_TOKEN,
 } from '@qodalis/cli-core';
+import { API_VERSION } from './lib/version';
 import { IFileSystemService_TOKEN } from './lib/interfaces';
 import { IFileSystemService } from './lib/interfaces';
 import { IndexedDbFileSystemService } from './lib/services';
@@ -23,6 +24,7 @@ import { CliTreeCommandProcessor } from './lib/processors/cli-tree-command-proce
 const fsService = new IndexedDbFileSystemService();
 
 const module: ICliModule = {
+    apiVersion: API_VERSION,
     name: '@qodalis/cli-files',
     processors: [
         new CliLsCommandProcessor(),

@@ -11,7 +11,7 @@ import {
     LIBRARY_VERSION as CORE_VERSION,
     satisfiesMinVersion,
 } from '@qodalis/cli-core';
-import { LIBRARY_VERSION as CLI_VERSION } from '../version';
+import { LIBRARY_VERSION as CLI_VERSION, API_VERSION } from '../version';
 import { CliExecutionContext } from '../context/cli-execution-context';
 import { CliCommandExecutionContext } from '../context/cli-command-execution-context';
 import { builtinProcessors } from '../processors';
@@ -137,6 +137,7 @@ export class CliBoot {
 
     private buildCoreModule(): ICliModule {
         return {
+            apiVersion: API_VERSION,
             name: '@qodalis/cli-core',
             version: CORE_VERSION,
             description: 'Core CLI services and utilities',

@@ -5,6 +5,7 @@
 export * from './lib/index';
 
 import { ICliModule, ICliCompletionProvider_TOKEN } from '@qodalis/cli-core';
+import { API_VERSION } from './lib/version';
 import { IFileSystemService_TOKEN } from './lib/interfaces';
 import { IndexedDbFileSystemService } from './lib/services';
 import { IFileSystemService } from './lib/interfaces';
@@ -40,6 +41,7 @@ interface ICliFilesModule extends ICliModule {
 const fsService = new IndexedDbFileSystemService();
 
 export const filesModule: ICliFilesModule = {
+    apiVersion: API_VERSION,
     name: '@qodalis/cli-files',
     processors: [
         new CliLsCommandProcessor(),

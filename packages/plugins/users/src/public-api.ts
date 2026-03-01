@@ -45,13 +45,14 @@ import {
 } from './lib/models/users-module-config';
 import { firstValueFrom } from 'rxjs';
 
-import { LIBRARY_VERSION } from './lib/version';
+import { LIBRARY_VERSION, API_VERSION } from './lib/version';
 
 interface ICliUsersModule extends ICliModule {
     configure(config: CliUsersModuleConfig): ICliModule;
 }
 
 export const usersModule: ICliUsersModule = {
+    apiVersion: API_VERSION,
     name: '@qodalis/cli-users',
     version: LIBRARY_VERSION,
     priority: Number.MAX_SAFE_INTEGER,
