@@ -10,3 +10,4 @@ export * from './cli-rm-command-processor';
 export * from './cli-cp-command-processor';
 export * from './cli-mv-command-processor';
 export * from './cli-tree-command-processor';
+export * from './cli-head-command-processor';
