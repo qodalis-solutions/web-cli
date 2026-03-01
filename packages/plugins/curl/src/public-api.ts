@@ -2,6 +2,7 @@
  * Public API Surface of curl
  */
 
+export * from './lib/utilities';
 export * from './lib/processors/cli-curl-command-processor';
 
 import { ICliModule } from '@qodalis/cli-core';

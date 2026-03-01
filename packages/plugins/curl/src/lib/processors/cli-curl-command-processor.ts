@@ -7,270 +7,276 @@ import {
     ICliExecutionContext,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
+import {
+    CurlResponse,
+    buildFetchOptions,
+    extractResponseHeaders,
+    formatResponseBody,
+    inferMethod,
+    parseHeaders,
+    resolveBody,
+    rewriteUrlToProxy,
+} from '../utilities';
 
 export class CliCurlCommandProcessor implements ICliCommandProcessor {
     command = 'curl';
 
-    description =
-        'A command-line tool to execute HTTP requests on your server. Supports GET, POST, PUT, DELETE, headers, and body data.';
+    description = 'Make HTTP requests from the terminal. Supports all HTTP methods, custom headers, request bodies, timeouts, and more.';
 
     author = DefaultLibraryAuthor;
 
     version = LIBRARY_VERSION;
 
-    processors?: ICliCommandProcessor[] | undefined = [];
+    valueRequired = true;
 
-    metadata?: CliProcessorMetadata | undefined = {
+    metadata?: CliProcessorMetadata = {
         icon: '🌐',
         requiredCoreVersion: '>=2.0.0 <3.0.0',
         requiredCliVersion: '>=2.0.0 <3.0.0',
     };
 
-    constructor() {
-        this.registerSubProcessors();
-    }
+    parameters = [
+        {
+            name: 'request',
+            aliases: ['X'],
+            type: 'string' as const,
+            description: 'HTTP method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS)',
+            required: false,
+        },
+        {
+            name: 'header',
+            aliases: ['H'],
+            type: 'array' as const,
+            description: 'Add header, e.g. -H \'Content-Type: application/json\' (repeatable)',
+            required: false,
+        },
+        {
+            name: 'data',
+            aliases: ['d'],
+            type: 'string' as const,
+            description: 'Request body (auto-detects JSON, sets method to POST if -X not given)',
+            required: false,
+        },
+        {
+            name: 'data-raw',
+            type: 'string' as const,
+            description: 'Request body sent as-is without JSON parsing',
+            required: false,
+        },
+        {
+            name: 'verbose',
+            aliases: ['v'],
+            type: 'boolean' as const,
+            description: 'Show request/response headers and timing',
+            required: false,
+        },
+        {
+            name: 'pretty',
+            type: 'boolean' as const,
+            description: 'Pretty-print JSON response body',
+            required: false,
+        },
+        {
+            name: 'timeout',
+            type: 'number' as const,
+            description: 'Request timeout in milliseconds (default: 30000)',
+            required: false,
+            defaultValue: '30000',
+        },
+        {
+            name: 'location',
+            aliases: ['L'],
+            type: 'boolean' as const,
+            description: 'Follow redirects (default: true)',
+            required: false,
+        },
+        {
+            name: 'proxy',
+            type: 'boolean' as const,
+            description: 'Route request through proxy.qodalis.com (bypasses CORS)',
+            required: false,
+        },
+        {
+            name: 'silent',
+            aliases: ['s'],
+            type: 'boolean' as const,
+            description: 'Only output response body (no status line)',
+            required: false,
+        },
+        {
+            name: 'output',
+            aliases: ['o'],
+            type: 'string' as const,
+            description: 'Store response in a named variable',
+            required: false,
+        },
+    ];
 
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.executor.showHelp(command, context);
-    }
-
-    async initialize(context: ICliExecutionContext): Promise<void> {}
-
-    private registerSubProcessors(): void {
-        this.processors = [
-            {
-                command: 'get',
-                description: 'Perform an HTTP GET request',
-                valueRequired: true,
-                parameters: [
-                    {
-                        name: 'header',
-                        aliases: ['H'],
-                        type: 'array',
-                        description:
-                            'Add custom headers. Accept multiple headers.',
-                        required: false,
-                    },
-                    {
-                        name: 'proxy',
-                        type: 'boolean',
-                        description: 'Use procy',
-                        required: false,
-                    },
-                ],
-                processCommand: async (command, context) => {
-                    await this.executeRequest('GET', command, context);
-                },
-            },
-            {
-                command: 'post',
-                description: 'Perform an HTTP POST request',
-                valueRequired: true,
-                parameters: [
-                    {
-                        name: 'header',
-                        aliases: ['H'],
-                        type: 'array',
-                        description: 'Add custom headers',
-                        required: false,
-                    },
-                    {
-                        name: 'data',
-                        aliases: ['d'],
-                        type: 'string',
-                        description: 'Request body',
-                        required: false,
-                    },
-                    {
-                        name: 'proxy',
-                        type: 'boolean',
-                        description: 'Use procy',
-                        required: false,
-                    },
-                ],
-                processCommand: async (command, context) => {
-                    await this.executeRequest('POST', command, context);
-                },
-            },
-            {
-                command: 'put',
-                description: 'Perform an HTTP PUT request',
-                valueRequired: true,
-                parameters: [
-                    {
-                        name: 'header',
-                        aliases: ['H'],
-                        type: 'array',
-                        description: 'Add custom headers',
-                        required: false,
-                    },
-                    {
-                        name: 'data',
-                        aliases: ['d'],
-                        type: 'string',
-                        description: 'Request body',
-                        required: false,
-                    },
-                    {
-                        name: 'proxy',
-                        type: 'boolean',
-                        description: 'Use procy',
-                        required: false,
-                    },
-                ],
-                processCommand: async (command, context) => {
-                    await this.executeRequest('PUT', command, context);
-                },
-            },
-            {
-                command: 'delete',
-                description: 'Perform an HTTP DELETE request',
-                valueRequired: true,
-                parameters: [
-                    {
-                        name: 'header',
-                        aliases: ['H'],
-                        type: 'array',
-                        description: 'Add custom headers',
-                        required: false,
-                    },
-                    {
-                        name: 'proxy',
-                        type: 'boolean',
-                        description: 'Use procy',
-                        required: false,
-                    },
-                ],
-                processCommand: async (command, context) => {
-                    await this.executeRequest('DELETE', command, context);
-                },
-            },
-        ];
-    }
-
-    private async executeRequest(
-        method: string,
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
         const url = command.value;
-        const headers = command.args['header'] || command.args['H'] || [];
-        const data = command.args['data'] || command.args['d'];
-        const verbose = !!command.args['verbose'];
-        const useProxy = !!command.args['proxy'];
 
         if (!url) {
-            context.writer.writeError('URL is required.');
+            context.writer.writeError('URL is required. Usage: curl <url> [options]');
+            context.process.exit(1);
             return;
         }
 
-        // Prepare headers
-        const headersObject = headers.reduce(
-            (acc: Record<string, string>, header: string) => {
-                const [key, value] = header.split(':').map((str) => str.trim());
-                if (key && value) acc[key] = value;
-                return acc;
-            },
-            {},
-        );
+        const args = command.args;
+        const explicitMethod = args['request'] || args['X'];
+        const data = args['data'] || args['d'];
+        const dataRaw = args['data-raw'];
+        const hasBody = data != null || dataRaw != null;
+        const verbose = !!args['verbose'] || !!args['v'];
+        const pretty = !!args['pretty'];
+        const silent = !!args['silent'] || !!args['s'];
+        const useProxy = !!args['proxy'];
+        const timeout = parseInt(args['timeout'] || '30000', 10);
+        const followRedirects = args['location'] !== false && args['L'] !== false;
 
-        // Prepare request options
-        const options: RequestInit = {
-            method,
-            headers: headersObject,
-            body: data ? JSON.stringify(JSON.parse(data)) : undefined,
-        };
-
+        let method: string;
         try {
-            const requestUrl = useProxy ? this.rewriteUrlToProxy(url) : url;
+            method = inferMethod(explicitMethod, hasBody);
+        } catch (e: any) {
+            context.writer.writeError(e.message);
+            context.process.exit(1);
+            return;
+        }
 
-            const response = await fetch(requestUrl, options);
-            const text = await response.text();
+        const headers = parseHeaders(args['header'] || args['H']);
+        const body = resolveBody(data, dataRaw);
+        const requestUrl = useProxy ? rewriteUrlToProxy(url) : url;
 
-            context.writer.writeSuccess('Request successful:');
-            if (verbose) {
-                context.writer.writeln(`Status: ${response.status}`);
+        const fetchOptions = buildFetchOptions({
+            url: requestUrl,
+            method,
+            headers,
+            body: data,
+            rawBody: dataRaw,
+            followRedirects,
+            timeout,
+            proxy: useProxy,
+        });
+
+        if (verbose) {
+            context.writer.writeln(
+                `> ${context.writer.wrapInColor(`${method} ${url}`, CliForegroundColor.Cyan)}`,
+            );
+            for (const [key, value] of Object.entries(headers)) {
                 context.writer.writeln(
-                    `Headers: ${JSON.stringify(response.headers, null, 2)}`,
+                    `> ${context.writer.wrapInColor(`${key}: ${value}`, CliForegroundColor.Yellow)}`,
                 );
             }
-            context.writer.writeln(text);
-
-            context.process.output(text);
-        } catch (error) {
-            context.writer.writeError(`Request failed: ${error}`);
-            context.process.exit(-1);
-        } finally {
+            if (body) {
+                context.writer.writeln(`> Body: ${body}`);
+            }
             context.writer.writeln();
-            context.writer.writeInfo('Equivalent curl command:');
-            context.writer.writeln(
-                this.generateCurlCommand(url, method, headers, data),
-            );
-        }
-    }
-
-    private generateCurlCommand(
-        url: string,
-        method: string,
-        headers: string[],
-        data?: string,
-    ): string {
-        const headerString = headers.map((h) => `-H "${h}"`).join(' ');
-        const dataString = data ? `-d '${data}'` : '';
-        return `curl -X ${method} ${headerString} ${dataString} "${url}"`;
-    }
-
-    private rewriteUrlToProxy(originalUrl: string): string {
-        const regex = /^(https?):\/\/([^\/]+)(\/.*)?$/i;
-
-        const match = originalUrl.match(regex);
-
-        if (!match) {
-            throw new Error('Invalid URL provided');
         }
 
-        const scheme = match[1]; // 'http' or 'https'
-        const domain = match[2]; // domain.com
-        const path = match[3] || '/'; // /path or '/'
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        fetchOptions.signal = controller.signal;
 
-        return `https://proxy.qodalis.com/proxy/${scheme}/${domain}${path}`;
+        const startTime = performance.now();
+
+        try {
+            const response = await fetch(requestUrl, fetchOptions);
+            const elapsed = Math.round(performance.now() - startTime);
+            const responseText = await response.text();
+            const responseHeaders = extractResponseHeaders(response);
+
+            const curlResponse: CurlResponse = {
+                status: response.status,
+                statusText: response.statusText,
+                headers: responseHeaders,
+                body: responseText,
+                timing: elapsed,
+                url: response.url,
+                redirected: response.redirected,
+            };
+
+            if (!silent) {
+                const statusColor = response.ok ? CliForegroundColor.Green : CliForegroundColor.Red;
+                context.writer.writeln(
+                    context.writer.wrapInColor(
+                        `HTTP ${response.status} ${response.statusText}`,
+                        statusColor,
+                    ),
+                );
+            }
+
+            if (verbose) {
+                context.writer.writeln();
+                for (const [key, value] of Object.entries(responseHeaders)) {
+                    context.writer.writeln(
+                        `< ${context.writer.wrapInColor(`${key}: ${value}`, CliForegroundColor.Yellow)}`,
+                    );
+                }
+                context.writer.writeln(
+                    `< ${context.writer.wrapInColor(`Time: ${elapsed}ms`, CliForegroundColor.Magenta)}`,
+                );
+                if (response.redirected) {
+                    context.writer.writeln(
+                        `< ${context.writer.wrapInColor(`Redirected to: ${response.url}`, CliForegroundColor.Cyan)}`,
+                    );
+                }
+                context.writer.writeln();
+            }
+
+            const formattedBody = formatResponseBody(responseText, pretty);
+            if (formattedBody) {
+                context.writer.writeln(formattedBody);
+            }
+
+            context.process.output(curlResponse);
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                context.writer.writeError(`Request timed out after ${timeout}ms`);
+            } else {
+                context.writer.writeError(`Request failed: ${error.message}`);
+            }
+            context.process.exit(1);
+        } finally {
+            clearTimeout(timeoutId);
+        }
     }
 
     writeDescription(context: ICliExecutionContext): void {
         const { writer } = context;
+
         writer.writeln(this.description!);
         writer.writeln();
-        writer.writeln('📋 Usage:');
-        writer.writeln(
-            `  ${writer.wrapInColor('curl <method> <url> [options]', CliForegroundColor.Cyan)}`,
-        );
+
+        writer.writeln(writer.wrapInColor('Usage:', CliForegroundColor.Yellow));
+        writer.writeln(`  curl <url> [options]`);
         writer.writeln();
-        writer.writeln('⚙️  Options:');
-        writer.writeln(
-            `  ${writer.wrapInColor('-H, --header', CliForegroundColor.Yellow)}     Add custom headers`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('-d, --data', CliForegroundColor.Yellow)}       Add request body (JSON)`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('--verbose', CliForegroundColor.Yellow)}        Print detailed response (status, headers)`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('--proxy', CliForegroundColor.Yellow)}          Route request through proxy`,
-        );
+
+        writer.writeln(writer.wrapInColor('Options:', CliForegroundColor.Yellow));
+        writer.writeln(`  ${writer.wrapInColor('-X, --request <METHOD>', CliForegroundColor.Cyan)}   HTTP method (default: GET, or POST if -d given)`);
+        writer.writeln(`  ${writer.wrapInColor('-H, --header <header>', CliForegroundColor.Cyan)}    Add header (repeatable)`);
+        writer.writeln(`  ${writer.wrapInColor('-d, --data <body>', CliForegroundColor.Cyan)}        Request body (auto-detects JSON)`);
+        writer.writeln(`  ${writer.wrapInColor('--data-raw <body>', CliForegroundColor.Cyan)}        Request body as-is`);
+        writer.writeln(`  ${writer.wrapInColor('-v, --verbose', CliForegroundColor.Cyan)}            Show headers and timing`);
+        writer.writeln(`  ${writer.wrapInColor('--pretty', CliForegroundColor.Cyan)}                 Pretty-print JSON response`);
+        writer.writeln(`  ${writer.wrapInColor('--timeout <ms>', CliForegroundColor.Cyan)}           Timeout in ms (default: 30000)`);
+        writer.writeln(`  ${writer.wrapInColor('-L, --location', CliForegroundColor.Cyan)}           Follow redirects (default: true)`);
+        writer.writeln(`  ${writer.wrapInColor('--proxy', CliForegroundColor.Cyan)}                  Route through CORS proxy`);
+        writer.writeln(`  ${writer.wrapInColor('-s, --silent', CliForegroundColor.Cyan)}             Only output body`);
+        writer.writeln(`  ${writer.wrapInColor('-o, --output <name>', CliForegroundColor.Cyan)}      Store response in variable`);
         writer.writeln();
-        writer.writeln('📝 Examples:');
-        writer.writeln(`  curl get https://api.example.com/users`);
-        writer.writeln(
-            `  curl post https://api.example.com/users -d='{"name":"John"}' -H="Content-Type: application/json"`,
-        );
-        writer.writeln(`  curl delete https://api.example.com/users/1 --proxy`);
+
+        writer.writeln(writer.wrapInColor('Examples:', CliForegroundColor.Yellow));
+        writer.writeln(`  curl https://api.example.com/users`);
+        writer.writeln(`  curl https://api.example.com/users -X POST -d '{"name":"John"}' -H 'Content-Type: application/json'`);
+        writer.writeln(`  curl https://api.example.com/users -v --pretty`);
+        writer.writeln(`  curl https://api.example.com/status -X HEAD`);
+        writer.writeln(`  curl https://api.example.com/data --proxy --timeout 5000`);
         writer.writeln();
-        writer.writeWarning(
-            '⚠️  The server must allow CORS for this tool to work',
-        );
+
+        writer.writeWarning('The server must allow CORS for this tool to work. Use --proxy to bypass CORS restrictions.');
     }
+
+    async initialize(_context: ICliExecutionContext): Promise<void> {}
 }
