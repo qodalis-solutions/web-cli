@@ -4,10 +4,10 @@
 
 export * from './lib/index';
 
-import { ICliModule, ICliCompletionProvider_TOKEN } from '@qodalis/cli-core';
+import { ICliModule, ICliCompletionProvider_TOKEN, ICliFileTransferService_TOKEN } from '@qodalis/cli-core';
 import { API_VERSION } from './lib/version';
 import { IFileSystemService_TOKEN } from './lib/interfaces';
-import { IndexedDbFileSystemService } from './lib/services';
+import { IndexedDbFileSystemService, VirtualFsFileTransferService } from './lib/services';
 import { IFileSystemService } from './lib/interfaces';
 import { FilePathCompletionProvider } from './lib/completion/file-path-completion-provider';
 import { CliLsCommandProcessor } from './lib/processors/cli-ls-command-processor';
@@ -76,6 +76,10 @@ export const filesModule: ICliFilesModule = {
             provide: ICliCompletionProvider_TOKEN,
             useValue: new FilePathCompletionProvider(fsService),
             multi: true,
+        },
+        {
+            provide: ICliFileTransferService_TOKEN,
+            useValue: new VirtualFsFileTransferService(fsService),
         },
     ],
 
