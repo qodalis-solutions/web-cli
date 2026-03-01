@@ -103,6 +103,14 @@ export default defineConfig({
                 __dirname,
                 '../../dist/wordle/public-api.mjs',
             ),
+            '@qodalis/cli-scp': path.resolve(
+                __dirname,
+                '../../dist/scp/public-api.mjs',
+            ),
+            '@qodalis/cli-wget': path.resolve(
+                __dirname,
+                '../../dist/wget/public-api.mjs',
+            ),
         },
     },
 });

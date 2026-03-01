@@ -25,6 +25,8 @@ export function projectJsonTemplate(vars: TemplateVars): string {
                     options: {
                         tsConfig: `packages/plugins/${vars.name}/tsconfig.spec.json`,
                         polyfills: ['zone.js', 'zone.js/testing'],
+                        browsers: 'ChromeHeadless',
+                        watch: false,
                     },
                 },
             },

@@ -479,7 +479,58 @@
       "projectType": "library",
       "root": "packages/plugins/files",
       "sourceRoot": "packages/plugins/files/src",
-      "architect": {}
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/files/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
+            "browsers": "ChromeHeadless",
+            "watch": false
+          }
+        }
+      }
+    },
+    "scp": {
+      "projectType": "library",
+      "root": "packages/plugins/scp",
+      "sourceRoot": "packages/plugins/scp/src",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/scp/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
+            "browsers": "ChromeHeadless",
+            "watch": false
+          }
+        }
+      }
+    },
+    "wget": {
+      "projectType": "library",
+      "root": "packages/plugins/wget",
+      "sourceRoot": "packages/plugins/wget/src",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/wget/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
+            "browsers": "ChromeHeadless",
+            "watch": false
+          }
+        }
+      }
     }
   },
   "cli": {

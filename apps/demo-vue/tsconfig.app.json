@@ -25,7 +25,9 @@
       "@qodalis/cli-tetris": ["dist/tetris"],
       "@qodalis/cli-2048": ["dist/2048"],
       "@qodalis/cli-minesweeper": ["dist/minesweeper"],
-      "@qodalis/cli-wordle": ["dist/wordle"]
+      "@qodalis/cli-wordle": ["dist/wordle"],
+      "@qodalis/cli-scp": ["dist/scp"],
+      "@qodalis/cli-wget": ["dist/wget"]
     },
     "types": ["vite/client"],
 
