@@ -114,11 +114,16 @@ export class CliScpCommandCommandProcessor implements ICliCommandProcessor {
         context.spinner?.show(`Downloading ${remotePath} from ${server.name}...`);
 
         try {
+            let lastProgressUpdate = 0;
             const { content, size } = await transferService.download(
                 serverUrl(server),
                 remotePath,
                 server.headers,
                 (received, total) => {
+                    const now = Date.now();
+                    if (now - lastProgressUpdate < 200) return;
+                    lastProgressUpdate = now;
+
                     if (total > 0) {
                         const pct = Math.round((received / total) * 100);
                         context.spinner?.show(
