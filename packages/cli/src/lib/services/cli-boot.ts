@@ -9,7 +9,7 @@ import {
     CliModuleRegistry,
     initializeBrowserEnvironment,
     LIBRARY_VERSION as CORE_VERSION,
-    satisfiesMinVersion,
+    satisfiesVersionRange,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION as CLI_VERSION, API_VERSION } from '../version';
 import { CliExecutionContext } from '../context/cli-execution-context';
@@ -65,10 +65,24 @@ export class CliBoot {
         const coreModule = this.buildCoreModule();
         await this.bootModule(coreModule, context);
 
-        // 4. Topologically sort remaining modules by dependencies
-        const sorted = this.topologicalSort(modules, context);
+        // 4. Filter out modules that do not meet the required API version
+        const compatible = modules.filter((module) => {
+            const modApiVersion = module.apiVersion;
+            if (typeof modApiVersion !== 'number' || modApiVersion < API_VERSION) {
+                context.writer.writeWarning(
+                    `Plugin "${module.name}" targets API version ${modApiVersion ?? 'unknown'}, ` +
+                    `but this runtime requires API version ${API_VERSION}. Skipping. ` +
+                    `See https://qodalis.com/docs/upgrade-v2`,
+                );
+                return false;
+            }
+            return true;
+        });
 
-        // 5. Boot each module in order
+        // 5. Topologically sort remaining modules by dependencies
+        const sorted = this.topologicalSort(compatible, context);
+
+        // 6. Boot each module in order
         for (const module of sorted) {
             await this.bootModule(module, context);
         }
@@ -204,19 +218,19 @@ export class CliBoot {
             const meta = p.metadata;
             if (
                 meta?.requiredCoreVersion &&
-                !satisfiesMinVersion(CORE_VERSION, meta.requiredCoreVersion)
+                !satisfiesVersionRange(CORE_VERSION, meta.requiredCoreVersion)
             ) {
                 context.writer.writeWarning(
-                    `Plugin "${p.command}" requires cli-core >=${meta.requiredCoreVersion} but ${CORE_VERSION} is installed. Skipping.`,
+                    `Plugin "${p.command}" requires cli-core ${meta.requiredCoreVersion} but ${CORE_VERSION} is installed. Skipping.`,
                 );
                 return false;
             }
             if (
                 meta?.requiredCliVersion &&
-                !satisfiesMinVersion(CLI_VERSION, meta.requiredCliVersion)
+                !satisfiesVersionRange(CLI_VERSION, meta.requiredCliVersion)
             ) {
                 context.writer.writeWarning(
-                    `Plugin "${p.command}" requires angular-cli >=${meta.requiredCliVersion} but ${CLI_VERSION} is installed. Skipping.`,
+                    `Plugin "${p.command}" requires cli ${meta.requiredCliVersion} but ${CLI_VERSION} is installed. Skipping.`,
                 );
                 return false;
             }
