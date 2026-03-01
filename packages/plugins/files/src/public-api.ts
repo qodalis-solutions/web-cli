@@ -24,6 +24,7 @@ import { CliMvCommandProcessor } from './lib/processors/cli-mv-command-processor
 import { CliTreeCommandProcessor } from './lib/processors/cli-tree-command-processor';
 import { CliTailCommandProcessor } from './lib/processors/cli-tail-command-processor';
 import { CliWcCommandProcessor } from './lib/processors/cli-wc-command-processor';
+import { CliFindCommandProcessor } from './lib/processors/cli-find-command-processor';
 
 /**
  * Configuration options for the files module.
@@ -60,6 +61,7 @@ export const filesModule: ICliFilesModule = {
         new CliTreeCommandProcessor(),
         new CliTailCommandProcessor(),
         new CliWcCommandProcessor(),
+        new CliFindCommandProcessor(),
     ],
     services: [
         {

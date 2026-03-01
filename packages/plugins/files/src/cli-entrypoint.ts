@@ -22,6 +22,7 @@ import { CliMvCommandProcessor } from './lib/processors/cli-mv-command-processor
 import { CliTreeCommandProcessor } from './lib/processors/cli-tree-command-processor';
 import { CliTailCommandProcessor } from './lib/processors/cli-tail-command-processor';
 import { CliFindCommandProcessor } from './lib/processors/cli-find-command-processor';
+import { CliGrepCommandProcessor } from './lib/processors/cli-grep-command-processor';
 
 const fsService = new IndexedDbFileSystemService();
 
@@ -42,6 +43,8 @@ const module: ICliModule = {
         new CliMvCommandProcessor(),
         new CliTreeCommandProcessor(),
         new CliTailCommandProcessor(),
+        new CliFindCommandProcessor(),
+        new CliGrepCommandProcessor(),
     ],
     services: [
         {
