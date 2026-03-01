@@ -11,3 +11,6 @@ export * from './cli-cp-command-processor';
 export * from './cli-mv-command-processor';
 export * from './cli-tree-command-processor';
 export * from './cli-head-command-processor';
+export * from './cli-tail-command-processor';
+export * from './cli-wc-command-processor';
+export * from './cli-find-command-processor';
