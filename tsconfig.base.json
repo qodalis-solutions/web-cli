@@ -3,28 +3,78 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "@qodalis/cli-core": ["dist/core"],
-      "@qodalis/cli": ["dist/cli"],
-      "@qodalis/angular-cli": ["dist/angular-cli"],
-      "@qodalis/cli-server-logs": ["dist/server-logs"],
-      "@qodalis/cli-guid": ["dist/guid"],
-      "@qodalis/cli-text-to-image": ["dist/text-to-image"],
-      "@qodalis/cli-regex": ["dist/regex"],
-      "@qodalis/cli-speed-test": ["dist/speed-test"],
-      "@qodalis/cli-browser-storage": ["dist/browser-storage"],
-      "@qodalis/cli-string": ["dist/string"],
-      "@qodalis/cli-todo": ["dist/todo"],
-      "@qodalis/cli-curl": ["dist/curl"],
-      "@qodalis/cli-password-generator": ["dist/password-generator"],
-      "@qodalis/cli-qr": ["dist/qr"],
-      "@qodalis/cli-yesno": ["dist/yesno"],
-      "@qodalis/cli-users": ["dist/users"],
-      "@qodalis/cli-files": ["dist/files"],
-      "@qodalis/cli-snake": ["dist/snake"],
-      "@qodalis/cli-tetris": ["dist/tetris"],
-      "@qodalis/cli-2048": ["dist/2048"],
-      "@qodalis/cli-minesweeper": ["dist/minesweeper"],
-      "@qodalis/cli-wordle": ["dist/wordle"]
+      "@qodalis/cli-core": [
+        "dist/core"
+      ],
+      "@qodalis/cli": [
+        "dist/cli"
+      ],
+      "@qodalis/angular-cli": [
+        "dist/angular-cli"
+      ],
+      "@qodalis/cli-server-logs": [
+        "dist/server-logs"
+      ],
+      "@qodalis/cli-guid": [
+        "dist/guid"
+      ],
+      "@qodalis/cli-text-to-image": [
+        "dist/text-to-image"
+      ],
+      "@qodalis/cli-regex": [
+        "dist/regex"
+      ],
+      "@qodalis/cli-speed-test": [
+        "dist/speed-test"
+      ],
+      "@qodalis/cli-browser-storage": [
+        "dist/browser-storage"
+      ],
+      "@qodalis/cli-string": [
+        "dist/string"
+      ],
+      "@qodalis/cli-todo": [
+        "dist/todo"
+      ],
+      "@qodalis/cli-curl": [
+        "dist/curl"
+      ],
+      "@qodalis/cli-password-generator": [
+        "dist/password-generator"
+      ],
+      "@qodalis/cli-qr": [
+        "dist/qr"
+      ],
+      "@qodalis/cli-yesno": [
+        "dist/yesno"
+      ],
+      "@qodalis/cli-users": [
+        "dist/users"
+      ],
+      "@qodalis/cli-files": [
+        "dist/files"
+      ],
+      "@qodalis/cli-snake": [
+        "dist/snake"
+      ],
+      "@qodalis/cli-tetris": [
+        "dist/tetris"
+      ],
+      "@qodalis/cli-2048": [
+        "dist/2048"
+      ],
+      "@qodalis/cli-minesweeper": [
+        "dist/minesweeper"
+      ],
+      "@qodalis/cli-wordle": [
+        "dist/wordle"
+      ],
+      "@qodalis/cli-scp": [
+        "dist/scp"
+      ],
+      "@qodalis/cli-wget": [
+        "dist/wget"
+      ]
     },
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
@@ -42,7 +92,10 @@
     "target": "ES2022",
     "module": "ES2022",
     "useDefineForClassFields": false,
-    "lib": ["ES2022", "dom"],
+    "lib": [
+      "ES2022",
+      "dom"
+    ],
     "skipLibCheck": true
   }
 }

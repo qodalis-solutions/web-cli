@@ -111,6 +111,9 @@ export class CommandLineMode implements IInputMode {
             this.host.abort();
             this.host.terminal.writeln('Ctrl+C');
 
+            // Clear context processor if one is active (e.g. --context mode)
+            this.host.getExecutionContext().setContextProcessor(undefined);
+
             if (!this.isExecutingCommand) {
                 this.host.showPrompt();
             }

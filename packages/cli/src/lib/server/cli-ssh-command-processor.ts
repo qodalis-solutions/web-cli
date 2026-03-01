@@ -22,7 +22,7 @@ type ServerShellMessage =
 export class CliSshCommandProcessor implements ICliCommandProcessor {
     command = 'ssh';
     description = 'Open a remote shell session on a server';
-    valueRequired = true;
+    valueRequired = false;
     metadata: CliProcessorMetadata = {
         module: '@qodalis/cli-server',
         icon: '\u{1F5A5}',
@@ -168,7 +168,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             return empty;
         }
 
-        // 3. No server specified — auto-select or show menu
+        // 3. No server specified — auto-select single server
         if (shellServers.length === 1) {
             return {
                 serverName: shellServers[0].name,
@@ -177,6 +177,24 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             };
         }
 
+        // 4. Use default server if set and shell-capable
+        const manager = context.services.get<CliServerManager>(
+            CliServerManager_TOKEN,
+        );
+        if (manager?.defaultServer) {
+            const entry = shellServers.find(
+                (s) => s.name === manager.defaultServer,
+            );
+            if (entry) {
+                return {
+                    serverName: entry.name,
+                    oneShotCmd: null,
+                    connection: entry.connection,
+                };
+            }
+        }
+
+        // 5. Multiple servers, no default — show interactive menu
         const selected = await context.reader.readSelectInline(
             'Select a server for shell access:',
             shellServers.map((s) => ({
