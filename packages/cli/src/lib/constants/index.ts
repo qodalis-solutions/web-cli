@@ -30,22 +30,22 @@ export const CLi_Name_Art = CLi_Name_Art_Full;
 export const hotkeysInfo = [
     {
         key: 'Ctrl + C',
-        description: '⏹  Cancel the running command or copy selection',
+        description: 'Cancel command or copy selection',
     },
     {
         key: 'Ctrl + V',
-        description: '📋 Paste from clipboard',
+        description: 'Paste from clipboard',
     },
     {
         key: 'Ctrl + L',
-        description: '🧹 Clear the terminal screen',
+        description: 'Clear the terminal screen',
     },
     {
         key: '↑ / ↓',
-        description: '📜 Navigate through command history',
+        description: 'Navigate command history',
     },
     {
         key: 'Tab',
-        description: '⚡ Autocomplete command',
+        description: 'Autocomplete command',
     },
 ];

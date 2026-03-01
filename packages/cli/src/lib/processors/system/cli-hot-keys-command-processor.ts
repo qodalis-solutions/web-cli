@@ -8,6 +8,9 @@ import {
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { hotkeysInfo } from '../../constants';
 
+const DIM = '\x1b[2m';
+const RESET = '\x1b[0m';
+
 export class CliHotKeysCommandProcessor implements ICliCommandProcessor {
     command = 'hotkeys';
 
@@ -31,19 +34,9 @@ export class CliHotKeysCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         const { writer } = context;
 
-        writer.writeln(
-            writer.wrapInColor(
-                '⌨️  Keyboard Shortcuts:',
-                CliForegroundColor.Yellow,
-            ),
-        );
-
         hotkeysInfo.forEach((hotkey) => {
             writer.writeln(
-                `  ${writer.wrapInColor(
-                    hotkey.key.padEnd(12),
-                    CliForegroundColor.Yellow,
-                )} ${hotkey.description}`,
+                `    ${writer.wrapInColor(hotkey.key.padEnd(12), CliForegroundColor.Cyan)} ${DIM}${hotkey.description}${RESET}`,
             );
         });
     }
@@ -52,13 +45,11 @@ export class CliHotKeysCommandProcessor implements ICliCommandProcessor {
         const { writer } = context;
         writer.writeln('Displays all available keyboard shortcuts and hotkeys');
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(
+            writer.wrapInColor('Usage:', CliForegroundColor.Yellow),
+        );
         writer.writeln(
             `  ${writer.wrapInColor('hotkeys', CliForegroundColor.Cyan)}`,
-        );
-        writer.writeln();
-        writer.writeln(
-            '💡 Hotkeys help you navigate and control the terminal faster',
         );
     }
 }

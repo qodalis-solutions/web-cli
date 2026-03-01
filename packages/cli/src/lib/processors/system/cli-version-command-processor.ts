@@ -13,6 +13,10 @@ import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../../version';
 import { getCliNameArt } from '../../constants';
 
+const BOLD = '\x1b[1m';
+const DIM = '\x1b[2m';
+const RESET = '\x1b[0m';
+
 export class CliVersionCommandProcessor implements ICliCommandProcessor {
     command = 'version';
 
@@ -37,11 +41,11 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
         const { writer } = context;
 
         writer.writeln(
-            `⚙️  Qodalis CLI ${writer.wrapInColor(`v${LIBRARY_VERSION}`, CliForegroundColor.Green)}`,
+            writer.wrapInColor(getCliNameArt(context.terminal.cols), CliForegroundColor.Cyan),
         );
 
         writer.writeln(
-            `📦  Core ${writer.wrapInColor(`v${CORE_VERSION}`, CliForegroundColor.Green)}`,
+            `  ${DIM}CLI${RESET}  ${writer.wrapInColor(`v${LIBRARY_VERSION}`, CliForegroundColor.Green)}    ${DIM}Core${RESET}  ${writer.wrapInColor(`v${CORE_VERSION}`, CliForegroundColor.Green)}`,
         );
 
         let framework = 'vanilla';
@@ -51,13 +55,11 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
             // no framework registered — standalone usage
         }
         writer.writeln(
-            `🖥️  Framework: ${writer.wrapInColor(framework, CliForegroundColor.Cyan)}`,
+            `  ${DIM}Framework${RESET}  ${writer.wrapInColor(framework, CliForegroundColor.Cyan)}`,
         );
 
-        writer.writeln(getCliNameArt(context.terminal.cols));
-
         writer.writeln(
-            `📖 ${writer.wrapInColor('Documentation:', CliForegroundColor.Green)} https://cli.qodalis.com/docs/`,
+            `  ${DIM}Docs${RESET}  ${writer.wrapInColor('https://cli.qodalis.com/docs/', CliForegroundColor.Blue)}`,
         );
 
         writer.writeln();
@@ -69,13 +71,15 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
             'Prints the current version of the CLI and documentation link',
         );
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(
+            writer.wrapInColor('Usage:', CliForegroundColor.Yellow),
+        );
         writer.writeln(
             `  ${writer.wrapInColor('version', CliForegroundColor.Cyan)}`,
         );
         writer.writeln();
         writer.writeln(
-            `📖 Documentation: ${writer.wrapInColor('https://cli.qodalis.com/docs/', CliForegroundColor.Blue)}`,
+            `  ${DIM}Docs${RESET}  ${writer.wrapInColor('https://cli.qodalis.com/docs/', CliForegroundColor.Blue)}`,
         );
     }
 }
