@@ -270,8 +270,22 @@ export class CliEngine {
      * Clean up terminal and event listeners.
      */
     destroy(): void {
-        // Dispose execution context (cleans up managed timers, notifies processors)
+        // 1. Dispose execution context (stops background services, cleans up managed timers)
         this.executionContext?.dispose();
+
+        // 2. Call onDestroy on all registered modules
+        if (this.bootService && this.executionContext) {
+            const modules = this.bootService.getModuleRegistry().getAll();
+            for (const module of modules) {
+                if (module.onDestroy) {
+                    try {
+                        module.onDestroy(this.executionContext);
+                    } catch (e) {
+                        console.error(`Error in onDestroy for module "${module.name}":`, e);
+                    }
+                }
+            }
+        }
 
         if (this.resizeListener) {
             window.removeEventListener('resize', this.resizeListener);

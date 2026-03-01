@@ -17,6 +17,7 @@ import {
     ICliTerminalWriter,
     ICliUserSession,
     ICliTextAnimator,
+    ICliBackgroundServiceRegistry,
 } from '@qodalis/cli-core';
 import { Terminal } from '@xterm/xterm';
 import { Subject } from 'rxjs';
@@ -46,6 +47,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     logger: ICliLogger;
     services: ICliServiceProvider;
     reader: ICliInputReader;
+    readonly backgroundServices: ICliBackgroundServiceRegistry;
 
     get promptLength(): number {
         return this.context.promptLength;
@@ -110,6 +112,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
         this.exitFullScreenMode = () => context.exitFullScreenMode();
         this.createInterval = (cb, ms) => context.createInterval(cb, ms);
         this.createTimeout = (cb, ms) => context.createTimeout(cb, ms);
+        this.backgroundServices = context.backgroundServices;
 
         this.state = context.services
             .get<ICliStateStoreManager>(CliStateStoreManager_TOKEN)

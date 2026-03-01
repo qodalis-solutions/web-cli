@@ -19,7 +19,9 @@ import {
     ICliTextAnimator,
     ICliCommandExecutorService,
     ICliInputReader,
+    ICliBackgroundServiceRegistry,
 } from '@qodalis/cli-core';
+import { CliBackgroundServiceRegistry } from '../services/background';
 import { CliTerminalWriter } from '../services/cli-terminal-writer';
 import { CliTerminalSpinner } from '../services/progress-bars/cli-terminal-spinner';
 import { CliTerminalProgressBar } from '../services/progress-bars/cli-terminal-progress-bar';
@@ -86,6 +88,8 @@ export class CliExecutionContext
 
     public readonly services: ICliServiceProvider;
 
+    public readonly backgroundServices: ICliBackgroundServiceRegistry;
+
     public promptPathProvider?: () => string | null;
 
     public readonly completionEngine = new CliCompletionEngine();
@@ -147,6 +151,12 @@ export class CliExecutionContext
 
         this.commandHistory = deps.commandHistory;
         this.lineRenderer = new CliTerminalLineRenderer(terminal, this.writer);
+
+        this.backgroundServices = new CliBackgroundServiceRegistry(
+            this.state,
+            deps.services,
+            this.writer,
+        );
     }
 
     // -- Public API (ICliExecutionContext) --
@@ -341,6 +351,7 @@ export class CliExecutionContext
     public enterFullScreenMode(processor: ICliCommandProcessor): void {
         this.terminal.write('\x1b[?1049h'); // alternate screen buffer
         this.terminal.write('\x1b[?25l'); // hide cursor
+        (this.backgroundServices as CliBackgroundServiceRegistry).setFullScreen(true);
         this.setContextProcessor(processor, true);
 
         // Subscribe to terminal resize events and forward to the processor
@@ -355,6 +366,8 @@ export class CliExecutionContext
 
     public exitFullScreenMode(): void {
         const processor = this.contextProcessor;
+
+        (this.backgroundServices as CliBackgroundServiceRegistry).setFullScreen(false);
 
         // Clean up managed timers
         this.clearAllManagedTimers();
@@ -498,6 +511,8 @@ export class CliExecutionContext
         if (this.contextProcessor?.onDispose) {
             this.contextProcessor.onDispose(this);
         }
+
+        (this.backgroundServices as CliBackgroundServiceRegistry).destroyAll().catch(() => {});
 
         this.clearAllManagedTimers();
         this.resizeDisposable?.dispose();
