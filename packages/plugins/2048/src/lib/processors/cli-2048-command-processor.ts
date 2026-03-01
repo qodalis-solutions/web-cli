@@ -79,7 +79,8 @@ const BOX = {
 
 // Grid constants
 const GRID_SIZE = 4;
-const CELL_WIDTH = 6; // Width of each cell (enough for " 2048 ")
+const CELL_WIDTH = 8; // Width of each cell (enough for "  2048  ")
+const CELL_HEIGHT = 3; // Height of each cell (top padding, number, bottom padding)
 
 // -- Tile color mapping -----------------------------------------------------
 
@@ -399,13 +400,14 @@ export class Cli2048CommandProcessor implements ICliCommandProcessor {
         const cols = context.terminal.cols;
         const rows = context.terminal.rows;
 
-        // Total grid visual width: 1 (left border) + GRID_SIZE * (CELL_WIDTH + 1) + 1 (right border)
-        // Each cell is CELL_WIDTH chars, plus a vertical separator after each cell
+        // Total grid visual width: 1 (left border) + GRID_SIZE * (CELL_WIDTH + 1)
         const totalWidth = 1 + GRID_SIZE * (CELL_WIDTH + 1);
-        // Total grid visual height: 1 (top border) + GRID_SIZE * 2 (each cell is 1 row + separator) - 1 + 1 (bottom border)
-        // Actually: top border + (GRID_SIZE rows, each 1 char high, with horizontal separator between rows) + bottom border
-        // = 1 + GRID_SIZE + (GRID_SIZE - 1) + 1 = 2 * GRID_SIZE + 1
-        const totalHeight = 2 * GRID_SIZE + 1;
+        // Total grid visual height:
+        //   1 (top border) + GRID_SIZE * CELL_HEIGHT (cell rows) + (GRID_SIZE - 1) (separators) + 1 (bottom border)
+        //   = GRID_SIZE * CELL_HEIGHT + GRID_SIZE - 1 + 2
+        //   = 4 * 3 + 3 + 2 = 17
+        const totalHeight =
+            GRID_SIZE * CELL_HEIGHT + (GRID_SIZE - 1) + 2;
 
         // Center horizontally
         this.offsetX = Math.max(
@@ -702,24 +704,33 @@ export class Cli2048CommandProcessor implements ICliCommandProcessor {
         );
 
         // -- Grid -----------------------------------------------------------
-        // Each row of tiles is rendered as:
-        //   | <cell> | <cell> | <cell> | <cell> |
-        // With horizontal separators between rows.
+        // Each row of tiles is rendered as CELL_HEIGHT (3) screen rows:
+        //   | <pad>  | <pad>  | <pad>  | <pad>  |   (row 1: top padding)
+        //   | <num>  | <num>  | <num>  | <num>  |   (row 2: centered number)
+        //   | <pad>  | <pad>  | <pad>  | <pad>  |   (row 3: bottom padding)
+        // With single-line horizontal separators between tile rows.
 
         let currentRow = this.offsetY + 1;
 
         for (let r = 0; r < GRID_SIZE; r++) {
-            // Tile row
-            buf.push(ansi.cursorTo(currentRow, this.offsetX));
-            buf.push(ansi.fg.cyan, BOX.vertical, ansi.reset);
-
+            // Build multi-line cell content for this row
+            const cellLines: string[][] = [];
             for (let c = 0; c < GRID_SIZE; c++) {
-                const value = this.grid[r][c];
-                buf.push(this.renderCell(value));
-                buf.push(ansi.fg.cyan, BOX.vertical, ansi.reset);
+                cellLines.push(this.renderCell(this.grid[r][c]));
             }
 
-            currentRow++;
+            // Render CELL_HEIGHT screen rows for this tile row
+            for (let line = 0; line < CELL_HEIGHT; line++) {
+                buf.push(ansi.cursorTo(currentRow, this.offsetX));
+                buf.push(ansi.fg.cyan, BOX.vertical, ansi.reset);
+
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    buf.push(cellLines[c][line]);
+                    buf.push(ansi.fg.cyan, BOX.vertical, ansi.reset);
+                }
+
+                currentRow++;
+            }
 
             // Horizontal separator (except after last row)
             if (r < GRID_SIZE - 1) {
@@ -787,16 +798,25 @@ export class Cli2048CommandProcessor implements ICliCommandProcessor {
         context.terminal.write(buf.join(''));
     }
 
-    private renderCell(value: number): string {
+    /**
+     * Returns an array of CELL_HEIGHT (3) strings, one per screen row:
+     *   [0] top padding row (spaces with background color)
+     *   [1] center row with the number
+     *   [2] bottom padding row (spaces with background color)
+     */
+    private renderCell(value: number): string[] {
+        const emptyRow = ' '.repeat(CELL_WIDTH);
+
         if (value === 0) {
             const content = '\u00B7'.padStart(
                 Math.floor(CELL_WIDTH / 2) + 1,
             );
-            return (
+            const centerLine =
                 ansi.fg.gray +
                 content.padEnd(CELL_WIDTH) +
-                ansi.reset
-            );
+                ansi.reset;
+            const padLine = ansi.reset + emptyRow;
+            return [padLine, centerLine, padLine];
         }
 
         const label = `${value}`;
@@ -806,21 +826,26 @@ export class Cli2048CommandProcessor implements ICliCommandProcessor {
 
         const colors = tileColor(value);
 
-        return (
+        const padLine =
+            colors.bg + emptyRow + ansi.reset;
+        const centerLine =
             colors.bg +
             colors.fg +
             ' '.repeat(padLeft) +
             label +
             ' '.repeat(padRight) +
-            ansi.reset
-        );
+            ansi.reset;
+
+        return [padLine, centerLine, padLine];
     }
 
     private renderGameOverOverlay(buf: string[]): void {
         const gridVisualWidth = 1 + GRID_SIZE * (CELL_WIDTH + 1);
-        const gridVisualHeight = 2 * GRID_SIZE; // approximate center area
+        // Grid content height: GRID_SIZE * CELL_HEIGHT + (GRID_SIZE - 1) separators
+        const gridVisualHeight =
+            GRID_SIZE * CELL_HEIGHT + (GRID_SIZE - 1);
         const centerY =
-            this.offsetY + Math.floor(gridVisualHeight / 2);
+            this.offsetY + 1 + Math.floor(gridVisualHeight / 2);
 
         const boxWidth = 24;
         const boxLeft =
@@ -879,9 +904,11 @@ export class Cli2048CommandProcessor implements ICliCommandProcessor {
 
     private renderWinOverlay(buf: string[]): void {
         const gridVisualWidth = 1 + GRID_SIZE * (CELL_WIDTH + 1);
-        const gridVisualHeight = 2 * GRID_SIZE;
+        // Grid content height: GRID_SIZE * CELL_HEIGHT + (GRID_SIZE - 1) separators
+        const gridVisualHeight =
+            GRID_SIZE * CELL_HEIGHT + (GRID_SIZE - 1);
         const centerY =
-            this.offsetY + Math.floor(gridVisualHeight / 2);
+            this.offsetY + 1 + Math.floor(gridVisualHeight / 2);
 
         const boxWidth = 28;
         const boxLeft =

@@ -411,8 +411,8 @@ export class CliMinesweeperCommandProcessor implements ICliCommandProcessor {
         const cols = context.terminal.cols;
         const rows = context.terminal.rows;
 
-        // Each cell is 2 chars wide, plus 2 for borders
-        const gridDisplayWidth = this.gridCols * 2 + 2;
+        // Each cell is 3 chars wide, plus 2 for borders
+        const gridDisplayWidth = this.gridCols * 3 + 2;
         // Grid height plus 2 for borders, plus title row, plus HUD rows
         const gridDisplayHeight = this.gridRows + 2;
 
@@ -708,7 +708,7 @@ export class CliMinesweeperCommandProcessor implements ICliCommandProcessor {
         // -- Title bar ------------------------------------------------------
         const config = DIFFICULTIES[this.difficulty];
         const title = ` MINESWEEPER - ${config.label} `;
-        const gridDisplayWidth = this.gridCols * 2;
+        const gridDisplayWidth = this.gridCols * 3;
         const titlePad = Math.max(
             0,
             Math.floor((gridDisplayWidth - title.length) / 2),
@@ -748,25 +748,25 @@ export class CliMinesweeperCommandProcessor implements ICliCommandProcessor {
 
                 if (isExploded && this.gameOver) {
                     // The mine that was clicked - bright red background
-                    cellStr = `${ansi.bg.brightRed}${ansi.fg.white}${ansi.bold}${EXPLODED_CHAR} ${ansi.reset}`;
+                    cellStr = `${ansi.bg.brightRed}${ansi.fg.white}${ansi.bold} ${EXPLODED_CHAR} ${ansi.reset}`;
                 } else if (cell.revealed) {
                     if (cell.mine) {
                         // Revealed mine (game over, show all mines)
-                        cellStr = `${ansi.fg.red}${ansi.bold}${MINE_CHAR} ${ansi.reset}`;
+                        cellStr = `${ansi.fg.red}${ansi.bold} ${MINE_CHAR} ${ansi.reset}`;
                     } else if (cell.adjacentMines > 0) {
                         // Number
                         const color =
                             NUMBER_COLORS[cell.adjacentMines] || ansi.fg.white;
-                        cellStr = `${color}${ansi.bold}${cell.adjacentMines} ${ansi.reset}`;
+                        cellStr = `${color}${ansi.bold} ${cell.adjacentMines} ${ansi.reset}`;
                     } else {
                         // Empty revealed cell
-                        cellStr = '  ';
+                        cellStr = '   ';
                     }
                 } else if (cell.flagged) {
-                    cellStr = `${ansi.fg.red}${ansi.bold}${FLAG_CHAR} ${ansi.reset}`;
+                    cellStr = `${ansi.fg.red}${ansi.bold} ${FLAG_CHAR} ${ansi.reset}`;
                 } else {
                     // Hidden cell
-                    cellStr = `${ansi.fg.gray}${HIDDEN_CHAR} ${ansi.reset}`;
+                    cellStr = `${ansi.fg.gray} ${HIDDEN_CHAR} ${ansi.reset}`;
                 }
 
                 // Apply cursor highlight (inverse)
@@ -849,7 +849,7 @@ export class CliMinesweeperCommandProcessor implements ICliCommandProcessor {
     private renderGameOverOverlay(buf: string[]): void {
         const centerY = this.offsetY + Math.floor(this.gridRows / 2);
         const boxWidth = 24;
-        const gridDisplayWidth = this.gridCols * 2 + 2;
+        const gridDisplayWidth = this.gridCols * 3 + 2;
         const boxLeft =
             this.offsetX + Math.floor((gridDisplayWidth - boxWidth) / 2);
 
@@ -907,7 +907,7 @@ export class CliMinesweeperCommandProcessor implements ICliCommandProcessor {
     private renderWinOverlay(buf: string[]): void {
         const centerY = this.offsetY + Math.floor(this.gridRows / 2);
         const boxWidth = 26;
-        const gridDisplayWidth = this.gridCols * 2 + 2;
+        const gridDisplayWidth = this.gridCols * 3 + 2;
         const boxLeft =
             this.offsetX + Math.floor((gridDisplayWidth - boxWidth) / 2);
 

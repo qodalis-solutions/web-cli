@@ -72,9 +72,9 @@ const BOX = {
     vertical: '\u2502',    // |
 };
 
-const BLOCK_CHAR = '\u2588\u2588'; // Two full blocks (each cell = 2 chars wide for square look)
-const EMPTY_CELL = '  ';           // Two spaces
-const GHOST_CHAR = '\u2591\u2591'; // Light shade for ghost piece
+const BLOCK_CHAR = '\u2588\u2588\u2588'; // Three full blocks (each cell = 3 chars wide for larger look)
+const EMPTY_CELL = '   ';              // Three spaces
+const GHOST_CHAR = '\u2591\u2591\u2591'; // Light shade for ghost piece
 
 // ── Tetromino definitions ───────────────────────────────────────────
 // Each piece defined with all 4 rotation states.
@@ -465,9 +465,9 @@ export class CliTetrisCommandProcessor implements ICliCommandProcessor {
         const cols = context.terminal.cols;
         const rows = context.terminal.rows;
 
-        // Board is BOARD_WIDTH cells * 2 chars each + 2 border chars
-        // Plus HUD panel on the right: ~16 chars
-        const totalWidth = BOARD_WIDTH * 2 + 2 + 18;
+        // Board is BOARD_WIDTH cells * 3 chars each + 2 border chars
+        // Plus HUD panel on the right: ~18 chars
+        const totalWidth = BOARD_WIDTH * 3 + 2 + 18;
         this.offsetX = Math.max(1, Math.floor((cols - totalWidth) / 2));
         this.offsetY = Math.max(1, Math.floor((rows - BOARD_HEIGHT - 4) / 2));
     }
@@ -737,7 +737,7 @@ export class CliTetrisCommandProcessor implements ICliCommandProcessor {
         buf.push(ansi.clearScreen, ansi.cursorHome, ansi.hideCursor);
 
         // ── Title bar ────────────────────────────────────────────────
-        const boardDisplayWidth = BOARD_WIDTH * 2 + 2; // cells + borders
+        const boardDisplayWidth = BOARD_WIDTH * 3 + 2; // cells + borders
         const title = ' TETRIS ';
         const titlePad = Math.max(
             0,
@@ -819,7 +819,7 @@ export class CliTetrisCommandProcessor implements ICliCommandProcessor {
         buf.push(
             ansi.fg.cyan,
             BOX.bottomLeft,
-            BOX.horizontal.repeat(BOARD_WIDTH * 2),
+            BOX.horizontal.repeat(BOARD_WIDTH * 3),
             BOX.bottomRight,
             ansi.reset,
         );
@@ -916,7 +916,7 @@ export class CliTetrisCommandProcessor implements ICliCommandProcessor {
     private renderGameOverOverlay(buf: string[]): void {
         const centerY = this.offsetY + Math.floor(BOARD_HEIGHT / 2);
         const boxWidth = 24;
-        const boxLeft = this.offsetX + Math.floor((BOARD_WIDTH * 2 + 2 - boxWidth) / 2);
+        const boxLeft = this.offsetX + Math.floor((BOARD_WIDTH * 3 + 2 - boxWidth) / 2);
 
         buf.push(ansi.cursorTo(centerY - 3, boxLeft));
         buf.push(
@@ -960,7 +960,7 @@ export class CliTetrisCommandProcessor implements ICliCommandProcessor {
     private renderPauseOverlay(buf: string[]): void {
         const centerY = this.offsetY + Math.floor(BOARD_HEIGHT / 2);
         const boxWidth = 20;
-        const boxLeft = this.offsetX + Math.floor((BOARD_WIDTH * 2 + 2 - boxWidth) / 2);
+        const boxLeft = this.offsetX + Math.floor((BOARD_WIDTH * 3 + 2 - boxWidth) / 2);
 
         buf.push(ansi.cursorTo(centerY - 1, boxLeft));
         buf.push(

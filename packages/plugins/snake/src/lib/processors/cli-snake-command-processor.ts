@@ -78,10 +78,13 @@ const BOX = {
     vertical: '\u2502',    // │
 };
 
-const SNAKE_HEAD = '\u2588';   // █
-const SNAKE_BODY = '\u2593';   // ▓
-const FOOD_CHAR = '\u25CF';    // ●
-const EMPTY_CHAR = ' ';
+const SNAKE_HEAD = '\u2588\u2588';   // ██ (2 chars wide)
+const SNAKE_BODY = '\u2593\u2593';   // ▓▓ (2 chars wide)
+const FOOD_CHAR = '\u25CF\u25CF';    // ●● (2 chars wide)
+const EMPTY_CHAR = '  ';             // 2 spaces wide
+
+// Each cell is 2 characters wide on screen
+const CELL_WIDTH = 2;
 
 // ── Processor ────────────────────────────────────────────────────────
 
@@ -353,16 +356,18 @@ export class CliSnakeCommandProcessor implements ICliCommandProcessor {
         const cols = context.terminal.cols;
         const rows = context.terminal.rows;
 
-        // Reserve 2 for borders, 3 rows for HUD at bottom
-        this.gridWidth = Math.min(cols - 2, 60);
+        // Each cell is CELL_WIDTH chars wide; reserve 2 for left/right borders, 2 extra padding
+        // gridWidth is in cell units; visual width = gridWidth * CELL_WIDTH + 2 (borders)
+        this.gridWidth = Math.min(Math.floor((cols - 4) / CELL_WIDTH), 40);
         this.gridHeight = Math.min(rows - 5, 25);
 
         // Ensure minimum playable size
         this.gridWidth = Math.max(this.gridWidth, 15);
         this.gridHeight = Math.max(this.gridHeight, 10);
 
-        // Center horizontally
-        this.offsetX = Math.max(1, Math.floor((cols - this.gridWidth - 2) / 2));
+        // Center horizontally based on visual width (gridWidth * CELL_WIDTH + 2 for borders)
+        const visualWidth = this.gridWidth * CELL_WIDTH + 2;
+        this.offsetX = Math.max(1, Math.floor((cols - visualWidth) / 2));
         this.offsetY = 1;
     }
 
@@ -522,9 +527,10 @@ export class CliSnakeCommandProcessor implements ICliCommandProcessor {
 
         // ── Title bar ────────────────────────────────────────────────
         const title = ' SNAKE ';
+        const visualInnerWidth = this.gridWidth * CELL_WIDTH;
         const titlePad = Math.max(
             0,
-            Math.floor((this.gridWidth + 2 - title.length) / 2),
+            Math.floor((visualInnerWidth - title.length) / 2),
         );
         buf.push(ansi.cursorTo(this.offsetY, this.offsetX));
         buf.push(
@@ -537,7 +543,7 @@ export class CliSnakeCommandProcessor implements ICliCommandProcessor {
             ansi.reset,
             ansi.fg.cyan,
             BOX.horizontal.repeat(
-                Math.max(0, this.gridWidth - titlePad - title.length),
+                Math.max(0, visualInnerWidth - titlePad - title.length),
             ),
             BOX.topRight,
             ansi.reset,
@@ -587,7 +593,7 @@ export class CliSnakeCommandProcessor implements ICliCommandProcessor {
         buf.push(
             ansi.fg.cyan,
             BOX.bottomLeft,
-            BOX.horizontal.repeat(this.gridWidth),
+            BOX.horizontal.repeat(this.gridWidth * CELL_WIDTH),
             BOX.bottomRight,
             ansi.reset,
         );
@@ -635,11 +641,11 @@ export class CliSnakeCommandProcessor implements ICliCommandProcessor {
 
     private renderGameOverOverlay(buf: string[]): void {
         const centerY = this.offsetY + Math.floor(this.gridHeight / 2);
-        const centerX = this.offsetX + Math.floor(this.gridWidth / 2) - 8;
+        const visualBoardWidth = this.gridWidth * CELL_WIDTH + 2;
 
         // Game over box
         const boxWidth = 22;
-        const boxLeft = this.offsetX + Math.floor((this.gridWidth + 2 - boxWidth) / 2);
+        const boxLeft = this.offsetX + Math.floor((visualBoardWidth - boxWidth) / 2);
 
         buf.push(ansi.cursorTo(centerY - 2, boxLeft));
         buf.push(
@@ -695,8 +701,9 @@ export class CliSnakeCommandProcessor implements ICliCommandProcessor {
 
     private renderPauseOverlayInBuf(buf: string[]): void {
         const centerY = this.offsetY + Math.floor(this.gridHeight / 2);
+        const visualBoardWidth = this.gridWidth * CELL_WIDTH + 2;
         const boxWidth = 18;
-        const boxLeft = this.offsetX + Math.floor((this.gridWidth + 2 - boxWidth) / 2);
+        const boxLeft = this.offsetX + Math.floor((visualBoardWidth - boxWidth) / 2);
 
         buf.push(ansi.cursorTo(centerY - 1, boxLeft));
         buf.push(

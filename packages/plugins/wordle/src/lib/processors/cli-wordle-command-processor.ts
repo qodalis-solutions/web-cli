@@ -366,12 +366,12 @@ export class CliWordleCommandProcessor implements ICliCommandProcessor {
         const cols = context.terminal.cols;
         const rows = context.terminal.rows;
 
-        // Grid is 5 cells wide, each cell 3 chars + borders = 5*3 + 6 = 21 chars wide
-        const gridWidth = WORD_LENGTH * 3 + WORD_LENGTH + 1;
+        // Grid is 5 cells wide, each cell 5 chars + borders = 5*5 + 6 = 31 chars wide
+        const gridWidth = WORD_LENGTH * 5 + WORD_LENGTH + 1;
         this.offsetX = Math.max(1, Math.floor((cols - gridWidth) / 2));
 
-        // Vertically: title(2) + grid(6*2+7=19) + gap(1) + keyboard(5) + hud(2) + controls(1) = ~30
-        const totalHeight = 30;
+        // Vertically: title(2) + grid(6*4=24) + gap(1) + message(2) + keyboard(9) + hud(2) + controls(1) = ~41
+        const totalHeight = 41;
         this.offsetY = Math.max(1, Math.floor((rows - totalHeight) / 2));
     }
 
@@ -513,7 +513,7 @@ export class CliWordleCommandProcessor implements ICliCommandProcessor {
         let row = this.offsetY;
 
         // ── Title ────────────────────────────────────────────────────
-        const gridWidth = WORD_LENGTH * 3 + WORD_LENGTH + 1; // 21
+        const gridWidth = WORD_LENGTH * 5 + WORD_LENGTH + 1; // 31
         const title = 'W O R D L E';
         const titlePad = Math.max(
             0,
@@ -613,19 +613,35 @@ export class CliWordleCommandProcessor implements ICliCommandProcessor {
             guess = this.currentInput;
         }
 
+        const cellWidth = 5; // chars per cell content
+
         // Top border of cells
         buf.push(ansi.cursorTo(startRow, this.offsetX));
         buf.push(ansi.fg.gray);
         for (let c = 0; c < WORD_LENGTH; c++) {
             buf.push(
                 c === 0 ? BOX.topLeft : BOX.teeDown,
-                BOX.horizontal.repeat(3),
+                BOX.horizontal.repeat(cellWidth),
             );
         }
         buf.push(BOX.topRight, ansi.reset);
 
-        // Cell contents
+        // Padding row (row 1 of 3 content rows) - shows background color
         buf.push(ansi.cursorTo(startRow + 1, this.offsetX));
+        for (let c = 0; c < WORD_LENGTH; c++) {
+            buf.push(ansi.fg.gray, BOX.vertical, ansi.reset);
+
+            if (isSubmitted && evaluation[c] !== undefined) {
+                const bgColor = this.getStatusBgColor(evaluation[c]);
+                buf.push(bgColor, ' '.repeat(cellWidth), ansi.reset);
+            } else {
+                buf.push(' '.repeat(cellWidth));
+            }
+        }
+        buf.push(ansi.fg.gray, BOX.vertical, ansi.reset);
+
+        // Letter row (row 2 of 3 content rows) - centered letter with background
+        buf.push(ansi.cursorTo(startRow + 2, this.offsetX));
         for (let c = 0; c < WORD_LENGTH; c++) {
             buf.push(ansi.fg.gray, BOX.vertical, ansi.reset);
 
@@ -639,7 +655,7 @@ export class CliWordleCommandProcessor implements ICliCommandProcessor {
                     bgColor,
                     ansi.fg.white,
                     ansi.bold,
-                    ` ${displayLetter} `,
+                    `  ${displayLetter}  `,
                     ansi.reset,
                 );
             } else if (isCurrentRow && c < this.currentInput.length) {
@@ -647,38 +663,52 @@ export class CliWordleCommandProcessor implements ICliCommandProcessor {
                 buf.push(
                     ansi.bold,
                     ansi.fg.white,
-                    ` ${displayLetter} `,
+                    `  ${displayLetter}  `,
                     ansi.reset,
                 );
             } else if (isCurrentRow && c === this.currentInput.length) {
                 // Cursor position
-                buf.push(ansi.fg.gray, ' _ ', ansi.reset);
+                buf.push(ansi.fg.gray, '  _  ', ansi.reset);
             } else {
                 // Empty cell
-                buf.push('   ');
+                buf.push(' '.repeat(cellWidth));
+            }
+        }
+        buf.push(ansi.fg.gray, BOX.vertical, ansi.reset);
+
+        // Padding row (row 3 of 3 content rows) - shows background color
+        buf.push(ansi.cursorTo(startRow + 3, this.offsetX));
+        for (let c = 0; c < WORD_LENGTH; c++) {
+            buf.push(ansi.fg.gray, BOX.vertical, ansi.reset);
+
+            if (isSubmitted && evaluation[c] !== undefined) {
+                const bgColor = this.getStatusBgColor(evaluation[c]);
+                buf.push(bgColor, ' '.repeat(cellWidth), ansi.reset);
+            } else {
+                buf.push(' '.repeat(cellWidth));
             }
         }
         buf.push(ansi.fg.gray, BOX.vertical, ansi.reset);
 
         // Bottom border of cells
-        buf.push(ansi.cursorTo(startRow + 2, this.offsetX));
+        buf.push(ansi.cursorTo(startRow + 4, this.offsetX));
         buf.push(ansi.fg.gray);
         for (let c = 0; c < WORD_LENGTH; c++) {
             buf.push(
                 c === 0 ? BOX.bottomLeft : BOX.teeUp,
-                BOX.horizontal.repeat(3),
+                BOX.horizontal.repeat(cellWidth),
             );
         }
         buf.push(BOX.bottomRight, ansi.reset);
 
-        return startRow + 3;
+        return startRow + 5;
     }
 
     private renderGameOverMessage(
         buf: string[],
         row: number,
     ): number {
-        const gridWidth = WORD_LENGTH * 3 + WORD_LENGTH + 1;
+        const gridWidth = WORD_LENGTH * 5 + WORD_LENGTH + 1;
 
         if (this.gameWon) {
             const messages = [
@@ -711,12 +741,12 @@ export class CliWordleCommandProcessor implements ICliCommandProcessor {
     }
 
     private renderKeyboard(buf: string[], startRow: number): number {
-        const gridWidth = WORD_LENGTH * 3 + WORD_LENGTH + 1;
+        const gridWidth = WORD_LENGTH * 5 + WORD_LENGTH + 1;
         let row = startRow;
 
         for (const keyRow of KEYBOARD_ROWS) {
-            // Each key is 3 chars wide + 1 space = 4 per key
-            const rowWidth = keyRow.length * 4 - 1;
+            // Each key is 5 chars wide + 1 space = 6 per key
+            const rowWidth = keyRow.length * 6 - 1;
             const padLeft =
                 this.offsetX + Math.max(0, Math.floor((gridWidth - rowWidth) / 2));
 
@@ -733,10 +763,10 @@ export class CliWordleCommandProcessor implements ICliCommandProcessor {
 
                 const bgColor = this.getKeyboardBgColor(status);
                 const fgColor = this.getKeyboardFgColor(status);
-                buf.push(bgColor, fgColor, ansi.bold, ` ${key} `, ansi.reset);
+                buf.push(bgColor, fgColor, ansi.bold, `  ${key}  `, ansi.reset);
             }
 
-            row += 2;
+            row += 3;
         }
 
         return row;
