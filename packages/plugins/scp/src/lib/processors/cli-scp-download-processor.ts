@@ -100,6 +100,9 @@ export class CliScpDownloadProcessor implements ICliCommandChildProcessor {
 
         context.spinner?.show(`Downloading ${remotePath} from ${server.name}...`);
 
+        const abortController = new AbortController();
+        const abortSub = context.onAbort.subscribe(() => abortController.abort());
+
         try {
             const { content, size } = await transferService.download(
                 serverUrl(server),
@@ -117,7 +120,7 @@ export class CliScpDownloadProcessor implements ICliCommandChildProcessor {
                         );
                     }
                 },
-                context.onAbort.asObservable().toPromise() as any,
+                abortController.signal,
             );
             context.spinner?.hide();
 
@@ -149,6 +152,8 @@ export class CliScpDownloadProcessor implements ICliCommandChildProcessor {
         } catch (err: any) {
             context.spinner?.hide();
             context.writer.writeError(err.message || 'Download failed');
+        } finally {
+            abortSub.unsubscribe();
         }
     }
 
