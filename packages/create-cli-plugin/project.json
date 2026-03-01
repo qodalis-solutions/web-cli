@@ -1,0 +1,26 @@
+{
+    "name": "create-cli-plugin",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "packages/create-cli-plugin/src",
+    "targets": {
+        "build": {
+            "executor": "nx:run-commands",
+            "options": {
+                "commands": [
+                    "tsup",
+                    "cp package.json ../../dist/create-cli-plugin/package.json",
+                    "chmod +x ../../dist/create-cli-plugin/index.js"
+                ],
+                "cwd": "packages/create-cli-plugin",
+                "parallel": false
+            },
+            "inputs": [
+                "production",
+                "sharedGlobals"
+            ],
+            "outputs": [
+                "{workspaceRoot}/dist/create-cli-plugin"
+            ]
+        }
+    }
+}
