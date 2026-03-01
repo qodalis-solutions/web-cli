@@ -1,3 +1,6 @@
+// DEPRECATED: Use @qodalis/create-cli-plugin instead.
+// Run: pnpm run create-plugin
+// Or: npx @qodalis/create-cli-plugin
 const fs = require("fs/promises");
 const path = require("path");
 const readline = require("readline");

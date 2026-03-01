@@ -19,7 +19,8 @@
     "lint": "nx run-many -t lint",
     "format": "prettier --write \"packages/**/*.{ts,html,css,scss}\" \"apps/**/*.{ts,html,css,scss}\"",
     "graph": "nx graph",
-    "inject-versions": "node ./tools/inject-versions.js"
+    "inject-versions": "node ./tools/inject-versions.js",
+    "create-plugin": "nx build create-cli-plugin && node dist/create-cli-plugin/index.js"
   },
   "private": true,
   "dependencies": {

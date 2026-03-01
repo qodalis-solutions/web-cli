@@ -213,6 +213,36 @@ pkg add lodash
 eval _.map([1, 2, 3], n => n * 2)
 ```
 
+## Creating Custom Plugins
+
+Scaffold a new plugin package with the CLI tool:
+
+```bash
+npx @qodalis/create-cli-plugin
+```
+
+Or install globally:
+
+```bash
+npm install -g @qodalis/create-cli-plugin
+create-cli-plugin
+```
+
+The tool generates a complete plugin project with build config, command processor, tests, and an IIFE bundle for runtime loading. It supports both **standalone** projects and **monorepo** mode (auto-detected when run inside the web-cli workspace).
+
+You can also pass arguments directly for non-interactive usage:
+
+```bash
+npx @qodalis/create-cli-plugin --name weather --description "Weather forecasts"
+```
+
+Once scaffolded, implement your command logic in `src/lib/processors/`, build with `tsup`, and publish to npm. Users install your plugin at runtime:
+
+```bash
+pkg add @qodalis/cli-weather
+weather forecast --city "New York"
+```
+
 ## Extending with Custom Commands
 
 Create a class implementing `ICliCommandProcessor`:
