@@ -3,6 +3,7 @@
  */
 
 export * from './lib/processors/cli-regex-command-processor';
+export * from './lib/utilities';
 
 import { ICliModule } from '@qodalis/cli-core';
 import { CliRegexCommandProcessor } from './lib/processors/cli-regex-command-processor';
