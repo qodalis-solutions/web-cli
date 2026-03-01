@@ -110,6 +110,8 @@ export * from './version-utils';
 
 export * from './config-utils';
 
+export * from './server-version-negotiator';
+
 export const utils = {
     getParameterValue,
     formatJson,
