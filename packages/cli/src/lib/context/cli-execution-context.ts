@@ -224,6 +224,7 @@ export class CliExecutionContext
     setContextProcessor = (
         processor: ICliCommandProcessor | undefined,
         silent?: boolean,
+        fullScreen?: boolean,
     ): void => {
         if (!processor) {
             // Clearing the context processor — pop RawMode if one was active
@@ -246,7 +247,7 @@ export class CliExecutionContext
 
         // If processor has onData, push a RawMode to intercept all input
         if (processor.onData) {
-            this.pushMode(new RawMode(processor, this));
+            this.pushMode(new RawMode(processor, this, fullScreen));
         }
     };
 
@@ -352,7 +353,7 @@ export class CliExecutionContext
         this.terminal.write('\x1b[?1049h'); // alternate screen buffer
         this.terminal.write('\x1b[?25l'); // hide cursor
         (this.backgroundServices as CliBackgroundServiceRegistry).setFullScreen(true);
-        this.setContextProcessor(processor, true);
+        this.setContextProcessor(processor, true, true);
 
         // Subscribe to terminal resize events and forward to the processor
         if (processor.onResize) {

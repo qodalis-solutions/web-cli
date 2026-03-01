@@ -53,11 +53,9 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
 
                     const subscription = context.onAbort.subscribe(() => {
                         source.cancel('Speed test aborted by user');
-
-                        subscription.unsubscribe();
                     });
 
-                    new Promise<void>(async (resolve, reject) => {
+                    try {
                         context.writer.writeInfo('Starting live speed test...');
 
                         const downloadUrl =
@@ -68,34 +66,26 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
                             command.args['upload-url'] ||
                             'https://httpbin.org/post';
 
-                        try {
-                            await this.runDownloadSpeedTest(
-                                downloadUrl,
-                                context,
-                                source.token,
-                            );
+                        await this.runDownloadSpeedTest(
+                            downloadUrl,
+                            context,
+                            source.token,
+                        );
 
-                            await this.runUploadSpeedTest(
-                                uploadUrl,
-                                context,
-                                source,
-                            );
+                        await this.runUploadSpeedTest(
+                            uploadUrl,
+                            context,
+                            source,
+                        );
 
-                            context.writer.writeInfo('Speed test completed');
-
-                            resolve();
-                        } catch (error) {
-                            context.writer.writeError(
-                                `Speed test failed: ${error?.toString()}`,
-                            );
-
-                            reject(error);
-                        }
-
+                        context.writer.writeInfo('Speed test completed');
+                    } catch (error) {
+                        context.writer.writeError(
+                            `Speed test failed: ${error?.toString()}`,
+                        );
+                    } finally {
                         subscription.unsubscribe();
-
-                        context.showPrompt();
-                    });
+                    }
                 },
             },
         ];

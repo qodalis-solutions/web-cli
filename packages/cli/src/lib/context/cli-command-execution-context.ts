@@ -42,6 +42,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     setContextProcessor: (
         processor: ICliCommandProcessor | undefined,
         silent?: boolean,
+        fullScreen?: boolean,
     ) => void;
     process: ICliExecutionProcess;
     logger: ICliLogger;

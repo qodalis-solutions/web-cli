@@ -1,5 +1,6 @@
 import {
     CliServerConfig,
+    ICliBackgroundServiceRegistry,
     ICliCommandProcessorRegistry,
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
@@ -15,6 +16,7 @@ export class CliServerManager implements DefaultServerProvider {
     readonly connections = new Map<string, CliServerConnection>();
     private _logger?: { warn(msg: string): void; info(msg: string): void };
     private _defaultServer: string | null = null;
+    private _backgroundServices?: ICliBackgroundServiceRegistry;
 
     constructor(private readonly registry: ICliCommandProcessorRegistry) {}
 
@@ -35,13 +37,15 @@ export class CliServerManager implements DefaultServerProvider {
     async connectAll(
         servers: CliServerConfig[],
         logger?: { warn(msg: string): void; info(msg: string): void },
+        backgroundServices?: ICliBackgroundServiceRegistry,
     ): Promise<void> {
         this._logger = logger;
+        this._backgroundServices = backgroundServices;
 
         for (const config of servers) {
             if (config.enabled === false) continue;
 
-            const connection = new CliServerConnection(config);
+            const connection = new CliServerConnection(config, backgroundServices);
             this.connections.set(config.name, connection);
 
             connection.onDisconnect = () => {

@@ -4,13 +4,13 @@
     "changeOrigin": true,
     "secure": false,
     "ws": true,
-    "logLevel": "debug"
+    "logLevel": "warn"
   },
   "/speed-test/*": {
     "target": "https://nbg1-speed.hetzner.com/100MB.bin",
     "secure": false,
     "changeOrigin": true,
-    "logLevel": "debug",
+    "logLevel": "warn",
     "pathRewrite": {
       "^/speed-test": ""
     }
@@ -19,13 +19,13 @@
     "target": "http://localhost:8046",
     "changeOrigin": true,
     "secure": false,
-    "logLevel": "debug"
+    "logLevel": "warn"
   },
   "/ws/cli/*": {
     "target": "http://localhost:8046",
     "changeOrigin": true,
     "secure": false,
     "ws": true,
-    "logLevel": "debug"
+    "logLevel": "warn"
   }
 }

@@ -112,10 +112,12 @@ export interface ICliExecutionContext {
      * Set the current processor as the context processor, i.e. the processor that will handle the command
      * @param processor The processor to set
      * @param silent Indicates if the setting should be silent, i.e. not write to the terminal
+     * @param fullScreen When true, Ctrl+C is passed through to the processor (full-screen apps manage their own exit)
      */
     setContextProcessor: (
         processor: ICliCommandProcessor | undefined,
         silent?: boolean,
+        fullScreen?: boolean,
     ) => void;
 
     /**

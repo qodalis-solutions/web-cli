@@ -42,6 +42,12 @@ import {
 import { CliDefaultPingServerService } from '../services/defaults/cli-default-ping-server.service';
 import { CliCommandCompletionProvider } from '../completion/cli-command-completion-provider';
 import { CliParameterCompletionProvider } from '../completion/cli-parameter-completion-provider';
+import { CliServiceNameCompletionProvider } from '../completion/cli-service-name-completion-provider';
+import { CliPackageNameCompletionProvider } from '../completion/cli-package-name-completion-provider';
+import { CliThemeNameCompletionProvider } from '../completion/cli-theme-name-completion-provider';
+import { CliAliasNameCompletionProvider } from '../completion/cli-alias-name-completion-provider';
+import { CliServerNameCompletionProvider } from '../completion/cli-server-name-completion-provider';
+import { CliConfigKeyCompletionProvider } from '../completion/cli-config-key-completion-provider';
 import {
     CliServerManager,
     CliServerManager_TOKEN,
@@ -230,6 +236,12 @@ export class CliEngine {
 
         // 8. Set up tab-completion providers
         const defaultProviders: ICliCompletionProvider[] = [
+            new CliServiceNameCompletionProvider(this.executionContext.backgroundServices),
+            new CliPackageNameCompletionProvider(services),
+            new CliThemeNameCompletionProvider(),
+            new CliAliasNameCompletionProvider(stateStoreManager),
+            new CliServerNameCompletionProvider(serverManager),
+            new CliConfigKeyCompletionProvider(this.registry),
             new CliCommandCompletionProvider(this.registry),
             new CliParameterCompletionProvider(this.registry, executor),
         ];

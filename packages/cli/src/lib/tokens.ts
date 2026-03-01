@@ -34,6 +34,12 @@ export const CliModuleRegistry_TOKEN = 'cli-module-registry';
  */
 export const CliBackgroundServiceRegistry_TOKEN = 'cli-background-service-registry';
 
+/**
+ * Framework-agnostic token for the CLI package manager service.
+ * Used as a key in the service provider to retrieve the package manager.
+ */
+export const CliPackageManagerService_TOKEN = 'cli-package-manager-service';
+
 // Re-exported from @qodalis/cli-core for backward compatibility
 export {
     ICliUserSessionService_TOKEN,

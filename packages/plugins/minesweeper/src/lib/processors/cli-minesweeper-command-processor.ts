@@ -6,6 +6,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    ICliManagedInterval,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -142,7 +143,7 @@ export class CliMinesweeperCommandProcessor implements ICliCommandProcessor {
     private firstReveal = true;
     private startTime = 0;
     private elapsedSeconds = 0;
-    private timerHandle: ReturnType<typeof setInterval> | null = null;
+    private timerHandle: ICliManagedInterval | null = null;
     private flagCount = 0;
     private explodedRow = -1;
     private explodedCol = -1;
@@ -429,13 +430,12 @@ export class CliMinesweeperCommandProcessor implements ICliCommandProcessor {
         this.startTime = Date.now();
         this.elapsedSeconds = 0;
 
-        this.timerHandle = setInterval(() => {
+        this.timerHandle = context.createInterval(() => {
             if (!this.gameOver && !this.gameWon && !this.firstReveal) {
                 const prev = this.elapsedSeconds;
                 this.elapsedSeconds = Math.floor(
                     (Date.now() - this.startTime) / 1000,
                 );
-                // Only re-render if the second actually changed
                 if (this.elapsedSeconds !== prev && this.context) {
                     this.render(this.context);
                 }
@@ -445,7 +445,7 @@ export class CliMinesweeperCommandProcessor implements ICliCommandProcessor {
 
     private stopTimer(): void {
         if (this.timerHandle !== null) {
-            clearInterval(this.timerHandle);
+            this.timerHandle.clear();
             this.timerHandle = null;
         }
     }

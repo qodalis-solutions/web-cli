@@ -4,6 +4,7 @@ import {
     CliServerConfig,
     CliServerResponse,
     CliServerCommandDescriptor,
+    ICliBackgroundServiceRegistry,
 } from '@qodalis/cli-core';
 
 export class CliServerConnection {
@@ -14,7 +15,10 @@ export class CliServerConnection {
 
     onDisconnect?: () => void;
 
-    constructor(private readonly _config: CliServerConfig) {}
+    constructor(
+        private readonly _config: CliServerConfig,
+        private readonly _backgroundServices?: ICliBackgroundServiceRegistry,
+    ) {}
 
     get config(): CliServerConfig {
         return this._config;
@@ -111,6 +115,64 @@ export class CliServerConnection {
     }
 
     private connectEventSocket(): void {
+        if (!this._backgroundServices) {
+            this.connectEventSocketDirect();
+            return;
+        }
+
+        const serviceName = `server-events:${this._config.name}`;
+
+        try {
+            this._backgroundServices.register({
+                name: serviceName,
+                description: `Event stream for server '${this._config.name}'`,
+                type: 'daemon',
+                onStart: async (ctx) => {
+                    const baseUrl = this.normalizeUrl(this._config.url);
+                    const wsUrl = this.toWebSocketUrl(baseUrl) + '/ws/v1/cli/events';
+                    ctx.log(`Connecting to ${wsUrl}`);
+
+                    this._eventSocket = new WebSocket(wsUrl);
+
+                    this._eventSocket.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            ctx.emit({
+                                source: serviceName,
+                                type: data.type || 'server-event',
+                                data,
+                            });
+                            if (data.type === 'disconnect') {
+                                this.handleServerDisconnect();
+                            }
+                        } catch { /* ignore malformed */ }
+                    };
+
+                    this._eventSocket.onclose = () => {
+                        if (this._connected) {
+                            ctx.log('WebSocket closed unexpectedly', 'warn');
+                            this.handleServerDisconnect();
+                        }
+                    };
+
+                    this._eventSocket.onerror = () => {
+                        ctx.log('WebSocket error', 'error');
+                    };
+                },
+                onStop: async () => {
+                    this.closeEventSocketDirect();
+                },
+            });
+
+            this._backgroundServices.start(serviceName).catch(() => {
+                this.connectEventSocketDirect();
+            });
+        } catch {
+            this.connectEventSocketDirect();
+        }
+    }
+
+    private connectEventSocketDirect(): void {
         try {
             const baseUrl = this.normalizeUrl(this._config.url);
             const wsUrl = this.toWebSocketUrl(baseUrl) + '/ws/v1/cli/events';
@@ -150,6 +212,18 @@ export class CliServerConnection {
     }
 
     private closeEventSocket(): void {
+        if (this._backgroundServices) {
+            const serviceName = `server-events:${this._config.name}`;
+            const info = this._backgroundServices.getStatus(serviceName);
+            if (info && info.status === 'running') {
+                this._backgroundServices.stop(serviceName).catch(() => {});
+                return; // onStop calls closeEventSocketDirect()
+            }
+        }
+        this.closeEventSocketDirect();
+    }
+
+    private closeEventSocketDirect(): void {
         if (this._eventSocket) {
             this._eventSocket.onclose = null;
             this._eventSocket.onmessage = null;

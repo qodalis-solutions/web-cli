@@ -13,7 +13,10 @@ import {
     ICliUmdModule,
     Package,
 } from '@qodalis/cli-core';
-import { CliProcessorsRegistry_TOKEN } from '../../tokens';
+import {
+    CliPackageManagerService_TOKEN,
+    CliProcessorsRegistry_TOKEN,
+} from '../../tokens';
 import {
     CdnSourceName,
     ScriptLoaderService,
@@ -1000,6 +1003,12 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             'cli-key-value-store',
         );
         this.packagesManager.setStore(store);
+
+        // Expose the package manager so the completion provider can access it
+        context.services.set([{
+            provide: CliPackageManagerService_TOKEN,
+            useValue: this.packagesManager,
+        }]);
 
         // Register custom package sources from options
         const packageSources = context.options?.packageSources;

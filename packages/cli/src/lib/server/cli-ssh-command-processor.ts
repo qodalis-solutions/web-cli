@@ -22,6 +22,7 @@ type ServerShellMessage =
 export class CliSshCommandProcessor implements ICliCommandProcessor {
     command = 'ssh';
     description = 'Open a remote shell session on a server';
+    valueRequired = true;
     metadata: CliProcessorMetadata = {
         module: '@qodalis/cli-server',
         icon: '\u{1F5A5}',
@@ -70,58 +71,16 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        // Determine which server to connect to
-        let serverName = command.value;
-        let connection: CliServerConnection | undefined;
+        // Resolve server name from: --server=name, positional arg, or interactive menu
+        const { serverName, oneShotCmd, connection } =
+            await this.resolveServer(command, shellServers, context);
 
-        if (serverName) {
-            const entry = shellServers.find((s) => s.name === serverName);
-            if (!entry) {
-                context.writer.writeError(
-                    `Server '${serverName}' not found or does not support shell access.`,
-                );
-                context.process.exit(1);
-                return;
-            }
-            connection = entry.connection;
-        } else if (shellServers.length === 1) {
-            serverName = shellServers[0].name;
-            connection = shellServers[0].connection;
-        } else {
-            const selected = await context.reader.readSelectInline(
-                'Select a server for shell access:',
-                shellServers.map((s) => ({
-                    label: s.name,
-                    value: s.name,
-                })),
-            );
-            if (!selected) {
-                context.writer.writeInfo('Shell cancelled.');
-                return;
-            }
-            serverName = selected;
-            connection = shellServers.find(
-                (s) => s.name === selected,
-            )!.connection;
-        }
-
-        // Check for one-shot mode: ssh <server> <command>
-        const rawCmd = command.rawCommand ?? '';
-        const oneShotCmd = this.extractOneShotCommand(rawCmd, serverName!);
+        if (!serverName || !connection) return;
 
         if (oneShotCmd) {
-            await this.executeOneShot(
-                connection!,
-                serverName!,
-                oneShotCmd,
-                context,
-            );
+            await this.executeOneShot(connection, serverName, oneShotCmd, context);
         } else {
-            await this.executeInteractive(
-                connection!,
-                serverName!,
-                context,
-            );
+            await this.executeInteractive(connection, serverName, context);
         }
     }
 
@@ -156,17 +115,85 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         this.context = null;
     }
 
-    private extractOneShotCommand(
-        rawCommand: string,
-        serverName: string,
-    ): string | null {
-        // rawCommand is the full input, e.g. "ssh dotnet ls -la"
-        // Strip "ssh" prefix and optional server name
-        let rest = rawCommand.replace(/^ssh\s+/, '');
-        if (rest.startsWith(serverName)) {
-            rest = rest.slice(serverName.length).trim();
+    private async resolveServer(
+        command: CliProcessCommand,
+        shellServers: Array<{ name: string; connection: CliServerConnection }>,
+        context: ICliExecutionContext,
+    ): Promise<{
+        serverName: string | null;
+        oneShotCmd: string | null;
+        connection: CliServerConnection | null;
+    }> {
+        const empty = { serverName: null, oneShotCmd: null, connection: null };
+
+        // 1. Check --server=name parameter
+        const argServer = command.args?.['server'] as string | undefined;
+        if (argServer && typeof argServer === 'string') {
+            const entry = shellServers.find((s) => s.name === argServer);
+            if (!entry) {
+                context.writer.writeError(
+                    `Server '${argServer}' not found or does not support shell access.`,
+                );
+                context.process.exit(1);
+                return empty;
+            }
+            // One-shot command comes from command.value (text after "ssh" excluding flags)
+            // Not applicable with --server=name since value would be empty
+            return {
+                serverName: argServer,
+                oneShotCmd: null,
+                connection: entry.connection,
+            };
         }
-        return rest.length > 0 ? rest : null;
+
+        // 2. Check positional value: "ssh dotnet" or "ssh dotnet ls -la"
+        const value = command.value?.trim();
+        if (value) {
+            const parts = value.split(/\s+/);
+            const candidateName = parts[0];
+            const entry = shellServers.find((s) => s.name === candidateName);
+            if (entry) {
+                const oneShotCmd = parts.slice(1).join(' ') || null;
+                return {
+                    serverName: candidateName,
+                    oneShotCmd,
+                    connection: entry.connection,
+                };
+            }
+            // Value doesn't match any server — treat as error
+            context.writer.writeError(
+                `Server '${candidateName}' not found or does not support shell access.`,
+            );
+            context.process.exit(1);
+            return empty;
+        }
+
+        // 3. No server specified — auto-select or show menu
+        if (shellServers.length === 1) {
+            return {
+                serverName: shellServers[0].name,
+                oneShotCmd: null,
+                connection: shellServers[0].connection,
+            };
+        }
+
+        const selected = await context.reader.readSelectInline(
+            'Select a server for shell access:',
+            shellServers.map((s) => ({
+                label: s.name,
+                value: s.name,
+            })),
+        );
+        if (!selected) {
+            context.writer.writeInfo('Shell cancelled.');
+            return empty;
+        }
+        const entry = shellServers.find((s) => s.name === selected)!;
+        return {
+            serverName: selected,
+            oneShotCmd: null,
+            connection: entry.connection,
+        };
     }
 
     private async executeInteractive(
@@ -209,6 +236,8 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                             `Connected to ${serverName} (${msg.os}, ${msg.shell})`,
                         );
                         context.enterFullScreenMode(this);
+                        // Reset terminal for shell: clear screen, cursor home, show cursor
+                        context.terminal.write('\x1b[2J\x1b[H\x1b[?25h');
                         break;
 
                     case 'stdout':

@@ -40,6 +40,11 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
 
     private nextId = 1;
 
+    /** Returns the current list of todo items (used by completion providers). */
+    getTodos(): TodoItem[] {
+        return this.todos;
+    }
+
     constructor() {
         this.registerSubProcessors();
     }
