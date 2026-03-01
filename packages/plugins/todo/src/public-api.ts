@@ -2,6 +2,7 @@
  * Public API Surface of todo
  */
 
+export * from './lib/utilities';
 export * from './lib/processors/cli-todo-command-processor';
 export * from './lib/completion/cli-todo-id-completion-provider';
 

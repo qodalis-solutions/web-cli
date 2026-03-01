@@ -4,17 +4,8 @@ import {
 } from '@qodalis/cli-core';
 import { CliTodoCommandProcessor } from '../processors/cli-todo-command-processor';
 
-/**
- * Sub-commands of `todo` that accept a todo ID value.
- */
-const TODO_ID_SUBCOMMANDS = new Set(['rm', 'complete']);
+const TODO_ID_SUBCOMMANDS = new Set(['rm', 'done', 'complete', 'toggle', 'edit']);
 
-/**
- * Provides tab-completion for todo item IDs when typing
- * `todo rm <id>` or `todo complete <id>`.
- *
- * Priority 50 — checked before command and parameter completion.
- */
 export class CliTodoIdCompletionProvider
     implements ICliCompletionProvider
 {
@@ -44,9 +35,9 @@ export class CliTodoIdCompletionProvider
         const todos = this.todoProcessor.getTodos();
         const lowerPrefix = token.toLowerCase();
 
-        // For 'complete', only show non-completed todos
+        // For 'done' and 'complete', only show non-completed todos
         const filtered =
-            subCommand === 'complete'
+            subCommand === 'done' || subCommand === 'complete'
                 ? todos.filter((t) => !t.completed)
                 : todos;
 
