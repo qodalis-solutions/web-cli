@@ -7,6 +7,18 @@ import {
     ICliTerminalWriter,
 } from '@qodalis/cli-core';
 
+/**
+ * Regex that matches ANSI SGR escape sequences (colors, bold, reset, etc.)
+ */
+const ANSI_RE = /\x1b\[[0-9;]*m/g;
+
+/**
+ * Return the visible length of a string, ignoring ANSI escape codes.
+ */
+function visibleLength(text: string): number {
+    return text.replace(ANSI_RE, '').length;
+}
+
 export class CliTerminalWriter implements ICliTerminalWriter {
     constructor(public readonly terminal: Terminal) {}
 
@@ -151,17 +163,20 @@ export class CliTerminalWriter implements ICliTerminalWriter {
     }
 
     public writeTable(headers: string[], rows: string[][]): void {
-        // Calculate column widths
+        // Calculate column widths using visible length (ignoring ANSI codes)
         const colWidths = headers.map((header, colIndex) =>
             Math.max(
-                header.length,
-                ...rows.map((row) => row[colIndex]?.length || 0),
+                visibleLength(header),
+                ...rows.map((row) => visibleLength(row[colIndex] ?? '')),
             ),
         );
 
-        // Function to pad text to a specific width
-        const padText = (text: string, width: number) =>
-            text?.toString()?.padEnd(width, ' ');
+        // Pad text to a visible width, accounting for invisible ANSI sequences
+        const padText = (text: string, width: number) => {
+            const visible = visibleLength(text ?? '');
+            const padding = Math.max(0, width - visible);
+            return (text ?? '') + ' '.repeat(padding);
+        };
 
         // Write the header
         this.write(

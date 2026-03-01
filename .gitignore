@@ -1,16 +1,24 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
-# Compiled output
+# Build output
 /dist
+**/dist
 /tmp
 /out-tsc
 /bazel-out
 
-# Node
+# Dependencies
 /node_modules
-npm-debug.log
-yarn-error.log
 **/node_modules
+
+# Nx
+.nx/
+
+# Angular
+/.angular
+
+# SASS
+.sass-cache/
 
 # IDEs and editors
 .idea/
@@ -29,17 +37,14 @@ yarn-error.log
 !.vscode/extensions.json
 .history/*
 
-# Nx
-.nx/
-
-# Miscellaneous
-/.angular/cache
-.sass-cache/
-/connect.lock
+# Testing
 /coverage
-/libpeerconnection.log
 testem.log
-/typings
+
+# Logs
+npm-debug.log
+yarn-error.log
+*.log
 
 # System files
 .DS_Store
@@ -55,6 +60,7 @@ package-lock.json
 # Worktrees
 .worktrees/
 
-# Framework wrapper local builds
-packages/react-cli/dist
-packages/vue-cli/dist
+# Misc
+/connect.lock
+/libpeerconnection.log
+/typings

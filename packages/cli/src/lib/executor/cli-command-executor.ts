@@ -5,6 +5,8 @@ import {
     getRightOfWord,
     getParameterValue,
     ICliCommandExecutorService,
+    ICliCommandParameterDescriptor,
+    ICliGlobalParameterHandler,
     CancellablePromise,
     CliForegroundColor,
     ICliCommandProcessorRegistry,
@@ -16,6 +18,11 @@ import { ProcessExitedError } from '../errors';
 import { CliCommandExecutionContext } from '../context/cli-command-execution-context';
 import { CliAliasCommandProcessor } from '../processors';
 import { CapturingTerminalWriter } from '../services/capturing-terminal-writer';
+import {
+    versionGlobalParameter,
+    helpGlobalParameter,
+    contextGlobalParameter,
+} from './global-parameters';
 
 /**
  * Extended execution context interface used internally by the command executor.
@@ -28,8 +35,24 @@ export interface ICliExecutionHost extends ICliExecutionContext {
 
 export class CliCommandExecutor implements ICliCommandExecutorService {
     private commandParser: CommandParser = new CommandParser();
+    private globalParameters: ICliGlobalParameterHandler[] = [];
 
-    constructor(protected readonly registry: ICliCommandProcessorRegistry) {}
+    constructor(protected readonly registry: ICliCommandProcessorRegistry) {
+        this.registerGlobalParameter(versionGlobalParameter);
+        this.registerGlobalParameter(helpGlobalParameter);
+        this.registerGlobalParameter(contextGlobalParameter);
+    }
+
+    registerGlobalParameter(handler: ICliGlobalParameterHandler): void {
+        this.globalParameters.push(handler);
+        this.globalParameters.sort(
+            (a, b) => (a.priority ?? 0) - (b.priority ?? 0),
+        );
+    }
+
+    getGlobalParameters(): ICliCommandParameterDescriptor[] {
+        return this.globalParameters.map((h) => h.parameter);
+    }
 
     public async executeCommand(
         command: string,
@@ -220,19 +243,11 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             data: data,
         };
 
-        if (this.versionRequested(context, processor, args)) {
-            process.end();
-            return;
-        }
-
-        if (await this.helpRequested(commandToProcess, context)) {
-            process.end();
-            return;
-        }
-
-        if (this.setContextProcessorRequested(context, processor, args)) {
-            process.end();
-            return;
+        for (const handler of this.globalParameters) {
+            if (await handler.handle(args, processor, commandToProcess, context)) {
+                process.end();
+                return;
+            }
         }
 
         if (!this.validateBeforeExecution(context, processor, args)) {
@@ -358,51 +373,6 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         } catch (e) {
             context.writer.writeError(`Error executing command: ${e}`);
         }
-    }
-
-    private versionRequested(
-        context: ICliExecutionContext,
-        processor: ICliCommandProcessor,
-        args: Record<string, any>,
-    ): boolean {
-        if (args['v'] || args['version']) {
-            context.writer.writeln(
-                `${context.writer.wrapInColor(processor.version || '1.0.0', CliForegroundColor.Cyan)}`,
-            );
-            return true;
-        }
-
-        return false;
-    }
-
-    private setContextProcessorRequested(
-        context: ICliExecutionContext,
-        processor: ICliCommandProcessor,
-        args: Record<string, any>,
-    ): boolean {
-        if (args['context']) {
-            context.setContextProcessor(processor);
-            return true;
-        }
-
-        return false;
-    }
-
-    private async helpRequested(
-        commandToProcess: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<boolean> {
-        if (commandToProcess.command?.startsWith('help')) {
-            return false;
-        }
-
-        if (commandToProcess.args['h'] || commandToProcess.args['help']) {
-            await this.showHelp(commandToProcess, context);
-
-            return true;
-        }
-
-        return false;
     }
 
     /**

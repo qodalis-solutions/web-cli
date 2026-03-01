@@ -2,7 +2,6 @@ import {
     ICliExecutionContext,
     CliProcessCommand,
     ICliCommandProcessor,
-    ICliCommandParameterDescriptor,
     CliForegroundColor,
     CliProcessorMetadata,
     CliIcon,
@@ -232,7 +231,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         // Parameters
         const parameters = [
             ...(processor.parameters || []),
-            ...defaultParameters,
+            ...context.executor.getGlobalParameters(),
         ];
 
         writer.writeln(
@@ -274,18 +273,3 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
     }
 }
 
-const defaultParameters: ICliCommandParameterDescriptor[] = [
-    {
-        name: 'version',
-        aliases: ['v'],
-        type: 'boolean',
-        description: 'Displays the version of the command',
-        required: false,
-    },
-    {
-        name: 'main',
-        type: 'boolean',
-        description: 'Set the command as the main command',
-        required: false,
-    },
-];

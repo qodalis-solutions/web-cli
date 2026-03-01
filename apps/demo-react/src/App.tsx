@@ -33,20 +33,22 @@ import {
 import { CliInputDemoCommandProcessor } from "./processors/cli-input-demo-command-processor";
 
 /**
- * Example background services module demonstrating daemon services and background jobs.
+ * Example background services module demonstrating both execution modes:
+ *   - "heartbeat" runs on the main thread (uses ctx.createInterval)
+ *   - "ticker" runs in a Web Worker (uses workerFactory)
  */
 const backgroundServicesDemo: ICliModule = {
   apiVersion: 2,
   name: "background-services-demo",
-  description: "Demonstrates background services and jobs",
+  description: "Demonstrates background services on main thread and in a Web Worker",
   async onAfterBoot(context: ICliExecutionContext) {
-    // Register a daemon service that ticks every 10 seconds
+    // 1. Main-thread daemon: heartbeat (logs every 10s)
     context.backgroundServices.register({
       name: "heartbeat",
-      description: "Logs a heartbeat every 10 seconds",
+      description: "Main-thread daemon — logs a heartbeat every 10s",
       type: "daemon",
       async onStart(ctx) {
-        ctx.log("Heartbeat service started");
+        ctx.log("Heartbeat service started (main thread)");
         ctx.createInterval(() => {
           ctx.log(`Heartbeat: ${new Date().toLocaleTimeString()}`);
         }, 10000);
@@ -56,8 +58,33 @@ const backgroundServicesDemo: ICliModule = {
       },
     });
 
-    // Auto-start the heartbeat daemon
+    // 2. Worker daemon: ticker (ticks every 5s in a Web Worker)
+    context.backgroundServices.register({
+      name: "ticker",
+      description: "Worker daemon — ticks every 5s in a dedicated Web Worker",
+      type: "daemon",
+      workerCompatible: true,
+      workerFactory: () =>
+        new Worker(new URL("./workers/ticker.worker.ts", import.meta.url), {
+          type: "module",
+        }),
+      // Main-thread fallback if Workers are unavailable
+      async onStart(ctx) {
+        let count = 0;
+        ctx.log("Ticker started (main-thread fallback)");
+        ctx.createInterval(() => {
+          count++;
+          ctx.log(`Tick #${count} from main thread (fallback)`);
+        }, 5000);
+      },
+      async onStop(ctx) {
+        ctx.log("Ticker stopped");
+      },
+    });
+
+    // Auto-start both
     await context.backgroundServices.start("heartbeat");
+    await context.backgroundServices.start("ticker");
   },
 };
 
@@ -99,7 +126,11 @@ const options: CliOptions = {
     primary: "local",
     sources: [{ name: "local", url: "http://localhost:3000/", kind: "file" }],
   },
-  servers: [{ name: "local", url: "" }],
+  servers: [
+    { name: "dotnet", url: "http://localhost:8046" },
+    { name: "node", url: "http://localhost:8047" },
+    { name: "python", url: "http://localhost:8048" },
+  ],
 };
 
 const panelOptions: CliPanelOptions = {

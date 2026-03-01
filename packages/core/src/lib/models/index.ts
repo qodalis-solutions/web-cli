@@ -320,6 +320,20 @@ export type CliServerCommandDescriptor = {
 };
 
 /**
+ * Server capabilities returned by GET /api/cli/capabilities
+ */
+export type CliServerCapabilities = {
+    /** Whether this server supports remote shell access */
+    shell: boolean;
+    /** Server operating system (e.g. "linux", "win32", "darwin") */
+    os?: string;
+    /** Path to the shell binary on the server */
+    shellPath?: string;
+    /** Server version string */
+    version?: string;
+};
+
+/**
  * Represents a package that can be installed
  */
 export interface Package {

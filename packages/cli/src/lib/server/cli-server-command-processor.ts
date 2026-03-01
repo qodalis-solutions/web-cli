@@ -3,6 +3,7 @@ import {
     CliIcon,
     ICliCommandProcessor,
     ICliCommandChildProcessor,
+    ICliCommandParameterDescriptor,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
 import { CliServerManager, CliServerManager_TOKEN } from './cli-server-manager';
@@ -19,13 +20,16 @@ export class CliServerCommandProcessor implements ICliCommandProcessor {
         new ServerListProcessor(),
         new ServerStatusProcessor(),
         new ServerReconnectProcessor(),
+        new ServerDefaultProcessor(),
     ];
 
     async processCommand(
         _command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        context.writer.writeln('Usage: server <list|status|reconnect>');
+        context.writer.writeln(
+            'Usage: server <list|status|reconnect|default>',
+        );
         context.writer.writeln('Run "help server" for details.');
     }
 }
@@ -50,10 +54,12 @@ class ServerListProcessor implements ICliCommandChildProcessor {
 
         const headers = ['Name', 'URL', 'Status', 'Commands'];
         const rows: string[][] = [];
+        const defaultServer = manager.defaultServer;
 
         for (const [name, connection] of manager.connections) {
+            const isDefault = name === defaultServer;
             rows.push([
-                name,
+                isDefault ? `${name} *` : name,
                 connection.config.url,
                 connection.connected ? 'Connected' : 'Disconnected',
                 connection.connected ? String(connection.commands.length) : '-',
@@ -61,6 +67,10 @@ class ServerListProcessor implements ICliCommandChildProcessor {
         }
 
         context.writer.writeTable(headers, rows);
+
+        if (defaultServer) {
+            context.writer.writeInfo('* = default server');
+        }
     }
 }
 
@@ -150,6 +160,64 @@ class ServerReconnectProcessor implements ICliCommandChildProcessor {
             context.writer.writeError(
                 `Could not reconnect to '${serverName}'.`,
             );
+            context.process.exit(1);
+        }
+    }
+}
+
+class ServerDefaultProcessor implements ICliCommandChildProcessor {
+    command = 'default';
+    description = 'Get or set the default server for ambiguous commands';
+    parent?: ICliCommandProcessor;
+    parameters?: ICliCommandParameterDescriptor[] = [
+        {
+            name: '--clear',
+            description: 'Remove default server preference',
+            required: false,
+            type: 'boolean',
+        },
+    ];
+
+    async processCommand(
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        const manager = context.services.get<CliServerManager>(
+            CliServerManager_TOKEN,
+        );
+
+        if (!manager) {
+            context.writer.writeError('Server manager not available.');
+            context.process.exit(1);
+            return;
+        }
+
+        if (command.args?.['clear']) {
+            manager.setDefaultServer(null);
+            context.writer.writeSuccess('Default server cleared.');
+            return;
+        }
+
+        const serverName = command.value;
+        if (!serverName) {
+            const current = manager.defaultServer;
+            if (current) {
+                context.writer.writeInfo(`Default server: ${current}`);
+            } else {
+                context.writer.writeInfo(
+                    'No default server set. Run "server default <name>" to set one.',
+                );
+            }
+            return;
+        }
+
+        try {
+            manager.setDefaultServer(serverName);
+            context.writer.writeSuccess(
+                `Default server set to '${serverName}'.`,
+            );
+        } catch {
+            context.writer.writeError(`Unknown server: ${serverName}`);
             context.process.exit(1);
         }
     }

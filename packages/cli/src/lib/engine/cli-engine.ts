@@ -231,7 +231,7 @@ export class CliEngine {
         // 8. Set up tab-completion providers
         const defaultProviders: ICliCompletionProvider[] = [
             new CliCommandCompletionProvider(this.registry),
-            new CliParameterCompletionProvider(this.registry),
+            new CliParameterCompletionProvider(this.registry, executor),
         ];
 
         // Collect plugin-registered providers (multi-service)

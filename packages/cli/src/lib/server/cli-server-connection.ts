@@ -1,5 +1,6 @@
 import {
     CliProcessCommand,
+    CliServerCapabilities,
     CliServerConfig,
     CliServerResponse,
     CliServerCommandDescriptor,
@@ -8,6 +9,7 @@ import {
 export class CliServerConnection {
     private _connected = false;
     private _commands: CliServerCommandDescriptor[] = [];
+    private _capabilities: CliServerCapabilities | null = null;
     private _eventSocket: WebSocket | null = null;
 
     onDisconnect?: () => void;
@@ -26,25 +28,32 @@ export class CliServerConnection {
         return this._commands;
     }
 
+    get capabilities(): CliServerCapabilities | null {
+        return this._capabilities;
+    }
+
     async connect(): Promise<void> {
         try {
             this._commands = await this.fetchCommands();
             this._connected = true;
+            this._capabilities = await this.fetchCapabilities();
             this.connectEventSocket();
         } catch {
             this._connected = false;
             this._commands = [];
+            this._capabilities = null;
         }
     }
 
     disconnect(): void {
         this._connected = false;
         this._commands = [];
+        this._capabilities = null;
         this.closeEventSocket();
     }
 
     async fetchCommands(): Promise<CliServerCommandDescriptor[]> {
-        const url = `${this.normalizeUrl(this._config.url)}/api/cli/commands`;
+        const url = `${this.normalizeUrl(this._config.url)}/api/v1/cli/commands`;
         const response = await this.httpFetch(url);
 
         if (!response.ok) {
@@ -56,8 +65,19 @@ export class CliServerConnection {
         return response.json();
     }
 
+    async fetchCapabilities(): Promise<CliServerCapabilities | null> {
+        try {
+            const url = `${this.normalizeUrl(this._config.url)}/api/v1/cli/capabilities`;
+            const response = await this.httpFetch(url);
+            if (!response.ok) return null;
+            return response.json();
+        } catch {
+            return null;
+        }
+    }
+
     async execute(command: CliProcessCommand): Promise<CliServerResponse> {
-        const url = `${this.normalizeUrl(this._config.url)}/api/cli/execute`;
+        const url = `${this.normalizeUrl(this._config.url)}/api/v1/cli/execute`;
         const response = await this.httpFetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -82,7 +102,7 @@ export class CliServerConnection {
 
     async ping(): Promise<boolean> {
         try {
-            const url = `${this.normalizeUrl(this._config.url)}/api/cli/version`;
+            const url = `${this.normalizeUrl(this._config.url)}/api/v1/cli/version`;
             const response = await this.httpFetch(url);
             return response.ok;
         } catch {
@@ -93,7 +113,7 @@ export class CliServerConnection {
     private connectEventSocket(): void {
         try {
             const baseUrl = this.normalizeUrl(this._config.url);
-            const wsUrl = this.toWebSocketUrl(baseUrl) + '/ws/cli/events';
+            const wsUrl = this.toWebSocketUrl(baseUrl) + '/ws/v1/cli/events';
             this._eventSocket = new WebSocket(wsUrl);
 
             this._eventSocket.onmessage = (event) => {
@@ -124,6 +144,7 @@ export class CliServerConnection {
     private handleServerDisconnect(): void {
         this._connected = false;
         this._commands = [];
+        this._capabilities = null;
         this.closeEventSocket();
         this.onDisconnect?.();
     }

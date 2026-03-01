@@ -4,14 +4,33 @@ import {
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
 import { CliServerProxyProcessor } from './cli-server-proxy-processor';
+import {
+    CliServerMultiProxyProcessor,
+    DefaultServerProvider,
+} from './cli-server-multi-proxy-processor';
 
 export const CliServerManager_TOKEN = 'cli-server-manager';
 
-export class CliServerManager {
+export class CliServerManager implements DefaultServerProvider {
     readonly connections = new Map<string, CliServerConnection>();
     private _logger?: { warn(msg: string): void; info(msg: string): void };
+    private _defaultServer: string | null = null;
 
     constructor(private readonly registry: ICliCommandProcessorRegistry) {}
+
+    get defaultServer(): string | null {
+        return this._defaultServer;
+    }
+
+    setDefaultServer(name: string | null): void {
+        if (name !== null && !this.connections.has(name)) {
+            throw new Error(`Unknown server: ${name}`);
+        }
+        this._defaultServer = name;
+        // Re-register bare aliases with the new preference
+        this.unregisterBareAliases();
+        this.registerBareAliases();
+    }
 
     async connectAll(
         servers: CliServerConfig[],
@@ -92,9 +111,19 @@ export class CliServerManager {
             this.registry.unregisterProcessor(p);
         }
 
-        // Unregister bare aliases
+        // Unregister bare aliases (single-server and multi-server)
+        this.unregisterBareAliases();
+        // Re-register bare aliases for remaining connected servers
+        this.registerBareAliases();
+    }
+
+    private unregisterBareAliases(): void {
         for (const p of [...this.registry.processors]) {
-            if (p.metadata?.module === `server:${name}`) {
+            if (
+                p.metadata?.module === 'server:multi' ||
+                (p.metadata?.requireServer &&
+                    !p.command.includes(':'))
+            ) {
                 this.registry.unregisterProcessor(p);
             }
         }
@@ -127,37 +156,47 @@ export class CliServerManager {
         }
 
         for (const [command, servers] of commandCounts) {
-            if (servers.length !== 1) continue;
-
-            const serverName = servers[0];
-            const namespacedCommand = `${serverName}:${command}`;
             const existingProcessor = this.registry.findProcessor(command, []);
 
             // Only register bare alias if no local processor owns this command
             if (existingProcessor && !existingProcessor.metadata?.requireServer)
                 continue;
 
-            const namespacedProcessor = this.registry.findProcessor(
-                namespacedCommand,
-                [],
-            );
-            if (!namespacedProcessor) continue;
+            if (servers.length === 1) {
+                const serverName = servers[0];
+                const namespacedCommand = `${serverName}:${command}`;
 
-            // Create a proper proxy processor instance (not a spread copy)
-            // to preserve prototype methods like processCommand
-            const connection = this.connections.get(serverName)!;
-            const descriptor = connection.commands.find(
-                (c) => c.command === command,
-            )!;
-            const alias = new CliServerProxyProcessor(
-                connection,
-                descriptor,
-                serverName,
-            );
-            alias.command = command;
-            alias.aliases = [namespacedCommand];
+                const namespacedProcessor = this.registry.findProcessor(
+                    namespacedCommand,
+                    [],
+                );
+                if (!namespacedProcessor) continue;
 
-            this.registry.registerProcessor(alias);
+                const connection = this.connections.get(serverName)!;
+                const descriptor = connection.commands.find(
+                    (c) => c.command === command,
+                )!;
+                const alias = new CliServerProxyProcessor(
+                    connection,
+                    descriptor,
+                    serverName,
+                );
+                alias.command = command;
+                alias.aliases = [namespacedCommand];
+
+                this.registry.registerProcessor(alias);
+            } else {
+                // Command exists on multiple servers — register a multi-proxy
+                const entries = servers.map((serverName) => {
+                    const connection = this.connections.get(serverName)!;
+                    const descriptor = connection.commands.find(
+                        (c) => c.command === command,
+                    )!;
+                    return { serverName, connection, descriptor };
+                });
+                const multi = new CliServerMultiProxyProcessor(entries, this);
+                this.registry.registerProcessor(multi);
+            }
         }
     }
 }

@@ -2,11 +2,20 @@ import {
     ICliCommandProcessor,
     ICliCommandProcessorRegistry,
     ICliCommandChildProcessor,
+    ICliCommandExecutorService,
 } from '@qodalis/cli-core';
 import { CliCommandCompletionProvider } from '../lib/completion/cli-command-completion-provider';
 import { CliParameterCompletionProvider } from '../lib/completion/cli-parameter-completion-provider';
 import { CliCompletionEngine } from '../lib/completion/cli-completion-engine';
 import { CliCommandProcessorRegistry } from '../lib/registry';
+
+/** Minimal mock executor that returns no global parameters */
+const createMockExecutor = (): ICliCommandExecutorService => ({
+    showHelp: () => Promise.resolve(),
+    executeCommand: () => Promise.resolve(),
+    registerGlobalParameter: () => {},
+    getGlobalParameters: () => [],
+});
 
 const createProcessor = (
     command: string,
@@ -169,7 +178,7 @@ describe('CliParameterCompletionProvider', () => {
                 ],
             }),
         );
-        provider = new CliParameterCompletionProvider(registry);
+        provider = new CliParameterCompletionProvider(registry, createMockExecutor());
     });
 
     it('should complete long parameter names with --', () => {
@@ -289,7 +298,7 @@ describe('CliCompletionEngine', () => {
         );
 
         const cmdProvider = new CliCommandCompletionProvider(registry);
-        const paramProvider = new CliParameterCompletionProvider(registry);
+        const paramProvider = new CliParameterCompletionProvider(registry, createMockExecutor());
         engine.setProviders([paramProvider, cmdProvider]); // Different order to test sorting
     });
 

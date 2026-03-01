@@ -2,6 +2,8 @@ import {
     ICliCompletionProvider,
     ICliCompletionContext,
     ICliCommandProcessorRegistry,
+    ICliCommandExecutorService,
+    ICliCommandParameterDescriptor,
 } from '@qodalis/cli-core';
 
 /**
@@ -11,7 +13,10 @@ import {
 export class CliParameterCompletionProvider implements ICliCompletionProvider {
     priority = 200;
 
-    constructor(private readonly registry: ICliCommandProcessorRegistry) {}
+    constructor(
+        private readonly registry: ICliCommandProcessorRegistry,
+        private readonly executor: ICliCommandExecutorService,
+    ) {}
 
     getCompletions(context: ICliCompletionContext): string[] {
         const { tokens, token } = context;
@@ -35,7 +40,13 @@ export class CliParameterCompletionProvider implements ICliCompletionProvider {
             this.registry.processors,
         );
 
-        if (!processor?.parameters?.length) {
+        // Merge processor-specific parameters with global parameters
+        const allParameters: ICliCommandParameterDescriptor[] = [
+            ...(processor?.parameters ?? []),
+            ...this.executor.getGlobalParameters(),
+        ];
+
+        if (allParameters.length === 0) {
             return [];
         }
 
@@ -44,7 +55,7 @@ export class CliParameterCompletionProvider implements ICliCompletionProvider {
         const lowerPrefix = prefix.toLowerCase();
         const results: string[] = [];
 
-        for (const param of processor.parameters) {
+        for (const param of allParameters) {
             if (isDoubleDash) {
                 if (param.name.toLowerCase().startsWith(lowerPrefix)) {
                     results.push(`--${param.name}`);

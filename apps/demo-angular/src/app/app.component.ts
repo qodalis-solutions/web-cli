@@ -51,7 +51,9 @@ export class AppComponent {
             ],
         },
         servers: [
-            { name: 'local', url: '' }, // Empty URL = same origin (proxied via proxy.conf.json)
+            { name: 'dotnet', url: 'http://localhost:8046' },
+            { name: 'node', url: 'http://localhost:8047' },
+            { name: 'python', url: 'http://localhost:8048' },
         ],
     };
 

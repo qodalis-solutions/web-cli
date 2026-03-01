@@ -164,6 +164,7 @@ describe('CliCommandExecutor', () => {
         executor = new CliCommandExecutor(registry);
         writer = createStubWriter();
         context = createMockContext(writer);
+        (context as any).executor = executor;
     });
 
     // -----------------------------------------------------------------------

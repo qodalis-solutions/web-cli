@@ -12,8 +12,10 @@ import {
 import { ICliExecutionContext } from './execution-context';
 import {
     ICliCommandChildProcessor,
+    ICliCommandParameterDescriptor,
     ICliCommandProcessor,
 } from './command-processor';
+import { ICliGlobalParameterHandler } from './global-parameter';
 
 export interface ICliTerminalWriter {
     /**
@@ -189,6 +191,20 @@ export interface ICliCommandExecutorService {
         command: string,
         context: ICliExecutionContext,
     ): Promise<void>;
+
+    /**
+     * Register a global parameter handler.
+     * Global parameters (e.g. --help, --version) are evaluated for every
+     * command before the processor's own processCommand runs.
+     * @param handler The global parameter handler to register
+     */
+    registerGlobalParameter(handler: ICliGlobalParameterHandler): void;
+
+    /**
+     * Returns the descriptors of all registered global parameters.
+     * Used by help output and tab-completion.
+     */
+    getGlobalParameters(): ICliCommandParameterDescriptor[];
 }
 
 /**
@@ -514,3 +530,5 @@ export * from './engine-snapshot';
 export * from './background-service';
 
 export * from './worker-protocol';
+
+export * from './global-parameter';
