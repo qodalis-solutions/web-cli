@@ -147,11 +147,14 @@ async function main() {
   const readme = await getTemplateWithVars("README.md", vars);
   await replaceFileContent(projectDirectory + "/README.md", readme);
 
+  const majorVersion = version.split('.')[0];
+
   await createFile(
     projectDirectory + "/src/lib/version.ts",
     `
 // Automatically generated during build
 export const LIBRARY_VERSION = '${version}';
+export const API_VERSION = ${majorVersion};
     `,
   );
 

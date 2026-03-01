@@ -33,10 +33,12 @@ function updateLibrariesVersions() {
 
     const packageJson = require(packageJsonPath);
     const version = packageJson.version;
+    const majorVersion = version.split('.')[0];
 
     const versionFileContent = `
 // Automatically generated during build
 export const LIBRARY_VERSION = '${version}';
+export const API_VERSION = ${majorVersion};
   `;
 
     // Skip projects that don't use the src/lib/version.ts pattern (e.g. react-cli, vue-cli)
