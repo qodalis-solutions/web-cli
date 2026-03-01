@@ -28,7 +28,9 @@
         "polyfills": [
           "zone.js",
           "zone.js/testing"
-        ]
+        ],
+        "browsers": "ChromeHeadless",
+        "watch": false
       }
     }
   }

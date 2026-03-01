@@ -130,8 +130,8 @@ export class Cli2048CommandProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata | undefined = {
         module: 'games',
         icon: '\uD83D\uDD22', // U+1F522
-        requiredCoreVersion: '0.0.16',
-        requiredCliVersion: '1.0.37',
+        requiredCoreVersion: '>=2.0.0 <3.0.0',
+        requiredCliVersion: '>=2.0.0 <3.0.0',
     };
 
     stateConfiguration?: CliStateConfiguration | undefined = {

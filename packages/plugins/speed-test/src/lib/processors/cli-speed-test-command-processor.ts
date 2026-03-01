@@ -2,14 +2,40 @@ import {
     CliForegroundColor,
     CliProcessorMetadata,
     DefaultLibraryAuthor,
-} from '@qodalis/cli-core';
-import {
     CliProcessCommand,
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
-import axios, { CancelToken, CancelTokenSource } from 'axios';
 import { LIBRARY_VERSION } from '../version';
+
+/**
+ * Cloudflare speed test endpoints — edge-served, CORS-enabled, fast worldwide.
+ * The `bytes` parameter controls the download size.
+ */
+const DEFAULT_DOWNLOAD_URL =
+    'https://speed.cloudflare.com/__down?bytes=26214400';
+
+const DEFAULT_UPLOAD_URL = 'https://speed.cloudflare.com/__up';
+
+/** Size of upload test payload in bytes (10 MB). */
+const UPLOAD_SIZE = 10 * 1024 * 1024;
+
+/** Format bytes/second as a human-readable speed string. */
+function formatSpeed(bytesPerSecond: number): string {
+    const mbps = (bytesPerSecond * 8) / (1024 * 1024);
+    if (mbps >= 1) return `${mbps.toFixed(2)} Mbps`;
+    const kbps = (bytesPerSecond * 8) / 1024;
+    if (kbps >= 1) return `${kbps.toFixed(1)} Kbps`;
+    return `${(bytesPerSecond * 8).toFixed(0)} bps`;
+}
+
+/** Format bytes as a human-readable size string. */
+function formatBytes(bytes: number): string {
+    if (bytes >= 1024 * 1024)
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${bytes} B`;
+}
 
 export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
     command = 'speed-test';
@@ -18,14 +44,41 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
 
     author = DefaultLibraryAuthor;
 
-    processors?: ICliCommandProcessor[] | undefined = [];
-
     version = LIBRARY_VERSION;
 
-    metadata?: CliProcessorMetadata | undefined = {
+    processors?: ICliCommandProcessor[] = [];
+
+    parameters = [
+        {
+            name: 'download-url',
+            description: 'Custom URL for the download test',
+            type: 'string' as const,
+            required: false,
+        },
+        {
+            name: 'upload-url',
+            description: 'Custom URL for the upload test',
+            type: 'string' as const,
+            required: false,
+        },
+        {
+            name: 'download-only',
+            description: 'Only run the download test',
+            type: 'boolean' as const,
+            required: false,
+        },
+        {
+            name: 'upload-only',
+            description: 'Only run the upload test',
+            type: 'boolean' as const,
+            required: false,
+        },
+    ];
+
+    metadata?: CliProcessorMetadata = {
         icon: '🚀',
-        requiredCoreVersion: '0.0.16',
-        requiredCliVersion: '1.0.37',
+        requiredCoreVersion: '>=2.0.0 <3.0.0',
+        requiredCliVersion: '>=2.0.0 <3.0.0',
     };
 
     constructor() {
@@ -33,59 +86,8 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
             {
                 command: 'run',
                 description: 'Run the internet speed test',
-                parameters: [
-                    {
-                        name: 'download-url',
-                        description: 'URL to download the file',
-                        type: 'string',
-                        required: false,
-                    },
-                    {
-                        name: 'upload-url',
-                        description: 'URL to upload the file',
-                        type: 'string',
-                        required: false,
-                    },
-                ],
                 processCommand: async (command, context) => {
-                    const source: CancelTokenSource =
-                        axios.CancelToken.source();
-
-                    const subscription = context.onAbort.subscribe(() => {
-                        source.cancel('Speed test aborted by user');
-                    });
-
-                    try {
-                        context.writer.writeInfo('Starting live speed test...');
-
-                        const downloadUrl =
-                            command.args['download-url'] ||
-                            'https://proxy.qodalis.com/proxy/https/nbg1-speed.hetzner.com/100MB.bin';
-
-                        const uploadUrl =
-                            command.args['upload-url'] ||
-                            'https://httpbin.org/post';
-
-                        await this.runDownloadSpeedTest(
-                            downloadUrl,
-                            context,
-                            source.token,
-                        );
-
-                        await this.runUploadSpeedTest(
-                            uploadUrl,
-                            context,
-                            source,
-                        );
-
-                        context.writer.writeInfo('Speed test completed');
-                    } catch (error) {
-                        context.writer.writeError(
-                            `Speed test failed: ${error?.toString()}`,
-                        );
-                    } finally {
-                        subscription.unsubscribe();
-                    }
+                    await this.runSpeedTest(command, context);
                 },
             },
         ];
@@ -95,153 +97,289 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        await context.executor.showHelp(command, context);
+        await this.runSpeedTest(command, context);
     }
 
     writeDescription(context: ICliExecutionContext): void {
         const { writer } = context;
         writer.writeln(this.description);
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln('Usage:');
         writer.writeln(
-            `  ${writer.wrapInColor('speed-test run', CliForegroundColor.Cyan)}                          Run download & upload test`,
+            `  ${writer.wrapInColor('speed-test', CliForegroundColor.Cyan)}                                Run download & upload test`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('speed-test run --download-url=<url>', CliForegroundColor.Cyan)}     Custom download URL`,
+            `  ${writer.wrapInColor('speed-test --download-only', CliForegroundColor.Cyan)}                Download only`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('speed-test run --upload-url=<url>', CliForegroundColor.Cyan)}       Custom upload URL`,
+            `  ${writer.wrapInColor('speed-test --upload-only', CliForegroundColor.Cyan)}                  Upload only`,
+        );
+        writer.writeln(
+            `  ${writer.wrapInColor('speed-test --download-url=<url>', CliForegroundColor.Cyan)}           Custom download URL`,
+        );
+        writer.writeln(
+            `  ${writer.wrapInColor('speed-test --upload-url=<url>', CliForegroundColor.Cyan)}             Custom upload URL`,
         );
         writer.writeln();
         writer.writeln(
-            `💡 Press ${writer.wrapInColor('Ctrl+C', CliForegroundColor.Yellow)} to abort the test`,
+            `Press ${writer.wrapInColor('Ctrl+C', CliForegroundColor.Yellow)} to abort the test`,
         );
     }
 
-    /**
-     * Run the download speed test with live updates.
-     * @param context CLI execution context.
-     */
-    private async runDownloadSpeedTest(
-        url: string,
+    private async runSpeedTest(
+        command: CliProcessCommand,
         context: ICliExecutionContext,
-        cancelToken: CancelToken,
     ): Promise<void> {
-        const startTime = performance.now();
-        let previousTime = startTime;
-        let previousLoaded = 0;
+        const downloadOnly = !!command.args['download-only'];
+        const uploadOnly = !!command.args['upload-only'];
 
-        await axios.get(url, {
-            responseType: 'arraybuffer',
-            cancelToken: cancelToken,
-            headers: {
-                Origin: null,
-            },
-            onDownloadProgress: (progressEvent) => {
-                if (!!cancelToken.reason) {
-                    throw new Error('Speed test aborted by user');
-                }
-
-                const currentTime = performance.now();
-                const elapsedTime = (currentTime - previousTime) / 1000;
-                const bytesSinceLastUpdate =
-                    progressEvent.loaded - previousLoaded;
-
-                if (elapsedTime > 0) {
-                    const speedInBps = bytesSinceLastUpdate / elapsedTime; // Bytes per second
-                    const speedInMbps = (speedInBps * 8) / (1024 * 1024); // Convert to Mbps
-                    context.writer.writeln(
-                        `Download Speed: ${speedInMbps.toFixed(
-                            2,
-                        )} Mbps (Progress: ${(
-                            (progressEvent.loaded / progressEvent.total!) *
-                            100
-                        ).toFixed(2)}%)`,
-                    );
-                }
-
-                // Update previous values
-                previousTime = currentTime;
-                previousLoaded = progressEvent.loaded;
-            },
+        const controller = new AbortController();
+        const subscription = context.onAbort.subscribe(() => {
+            controller.abort();
         });
 
-        const endTime = performance.now();
-        const totalTime = (endTime - startTime) / 1000;
-        context.writer.writeSuccess(
-            `Download test completed in ${totalTime.toFixed(2)} seconds`,
-        );
-    }
-
-    /**
-     * Run the upload speed test with live updates.
-     * @param context CLI execution context.
-     */
-    private async runUploadSpeedTest(
-        url: string,
-        context: ICliExecutionContext,
-        source: CancelTokenSource,
-    ): Promise<void> {
-        const testData = new Uint8Array(20 * 1024 * 1024); // 20 MB of random data
-        testData.fill(0);
-        const startTime = performance.now();
-        let previousTime = startTime;
-        let previousUploaded = 0;
-
-        let uploadComplete = false;
+        const results: { download?: number; upload?: number } = {};
 
         try {
-            await axios.post(url, testData, {
-                headers: { 'Content-Type': 'application/octet-stream' },
-                cancelToken: source.token,
-                responseType: 'stream',
-                onUploadProgress: (progressEvent) => {
-                    if (!!source.token.reason) {
-                        throw new Error('Speed test aborted by user');
-                    }
+            if (!uploadOnly) {
+                const downloadUrl =
+                    (command.args['download-url'] as string) ||
+                    DEFAULT_DOWNLOAD_URL;
+                results.download = await this.testDownload(
+                    downloadUrl,
+                    context,
+                    controller.signal,
+                );
+            }
 
-                    const currentTime = performance.now();
-                    const elapsedTime = (currentTime - previousTime) / 1000; // Time since last update
-                    const bytesSinceLastUpdate =
-                        progressEvent.loaded - previousUploaded;
+            if (!downloadOnly) {
+                const uploadUrl =
+                    (command.args['upload-url'] as string) ||
+                    DEFAULT_UPLOAD_URL;
+                results.upload = await this.testUpload(
+                    uploadUrl,
+                    context,
+                    controller.signal,
+                );
+            }
 
-                    if (elapsedTime > 0) {
-                        const speedInBps = bytesSinceLastUpdate / elapsedTime; // Bytes per second
-                        const speedInMbps = (speedInBps * 8) / (1024 * 1024); // Convert to Mbps
-                        context.writer.writeln(
-                            `Upload Speed: ${speedInMbps.toFixed(
-                                2,
-                            )} Mbps (Progress: ${(
-                                (progressEvent.loaded / progressEvent.total!) *
-                                100
-                            ).toFixed(2)}%)`,
-                        );
-                    }
+            this.printSummary(results, context);
+        } catch (error: any) {
+            if (error.name === 'AbortError' || controller.signal.aborted) {
+                context.writer.writeWarning('Speed test aborted');
+            } else {
+                context.writer.writeError(
+                    `Speed test failed: ${error.message || error}`,
+                );
+            }
+        } finally {
+            subscription.unsubscribe();
+        }
+    }
 
-                    // Update previous values
-                    previousTime = currentTime;
-                    previousUploaded = progressEvent.loaded;
+    private async testDownload(
+        url: string,
+        context: ICliExecutionContext,
+        signal: AbortSignal,
+    ): Promise<number> {
+        context.writer.writeln();
 
-                    if (progressEvent.loaded >= progressEvent.total!) {
-                        uploadComplete = true;
-                        source.cancel('Upload test completed');
-                    }
-                },
-            });
-        } catch (e) {
-            if (axios.isCancel(e)) {
-                if (!uploadComplete) {
-                    context.writer.writeError('Upload test aborted by user');
+        const progressBar = context.progressBar;
+        const spinner = context.spinner;
+
+        // Show spinner while waiting for connection (DNS, TLS, TTFB)
+        spinner?.show('Connecting...');
+
+        const response = await fetch(url, { signal });
+
+        if (!response.ok) {
+            spinner?.hide();
+            throw new Error(`Download failed: HTTP ${response.status}`);
+        }
+
+        spinner?.hide();
+        context.writer.writeInfo('Running download test...');
+
+        const contentLength = parseInt(
+            response.headers.get('content-length') || '0',
+            10,
+        );
+
+        progressBar.show();
+        progressBar.update(0);
+
+        // Start timing AFTER connection is established (exclude TTFB)
+        const startTime = performance.now();
+        let totalBytes = 0;
+
+        const reader = response.body!.getReader();
+        let lastUpdateTime = startTime;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            totalBytes += value.length;
+
+            const now = performance.now();
+            if (now - lastUpdateTime > 250) {
+                lastUpdateTime = now;
+                const elapsedSec = (now - startTime) / 1000;
+                const avgSpeed = totalBytes / elapsedSec;
+
+                if (contentLength > 0) {
+                    const pct = Math.min(
+                        (totalBytes / contentLength) * 100,
+                        100,
+                    );
+                    progressBar.update(pct);
+                    progressBar.setText(
+                        `${formatSpeed(avgSpeed)} | ${formatBytes(totalBytes)} / ${formatBytes(contentLength)}`,
+                    );
                 } else {
-                    const endTime = performance.now();
-                    const totalTime = (endTime - startTime) / 1000;
-                    context.writer.writeSuccess(
-                        `Upload test completed in ${totalTime.toFixed(2)} seconds`,
+                    progressBar.setText(
+                        `${formatSpeed(avgSpeed)} | ${formatBytes(totalBytes)}`,
                     );
                 }
-            } else {
-                throw e;
             }
         }
+
+        progressBar.complete();
+        progressBar.hide();
+
+        const totalSec = (performance.now() - startTime) / 1000;
+        const avgSpeed = totalBytes / totalSec;
+
+        context.writer.writeSuccess(
+            `Download: ${formatSpeed(avgSpeed)} (${formatBytes(totalBytes)} in ${totalSec.toFixed(1)}s)`,
+        );
+
+        return avgSpeed;
+    }
+
+    private async testUpload(
+        url: string,
+        context: ICliExecutionContext,
+        signal: AbortSignal,
+    ): Promise<number> {
+        context.writer.writeln();
+        context.writer.writeInfo(
+            `Running upload test (${formatBytes(UPLOAD_SIZE)})...`,
+        );
+
+        const progressBar = context.progressBar;
+        progressBar.show();
+        progressBar.update(0);
+
+        // Fill with pseudo-random data to prevent compression from skewing results
+        const payload = new Uint8Array(UPLOAD_SIZE);
+        crypto.getRandomValues(payload);
+
+        return new Promise<number>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+
+            // Start timing from the first progress event (excludes connection setup)
+            let startTime = 0;
+            let lastUpdateTime = 0;
+
+            const onAbort = () => {
+                xhr.abort();
+                cleanup();
+                reject(new DOMException('Upload aborted', 'AbortError'));
+            };
+
+            const cleanup = () => {
+                signal.removeEventListener('abort', onAbort);
+            };
+
+            if (signal.aborted) {
+                reject(new DOMException('Upload aborted', 'AbortError'));
+                return;
+            }
+
+            signal.addEventListener('abort', onAbort);
+
+            xhr.upload.onprogress = (e) => {
+                const now = performance.now();
+
+                // Start timing from the first progress event
+                if (startTime === 0) {
+                    startTime = now;
+                    lastUpdateTime = now;
+                    return;
+                }
+
+                if (now - lastUpdateTime > 250) {
+                    lastUpdateTime = now;
+                    const elapsedSec = (now - startTime) / 1000;
+                    const avgSpeed = e.loaded / elapsedSec;
+
+                    if (e.lengthComputable) {
+                        const pct = (e.loaded / e.total) * 100;
+                        progressBar.update(pct);
+                    }
+
+                    progressBar.setText(
+                        `${formatSpeed(avgSpeed)} | ${formatBytes(e.loaded)} / ${formatBytes(UPLOAD_SIZE)}`,
+                    );
+                }
+            };
+
+            xhr.onload = () => {
+                cleanup();
+                progressBar.complete();
+                progressBar.hide();
+
+                // Use time from first progress event, not from before xhr.send()
+                const endTime = performance.now();
+                const totalSec =
+                    startTime > 0
+                        ? (endTime - startTime) / 1000
+                        : 1; // fallback to prevent division by zero
+                const avgSpeed = UPLOAD_SIZE / totalSec;
+
+                context.writer.writeSuccess(
+                    `Upload: ${formatSpeed(avgSpeed)} (${formatBytes(UPLOAD_SIZE)} in ${totalSec.toFixed(1)}s)`,
+                );
+
+                resolve(avgSpeed);
+            };
+
+            xhr.onerror = () => {
+                cleanup();
+                progressBar.hide();
+                reject(new Error('Upload request failed'));
+            };
+
+            xhr.ontimeout = () => {
+                cleanup();
+                progressBar.hide();
+                reject(new Error('Upload request timed out'));
+            };
+
+            xhr.open('POST', url);
+            xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+            xhr.send(payload);
+        });
+    }
+
+    private printSummary(
+        results: { download?: number; upload?: number },
+        context: ICliExecutionContext,
+    ): void {
+        context.writer.writeln();
+
+        const headers = ['Test', 'Speed'];
+        const rows: string[][] = [];
+
+        if (results.download !== undefined) {
+            rows.push(['Download', formatSpeed(results.download)]);
+        }
+        if (results.upload !== undefined) {
+            rows.push(['Upload', formatSpeed(results.upload)]);
+        }
+
+        context.writer.writeTable(headers, rows);
+        context.process.output(results);
     }
 }

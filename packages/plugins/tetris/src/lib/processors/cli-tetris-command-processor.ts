@@ -207,8 +207,8 @@ export class CliTetrisCommandProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata | undefined = {
         module: 'games',
         icon: '\uD83E\uDDF1', // brick emoji
-        requiredCoreVersion: '0.0.16',
-        requiredCliVersion: '1.0.37',
+        requiredCoreVersion: '>=2.0.0 <3.0.0',
+        requiredCliVersion: '>=2.0.0 <3.0.0',
     };
 
     stateConfiguration?: CliStateConfiguration | undefined = {

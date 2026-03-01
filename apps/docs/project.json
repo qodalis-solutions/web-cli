@@ -4,7 +4,10 @@
   "projectType": "application",
   "sourceRoot": "apps/docs/src",
   "prefix": "app",
-  "implicitDependencies": ["angular-cli", "cli"],
+  "implicitDependencies": [
+    "angular-cli",
+    "cli"
+  ],
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:browser",
@@ -12,7 +15,9 @@
         "outputPath": "dist/docs",
         "index": "apps/docs/src/index.html",
         "main": "apps/docs/src/main.ts",
-        "polyfills": ["zone.js"],
+        "polyfills": [
+          "zone.js"
+        ],
         "tsConfig": "apps/docs/tsconfig.app.json",
         "inlineStyleLanguage": "sass",
         "assets": [
@@ -51,7 +56,9 @@
         }
       },
       "defaultConfiguration": "production",
-      "outputs": ["{workspaceRoot}/dist/docs"]
+      "outputs": [
+        "{workspaceRoot}/dist/docs"
+      ]
     },
     "serve": {
       "executor": "@angular-devkit/build-angular:dev-server",
@@ -78,15 +85,22 @@
     "test": {
       "executor": "@angular-devkit/build-angular:karma",
       "options": {
-        "polyfills": ["zone.js", "zone.js/testing"],
+        "polyfills": [
+          "zone.js",
+          "zone.js/testing"
+        ],
         "tsConfig": "apps/docs/tsconfig.spec.json",
         "inlineStyleLanguage": "sass",
         "assets": [
           "apps/docs/src/favicon.ico",
           "apps/docs/src/assets"
         ],
-        "styles": ["apps/docs/src/styles.sass"],
-        "scripts": []
+        "styles": [
+          "apps/docs/src/styles.sass"
+        ],
+        "scripts": [],
+        "browsers": "ChromeHeadless",
+        "watch": false
       }
     }
   }

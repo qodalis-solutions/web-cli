@@ -24,8 +24,8 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata | undefined = {
         icon: '🔍',
-        requiredCoreVersion: '0.0.16',
-        requiredCliVersion: '1.0.37',
+        requiredCoreVersion: '>=2.0.0 <3.0.0',
+        requiredCliVersion: '>=2.0.0 <3.0.0',
     };
 
     constructor() {

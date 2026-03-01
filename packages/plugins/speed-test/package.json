@@ -20,18 +20,9 @@
   "umd": "./umd/index.js",
   "unpkg": "./umd/index.js",
   "dependencies": {
-    "@qodalis/cli-core": "workspace:*",
-    "axios": "^1.7.9"
+    "@qodalis/cli-core": "workspace:*"
   },
   "sideEffects": false,
-  "cliDependencies": [
-    {
-      "name": "axios",
-      "globalName": "axios",
-      "version": "1.7.9",
-      "url": "https://unpkg.com/axios@1.7.9/dist/axios.min.js"
-    }
-  ],
   "main": "./public-api.js",
   "module": "./public-api.mjs",
   "types": "./public-api.d.ts",

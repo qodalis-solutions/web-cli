@@ -3,9 +3,14 @@ export type ParsedArg = {
     value: any;
 };
 
+export type ParsedToken =
+    | { kind: 'flag'; name: string; value: string | number | boolean; hasEquals: boolean }
+    | { kind: 'word'; value: string };
+
 export type CommandParserOutput = {
     commandName: string;
     args: ParsedArg[];
+    tokens: ParsedToken[];
 };
 
 export type CommandPart = {
@@ -106,35 +111,46 @@ export class CommandParser {
         const matches = Array.from(command.matchAll(regex));
 
         if (matches.length === 0) {
-            return { commandName: '', args: [] };
+            return { commandName: '', args: [], tokens: [] };
         }
 
         const commandParts: string[] = [];
         const args: ParsedArg[] = [];
+        const tokens: ParsedToken[] = [];
 
         for (const match of matches) {
             if (match[1]) {
                 const key = match[1];
+                const hasEquals = match[2] !== undefined;
                 let value: any = match[2];
                 if (value) {
                     // Remove surrounding quotes
                     value = value.replace(/^['"]|['"]$/g, '');
-                } else {
+                } else if (!hasEquals) {
                     // Flag without a value
                     value = true;
                 }
+                const parsedValue = this.parseValue(value);
                 args.push({
                     name: key,
-                    value: this.parseValue(value),
+                    value: parsedValue,
+                });
+                tokens.push({
+                    kind: 'flag',
+                    name: key,
+                    value: parsedValue,
+                    hasEquals,
                 });
             } else if (!match[0].startsWith('-')) {
                 commandParts.push(match[0]);
+                tokens.push({ kind: 'word', value: match[0] });
             }
         }
 
         return {
             commandName: commandParts.join(' '),
             args,
+            tokens,
         };
     }
 

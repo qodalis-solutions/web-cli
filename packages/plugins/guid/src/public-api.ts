@@ -3,6 +3,7 @@
  */
 
 export * from './lib/utilities';
+export type { GuidFormat } from './lib/utilities';
 
 export * from './lib/processors/cli-guid-command-processor';
 

@@ -12,6 +12,7 @@ import {
     ICliCommandProcessorRegistry,
 } from '@qodalis/cli-core';
 import { CommandParser, CommandPart } from '../parsers';
+import { reconcileArgs } from '../parsers/reconcile-args';
 import { CliExecutionProcess } from '../context/cli-execution-process';
 import { CliArgsParser } from '../parsers/args-parser';
 import { ProcessExitedError } from '../errors';
@@ -182,12 +183,13 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
         process.start();
 
-        const { commandName, args: parsedArgs } =
-            this.commandParser.parse(command);
+        const parsed = this.commandParser.parse(command);
+        let { commandName } = parsed;
+        let parsedArgs = parsed.args;
 
         const [mainCommand, ...other] = commandName.split(' ');
 
-        const chainCommands = other.map((c) => c.toLowerCase());
+        let chainCommands = other.map((c) => c.toLowerCase());
 
         const searchableProcessors = context.contextProcessor
             ? (context.contextProcessor.processors ?? [])
@@ -198,6 +200,19 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             chainCommands,
             searchableProcessors,
         );
+
+        // Reconcile space-separated args (e.g. --server dotnet)
+        // using the processor's parameter descriptors.
+        // Only update parsedArgs — commandName and chainCommands stay
+        // unchanged so that valueRequired / acceptsRawInput and
+        // getRightOfWord() continue to work with the original tokens.
+        if (processor?.parameters?.length) {
+            const reconciled = reconcileArgs(
+                parsed.tokens,
+                processor.parameters,
+            );
+            parsedArgs = reconciled.args;
+        }
 
         if (!processor) {
             const aliasProcessor = this.registry.findProcessor('alias', []) as

@@ -1,5 +1,6 @@
-import { CommandParser, CommandPart } from '../lib/parsers/command-parser';
+import { CommandParser, CommandPart, ParsedToken } from '../lib/parsers/command-parser';
 import { CliArgsParser } from '../lib/parsers/args-parser';
+import { reconcileArgs } from '../lib/parsers/reconcile-args';
 import {
     ICliCommandProcessor,
     ICliCommandParameterDescriptor,
@@ -851,5 +852,225 @@ describe('CommandParser.splitByOperators', () => {
             { type: '>>', value: '>>' },
             { type: 'command', value: 'log.txt' },
         ]);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// CommandParser.parse — tokens field
+// ---------------------------------------------------------------------------
+describe('CommandParser.parse tokens', () => {
+    let parser: CommandParser;
+
+    beforeEach(() => {
+        parser = new CommandParser();
+    });
+
+    it('should emit word tokens for command parts', () => {
+        const result = parser.parse('ssh connect');
+        expect(result.tokens).toEqual([
+            { kind: 'word', value: 'ssh' },
+            { kind: 'word', value: 'connect' },
+        ]);
+    });
+
+    it('should emit flag tokens with hasEquals=false for bare flags', () => {
+        const result = parser.parse('build --verbose');
+        expect(result.tokens).toEqual([
+            { kind: 'word', value: 'build' },
+            { kind: 'flag', name: 'verbose', value: true, hasEquals: false },
+        ]);
+    });
+
+    it('should emit flag tokens with hasEquals=true for --key=value', () => {
+        const result = parser.parse('build --output=dist');
+        expect(result.tokens).toEqual([
+            { kind: 'word', value: 'build' },
+            { kind: 'flag', name: 'output', value: 'dist', hasEquals: true },
+        ]);
+    });
+
+    it('should emit tokens in source order', () => {
+        const result = parser.parse('ssh --server dotnet --verbose');
+        expect(result.tokens).toEqual([
+            { kind: 'word', value: 'ssh' },
+            { kind: 'flag', name: 'server', value: true, hasEquals: false },
+            { kind: 'word', value: 'dotnet' },
+            { kind: 'flag', name: 'verbose', value: true, hasEquals: false },
+        ]);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// reconcileArgs
+// ---------------------------------------------------------------------------
+describe('reconcileArgs', () => {
+    function desc(
+        name: string,
+        type: string,
+        aliases?: string[],
+    ): ICliCommandParameterDescriptor {
+        return { name, type, required: false, description: '', aliases };
+    }
+
+    it('should consume next word for string param (--server dotnet)', () => {
+        const tokens: ParsedToken[] = [
+            { kind: 'word', value: 'ssh' },
+            { kind: 'flag', name: 'server', value: true, hasEquals: false },
+            { kind: 'word', value: 'dotnet' },
+        ];
+        const result = reconcileArgs(tokens, [desc('server', 'string')]);
+        expect(result.args).toEqual([{ name: 'server', value: 'dotnet' }]);
+        expect(result.commandParts).toEqual(['ssh']);
+    });
+
+    it('should keep equals format working (--server=dotnet)', () => {
+        const tokens: ParsedToken[] = [
+            { kind: 'word', value: 'ssh' },
+            { kind: 'flag', name: 'server', value: 'dotnet', hasEquals: true },
+        ];
+        const result = reconcileArgs(tokens, [desc('server', 'string')]);
+        expect(result.args).toEqual([{ name: 'server', value: 'dotnet' }]);
+        expect(result.commandParts).toEqual(['ssh']);
+    });
+
+    it('should NOT consume next word for boolean flag', () => {
+        const tokens: ParsedToken[] = [
+            { kind: 'word', value: 'build' },
+            { kind: 'flag', name: 'verbose', value: true, hasEquals: false },
+            { kind: 'word', value: 'extra' },
+        ];
+        const result = reconcileArgs(tokens, [desc('verbose', 'boolean')]);
+        expect(result.args).toEqual([{ name: 'verbose', value: true }]);
+        expect(result.commandParts).toEqual(['build', 'extra']);
+    });
+
+    it('should handle --verbose dotnet where verbose is boolean', () => {
+        const tokens: ParsedToken[] = [
+            { kind: 'flag', name: 'verbose', value: true, hasEquals: false },
+            { kind: 'word', value: 'dotnet' },
+        ];
+        const result = reconcileArgs(tokens, [desc('verbose', 'boolean')]);
+        expect(result.args).toEqual([{ name: 'verbose', value: true }]);
+        expect(result.commandParts).toEqual(['dotnet']);
+    });
+
+    it('should consume and parse number value (--count 5)', () => {
+        const tokens: ParsedToken[] = [
+            { kind: 'word', value: 'cmd' },
+            { kind: 'flag', name: 'count', value: true, hasEquals: false },
+            { kind: 'word', value: '5' },
+        ];
+        const result = reconcileArgs(tokens, [desc('count', 'number')]);
+        expect(result.args).toEqual([{ name: 'count', value: 5 }]);
+        expect(result.commandParts).toEqual(['cmd']);
+    });
+
+    it('should handle mixed params (--server dotnet --verbose)', () => {
+        const tokens: ParsedToken[] = [
+            { kind: 'word', value: 'ssh' },
+            { kind: 'flag', name: 'server', value: true, hasEquals: false },
+            { kind: 'word', value: 'dotnet' },
+            { kind: 'flag', name: 'verbose', value: true, hasEquals: false },
+        ];
+        const result = reconcileArgs(tokens, [
+            desc('server', 'string'),
+            desc('verbose', 'boolean'),
+        ]);
+        expect(result.args).toEqual([
+            { name: 'server', value: 'dotnet' },
+            { name: 'verbose', value: true },
+        ]);
+        expect(result.commandParts).toEqual(['ssh']);
+    });
+
+    it('should keep flag as boolean when no next token (--server at end)', () => {
+        const tokens: ParsedToken[] = [
+            { kind: 'word', value: 'ssh' },
+            { kind: 'flag', name: 'server', value: true, hasEquals: false },
+        ];
+        const result = reconcileArgs(tokens, [desc('server', 'string')]);
+        expect(result.args).toEqual([{ name: 'server', value: true }]);
+        expect(result.commandParts).toEqual(['ssh']);
+    });
+
+    it('should not consume word for unknown flag (no descriptor match)', () => {
+        const tokens: ParsedToken[] = [
+            { kind: 'flag', name: 'unknown-flag', value: true, hasEquals: false },
+            { kind: 'word', value: 'value' },
+        ];
+        const result = reconcileArgs(tokens, [desc('server', 'string')]);
+        expect(result.args).toEqual([{ name: 'unknown-flag', value: true }]);
+        expect(result.commandParts).toEqual(['value']);
+    });
+
+    it('should not consume next flag token as value', () => {
+        const tokens: ParsedToken[] = [
+            { kind: 'flag', name: 'server', value: true, hasEquals: false },
+            { kind: 'flag', name: 'verbose', value: true, hasEquals: false },
+        ];
+        const result = reconcileArgs(tokens, [
+            desc('server', 'string'),
+            desc('verbose', 'boolean'),
+        ]);
+        expect(result.args).toEqual([
+            { name: 'server', value: true },
+            { name: 'verbose', value: true },
+        ]);
+        expect(result.commandParts).toEqual([]);
+    });
+
+    it('should handle aliases when matching descriptors', () => {
+        const tokens: ParsedToken[] = [
+            { kind: 'word', value: 'cmd' },
+            { kind: 'flag', name: 's', value: true, hasEquals: false },
+            { kind: 'word', value: 'dotnet' },
+        ];
+        const result = reconcileArgs(tokens, [
+            desc('server', 'string', ['s']),
+        ]);
+        expect(result.args).toEqual([{ name: 's', value: 'dotnet' }]);
+        expect(result.commandParts).toEqual(['cmd']);
+    });
+
+    it('should handle undefined descriptors gracefully', () => {
+        const tokens: ParsedToken[] = [
+            { kind: 'word', value: 'cmd' },
+            { kind: 'flag', name: 'flag', value: true, hasEquals: false },
+            { kind: 'word', value: 'val' },
+        ];
+        const result = reconcileArgs(tokens, undefined);
+        expect(result.args).toEqual([{ name: 'flag', value: true }]);
+        expect(result.commandParts).toEqual(['cmd', 'val']);
+    });
+
+    it('should handle end-to-end: ssh --server dotnet with SSH-like descriptors', () => {
+        const parser = new CommandParser();
+        const parsed = parser.parse('ssh --server dotnet');
+
+        const descriptors: ICliCommandParameterDescriptor[] = [
+            desc('server', 'string', ['s']),
+            desc('verbose', 'boolean', ['v']),
+        ];
+
+        const result = reconcileArgs(parsed.tokens, descriptors);
+        expect(result.args).toEqual([{ name: 'server', value: 'dotnet' }]);
+        expect(result.commandParts).toEqual(['ssh']);
+    });
+
+    it('end-to-end: equals format still works after reconciliation', () => {
+        const parser = new CommandParser();
+        const parsed = parser.parse('ssh --server=dotnet --verbose');
+
+        const descriptors: ICliCommandParameterDescriptor[] = [
+            desc('server', 'string', ['s']),
+            desc('verbose', 'boolean', ['v']),
+        ];
+
+        const result = reconcileArgs(parsed.tokens, descriptors);
+        expect(result.args).toEqual([
+            { name: 'server', value: 'dotnet' },
+            { name: 'verbose', value: true },
+        ]);
+        expect(result.commandParts).toEqual(['ssh']);
     });
 });
