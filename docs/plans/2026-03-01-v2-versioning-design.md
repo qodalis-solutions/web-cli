@@ -5,7 +5,7 @@
 
 ## Problem
 
-The Qodalis CLI ecosystem (frontend plugins + .NET backend) has no enforced versioning. A v1 plugin loads silently in a v2 runtime. Backend endpoints are unversioned. There is no mechanism to reject incompatible plugins or negotiate API versions between frontend and backend.
+The Qodalis CLI ecosystem (frontend plugins + three backend implementations: .NET, Node.js, Python) has no enforced versioning. A v1 plugin loads silently in a v2 runtime. Backend endpoints are unversioned across all three server implementations. There is no mechanism to reject incompatible plugins or negotiate API versions between frontend and backend.
 
 ## Goals
 
@@ -128,31 +128,34 @@ Response:
 
 #### 3.3 Backend Command Processor Versioning
 
-The .NET `ICliCommandProcessor` interface already has `Version`. Add `ApiVersion`:
+All three backend implementations add `ApiVersion` / `api_version` to their `ICliCommandProcessor`:
 
+**.NET** — `ICliCommandProcessor.cs`:
 ```csharp
-public interface ICliCommandProcessor
-{
-    int ApiVersion { get; }  // NEW
-    string Version { get; }
-    // ... existing members
-}
+int ApiVersion { get; }  // NEW, default 1
 ```
 
-The `CliCommandRegistry` filters processors by the requested API version. v2 endpoints only serve v2 processors.
-
-#### 3.4 DI Registration
-
-```csharp
-builder.Services
-    .AddControllers()
-    .AddCli(cli =>
-    {
-        cli.SupportApiVersion(1);  // Enable v1 routes
-        cli.SupportApiVersion(2);  // Enable v2 routes
-        cli.AddProcessor<MyV2Processor>();
-    });
+**Node.js** — `cli-command-processor.ts`:
+```typescript
+apiVersion: number;  // NEW, default 1
 ```
+
+**Python** — `cli_command_processor.py`:
+```python
+@property
+def api_version(self) -> int:  # NEW, default 1
+    return 1
+```
+
+The `CliCommandRegistry` in each backend filters processors by the requested API version. v2 endpoints only serve v2 processors.
+
+#### 3.4 Consistency Across Backends
+
+All three backends implement the same API contract:
+- Same route structure (`/api/v1/cli/*`, `/api/v2/cli/*`)
+- Same discovery endpoint (`/api/cli/versions`)
+- Same response shapes
+- Same WebSocket versioned paths
 
 ### 4. Frontend-Backend Version Negotiation
 
@@ -198,9 +201,10 @@ All `@qodalis/*` packages bump to `2.0.0` for the v2 release:
 
 npm semver ensures `npm install @qodalis/cli-core@^1.0.0` never pulls v2. Users must explicitly opt in.
 
-.NET packages bump to `2.0.0`:
-- `Qodalis.Cli.Abstractions@2.0.0`
-- `Qodalis.Cli@2.0.0`
+Backend packages bump to `2.0.0`:
+- .NET: `Qodalis.Cli.Abstractions@2.0.0`, `Qodalis.Cli@2.0.0`
+- Node.js: `@qodalis/cli-server-node@2.0.0`
+- Python: `qodalis-cli-server@2.0.0`
 
 ## Non-Goals
 
