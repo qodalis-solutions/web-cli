@@ -19,3 +19,5 @@ export * from './lib/themes';
 export * from './lib/version';
 
 export * from './lib/tokens';
+
+export * from './lib/worker';
