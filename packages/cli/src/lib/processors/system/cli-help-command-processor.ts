@@ -64,8 +64,9 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             sortedModules.forEach(([module, processors]) => {
+                const displayName = this.formatModuleName(module);
                 writer.writeln(
-                    `  ${writer.wrapInColor(module.charAt(0).toUpperCase() + module.slice(1), CliForegroundColor.Yellow)}`,
+                    `  ${writer.wrapInColor(displayName, CliForegroundColor.Yellow)}`,
                 );
 
                 processors.forEach((processor) => {
@@ -263,6 +264,21 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         }
 
         writer.writeln();
+    }
+
+    private formatModuleName(module: string): string {
+        // @qodalis/cli-server → Server
+        if (module.startsWith('@qodalis/cli-')) {
+            const name = module.replace('@qodalis/cli-', '');
+            return name.charAt(0).toUpperCase() + name.slice(1);
+        }
+        // server:myhost → Server (myhost)
+        if (module.startsWith('server:')) {
+            const name = module.substring(7);
+            return `Server (${name})`;
+        }
+        // system → System, misc → Misc
+        return module.charAt(0).toUpperCase() + module.slice(1);
     }
 
     private writeParameter(
