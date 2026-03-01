@@ -213,12 +213,28 @@ pkg add lodash
 eval _.map([1, 2, 3], n => n * 2)
 ```
 
-## Creating Custom Plugins
+## Creating a CLI Plugin
 
-Scaffold a new plugin package with the CLI tool:
+### Quick Start
+
+Scaffold a complete plugin project with a single command:
 
 ```bash
 npx @qodalis/create-cli-plugin
+```
+
+The interactive prompts will ask for:
+
+| Prompt | Description | Example |
+|--------|-------------|---------|
+| **Plugin name** | Lowercase, no spaces, no `cli-` prefix (added automatically) | `weather` |
+| **Description** | Short description of the plugin | `Weather forecasts` |
+| **Processor class name** | PascalCase name for the command processor class | `Weather` |
+
+You can also skip the prompts by passing arguments directly:
+
+```bash
+npx @qodalis/create-cli-plugin --name weather --description "Weather forecasts" --processor-name Weather
 ```
 
 Or install globally:
@@ -228,24 +244,287 @@ npm install -g @qodalis/create-cli-plugin
 create-cli-plugin
 ```
 
-The tool generates a complete plugin project with build config, command processor, tests, and an IIFE bundle for runtime loading. It supports both **standalone** projects and **monorepo** mode (auto-detected when run inside the web-cli workspace).
+### Standalone vs Monorepo Mode
 
-You can also pass arguments directly for non-interactive usage:
+The tool auto-detects whether you're inside the `web-cli` monorepo:
 
-```bash
-npx @qodalis/create-cli-plugin --name weather --description "Weather forecasts"
+| Mode | Detection | Output directory | Package manager |
+|------|-----------|-----------------|-----------------|
+| **Standalone** | Any directory outside web-cli | `./qodalis-cli-<name>/` | npm or pnpm (auto-detected) |
+| **Monorepo** | Inside web-cli workspace | `packages/plugins/<name>/` | pnpm (workspace) |
+
+In monorepo mode, the tool also:
+- Creates `project.json` (Nx build + test targets)
+- Creates `tsconfig.spec.json` (Karma/Jasmine test config)
+- Updates `tsconfig.base.json` with the path alias `@qodalis/cli-<name>` → `dist/<name>`
+
+### Generated Project Structure
+
+```
+qodalis-cli-weather/                    # or packages/plugins/weather/ in monorepo
+  package.json                          # npm package with CJS/ESM/UMD exports
+  tsup.config.ts                        # Build config (library + IIFE bundles)
+  tsconfig.json                         # TypeScript config
+  README.md                             # Auto-generated README
+  src/
+    public-api.ts                       # Public exports + ICliModule declaration
+    cli-entrypoint.ts                   # IIFE entrypoint for browser runtime loading
+    lib/
+      version.ts                        # LIBRARY_VERSION + API_VERSION constants
+      index.ts                          # Barrel re-exports
+      processors/
+        cli-weather-command-processor.ts # Command processor (your main logic goes here)
+    tests/
+      index.spec.ts                     # Jasmine test scaffold
 ```
 
-Once scaffolded, implement your command logic in `src/lib/processors/`, build with `tsup`, and publish to npm. Users install your plugin at runtime:
+### Step-by-Step Workflow
+
+#### 1. Scaffold the plugin
+
+```bash
+npx @qodalis/create-cli-plugin --name weather
+```
+
+#### 2. Implement your command processor
+
+Edit `src/lib/processors/cli-weather-command-processor.ts`:
+
+```typescript
+import {
+    CliProcessCommand,
+    DefaultLibraryAuthor,
+    ICliCommandProcessor,
+    ICliExecutionContext,
+} from '@qodalis/cli-core';
+import { LIBRARY_VERSION } from '../version';
+
+export class CliWeatherCommandProcessor implements ICliCommandProcessor {
+    command = 'weather';
+    description = 'Weather forecasts';
+    author = DefaultLibraryAuthor;
+    version = LIBRARY_VERSION;
+
+    // Sub-commands
+    processors?: ICliCommandProcessor[] = [
+        {
+            command: 'forecast',
+            description: 'Get weather forecast for a city',
+            parameters: [
+                {
+                    name: 'city',
+                    aliases: ['c'],
+                    description: 'City name',
+                    required: true,
+                    type: 'string',
+                },
+                {
+                    name: 'days',
+                    aliases: ['d'],
+                    description: 'Number of days',
+                    required: false,
+                    type: 'number',
+                    defaultValue: '3',
+                },
+            ],
+            processCommand: async (command, context) => {
+                const city = command.args['city'];
+                const days = parseInt(command.args['days'] ?? '3');
+                context.writer.writeln(`Forecast for ${city} (${days} days):`);
+                context.writer.writeSuccess('Sunny, 25°C');
+            },
+        },
+        {
+            command: 'current',
+            description: 'Get current weather',
+            acceptsRawInput: true,    // command.value = text after 'current'
+            valueRequired: true,       // error if no value provided
+            processCommand: async (command, context) => {
+                context.writer.writeln(`Current weather in ${command.value}: Sunny, 25°C`);
+            },
+        },
+    ];
+
+    // Default handler (runs when user types just 'weather')
+    async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        context.executor.showHelp(command, context);
+    }
+}
+```
+
+#### 3. Build the plugin
+
+**Standalone:**
+
+```bash
+cd qodalis-cli-weather
+npm run build          # or: npx tsup
+```
+
+**Monorepo:**
+
+```bash
+pnpm nx build weather
+```
+
+Build output goes to `dist/weather/` with three bundles:
+- `public-api.js` (CJS) + `public-api.mjs` (ESM) + `public-api.d.ts` (types)
+- `umd/index.js` (IIFE — self-contained browser bundle for runtime `pkg add`)
+
+#### 4. Test the plugin
+
+**Standalone:** Add your preferred test runner.
+
+**Monorepo:**
+
+```bash
+pnpm nx test weather
+```
+
+#### 5. Publish to npm
+
+```bash
+cd dist/weather         # or: cd qodalis-cli-weather/dist
+npm publish --access public
+```
+
+Users can then install your plugin at runtime in any Qodalis CLI terminal:
 
 ```bash
 pkg add @qodalis/cli-weather
 weather forecast --city "New York"
 ```
 
-## Extending with Custom Commands
+### The ICliModule Export
 
-Create a class implementing `ICliCommandProcessor`:
+Every plugin exports an `ICliModule` object in `public-api.ts`. This is how frameworks register your plugin:
+
+```typescript
+import { ICliModule } from '@qodalis/cli-core';
+import { CliWeatherCommandProcessor } from './lib/processors/cli-weather-command-processor';
+import { API_VERSION } from './lib/version';
+
+export const weatherModule: ICliModule = {
+    apiVersion: API_VERSION,         // must be >= 2
+    name: '@qodalis/cli-weather',
+    processors: [new CliWeatherCommandProcessor()],
+};
+```
+
+`ICliModule` also supports optional lifecycle hooks and configuration:
+
+```typescript
+export const weatherModule: ICliModule = {
+    apiVersion: 2,
+    name: '@qodalis/cli-weather',
+    processors: [new CliWeatherCommandProcessor()],
+    dependencies: ['@qodalis/cli-curl'],     // boot other modules first
+    priority: 0,                              // boot order (lower = first)
+    configure(config) { /* ... */ return this; },
+    onInit(context) { /* before processors initialize */ },
+    onAfterBoot(context) { /* after all modules boot */ },
+    onDestroy(context) { /* teardown */ },
+};
+```
+
+### The IIFE Entrypoint
+
+`src/cli-entrypoint.ts` enables runtime loading via `pkg add`. It calls `bootCliModule()` which registers the module with the global `window.__cliModuleRegistry`:
+
+```typescript
+import { bootCliModule, ICliModule } from '@qodalis/cli-core';
+import { CliWeatherCommandProcessor } from './lib/processors/cli-weather-command-processor';
+import { API_VERSION } from './lib/version';
+
+const module: ICliModule = {
+    apiVersion: API_VERSION,
+    name: '@qodalis/cli-weather',
+    processors: [new CliWeatherCommandProcessor()],
+};
+
+bootCliModule(module);
+```
+
+### Execution Context API
+
+The `ICliExecutionContext` passed to `processCommand` provides:
+
+| Property | Description |
+|----------|-------------|
+| `context.writer` | Terminal output — `writeln()`, `writeInfo()`, `writeSuccess()`, `writeError()`, `wrapInColor()` |
+| `context.reader` | User input — `readLine()`, `readPassword()`, `readConfirm()`, `readSelect()`, `readMultiSelect()`, `readNumber()` |
+| `context.executor` | Command execution — `showHelp(command, context)` |
+| `context.clipboard` | Clipboard — `write()`, `read()` |
+| `context.state` | Persistent key-value store |
+| `context.progressBar` | Progress bar widget |
+| `context.spinner` | Spinner widget |
+| `context.terminal` | Raw xterm.js `Terminal` instance |
+| `context.onAbort` | `Subject<void>` for Ctrl+C cancellation |
+| `context.enterFullScreenMode()` | Switch to full-screen TUI mode |
+| `context.createInterval()` / `context.createTimeout()` | Managed timers (auto-cleaned on abort) |
+
+### Registering Plugins in Your App
+
+#### Angular (via providers)
+
+```typescript
+import { CliModule, resolveCliModuleProvider } from '@qodalis/angular-cli';
+import { weatherModule } from '@qodalis/cli-weather';
+
+@NgModule({
+  imports: [CliModule],
+  providers: [resolveCliModuleProvider(weatherModule)],
+})
+export class AppModule {}
+```
+
+#### Angular (via template input)
+
+```typescript
+import { weatherModule } from '@qodalis/cli-weather';
+
+export class AppComponent {
+  modules = [weatherModule];
+}
+```
+
+```html
+<cli [modules]="modules" />
+```
+
+#### React
+
+```tsx
+import { CliConfigProvider, Cli } from '@qodalis/react-cli';
+import { weatherModule } from '@qodalis/cli-weather';
+
+function App() {
+  return (
+    <CliConfigProvider modules={[weatherModule]}>
+      <Cli />
+    </CliConfigProvider>
+  );
+}
+```
+
+#### Vue
+
+```vue
+<script setup lang="ts">
+import { CliConfigProvider, Cli } from '@qodalis/vue-cli';
+import { weatherModule } from '@qodalis/cli-weather';
+</script>
+
+<template>
+  <CliConfigProvider :modules="[weatherModule]">
+    <Cli />
+  </CliConfigProvider>
+</template>
+```
+
+## Extending with Inline Commands
+
+For quick one-off commands without creating a full plugin, implement `ICliCommandProcessor` directly in your app:
 
 ```typescript
 import {
@@ -269,40 +548,14 @@ export class GreetCommandProcessor implements ICliCommandProcessor {
 }
 ```
 
-### Register in Angular
+Register it with your framework (Angular: `resolveCommandProcessorProvider(GreetCommandProcessor)`, React/Vue: pass via `processors` prop), or wrap it in an inline `ICliModule`:
 
 ```typescript
-import { CliModule, resolveCommandProcessorProvider } from '@qodalis/angular-cli';
-
-@NgModule({
-  imports: [CliModule],
-  providers: [resolveCommandProcessorProvider(GreetCommandProcessor)],
-})
-export class AppModule {}
-```
-
-### Register in React
-
-```tsx
-import { Cli } from '@qodalis/react-cli';
-
-function App() {
-  return <Cli processors={[new GreetCommandProcessor()]} />;
-}
-```
-
-### Register in Vue
-
-```vue
-<script setup lang="ts">
-import { Cli } from '@qodalis/vue-cli';
-
-const processors = [new GreetCommandProcessor()];
-</script>
-
-<template>
-  <Cli :processors="processors" />
-</template>
+const myModule: ICliModule = {
+  apiVersion: 2,
+  name: 'my-app-commands',
+  processors: [new GreetCommandProcessor()],
+};
 ```
 
 ```bash

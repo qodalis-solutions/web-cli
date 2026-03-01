@@ -217,35 +217,54 @@
     </p>
     <div class="create-plugin-content">
       <div class="code-block">
-        <span class="code-label">Scaffold</span>
+        <span class="code-label">Scaffold (interactive)</span>
         <pre><code>npx @qodalis/create-cli-plugin</code></pre>
+      </div>
+      <div class="code-block">
+        <span class="code-label">Scaffold (non-interactive)</span>
+        <pre><code>npx @qodalis/create-cli-plugin --name weather --description "Weather forecasts"</code></pre>
       </div>
       <div class="create-plugin-steps">
         <div class="create-step">
           <span class="step-number">1</span>
           <div class="step-content">
             <strong>Scaffold</strong>
-            <span>Run the CLI tool — interactive prompts or pass <code>--name</code> directly</span>
+            <span>Run the CLI tool — interactive prompts or pass <code>--name</code>, <code>--description</code>, <code>--processor-name</code> directly</span>
           </div>
         </div>
         <div class="create-step">
           <span class="step-number">2</span>
           <div class="step-content">
             <strong>Implement</strong>
-            <span>Add your command logic in <code>src/lib/processors/</code></span>
+            <span>Add your command logic in <code>src/lib/processors/</code> — define sub-commands, parameters, and use the execution context API</span>
           </div>
         </div>
         <div class="create-step">
           <span class="step-number">3</span>
           <div class="step-content">
+            <strong>Build</strong>
+            <span>Run <code>npx tsup</code> to produce CJS, ESM, and IIFE bundles</span>
+          </div>
+        </div>
+        <div class="create-step">
+          <span class="step-number">4</span>
+          <div class="step-content">
             <strong>Publish</strong>
-            <span>Build with <code>tsup</code> and publish to npm</span>
+            <span>Run <code>npm publish --access public</code> to publish to npm</span>
           </div>
         </div>
       </div>
       <div class="code-block">
-        <span class="code-label">Install at runtime</span>
-        <pre><code>pkg add @qodalis/cli-your-plugin</code></pre>
+        <span class="code-label">Register in your app</span>
+        <pre><code>import {{ '{' }} weatherModule {{ '}' }} from '@qodalis/cli-weather';
+
+// Angular: &lt;cli [modules]="[weatherModule]" /&gt;
+// React:   &lt;CliConfigProvider modules={{ '{' }}[weatherModule]{{ '}' }}&gt;
+// Vue:     &lt;CliConfigProvider :modules="[weatherModule]"&gt;</code></pre>
+      </div>
+      <div class="code-block">
+        <span class="code-label">Or install at runtime (no rebuild needed)</span>
+        <pre><code>pkg add @qodalis/cli-weather</code></pre>
       </div>
     </div>
   </div>

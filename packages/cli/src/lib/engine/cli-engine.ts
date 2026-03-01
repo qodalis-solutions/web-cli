@@ -216,7 +216,7 @@ export class CliEngine {
             await serverManager.connectAll(this.options.servers, {
                 warn: (msg) => console.warn(msg),
                 info: (msg) => console.log(msg),
-            });
+            }, this.executionContext.backgroundServices);
         }
 
         // 6.5. Prepend welcome module and server module

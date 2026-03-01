@@ -4,7 +4,6 @@ import {
     CliProcessCommand,
     CliProcessorMetadata,
     DefaultLibraryAuthor,
-    delay,
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
@@ -30,8 +29,9 @@ export class CliSleepCommandProcessor implements ICliCommandProcessor {
 
     async processCommand(
         command: CliProcessCommand,
-        { writer }: ICliExecutionContext,
+        context: ICliExecutionContext,
     ) {
+        const { writer, onAbort } = context;
         const time = parseInt(command.value!);
 
         if (isNaN(time) || time < 0) {
@@ -41,9 +41,23 @@ export class CliSleepCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        await delay(time);
+        let aborted = false;
+        await new Promise<void>((resolve) => {
+            const timer = setTimeout(() => {
+                subscription.unsubscribe();
+                resolve();
+            }, time);
 
-        writer.writeInfo(`Slept for ${time}ms`);
+            const subscription = onAbort.subscribe(() => {
+                clearTimeout(timer);
+                aborted = true;
+                resolve();
+            });
+        });
+
+        if (!aborted) {
+            writer.writeInfo(`Slept for ${time}ms`);
+        }
     }
 
     writeDescription(context: ICliExecutionContext): void {

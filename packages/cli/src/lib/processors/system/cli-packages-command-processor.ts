@@ -1065,13 +1065,39 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
         signal?: AbortSignal,
     ) {
-        const { progressBar, writer } = context;
-
         const hasPackage = await this.packagesManager.hasPackage(name);
         if (hasPackage) {
-            writer.writeInfo(`Package ${name} already installed`);
+            context.writer.writeInfo(`Package ${name} already installed`);
             return;
         }
+
+        const jobName = `pkg-install:${name}`;
+
+        try {
+            context.backgroundServices.register({
+                name: jobName,
+                description: `Installing package '${name}'`,
+                type: 'job',
+                onStart: async (ctx) => {
+                    ctx.log(`Installing ${name}`);
+                    await this.doAddPackage(name, context, signal);
+                    ctx.log(`Installation of ${name} complete`);
+                },
+            });
+
+            await context.backgroundServices.start(jobName);
+        } catch {
+            // Fallback: run directly if service registration fails
+            await this.doAddPackage(name, context, signal);
+        }
+    }
+
+    private async doAddPackage(
+        name: string,
+        context: ICliExecutionContext,
+        signal?: AbortSignal,
+    ): Promise<void> {
+        const { progressBar } = context;
 
         progressBar.show();
         progressBar.setText(`Fetching package ${name}`);
