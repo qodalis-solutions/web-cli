@@ -21,3 +21,5 @@ export * from './lib/version';
 export * from './lib/tokens';
 
 export * from './lib/worker';
+
+export * from './lib/services';

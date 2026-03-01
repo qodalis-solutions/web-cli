@@ -532,3 +532,5 @@ export * from './background-service';
 export * from './worker-protocol';
 
 export * from './global-parameter';
+
+export * from './file-transfer';
