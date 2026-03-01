@@ -160,51 +160,50 @@ export class CliBoot {
     }
 
     /**
-     * Topologically sort modules by their dependencies.
-     * Modules with no dependencies (or only @qodalis/cli-core) come first.
-     * Circular dependencies are logged as warnings and the involved modules are appended at the end.
+     * Topologically sort modules by their dependencies using DFS.
+     * Modules with no dependencies come first.
+     * Circular dependencies are detected and reported. Missing dependencies
+     * cause the dependent module to be skipped.
      */
     private topologicalSort(
         modules: ICliModule[],
         context: CliExecutionContext,
     ): ICliModule[] {
-        const moduleMap = new Map<string, ICliModule>();
-        for (const m of modules) {
-            moduleMap.set(m.name, m);
-        }
-
-        const sorted: ICliModule[] = [];
+        const moduleMap = new Map(modules.map((m) => [m.name, m]));
         const visited = new Set<string>();
         const visiting = new Set<string>();
+        const sorted: ICliModule[] = [];
 
-        const visit = (mod: ICliModule): void => {
-            if (visited.has(mod.name)) return;
-
-            if (visiting.has(mod.name)) {
-                context.logger.warn(
-                    `Circular dependency detected involving module "${mod.name}". Loading order may be incorrect.`,
+        const visit = (name: string): void => {
+            if (visited.has(name)) return;
+            if (visiting.has(name)) {
+                context.writer.writeError(
+                    `Circular dependency detected involving module "${name}". Aborting module loading.`,
                 );
                 return;
             }
 
-            visiting.add(mod.name);
+            const mod = moduleMap.get(name);
+            if (!mod) return;
 
+            visiting.add(name);
             for (const dep of mod.dependencies ?? []) {
-                if (dep === '@qodalis/cli-core') continue;
-
-                const depModule = moduleMap.get(dep);
-                if (depModule) {
-                    visit(depModule);
+                if (!moduleMap.has(dep) && !this.bootedModules.has(dep)) {
+                    context.writer.writeWarning(
+                        `Module "${name}" depends on "${dep}" which is not loaded. Skipping "${name}".`,
+                    );
+                    visiting.delete(name);
+                    return;
                 }
+                visit(dep);
             }
-
-            visiting.delete(mod.name);
-            visited.add(mod.name);
+            visiting.delete(name);
+            visited.add(name);
             sorted.push(mod);
         };
 
         for (const mod of modules) {
-            visit(mod);
+            visit(mod.name);
         }
 
         return sorted;
