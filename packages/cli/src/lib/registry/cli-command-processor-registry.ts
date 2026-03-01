@@ -17,6 +17,11 @@ export class CliCommandProcessorRegistry implements ICliCommandProcessorRegistry
         const existingProcessor = this.getProcessorByName(processor.command);
 
         if (existingProcessor) {
+            // Same instance registered again (e.g. via multiple DI paths) — skip silently
+            if (existingProcessor === processor) {
+                return;
+            }
+
             const existingIndex = this.processors.findIndex(
                 (p) => p.command === processor.command,
             );

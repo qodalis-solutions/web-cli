@@ -46,13 +46,41 @@ const backgroundServicesDemo: ICliModule = {
         });
 
         // 2. Worker daemon: ticker (ticks every 5s in a Web Worker)
+        //    Angular's webpack doesn't support new URL() + import.meta.url for workers,
+        //    so we use an inline Blob worker instead.
         context.backgroundServices.register({
             name: 'ticker',
             description: 'Worker daemon — ticks every 5s in a dedicated Web Worker',
             type: 'daemon',
             workerCompatible: true,
-            workerFactory: () =>
-                new Worker(new URL('./workers/ticker.worker', import.meta.url)),
+            workerFactory: () => {
+                const code = `
+                    let intervalId = null;
+                    let count = 0;
+                    self.onmessage = function(ev) {
+                        switch (ev.data.type) {
+                            case 'start':
+                                count = 0;
+                                self.postMessage({ type: 'status', status: 'running' });
+                                self.postMessage({ type: 'log', level: 'info', message: 'Ticker worker started' });
+                                intervalId = setInterval(function() {
+                                    count++;
+                                    self.postMessage({ type: 'log', level: 'info', message: 'Tick #' + count + ' from worker thread' });
+                                    self.postMessage({ type: 'event', event: { source: 'ticker', type: 'tick', data: { count: count } } });
+                                }, 5000);
+                                break;
+                            case 'stop':
+                            case 'abort':
+                                if (intervalId !== null) { clearInterval(intervalId); intervalId = null; }
+                                self.postMessage({ type: 'log', level: 'info', message: 'Ticker worker stopped after ' + count + ' ticks' });
+                                self.postMessage({ type: 'status', status: 'stopped' });
+                                break;
+                        }
+                    };
+                `;
+                const blob = new Blob([code], { type: 'application/javascript' });
+                return new Worker(URL.createObjectURL(blob));
+            },
             // Main-thread fallback if Workers are unavailable
             async onStart(ctx) {
                 let count = 0;
