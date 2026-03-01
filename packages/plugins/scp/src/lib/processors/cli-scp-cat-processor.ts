@@ -11,7 +11,7 @@ export class CliScpCatProcessor implements ICliCommandChildProcessor {
     command = 'cat';
     description = 'Display contents of a remote file';
     acceptsRawInput = true;
-    valueRequired = true;
+    valueRequired = false;
     parent?: ICliCommandProcessor;
 
     parameters = [

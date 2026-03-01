@@ -14,7 +14,7 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
     aliases = ['put'];
     description = 'Upload a local file to a remote server';
     acceptsRawInput = true;
-    valueRequired = true;
+    valueRequired = false;
     parent?: ICliCommandProcessor;
 
     parameters = [

@@ -11,7 +11,7 @@ export class CliScpStatProcessor implements ICliCommandChildProcessor {
     command = 'stat';
     description = 'Show file or directory information on a remote server';
     acceptsRawInput = true;
-    valueRequired = true;
+    valueRequired = false;
     parent?: ICliCommandProcessor;
 
     parameters = [
