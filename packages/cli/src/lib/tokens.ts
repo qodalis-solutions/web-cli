@@ -28,6 +28,12 @@ export const ICliPingServerService_TOKEN = 'cli-ping-server-service';
  */
 export const CliModuleRegistry_TOKEN = 'cli-module-registry';
 
+/**
+ * Framework-agnostic token for the CLI background service registry.
+ * Used as a key in the service provider to retrieve the background service registry.
+ */
+export const CliBackgroundServiceRegistry_TOKEN = 'cli-background-service-registry';
+
 // Re-exported from @qodalis/cli-core for backward compatibility
 export {
     ICliUserSessionService_TOKEN,

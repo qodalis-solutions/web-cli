@@ -32,6 +32,7 @@ import { CliBoot } from '../services/cli-boot';
 import { welcomeModule } from '../services/cli-welcome-message';
 import { OverlayAddon } from '../addons/overlay';
 import {
+    CliBackgroundServiceRegistry_TOKEN,
     CliCommandHistory_TOKEN,
     CliModuleRegistry_TOKEN,
     CliProcessorsRegistry_TOKEN,
@@ -198,6 +199,12 @@ export class CliEngine {
         );
 
         this.executionContext.initializeTerminalListeners();
+
+        // 5.5. Register background services registry in the service container
+        services.set([{
+            provide: CliBackgroundServiceRegistry_TOKEN,
+            useValue: this.executionContext.backgroundServices,
+        }]);
 
         // 6. Connect to configured servers (if any)
         const serverManager = new CliServerManager(this.registry);
