@@ -469,6 +469,7 @@ describe('CliModuleRegistry', () => {
     let registry: CliModuleRegistry;
 
     const createModule = (name: string): ICliModule => ({
+        apiVersion: 2,
         name,
         version: '1.0.0',
         description: `Module ${name}`,

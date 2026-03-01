@@ -384,6 +384,12 @@ export interface ICliPingServerService {
  * Represents a module for the CLI
  */
 export interface ICliModule {
+    /**
+     * API version this module targets.
+     * Modules with apiVersion < 2 (or missing) are rejected by v2 runtimes.
+     */
+    apiVersion: number;
+
     /** Unique module identifier, e.g. '@qodalis/cli-guid' */
     name: string;
 
