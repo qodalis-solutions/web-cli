@@ -9,6 +9,7 @@ import {
 import { LIBRARY_VERSION } from '../version';
 import {
     CurlResponse,
+    buildCurlEquivalent,
     buildFetchOptions,
     extractResponseHeaders,
     formatResponseBody,
@@ -103,13 +104,6 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
             description: 'Only output response body (no status line)',
             required: false,
         },
-        {
-            name: 'output',
-            aliases: ['o'],
-            type: 'string' as const,
-            description: 'Store response in a named variable',
-            required: false,
-        },
     ];
 
     async processCommand(
@@ -150,14 +144,10 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
         const requestUrl = useProxy ? rewriteUrlToProxy(url) : url;
 
         const fetchOptions = buildFetchOptions({
-            url: requestUrl,
             method,
             headers,
-            body: data,
-            rawBody: dataRaw,
+            body,
             followRedirects,
-            timeout,
-            proxy: useProxy,
         });
 
         if (verbose) {
@@ -230,6 +220,12 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
                 context.writer.writeln(formattedBody);
             }
 
+            if (verbose) {
+                context.writer.writeln();
+                context.writer.writeInfo('Equivalent curl command:');
+                context.writer.writeln(buildCurlEquivalent(url, method, headers, body));
+            }
+
             context.process.output(curlResponse);
         } catch (error: any) {
             if (error.name === 'AbortError') {
@@ -264,7 +260,6 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
         writer.writeln(`  ${writer.wrapInColor('-L, --location', CliForegroundColor.Cyan)}           Follow redirects (default: true)`);
         writer.writeln(`  ${writer.wrapInColor('--proxy', CliForegroundColor.Cyan)}                  Route through CORS proxy`);
         writer.writeln(`  ${writer.wrapInColor('-s, --silent', CliForegroundColor.Cyan)}             Only output body`);
-        writer.writeln(`  ${writer.wrapInColor('-o, --output <name>', CliForegroundColor.Cyan)}      Store response in variable`);
         writer.writeln();
 
         writer.writeln(writer.wrapInColor('Examples:', CliForegroundColor.Yellow));

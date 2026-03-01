@@ -1,12 +1,8 @@
 export interface CurlRequestOptions {
-    url: string;
     method: string;
     headers: Record<string, string>;
     body?: string;
-    rawBody?: string;
     followRedirects: boolean;
-    timeout: number;
-    proxy: boolean;
 }
 
 export interface CurlResponse {
@@ -67,10 +63,9 @@ export function isJsonBody(body?: string): boolean {
 }
 
 export function buildFetchOptions(options: CurlRequestOptions): RequestInit {
-    const body = resolveBody(options.body, options.rawBody);
     const headers = { ...options.headers };
 
-    if (body && !headers['Content-Type'] && isJsonBody(body)) {
+    if (options.body && !headers['Content-Type'] && isJsonBody(options.body)) {
         headers['Content-Type'] = 'application/json';
     }
 
@@ -79,8 +74,8 @@ export function buildFetchOptions(options: CurlRequestOptions): RequestInit {
         headers,
     };
 
-    if (body && options.method !== 'GET' && options.method !== 'HEAD') {
-        init.body = body;
+    if (options.body && options.method !== 'GET' && options.method !== 'HEAD') {
+        init.body = options.body;
     }
 
     if (!options.followRedirects) {
