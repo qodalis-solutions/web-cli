@@ -208,6 +208,49 @@
   </div>
 </section>
 
+<!-- ===== CREATE YOUR OWN PLUGIN ===== -->
+<section class="create-plugin-section">
+  <div class="section-inner">
+    <h2 class="section-heading">Create Your Own Plugin</h2>
+    <p class="section-subheading">
+      Scaffold a complete plugin project with a single command. Generates build config, command processor, tests, and a browser-ready IIFE bundle.
+    </p>
+    <div class="create-plugin-content">
+      <div class="code-block">
+        <span class="code-label">Scaffold</span>
+        <pre><code>npx @qodalis/create-cli-plugin</code></pre>
+      </div>
+      <div class="create-plugin-steps">
+        <div class="create-step">
+          <span class="step-number">1</span>
+          <div class="step-content">
+            <strong>Scaffold</strong>
+            <span>Run the CLI tool — interactive prompts or pass <code>--name</code> directly</span>
+          </div>
+        </div>
+        <div class="create-step">
+          <span class="step-number">2</span>
+          <div class="step-content">
+            <strong>Implement</strong>
+            <span>Add your command logic in <code>src/lib/processors/</code></span>
+          </div>
+        </div>
+        <div class="create-step">
+          <span class="step-number">3</span>
+          <div class="step-content">
+            <strong>Publish</strong>
+            <span>Build with <code>tsup</code> and publish to npm</span>
+          </div>
+        </div>
+      </div>
+      <div class="code-block">
+        <span class="code-label">Install at runtime</span>
+        <pre><code>pkg add @qodalis/cli-your-plugin</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ===== CTA ===== -->
 <section class="cta-section">
   <div class="section-inner cta-inner">

@@ -603,6 +603,64 @@ $radius-sm: 8px
   color: $text-secondary
   margin: 0
 
+// ─── Create Plugin ───
+.create-plugin-section
+  padding: 80px 0
+  background: $bg-surface
+
+.create-plugin-content
+  max-width: 640px
+  margin: 0 auto
+  display: flex
+  flex-direction: column
+  gap: 24px
+
+.create-plugin-steps
+  display: flex
+  flex-direction: column
+  gap: 16px
+
+.create-step
+  display: flex
+  align-items: flex-start
+  gap: 16px
+
+  code
+    font-family: $mono
+    font-size: 0.78rem
+    background: rgba(129, 140, 248, 0.1)
+    padding: 1px 6px
+    border-radius: 3px
+    color: $accent
+
+.step-number
+  width: 32px
+  height: 32px
+  display: flex
+  align-items: center
+  justify-content: center
+  flex-shrink: 0
+  background: $accent
+  color: #fff
+  font-size: 0.82rem
+  font-weight: 700
+  border-radius: 50%
+
+.step-content
+  display: flex
+  flex-direction: column
+  gap: 4px
+  padding-top: 4px
+
+  strong
+    font-size: 0.9rem
+    color: #fff
+
+  span
+    font-size: 0.82rem
+    line-height: 1.5
+    color: $text-secondary
+
 // ─── CTA ───
 .cta-section
   padding: 80px 0

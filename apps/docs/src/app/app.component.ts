@@ -140,7 +140,7 @@ import { filesModule } from '@qodalis/cli-files';`,
             icon: '\u29C9',
             title: 'Plugin Ecosystem',
             description:
-                'Extend functionality with drop-in plugins. GUID, regex, QR codes, speed tests, and more.',
+                'Extend functionality with drop-in plugins. 13 official plugins included, or create your own with one command.',
         },
         {
             icon: '\u2261',
