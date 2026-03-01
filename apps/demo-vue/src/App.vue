@@ -20,8 +20,42 @@ import { tetrisModule } from '@qodalis/cli-tetris';
 import { game2048Module } from '@qodalis/cli-2048';
 import { minesweeperModule } from '@qodalis/cli-minesweeper';
 import { wordleModule } from '@qodalis/cli-wordle';
-import { CliLogLevel, type CliOptions, type ICliModule } from '@qodalis/cli-core';
+import {
+    CliLogLevel,
+    type CliOptions,
+    type ICliModule,
+    type ICliExecutionContext,
+} from '@qodalis/cli-core';
 import { CliInputDemoCommandProcessor } from './processors/cli-input-demo-command-processor';
+
+/**
+ * Example background services module demonstrating daemon services and background jobs.
+ */
+const backgroundServicesDemo: ICliModule = {
+    apiVersion: 2,
+    name: 'background-services-demo',
+    description: 'Demonstrates background services and jobs',
+    async onAfterBoot(context: ICliExecutionContext) {
+        // Register a daemon service that ticks every 10 seconds
+        context.backgroundServices.register({
+            name: 'heartbeat',
+            description: 'Logs a heartbeat every 10 seconds',
+            type: 'daemon',
+            async onStart(ctx) {
+                ctx.log('Heartbeat service started');
+                ctx.createInterval(() => {
+                    ctx.log(`Heartbeat: ${new Date().toLocaleTimeString()}`);
+                }, 10000);
+            },
+            async onStop(ctx) {
+                ctx.log('Heartbeat service stopped');
+            },
+        });
+
+        // Auto-start the heartbeat daemon
+        await context.backgroundServices.start('heartbeat');
+    },
+};
 
 const modules: ICliModule[] = [
     filesModule,
@@ -54,6 +88,7 @@ const modules: ICliModule[] = [
         name: 'input-demo',
         processors: [new CliInputDemoCommandProcessor()],
     },
+    backgroundServicesDemo,
 ];
 
 const options: CliOptions = {

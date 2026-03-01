@@ -14,6 +14,39 @@ import { browserStorageModule } from '@qodalis/cli-browser-storage';
 import { stringModule } from '@qodalis/cli-string';
 import { todoModule } from '@qodalis/cli-todo';
 import { usersModule } from '@qodalis/cli-users';
+import {
+    ICliModule,
+    ICliExecutionContext,
+} from '@qodalis/cli-core';
+
+/**
+ * Example background services module demonstrating daemon services and background jobs.
+ */
+const backgroundServicesDemo: ICliModule = {
+    apiVersion: 2,
+    name: 'background-services-demo',
+    description: 'Demonstrates background services and jobs',
+    async onAfterBoot(context: ICliExecutionContext) {
+        // Register a daemon service that ticks every 10 seconds
+        context.backgroundServices.register({
+            name: 'heartbeat',
+            description: 'Logs a heartbeat every 10 seconds',
+            type: 'daemon',
+            async onStart(ctx) {
+                ctx.log('Heartbeat service started');
+                ctx.createInterval(() => {
+                    ctx.log(`Heartbeat: ${new Date().toLocaleTimeString()}`);
+                }, 10000);
+            },
+            async onStop(ctx) {
+                ctx.log('Heartbeat service stopped');
+            },
+        });
+
+        // Auto-start the heartbeat daemon
+        await context.backgroundServices.start('heartbeat');
+    },
+};
 
 // Demonstrates registering CLI modules via Angular DI (NgModule providers).
 // These modules are injected into CliComponent via CliModule_TOKEN automatically.
@@ -43,6 +76,7 @@ import { usersModule } from '@qodalis/cli-users';
                 requirePassword: true,
             }),
         ),
+        resolveCliModuleProvider(backgroundServicesDemo),
     ],
     bootstrap: [AppComponent],
 })
