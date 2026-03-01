@@ -55,7 +55,15 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 (x) => x.metadata?.module || 'uncategorized',
             );
 
-            groupedCommands.forEach((processors, module) => {
+            const sortedModules = [...groupedCommands.entries()].sort(
+                ([a], [b]) => {
+                    if (a === 'uncategorized') return 1;
+                    if (b === 'uncategorized') return -1;
+                    return 0;
+                },
+            );
+
+            sortedModules.forEach(([module, processors]) => {
                 writer.writeln(
                     `  ${writer.wrapInColor(module.charAt(0).toUpperCase() + module.slice(1), CliForegroundColor.Yellow)}`,
                 );
