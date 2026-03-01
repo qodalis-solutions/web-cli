@@ -1,4 +1,5 @@
 import { ICliModule } from '../interfaces';
+import { API_VERSION } from '../version';
 
 /**
  * Registry that tracks loaded CLI modules and dispatches boot handlers
@@ -18,8 +19,17 @@ export class CliModuleRegistry {
 
     /**
      * Register a module and notify all boot handlers.
+     * Modules that do not meet the required API version are silently skipped.
      */
     async register(module: ICliModule): Promise<void> {
+        const modApiVersion = module.apiVersion;
+        if (typeof modApiVersion !== 'number' || modApiVersion < API_VERSION) {
+            console.warn(
+                `[CLI] Plugin "${module.name}" targets API version ${modApiVersion ?? 'unknown'}, ` +
+                `but this runtime requires API version ${API_VERSION}. Skipping.`,
+            );
+            return;
+        }
         this.modules.set(module.name, module);
         for (const handler of this.bootHandlers) {
             await handler(module);
