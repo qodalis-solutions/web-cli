@@ -1,7 +1,7 @@
 import { TemplateVars } from './types';
 
 export function packageJsonTemplate(vars: TemplateVars, monorepo: boolean): string {
-    const coreVersion = monorepo ? 'workspace:*' : '^2.0.0';
+    const coreVersion = monorepo ? 'workspace:*' : '^0.0.16';
     return JSON.stringify(
         {
             name: `@qodalis/cli-${vars.name}`,
@@ -17,8 +17,15 @@ export function packageJsonTemplate(vars: TemplateVars, monorepo: boolean): stri
             keywords: ['cli', 'qodalis', 'terminal', vars.name],
             umd: './umd/index.js',
             unpkg: './umd/index.js',
+            scripts: monorepo ? undefined : {
+                build: 'tsup',
+            },
             dependencies: {
                 '@qodalis/cli-core': coreVersion,
+            },
+            devDependencies: monorepo ? undefined : {
+                tsup: '^8.0.0',
+                typescript: '^5.0.0',
             },
             sideEffects: false,
             main: './public-api.js',

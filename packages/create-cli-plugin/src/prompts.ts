@@ -1,6 +1,6 @@
 import { input } from '@inquirer/prompts';
 
-function toPascalCase(str: string): string {
+export function toPascalCase(str: string): string {
     return str
         .split(/[-_\s]+/)
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))

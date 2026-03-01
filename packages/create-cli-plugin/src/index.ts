@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { execSync } from 'child_process';
 import { detectMonorepo } from './detect-monorepo';
-import { promptForPluginInfo } from './prompts';
+import { promptForPluginInfo, toPascalCase, PluginAnswers } from './prompts';
 import { scaffoldPlugin } from './scaffold';
 
 const program = new Command();
@@ -10,7 +10,10 @@ program
     .name('create-cli-plugin')
     .description('Scaffold a new Qodalis CLI plugin')
     .version('1.0.0')
-    .action(async () => {
+    .option('-n, --name <name>', 'Plugin name (lowercase)')
+    .option('-d, --description <description>', 'Plugin description')
+    .option('-p, --processor-name <name>', 'Processor class name (PascalCase)')
+    .action(async (options) => {
         try {
             const cwd = process.cwd();
             const monorepo = detectMonorepo(cwd);
@@ -22,7 +25,18 @@ program
                 console.log('Creating a standalone plugin project.\n');
             }
 
-            const answers = await promptForPluginInfo();
+            let answers: PluginAnswers;
+
+            if (options.name) {
+                answers = {
+                    name: options.name,
+                    description: options.description || `CLI extension for ${options.name}`,
+                    processorName: options.processorName || toPascalCase(options.name),
+                };
+            } else {
+                answers = await promptForPluginInfo();
+            }
+
             const projectDir = scaffoldPlugin(answers, monorepo);
 
             console.log('\nDone!\n');
