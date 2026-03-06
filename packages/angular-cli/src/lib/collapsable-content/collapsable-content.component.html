@@ -29,10 +29,11 @@
   </svg>
 </button>
 
-<!-- Main panel (hidden when isHidden) -->
+<!-- Main panel (kept in DOM when hidden to preserve terminal state) -->
 <div
-  *ngIf="visible && !isHidden"
+  *ngIf="visible"
   class="terminal-wrapper"
+  [style.display]="isHidden ? 'none' : ''"
   [class.collapsed]="isCollapsed"
   [class.maximized]="isMaximized"
   [class.resizing]="isResizing"

@@ -482,16 +482,6 @@ export const CliPanel = defineComponent({
         return () => {
             if (!visible.value) return null;
 
-            if (hidden.value) {
-                return h('button', {
-                    class: 'cli-panel-hide-tab',
-                    'data-position': position.value,
-                    'data-hide-align': hideAlignment.value,
-                    title: 'Show CLI',
-                    onClick: handleUnhide,
-                }, [hideTabChevron(position.value)]);
-            }
-
             const wrapperClass = [
                 'cli-panel-wrapper',
                 collapsed.value && 'collapsed',
@@ -502,9 +492,11 @@ export const CliPanel = defineComponent({
                 .filter(Boolean)
                 .join(' ');
 
-            const wrapperStyle = isHorizontal.value
-                ? { width: `${panelWidth.value}px`, ...props.style }
-                : { height: `${panelHeight.value}px`, ...props.style };
+            const wrapperStyle = {
+                ...(isHorizontal.value ? { width: `${panelWidth.value}px` } : { height: `${panelHeight.value}px` }),
+                ...(hidden.value ? { display: 'none' } : {}),
+                ...props.style,
+            };
 
             const headerEl = h('div', { class: 'cli-panel-header' }, [
                 h(
@@ -951,7 +943,18 @@ export const CliPanel = defineComponent({
                   )
                 : null;
 
+            const hideTabEl = hidden.value
+                ? h('button', {
+                    class: 'cli-panel-hide-tab',
+                    'data-position': position.value,
+                    'data-hide-align': hideAlignment.value,
+                    title: 'Show CLI',
+                    onClick: handleUnhide,
+                }, [hideTabChevron(position.value)])
+                : null;
+
             return h('div', {}, [
+                hideTabEl,
                 h(
                     'div',
                     {

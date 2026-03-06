@@ -467,26 +467,26 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
 
     if (!visible) return null;
 
-    if (hidden) {
-        return (
-            <button
-                className="cli-panel-hide-tab"
-                data-position={position}
-                data-hide-align={hideAlignment}
-                title="Show CLI"
-                onClick={handleUnhide}
-            >
-                <HideTabChevron position={position} />
-            </button>
-        );
-    }
-
-    const wrapperStyle: React.CSSProperties = isHorizontal
-        ? { width: `${panelWidth}px`, ...style }
-        : { height: `${panelHeight}px`, ...style };
+    const wrapperStyle: React.CSSProperties = {
+        ...(isHorizontal ? { width: `${panelWidth}px` } : { height: `${panelHeight}px` }),
+        ...(hidden ? { display: 'none' } : {}),
+        ...style,
+    };
 
     return (
         <>
+            {/* Hide tab (shown when panel is hidden) */}
+            {hidden && (
+                <button
+                    className="cli-panel-hide-tab"
+                    data-position={position}
+                    data-hide-align={hideAlignment}
+                    title="Show CLI"
+                    onClick={handleUnhide}
+                >
+                    <HideTabChevron position={position} />
+                </button>
+            )}
             <div
                 className={`cli-panel-wrapper ${collapsed ? 'collapsed' : ''} ${maximized ? 'maximized' : ''} ${panelResizing ? 'resizing' : ''} ${className ?? ''}`}
                 style={wrapperStyle}
