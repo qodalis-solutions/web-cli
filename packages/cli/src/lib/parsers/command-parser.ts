@@ -14,8 +14,8 @@ export type CommandParserOutput = {
 };
 
 export type CommandPart = {
-    /** 'command' for a command to execute, or the operator string ('&&', '||', '>>', '|') */
-    type: 'command' | '&&' | '||' | '>>' | '|';
+    /** 'command' for a command to execute, or the operator string */
+    type: 'command' | '&&' | '||' | '>>' | '>' | '|' | ';';
     value: string;
 };
 
@@ -24,7 +24,7 @@ export type CommandPart = {
  */
 export class CommandParser {
     /** Operators recognized during command-line splitting. */
-    private static readonly OPERATORS = ['&&', '||', '>>', '|'] as const;
+    private static readonly OPERATORS = ['&&', '||', '>>', '>', '|', ';'] as const;
 
     /**
      * Split a raw command line into commands and operators.
@@ -84,6 +84,28 @@ export class CommandParser {
                 }
                 current = '';
                 result.push({ type: '|', value: '|' });
+                continue;
+            }
+
+            // Check for single-character > redirect (after >> is ruled out)
+            if (ch === '>') {
+                const trimmed = current.trim();
+                if (trimmed) {
+                    result.push({ type: 'command', value: trimmed });
+                }
+                current = '';
+                result.push({ type: '>', value: '>' });
+                continue;
+            }
+
+            // Check for ; sequential separator
+            if (ch === ';') {
+                const trimmed = current.trim();
+                if (trimmed) {
+                    result.push({ type: 'command', value: trimmed });
+                }
+                current = '';
+                result.push({ type: ';', value: ';' });
                 continue;
             }
 

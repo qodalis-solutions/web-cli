@@ -853,6 +853,82 @@ describe('CommandParser.splitByOperators', () => {
             { type: 'command', value: 'log.txt' },
         ]);
     });
+
+    // -- ; operator --
+
+    it('should split two commands by ;', () => {
+        const parts = CommandParser.splitByOperators('echo hello ; echo world');
+        expect(parts).toEqual([
+            { type: 'command', value: 'echo hello' },
+            { type: ';', value: ';' },
+            { type: 'command', value: 'echo world' },
+        ]);
+    });
+
+    it('should split three commands by ;', () => {
+        const parts = CommandParser.splitByOperators('a ; b ; c');
+        expect(parts).toEqual([
+            { type: 'command', value: 'a' },
+            { type: ';', value: ';' },
+            { type: 'command', value: 'b' },
+            { type: ';', value: ';' },
+            { type: 'command', value: 'c' },
+        ]);
+    });
+
+    it('should handle ; with no spaces', () => {
+        const parts = CommandParser.splitByOperators('a;b');
+        expect(parts).toEqual([
+            { type: 'command', value: 'a' },
+            { type: ';', value: ';' },
+            { type: 'command', value: 'b' },
+        ]);
+    });
+
+    it('should not split on ; inside quoted strings', () => {
+        const parts = CommandParser.splitByOperators('echo "a ; b"');
+        expect(parts).toEqual([{ type: 'command', value: 'echo "a ; b"' }]);
+    });
+
+    it('should handle mixed ; and && operators', () => {
+        const parts = CommandParser.splitByOperators('a ; b && c');
+        expect(parts).toEqual([
+            { type: 'command', value: 'a' },
+            { type: ';', value: ';' },
+            { type: 'command', value: 'b' },
+            { type: '&&', value: '&&' },
+            { type: 'command', value: 'c' },
+        ]);
+    });
+
+    // -- > operator --
+
+    it('should split command and redirect target by >', () => {
+        const parts = CommandParser.splitByOperators('echo hello > output.txt');
+        expect(parts).toEqual([
+            { type: 'command', value: 'echo hello' },
+            { type: '>', value: '>' },
+            { type: 'command', value: 'output.txt' },
+        ]);
+    });
+
+    it('should distinguish > from >>', () => {
+        const parts = CommandParser.splitByOperators('echo a > out.txt && echo b >> out.txt');
+        expect(parts).toEqual([
+            { type: 'command', value: 'echo a' },
+            { type: '>', value: '>' },
+            { type: 'command', value: 'out.txt' },
+            { type: '&&', value: '&&' },
+            { type: 'command', value: 'echo b' },
+            { type: '>>', value: '>>' },
+            { type: 'command', value: 'out.txt' },
+        ]);
+    });
+
+    it('should not split on > inside quoted strings', () => {
+        const parts = CommandParser.splitByOperators('echo "a > b"');
+        expect(parts).toEqual([{ type: 'command', value: 'echo "a > b"' }]);
+    });
 });
 
 // ---------------------------------------------------------------------------
