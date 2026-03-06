@@ -10,7 +10,9 @@ import {
     CancellablePromise,
     CliForegroundColor,
     ICliCommandProcessorRegistry,
+    ICliProcessRegistry,
 } from '@qodalis/cli-core';
+import { CliProcessRegistry_TOKEN } from '../services/cli-process-registry';
 import { CommandParser, CommandPart } from '../parsers';
 import { reconcileArgs } from '../parsers/reconcile-args';
 import { CliExecutionProcess } from '../context/cli-execution-process';
@@ -237,6 +239,14 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
         process.start();
 
+        let processEntry: { pid: number; abortController: AbortController } | undefined;
+        try {
+            const procRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
+            processEntry = procRegistry.register(command);
+        } catch {
+            // Registry not available — proceed without it
+        }
+
         const parsed = this.commandParser.parse(command);
         let { commandName } = parsed;
         let parsedArgs = parsed.args;
@@ -421,11 +431,25 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 process.data = capturingWriter.getCapturedData();
             }
 
+            if (processEntry) {
+                try {
+                    const procRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
+                    procRegistry.complete(processEntry.pid, context.process.exitCode ?? 0);
+                } catch { /* ignore */ }
+            }
+
             if (!process.exited) {
                 process.end();
             }
         } catch (e) {
             context.spinner?.hide();
+
+            if (processEntry) {
+                try {
+                    const procRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
+                    procRegistry.fail(processEntry.pid);
+                } catch { /* ignore */ }
+            }
 
             if (e instanceof ProcessExitedError) {
                 cancellable?.cancel();

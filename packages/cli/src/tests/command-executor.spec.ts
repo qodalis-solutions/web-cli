@@ -1168,4 +1168,56 @@ describe('CliCommandExecutor', () => {
             expect(signals[0]).not.toBe(signals[1]); // Different controllers
         });
     });
+
+    // -----------------------------------------------------------------------
+    // Process Registry
+    // -----------------------------------------------------------------------
+    describe('Process Registry', () => {
+        it('should track executed commands with PIDs', async () => {
+            const { CliProcessRegistry, CliProcessRegistry_TOKEN } = await import(
+                '../lib/services/cli-process-registry'
+            );
+            const procRegistry = new CliProcessRegistry();
+            const origGet = (context.services as any).get.bind(context.services);
+            (context.services as any).get = (token: any) => {
+                if (token === CliProcessRegistry_TOKEN) return procRegistry;
+                return origGet(token);
+            };
+
+            registry.registerProcessor(
+                createTestProcessor('cmd', async () => {}),
+            );
+
+            await executor.executeCommand('cmd', context);
+
+            const processes = procRegistry.list();
+            expect(processes.length).toBeGreaterThan(0);
+            expect(processes[0].command).toBe('cmd');
+            expect(processes[0].status).toBe('completed');
+        });
+
+        it('should mark failed commands in registry', async () => {
+            const { CliProcessRegistry, CliProcessRegistry_TOKEN } = await import(
+                '../lib/services/cli-process-registry'
+            );
+            const procRegistry = new CliProcessRegistry();
+            const origGet = (context.services as any).get.bind(context.services);
+            (context.services as any).get = (token: any) => {
+                if (token === CliProcessRegistry_TOKEN) return procRegistry;
+                return origGet(token);
+            };
+
+            registry.registerProcessor(
+                createTestProcessor('fail', async () => {
+                    throw new Error('boom');
+                }),
+            );
+
+            await executor.executeCommand('fail', context);
+
+            const processes = procRegistry.list();
+            expect(processes.length).toBeGreaterThan(0);
+            expect(processes[0].status).toBe('failed');
+        });
+    });
 });

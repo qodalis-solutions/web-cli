@@ -309,6 +309,35 @@ export interface ICliExecutionProcess {
 }
 
 /**
+ * Represents a tracked CLI process entry
+ */
+export interface ICliProcessEntry {
+    pid: number;
+    command: string;
+    startTime: number;
+    status: 'running' | 'completed' | 'failed' | 'killed';
+    exitCode?: number;
+}
+
+/**
+ * Registry for tracking CLI processes
+ */
+export interface ICliProcessRegistry {
+    /** Register a new process, returns assigned PID */
+    register(command: string): { pid: number; abortController: AbortController };
+    /** Mark process as completed */
+    complete(pid: number, exitCode: number): void;
+    /** Mark process as failed */
+    fail(pid: number): void;
+    /** Kill a process by PID */
+    kill(pid: number): boolean;
+    /** List all processes (running + recent completed) */
+    list(): ICliProcessEntry[];
+    /** Get the current foreground process PID */
+    readonly currentPid: number | undefined;
+}
+
+/**
  * Represents a key-value store for the CLI
  */
 export interface ICliKeyValueStore {

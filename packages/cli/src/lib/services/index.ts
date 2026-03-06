@@ -18,3 +18,4 @@ export {
     CliInputReaderHost,
 } from './cli-input-reader';
 export { CapturingTerminalWriter } from './capturing-terminal-writer';
+export { CliProcessRegistry, CliProcessRegistry_TOKEN } from './cli-process-registry';
