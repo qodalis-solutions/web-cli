@@ -40,6 +40,7 @@ import { CliChmodCommandProcessor } from './lib/processors/cli-chmod-command-pro
 import { CliDuCommandProcessor } from './lib/processors/cli-du-command-processor';
 import { CliLnCommandProcessor } from './lib/processors/cli-ln-command-processor';
 import { CliSedCommandProcessor } from './lib/processors/cli-sed-command-processor';
+import { CliAwkCommandProcessor } from './lib/processors/cli-awk-command-processor';
 
 /**
  * Configuration options for the files module.
@@ -92,6 +93,7 @@ export const filesModule: ICliFilesModule = {
         new CliDuCommandProcessor(),
         new CliLnCommandProcessor(),
         new CliSedCommandProcessor(),
+        new CliAwkCommandProcessor(),
     ],
     services: [
         {
