@@ -372,3 +372,112 @@ describe('CliCompletionEngine', () => {
         expect(result.replacement).toBe('high');
     });
 });
+
+import { CliThemeNameCompletionProvider } from '../lib/completion/cli-theme-name-completion-provider';
+
+// ---------------------------------------------------------------------------
+// CliThemeNameCompletionProvider
+// ---------------------------------------------------------------------------
+describe('CliThemeNameCompletionProvider', () => {
+    let provider: CliThemeNameCompletionProvider;
+
+    beforeEach(() => {
+        provider = new CliThemeNameCompletionProvider();
+    });
+
+    it('should complete theme names for "theme apply"', () => {
+        const result = provider.getCompletions({
+            input: 'theme apply d',
+            cursor: 13,
+            token: 'd',
+            tokenStart: 12,
+            tokenIndex: 2,
+            tokens: ['theme', 'apply', 'd'],
+        });
+        expect(result).toContain('dracula');
+    });
+
+    it('should complete theme names for "theme preview"', () => {
+        const result = provider.getCompletions({
+            input: 'theme preview n',
+            cursor: 15,
+            token: 'n',
+            tokenStart: 14,
+            tokenIndex: 2,
+            tokens: ['theme', 'preview', 'n'],
+        });
+        expect(result).toContain('nord');
+    });
+
+    it('should complete dark/light for "theme random"', () => {
+        const result = provider.getCompletions({
+            input: 'theme random d',
+            cursor: 14,
+            token: 'd',
+            tokenStart: 13,
+            tokenIndex: 2,
+            tokens: ['theme', 'random', 'd'],
+        });
+        expect(result).toEqual(['dark']);
+    });
+
+    it('should complete tags for "theme search"', () => {
+        const result = provider.getCompletions({
+            input: 'theme search r',
+            cursor: 14,
+            token: 'r',
+            tokenStart: 13,
+            tokenIndex: 2,
+            tokens: ['theme', 'search', 'r'],
+        });
+        expect(result).toContain('retro');
+    });
+
+    it('should return empty for non-theme commands', () => {
+        const result = provider.getCompletions({
+            input: 'echo test d',
+            cursor: 11,
+            token: 'd',
+            tokenStart: 10,
+            tokenIndex: 2,
+            tokens: ['echo', 'test', 'd'],
+        });
+        expect(result).toEqual([]);
+    });
+
+    it('should include new themes like tokyoNight', () => {
+        const result = provider.getCompletions({
+            input: 'theme apply tokyo',
+            cursor: 17,
+            token: 'tokyo',
+            tokenStart: 12,
+            tokenIndex: 2,
+            tokens: ['theme', 'apply', 'tokyo'],
+        });
+        expect(result).toContain('tokyoNight');
+    });
+
+    it('should work with "themes" alias', () => {
+        const result = provider.getCompletions({
+            input: 'themes apply d',
+            cursor: 14,
+            token: 'd',
+            tokenStart: 13,
+            tokenIndex: 2,
+            tokens: ['themes', 'apply', 'd'],
+        });
+        expect(result).toContain('dracula');
+    });
+
+    it('should return empty for wrong token index', () => {
+        const result = provider.getCompletions({
+            input: 'theme',
+            cursor: 5,
+            token: 'theme',
+            tokenStart: 0,
+            tokenIndex: 0,
+            tokens: ['theme'],
+        });
+        expect(result).toEqual([]);
+    });
+});
