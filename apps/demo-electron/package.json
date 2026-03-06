@@ -2,6 +2,7 @@
   "name": "demo-electron",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "description": "Electron demo app for the Qodalis CLI terminal",
   "main": "out/main/index.js",
   "scripts": {
