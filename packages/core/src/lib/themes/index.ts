@@ -648,3 +648,5 @@ export const DefaultThemes = {
 } as DefaultThemesType;
 
 DefaultThemes.yellow = DefaultThemes.highContrastLight;
+
+export * from './theme-info';

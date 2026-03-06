@@ -1,4 +1,4 @@
-import { DefaultThemes } from '@qodalis/cli-core';
+import { DefaultThemes, DefaultThemeInfos, CliThemeInfo } from '@qodalis/cli-core';
 import { ITheme } from '@xterm/xterm';
 
 export type ThemeState = {
@@ -8,4 +8,8 @@ export type ThemeState = {
 
 export const themes = {
     ...DefaultThemes,
+};
+
+export const themeInfos: Record<string, CliThemeInfo> = {
+    ...DefaultThemeInfos,
 };
