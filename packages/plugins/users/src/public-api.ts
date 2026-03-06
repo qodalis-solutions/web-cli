@@ -18,6 +18,7 @@ import {
     ICliUserSessionService_TOKEN,
     ICliGroupsStoreService_TOKEN,
     ICliAuthService_TOKEN,
+    ICliPermissionService_TOKEN,
 } from '@qodalis/cli-core';
 
 import { CliWhoamiCommandProcessor } from './lib/processors/cli-whoami-command-processor';
@@ -39,6 +40,7 @@ import { CliDefaultUsersStoreService } from './lib/services/cli-default-users-st
 import { CliDefaultUserSessionService } from './lib/services/cli-default-user-session.service';
 import { CliDefaultGroupsStoreService } from './lib/services/cli-default-groups-store.service';
 import { CliDefaultAuthService } from './lib/services/cli-default-auth.service';
+import { CliDefaultPermissionService } from './lib/services/cli-default-permission.service';
 import {
     CliUsersModuleConfig,
     CliUsersModuleConfig_TOKEN,
@@ -94,9 +96,10 @@ export const usersModule: ICliUsersModule = {
             'cli-key-value-store',
         );
 
-        // Register module config so processors can access it
+        // Register module config and permission service
         context.services.set([
             { provide: CliUsersModuleConfig_TOKEN, useValue: moduleConfig },
+            { provide: ICliPermissionService_TOKEN, useValue: new CliDefaultPermissionService() },
         ]);
 
         // Initialize users store
@@ -173,18 +176,19 @@ export const usersModule: ICliUsersModule = {
                     displayName: formatDisplayName(session.user),
                 };
 
-                // Sync filesystem home path with current user's homeDir
-                if (session.user.homeDir) {
-                    try {
-                        const fs = context.services.get<any>(
-                            'cli-file-system-service',
-                        );
-                        if (fs) {
+                // Sync filesystem with current user
+                try {
+                    const fs = context.services.get<any>(
+                        'cli-file-system-service',
+                    );
+                    if (fs) {
+                        if (session.user.homeDir) {
                             fs.setHomePath(session.user.homeDir);
                         }
-                    } catch {
-                        // Files module not installed — skip
+                        fs.setCurrentUser(session.user.id, session.user.groups);
                     }
+                } catch {
+                    // Files module not installed — skip
                 }
             }
         });
@@ -276,13 +280,6 @@ export const usersModule: ICliUsersModule = {
         if (homeDirInput === null) return false;
         const homeDir = homeDirInput || `/home/${username}`;
 
-        // Shell
-        const shellInput = await context.reader.readLine(
-            'Shell [/bin/bash]: ',
-        );
-        if (shellInput === null) return false;
-        const shell = shellInput || '/bin/bash';
-
         // Groups
         const groupsInput = await context.reader.readLine(
             'Groups (comma-separated) []: ',
@@ -323,7 +320,6 @@ export const usersModule: ICliUsersModule = {
             email,
             groups,
             homeDir,
-            shell,
         });
         await authService.setPassword(user.id, password);
         await sessionService.setUserSession({

@@ -48,6 +48,8 @@ export class CliStatCommandProcessor implements ICliCommandProcessor {
                 Size: `${node.size}`,
                 Type: node.type,
                 Permissions: node.permissions || 'rw-r--r--',
+                Owner: node.ownership?.uid || '-',
+                Group: node.ownership?.gid || '-',
                 Created: new Date(node.createdAt).toLocaleString(),
                 Modified: new Date(node.modifiedAt).toLocaleString(),
             });

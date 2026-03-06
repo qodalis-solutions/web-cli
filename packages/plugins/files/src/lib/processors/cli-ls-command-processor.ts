@@ -91,6 +91,8 @@ export class CliLsCommandProcessor implements ICliCommandProcessor {
             const perms =
                 entry.permissions ||
                 (entry.type === 'directory' ? 'rwxr-xr-x' : 'rw-r--r--');
+            const owner = entry.ownership?.uid || '-';
+            const group = entry.ownership?.gid || '-';
             const size = entry.type === 'file' ? entry.size.toString() : '-';
             const date = new Date(entry.modifiedAt);
             const dateStr = date.toLocaleDateString('en-US', {
@@ -105,7 +107,7 @@ export class CliLsCommandProcessor implements ICliCommandProcessor {
                     : entry.name;
 
             writer.writeln(
-                `${typeChar}${perms}  ${size.padStart(6)}  ${dateStr}  ${name}`,
+                `${typeChar}${perms}  ${owner.padEnd(8)} ${group.padEnd(8)} ${size.padStart(6)}  ${dateStr}  ${name}`,
             );
         }
     }

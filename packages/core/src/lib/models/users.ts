@@ -12,8 +12,6 @@ export interface ICliUser {
     groups: string[];
     /** Virtual home directory path, e.g. /home/root */
     homeDir?: string;
-    /** Default shell/prompt configuration */
-    shell?: string;
     /** Account creation timestamp */
     createdAt: number;
     /** Last modification timestamp */

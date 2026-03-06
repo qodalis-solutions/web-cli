@@ -1,3 +1,4 @@
+import { ICliOwnership } from '@qodalis/cli-core';
 import { IFileNode } from '../interfaces/i-file-node';
 import { IFileSystemService } from '../interfaces/i-file-system-service';
 
@@ -53,6 +54,23 @@ export class IndexedDbFileSystemService implements IFileSystemService {
     private root: IFileNode = createSeedFileSystem();
     private cwd: string = DEFAULT_HOME;
     private homePath: string = DEFAULT_HOME;
+    private currentUid: string | null = null;
+    private currentGroups: string[] = [];
+
+    // --- User context ---
+
+    setCurrentUser(uid: string, groups: string[]): void {
+        this.currentUid = uid;
+        this.currentGroups = groups;
+    }
+
+    private getDefaultOwnership(): ICliOwnership | undefined {
+        if (!this.currentUid) return undefined;
+        return {
+            uid: this.currentUid,
+            gid: this.currentGroups[0] || 'users',
+        };
+    }
 
     // --- Navigation ---
 
@@ -189,6 +207,7 @@ export class IndexedDbFileSystemService implements IFileSystemService {
                         modifiedAt: now,
                         size: 0,
                         permissions: 'rwxr-xr-x',
+                        ownership: this.getDefaultOwnership(),
                     };
                     current.children.push(child);
                     current.modifiedAt = now;
@@ -226,6 +245,7 @@ export class IndexedDbFileSystemService implements IFileSystemService {
                 modifiedAt: now,
                 size: 0,
                 permissions: 'rwxr-xr-x',
+                ownership: this.getDefaultOwnership(),
             });
             parent.modifiedAt = now;
         }
@@ -267,6 +287,7 @@ export class IndexedDbFileSystemService implements IFileSystemService {
                 modifiedAt: now,
                 size: new Blob([content]).size,
                 permissions: 'rw-r--r--',
+                ownership: this.getDefaultOwnership(),
             });
             parent.modifiedAt = now;
         }
@@ -442,6 +463,26 @@ export class IndexedDbFileSystemService implements IFileSystemService {
         srcParent.modifiedAt = Date.now();
     }
 
+    // --- Permissions ---
+
+    chmod(path: string, permissions: string): void {
+        const resolved = this.resolvePath(path);
+        const node = this.getNode(resolved);
+        if (!node) {
+            throw new Error(`chmod: ${path}: No such file or directory`);
+        }
+        node.permissions = permissions;
+    }
+
+    chown(path: string, ownership: ICliOwnership): void {
+        const resolved = this.resolvePath(path);
+        const node = this.getNode(resolved);
+        if (!node) {
+            throw new Error(`chown: ${path}: No such file or directory`);
+        }
+        node.ownership = ownership;
+    }
+
     // --- Persistence ---
 
     async initialize(): Promise<void> {
@@ -498,6 +539,7 @@ export class IndexedDbFileSystemService implements IFileSystemService {
             modifiedAt: now,
             size: node.size,
             permissions: node.permissions,
+            ownership: node.ownership ? { ...node.ownership } : undefined,
         };
 
         if (node.type === 'file') {

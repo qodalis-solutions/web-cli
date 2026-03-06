@@ -61,7 +61,7 @@ export class CliChmodCommandProcessor implements ICliCommandProcessor {
                 return;
             }
 
-            this.applyPermissions(node, perms, recursive);
+            this.applyPermissions(fs, resolved, node, perms, recursive);
         }
 
         await fs.persist();
@@ -130,7 +130,6 @@ export class CliChmodCommandProcessor implements ICliCommandProcessor {
             } else if (op === '-') {
                 chars[idx] = '-';
             } else if (op === '=') {
-                // First clear all for the who group, then set
                 chars[idx] = permChar;
             }
         }
@@ -172,14 +171,20 @@ export class CliChmodCommandProcessor implements ICliCommandProcessor {
     }
 
     private applyPermissions(
+        fs: IFileSystemService,
+        basePath: string,
         node: IFileNode,
         perms: string,
         recursive: boolean,
     ): void {
-        node.permissions = perms;
+        fs.chmod(basePath, perms);
         if (recursive && node.type === 'directory' && node.children) {
             for (const child of node.children) {
-                this.applyPermissions(child, perms, true);
+                const childPath =
+                    basePath === '/'
+                        ? `/${child.name}`
+                        : `${basePath}/${child.name}`;
+                this.applyPermissions(fs, childPath, child, perms, recursive);
             }
         }
     }

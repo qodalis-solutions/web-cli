@@ -37,6 +37,7 @@ import { CliPasteCommandProcessor } from './lib/processors/cli-paste-command-pro
 import { CliTrCommandProcessor } from './lib/processors/cli-tr-command-processor';
 import { CliStatCommandProcessor } from './lib/processors/cli-stat-command-processor';
 import { CliChmodCommandProcessor } from './lib/processors/cli-chmod-command-processor';
+import { CliChownCommandProcessor } from './lib/processors/cli-chown-command-processor';
 import { CliDuCommandProcessor } from './lib/processors/cli-du-command-processor';
 import { CliLnCommandProcessor } from './lib/processors/cli-ln-command-processor';
 import { CliSedCommandProcessor } from './lib/processors/cli-sed-command-processor';
@@ -93,6 +94,7 @@ export const filesModule: ICliFilesModule = {
         new CliTrCommandProcessor(),
         new CliStatCommandProcessor(),
         new CliChmodCommandProcessor(),
+        new CliChownCommandProcessor(),
         new CliDuCommandProcessor(),
         new CliLnCommandProcessor(),
         new CliSedCommandProcessor(),

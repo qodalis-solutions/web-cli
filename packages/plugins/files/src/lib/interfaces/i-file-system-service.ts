@@ -1,3 +1,4 @@
+import { ICliOwnership } from '@qodalis/cli-core';
 import { IFileNode } from './i-file-node';
 
 export const IFileSystemService_TOKEN = 'cli-file-system-service';
@@ -15,6 +16,9 @@ export interface IFileSystemService {
     getHomePath(): string;
     setHomePath(path: string): void;
 
+    // User context (used for ownership defaults and permission checks)
+    setCurrentUser(uid: string, groups: string[]): void;
+
     // Read operations
     getNode(path: string): IFileNode | null;
     listDirectory(path: string): IFileNode[];
@@ -29,6 +33,10 @@ export interface IFileSystemService {
     remove(path: string, recursive?: boolean): void;
     copy(src: string, dest: string, recursive?: boolean): void;
     move(src: string, dest: string): void;
+
+    // Permissions
+    chmod(path: string, permissions: string): void;
+    chown(path: string, ownership: ICliOwnership): void;
 
     // Persistence
     initialize(): Promise<void>;

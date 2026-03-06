@@ -1,3 +1,5 @@
+import { ICliOwnership } from '@qodalis/cli-core';
+
 /**
  * Represents a node in the virtual filesystem (file or directory).
  */
@@ -23,8 +25,11 @@ export interface IFileNode {
     /** Size in bytes (content length for files, 0 for directories) */
     size: number;
 
-    /** Unix-style permission string (display only, e.g. "rwxr-xr-x") */
+    /** Unix-style permission string (e.g. "rwxr-xr-x") */
     permissions?: string;
+
+    /** Owner and group metadata */
+    ownership?: ICliOwnership;
 
     /** Target path for symbolic links */
     linkTarget?: string;
