@@ -5,7 +5,7 @@ import {
     Output,
     HostListener,
 } from '@angular/core';
-import { CliPanelPosition } from '@qodalis/cli-core';
+import { CliPanelPosition, CliPanelHideAlignment } from '@qodalis/cli-core';
 
 const HEADER_HEIGHT = 60;
 
@@ -32,6 +32,8 @@ export class CollapsableContentComponent {
     @Input() position: CliPanelPosition = 'bottom';
     @Input() closable: boolean = true;
     @Input() resizable: boolean = true;
+    @Input() hideable: boolean = true;
+    @Input() hideAlignment: CliPanelHideAlignment = 'center';
 
     @Output()
     public onToggle = new EventEmitter<boolean>();
@@ -41,6 +43,12 @@ export class CollapsableContentComponent {
 
     @Output()
     public onClose = new EventEmitter<void>();
+
+    @Output()
+    public onHide = new EventEmitter<void>();
+
+    isHidden = false;
+    private preHideCollapsed = true;
 
     get isHorizontal(): boolean {
         return this.position === 'left' || this.position === 'right';
@@ -55,6 +63,18 @@ export class CollapsableContentComponent {
     closeTerminal(): void {
         this.visible = false;
         this.onClose.emit();
+    }
+
+    hideTerminal(): void {
+        this.preHideCollapsed = this.isCollapsed;
+        this.isHidden = true;
+        this.onHide.emit();
+    }
+
+    unhideTerminal(): void {
+        this.isHidden = false;
+        this.isCollapsed = this.preHideCollapsed;
+        this.onToggle.emit(this.isCollapsed);
     }
 
     toggleMaximizationTerminal(): void {

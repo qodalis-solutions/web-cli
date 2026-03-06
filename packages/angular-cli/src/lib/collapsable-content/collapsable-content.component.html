@@ -1,5 +1,37 @@
+<!-- Hide tab (shown when panel is hidden) -->
+<button
+  *ngIf="visible && isHidden"
+  class="cli-panel-hide-tab"
+  [attr.data-position]="position"
+  [attr.data-hide-align]="hideAlignment"
+  title="Show CLI"
+  (click)="unhideTerminal()"
+>
+  <svg
+    class="cli-panel-hide-tab-arrow"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <!-- bottom: chevron up -->
+    <polyline *ngIf="position === 'bottom'" points="18 15 12 9 6 15" />
+    <!-- top: chevron down -->
+    <polyline *ngIf="position === 'top'" points="6 9 12 15 18 9" />
+    <!-- left: chevron right -->
+    <polyline *ngIf="position === 'left'" points="9 18 15 12 9 6" />
+    <!-- right: chevron left -->
+    <polyline *ngIf="position === 'right'" points="15 6 9 12 15 18" />
+  </svg>
+</button>
+
+<!-- Main panel (hidden when isHidden) -->
 <div
-  *ngIf="visible"
+  *ngIf="visible && !isHidden"
   class="terminal-wrapper"
   [class.collapsed]="isCollapsed"
   [class.maximized]="isMaximized"
@@ -7,6 +39,7 @@
   [attr.data-position]="position"
   [attr.data-resizable]="resizable"
   [attr.data-closable]="closable"
+  [attr.data-hideable]="hideable"
   [style]="isHorizontal
     ? { width: panelWidth + 'px' }
     : { height: panelHeight + 'px' }"
@@ -34,6 +67,28 @@
         CLI
       </p>
       <div class="action-buttons">
+        <!-- Hide button -->
+        <button
+          *ngIf="hideable"
+          class="panel-btn panel-btn-hide"
+          title="Hide"
+          (click)="hideTerminal()"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="5" y1="18" x2="19" y2="18" />
+            <polyline points="9 14 12 17 15 14" />
+          </svg>
+        </button>
+
         <button
           class="panel-btn"
           [title]="!isMaximized ? 'Maximize' : 'Restore'"
@@ -89,16 +144,12 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <!-- bottom: up/down chevrons -->
             <polyline *ngIf="position === 'bottom' && isCollapsed" points="18 15 12 9 6 15" />
             <polyline *ngIf="position === 'bottom' && !isCollapsed" points="6 9 12 15 18 9" />
-            <!-- top: down/up chevrons -->
             <polyline *ngIf="position === 'top' && isCollapsed" points="6 9 12 15 18 9" />
             <polyline *ngIf="position === 'top' && !isCollapsed" points="18 15 12 9 6 15" />
-            <!-- left: right/left chevrons -->
             <polyline *ngIf="position === 'left' && isCollapsed" points="9 18 15 12 9 6" />
             <polyline *ngIf="position === 'left' && !isCollapsed" points="15 6 9 12 15 18" />
-            <!-- right: left/right chevrons -->
             <polyline *ngIf="position === 'right' && isCollapsed" points="15 6 9 12 15 18" />
             <polyline *ngIf="position === 'right' && !isCollapsed" points="9 18 15 12 9 6" />
           </svg>

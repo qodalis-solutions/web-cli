@@ -3,6 +3,8 @@
   [position]="options?.position ?? 'bottom'"
   [closable]="options?.closable ?? true"
   [resizable]="options?.resizable ?? true"
+  [hideable]="options?.hideable ?? true"
+  [hideAlignment]="options?.hideAlignment ?? 'center'"
   (onToggle)="onToggle($event)"
   (onContentSizeChange)="onContentSizeChange($event)"
   (onClose)="onClose.emit()"
