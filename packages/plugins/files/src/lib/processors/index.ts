@@ -29,3 +29,6 @@ export * from './cli-du-command-processor';
 export * from './cli-ln-command-processor';
 export * from './cli-sed-command-processor';
 export * from './cli-awk-command-processor';
+export * from './cli-diff-command-processor';
+export * from './cli-tee-command-processor';
+export * from './cli-xargs-command-processor';
