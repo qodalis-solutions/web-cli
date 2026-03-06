@@ -17,22 +17,7 @@ export class CliDefaultUsersStoreService implements ICliUsersStoreService {
         this.kvStore = kvStore;
 
         const stored = await kvStore.get<ICliUser[]>(STORAGE_KEY);
-        if (stored && stored.length > 0) {
-            this.usersSubject.next(stored);
-        } else {
-            const now = Date.now();
-            const rootUser: ICliUser = {
-                id: 'root',
-                name: 'root',
-                email: 'root@localhost',
-                groups: ['admin'],
-                homeDir: '/home/root',
-                createdAt: now,
-                updatedAt: now,
-            };
-            this.usersSubject.next([rootUser]);
-            await this.persist();
-        }
+        this.usersSubject.next(stored || []);
     }
 
     async createUser(user: CliAddUser): Promise<ICliUser> {

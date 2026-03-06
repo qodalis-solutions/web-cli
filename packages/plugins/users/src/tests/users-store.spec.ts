@@ -34,15 +34,11 @@ describe('CliDefaultUsersStoreService', () => {
     // ---------- initialize ----------
 
     describe('initialize', () => {
-        it('should seed root user when store is empty', async () => {
+        it('should start with empty users when store is empty', async () => {
             await service.initialize(kvStore);
 
             const users = await firstValueFrom(service.getUsers());
-            expect(users.length).toBe(1);
-            expect(users[0].name).toBe('root');
-            expect(users[0].email).toBe('root@localhost');
-            expect(users[0].id).toBe('root');
-            expect(users[0].groups).toEqual(['admin']);
+            expect(users.length).toBe(0);
         });
 
         it('should load existing users from store', async () => {
@@ -188,7 +184,7 @@ describe('CliDefaultUsersStoreService', () => {
     describe('getUsers', () => {
         beforeEach(async () => {
             await service.initialize(kvStore);
-            // root already exists; add more users
+            // add users
             await service.createUser({
                 name: 'alice',
                 email: 'alice@test.com',
@@ -208,7 +204,7 @@ describe('CliDefaultUsersStoreService', () => {
 
         it('should return all users', async () => {
             const users = await firstValueFrom(service.getUsers());
-            expect(users.length).toBe(4); // root + 3
+            expect(users.length).toBe(3); // alice + bob + charlie
         });
 
         it('should filter by query matching name', async () => {
@@ -229,7 +225,7 @@ describe('CliDefaultUsersStoreService', () => {
 
         it('should support skip', async () => {
             const users = await firstValueFrom(service.getUsers({ skip: 2 }));
-            expect(users.length).toBe(2); // skips root and alice
+            expect(users.length).toBe(1); // skips alice and bob
         });
 
         it('should support take', async () => {
@@ -242,8 +238,8 @@ describe('CliDefaultUsersStoreService', () => {
                 service.getUsers({ skip: 1, take: 2 }),
             );
             expect(users.length).toBe(2);
-            expect(users[0].name).toBe('alice');
-            expect(users[1].name).toBe('bob');
+            expect(users[0].name).toBe('bob');
+            expect(users[1].name).toBe('charlie');
         });
     });
 
@@ -367,7 +363,7 @@ describe('CliDefaultUsersStoreService', () => {
 
             const stored = await kvStore.get<any[]>('cli-users');
             expect(stored).toBeDefined();
-            expect(stored!.length).toBe(2); // root + alice
+            expect(stored!.length).toBe(1); // alice only
             expect(stored!.some((u) => u.name === 'alice')).toBe(true);
         });
 
@@ -396,8 +392,7 @@ describe('CliDefaultUsersStoreService', () => {
             await service.deleteUser(created.id);
 
             const stored = await kvStore.get<any[]>('cli-users');
-            expect(stored!.length).toBe(1); // only root remains
-            expect(stored!.some((u) => u.name === 'alice')).toBe(false);
+            expect(stored!.length).toBe(0);
         });
     });
 });

@@ -439,6 +439,17 @@ export interface ICliModule {
     /** Called after services are registered and before processors are initialized */
     onInit?(context: ICliExecutionContext): Promise<void>;
 
+    /**
+     * Optional first-run setup flow. Called during boot if the module
+     * has not been set up yet (determined by a persisted flag in the
+     * key-value store). Use context.reader to prompt the user for
+     * initial configuration.
+     *
+     * @returns true to mark setup as complete; false/throw to abort
+     * (module still loads, setup re-triggers next boot).
+     */
+    onSetup?(context: ICliExecutionContext): Promise<boolean>;
+
     /** Called after all modules have booted and the terminal is interactive */
     onAfterBoot?(context: ICliExecutionContext): Promise<void>;
 

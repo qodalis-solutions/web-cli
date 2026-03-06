@@ -28,14 +28,6 @@ export class CliDefaultAuthService implements ICliAuthService {
         const stored =
             await kvStore.get<ICliUserCredentials[]>(CREDENTIALS_KEY);
         this.credentials = stored || [];
-
-        // Seed default root password if no credentials exist
-        if (this.credentials.length === 0) {
-            const rootUser = await firstValueFrom(usersStore.getUser('root'));
-            if (rootUser) {
-                await this.setPassword(rootUser.id, 'root');
-            }
-        }
     }
 
     async login(username: string, password: string): Promise<ICliUserSession> {
@@ -68,11 +60,12 @@ export class CliDefaultAuthService implements ICliAuthService {
     async logout(): Promise<void> {
         await this.sessionService.clearSession();
 
-        // Fall back to root session
-        const rootUser = await firstValueFrom(this.usersStore.getUser('root'));
-        if (rootUser) {
+        // Fall back to first admin user session
+        const users = await firstValueFrom(this.usersStore.getUsers());
+        const adminUser = users.find(u => u.groups.includes('admin'));
+        if (adminUser) {
             await this.sessionService.setUserSession({
-                user: rootUser,
+                user: adminUser,
                 loginTime: Date.now(),
                 lastActivity: Date.now(),
             });

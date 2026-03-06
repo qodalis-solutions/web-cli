@@ -44,31 +44,31 @@ describe('CliDefaultAuthService', () => {
     // ---------- initialize ----------
 
     describe('initialize', () => {
-        it('should seed root password when no credentials exist', async () => {
+        it('should not seed any credentials when store is empty', async () => {
             await authService.initialize(kvStore, usersStore, sessionService);
 
-            // Root user should now have a password (the default "root")
+            // No users exist, so no credentials should be seeded
             const valid = await authService.verifyPassword('root', 'root');
-            expect(valid).toBe(true);
+            expect(valid).toBe(false);
         });
 
         it('should not overwrite existing credentials', async () => {
-            // First init: seed root password
             await authService.initialize(kvStore, usersStore, sessionService);
 
-            // Change root password
-            await authService.setPassword('root', 'newpass');
+            // Create a user and set password
+            const user = await usersStore.createUser({
+                name: 'alice',
+                email: 'alice@test.com',
+                groups: [],
+            });
+            await authService.setPassword(user.id, 'mypass');
 
             // Re-init the service (simulates restart)
             const authService2 = new CliDefaultAuthService();
             await authService2.initialize(kvStore, usersStore, sessionService);
 
-            // The custom password should still work, not the default
-            const valid = await authService2.verifyPassword('root', 'newpass');
+            const valid = await authService2.verifyPassword(user.id, 'mypass');
             expect(valid).toBe(true);
-
-            const oldValid = await authService2.verifyPassword('root', 'root');
-            expect(oldValid).toBe(false);
         });
     });
 
@@ -197,21 +197,34 @@ describe('CliDefaultAuthService', () => {
         });
 
         it('should return session for valid credentials', async () => {
-            const session = await authService.login('root', 'root');
+            const user = await usersStore.createUser({
+                name: 'testuser',
+                email: 'test@test.com',
+                groups: [],
+            });
+            await authService.setPassword(user.id, 'pass');
+
+            const session = await authService.login('testuser', 'pass');
             expect(session).toBeDefined();
-            expect(session.user.name).toBe('root');
+            expect(session.user.name).toBe('testuser');
             expect(session.loginTime).toBeDefined();
             expect(session.lastActivity).toBeDefined();
         });
 
         it('should set the session on the session service after login', async () => {
-            await authService.login('root', 'root');
+            const user = await usersStore.createUser({
+                name: 'testuser',
+                email: 'test@test.com',
+                groups: [],
+            });
+            await authService.setPassword(user.id, 'pass');
+            await authService.login('testuser', 'pass');
 
             const current = await firstValueFrom(
                 sessionService.getUserSession(),
             );
             expect(current).toBeDefined();
-            expect(current!.user.name).toBe('root');
+            expect(current!.user.name).toBe('testuser');
         });
 
         it('should throw for unknown user', async () => {
@@ -221,8 +234,15 @@ describe('CliDefaultAuthService', () => {
         });
 
         it('should throw for wrong password', async () => {
+            const user = await usersStore.createUser({
+                name: 'testuser2',
+                email: 'test2@test.com',
+                groups: [],
+            });
+            await authService.setPassword(user.id, 'correctpass');
+
             await expectAsync(
-                authService.login('root', 'wrongpassword'),
+                authService.login('testuser2', 'wrongpassword'),
             ).toBeRejectedWithError(/Authentication failure/);
         });
 
@@ -248,15 +268,22 @@ describe('CliDefaultAuthService', () => {
             await authService.initialize(kvStore, usersStore, sessionService);
         });
 
-        it('should fall back to root session after logout', async () => {
-            // Login as a non-root user
-            await usersStore.createUser({
+        it('should fall back to admin session after logout', async () => {
+            // Create an admin user
+            const admin = await usersStore.createUser({
+                name: 'admin',
+                email: 'admin@test.com',
+                groups: ['admin'],
+            });
+            await authService.setPassword(admin.id, 'adminpass');
+
+            // Create and login as a non-admin user
+            const user = await usersStore.createUser({
                 name: 'testlogout',
                 email: 'tl@test.com',
                 groups: [],
             });
-            const user = await firstValueFrom(usersStore.getUser('testlogout'));
-            await authService.setPassword(user!.id, 'pass');
+            await authService.setPassword(user.id, 'pass');
             await authService.login('testlogout', 'pass');
 
             let current = await firstValueFrom(sessionService.getUserSession());
@@ -266,7 +293,7 @@ describe('CliDefaultAuthService', () => {
 
             current = await firstValueFrom(sessionService.getUserSession());
             expect(current).toBeDefined();
-            expect(current?.user.name).toBe('root');
+            expect(current?.user.name).toBe('admin');
         });
     });
 });

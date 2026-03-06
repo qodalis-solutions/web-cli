@@ -4,6 +4,7 @@ import {
     ICliCommandChildProcessor,
     ICliCommandProcessor,
     ICliCommandProcessorRegistry,
+    ICliKeyValueStore,
     ICliModule,
     ICliServiceProvider,
     CliModuleRegistry,
@@ -129,6 +130,38 @@ export class CliBoot {
                     `Error in onInit for module "${module.name}":`,
                     e,
                 );
+            }
+        }
+
+        // Module lifecycle: onSetup (first-run setup flow)
+        if (module.onSetup) {
+            const kvStore = context.services.get<ICliKeyValueStore>(
+                'cli-key-value-store',
+            );
+            const setupKey = `cli-module-setup:${module.name}`;
+            const setupState = await kvStore.get<{
+                installed: boolean;
+                installedAt: number;
+            }>(setupKey);
+
+            if (!setupState?.installed) {
+                try {
+                    context.spinner?.hide();
+                    const success = await module.onSetup(context);
+                    if (success) {
+                        await kvStore.set(setupKey, {
+                            installed: true,
+                            installedAt: Date.now(),
+                        });
+                    }
+                } catch (e) {
+                    console.error(
+                        `Setup failed for module "${module.name}":`,
+                        e,
+                    );
+                } finally {
+                    context.spinner?.show();
+                }
             }
         }
 

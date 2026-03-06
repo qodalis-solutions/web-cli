@@ -148,12 +148,11 @@ export const usersModule: ICliUsersModule = {
         } else {
             const restoredSession = await sessionService.restoreSession();
             if (!restoredSession) {
-                const rootUser = await firstValueFrom(
-                    usersStore.getUser('root'),
-                );
-                if (rootUser) {
+                const users = await firstValueFrom(usersStore.getUsers());
+                const adminUser = users.find(u => u.groups.includes('admin'));
+                if (adminUser) {
                     await sessionService.setUserSession({
-                        user: rootUser,
+                        user: adminUser,
                         loginTime: Date.now(),
                         lastActivity: Date.now(),
                     });
@@ -173,8 +172,181 @@ export const usersModule: ICliUsersModule = {
                     ...session,
                     displayName: formatDisplayName(session.user),
                 };
+
+                // Sync filesystem home path with current user's homeDir
+                if (session.user.homeDir) {
+                    try {
+                        const fs = context.services.get<any>(
+                            'cli-file-system-service',
+                        );
+                        if (fs) {
+                            fs.setHomePath(session.user.homeDir);
+                        }
+                    } catch {
+                        // Files module not installed — skip
+                    }
+                }
             }
         });
+    },
+
+    async onSetup(context) {
+        const usersStore = context.services.get<ICliUsersStoreService>(
+            ICliUsersStoreService_TOKEN,
+        );
+        const authService = context.services.get<ICliAuthService>(
+            ICliAuthService_TOKEN,
+        );
+        const sessionService = context.services.get<ICliUserSessionService>(
+            ICliUserSessionService_TOKEN,
+        );
+
+        // Step 1: Show intro
+        context.writer.writeln('');
+        context.writer.writeln('============================================');
+        context.writer.writeln('  Welcome to Qodalis CLI User Setup');
+        context.writer.writeln('============================================');
+        context.writer.writeln('');
+        context.writer.writeln('This system requires initial user configuration.');
+        context.writer.writeln('');
+        context.writer.writeln("A 'root' superuser will be created automatically.");
+        context.writer.writeln('You will now create your personal user account.');
+        context.writer.writeln('');
+
+        // Step 2: Create root user silently
+        const rootUser = await usersStore.createUser({
+            name: 'root',
+            email: 'root@localhost',
+            groups: ['admin'],
+            homeDir: '/home/root',
+        });
+        await authService.setPassword(rootUser.id, 'root');
+
+        // Step 3: Prompt for custom user
+        const usernameRegex = /^[a-z_][a-z0-9_-]{0,31}$/;
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        // Username
+        let username: string;
+        while (true) {
+            const input = await context.reader.readLine('Username: ');
+            if (input === null) return false;
+            if (!usernameRegex.test(input)) {
+                context.writer.writeError(
+                    'Invalid username. Must match /^[a-z_][a-z0-9_-]{0,31}$/.',
+                );
+                continue;
+            }
+            username = input;
+            break;
+        }
+
+        // Email
+        let email: string;
+        while (true) {
+            const input = await context.reader.readLine('Email: ');
+            if (input === null) return false;
+            if (!emailRegex.test(input)) {
+                context.writer.writeError(
+                    'Invalid email address.',
+                );
+                continue;
+            }
+            email = input;
+            break;
+        }
+
+        // Home directory
+        const homeDirInput = await context.reader.readLine(
+            `Home directory [/home/${username}]: `,
+        );
+        if (homeDirInput === null) return false;
+        const homeDir = homeDirInput || `/home/${username}`;
+
+        // Shell
+        const shellInput = await context.reader.readLine(
+            'Shell [/bin/bash]: ',
+        );
+        if (shellInput === null) return false;
+        const shell = shellInput || '/bin/bash';
+
+        // Groups
+        const groupsInput = await context.reader.readLine(
+            'Groups (comma-separated) []: ',
+        );
+        if (groupsInput === null) return false;
+        const groups = groupsInput
+            ? groupsInput.split(',').map((g) => g.trim()).filter(Boolean)
+            : [];
+
+        // Password
+        let password: string;
+        while (true) {
+            const pw = await context.reader.readPassword('Password: ');
+            if (pw === null) return false;
+            if (!pw) {
+                context.writer.writeError('Password cannot be empty.');
+                continue;
+            }
+
+            const confirm = await context.reader.readPassword(
+                'Confirm password: ',
+            );
+            if (confirm === null) return false;
+
+            if (pw !== confirm) {
+                context.writer.writeError(
+                    'Passwords do not match. Please try again.',
+                );
+                continue;
+            }
+            password = pw;
+            break;
+        }
+
+        // Step 4: Create user and auto-login
+        const user = await usersStore.createUser({
+            name: username,
+            email,
+            groups,
+            homeDir,
+            shell,
+        });
+        await authService.setPassword(user.id, password);
+        await sessionService.setUserSession({
+            user,
+            loginTime: Date.now(),
+            lastActivity: Date.now(),
+        });
+
+        context.writer.writeSuccess(
+            `User '${username}' created successfully.`,
+        );
+
+        // Create home directories if the files module is installed
+        try {
+            const fs = context.services.get<any>('cli-file-system-service');
+            if (fs) {
+                if (!fs.exists(rootUser.homeDir)) {
+                    fs.createDirectory(rootUser.homeDir, true);
+                }
+                if (!fs.exists(homeDir)) {
+                    fs.createDirectory(homeDir, true);
+                }
+                // Create a welcome file in the new user's home
+                fs.createFile(
+                    `${homeDir}/welcome.txt`,
+                    'Welcome to Qodalis CLI filesystem!\n',
+                );
+                fs.setHomePath(homeDir);
+                fs.setCurrentDirectory(homeDir);
+                await fs.persist();
+            }
+        } catch {
+            // Files module not installed — skip
+        }
+
+        return true;
     },
 
     async onAfterBoot(context) {

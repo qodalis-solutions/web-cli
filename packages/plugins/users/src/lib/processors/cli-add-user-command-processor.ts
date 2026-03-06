@@ -158,6 +158,19 @@ export class CliAddUserCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
+        // Create home directory if the files module is installed
+        if (user.homeDir) {
+            try {
+                const fs = context.services.get<any>('cli-file-system-service');
+                if (fs && !fs.exists(user.homeDir)) {
+                    fs.createDirectory(user.homeDir, true);
+                    await fs.persist();
+                }
+            } catch {
+                // Files module not installed — skip
+            }
+        }
+
         context.writer.writeInfo('User created successfully');
     }
 
