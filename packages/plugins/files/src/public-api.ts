@@ -34,6 +34,7 @@ import { CliSortCommandProcessor } from './lib/processors/cli-sort-command-proce
 import { CliUniqCommandProcessor } from './lib/processors/cli-uniq-command-processor';
 import { CliCutCommandProcessor } from './lib/processors/cli-cut-command-processor';
 import { CliPasteCommandProcessor } from './lib/processors/cli-paste-command-processor';
+import { CliTrCommandProcessor } from './lib/processors/cli-tr-command-processor';
 
 /**
  * Configuration options for the files module.
@@ -80,6 +81,7 @@ export const filesModule: ICliFilesModule = {
         new CliUniqCommandProcessor(),
         new CliCutCommandProcessor(),
         new CliPasteCommandProcessor(),
+        new CliTrCommandProcessor(),
     ],
     services: [
         {

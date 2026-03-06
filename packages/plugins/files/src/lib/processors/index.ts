@@ -22,3 +22,4 @@ export * from './cli-sort-command-processor';
 export * from './cli-uniq-command-processor';
 export * from './cli-cut-command-processor';
 export * from './cli-paste-command-processor';
+export * from './cli-tr-command-processor';
