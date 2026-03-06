@@ -122,7 +122,7 @@ describe('CliTrCommandProcessor', () => {
         const cmd = makeCommand("tr 'abc' 'ABC' /home/user/tr-test.txt");
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
-        expect(output).toContain('Hello WorlC');
+        expect(output).toContain('Hello World');
         expect(output).toContain('foo BAr BAz');
     });
 
