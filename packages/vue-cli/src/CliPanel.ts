@@ -8,7 +8,7 @@ import {
     onMounted,
     onBeforeUnmount,
 } from 'vue';
-import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, CliEngineSnapshot } from '@qodalis/cli-core';
+import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, CliPanelHideAlignment, CliEngineSnapshot } from '@qodalis/cli-core';
 import { CliEngine, CliEngineOptions } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliConfigKey } from './CliConfigProvider';
@@ -83,6 +83,11 @@ const closeIcon = () =>
         h('line', { x1: '18', y1: '6', x2: '6', y2: '18' }),
         h('line', { x1: '6', y1: '6', x2: '18', y2: '18' }),
     ]);
+const hideIcon = () =>
+    h('svg', svgAttrs, [
+        h('line', { x1: '5', y1: '18', x2: '19', y2: '18' }),
+        h('polyline', { points: '9 14 12 17 15 14' }),
+    ]);
 
 function collapseChevron(position: CliPanelPosition, isCollapsed: boolean) {
     let points: string;
@@ -101,6 +106,19 @@ function collapseChevron(position: CliPanelPosition, isCollapsed: boolean) {
             break;
     }
     return h('svg', svgAttrs, [h('polyline', { points })]);
+}
+
+function hideTabChevron(position: CliPanelPosition) {
+    let points: string;
+    switch (position) {
+        case 'top': points = '6 9 12 15 18 9'; break;
+        case 'left': points = '9 18 15 12 9 6'; break;
+        case 'right': points = '15 6 9 12 15 18'; break;
+        default: points = '18 15 12 9 6 15'; break;
+    }
+    return h('svg', { class: 'cli-panel-hide-tab-arrow', ...svgAttrs, width: '20', height: '20', 'stroke-width': '2' }, [
+        h('polyline', { points }),
+    ]);
 }
 
 /* ─── Component ──────────────────────────────────────────── */
@@ -148,11 +166,15 @@ export const CliPanel = defineComponent({
         const prevHeight = ref(600);
         const prevWidth = ref(400);
         const initialized = ref(false);
+        const hidden = ref(false);
+        let preHideCollapsed = true;
 
         const position = computed<CliPanelPosition>(() => mergedOptions.value?.position ?? 'bottom');
         const closable = computed(() => mergedOptions.value?.closable ?? true);
         const resizable = computed(() => mergedOptions.value?.resizable ?? true);
         const isHorizontal = computed(() => position.value === 'left' || position.value === 'right');
+        const hideable = computed(() => mergedOptions.value?.hideable ?? true);
+        const hideAlignment = computed<CliPanelHideAlignment>(() => mergedOptions.value?.hideAlignment ?? 'center');
 
         const tabs = ref<TerminalTab[]>([]);
         const activeTabId = ref(0);
@@ -445,10 +467,30 @@ export const CliPanel = defineComponent({
             props.onClose?.();
         }
 
+        function handleHide() {
+            preHideCollapsed = collapsed.value;
+            hidden.value = true;
+        }
+
+        function handleUnhide() {
+            hidden.value = false;
+            collapsed.value = preHideCollapsed;
+        }
+
         /* ─── Render ─────────────────────────────────────── */
 
         return () => {
             if (!visible.value) return null;
+
+            if (hidden.value) {
+                return h('button', {
+                    class: 'cli-panel-hide-tab',
+                    'data-position': position.value,
+                    'data-hide-align': hideAlignment.value,
+                    title: 'Show CLI',
+                    onClick: handleUnhide,
+                }, [hideTabChevron(position.value)]);
+            }
 
             const wrapperClass = [
                 'cli-panel-wrapper',
@@ -481,6 +523,13 @@ export const CliPanel = defineComponent({
                         'CLI',
                     ]),
                     h('div', { class: 'cli-panel-action-buttons' }, [
+                        hideable.value
+                            ? h('button', {
+                                class: 'cli-panel-btn cli-panel-btn-hide',
+                                title: 'Hide',
+                                onClick: handleHide,
+                            }, [hideIcon()])
+                            : null,
                         h(
                             'button',
                             {
@@ -911,6 +960,7 @@ export const CliPanel = defineComponent({
                         'data-position': position.value,
                         'data-resizable': String(resizable.value),
                         'data-closable': String(closable.value),
+                        'data-hideable': String(hideable.value),
                     },
                     [headerEl, contentEl],
                 ),
