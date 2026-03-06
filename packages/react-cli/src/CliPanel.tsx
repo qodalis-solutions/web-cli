@@ -73,6 +73,13 @@ const CloseIcon = () => (
     </svg>
 );
 
+const HideIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="5" y1="18" x2="19" y2="18" />
+        <polyline points="9 14 12 17 15 14" />
+    </svg>
+);
+
 function CollapseChevron({ position, isCollapsed }: { position: string; isCollapsed: boolean }) {
     let points: string;
     switch (position) {
@@ -96,6 +103,21 @@ function CollapseChevron({ position, isCollapsed }: { position: string; isCollap
     );
 }
 
+function HideTabChevron({ position }: { position: string }) {
+    let points: string;
+    switch (position) {
+        case 'top': points = '6 9 12 15 18 9'; break;
+        case 'left': points = '9 18 15 12 9 6'; break;
+        case 'right': points = '15 6 9 12 15 18'; break;
+        default: points = '18 15 12 9 6 15'; break; // bottom: up
+    }
+    return (
+        <svg className="cli-panel-hide-tab-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points={points} />
+        </svg>
+    );
+}
+
 /* ─── Component ──────────────────────────────────────────── */
 
 export function CliPanel({ options: optionsProp, modules: modulesProp, processors: processorsProp, services: servicesProp, onClose, style, className }: CliPanelProps) {
@@ -109,6 +131,8 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
     const closable = options?.closable ?? true;
     const resizable = options?.resizable ?? true;
     const isHorizontal = position === 'left' || position === 'right';
+    const hideable = options?.hideable ?? true;
+    const hideAlignment = options?.hideAlignment ?? 'center';
 
     const [visible, setVisible] = useState(true);
     const [collapsed, setCollapsed] = useState(options?.isCollapsed ?? true);
@@ -116,6 +140,8 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
     const [panelHeight, setPanelHeight] = useState(600);
     const [panelWidth, setPanelWidth] = useState(400);
     const [initialized, setInitialized] = useState(false);
+    const [hidden, setHidden] = useState(false);
+    const preHideCollapsedRef = useRef(true);
 
     const [tabs, setTabs] = useState<TerminalTab[]>([]);
     const [activeTabId, setActiveTabId] = useState(0);
@@ -427,9 +453,33 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
         onClose?.();
     }, [onClose]);
 
+    const handleHide = useCallback(() => {
+        preHideCollapsedRef.current = collapsed;
+        setHidden(true);
+    }, [collapsed]);
+
+    const handleUnhide = useCallback(() => {
+        setHidden(false);
+        setCollapsed(preHideCollapsedRef.current);
+    }, []);
+
     /* ─── Render ─────────────────────────────────────────── */
 
     if (!visible) return null;
+
+    if (hidden) {
+        return (
+            <button
+                className="cli-panel-hide-tab"
+                data-position={position}
+                data-hide-align={hideAlignment}
+                title="Show CLI"
+                onClick={handleUnhide}
+            >
+                <HideTabChevron position={position} />
+            </button>
+        );
+    }
 
     const wrapperStyle: React.CSSProperties = isHorizontal
         ? { width: `${panelWidth}px`, ...style }
@@ -443,6 +493,7 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
                 data-position={position}
                 data-resizable={String(resizable)}
                 data-closable={String(closable)}
+                data-hideable={String(hideable)}
             >
                 {/* Header */}
                 <div className="cli-panel-header">
@@ -455,6 +506,11 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
                             CLI
                         </p>
                         <div className="cli-panel-action-buttons">
+                            {hideable && (
+                                <button className="cli-panel-btn cli-panel-btn-hide" title="Hide" onClick={handleHide}>
+                                    <HideIcon />
+                                </button>
+                            )}
                             <button className="cli-panel-btn" title={maximized ? 'Restore' : 'Maximize'} disabled={collapsed} onClick={toggleMaximize}>
                                 {maximized ? <RestoreIcon /> : <MaximizeIcon />}
                             </button>
