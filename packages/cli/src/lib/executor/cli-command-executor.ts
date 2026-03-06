@@ -39,6 +39,7 @@ export interface ICliExecutionHost extends ICliExecutionContext {
 export class CliCommandExecutor implements ICliCommandExecutorService {
     private commandParser: CommandParser = new CommandParser();
     private globalParameters: ICliGlobalParameterHandler[] = [];
+    private lastCapturingWriter?: CapturingTerminalWriter;
 
     constructor(protected readonly registry: ICliCommandProcessorRegistry) {
         this.registerGlobalParameter(versionGlobalParameter);
@@ -121,6 +122,30 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 if (shouldRunNext) {
                     await this.writeOutputToFile(nextPart.value, context);
                     pipelineData = undefined;
+                }
+                continue;
+            } else if (part.type === '2>>') {
+                const nextPart = parts[i + 1];
+                i++;
+                if (!nextPart || nextPart.type !== 'command') {
+                    context.writer.writeError('Missing file path after 2>>');
+                    lastExitSuccess = false;
+                    continue;
+                }
+                if (shouldRunNext) {
+                    await this.appendStderrToFile(nextPart.value, context);
+                }
+                continue;
+            } else if (part.type === '2>') {
+                const nextPart = parts[i + 1];
+                i++;
+                if (!nextPart || nextPart.type !== 'command') {
+                    context.writer.writeError('Missing file path after 2>');
+                    lastExitSuccess = false;
+                    continue;
+                }
+                if (shouldRunNext) {
+                    await this.writeStderrToFile(nextPart.value, context);
                 }
                 continue;
             }
@@ -398,6 +423,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             commandContext.writer,
         );
         commandContext.writer = capturingWriter;
+        this.lastCapturingWriter = capturingWriter;
 
         try {
             const hooks = processor.hooks ?? [];
@@ -471,6 +497,68 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             }
         } finally {
             abortSub.unsubscribe();
+        }
+    }
+
+    private async writeStderrToFile(
+        filePath: string,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        const stderr = this.lastCapturingWriter?.getCapturedStderr();
+        if (!stderr) return;
+
+        const FS_TOKEN = 'cli-file-system-service';
+        let fs: any;
+        try {
+            fs = context.services.get(FS_TOKEN);
+        } catch {
+            context.writer.writeError(
+                '2> redirect requires @qodalis/cli-files plugin',
+            );
+            return;
+        }
+
+        try {
+            const resolved = fs.resolvePath(filePath.trim());
+            if (fs.exists(resolved)) {
+                fs.writeFile(resolved, stderr);
+            } else {
+                fs.createFile(resolved, stderr);
+            }
+            await fs.persist();
+        } catch (e: any) {
+            context.writer.writeError(`2> failed: ${e.message || e}`);
+        }
+    }
+
+    private async appendStderrToFile(
+        filePath: string,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        const stderr = this.lastCapturingWriter?.getCapturedStderr();
+        if (!stderr) return;
+
+        const FS_TOKEN = 'cli-file-system-service';
+        let fs: any;
+        try {
+            fs = context.services.get(FS_TOKEN);
+        } catch {
+            context.writer.writeError(
+                '2>> redirect requires @qodalis/cli-files plugin',
+            );
+            return;
+        }
+
+        try {
+            const resolved = fs.resolvePath(filePath.trim());
+            if (fs.exists(resolved)) {
+                fs.writeFile(resolved, stderr, true); // append
+            } else {
+                fs.createFile(resolved, stderr);
+            }
+            await fs.persist();
+        } catch (e: any) {
+            context.writer.writeError(`2>> failed: ${e.message || e}`);
         }
     }
 

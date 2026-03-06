@@ -1,9 +1,13 @@
 import { CommandParser, CommandPart, ParsedToken } from '../lib/parsers/command-parser';
 import { CliArgsParser } from '../lib/parsers/args-parser';
 import { reconcileArgs } from '../lib/parsers/reconcile-args';
+import { CapturingTerminalWriter } from '../lib/services/capturing-terminal-writer';
 import {
     ICliCommandProcessor,
     ICliCommandParameterDescriptor,
+    ICliTerminalWriter,
+    CliForegroundColor,
+    CliBackgroundColor,
 } from '@qodalis/cli-core';
 
 // ---------------------------------------------------------------------------
@@ -929,6 +933,42 @@ describe('CommandParser.splitByOperators', () => {
         const parts = CommandParser.splitByOperators('echo "a > b"');
         expect(parts).toEqual([{ type: 'command', value: 'echo "a > b"' }]);
     });
+
+    // -- 2> and 2>> operators --
+
+    it('should split command and stderr redirect by 2>', () => {
+        const parts = CommandParser.splitByOperators('cmd 2> errors.txt');
+        expect(parts).toEqual([
+            { type: 'command', value: 'cmd' },
+            { type: '2>', value: '2>' },
+            { type: 'command', value: 'errors.txt' },
+        ]);
+    });
+
+    it('should split command and stderr append by 2>>', () => {
+        const parts = CommandParser.splitByOperators('cmd 2>> errors.txt');
+        expect(parts).toEqual([
+            { type: 'command', value: 'cmd' },
+            { type: '2>>', value: '2>>' },
+            { type: 'command', value: 'errors.txt' },
+        ]);
+    });
+
+    it('should distinguish 2> from > and 2>> from >>', () => {
+        const parts = CommandParser.splitByOperators('cmd > out.txt 2> err.txt');
+        expect(parts).toEqual([
+            { type: 'command', value: 'cmd' },
+            { type: '>', value: '>' },
+            { type: 'command', value: 'out.txt' },
+            { type: '2>', value: '2>' },
+            { type: 'command', value: 'err.txt' },
+        ]);
+    });
+
+    it('should not split 2> inside quotes', () => {
+        const parts = CommandParser.splitByOperators('echo "2> not redirect"');
+        expect(parts).toEqual([{ type: 'command', value: 'echo "2> not redirect"' }]);
+    });
 });
 
 // ---------------------------------------------------------------------------
@@ -1148,5 +1188,85 @@ describe('reconcileArgs', () => {
             { name: 'verbose', value: true },
         ]);
         expect(result.commandParts).toEqual(['ssh']);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// CapturingTerminalWriter — stderr capture
+// ---------------------------------------------------------------------------
+describe('CapturingTerminalWriter stderr capture', () => {
+    function createStubWriter(): ICliTerminalWriter {
+        return {
+            write: () => {},
+            writeln: () => {},
+            writeSuccess: () => {},
+            writeInfo: () => {},
+            writeError: () => {},
+            writeWarning: () => {},
+            wrapInColor: (text: string) => text,
+            wrapInBackgroundColor: (text: string) => text,
+            writeJson: () => {},
+            writeToFile: () => {},
+            writeObjectsAsTable: () => {},
+            writeTable: () => {},
+            writeDivider: () => {},
+            writeList: () => {},
+            writeKeyValue: () => {},
+            writeColumns: () => {},
+        } as ICliTerminalWriter;
+    }
+
+    it('should capture stderr from writeError', () => {
+        const inner = createStubWriter();
+        const capturing = new CapturingTerminalWriter(inner);
+
+        capturing.writeln('stdout line');
+        capturing.writeError('stderr line');
+
+        expect(capturing.getCapturedData()).toBe('stdout line');
+        expect(capturing.getCapturedStderr()).toBe('stderr line');
+        expect(capturing.hasStderr()).toBeTrue();
+    });
+
+    it('should capture stderr from writeWarning', () => {
+        const inner = createStubWriter();
+        const capturing = new CapturingTerminalWriter(inner);
+
+        capturing.writeWarning('warn msg');
+
+        expect(capturing.getCapturedStderr()).toBe('warn msg');
+        expect(capturing.hasStderr()).toBeTrue();
+    });
+
+    it('should return undefined when no stderr captured', () => {
+        const inner = createStubWriter();
+        const capturing = new CapturingTerminalWriter(inner);
+
+        capturing.writeln('only stdout');
+
+        expect(capturing.getCapturedStderr()).toBeUndefined();
+        expect(capturing.hasStderr()).toBeFalse();
+    });
+
+    it('should capture multiple stderr lines', () => {
+        const inner = createStubWriter();
+        const capturing = new CapturingTerminalWriter(inner);
+
+        capturing.writeError('error 1');
+        capturing.writeWarning('warning 1');
+        capturing.writeError('error 2');
+
+        expect(capturing.getCapturedStderr()).toBe('error 1\nwarning 1\nerror 2');
+    });
+
+    it('should not mix stderr into stdout capture', () => {
+        const inner = createStubWriter();
+        const capturing = new CapturingTerminalWriter(inner);
+
+        capturing.writeln('stdout');
+        capturing.writeError('stderr');
+
+        expect(capturing.getCapturedData()).toBe('stdout');
+        expect(capturing.getCapturedStderr()).toBe('stderr');
     });
 });

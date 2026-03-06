@@ -37,6 +37,9 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
     /** Structured data captured from writeObjectsAsTable calls. */
     private _tableObjects: any[][] = [];
 
+    /** Raw text lines captured from writeError/writeWarning calls. */
+    private _stderrLines: string[] = [];
+
     constructor(private readonly inner: ICliTerminalWriter) {}
 
     // -- stdout-equivalent methods (captured) --------------------------------
@@ -81,10 +84,12 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
     }
 
     writeWarning(message: string): void {
+        this._stderrLines.push(stripAnsi(message));
         this.inner.writeWarning(message);
     }
 
     writeError(message: string): void {
+        this._stderrLines.push(stripAnsi(message));
         this.inner.writeError(message);
     }
 
@@ -178,5 +183,20 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
         }
 
         return undefined;
+    }
+
+    /**
+     * Returns true if any stderr-equivalent output was captured.
+     */
+    hasStderr(): boolean {
+        return this._stderrLines.length > 0;
+    }
+
+    /**
+     * Returns captured stderr text joined with newlines, or undefined if empty.
+     */
+    getCapturedStderr(): string | undefined {
+        if (this._stderrLines.length === 0) return undefined;
+        return this._stderrLines.join('\n').trim() || undefined;
     }
 }

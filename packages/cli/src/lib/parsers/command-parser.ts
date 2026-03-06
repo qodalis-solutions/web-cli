@@ -15,7 +15,7 @@ export type CommandParserOutput = {
 
 export type CommandPart = {
     /** 'command' for a command to execute, or the operator string */
-    type: 'command' | '&&' | '||' | '>>' | '>' | '|' | ';';
+    type: 'command' | '&&' | '||' | '2>>' | '2>' | '>>' | '>' | '|' | ';';
     value: string;
 };
 
@@ -24,7 +24,7 @@ export type CommandPart = {
  */
 export class CommandParser {
     /** Operators recognized during command-line splitting. */
-    private static readonly OPERATORS = ['&&', '||', '>>', '>', '|', ';'] as const;
+    private static readonly OPERATORS = ['&&', '||', '2>>', '2>', '>>', '>', '|', ';'] as const;
 
     /**
      * Split a raw command line into commands and operators.
@@ -62,6 +62,19 @@ export class CommandParser {
 
             // Check for two-character operators at this position
             const twoChar = input.slice(i, i + 2);
+
+            // Check for 2>> stderr append redirect (current ends with '2' and next two chars are '>>')
+            if (twoChar === '>>' && current.endsWith('2')) {
+                const prefix = current.slice(0, -1).trim();
+                if (prefix) {
+                    result.push({ type: 'command', value: prefix });
+                }
+                current = '';
+                result.push({ type: '2>>', value: '2>>' });
+                i++; // skip the second >
+                continue;
+            }
+
             if (twoChar === '&&' || twoChar === '||' || twoChar === '>>') {
                 const trimmed = current.trim();
                 if (trimmed) {
@@ -73,6 +86,17 @@ export class CommandParser {
                     value: twoChar,
                 });
                 i++; // skip the second character of the operator
+                continue;
+            }
+
+            // Check for 2> stderr overwrite redirect (current ends with '2' and next char is '>')
+            if (ch === '>' && current.endsWith('2')) {
+                const prefix = current.slice(0, -1).trim();
+                if (prefix) {
+                    result.push({ type: 'command', value: prefix });
+                }
+                current = '';
+                result.push({ type: '2>', value: '2>' });
                 continue;
             }
 
