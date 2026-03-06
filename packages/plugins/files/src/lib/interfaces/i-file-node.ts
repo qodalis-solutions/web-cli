@@ -25,4 +25,7 @@ export interface IFileNode {
 
     /** Unix-style permission string (display only, e.g. "rwxr-xr-x") */
     permissions?: string;
+
+    /** Target path for symbolic links */
+    linkTarget?: string;
 }

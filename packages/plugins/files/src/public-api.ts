@@ -35,6 +35,10 @@ import { CliUniqCommandProcessor } from './lib/processors/cli-uniq-command-proce
 import { CliCutCommandProcessor } from './lib/processors/cli-cut-command-processor';
 import { CliPasteCommandProcessor } from './lib/processors/cli-paste-command-processor';
 import { CliTrCommandProcessor } from './lib/processors/cli-tr-command-processor';
+import { CliStatCommandProcessor } from './lib/processors/cli-stat-command-processor';
+import { CliChmodCommandProcessor } from './lib/processors/cli-chmod-command-processor';
+import { CliDuCommandProcessor } from './lib/processors/cli-du-command-processor';
+import { CliLnCommandProcessor } from './lib/processors/cli-ln-command-processor';
 
 /**
  * Configuration options for the files module.
@@ -82,6 +86,10 @@ export const filesModule: ICliFilesModule = {
         new CliCutCommandProcessor(),
         new CliPasteCommandProcessor(),
         new CliTrCommandProcessor(),
+        new CliStatCommandProcessor(),
+        new CliChmodCommandProcessor(),
+        new CliDuCommandProcessor(),
+        new CliLnCommandProcessor(),
     ],
     services: [
         {
