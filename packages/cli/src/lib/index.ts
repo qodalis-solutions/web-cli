@@ -14,3 +14,4 @@ export * from './storage';
 export * from './state';
 export * from './engine';
 export * from './server';
+export * from './testing';
