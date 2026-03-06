@@ -131,24 +131,8 @@ export class CliXargsCommandProcessor implements ICliCommandProcessor {
     }
 
     private getAllNonFlagTokens(command: CliProcessCommand): string[] {
-        const raw = command.rawCommand || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
-        const result: string[] = [];
-        let i = 0;
-        while (i < tokens.length) {
-            const t = tokens[i];
-            if (t === '-I' || t === '--replace') {
-                i += 2; // skip flag and its value
-            } else if (t === '-n' || t === '--max-args') {
-                i += 2; // skip flag and its value
-            } else if (t.startsWith('-')) {
-                i++;
-            } else {
-                result.push(t);
-                i++;
-            }
-        }
-        return result;
+        const raw = command.value || '';
+        return raw.split(/\s+/).filter(Boolean);
     }
 
     private escapeRegex(str: string): string {
@@ -159,23 +143,8 @@ export class CliXargsCommandProcessor implements ICliCommandProcessor {
         commandTemplate: string | null;
         inputFile: string | null;
     } {
-        const raw = command.rawCommand || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
-        const nonFlagTokens: string[] = [];
-        let i = 0;
-        while (i < tokens.length) {
-            const t = tokens[i];
-            if (t === '-I' || t === '--replace') {
-                i += 2; // skip flag and its value
-            } else if (t === '-n' || t === '--max-args') {
-                i += 2; // skip flag and its value
-            } else if (t.startsWith('-')) {
-                i++;
-            } else {
-                nonFlagTokens.push(t);
-                i++;
-            }
-        }
+        const raw = command.value || '';
+        const nonFlagTokens = raw.split(/\s+/).filter(Boolean);
 
         // Last token is input file, rest form the command template
         if (nonFlagTokens.length < 2) {

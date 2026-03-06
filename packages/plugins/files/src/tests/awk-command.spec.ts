@@ -65,7 +65,7 @@ describe('CliAwkCommandProcessor', () => {
     });
 
     it('should use custom separator', async () => {
-        const cmd = makeCommand("awk -F ',' '{print $2}' /home/user/csv-data.txt");
+        const cmd = makeCommand("awk '{print $2}' /home/user/csv-data.txt", { F: ',' });
         await processor.processCommand(cmd, ctx);
         const output = writer.written;
         expect(output).toContain('age');
@@ -178,7 +178,7 @@ describe('CliAwkCommandProcessor (piped input)', () => {
     });
 
     it('should process piped input with field separator', async () => {
-        const cmd = makeCommand("awk -F ',' '{print $2}'", {}, 'a,b,c\nd,e,f');
+        const cmd = makeCommand("awk '{print $2}'", { F: ',' }, 'a,b,c\nd,e,f');
         await processor.processCommand(cmd, ctx);
         const output = writer.written;
         expect(output).toContain('b');

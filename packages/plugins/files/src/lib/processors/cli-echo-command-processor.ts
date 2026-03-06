@@ -21,8 +21,7 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const raw = command.rawCommand;
-        const afterEcho = raw.substring(raw.indexOf('echo') + 5).trim();
+        const afterEcho = command.value || '';
 
         // Check for file redirection syntax
         const hasRedirection = />>?\s*.+$/.test(afterEcho);

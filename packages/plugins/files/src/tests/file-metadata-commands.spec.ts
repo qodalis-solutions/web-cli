@@ -91,12 +91,36 @@ function makeCommand(
     raw: string,
     args: Record<string, any> = {},
 ): CliProcessCommand {
-    const tokens = raw.split(/\s+/);
+    const tokens = raw.split(/\s+/).filter(Boolean);
+    const command = tokens[0];
+    const parsedArgs: Record<string, any> = {};
+    const valueParts: string[] = [];
+
+    for (let i = 1; i < tokens.length; i++) {
+        const t = tokens[i];
+        if (t.startsWith('--')) {
+            const eqIdx = t.indexOf('=');
+            if (eqIdx !== -1) {
+                parsedArgs[t.slice(2, eqIdx)] = t.slice(eqIdx + 1);
+            } else {
+                parsedArgs[t.slice(2)] = true;
+            }
+        } else if (t.startsWith('-') && t.length > 1) {
+            parsedArgs[t.slice(1)] = true;
+        } else {
+            valueParts.push(t);
+        }
+    }
+
+    const value = valueParts.length > 0 ? valueParts.join(' ') : undefined;
+    const mergedArgs = { ...parsedArgs, ...args };
+
     return {
-        command: tokens[0],
-        rawCommand: tokens.slice(1).join(' '),
+        command,
+        rawCommand: raw,
+        value,
         chainCommands: [],
-        args,
+        args: mergedArgs,
     } as any;
 }
 
@@ -304,7 +328,7 @@ describe('CliDuCommandProcessor', () => {
     });
 
     it('should respect -d max-depth', async () => {
-        const cmd = makeCommand('du -d 0 /home/user');
+        const cmd = makeCommand('du /home/user', { d: '0' });
         await processor.processCommand(cmd, ctx);
         // With depth 0, only show the root directory itself
         const lines = writer.written.filter(l => l.includes('\t'));

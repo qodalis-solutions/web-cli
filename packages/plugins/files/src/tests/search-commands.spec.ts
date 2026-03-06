@@ -231,7 +231,7 @@ describe('CliFindCommandProcessor', () => {
 
     it('should default to cwd when no path given', async () => {
         fs.setCurrentDirectory('/home/user');
-        const cmd = makeCommand('find -name *.sh', {
+        const cmd = makeCommand('find', {
             name: '*.sh',
         });
         await processor.processCommand(cmd, ctx);
@@ -444,7 +444,7 @@ describe('CliHeadCommandProcessor (piped input)', () => {
 
     it('should display first N lines of piped input', async () => {
         const input = 'line1\nline2\nline3\nline4\nline5';
-        const cmd = makeCommand('head -n 3', { n: '3' }, input);
+        const cmd = makeCommand('head', { n: 3 }, input);
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         expect(output).toContain('line1');
@@ -481,7 +481,7 @@ describe('CliTailCommandProcessor (piped input)', () => {
 
     it('should display last N lines of piped input', async () => {
         const input = 'line1\nline2\nline3\nline4\nline5';
-        const cmd = makeCommand('tail -n 2', { n: '2' }, input);
+        const cmd = makeCommand('tail', { n: 2 }, input);
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         expect(output).toContain('line4');

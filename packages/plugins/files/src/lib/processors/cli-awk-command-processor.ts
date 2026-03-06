@@ -151,23 +151,10 @@ export class CliAwkCommandProcessor implements ICliCommandProcessor {
     private parseArgs(
         command: CliProcessCommand,
     ): { program: string | null; filePath: string | null; fieldSep: string | null } {
-        const raw = command.rawCommand || '';
+        const raw = command.value || '';
 
-        let fieldSep: string | null = null;
+        const fieldSep: string | null = command.args['F'] || null;
         let rest = raw;
-
-        // Extract -F option
-        const fMatch = rest.match(/^-F\s+(?:'([^']*)'|"([^"]*)"|(\S+))\s*/);
-        if (fMatch) {
-            fieldSep = fMatch[1] ?? fMatch[2] ?? fMatch[3];
-            rest = rest.slice(fMatch[0].length);
-        } else {
-            const fMatch2 = rest.match(/^-F(?:'([^']*)'|"([^"]*)"|(\S+))\s*/);
-            if (fMatch2) {
-                fieldSep = fMatch2[1] ?? fMatch2[2] ?? fMatch2[3];
-                rest = rest.slice(fMatch2[0].length);
-            }
-        }
 
         // Extract program (in quotes)
         let program: string | null = null;

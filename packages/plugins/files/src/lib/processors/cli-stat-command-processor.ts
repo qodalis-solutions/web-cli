@@ -57,14 +57,7 @@ export class CliStatCommandProcessor implements ICliCommandProcessor {
     }
 
     private parsePaths(command: CliProcessCommand): string[] {
-        const raw = command.rawCommand || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
-        const paths: string[] = [];
-        for (const t of tokens) {
-            if (!t.startsWith('-')) {
-                paths.push(t);
-            }
-        }
-        return paths;
+        const raw = command.value || '';
+        return raw.split(/\s+/).filter(Boolean);
     }
 }

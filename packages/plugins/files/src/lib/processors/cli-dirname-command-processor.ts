@@ -56,15 +56,7 @@ export class CliDirnameCommandProcessor implements ICliCommandProcessor {
     }
 
     private parseTokens(command: CliProcessCommand): string[] {
-        const raw = command.rawCommand || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
-        const result: string[] = [];
-        for (let i = 0; i < tokens.length; i++) {
-            const t = tokens[i];
-            if (!t.startsWith('-')) {
-                result.push(t);
-            }
-        }
-        return result;
+        const raw = command.value || '';
+        return raw.split(/\s+/).filter(Boolean);
     }
 }

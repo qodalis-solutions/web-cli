@@ -124,9 +124,7 @@ export class CliWcCommandProcessor implements ICliCommandProcessor {
     }
 
     private parsePaths(command: CliProcessCommand): string[] {
-        const raw = command.rawCommand || '';
-        return raw
-            .split(/\s+/)
-            .filter((t) => t && !t.startsWith('-'));
+        const raw = command.value || '';
+        return raw.split(/\s+/).filter(Boolean);
     }
 }

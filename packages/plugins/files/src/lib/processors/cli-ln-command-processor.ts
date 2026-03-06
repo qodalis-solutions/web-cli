@@ -74,23 +74,14 @@ export class CliLnCommandProcessor implements ICliCommandProcessor {
         target: string | null;
         linkName: string | null;
     } {
-        const raw = command.rawCommand || '';
+        const raw = command.value || '';
         const tokens = raw.split(/\s+/).filter(Boolean);
-        let symbolic = false;
-        const positional: string[] = [];
-
-        for (const t of tokens) {
-            if (t === '-s') {
-                symbolic = true;
-            } else if (!t.startsWith('-')) {
-                positional.push(t);
-            }
-        }
+        const symbolic = command.args['s'] || false;
 
         return {
             symbolic,
-            target: positional[0] || null,
-            linkName: positional[1] || null,
+            target: tokens[0] || null,
+            linkName: tokens[1] || null,
         };
     }
 }

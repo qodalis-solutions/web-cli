@@ -93,20 +93,9 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
     }
 
     private parseSearchPath(command: CliProcessCommand): string | null {
-        const raw = command.rawCommand || '';
+        const raw = command.value || '';
         const tokens = raw.split(/\s+/).filter(Boolean);
-        let i = 0;
-        while (i < tokens.length) {
-            const t = tokens[i];
-            if (t === '-name' || t === '-type' || t === '-maxdepth') {
-                i += 2;
-            } else if (t.startsWith('-')) {
-                i++;
-            } else {
-                return t;
-            }
-        }
-        return null;
+        return tokens.length > 0 ? tokens[0] : null;
     }
 
     private globToRegex(pattern: string): RegExp {

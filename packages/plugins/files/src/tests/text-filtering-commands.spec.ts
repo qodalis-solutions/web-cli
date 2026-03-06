@@ -77,7 +77,7 @@ describe('CliSortCommandProcessor', () => {
     });
 
     it('should sort by key field with -k', async () => {
-        const cmd = makeCommand('sort -t , -k 2 /home/user/csv.txt', { t: ',', k: '2' });
+        const cmd = makeCommand('sort /home/user/csv.txt', { t: ',', k: '2' });
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         // Sorting by age field (string sort): 25 < 30 < 35 < "age"
@@ -86,7 +86,7 @@ describe('CliSortCommandProcessor', () => {
     });
 
     it('should sort by numeric key with -k and -n', async () => {
-        const cmd = makeCommand('sort -t , -k 2 -n /home/user/csv.txt', { t: ',', k: '2', n: true });
+        const cmd = makeCommand('sort -n /home/user/csv.txt', { t: ',', k: '2', n: true });
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         const lines = output.split('\n').filter(Boolean);
@@ -210,7 +210,7 @@ describe('CliCutCommandProcessor', () => {
     });
 
     it('should extract field 2 with comma delimiter', async () => {
-        const cmd = makeCommand('cut -d , -f 2 /home/user/csv.txt', { d: ',', f: '2' });
+        const cmd = makeCommand('cut /home/user/csv.txt', { d: ',', f: '2' });
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         const lines = output.split('\n').filter(Boolean);
@@ -218,7 +218,7 @@ describe('CliCutCommandProcessor', () => {
     });
 
     it('should extract fields 1 and 3', async () => {
-        const cmd = makeCommand('cut -d , -f 1,3 /home/user/csv.txt', { d: ',', f: '1,3' });
+        const cmd = makeCommand('cut /home/user/csv.txt', { d: ',', f: '1,3' });
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         const lines = output.split('\n').filter(Boolean);
@@ -227,7 +227,7 @@ describe('CliCutCommandProcessor', () => {
     });
 
     it('should extract characters 1-5', async () => {
-        const cmd = makeCommand('cut -c 1-5 /home/user/csv.txt', { c: '1-5' });
+        const cmd = makeCommand('cut /home/user/csv.txt', { c: '1-5' });
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         const lines = output.split('\n').filter(Boolean);
@@ -236,7 +236,7 @@ describe('CliCutCommandProcessor', () => {
     });
 
     it('should extract single character position', async () => {
-        const cmd = makeCommand('cut -c 3 /home/user/csv.txt', { c: '3' });
+        const cmd = makeCommand('cut /home/user/csv.txt', { c: '3' });
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         const lines = output.split('\n').filter(Boolean);
@@ -245,7 +245,7 @@ describe('CliCutCommandProcessor', () => {
     });
 
     it('should use tab as default delimiter for fields', async () => {
-        const cmd = makeCommand('cut -f 2 /home/user/tabs.txt', { f: '2' });
+        const cmd = makeCommand('cut /home/user/tabs.txt', { f: '2' });
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         const lines = output.split('\n').filter(Boolean);
@@ -260,13 +260,13 @@ describe('CliCutCommandProcessor', () => {
     });
 
     it('should error on missing operand', async () => {
-        const cmd = makeCommand('cut -f 1', { f: '1' });
+        const cmd = makeCommand('cut', { f: '1' });
         await processor.processCommand(cmd, ctx);
         expect(writer.written.some(l => l.includes('missing file operand'))).toBe(true);
     });
 
     it('should error on nonexistent file', async () => {
-        const cmd = makeCommand('cut -f 1 /nonexistent', { f: '1' });
+        const cmd = makeCommand('cut /nonexistent', { f: '1' });
         await processor.processCommand(cmd, ctx);
         expect(writer.written.some(l => l.includes('[error]'))).toBe(true);
     });
@@ -306,7 +306,7 @@ describe('CliPasteCommandProcessor', () => {
     });
 
     it('should use custom delimiter with -d', async () => {
-        const cmd = makeCommand('paste -d , /home/user/file1.txt /home/user/file2.txt', { d: ',' });
+        const cmd = makeCommand('paste /home/user/file1.txt /home/user/file2.txt', { d: ',' });
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         const lines = output.split('\n').filter(Boolean);
@@ -444,7 +444,7 @@ describe('CliCutCommandProcessor (piped input)', () => {
     });
 
     it('should cut fields from piped text', async () => {
-        const cmd = makeCommand('cut -d , -f 2', { d: ',', f: '2' }, 'a,b,c\n1,2,3');
+        const cmd = makeCommand('cut', { d: ',', f: '2' }, 'a,b,c\n1,2,3');
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         const lines = output.split('\n').filter(Boolean);

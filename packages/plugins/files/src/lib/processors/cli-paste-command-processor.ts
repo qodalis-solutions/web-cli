@@ -107,21 +107,7 @@ export class CliPasteCommandProcessor implements ICliCommandProcessor {
     }
 
     private parsePaths(command: CliProcessCommand): string[] {
-        const raw = command.rawCommand || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
-        const paths: string[] = [];
-        let i = 0;
-        while (i < tokens.length) {
-            const t = tokens[i];
-            if (t === '-d' || t === '--delimiters') {
-                i += 2;
-            } else if (t.startsWith('-')) {
-                i++;
-            } else {
-                paths.push(t);
-                i++;
-            }
-        }
-        return paths;
+        const raw = command.value || '';
+        return raw.split(/\s+/).filter(Boolean);
     }
 }

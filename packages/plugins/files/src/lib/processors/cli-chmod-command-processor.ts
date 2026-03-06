@@ -72,22 +72,11 @@ export class CliChmodCommandProcessor implements ICliCommandProcessor {
         mode: string | null;
         paths: string[];
     } {
-        const raw = command.rawCommand || '';
+        const raw = command.value || '';
         const tokens = raw.split(/\s+/).filter(Boolean);
-        let recursive = false;
-        let mode: string | null = null;
-        const paths: string[] = [];
-
-        for (const t of tokens) {
-            if (t === '-R') {
-                recursive = true;
-            } else if (mode === null) {
-                mode = t;
-            } else {
-                paths.push(t);
-            }
-        }
-
+        const recursive = command.args['R'] || false;
+        const mode = tokens.length > 0 ? tokens[0] : null;
+        const paths = tokens.slice(1);
         return { recursive, mode, paths };
     }
 

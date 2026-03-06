@@ -139,26 +139,11 @@ export class CliTrCommandProcessor implements ICliCommandProcessor {
             IFileSystemService_TOKEN,
         );
 
-        const raw = command.rawCommand || '';
-        const tokens = parseTokens(raw);
+        const raw = command.value || '';
+        const positional = parseTokens(raw);
 
-        // Separate flags from positional arguments
-        const flags: string[] = [];
-        const positional: string[] = [];
-
-        for (const token of tokens) {
-            if (token.startsWith('-') && /^-[a-zA-Z]+$/.test(token)) {
-                // Expand combined flags like -ds into individual flags
-                for (let j = 1; j < token.length; j++) {
-                    flags.push(token[j]);
-                }
-            } else {
-                positional.push(token);
-            }
-        }
-
-        const deleteMode = flags.includes('d');
-        const squeezeMode = flags.includes('s');
+        const deleteMode = !!command.args['d'];
+        const squeezeMode = !!command.args['s'];
 
         if (positional.length === 0) {
             context.writer.writeError('tr: missing operand');

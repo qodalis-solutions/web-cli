@@ -70,17 +70,49 @@ export function createMockContext(
     } as any;
 }
 
+/**
+ * Build a CliProcessCommand matching executor behavior:
+ * - flags (tokens starting with -) go into `args` as booleans
+ * - non-flag tokens (after the command name) form `value`
+ * - for flags with values (e.g. -n 5, -d ','), pass them via `args`
+ *
+ * Explicit `args` override any flags parsed from the string.
+ */
 export function makeCommand(
     raw: string,
     args: Record<string, any> = {},
     data?: any,
 ): CliProcessCommand {
-    const tokens = raw.split(/\s+/);
+    const tokens = raw.split(/\s+/).filter(Boolean);
+    const command = tokens[0];
+    const parsedArgs: Record<string, any> = {};
+    const valueParts: string[] = [];
+
+    for (let i = 1; i < tokens.length; i++) {
+        const t = tokens[i];
+        if (t.startsWith('--')) {
+            const eqIdx = t.indexOf('=');
+            if (eqIdx !== -1) {
+                parsedArgs[t.slice(2, eqIdx)] = t.slice(eqIdx + 1);
+            } else {
+                parsedArgs[t.slice(2)] = true;
+            }
+        } else if (t.startsWith('-') && t.length > 1) {
+            parsedArgs[t.slice(1)] = true;
+        } else {
+            valueParts.push(t);
+        }
+    }
+
+    const value = valueParts.length > 0 ? valueParts.join(' ') : undefined;
+    const mergedArgs = { ...parsedArgs, ...args };
+
     return {
-        command: tokens[0],
-        rawCommand: tokens.slice(1).join(' '),
+        command,
+        rawCommand: raw,
+        value,
         chainCommands: [],
-        args,
+        args: mergedArgs,
         data,
     } as any;
 }

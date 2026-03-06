@@ -172,7 +172,7 @@ describe('CliSedCommandProcessor', () => {
     // -----------------------------------------------------------------------
 
     it('should support -e for multiple expressions', async () => {
-        const cmd = makeCommand("sed -e 's/Hello/Hi/' -e 's/World/Earth/' /home/user/sed-test.txt");
+        const cmd = makeCommand("sed /home/user/sed-test.txt", { e: ["s/Hello/Hi/", "s/World/Earth/"] });
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         expect(output).toContain('Hi Earth');

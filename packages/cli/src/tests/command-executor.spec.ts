@@ -1045,6 +1045,223 @@ describe('CliCommandExecutor', () => {
     });
 
     // -----------------------------------------------------------------------
+    // Operator >> — append redirect
+    // -----------------------------------------------------------------------
+    describe('Operator >> — append redirect', () => {
+        it('should append output to file via >> redirect', async () => {
+            let writtenContent: string | undefined;
+            let appendMode: boolean | undefined;
+            const mockFs = {
+                resolvePath: (p: string) => p.trim(),
+                exists: () => true,
+                writeFile: (path: string, content: string, append?: boolean) => {
+                    writtenContent = content;
+                    appendMode = append;
+                },
+                persist: async () => {},
+            };
+            (context.services as any).get = (token: any) => {
+                if (token === 'cli-file-system-service') return mockFs;
+                return (context.services as any).services?.get(token);
+            };
+
+            registry.registerProcessor(
+                createTestProcessor('producer', async (_cmd, ctx) => {
+                    ctx.process.output('appended content');
+                }),
+            );
+
+            await executor.executeCommand('producer >> output.txt', context);
+
+            expect(writtenContent).toBe('appended content');
+            expect(appendMode).toBe(true);
+        });
+
+        it('should create file if it does not exist with >> redirect', async () => {
+            let createdPath: string | undefined;
+            let createdContent: string | undefined;
+            const mockFs = {
+                resolvePath: (p: string) => p.trim(),
+                exists: () => false,
+                createFile: (path: string, content: string) => {
+                    createdPath = path;
+                    createdContent = content;
+                },
+                persist: async () => {},
+            };
+            (context.services as any).get = (token: any) => {
+                if (token === 'cli-file-system-service') return mockFs;
+                return (context.services as any).services?.get(token);
+            };
+
+            registry.registerProcessor(
+                createTestProcessor('producer', async (_cmd, ctx) => {
+                    ctx.process.output('new file content');
+                }),
+            );
+
+            await executor.executeCommand('producer >> newfile.txt', context);
+
+            expect(createdPath).toBe('newfile.txt');
+            expect(createdContent).toBe('new file content');
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // Operator 2> / 2>> — stderr redirect
+    // -----------------------------------------------------------------------
+    describe('Operator 2> — stderr redirect', () => {
+        it('should write stderr to file via 2> redirect', async () => {
+            let writtenContent: string | undefined;
+            const mockFs = {
+                resolvePath: (p: string) => p.trim(),
+                exists: () => false,
+                createFile: (path: string, content: string) => {
+                    writtenContent = content;
+                },
+                persist: async () => {},
+            };
+            (context.services as any).get = (token: any) => {
+                if (token === 'cli-file-system-service') return mockFs;
+                return (context.services as any).services?.get(token);
+            };
+
+            registry.registerProcessor(
+                createTestProcessor('errorer', async (_cmd, ctx) => {
+                    ctx.writer.writeError('something went wrong');
+                }),
+            );
+
+            await executor.executeCommand('errorer 2> errors.log', context);
+
+            expect(writtenContent).toContain('something went wrong');
+        });
+
+        it('should append stderr with 2>> redirect', async () => {
+            let writtenContent: string | undefined;
+            let appendMode: boolean | undefined;
+            const mockFs = {
+                resolvePath: (p: string) => p.trim(),
+                exists: () => true,
+                writeFile: (path: string, content: string, append?: boolean) => {
+                    writtenContent = content;
+                    appendMode = append;
+                },
+                persist: async () => {},
+            };
+            (context.services as any).get = (token: any) => {
+                if (token === 'cli-file-system-service') return mockFs;
+                return (context.services as any).services?.get(token);
+            };
+
+            registry.registerProcessor(
+                createTestProcessor('errorer', async (_cmd, ctx) => {
+                    ctx.writer.writeError('appended error');
+                }),
+            );
+
+            await executor.executeCommand('errorer 2>> errors.log', context);
+
+            expect(writtenContent).toContain('appended error');
+            expect(appendMode).toBe(true);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // command.value and reconcileArgs integration
+    // -----------------------------------------------------------------------
+    describe('command.value population', () => {
+        it('should set value for acceptsRawInput processor', async () => {
+            let receivedValue: string | undefined;
+            registry.registerProcessor(
+                createTestProcessor('myecho', async (cmd) => {
+                    receivedValue = cmd.value;
+                }, {
+                    acceptsRawInput: true,
+                }),
+            );
+
+            await executor.executeCommand('myecho hello world', context);
+
+            expect(receivedValue).toBe('hello world');
+        });
+
+        it('should set value for valueRequired processor', async () => {
+            let receivedValue: string | undefined;
+            registry.registerProcessor(
+                createTestProcessor('mycat', async (cmd) => {
+                    receivedValue = cmd.value;
+                }, {
+                    valueRequired: true,
+                }),
+            );
+
+            await executor.executeCommand('mycat file.txt', context);
+
+            expect(receivedValue).toBe('file.txt');
+        });
+
+        it('should exclude flags from value', async () => {
+            let receivedValue: string | undefined;
+            let receivedArgs: Record<string, any> = {};
+            registry.registerProcessor(
+                createTestProcessor('mygrep', async (cmd) => {
+                    receivedValue = cmd.value;
+                    receivedArgs = cmd.args;
+                }, {
+                    acceptsRawInput: true,
+                    parameters: [
+                        { name: 'ignore-case', aliases: ['i'], type: 'boolean' as const, required: false, description: '' },
+                    ],
+                }),
+            );
+
+            await executor.executeCommand('mygrep -i pattern file.txt', context);
+
+            expect(receivedValue).toBe('pattern file.txt');
+            expect(receivedArgs['i']).toBe(true);
+        });
+
+        it('should exclude consumed flag values from value via reconcileArgs', async () => {
+            let receivedValue: string | undefined;
+            let receivedArgs: Record<string, any> = {};
+            registry.registerProcessor(
+                createTestProcessor('myhead', async (cmd) => {
+                    receivedValue = cmd.value;
+                    receivedArgs = cmd.args;
+                }, {
+                    acceptsRawInput: true,
+                    valueRequired: true,
+                    parameters: [
+                        { name: 'lines', aliases: ['n'], type: 'number' as const, required: false, description: '' },
+                    ],
+                }),
+            );
+
+            await executor.executeCommand('myhead -n 5 file.txt', context);
+
+            expect(receivedValue).toBe('file.txt');
+            expect(receivedArgs['n']).toBe(5);
+        });
+
+        it('should not include command name in value', async () => {
+            let receivedValue: string | undefined;
+            registry.registerProcessor(
+                createTestProcessor('stat', async (cmd) => {
+                    receivedValue = cmd.value;
+                }, {
+                    acceptsRawInput: true,
+                    valueRequired: true,
+                }),
+            );
+
+            await executor.executeCommand('stat welcome.txt', context);
+
+            expect(receivedValue).toBe('welcome.txt');
+        });
+    });
+
+    // -----------------------------------------------------------------------
     // process.exit() improvements
     // -----------------------------------------------------------------------
     describe('process.exit() improvements', () => {

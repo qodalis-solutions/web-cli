@@ -57,11 +57,7 @@ export class CliCpCommandProcessor implements ICliCommandProcessor {
     }
 
     private parseArgs(command: CliProcessCommand): string[] {
-        const raw = command.rawCommand;
-        const afterCmd = raw.substring(raw.indexOf('cp') + 2).trim();
-        const tokens = afterCmd
-            .split(/\s+/)
-            .filter((t) => t && !t.startsWith('--') && !t.startsWith('-'));
-        return tokens;
+        const raw = command.value || '';
+        return raw.split(/\s+/).filter((t) => t && !t.startsWith('--') && !t.startsWith('-'));
     }
 }

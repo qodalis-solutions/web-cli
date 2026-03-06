@@ -292,15 +292,16 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
         // Reconcile space-separated args (e.g. --server dotnet)
         // using the processor's parameter descriptors.
-        // Only update parsedArgs — commandName and chainCommands stay
-        // unchanged so that valueRequired / acceptsRawInput and
-        // getRightOfWord() continue to work with the original tokens.
+        // Update both parsedArgs AND commandName so that consumed
+        // flag values (e.g. "5" in "-n 5") are excluded from
+        // the positional value passed to the processor.
         if (processor?.parameters?.length) {
             const reconciled = reconcileArgs(
                 parsed.tokens,
                 processor.parameters,
             );
             parsedArgs = reconciled.args;
+            commandName = reconciled.commandParts.join(' ');
         }
 
         if (!processor) {

@@ -101,34 +101,16 @@ export class CliTeeCommandProcessor implements ICliCommandProcessor {
     }
 
     private getAllPaths(command: CliProcessCommand): string[] {
-        const raw = command.rawCommand || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
-        const paths: string[] = [];
-        for (const t of tokens) {
-            if (!t.startsWith('-')) {
-                paths.push(t);
-            }
-        }
-        return paths;
+        const raw = command.value || '';
+        return raw.split(/\s+/).filter(Boolean);
     }
 
     private parseArgs(command: CliProcessCommand): {
         outputFiles: string[];
         inputFile: string | null;
     } {
-        const raw = command.rawCommand || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
-        const paths: string[] = [];
-        let i = 0;
-        while (i < tokens.length) {
-            const t = tokens[i];
-            if (t.startsWith('-')) {
-                i++;
-            } else {
-                paths.push(t);
-                i++;
-            }
-        }
+        const raw = command.value || '';
+        const paths = raw.split(/\s+/).filter(Boolean);
 
         // Last path is input file, rest are output files
         if (paths.length < 2) {

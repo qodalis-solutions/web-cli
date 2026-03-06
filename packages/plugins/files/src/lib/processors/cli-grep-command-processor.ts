@@ -231,31 +231,19 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
     private parseArgs(
         command: CliProcessCommand,
     ): { pattern: string | null; paths: string[] } {
-        const raw = command.rawCommand || '';
+        const raw = command.value || '';
         const tokens = raw.split(/\s+/).filter(Boolean);
-        const nonFlags: string[] = [];
 
-        let i = 0;
-        while (i < tokens.length) {
-            const t = tokens[i];
-            if (t.startsWith('-')) {
-                i++;
-            } else {
-                nonFlags.push(t);
-                i++;
-            }
-        }
-
-        if (nonFlags.length === 0) {
+        if (tokens.length === 0) {
             return { pattern: null, paths: [] };
         }
-        if (nonFlags.length === 1) {
-            return { pattern: nonFlags[0], paths: [] };
+        if (tokens.length === 1) {
+            return { pattern: tokens[0], paths: [] };
         }
 
         return {
-            pattern: nonFlags[0],
-            paths: nonFlags.slice(1),
+            pattern: tokens[0],
+            paths: tokens.slice(1),
         };
     }
 

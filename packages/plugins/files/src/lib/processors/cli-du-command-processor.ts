@@ -88,39 +88,13 @@ export class CliDuCommandProcessor implements ICliCommandProcessor {
         maxDepth: number;
         paths: string[];
     } {
-        const raw = command.rawCommand || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
-        let humanReadable = false;
-        let summaryOnly = false;
-        let maxDepth = Infinity;
-        const paths: string[] = [];
-
-        let i = 0;
-        while (i < tokens.length) {
-            const t = tokens[i];
-            if (t === '-h') {
-                humanReadable = true;
-                i++;
-            } else if (t === '-s') {
-                summaryOnly = true;
-                i++;
-            } else if (t === '-d' || t === '--max-depth') {
-                maxDepth = parseInt(tokens[i + 1] || '0', 10);
-                i += 2;
-            } else if (t === '-sh' || t === '-hs') {
-                summaryOnly = true;
-                humanReadable = true;
-                i++;
-            } else if (t.startsWith('-')) {
-                // Handle combined flags like -sh
-                if (t.includes('s')) summaryOnly = true;
-                if (t.includes('h')) humanReadable = true;
-                i++;
-            } else {
-                paths.push(t);
-                i++;
-            }
-        }
+        const raw = command.value || '';
+        const paths = raw.split(/\s+/).filter(Boolean);
+        const humanReadable = !!command.args['h'];
+        const summaryOnly = !!command.args['s'];
+        const maxDepth = command.args['d'] || command.args['max-depth']
+            ? parseInt(command.args['d'] || command.args['max-depth'] || '0', 10)
+            : Infinity;
 
         return { humanReadable, summaryOnly, maxDepth, paths };
     }

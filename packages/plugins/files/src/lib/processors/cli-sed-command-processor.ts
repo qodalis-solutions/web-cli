@@ -192,46 +192,31 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
         expressions: string[];
         filePath: string | null;
     } {
-        const raw = command.rawCommand || '';
+        const raw = command.value || '';
         const tokens = this.tokenize(raw);
 
-        let inPlace = false;
-        let suppress = false;
+        const inPlace = !!command.args['in-place'] || !!command.args['i'];
+        const suppress = !!command.args['quiet'] || !!command.args['n'];
         const expressions: string[] = [];
         let filePath: string | null = null;
         const nonFlagTokens: string[] = [];
 
-        let i = 0;
-        while (i < tokens.length) {
-            const t = tokens[i];
-            if (t === '-i') {
-                inPlace = true;
-                i++;
-            } else if (t === '-n') {
-                suppress = true;
-                i++;
-            } else if (t === '-e') {
-                i++;
-                if (i < tokens.length) {
-                    expressions.push(tokens[i]);
-                    i++;
+        // Check for -e expressions from args
+        if (command.args['expression'] || command.args['e']) {
+            const eValue = command.args['expression'] || command.args['e'];
+            if (Array.isArray(eValue)) {
+                for (const v of eValue) {
+                    if (v && typeof v === 'string') {
+                        expressions.push(v);
+                    }
                 }
-            } else if (t === '-in' || t === '-ni') {
-                inPlace = true;
-                suppress = true;
-                i++;
-            } else if (t.startsWith('-') && !t.startsWith('-e') && t.length > 1) {
-                // Parse combined flags like -ni, -in
-                const flags = t.slice(1);
-                for (const f of flags) {
-                    if (f === 'i') inPlace = true;
-                    else if (f === 'n') suppress = true;
-                }
-                i++;
-            } else {
-                nonFlagTokens.push(t);
-                i++;
+            } else if (eValue && typeof eValue === 'string') {
+                expressions.push(eValue);
             }
+        }
+
+        for (const t of tokens) {
+            nonFlagTokens.push(t);
         }
 
         // If no -e expressions, first non-flag token is the expression
