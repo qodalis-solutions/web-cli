@@ -8,7 +8,7 @@ import {
     onMounted,
     onBeforeUnmount,
 } from 'vue';
-import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, CliPanelHideAlignment, CliEngineSnapshot } from '@qodalis/cli-core';
+import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, CliPanelHideAlignment, CliEngineSnapshot, derivePanelThemeStyles, loadPanelPosition, savePanelPosition, nextPanelPosition } from '@qodalis/cli-core';
 import { CliEngine, CliEngineOptions } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliConfigKey } from './CliConfigProvider';
@@ -121,6 +121,28 @@ function hideTabChevron(position: CliPanelPosition) {
     ]);
 }
 
+function positionIcon(pos: string) {
+    let fillRect: any;
+    switch (pos) {
+        case 'top':
+            fillRect = h('rect', { x: '4', y: '4', width: '16', height: '5', rx: '1', fill: 'currentColor', stroke: 'none', opacity: '0.5' });
+            break;
+        case 'left':
+            fillRect = h('rect', { x: '4', y: '4', width: '5', height: '16', rx: '1', fill: 'currentColor', stroke: 'none', opacity: '0.5' });
+            break;
+        case 'right':
+            fillRect = h('rect', { x: '15', y: '4', width: '5', height: '16', rx: '1', fill: 'currentColor', stroke: 'none', opacity: '0.5' });
+            break;
+        default: // bottom
+            fillRect = h('rect', { x: '4', y: '15', width: '16', height: '5', rx: '1', fill: 'currentColor', stroke: 'none', opacity: '0.5' });
+            break;
+    }
+    return h('svg', { ...svgAttrs }, [
+        h('rect', { x: '3', y: '3', width: '18', height: '18', rx: '2' }),
+        fillRect,
+    ]);
+}
+
 /* ─── Component ──────────────────────────────────────────── */
 
 export const CliPanel = defineComponent({
@@ -169,12 +191,14 @@ export const CliPanel = defineComponent({
         const hidden = ref(false);
         let preHideCollapsed = true;
 
-        const position = computed<CliPanelPosition>(() => mergedOptions.value?.position ?? 'bottom');
+        const position = ref<CliPanelPosition>(loadPanelPosition() ?? mergedOptions.value?.position ?? 'bottom');
         const closable = computed(() => mergedOptions.value?.closable ?? true);
         const resizable = computed(() => mergedOptions.value?.resizable ?? true);
         const isHorizontal = computed(() => position.value === 'left' || position.value === 'right');
         const hideable = computed(() => mergedOptions.value?.hideable ?? true);
         const hideAlignment = computed<CliPanelHideAlignment>(() => mergedOptions.value?.hideAlignment ?? 'center');
+        const syncTheme = computed(() => mergedOptions.value?.syncTheme ?? false);
+        const themeStyles = ref<Record<string, string>>({});
 
         const tabs = ref<TerminalTab[]>([]);
         const activeTabId = ref(0);
@@ -222,11 +246,37 @@ export const CliPanel = defineComponent({
             activePaneId.value = paneId;
         }
 
+        let themeObserver: MutationObserver | undefined;
+
+        function syncThemeFromEngine() {
+            const engine = engineMap.values().next().value;
+            if (!engine) return;
+            const theme = (engine as CliEngine).getTerminal().options.theme;
+            if (theme) themeStyles.value = derivePanelThemeStyles(theme);
+        }
+
+        function setupThemeSync() {
+            if (!syncTheme.value) return;
+            setTimeout(() => {
+                syncThemeFromEngine();
+                const container = document.querySelector('.cli-panel-wrapper .terminal-container');
+                if (!container) return;
+                themeObserver?.disconnect();
+                themeObserver = new MutationObserver(syncThemeFromEngine);
+                themeObserver.observe(container, { attributes: true, attributeFilter: ['style'] });
+            }, 200);
+        }
+
+        onBeforeUnmount(() => {
+            themeObserver?.disconnect();
+        });
+
         function toggle() {
             collapsed.value = !collapsed.value;
             if (!collapsed.value && !initialized.value) {
                 initialized.value = true;
                 addTab();
+                setupThemeSync();
             }
         }
 
@@ -477,6 +527,11 @@ export const CliPanel = defineComponent({
             collapsed.value = preHideCollapsed;
         }
 
+        const handlePositionChange = () => {
+            position.value = nextPanelPosition(position.value);
+            savePanelPosition(position.value);
+        };
+
         /* ─── Render ─────────────────────────────────────── */
 
         return () => {
@@ -495,6 +550,7 @@ export const CliPanel = defineComponent({
             const wrapperStyle = {
                 ...(isHorizontal.value ? { width: `${panelWidth.value}px` } : { height: `${panelHeight.value}px` }),
                 ...(hidden.value ? { display: 'none' } : {}),
+                ...themeStyles.value,
                 ...props.style,
             };
 
@@ -515,6 +571,11 @@ export const CliPanel = defineComponent({
                         'CLI',
                     ]),
                     h('div', { class: 'cli-panel-action-buttons' }, [
+                        h('button', {
+                            class: 'cli-panel-btn cli-panel-btn-position',
+                            title: `Move panel (${position.value})`,
+                            onClick: handlePositionChange,
+                        }, [positionIcon(position.value)]),
                         hideable.value
                             ? h('button', {
                                 class: 'cli-panel-btn cli-panel-btn-hide',
@@ -948,6 +1009,7 @@ export const CliPanel = defineComponent({
                     class: 'cli-panel-hide-tab',
                     'data-position': position.value,
                     'data-hide-align': hideAlignment.value,
+                    style: themeStyles.value,
                     title: 'Show CLI',
                     onClick: handleUnhide,
                 }, [
