@@ -27,3 +27,4 @@ export * from './cli-stat-command-processor';
 export * from './cli-chmod-command-processor';
 export * from './cli-du-command-processor';
 export * from './cli-ln-command-processor';
+export * from './cli-sed-command-processor';
