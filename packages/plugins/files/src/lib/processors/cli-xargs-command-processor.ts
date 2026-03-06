@@ -48,25 +48,41 @@ export class CliXargsCommandProcessor implements ICliCommandProcessor {
         );
         const parsed = this.parseArgs(command);
 
-        if (!parsed.commandTemplate) {
-            context.writer.writeError('xargs: missing command');
-            return;
+        let commandTemplate: string;
+        let argContent: string;
+
+        if (command.data != null) {
+            // Piped mode: all non-flag tokens form the command template
+            commandTemplate = this.getAllNonFlagTokens(command).join(' ');
+            if (!commandTemplate) {
+                context.writer.writeError('xargs: missing command');
+                return;
+            }
+            argContent =
+                typeof command.data === 'string'
+                    ? command.data
+                    : JSON.stringify(command.data);
+        } else {
+            if (!parsed.commandTemplate) {
+                context.writer.writeError('xargs: missing command');
+                return;
+            }
+            commandTemplate = parsed.commandTemplate;
+
+            if (!parsed.inputFile) {
+                context.writer.writeError('xargs: missing input file');
+                return;
+            }
+            if (!fs.exists(parsed.inputFile)) {
+                context.writer.writeError(
+                    `xargs: ${parsed.inputFile}: No such file or directory`,
+                );
+                return;
+            }
+            argContent = fs.readFile(parsed.inputFile) || '';
         }
 
-        if (!parsed.inputFile) {
-            context.writer.writeError('xargs: missing input file');
-            return;
-        }
-
-        if (!fs.exists(parsed.inputFile)) {
-            context.writer.writeError(
-                `xargs: ${parsed.inputFile}: No such file or directory`,
-            );
-            return;
-        }
-
-        const content = fs.readFile(parsed.inputFile) || '';
-        const args = content
+        const args = argContent
             .split('\n')
             .map((l) => l.trim())
             .filter(Boolean);
@@ -78,7 +94,7 @@ export class CliXargsCommandProcessor implements ICliCommandProcessor {
         if (replaceStr) {
             // Replace mode: one command per arg
             for (const arg of args) {
-                const cmd = parsed.commandTemplate.replace(
+                const cmd = commandTemplate.replace(
                     new RegExp(this.escapeRegex(replaceStr), 'g'),
                     arg,
                 );
@@ -89,13 +105,13 @@ export class CliXargsCommandProcessor implements ICliCommandProcessor {
             for (let i = 0; i < args.length; i += maxArgs) {
                 const group = args.slice(i, i + maxArgs);
                 commands.push(
-                    `${parsed.commandTemplate} ${group.join(' ')}`,
+                    `${commandTemplate} ${group.join(' ')}`,
                 );
             }
         } else {
             // All args at once
             commands.push(
-                `${parsed.commandTemplate} ${args.join(' ')}`,
+                `${commandTemplate} ${args.join(' ')}`,
             );
         }
 
@@ -112,6 +128,27 @@ export class CliXargsCommandProcessor implements ICliCommandProcessor {
                 context.writer.writeln(cmd);
             }
         }
+    }
+
+    private getAllNonFlagTokens(command: CliProcessCommand): string[] {
+        const raw = command.rawCommand || '';
+        const tokens = raw.split(/\s+/).filter(Boolean);
+        const result: string[] = [];
+        let i = 0;
+        while (i < tokens.length) {
+            const t = tokens[i];
+            if (t === '-I' || t === '--replace') {
+                i += 2; // skip flag and its value
+            } else if (t === '-n' || t === '--max-args') {
+                i += 2; // skip flag and its value
+            } else if (t.startsWith('-')) {
+                i++;
+            } else {
+                result.push(t);
+                i++;
+            }
+        }
+        return result;
     }
 
     private escapeRegex(str: string): string {

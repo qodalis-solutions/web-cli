@@ -218,3 +218,86 @@ describe('CliXargsCommandProcessor', () => {
         expect(writer.written.some(l => l.includes('No such file or directory'))).toBe(true);
     });
 });
+
+// ---------------------------------------------------------------------------
+// tee command tests (piped input)
+// ---------------------------------------------------------------------------
+
+describe('CliTeeCommandProcessor (piped input)', () => {
+    let processor: CliTeeCommandProcessor;
+    let fs: IndexedDbFileSystemService;
+    let writer: ICliTerminalWriter & { written: string[] };
+    let ctx: ICliExecutionContext;
+
+    beforeEach(() => {
+        processor = new CliTeeCommandProcessor();
+        fs = setupTestFs();
+        writer = createStubWriter();
+        ctx = createMockContext(writer, fs);
+    });
+
+    it('should write piped data to stdout and output files', async () => {
+        const cmd = makeCommand('tee /home/user/out.txt', {}, 'piped content');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('piped content');
+        expect(fs.readFile('/home/user/out.txt')).toBe('piped content');
+    });
+
+    it('should append piped data with -a', async () => {
+        fs.createFile('/home/user/existing.txt', 'old\n');
+        const cmd = makeCommand('tee -a /home/user/existing.txt', { a: true }, 'new');
+        await processor.processCommand(cmd, ctx);
+        const content = fs.readFile('/home/user/existing.txt');
+        expect(content).toContain('old');
+        expect(content).toContain('new');
+    });
+
+    it('should write piped data to multiple output files', async () => {
+        const cmd = makeCommand('tee /home/user/a.txt /home/user/b.txt', {}, 'hello pipes');
+        await processor.processCommand(cmd, ctx);
+        expect(fs.readFile('/home/user/a.txt')).toBe('hello pipes');
+        expect(fs.readFile('/home/user/b.txt')).toBe('hello pipes');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// xargs command tests (piped input)
+// ---------------------------------------------------------------------------
+
+describe('CliXargsCommandProcessor (piped input)', () => {
+    let processor: CliXargsCommandProcessor;
+    let fs: IndexedDbFileSystemService;
+    let writer: ICliTerminalWriter & { written: string[] };
+    let ctx: ICliExecutionContext;
+
+    beforeEach(() => {
+        processor = new CliXargsCommandProcessor();
+        fs = setupTestFs();
+        writer = createStubWriter();
+        ctx = createMockContext(writer, fs);
+    });
+
+    it('should build commands from piped data', async () => {
+        const cmd = makeCommand('xargs echo', {}, 'hello\nworld\nfoo');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('echo hello world foo');
+    });
+
+    it('should support -I replace with piped data', async () => {
+        const cmd = makeCommand('xargs -I {} cat {}', { I: '{}' }, 'a\nb');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('cat a');
+        expect(output).toContain('cat b');
+    });
+
+    it('should support -n grouping with piped data', async () => {
+        const cmd = makeCommand('xargs -n 2 echo', { n: '2' }, 'a\nb\nc');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('echo a b');
+        expect(output).toContain('echo c');
+    });
+});

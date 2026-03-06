@@ -36,43 +36,80 @@ export class CliTeeCommandProcessor implements ICliCommandProcessor {
         const append = command.args['append'] || command.args['a'] || false;
         const parsed = this.parseArgs(command);
 
-        if (parsed.outputFiles.length === 0 && !parsed.inputFile) {
-            context.writer.writeError('tee: missing operand');
-            return;
+        let content: string;
+
+        if (command.data != null) {
+            // Piped mode: all positional args are output files
+            content =
+                typeof command.data === 'string'
+                    ? command.data
+                    : JSON.stringify(command.data);
+            const outputFiles = this.getAllPaths(command);
+
+            // Write to stdout
+            context.writer.writeln(content);
+
+            // Write to each output file
+            for (const outFile of outputFiles) {
+                if (append && fs.exists(outFile)) {
+                    fs.writeFile(outFile, content, true);
+                } else {
+                    fs.writeFile(outFile, content);
+                }
+            }
+            await fs.persist();
+        } else {
+            // File mode: last arg is input, rest are output
+            if (parsed.outputFiles.length === 0 && !parsed.inputFile) {
+                context.writer.writeError('tee: missing operand');
+                return;
+            }
+
+            if (!parsed.inputFile) {
+                context.writer.writeError('tee: missing input file');
+                return;
+            }
+
+            if (parsed.outputFiles.length === 0) {
+                context.writer.writeError('tee: missing output file');
+                return;
+            }
+
+            if (!fs.exists(parsed.inputFile)) {
+                context.writer.writeError(
+                    `tee: ${parsed.inputFile}: No such file or directory`,
+                );
+                return;
+            }
+
+            content = fs.readFile(parsed.inputFile) || '';
+
+            // Write to stdout
+            context.writer.writeln(content);
+
+            // Write to each output file
+            for (const outFile of parsed.outputFiles) {
+                if (append && fs.exists(outFile)) {
+                    fs.writeFile(outFile, content, true);
+                } else {
+                    fs.writeFile(outFile, content);
+                }
+            }
+
+            await fs.persist();
         }
+    }
 
-        if (!parsed.inputFile) {
-            context.writer.writeError('tee: missing input file');
-            return;
-        }
-
-        if (parsed.outputFiles.length === 0) {
-            context.writer.writeError('tee: missing output file');
-            return;
-        }
-
-        if (!fs.exists(parsed.inputFile)) {
-            context.writer.writeError(
-                `tee: ${parsed.inputFile}: No such file or directory`,
-            );
-            return;
-        }
-
-        const content = fs.readFile(parsed.inputFile) || '';
-
-        // Write to stdout
-        context.writer.writeln(content);
-
-        // Write to each output file
-        for (const outFile of parsed.outputFiles) {
-            if (append && fs.exists(outFile)) {
-                fs.writeFile(outFile, content, true);
-            } else {
-                fs.writeFile(outFile, content);
+    private getAllPaths(command: CliProcessCommand): string[] {
+        const raw = command.rawCommand || '';
+        const tokens = raw.split(/\s+/).filter(Boolean);
+        const paths: string[] = [];
+        for (const t of tokens) {
+            if (!t.startsWith('-')) {
+                paths.push(t);
             }
         }
-
-        await fs.persist();
+        return paths;
     }
 
     private parseArgs(command: CliProcessCommand): {
