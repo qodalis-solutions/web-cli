@@ -97,6 +97,22 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
             return;
         }
         if (paths.length === 0) {
+            if (command.data != null) {
+                let regex: RegExp;
+                try {
+                    regex = new RegExp(pattern, ignoreCase ? 'gi' : 'g');
+                } catch {
+                    context.writer.writeError(`grep: invalid pattern '${pattern}'`);
+                    return;
+                }
+                const content = typeof command.data === 'string'
+                    ? command.data
+                    : JSON.stringify(command.data);
+                this.grepContent(content, null, regex, {
+                    ignoreCase, showLineNum, countOnly, filesOnly, invert,
+                }, context, false);
+                return;
+            }
             context.writer.writeError(
                 'grep: missing file operand. Usage: grep [options] <pattern> <file>',
             );
@@ -141,74 +157,73 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
         for (const filePath of filePaths) {
             try {
                 const content = fs.readFile(filePath) ?? '';
-                const lines = content.split('\n');
-                let matchCount = 0;
-                const matchingLines: { num: number; text: string }[] = [];
-
-                for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-                    const line = lines[lineIdx];
-                    regex.lastIndex = 0;
-                    const hasMatch = regex.test(line);
-                    const isMatch = invert ? !hasMatch : hasMatch;
-
-                    if (isMatch) {
-                        matchCount++;
-                        matchingLines.push({
-                            num: lineIdx + 1,
-                            text: line,
-                        });
-                    }
-                }
-
-                if (filesOnly) {
-                    if (matchCount > 0) {
-                        context.writer.writeln(filePath);
-                    }
-                } else if (countOnly) {
-                    const prefix = multiFile ? `${filePath}:` : '';
-                    context.writer.writeln(`${prefix}${matchCount}`);
-                } else {
-                    for (const m of matchingLines) {
-                        const parts: string[] = [];
-                        if (multiFile) {
-                            parts.push(
-                                context.writer.wrapInColor(
-                                    filePath,
-                                    CliForegroundColor.Magenta,
-                                ),
-                            );
-                            parts.push(':');
-                        }
-                        if (showLineNum) {
-                            parts.push(
-                                context.writer.wrapInColor(
-                                    String(m.num),
-                                    CliForegroundColor.Green,
-                                ),
-                            );
-                            parts.push(':');
-                        }
-
-                        if (!invert) {
-                            regex.lastIndex = 0;
-                            const highlighted = m.text.replace(
-                                regex,
-                                (match) =>
-                                    context.writer.wrapInColor(
-                                        match,
-                                        CliForegroundColor.Red,
-                                    ),
-                            );
-                            parts.push(highlighted);
-                        } else {
-                            parts.push(m.text);
-                        }
-
-                        context.writer.writeln(parts.join(''));
-                    }
-                }
+                this.grepContent(content, filePath, regex, {
+                    ignoreCase, showLineNum, countOnly, filesOnly, invert,
+                }, context, multiFile);
             } catch (e: any) {
                 context.writer.writeError(`grep: ${filePath}: ${e.message}`);
+            }
+        }
+    }
+
+    private grepContent(
+        content: string,
+        filePath: string | null,
+        regex: RegExp,
+        options: {
+            ignoreCase: boolean;
+            showLineNum: boolean;
+            countOnly: boolean;
+            filesOnly: boolean;
+            invert: boolean;
+        },
+        context: ICliExecutionContext,
+        multiFile: boolean,
+    ): void {
+        const lines = content.split('\n');
+        let matchCount = 0;
+        const matchingLines: { num: number; text: string }[] = [];
+
+        for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+            const line = lines[lineIdx];
+            regex.lastIndex = 0;
+            const hasMatch = regex.test(line);
+            const isMatch = options.invert ? !hasMatch : hasMatch;
+
+            if (isMatch) {
+                matchCount++;
+                matchingLines.push({ num: lineIdx + 1, text: line });
+            }
+        }
+
+        if (options.filesOnly) {
+            if (matchCount > 0 && filePath) {
+                context.writer.writeln(filePath);
+            }
+        } else if (options.countOnly) {
+            const prefix = multiFile && filePath ? `${filePath}:` : '';
+            context.writer.writeln(`${prefix}${matchCount}`);
+        } else {
+            for (const m of matchingLines) {
+                const parts: string[] = [];
+                if (multiFile && filePath) {
+                    parts.push(context.writer.wrapInColor(filePath, CliForegroundColor.Magenta));
+                    parts.push(':');
+                }
+                if (options.showLineNum) {
+                    parts.push(context.writer.wrapInColor(String(m.num), CliForegroundColor.Green));
+                    parts.push(':');
+                }
+                if (!options.invert) {
+                    regex.lastIndex = 0;
+                    const highlighted = m.text.replace(regex, (match) =>
+                        context.writer.wrapInColor(match, CliForegroundColor.Red),
+                    );
+                    parts.push(highlighted);
+                } else {
+                    parts.push(m.text);
+                }
+                context.writer.writeln(parts.join(''));
             }
         }
     }
@@ -220,8 +235,7 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
         const tokens = raw.split(/\s+/).filter(Boolean);
         const nonFlags: string[] = [];
 
-        // Skip the first token — it's the command name ("grep")
-        let i = 1;
+        let i = 0;
         while (i < tokens.length) {
             const t = tokens[i];
             if (t.startsWith('-')) {

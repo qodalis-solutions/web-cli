@@ -1,96 +1,14 @@
-import { Subject } from 'rxjs';
 import {
-    CliProcessCommand,
-    CliForegroundColor,
-    CliBackgroundColor,
     ICliExecutionContext,
     ICliTerminalWriter,
-    ICliServiceProvider,
 } from '@qodalis/cli-core';
 import { IndexedDbFileSystemService } from '../lib/services';
-import { IFileSystemService_TOKEN } from '../lib/interfaces';
+import { createStubWriter, createMockContext, makeCommand } from './helpers';
 import { CliHeadCommandProcessor } from '../lib/processors/cli-head-command-processor';
 import { CliTailCommandProcessor } from '../lib/processors/cli-tail-command-processor';
 import { CliWcCommandProcessor } from '../lib/processors/cli-wc-command-processor';
 import { CliFindCommandProcessor } from '../lib/processors/cli-find-command-processor';
 import { CliGrepCommandProcessor } from '../lib/processors/cli-grep-command-processor';
-
-// ---------------------------------------------------------------------------
-// Test Helpers
-// ---------------------------------------------------------------------------
-
-function createStubWriter(): ICliTerminalWriter & { written: string[] } {
-    const written: string[] = [];
-    return {
-        written,
-        write(text: string) { written.push(text); },
-        writeln(text?: string) { written.push(text ?? ''); },
-        writeSuccess(msg: string) { written.push(`[success] ${msg}`); },
-        writeInfo(msg: string) { written.push(`[info] ${msg}`); },
-        writeWarning(msg: string) { written.push(`[warn] ${msg}`); },
-        writeError(msg: string) { written.push(`[error] ${msg}`); },
-        wrapInColor(text: string, _color: CliForegroundColor) { return text; },
-        wrapInBackgroundColor(text: string, _color: CliBackgroundColor) { return text; },
-        writeJson(json: any) { written.push(JSON.stringify(json)); },
-        writeToFile(_fn: string, _content: string) {},
-        writeObjectsAsTable(objects: any[]) { written.push(JSON.stringify(objects)); },
-        writeTable(_h: string[], _r: string[][]) {},
-        writeDivider() {},
-        writeList(_items: string[], _options?: any) {},
-        writeKeyValue(_entries: any, _options?: any) {},
-        writeColumns(_items: string[], _options?: any) {},
-    };
-}
-
-function createMockContext(
-    writer: ICliTerminalWriter,
-    fs: IndexedDbFileSystemService,
-): ICliExecutionContext {
-    const services: ICliServiceProvider = {
-        get<T>(token: any): T {
-            if (token === IFileSystemService_TOKEN) return fs as any;
-            throw new Error(`Unknown service: ${token}`);
-        },
-        set() {},
-    };
-
-    return {
-        writer,
-        services,
-        spinner: { show() {}, hide() {} },
-        progressBar: { show() {}, update() {}, hide() {} },
-        onAbort: new Subject<void>(),
-        terminal: {} as any,
-        reader: {} as any,
-        executor: {} as any,
-        clipboard: {} as any,
-        options: undefined,
-        logger: { log() {}, info() {}, warn() {}, error() {}, debug() {}, setCliLogLevel() {} },
-        process: { output() {}, exit() {} } as any,
-        state: {} as any,
-        showPrompt: jasmine.createSpy('showPrompt'),
-        setContextProcessor: jasmine.createSpy('setContextProcessor'),
-        setCurrentLine: jasmine.createSpy('setCurrentLine'),
-        clearLine: jasmine.createSpy('clearLine'),
-        clearCurrentLine: jasmine.createSpy('clearCurrentLine'),
-        refreshCurrentLine: jasmine.createSpy('refreshCurrentLine'),
-        enterFullScreenMode: jasmine.createSpy('enterFullScreenMode'),
-        exitFullScreenMode: jasmine.createSpy('exitFullScreenMode'),
-    } as any;
-}
-
-function makeCommand(
-    raw: string,
-    args: Record<string, any> = {},
-): CliProcessCommand {
-    const tokens = raw.split(/\s+/);
-    return {
-        command: tokens[0],
-        rawCommand: tokens.slice(1).join(' '),
-        chainCommands: [],
-        args,
-    } as any;
-}
 
 function setupTestFs(): IndexedDbFileSystemService {
     const fs = new IndexedDbFileSystemService();
@@ -441,5 +359,68 @@ describe('CliGrepCommandProcessor', () => {
         const output = writer.written.join('\n');
         expect(output).toContain('Line 3');
         expect(output).not.toContain('Line 1');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// grep command tests (piped input)
+// ---------------------------------------------------------------------------
+
+describe('CliGrepCommandProcessor (piped input)', () => {
+    let processor: CliGrepCommandProcessor;
+    let fs: IndexedDbFileSystemService;
+    let writer: ICliTerminalWriter & { written: string[] };
+    let ctx: ICliExecutionContext;
+
+    beforeEach(() => {
+        processor = new CliGrepCommandProcessor();
+        fs = setupTestFs();
+        writer = createStubWriter();
+        ctx = createMockContext(writer, fs);
+    });
+
+    it('should search piped text when no file paths given', async () => {
+        const cmd = makeCommand('grep hello', {}, 'hello world\ngoodbye world\nhello again');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('hello world');
+        expect(output).toContain('hello again');
+        expect(output).not.toContain('goodbye');
+    });
+
+    it('should apply -i flag on piped input', async () => {
+        const cmd = makeCommand('grep -i HELLO', { i: true }, 'Hello World\ngoodbye');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('Hello World');
+    });
+
+    it('should apply -v invert on piped input', async () => {
+        const cmd = makeCommand('grep -v hello', { v: true }, 'hello\nworld\nhello again');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('world');
+        expect(output).not.toContain('hello');
+    });
+
+    it('should apply -c count on piped input', async () => {
+        const cmd = makeCommand('grep -c hello', { c: true }, 'hello\nworld\nhello again');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('2');
+    });
+
+    it('should apply -n line numbers on piped input', async () => {
+        const cmd = makeCommand('grep -n hello', { n: true }, 'hello\nworld\nhello again');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('1');
+        expect(output).toContain('3');
+    });
+
+    it('should still require a pattern even with piped input', async () => {
+        const cmd = makeCommand('grep', {}, 'some data');
+        await processor.processCommand(cmd, ctx);
+        expect(writer.written.some(w => w.includes('missing pattern'))).toBeTrue();
     });
 });
