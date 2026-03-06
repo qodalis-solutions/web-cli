@@ -34,6 +34,7 @@ export class CollapsableContentComponent {
     @Input() resizable: boolean = true;
     @Input() hideable: boolean = true;
     @Input() hideAlignment: CliPanelHideAlignment = 'center';
+    @Input() themeStyles: Record<string, string> = {};
 
     @Output()
     public onToggle = new EventEmitter<boolean>();
@@ -47,11 +48,21 @@ export class CollapsableContentComponent {
     @Output()
     public onHide = new EventEmitter<void>();
 
+    @Output()
+    public onPositionChange = new EventEmitter<void>();
+
     isHidden = false;
     private preHideCollapsed = true;
 
     get isHorizontal(): boolean {
         return this.position === 'left' || this.position === 'right';
+    }
+
+    get wrapperStyle(): Record<string, string> {
+        const size: Record<string, string> = this.isHorizontal
+            ? { width: this.panelWidth + 'px' }
+            : { height: this.panelHeight + 'px' };
+        return { ...size, ...this.themeStyles };
     }
 
     toggleTerminal(): void {
@@ -75,6 +86,10 @@ export class CollapsableContentComponent {
         this.isHidden = false;
         this.isCollapsed = this.preHideCollapsed;
         this.onToggle.emit(this.isCollapsed);
+    }
+
+    cyclePosition(): void {
+        this.onPositionChange.emit();
     }
 
     toggleMaximizationTerminal(): void {

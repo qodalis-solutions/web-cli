@@ -4,6 +4,8 @@ import {
     EventEmitter,
     HostListener,
     Input,
+    OnDestroy,
+    OnInit,
     Output,
     QueryList,
     ViewChild,
@@ -12,8 +14,13 @@ import {
 import {
     CliEngineSnapshot,
     CliPanelConfig,
+    CliPanelPosition,
     ICliCommandProcessor,
     ICliModule,
+    derivePanelThemeStyles,
+    loadPanelPosition,
+    savePanelPosition,
+    nextPanelPosition,
 } from '@qodalis/cli-core';
 import { CliEngine, CliEngineOptions } from '@qodalis/cli';
 import { CliComponent } from '../cli/cli.component';
@@ -49,7 +56,7 @@ export type CliPanelOptions = CliEngineOptions & CliPanelConfig;
     templateUrl: './cli-panel.component.html',
     styleUrls: ['./cli-panel.component.sass'],
 })
-export class CliPanelComponent {
+export class CliPanelComponent implements OnInit, OnDestroy {
     /**
      * The options for the CLI.
      */
@@ -72,6 +79,10 @@ export class CliPanelComponent {
     @ViewChild(CollapsableContentComponent)
     collapsableContent!: CollapsableContentComponent;
     @ViewChildren(CliComponent) cliComponents!: QueryList<CliComponent>;
+
+    currentPosition: CliPanelPosition = 'bottom';
+
+    themeStyles: Record<string, string> = {};
 
     visible = true;
 
@@ -101,7 +112,17 @@ export class CliPanelComponent {
 
     protected initialized: boolean = false;
 
+    private themeObserver?: MutationObserver;
+
     constructor(private readonly elementRef: ElementRef) {}
+
+    ngOnInit(): void {
+        this.currentPosition = loadPanelPosition() ?? this.options?.position ?? 'bottom';
+    }
+
+    ngOnDestroy(): void {
+        this.themeObserver?.disconnect();
+    }
 
     @HostListener('document:click', ['$event'])
     onDocumentClick(event: MouseEvent): void {
@@ -118,10 +139,16 @@ export class CliPanelComponent {
         this.cancelAllEditing();
     }
 
+    onPositionChange(): void {
+        this.currentPosition = nextPanelPosition(this.currentPosition);
+        savePanelPosition(this.currentPosition);
+    }
+
     onToggle($event: boolean) {
         if (!$event && !this.initialized) {
             this.initialized = true;
             this.addTab();
+            this.setupThemeSync();
         }
     }
 
@@ -494,5 +521,39 @@ export class CliPanelComponent {
         if (total === 0) return;
         const scale = 100 / total;
         panes.forEach((p) => (p.widthPercent = p.widthPercent * scale));
+    }
+
+    private setupThemeSync(): void {
+        if (!this.options?.syncTheme) return;
+
+        // Wait for the first terminal to render, then observe style changes
+        setTimeout(() => {
+            this.syncThemeFromEngine();
+
+            const container = this.elementRef.nativeElement.querySelector(
+                '.terminal-container',
+            );
+            if (!container) return;
+
+            this.themeObserver?.disconnect();
+            this.themeObserver = new MutationObserver(() => {
+                this.syncThemeFromEngine();
+            });
+            this.themeObserver.observe(container, {
+                attributes: true,
+                attributeFilter: ['style'],
+            });
+        }, 200);
+    }
+
+    private syncThemeFromEngine(): void {
+        if (!this.cliComponents) return;
+        const first = this.cliComponents.first;
+        if (!first) return;
+        const engine = first.getEngine();
+        if (!engine) return;
+        const theme = engine.getTerminal().options.theme;
+        if (!theme) return;
+        this.themeStyles = derivePanelThemeStyles(theme);
     }
 }

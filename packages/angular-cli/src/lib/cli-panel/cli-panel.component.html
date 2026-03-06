@@ -1,12 +1,14 @@
 <collapsable-content
   [isCollapsed]="options?.isCollapsed ?? true"
-  [position]="options?.position ?? 'bottom'"
+  [position]="currentPosition"
   [closable]="options?.closable ?? true"
   [resizable]="options?.resizable ?? true"
   [hideable]="options?.hideable ?? true"
   [hideAlignment]="options?.hideAlignment ?? 'center'"
+  [themeStyles]="themeStyles"
   (onToggle)="onToggle($event)"
   (onContentSizeChange)="onContentSizeChange($event)"
+  (onPositionChange)="onPositionChange()"
   (onClose)="onClose.emit()"
   *ngIf="visible"
 >
