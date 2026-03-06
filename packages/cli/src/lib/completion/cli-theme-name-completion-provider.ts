@@ -4,17 +4,19 @@ import {
     DefaultThemes,
 } from '@qodalis/cli-core';
 
-/**
- * Sub-commands of `theme` (and alias `themes`) that accept a theme name value.
- */
 const THEME_NAME_SUBCOMMANDS = new Set(['preview', 'apply']);
+const RANDOM_FILTER_VALUES = ['dark', 'light'];
+const SEARCH_TAGS = [
+    'popular',
+    'retro',
+    'fun',
+    'pastel',
+    'accessibility',
+    'built-in',
+    'dark',
+    'light',
+];
 
-/**
- * Provides tab-completion for theme names when typing
- * `theme preview <name>` or `theme apply <name>`.
- *
- * Priority 50 — checked before command and parameter completion.
- */
 export class CliThemeNameCompletionProvider
     implements ICliCompletionProvider
 {
@@ -35,14 +37,28 @@ export class CliThemeNameCompletionProvider
         }
 
         const subCommand = tokens[1].toLowerCase();
-        if (!THEME_NAME_SUBCOMMANDS.has(subCommand)) {
-            return [];
-        }
-
         const lowerPrefix = token.toLowerCase();
 
-        return this.themeNames
-            .filter((name) => name.toLowerCase().startsWith(lowerPrefix))
-            .sort();
+        if (THEME_NAME_SUBCOMMANDS.has(subCommand)) {
+            return this.themeNames
+                .filter((name) =>
+                    name.toLowerCase().startsWith(lowerPrefix),
+                )
+                .sort();
+        }
+
+        if (subCommand === 'random') {
+            return RANDOM_FILTER_VALUES.filter((v) =>
+                v.startsWith(lowerPrefix),
+            );
+        }
+
+        if (subCommand === 'search') {
+            return SEARCH_TAGS.filter((t) =>
+                t.startsWith(lowerPrefix),
+            );
+        }
+
+        return [];
     }
 }

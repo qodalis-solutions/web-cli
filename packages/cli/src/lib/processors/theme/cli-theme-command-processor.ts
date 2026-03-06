@@ -6,11 +6,12 @@ import {
     ICliCommandAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    CliThemeInfo,
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { ITheme } from '@xterm/xterm';
-import { themes, ThemeState } from './types';
+import { themes, ThemeState, themeInfos } from './types';
 
 /** Convert a hex color string (#RRGGBB) to {r, g, b}. Returns null on invalid input. */
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
@@ -65,7 +66,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
 
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
-    version?: string | undefined = '1.1.0';
+    version?: string | undefined = '2.0.0';
 
     processors?: ICliCommandProcessor[] | undefined = [];
 
@@ -98,25 +99,46 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     const state = context.state.getState<ThemeState>();
                     const currentName = state.selectedTheme || '';
 
+                    const darkThemes = Object.entries(themeInfos).filter(
+                        ([, info]) => info.category === 'dark',
+                    );
+                    const lightThemes = Object.entries(themeInfos).filter(
+                        ([, info]) => info.category === 'light',
+                    );
+
+                    const renderGroup = (
+                        groupLabel: string,
+                        entries: [string, CliThemeInfo][],
+                    ) => {
+                        context.writer.writeln(
+                            context.writer.wrapInColor(
+                                `  ${groupLabel}`,
+                                CliForegroundColor.Yellow,
+                            ),
+                        );
+                        context.writer.writeln();
+                        for (const [name, info] of entries) {
+                            const active =
+                                name === currentName ? ' (active)' : '';
+                            const swatches = PALETTE_KEYS.map((k) =>
+                                colorSwatch(info.theme[k] as string),
+                            ).join('');
+                            const nameLabel = context.writer.wrapInColor(
+                                name.padEnd(22),
+                                CliForegroundColor.Cyan,
+                            );
+                            context.writer.writeln(
+                                `    ${swatches} ${nameLabel} ${info.description}${active}`,
+                            );
+                        }
+                        context.writer.writeln();
+                    };
+
                     context.writer.writeln('Available themes:');
                     context.writer.writeln();
+                    renderGroup('Dark', darkThemes);
+                    renderGroup('Light', lightThemes);
 
-                    for (const name of Object.keys(themes)) {
-                        const t = themes[name];
-                        const active = name === currentName ? ' (active)' : '';
-                        const swatches = PALETTE_KEYS.map((k) =>
-                            colorSwatch(t[k] as string),
-                        ).join('');
-                        const label = context.writer.wrapInColor(
-                            name,
-                            CliForegroundColor.Cyan,
-                        );
-                        context.writer.writeln(
-                            `  ${swatches} ${label}${active}`,
-                        );
-                    }
-
-                    context.writer.writeln();
                     context.writer.writeInfo(
                         `Use ${context.writer.wrapInColor('theme apply <name>', CliForegroundColor.Cyan)} or ${context.writer.wrapInColor('theme apply', CliForegroundColor.Cyan)} to select interactively`,
                     );
@@ -368,6 +390,178 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     context.writer.writeSuccess('Theme reset to default');
                 },
             },
+            {
+                command: 'search',
+                description: 'Search themes by name, tag, or description',
+                valueRequired: true,
+                processCommand: async (
+                    command: CliProcessCommand,
+                    context: ICliExecutionContext,
+                ) => {
+                    const query = command.value!.toLowerCase();
+                    const matches = Object.entries(themeInfos).filter(
+                        ([name, info]) =>
+                            name.toLowerCase().includes(query) ||
+                            info.description.toLowerCase().includes(query) ||
+                            info.tags.some((t) =>
+                                t.toLowerCase().includes(query),
+                            ),
+                    );
+
+                    if (matches.length === 0) {
+                        context.writer.writeWarning(
+                            `No themes matching "${command.value}"`,
+                        );
+                        return;
+                    }
+
+                    context.writer.writeln(
+                        `Found ${matches.length} theme${matches.length > 1 ? 's' : ''} matching "${command.value}":`,
+                    );
+                    context.writer.writeln();
+
+                    for (const [name, info] of matches) {
+                        const swatches = PALETTE_KEYS.map((k) =>
+                            colorSwatch(info.theme[k] as string),
+                        ).join('');
+                        const nameLabel = context.writer.wrapInColor(
+                            name.padEnd(22),
+                            CliForegroundColor.Cyan,
+                        );
+                        const tags = info.tags
+                            .map((t) =>
+                                context.writer.wrapInColor(
+                                    `#${t}`,
+                                    CliForegroundColor.Magenta,
+                                ),
+                            )
+                            .join(' ');
+                        context.writer.writeln(
+                            `  ${swatches} ${nameLabel} ${info.description}  ${tags}`,
+                        );
+                    }
+                },
+            },
+            {
+                command: 'random',
+                description:
+                    'Apply a random theme (optionally filter by "dark" or "light")',
+                processCommand: async (
+                    command: CliProcessCommand,
+                    context: ICliExecutionContext,
+                ) => {
+                    const filter = command.value?.toLowerCase() as
+                        | 'dark'
+                        | 'light'
+                        | undefined;
+                    let candidates = Object.entries(themeInfos);
+
+                    if (filter === 'dark' || filter === 'light') {
+                        candidates = candidates.filter(
+                            ([, info]) => info.category === filter,
+                        );
+                    }
+
+                    const [name, info] =
+                        candidates[
+                            Math.floor(Math.random() * candidates.length)
+                        ];
+
+                    context.terminal.options.theme = info.theme;
+
+                    context.state.updateState({
+                        selectedTheme: name,
+                        customOptions: null,
+                    });
+
+                    await context.state.persist();
+                    this.applyStyles(context);
+
+                    context.writer.writeSuccess(
+                        `Random theme "${name}" applied`,
+                    );
+                },
+            },
+            {
+                command: 'export',
+                description: 'Export the current theme as JSON',
+                processCommand: async (
+                    _: CliProcessCommand,
+                    context: ICliExecutionContext,
+                ) => {
+                    const currentTheme = context.terminal.options.theme;
+                    const json = JSON.stringify(currentTheme, null, 2);
+
+                    context.writer.writeln(json);
+
+                    context.process.output({ json });
+                },
+            },
+            {
+                command: 'import',
+                description: 'Import a theme from JSON',
+                processCommand: async (
+                    _: CliProcessCommand,
+                    context: ICliExecutionContext,
+                ) => {
+                    context.writer.writeln(
+                        'Paste your theme JSON (single line or multi-line, then press Enter on an empty line):',
+                    );
+
+                    let jsonStr = '';
+                    // eslint-disable-next-line no-constant-condition
+                    while (true) {
+                        const line =
+                            await context.reader.readLine('');
+                        if (line === null || line.trim() === '')
+                            break;
+                        jsonStr += line;
+                    }
+
+                    if (!jsonStr.trim()) {
+                        context.writer.writeWarning(
+                            'Import cancelled - no input',
+                        );
+                        return;
+                    }
+
+                    let imported: ITheme;
+                    try {
+                        imported = JSON.parse(jsonStr);
+                    } catch {
+                        context.writer.writeError(
+                            'Invalid JSON. Please provide a valid theme object.',
+                        );
+                        return;
+                    }
+
+                    if (
+                        typeof imported !== 'object' ||
+                        imported === null ||
+                        !imported.background ||
+                        !imported.foreground
+                    ) {
+                        context.writer.writeError(
+                            'Theme must be an object with at least "background" and "foreground" properties.',
+                        );
+                        return;
+                    }
+
+                    context.terminal.options.theme = imported;
+
+                    context.state.updateState({
+                        selectedTheme: null,
+                        customOptions: imported,
+                    });
+
+                    await context.state.persist();
+                    this.applyStyles(context);
+
+                    context.writer.writeSuccess(
+                        'Custom theme imported and applied',
+                    );
+                },
+            },
         ];
     }
 
@@ -508,7 +702,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
         writer.writeln();
         writer.writeln('Usage:');
         writer.writeln(
-            `  ${writer.wrapInColor('theme list', CliForegroundColor.Cyan)}                     List themes with color previews`,
+            `  ${writer.wrapInColor('theme list', CliForegroundColor.Cyan)}                     List themes grouped by dark/light`,
         );
         writer.writeln(
             `  ${writer.wrapInColor('theme apply', CliForegroundColor.Cyan)}                    Select a theme interactively`,
@@ -520,10 +714,22 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
             `  ${writer.wrapInColor('theme preview <name>', CliForegroundColor.Cyan)}           Preview a theme without applying`,
         );
         writer.writeln(
+            `  ${writer.wrapInColor('theme search <keyword>', CliForegroundColor.Cyan)}         Search by name, tag, or description`,
+        );
+        writer.writeln(
+            `  ${writer.wrapInColor('theme random [dark|light]', CliForegroundColor.Cyan)}      Apply a random theme`,
+        );
+        writer.writeln(
             `  ${writer.wrapInColor('theme current', CliForegroundColor.Cyan)}                  Show active theme with swatches`,
         );
         writer.writeln(
             `  ${writer.wrapInColor('theme set <key> <value>', CliForegroundColor.Cyan)}        Set a theme variable`,
+        );
+        writer.writeln(
+            `  ${writer.wrapInColor('theme export', CliForegroundColor.Cyan)}                   Export current theme as JSON`,
+        );
+        writer.writeln(
+            `  ${writer.wrapInColor('theme import', CliForegroundColor.Cyan)}                   Import a theme from JSON`,
         );
         writer.writeln(
             `  ${writer.wrapInColor('theme save', CliForegroundColor.Cyan)}                     Save current settings`,
@@ -537,17 +743,26 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
             `  theme apply dracula              ${writer.wrapInColor('# Apply the Dracula theme', CliForegroundColor.Green)}`,
         );
         writer.writeln(
+            `  theme apply tokyoNight           ${writer.wrapInColor('# Apply Tokyo Night', CliForegroundColor.Green)}`,
+        );
+        writer.writeln(
             `  theme preview nord               ${writer.wrapInColor('# Preview Nord palette', CliForegroundColor.Green)}`,
+        );
+        writer.writeln(
+            `  theme search retro               ${writer.wrapInColor('# Find retro-style themes', CliForegroundColor.Green)}`,
+        );
+        writer.writeln(
+            `  theme random dark                ${writer.wrapInColor('# Apply a random dark theme', CliForegroundColor.Green)}`,
         );
         writer.writeln(
             `  theme set background #1a1a2e     ${writer.wrapInColor('# Change background color', CliForegroundColor.Green)}`,
         );
         writer.writeln(
-            `  theme set foreground #e0e0e0     ${writer.wrapInColor('# Change text color', CliForegroundColor.Green)}`,
+            `  theme export                     ${writer.wrapInColor('# Export theme as JSON', CliForegroundColor.Green)}`,
         );
         writer.writeln();
         writer.writeln(
-            `Available options: ${writer.wrapInColor(this.themeOptions.join(', ') ?? '', CliForegroundColor.Blue)}`,
+            `Available color keys: ${writer.wrapInColor(this.themeOptions.join(', ') ?? '', CliForegroundColor.Blue)}`,
         );
     }
 }
