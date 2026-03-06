@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliEngineSnapshot } from '@qodalis/cli-core';
+import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliEngineSnapshot, derivePanelThemeStyles, loadPanelPosition, savePanelPosition, nextPanelPosition, CliPanelPosition } from '@qodalis/cli-core';
 import { CliEngineOptions, CliEngine } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliContext } from './CliContext';
@@ -118,6 +118,30 @@ function HideTabChevron({ position }: { position: string }) {
     );
 }
 
+function PositionIcon({ position }: { position: string }) {
+    let fillRect: React.ReactElement;
+    switch (position) {
+        case 'top':
+            fillRect = <rect x="4" y="4" width="16" height="5" rx="1" fill="currentColor" stroke="none" opacity="0.5" />;
+            break;
+        case 'left':
+            fillRect = <rect x="4" y="4" width="5" height="16" rx="1" fill="currentColor" stroke="none" opacity="0.5" />;
+            break;
+        case 'right':
+            fillRect = <rect x="15" y="4" width="5" height="16" rx="1" fill="currentColor" stroke="none" opacity="0.5" />;
+            break;
+        default: // bottom
+            fillRect = <rect x="4" y="15" width="16" height="5" rx="1" fill="currentColor" stroke="none" opacity="0.5" />;
+            break;
+    }
+    return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            {fillRect}
+        </svg>
+    );
+}
+
 /* ─── Component ──────────────────────────────────────────── */
 
 export function CliPanel({ options: optionsProp, modules: modulesProp, processors: processorsProp, services: servicesProp, onClose, style, className }: CliPanelProps) {
@@ -127,12 +151,15 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
     const processors = processorsProp ?? config.processors;
     const services = servicesProp ?? config.services;
 
-    const position = options?.position ?? 'bottom';
+    const [position, setPosition] = useState<CliPanelPosition>(
+        () => loadPanelPosition() ?? options?.position ?? 'bottom'
+    );
     const closable = options?.closable ?? true;
     const resizable = options?.resizable ?? true;
     const isHorizontal = position === 'left' || position === 'right';
     const hideable = options?.hideable ?? true;
     const hideAlignment = options?.hideAlignment ?? 'center';
+    const syncTheme = options?.syncTheme ?? false;
 
     const [visible, setVisible] = useState(true);
     const [collapsed, setCollapsed] = useState(options?.isCollapsed ?? true);
@@ -142,6 +169,8 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
     const [initialized, setInitialized] = useState(false);
     const [hidden, setHidden] = useState(false);
     const preHideCollapsedRef = useRef(true);
+    const [themeStyles, setThemeStyles] = useState<Record<string, string>>({});
+    const wrapperRef = useRef<HTMLDivElement>(null);
 
     const [tabs, setTabs] = useState<TerminalTab[]>([]);
     const [activeTabId, setActiveTabId] = useState(0);
@@ -423,6 +452,34 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
         return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
     }, [paneResizing]);
 
+    /* ─── Theme sync ──────────────────────────────────────── */
+
+    useEffect(() => {
+        if (!syncTheme || !initialized) return;
+
+        const syncFromEngine = () => {
+            const engine = engineMapRef.current.values().next().value;
+            if (!engine) return;
+            const theme = engine.getTerminal().options.theme;
+            if (theme) setThemeStyles(derivePanelThemeStyles(theme));
+        };
+
+        // Initial sync after terminals render
+        const timer = setTimeout(() => {
+            syncFromEngine();
+
+            const container = wrapperRef.current?.querySelector('.terminal-container');
+            if (!container) return;
+
+            const observer = new MutationObserver(syncFromEngine);
+            observer.observe(container, { attributes: true, attributeFilter: ['style'] });
+
+            return () => observer.disconnect();
+        }, 200);
+
+        return () => clearTimeout(timer);
+    }, [syncTheme, initialized]);
+
     /* ─── Maximize ───────────────────────────────────────── */
 
     const toggleMaximize = useCallback(() => {
@@ -463,6 +520,14 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
         setCollapsed(preHideCollapsedRef.current);
     }, []);
 
+    const handlePositionChange = useCallback(() => {
+        setPosition(prev => {
+            const next = nextPanelPosition(prev);
+            savePanelPosition(next);
+            return next;
+        });
+    }, []);
+
     /* ─── Render ─────────────────────────────────────────── */
 
     if (!visible) return null;
@@ -470,8 +535,9 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
     const wrapperStyle: React.CSSProperties = {
         ...(isHorizontal ? { width: `${panelWidth}px` } : { height: `${panelHeight}px` }),
         ...(hidden ? { display: 'none' } : {}),
+        ...themeStyles,
         ...style,
-    };
+    } as React.CSSProperties;
 
     return (
         <>
@@ -481,6 +547,7 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
                     className="cli-panel-hide-tab"
                     data-position={position}
                     data-hide-align={hideAlignment}
+                    style={themeStyles as React.CSSProperties}
                     title="Show CLI"
                     onClick={handleUnhide}
                 >
@@ -493,6 +560,7 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
                 </button>
             )}
             <div
+                ref={wrapperRef}
                 className={`cli-panel-wrapper ${collapsed ? 'collapsed' : ''} ${maximized ? 'maximized' : ''} ${panelResizing ? 'resizing' : ''} ${className ?? ''}`}
                 style={wrapperStyle}
                 data-position={position}
@@ -511,6 +579,9 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
                             CLI
                         </p>
                         <div className="cli-panel-action-buttons">
+                            <button className="cli-panel-btn cli-panel-btn-position" title={`Move panel (${position})`} onClick={handlePositionChange}>
+                                <PositionIcon position={position} />
+                            </button>
                             {hideable && (
                                 <button className="cli-panel-btn cli-panel-btn-hide" title="Hide" onClick={handleHide}>
                                     <HideIcon />
