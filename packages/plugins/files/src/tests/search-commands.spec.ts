@@ -424,3 +424,101 @@ describe('CliGrepCommandProcessor (piped input)', () => {
         expect(writer.written.some(w => w.includes('missing pattern'))).toBeTrue();
     });
 });
+
+// ---------------------------------------------------------------------------
+// head command tests (piped input)
+// ---------------------------------------------------------------------------
+
+describe('CliHeadCommandProcessor (piped input)', () => {
+    let processor: CliHeadCommandProcessor;
+    let fs: IndexedDbFileSystemService;
+    let writer: ICliTerminalWriter & { written: string[] };
+    let ctx: ICliExecutionContext;
+
+    beforeEach(() => {
+        processor = new CliHeadCommandProcessor();
+        fs = setupTestFs();
+        writer = createStubWriter();
+        ctx = createMockContext(writer, fs);
+    });
+
+    it('should display first N lines of piped input', async () => {
+        const input = 'line1\nline2\nline3\nline4\nline5';
+        const cmd = makeCommand('head -n 3', { n: '3' }, input);
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('line1');
+        expect(output).toContain('line3');
+        expect(output).not.toContain('line4');
+    });
+
+    it('should default to 10 lines for piped input', async () => {
+        const lines = Array.from({ length: 15 }, (_, i) => `line${i + 1}`).join('\n');
+        const cmd = makeCommand('head', {}, lines);
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('line10');
+        expect(output).not.toContain('line11');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// tail command tests (piped input)
+// ---------------------------------------------------------------------------
+
+describe('CliTailCommandProcessor (piped input)', () => {
+    let processor: CliTailCommandProcessor;
+    let fs: IndexedDbFileSystemService;
+    let writer: ICliTerminalWriter & { written: string[] };
+    let ctx: ICliExecutionContext;
+
+    beforeEach(() => {
+        processor = new CliTailCommandProcessor();
+        fs = setupTestFs();
+        writer = createStubWriter();
+        ctx = createMockContext(writer, fs);
+    });
+
+    it('should display last N lines of piped input', async () => {
+        const input = 'line1\nline2\nline3\nline4\nline5';
+        const cmd = makeCommand('tail -n 2', { n: '2' }, input);
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('line4');
+        expect(output).toContain('line5');
+        expect(output).not.toContain('line3');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// wc command tests (piped input)
+// ---------------------------------------------------------------------------
+
+describe('CliWcCommandProcessor (piped input)', () => {
+    let processor: CliWcCommandProcessor;
+    let fs: IndexedDbFileSystemService;
+    let writer: ICliTerminalWriter & { written: string[] };
+    let ctx: ICliExecutionContext;
+
+    beforeEach(() => {
+        processor = new CliWcCommandProcessor();
+        fs = setupTestFs();
+        writer = createStubWriter();
+        ctx = createMockContext(writer, fs);
+    });
+
+    it('should count lines/words/chars of piped text', async () => {
+        const cmd = makeCommand('wc', {}, 'hello world\nfoo bar baz');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('');
+        expect(output).toContain('2'); // 2 lines
+        expect(output).toContain('5'); // 5 words
+    });
+
+    it('should count only lines with -l on piped input', async () => {
+        const cmd = makeCommand('wc -l', { l: true }, 'a\nb\nc');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('');
+        expect(output).toContain('3');
+    });
+});

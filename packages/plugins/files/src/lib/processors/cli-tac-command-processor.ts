@@ -26,6 +26,17 @@ export class CliTacCommandProcessor implements ICliCommandProcessor {
         const paths = this.parsePaths(command);
 
         if (paths.length === 0) {
+            if (command.data != null) {
+                const content = typeof command.data === 'string'
+                    ? command.data : JSON.stringify(command.data);
+                const lines = content.split('\n');
+                if (lines.length > 0 && lines[lines.length - 1] === '') {
+                    lines.pop();
+                }
+                lines.reverse();
+                context.writer.writeln(lines.join('\n'));
+                return;
+            }
             context.writer.writeError('tac: missing file operand');
             return;
         }

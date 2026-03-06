@@ -40,6 +40,14 @@ export class CliTailCommandProcessor implements ICliCommandProcessor {
         const paths = this.parsePaths(command);
 
         if (paths.length === 0) {
+            if (command.data != null) {
+                const content = typeof command.data === 'string'
+                    ? command.data : JSON.stringify(command.data);
+                const lines = content.split('\n');
+                const selected = lines.slice(-count);
+                context.writer.writeln(selected.join('\n'));
+                return;
+            }
             context.writer.writeError('tail: missing file operand');
             return;
         }

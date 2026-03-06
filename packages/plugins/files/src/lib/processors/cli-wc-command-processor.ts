@@ -57,6 +57,24 @@ export class CliWcCommandProcessor implements ICliCommandProcessor {
 
         const paths = this.parsePaths(command);
         if (paths.length === 0) {
+            if (command.data != null) {
+                const content = typeof command.data === 'string'
+                    ? command.data : JSON.stringify(command.data);
+                const lineCount = content === '' ? 0 : content.split('\n').length;
+                const wordCount =
+                    content.trim() === ''
+                        ? 0
+                        : content.trim().split(/\s+/).length;
+                const charCount = content.length;
+
+                const parts: string[] = [];
+                if (showAll || showLines) parts.push(String(lineCount).padStart(8));
+                if (showAll || showWords) parts.push(String(wordCount).padStart(8));
+                if (showAll || showChars) parts.push(String(charCount).padStart(8));
+
+                context.writer.writeln(parts.join(''));
+                return;
+            }
             context.writer.writeError('wc: missing file operand');
             return;
         }

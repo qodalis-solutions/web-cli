@@ -40,6 +40,14 @@ export class CliHeadCommandProcessor implements ICliCommandProcessor {
         const paths = this.parsePaths(command);
 
         if (paths.length === 0) {
+            if (command.data != null) {
+                const content = typeof command.data === 'string'
+                    ? command.data : JSON.stringify(command.data);
+                const lines = content.split('\n');
+                const selected = lines.slice(0, count);
+                context.writer.writeln(selected.join('\n'));
+                return;
+            }
             context.writer.writeError('head: missing file operand');
             return;
         }

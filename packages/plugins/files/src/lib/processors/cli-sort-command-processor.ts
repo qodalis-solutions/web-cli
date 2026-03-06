@@ -71,6 +71,59 @@ export class CliSortCommandProcessor implements ICliCommandProcessor {
         const paths = this.parsePaths(command);
 
         if (paths.length === 0) {
+            if (command.data != null) {
+                const content = typeof command.data === 'string'
+                    ? command.data : JSON.stringify(command.data);
+                let lines = content.split('\n');
+                if (lines.length > 0 && lines[lines.length - 1] === '') {
+                    lines.pop();
+                }
+
+                const keyIndex = keyField
+                    ? parseInt(keyField, 10) - 1
+                    : undefined;
+
+                lines.sort((a, b) => {
+                    let va: string | number = a;
+                    let vb: string | number = b;
+
+                    if (keyIndex !== undefined && keyIndex >= 0) {
+                        const sepRegex = delimiter
+                            ? new RegExp(
+                                  delimiter.replace(
+                                      /[.*+?^${}()|[\]\\]/g,
+                                      '\\$&',
+                                  ),
+                              )
+                            : /\s+/;
+                        const fieldsA = a.split(sepRegex);
+                        const fieldsB = b.split(sepRegex);
+                        va = fieldsA[keyIndex] || '';
+                        vb = fieldsB[keyIndex] || '';
+                    }
+
+                    if (numeric) {
+                        const na = parseFloat(va as string) || 0;
+                        const nb = parseFloat(vb as string) || 0;
+                        return na - nb;
+                    }
+
+                    return (va as string).localeCompare(vb as string);
+                });
+
+                if (unique) {
+                    lines = lines.filter(
+                        (line, i, arr) => i === 0 || line !== arr[i - 1],
+                    );
+                }
+
+                if (reverse) {
+                    lines.reverse();
+                }
+
+                context.writer.writeln(lines.join('\n'));
+                return;
+            }
             context.writer.writeError('sort: missing file operand');
             return;
         }

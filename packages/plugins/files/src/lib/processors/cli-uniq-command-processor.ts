@@ -65,6 +65,46 @@ export class CliUniqCommandProcessor implements ICliCommandProcessor {
         const paths = this.parsePaths(command);
 
         if (paths.length === 0) {
+            if (command.data != null) {
+                const content = typeof command.data === 'string'
+                    ? command.data : JSON.stringify(command.data);
+                let lines = content.split('\n');
+                if (lines.length > 0 && lines[lines.length - 1] === '') {
+                    lines.pop();
+                }
+
+                const groups: { line: string; count: number }[] = [];
+                for (const line of lines) {
+                    const last = groups[groups.length - 1];
+                    const compare = ignoreCase
+                        ? (a: string, b: string) =>
+                              a.toLowerCase() === b.toLowerCase()
+                        : (a: string, b: string) => a === b;
+                    if (last && compare(last.line, line)) {
+                        last.count++;
+                    } else {
+                        groups.push({ line, count: 1 });
+                    }
+                }
+
+                let filtered = groups;
+                if (onlyDuplicates) {
+                    filtered = filtered.filter((g) => g.count > 1);
+                }
+                if (onlyUnique) {
+                    filtered = filtered.filter((g) => g.count === 1);
+                }
+
+                const output = filtered.map((g) => {
+                    if (showCount) {
+                        return `${String(g.count).padStart(7)} ${g.line}`;
+                    }
+                    return g.line;
+                });
+
+                context.writer.writeln(output.join('\n'));
+                return;
+            }
             context.writer.writeError('uniq: missing file operand');
             return;
         }

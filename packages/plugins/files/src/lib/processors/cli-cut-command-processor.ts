@@ -60,15 +60,45 @@ export class CliCutCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
+        const spec = fieldsSpec || charsSpec!;
+        const indices = this.parseSpec(spec);
         const paths = this.parsePaths(command);
 
         if (paths.length === 0) {
+            if (command.data != null) {
+                const content = typeof command.data === 'string'
+                    ? command.data : JSON.stringify(command.data);
+                let lines = content.split('\n');
+                if (lines.length > 0 && lines[lines.length - 1] === '') {
+                    lines.pop();
+                }
+
+                const output = lines.map((line) => {
+                    if (fieldsSpec) {
+                        const fields = line.split(delimiter);
+                        const resolved = this.resolveIndices(
+                            indices,
+                            fields.length,
+                        );
+                        return resolved
+                            .map((idx) => fields[idx] || '')
+                            .join(delimiter);
+                    } else {
+                        const chars = line.split('');
+                        const resolved = this.resolveIndices(
+                            indices,
+                            chars.length,
+                        );
+                        return resolved.map((idx) => chars[idx] || '').join('');
+                    }
+                });
+
+                context.writer.writeln(output.join('\n'));
+                return;
+            }
             context.writer.writeError('cut: missing file operand');
             return;
         }
-
-        const spec = fieldsSpec || charsSpec!;
-        const indices = this.parseSpec(spec);
 
         for (const path of paths) {
             try {

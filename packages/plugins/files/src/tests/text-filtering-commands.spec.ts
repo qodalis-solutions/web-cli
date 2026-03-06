@@ -349,3 +349,105 @@ describe('CliPasteCommandProcessor', () => {
         expect(writer.written.some(l => l.includes('[error]'))).toBe(true);
     });
 });
+
+// ---------------------------------------------------------------------------
+// sort command tests (piped input)
+// ---------------------------------------------------------------------------
+
+describe('CliSortCommandProcessor (piped input)', () => {
+    let processor: CliSortCommandProcessor;
+    let fs: IndexedDbFileSystemService;
+    let writer: ICliTerminalWriter & { written: string[] };
+    let ctx: ICliExecutionContext;
+
+    beforeEach(() => {
+        processor = new CliSortCommandProcessor();
+        fs = setupTestFs();
+        writer = createStubWriter();
+        ctx = createMockContext(writer, fs);
+    });
+
+    it('should sort piped text', async () => {
+        const cmd = makeCommand('sort', {}, 'banana\napple\ncherry');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        const lines = output.split('\n').filter(Boolean);
+        expect(lines).toEqual(['apple', 'banana', 'cherry']);
+    });
+
+    it('should sort piped text numerically with -n', async () => {
+        const cmd = makeCommand('sort -n', { n: true }, '3\n1\n2');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        const lines = output.split('\n').filter(Boolean);
+        expect(lines).toEqual(['1', '2', '3']);
+    });
+
+    it('should sort piped text in reverse with -r', async () => {
+        const cmd = makeCommand('sort -r', { r: true }, 'a\nc\nb');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        const lines = output.split('\n').filter(Boolean);
+        expect(lines).toEqual(['c', 'b', 'a']);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// uniq command tests (piped input)
+// ---------------------------------------------------------------------------
+
+describe('CliUniqCommandProcessor (piped input)', () => {
+    let processor: CliUniqCommandProcessor;
+    let fs: IndexedDbFileSystemService;
+    let writer: ICliTerminalWriter & { written: string[] };
+    let ctx: ICliExecutionContext;
+
+    beforeEach(() => {
+        processor = new CliUniqCommandProcessor();
+        fs = setupTestFs();
+        writer = createStubWriter();
+        ctx = createMockContext(writer, fs);
+    });
+
+    it('should deduplicate piped text', async () => {
+        const cmd = makeCommand('uniq', {}, 'a\na\nb\nc\nc');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        const lines = output.split('\n').filter(Boolean);
+        expect(lines).toEqual(['a', 'b', 'c']);
+    });
+
+    it('should count duplicates with -c on piped input', async () => {
+        const cmd = makeCommand('uniq -c', { c: true }, 'a\na\nb');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('2 a');
+        expect(output).toContain('1 b');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// cut command tests (piped input)
+// ---------------------------------------------------------------------------
+
+describe('CliCutCommandProcessor (piped input)', () => {
+    let processor: CliCutCommandProcessor;
+    let fs: IndexedDbFileSystemService;
+    let writer: ICliTerminalWriter & { written: string[] };
+    let ctx: ICliExecutionContext;
+
+    beforeEach(() => {
+        processor = new CliCutCommandProcessor();
+        fs = setupTestFs();
+        writer = createStubWriter();
+        ctx = createMockContext(writer, fs);
+    });
+
+    it('should cut fields from piped text', async () => {
+        const cmd = makeCommand('cut -d , -f 2', { d: ',', f: '2' }, 'a,b,c\n1,2,3');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        const lines = output.split('\n').filter(Boolean);
+        expect(lines).toEqual(['b', '2']);
+    });
+});
