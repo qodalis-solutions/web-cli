@@ -94,12 +94,13 @@ function makeCommand(
 
 function setupTestFs(): IndexedDbFileSystemService {
     const fs = new IndexedDbFileSystemService();
-    // The seed filesystem already contains /home/user/welcome.txt
-    // Create additional test structure:
+    // Create test structure under /home/user:
     //   /home/user/docs/
     //   /home/user/docs/readme.md
     //   /home/user/docs/notes.txt
     //   /home/user/hello.sh
+    fs.createDirectory('/home/user');
+    fs.createFile('/home/user/welcome.txt', 'Welcome to Qodalis CLI filesystem!\n');
     fs.createDirectory('/home/user/docs');
     fs.createFile('/home/user/docs/readme.md', 'Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8\nLine 9\nLine 10\nLine 11\nLine 12\n');
     fs.createFile('/home/user/docs/notes.txt', 'Hello World\nhello again\nGoodbye\nHELLO final\n');

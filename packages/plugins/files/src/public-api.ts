@@ -27,6 +27,9 @@ import { CliTailCommandProcessor } from './lib/processors/cli-tail-command-proce
 import { CliWcCommandProcessor } from './lib/processors/cli-wc-command-processor';
 import { CliFindCommandProcessor } from './lib/processors/cli-find-command-processor';
 import { CliGrepCommandProcessor } from './lib/processors/cli-grep-command-processor';
+import { CliTacCommandProcessor } from './lib/processors/cli-tac-command-processor';
+import { CliBasenameCommandProcessor } from './lib/processors/cli-basename-command-processor';
+import { CliDirnameCommandProcessor } from './lib/processors/cli-dirname-command-processor';
 
 /**
  * Configuration options for the files module.
@@ -66,6 +69,9 @@ export const filesModule: ICliFilesModule = {
         new CliWcCommandProcessor(),
         new CliFindCommandProcessor(),
         new CliGrepCommandProcessor(),
+        new CliTacCommandProcessor(),
+        new CliBasenameCommandProcessor(),
+        new CliDirnameCommandProcessor(),
     ],
     services: [
         {

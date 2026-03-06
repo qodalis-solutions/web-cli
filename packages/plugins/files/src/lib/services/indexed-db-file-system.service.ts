@@ -5,7 +5,8 @@ const DB_NAME = 'qodalis-cli-filesystem';
 const STORE_NAME = 'filesystem';
 const ROOT_KEY = 'root';
 const CWD_KEY = 'cwd';
-const DEFAULT_CWD = '/home/user';
+const HOME_KEY = 'home';
+const DEFAULT_HOME = '/home/user';
 
 function createSeedFileSystem(): IFileNode {
     const now = Date.now();
@@ -16,27 +17,7 @@ function createSeedFileSystem(): IFileNode {
             {
                 name: 'home',
                 type: 'directory',
-                children: [
-                    {
-                        name: 'user',
-                        type: 'directory',
-                        children: [
-                            {
-                                name: 'welcome.txt',
-                                type: 'file',
-                                content: 'Welcome to Qodalis CLI filesystem!\n',
-                                createdAt: now,
-                                modifiedAt: now,
-                                size: 36,
-                                permissions: 'rw-r--r--',
-                            },
-                        ],
-                        createdAt: now,
-                        modifiedAt: now,
-                        size: 0,
-                        permissions: 'rwxr-xr-x',
-                    },
-                ],
+                children: [],
                 createdAt: now,
                 modifiedAt: now,
                 size: 0,
@@ -70,7 +51,8 @@ function createSeedFileSystem(): IFileNode {
 
 export class IndexedDbFileSystemService implements IFileSystemService {
     private root: IFileNode = createSeedFileSystem();
-    private cwd: string = DEFAULT_CWD;
+    private cwd: string = DEFAULT_HOME;
+    private homePath: string = DEFAULT_HOME;
 
     // --- Navigation ---
 
@@ -90,12 +72,20 @@ export class IndexedDbFileSystemService implements IFileSystemService {
         this.cwd = resolved;
     }
 
+    getHomePath(): string {
+        return this.homePath;
+    }
+
+    setHomePath(path: string): void {
+        this.homePath = path;
+    }
+
     resolvePath(path: string): string {
         if (path === '~' || path === '') {
-            return DEFAULT_CWD;
+            return this.homePath;
         }
         if (path.startsWith('~/')) {
-            path = DEFAULT_CWD + path.substring(1);
+            path = this.homePath + path.substring(1);
         }
 
         const parts = path.startsWith('/')
@@ -462,12 +452,16 @@ export class IndexedDbFileSystemService implements IFileSystemService {
 
             const rootData = await this.idbGet<IFileNode>(store, ROOT_KEY);
             const cwdData = await this.idbGet<string>(store, CWD_KEY);
+            const homeData = await this.idbGet<string>(store, HOME_KEY);
 
             if (rootData) {
                 this.root = rootData;
             }
             if (cwdData) {
                 this.cwd = cwdData;
+            }
+            if (homeData) {
+                this.homePath = homeData;
             }
         } finally {
             db.close();
@@ -482,6 +476,7 @@ export class IndexedDbFileSystemService implements IFileSystemService {
 
             store.put(this.root, ROOT_KEY);
             store.put(this.cwd, CWD_KEY);
+            store.put(this.homePath, HOME_KEY);
 
             await new Promise<void>((resolve, reject) => {
                 tx.oncomplete = () => resolve();

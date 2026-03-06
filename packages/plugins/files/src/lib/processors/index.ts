@@ -15,3 +15,6 @@ export * from './cli-tail-command-processor';
 export * from './cli-wc-command-processor';
 export * from './cli-find-command-processor';
 export * from './cli-grep-command-processor';
+export * from './cli-tac-command-processor';
+export * from './cli-basename-command-processor';
+export * from './cli-dirname-command-processor';

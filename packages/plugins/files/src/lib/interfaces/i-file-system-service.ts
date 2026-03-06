@@ -11,6 +11,10 @@ export interface IFileSystemService {
     setCurrentDirectory(path: string): void;
     resolvePath(path: string): string;
 
+    // Home directory (used for ~ resolution)
+    getHomePath(): string;
+    setHomePath(path: string): void;
+
     // Read operations
     getNode(path: string): IFileNode | null;
     listDirectory(path: string): IFileNode[];
