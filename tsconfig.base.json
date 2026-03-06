@@ -74,6 +74,15 @@
       ],
       "@qodalis/cli-wget": [
         "dist/wget"
+      ],
+      "@qodalis/electron-cli": [
+        "dist/electron-cli"
+      ],
+      "@qodalis/electron-cli/preload": [
+        "dist/electron-cli/preload"
+      ],
+      "@qodalis/electron-cli/main": [
+        "dist/electron-cli/main"
       ]
     },
     "outDir": "./dist/out-tsc",

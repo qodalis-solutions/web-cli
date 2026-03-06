@@ -3,6 +3,7 @@
 # Build output
 /dist
 **/dist
+**/out
 /tmp
 /out-tsc
 /bazel-out

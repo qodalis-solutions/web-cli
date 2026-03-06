@@ -9,5 +9,6 @@ ignoredBuiltDependencies:
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - esbuild
+  - electron
   - less
   - nice-napi

@@ -220,7 +220,8 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
         const tokens = raw.split(/\s+/).filter(Boolean);
         const nonFlags: string[] = [];
 
-        let i = 0;
+        // Skip the first token — it's the command name ("grep")
+        let i = 1;
         while (i < tokens.length) {
             const t = tokens[i];
             if (t.startsWith('-')) {

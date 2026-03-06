@@ -16,43 +16,52 @@ export function useCliEngine(
 ): CliEngine | null {
     const [engine, setEngine] = useState<CliEngine | null>(null);
     const engineRef = useRef<CliEngine | null>(null);
-    const mountedRef = useRef(false);
+    const initTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         if (config?.disabled || !containerRef.current) return;
 
-        // Guard against StrictMode double-mount: skip the first mount
-        // since React will immediately unmount and remount.
-        if (!mountedRef.current) {
-            mountedRef.current = true;
-            return;
-        }
+        // Defer initialization slightly so that StrictMode's immediate
+        // unmount (mount → unmount → remount) cancels the first attempt
+        // via the cleanup function, while non-StrictMode proceeds normally.
+        const container = containerRef.current;
+        initTimerRef.current = setTimeout(() => {
+            initTimerRef.current = null;
+            if (!container) return;
 
-        const e = new CliEngine(containerRef.current, config?.options);
+            const e = new CliEngine(container, config?.options);
 
-        e.registerService('cli-framework', 'React');
+            e.registerService('cli-framework', 'React');
 
-        if (config?.services) {
-            for (const [token, value] of Object.entries(config.services)) {
-                e.registerService(token, value);
+            if (config?.services) {
+                for (const [token, value] of Object.entries(config.services)) {
+                    e.registerService(token, value);
+                }
             }
-        }
 
-        if (config?.modules) {
-            e.registerModules(config.modules);
-        }
+            if (config?.modules) {
+                e.registerModules(config.modules);
+            }
 
-        if (config?.processors) {
-            e.registerProcessors(config.processors);
-        }
+            if (config?.processors) {
+                e.registerProcessors(config.processors);
+            }
 
-        engineRef.current = e;
-        e.start().then(() => setEngine(e));
+            engineRef.current = e;
+            e.start().then(() => setEngine(e));
+        }, 0);
 
         return () => {
-            e.destroy();
-            engineRef.current = null;
-            setEngine(null);
+            if (initTimerRef.current !== null) {
+                clearTimeout(initTimerRef.current);
+                initTimerRef.current = null;
+                return;
+            }
+            if (engineRef.current) {
+                engineRef.current.destroy();
+                engineRef.current = null;
+                setEngine(null);
+            }
         };
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
