@@ -1112,4 +1112,60 @@ describe('CliCommandExecutor', () => {
             expect(calls).toEqual(['fail-silent', 'fallback']);
         });
     });
+
+    // -----------------------------------------------------------------------
+    // Per-command AbortController
+    // -----------------------------------------------------------------------
+    describe('Per-command AbortController', () => {
+        it('should provide an AbortSignal on the command context', async () => {
+            let signal: AbortSignal | undefined;
+            registry.registerProcessor(
+                createTestProcessor('cmd', async (_cmd, ctx) => {
+                    signal = ctx.signal;
+                }),
+            );
+
+            await executor.executeCommand('cmd', context);
+
+            expect(signal).toBeDefined();
+            expect(signal!.aborted).toBe(false);
+        });
+
+        it('should abort signal when onAbort fires', async () => {
+            let signal: AbortSignal | undefined;
+            registry.registerProcessor(
+                createTestProcessor('cmd', async (_cmd, ctx) => {
+                    signal = ctx.signal;
+                    // Simulate abort during command execution
+                    context.onAbort.next();
+                }),
+            );
+
+            await executor.executeCommand('cmd', context);
+
+            expect(signal).toBeDefined();
+            expect(signal!.aborted).toBe(true);
+        });
+
+        it('should create fresh AbortController for each command in pipeline', async () => {
+            const signals: (AbortSignal | undefined)[] = [];
+            registry.registerProcessor(
+                createTestProcessor('cmd1', async (_cmd, ctx) => {
+                    signals.push(ctx.signal);
+                }),
+            );
+            registry.registerProcessor(
+                createTestProcessor('cmd2', async (_cmd, ctx) => {
+                    signals.push(ctx.signal);
+                }),
+            );
+
+            await executor.executeCommand('cmd1 | cmd2', context);
+
+            expect(signals.length).toBe(2);
+            expect(signals[0]).toBeDefined();
+            expect(signals[1]).toBeDefined();
+            expect(signals[0]).not.toBe(signals[1]); // Different controllers
+        });
+    });
 });

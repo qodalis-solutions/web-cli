@@ -33,6 +33,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     progressBar: ICliPercentageProgressBar;
     textAnimator?: ICliTextAnimator | undefined;
     onAbort: Subject<void>;
+    signal?: AbortSignal;
     terminal: Terminal;
     writer: ICliTerminalWriter;
     executor: ICliCommandExecutorService;
@@ -94,6 +95,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
         this.progressBar = context.progressBar;
         this.textAnimator = context.textAnimator;
         this.onAbort = context.onAbort;
+        this.signal = context.signal;
         this.terminal = context.terminal;
         this.writer = context.writer;
         this.executor = context.executor;

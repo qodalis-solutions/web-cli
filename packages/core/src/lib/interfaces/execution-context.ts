@@ -65,6 +65,13 @@ export interface ICliExecutionContext {
     onAbort: Subject<void>;
 
     /**
+     * Abort signal for the current command. Fires when the command is
+     * cancelled via Ctrl+C or killed. Commands should check this signal
+     * or listen to onAbort for cooperative cancellation.
+     */
+    signal?: AbortSignal;
+
+    /**
      * The terminal to use for writing
      */
     terminal: Terminal;

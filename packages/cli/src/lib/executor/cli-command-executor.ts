@@ -374,6 +374,13 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             processor,
         );
 
+        const commandAbortController = new AbortController();
+        commandContext.signal = commandAbortController.signal;
+
+        const abortSub = context.onAbort.subscribe(() => {
+            commandAbortController.abort();
+        });
+
         // Wrap the writer to capture stdout-equivalent output.
         // If the command doesn't call process.output() explicitly,
         // the captured text becomes the implicit pipeline data.
@@ -438,6 +445,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 context.writer.writeError(`Error executing command: ${e}`);
                 context.process.exit(-1);
             }
+        } finally {
+            abortSub.unsubscribe();
         }
     }
 
