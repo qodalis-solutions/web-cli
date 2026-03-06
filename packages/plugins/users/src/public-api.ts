@@ -213,14 +213,20 @@ export const usersModule: ICliUsersModule = {
         context.writer.writeln('You will now create your personal user account.');
         context.writer.writeln('');
 
-        // Step 2: Create root user silently
-        const rootUser = await usersStore.createUser({
-            name: 'root',
-            email: 'root@localhost',
-            groups: ['admin'],
-            homeDir: '/home/root',
-        });
-        await authService.setPassword(rootUser.id, 'root');
+        // Step 2: Create root user silently (skip if already exists)
+        let rootUser: ICliUser;
+        const existingRoot = await firstValueFrom(usersStore.getUser('root'));
+        if (existingRoot) {
+            rootUser = existingRoot;
+        } else {
+            rootUser = await usersStore.createUser({
+                name: 'root',
+                email: 'root@localhost',
+                groups: ['admin'],
+                homeDir: '/home/root',
+            });
+            await authService.setPassword(rootUser.id, 'root');
+        }
 
         // Step 3: Prompt for custom user
         const usernameRegex = /^[a-z_][a-z0-9_-]{0,31}$/;
@@ -234,6 +240,13 @@ export const usersModule: ICliUsersModule = {
             if (!usernameRegex.test(input)) {
                 context.writer.writeError(
                     'Invalid username. Must match /^[a-z_][a-z0-9_-]{0,31}$/.',
+                );
+                continue;
+            }
+            const existingUser = await firstValueFrom(usersStore.getUser(input));
+            if (existingUser) {
+                context.writer.writeError(
+                    `Username '${input}' already exists. Choose another.`,
                 );
                 continue;
             }
