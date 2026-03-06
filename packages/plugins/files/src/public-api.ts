@@ -30,6 +30,10 @@ import { CliGrepCommandProcessor } from './lib/processors/cli-grep-command-proce
 import { CliTacCommandProcessor } from './lib/processors/cli-tac-command-processor';
 import { CliBasenameCommandProcessor } from './lib/processors/cli-basename-command-processor';
 import { CliDirnameCommandProcessor } from './lib/processors/cli-dirname-command-processor';
+import { CliSortCommandProcessor } from './lib/processors/cli-sort-command-processor';
+import { CliUniqCommandProcessor } from './lib/processors/cli-uniq-command-processor';
+import { CliCutCommandProcessor } from './lib/processors/cli-cut-command-processor';
+import { CliPasteCommandProcessor } from './lib/processors/cli-paste-command-processor';
 
 /**
  * Configuration options for the files module.
@@ -72,6 +76,10 @@ export const filesModule: ICliFilesModule = {
         new CliTacCommandProcessor(),
         new CliBasenameCommandProcessor(),
         new CliDirnameCommandProcessor(),
+        new CliSortCommandProcessor(),
+        new CliUniqCommandProcessor(),
+        new CliCutCommandProcessor(),
+        new CliPasteCommandProcessor(),
     ],
     services: [
         {

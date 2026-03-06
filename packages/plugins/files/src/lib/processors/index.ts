@@ -18,3 +18,7 @@ export * from './cli-grep-command-processor';
 export * from './cli-tac-command-processor';
 export * from './cli-basename-command-processor';
 export * from './cli-dirname-command-processor';
+export * from './cli-sort-command-processor';
+export * from './cli-uniq-command-processor';
+export * from './cli-cut-command-processor';
+export * from './cli-paste-command-processor';
