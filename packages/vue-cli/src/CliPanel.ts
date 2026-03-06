@@ -116,7 +116,7 @@ function hideTabChevron(position: CliPanelPosition) {
         case 'right': points = '15 6 9 12 15 18'; break;
         default: points = '18 15 12 9 6 15'; break;
     }
-    return h('svg', { class: 'cli-panel-hide-tab-arrow', ...svgAttrs, width: '20', height: '20', 'stroke-width': '2' }, [
+    return h('svg', { class: 'cli-panel-hide-tab-arrow', ...svgAttrs, width: '14', height: '14', 'stroke-width': '2.5' }, [
         h('polyline', { points }),
     ]);
 }
@@ -950,7 +950,14 @@ export const CliPanel = defineComponent({
                     'data-hide-align': hideAlignment.value,
                     title: 'Show CLI',
                     onClick: handleUnhide,
-                }, [hideTabChevron(position.value)])
+                }, [
+                    h('svg', { class: 'cli-panel-hide-tab-icon', ...svgAttrs, width: '16', height: '16', 'stroke-width': '2' }, [
+                        h('polyline', { points: '4 17 10 11 4 5' }),
+                        h('line', { x1: '12', y1: '19', x2: '20', y2: '19' }),
+                    ]),
+                    h('span', { class: 'cli-panel-hide-tab-label' }, 'CLI'),
+                    hideTabChevron(position.value),
+                ])
                 : null;
 
             return h('div', {}, [

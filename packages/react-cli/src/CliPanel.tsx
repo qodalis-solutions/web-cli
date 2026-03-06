@@ -112,7 +112,7 @@ function HideTabChevron({ position }: { position: string }) {
         default: points = '18 15 12 9 6 15'; break; // bottom: up
     }
     return (
-        <svg className="cli-panel-hide-tab-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="cli-panel-hide-tab-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points={points} />
         </svg>
     );
@@ -484,6 +484,11 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
                     title="Show CLI"
                     onClick={handleUnhide}
                 >
+                    <svg className="cli-panel-hide-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="4 17 10 11 4 5" />
+                        <line x1="12" y1="19" x2="20" y2="19" />
+                    </svg>
+                    <span className="cli-panel-hide-tab-label">CLI</span>
                     <HideTabChevron position={position} />
                 </button>
             )}
