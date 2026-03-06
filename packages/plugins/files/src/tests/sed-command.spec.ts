@@ -1,92 +1,10 @@
-import { Subject } from 'rxjs';
 import {
-    CliProcessCommand,
-    CliForegroundColor,
-    CliBackgroundColor,
     ICliExecutionContext,
     ICliTerminalWriter,
-    ICliServiceProvider,
 } from '@qodalis/cli-core';
 import { IndexedDbFileSystemService } from '../lib/services';
-import { IFileSystemService_TOKEN } from '../lib/interfaces';
 import { CliSedCommandProcessor } from '../lib/processors/cli-sed-command-processor';
-
-// ---------------------------------------------------------------------------
-// Test Helpers
-// ---------------------------------------------------------------------------
-
-function createStubWriter(): ICliTerminalWriter & { written: string[] } {
-    const written: string[] = [];
-    return {
-        written,
-        write(text: string) { written.push(text); },
-        writeln(text?: string) { written.push(text ?? ''); },
-        writeSuccess(msg: string) { written.push(`[success] ${msg}`); },
-        writeInfo(msg: string) { written.push(`[info] ${msg}`); },
-        writeWarning(msg: string) { written.push(`[warn] ${msg}`); },
-        writeError(msg: string) { written.push(`[error] ${msg}`); },
-        wrapInColor(text: string, _color: CliForegroundColor) { return text; },
-        wrapInBackgroundColor(text: string, _color: CliBackgroundColor) { return text; },
-        writeJson(json: any) { written.push(JSON.stringify(json)); },
-        writeToFile(_fn: string, _content: string) {},
-        writeObjectsAsTable(objects: any[]) { written.push(JSON.stringify(objects)); },
-        writeTable(_h: string[], _r: string[][]) {},
-        writeDivider() {},
-        writeList(_items: string[], _options?: any) {},
-        writeKeyValue(_entries: any, _options?: any) {},
-        writeColumns(_items: string[], _options?: any) {},
-    };
-}
-
-function createMockContext(
-    writer: ICliTerminalWriter,
-    fs: IndexedDbFileSystemService,
-): ICliExecutionContext {
-    const services: ICliServiceProvider = {
-        get<T>(token: any): T {
-            if (token === IFileSystemService_TOKEN) return fs as any;
-            throw new Error(`Unknown service: ${token}`);
-        },
-        set() {},
-    };
-
-    return {
-        writer,
-        services,
-        spinner: { show() {}, hide() {} },
-        progressBar: { show() {}, update() {}, hide() {} },
-        onAbort: new Subject<void>(),
-        terminal: {} as any,
-        reader: {} as any,
-        executor: {} as any,
-        clipboard: {} as any,
-        options: undefined,
-        logger: { log() {}, info() {}, warn() {}, error() {}, debug() {}, setCliLogLevel() {} },
-        process: { output() {}, exit() {} } as any,
-        state: {} as any,
-        showPrompt: jasmine.createSpy('showPrompt'),
-        setContextProcessor: jasmine.createSpy('setContextProcessor'),
-        setCurrentLine: jasmine.createSpy('setCurrentLine'),
-        clearLine: jasmine.createSpy('clearLine'),
-        clearCurrentLine: jasmine.createSpy('clearCurrentLine'),
-        refreshCurrentLine: jasmine.createSpy('refreshCurrentLine'),
-        enterFullScreenMode: jasmine.createSpy('enterFullScreenMode'),
-        exitFullScreenMode: jasmine.createSpy('exitFullScreenMode'),
-    } as any;
-}
-
-function makeCommand(
-    raw: string,
-    args: Record<string, any> = {},
-): CliProcessCommand {
-    const tokens = raw.split(/\s+/);
-    return {
-        command: tokens[0],
-        rawCommand: tokens.slice(1).join(' '),
-        chainCommands: [],
-        args,
-    } as any;
-}
+import { createStubWriter, createMockContext, makeCommand } from './helpers';
 
 function setupTestFs(): IndexedDbFileSystemService {
     const fs = new IndexedDbFileSystemService();
@@ -292,5 +210,56 @@ describe('CliSedCommandProcessor', () => {
         const cmd = makeCommand("sed 's/[invalid/replacement/' /home/user/sed-test.txt");
         await processor.processCommand(cmd, ctx);
         expect(writer.written.some(l => l.includes('[error]'))).toBe(true);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// sed piped input tests
+// ---------------------------------------------------------------------------
+
+describe('CliSedCommandProcessor (piped input)', () => {
+    let processor: CliSedCommandProcessor;
+    let fs: IndexedDbFileSystemService;
+    let writer: ICliTerminalWriter & { written: string[] };
+    let ctx: ICliExecutionContext;
+
+    beforeEach(() => {
+        processor = new CliSedCommandProcessor();
+        fs = setupTestFs();
+        writer = createStubWriter();
+        ctx = createMockContext(writer, fs);
+    });
+
+    it('should process piped input with substitution', async () => {
+        const cmd = makeCommand("sed 's/hello/world/g'", {}, 'hello there\nhello again');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('world there');
+        expect(output).toContain('world again');
+    });
+
+    it('should process piped input with deletion', async () => {
+        const cmd = makeCommand("sed '2d'", {}, 'line1\nline2\nline3');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('line1');
+        expect(output).toContain('line3');
+        expect(output).not.toContain('line2');
+    });
+
+    it('should process piped input with -n and print', async () => {
+        const cmd = makeCommand("sed -n '/foo/p'", {}, 'foo bar\nbaz qux\nfoo end');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('foo bar');
+        expect(output).toContain('foo end');
+        expect(output).not.toContain('baz qux');
+    });
+
+    it('should ignore in-place flag when piped', async () => {
+        const cmd = makeCommand("sed -i 's/hello/world/'", {}, 'hello there');
+        await processor.processCommand(cmd, ctx);
+        const output = writer.written.join('\n');
+        expect(output).toContain('world there');
     });
 });

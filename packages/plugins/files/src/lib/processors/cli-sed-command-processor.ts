@@ -76,24 +76,30 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        if (!filePath) {
+        let content: string;
+        if (filePath) {
+            const resolved = fs.resolvePath(filePath);
+
+            if (!fs.exists(resolved)) {
+                context.writer.writeError(
+                    `sed: ${filePath}: No such file or directory`,
+                );
+                return;
+            }
+
+            if (fs.isDirectory(resolved)) {
+                context.writer.writeError(`sed: ${filePath}: Is a directory`);
+                return;
+            }
+
+            content = fs.readFile(resolved) ?? '';
+        } else if (command.data != null) {
+            content = typeof command.data === 'string'
+                ? command.data : JSON.stringify(command.data);
+        } else {
             context.writer.writeError(
                 'sed: missing file operand. Usage: sed [options] \'expression\' <file>',
             );
-            return;
-        }
-
-        const resolved = fs.resolvePath(filePath);
-
-        if (!fs.exists(resolved)) {
-            context.writer.writeError(
-                `sed: ${filePath}: No such file or directory`,
-            );
-            return;
-        }
-
-        if (fs.isDirectory(resolved)) {
-            context.writer.writeError(`sed: ${filePath}: Is a directory`);
             return;
         }
 
@@ -108,8 +114,6 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
                 return;
             }
         }
-
-        const content = fs.readFile(resolved) ?? '';
         const lines = content.split('\n');
         const outputLines: string[] = [];
 
@@ -169,7 +173,8 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
 
         const result = outputLines.join('\n');
 
-        if (inPlace) {
+        if (inPlace && filePath) {
+            const resolved = fs.resolvePath(filePath);
             fs.writeFile(resolved, result);
             await fs.persist();
         } else {

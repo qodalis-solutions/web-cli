@@ -170,25 +170,29 @@ export class CliTrCommandProcessor implements ICliCommandProcessor {
         let filePath: string | undefined;
 
         if (deleteMode && squeezeMode) {
-            // -d -s SET1 SET2 file
-            if (positional.length < 3) {
+            // -d -s SET1 SET2 [file]
+            if (positional.length < 2) {
                 context.writer.writeError('tr: missing operand');
                 return;
             }
             set1Str = positional[0];
             set2Str = positional[1];
-            filePath = positional[2];
+            if (positional.length >= 3) {
+                filePath = positional[2];
+            }
         } else if (deleteMode) {
-            // -d SET1 file
-            if (positional.length < 2) {
-                context.writer.writeError('tr: missing file operand');
+            // -d SET1 [file]
+            if (positional.length < 1) {
+                context.writer.writeError('tr: missing operand');
                 return;
             }
             set1Str = positional[0];
-            filePath = positional[1];
+            if (positional.length >= 2) {
+                filePath = positional[1];
+            }
         } else if (squeezeMode) {
-            if (positional.length < 2) {
-                context.writer.writeError('tr: missing file operand');
+            if (positional.length < 1) {
+                context.writer.writeError('tr: missing operand');
                 return;
             }
             if (positional.length >= 3) {
@@ -196,38 +200,55 @@ export class CliTrCommandProcessor implements ICliCommandProcessor {
                 set1Str = positional[0];
                 set2Str = positional[1];
                 filePath = positional[2];
-            } else {
-                // -s SET1 file => squeeze chars in SET1
+            } else if (positional.length === 2) {
+                // -s SET1 file  OR  -s SET1 SET2 (piped)
+                // If piped data exists and there's no file at positional[1], treat as SET1 + file
                 set1Str = positional[0];
                 filePath = positional[1];
+            } else {
+                // -s SET1 (piped)
+                set1Str = positional[0];
             }
         } else {
-            // translate: SET1 SET2 file
-            if (positional.length < 3) {
-                if (positional.length < 2) {
-                    context.writer.writeError('tr: missing operand');
-                    return;
-                }
-                context.writer.writeError('tr: missing file operand');
+            // translate: SET1 SET2 [file]
+            if (positional.length < 2) {
+                context.writer.writeError('tr: missing operand');
                 return;
             }
             set1Str = positional[0];
             set2Str = positional[1];
-            filePath = positional[2];
+            if (positional.length >= 3) {
+                filePath = positional[2];
+            }
+        }
+
+        let content: string | null;
+        if (filePath) {
+            try {
+                if (fs.isDirectory(filePath)) {
+                    context.writer.writeError(`tr: ${filePath}: Is a directory`);
+                    return;
+                }
+                content = fs.readFile(filePath);
+                if (content === null) {
+                    context.writer.writeError(
+                        `tr: ${filePath}: No such file or directory`,
+                    );
+                    return;
+                }
+            } catch (e: any) {
+                context.writer.writeError(`tr: ${e.message}`);
+                return;
+            }
+        } else if (command.data != null) {
+            content = typeof command.data === 'string'
+                ? command.data : JSON.stringify(command.data);
+        } else {
+            context.writer.writeError('tr: missing file operand');
+            return;
         }
 
         try {
-            if (fs.isDirectory(filePath!)) {
-                context.writer.writeError(`tr: ${filePath}: Is a directory`);
-                return;
-            }
-            const content = fs.readFile(filePath!);
-            if (content === null) {
-                context.writer.writeError(
-                    `tr: ${filePath}: No such file or directory`,
-                );
-                return;
-            }
 
             const set1 = expandSet(set1Str!);
             const set1Set = new Set(set1);

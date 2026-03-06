@@ -68,6 +68,9 @@ export class CliAwkCommandProcessor implements ICliCommandProcessor {
                 context.writer.writeError(`awk: ${e.message}`);
                 return;
             }
+        } else if (command.data != null) {
+            content = typeof command.data === 'string'
+                ? command.data : JSON.stringify(command.data);
         }
 
         const rules = this.parseProgram(program);
