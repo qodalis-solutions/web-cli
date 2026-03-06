@@ -526,9 +526,9 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
                     </div>
                 </div>
 
-                {/* Content */}
-                {!collapsed && initialized && (
-                    <div className="cli-panel-content">
+                {/* Content (kept in DOM to preserve terminal state) */}
+                {initialized && (
+                    <div className="cli-panel-content" style={collapsed ? { display: 'none' } : undefined}>
                         {/* Tab bar */}
                         <div className="cli-panel-tabs">
                             <ul className="cli-panel-tab-list">

@@ -557,8 +557,8 @@ export const CliPanel = defineComponent({
             ]);
 
             const contentEl =
-                !collapsed.value && initialized.value
-                    ? h('div', { class: 'cli-panel-content' }, [
+                initialized.value
+                    ? h('div', { class: 'cli-panel-content', style: collapsed.value ? { display: 'none' } : undefined }, [
                           // Tab bar
                           h('div', { class: 'cli-panel-tabs' }, [
                               h(
