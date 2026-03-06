@@ -443,6 +443,11 @@ export type CliState = Record<string, any>;
 export type CliPanelPosition = 'bottom' | 'top' | 'left' | 'right';
 
 /**
+ * Alignment of the hidden-mode tab along its viewport edge.
+ */
+export type CliPanelHideAlignment = 'start' | 'center' | 'end';
+
+/**
  * Configuration for the CLI panel component.
  */
 export interface CliPanelConfig {
@@ -469,6 +474,21 @@ export interface CliPanelConfig {
      * @default true
      */
     resizable?: boolean;
+
+    /**
+     * Whether the hide button is shown. When hidden, the panel collapses
+     * to a small tab at the viewport edge.
+     * @default true
+     */
+    hideable?: boolean;
+
+    /**
+     * Alignment of the hide tab along the panel's viewport edge.
+     * For bottom/top: 'start' = left, 'center', 'end' = right.
+     * For left/right: 'start' = top, 'center', 'end' = bottom.
+     * @default 'center'
+     */
+    hideAlignment?: CliPanelHideAlignment;
 }
 
 export const enums = {
