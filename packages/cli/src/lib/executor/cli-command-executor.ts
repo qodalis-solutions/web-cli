@@ -89,6 +89,11 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 // Pipe: always run next command with previous output
                 shouldRunNext = true;
                 continue;
+            } else if (part.type === ';') {
+                // Sequential: always run next, reset pipeline data
+                shouldRunNext = true;
+                pipelineData = undefined;
+                continue;
             } else if (part.type === '>>') {
                 const nextPart = parts[i + 1];
                 i++;
@@ -100,6 +105,19 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 if (shouldRunNext) {
                     await this.appendOutputToFile(nextPart.value, context);
                     // Data was consumed by the redirect — clear it
+                    pipelineData = undefined;
+                }
+                continue;
+            } else if (part.type === '>') {
+                const nextPart = parts[i + 1];
+                i++;
+                if (!nextPart || nextPart.type !== 'command') {
+                    context.writer.writeError('Missing file path after >');
+                    lastExitSuccess = false;
+                    continue;
+                }
+                if (shouldRunNext) {
+                    await this.writeOutputToFile(nextPart.value, context);
                     pipelineData = undefined;
                 }
                 continue;
@@ -171,6 +189,42 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             await fs.persist();
         } catch (e: any) {
             context.writer.writeError(`>> failed: ${e.message || e}`);
+        }
+    }
+
+    private async writeOutputToFile(
+        filePath: string,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        const FS_TOKEN = 'cli-file-system-service';
+
+        let fs: any;
+        try {
+            fs = context.services.get(FS_TOKEN);
+        } catch {
+            context.writer.writeError(
+                '> redirect requires @qodalis/cli-files plugin',
+            );
+            return;
+        }
+
+        const output = context.process.data;
+        if (output === undefined || output === null) {
+            return;
+        }
+
+        try {
+            const resolved = fs.resolvePath(filePath.trim());
+            const content =
+                typeof output === 'string' ? output : JSON.stringify(output);
+            if (fs.exists(resolved)) {
+                fs.writeFile(resolved, content); // overwrite (no append flag)
+            } else {
+                fs.createFile(resolved, content);
+            }
+            await fs.persist();
+        } catch (e: any) {
+            context.writer.writeError(`> failed: ${e.message || e}`);
         }
     }
 

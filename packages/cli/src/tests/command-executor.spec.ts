@@ -916,4 +916,131 @@ describe('CliCommandExecutor', () => {
             expect(context.process.data).toBeUndefined();
         });
     });
+
+    // -----------------------------------------------------------------------
+    // Operator ; — sequential execution
+    // -----------------------------------------------------------------------
+    describe('Operator ; — sequential execution', () => {
+        it('should run both commands regardless of first success', async () => {
+            const calls: string[] = [];
+            registry.registerProcessor(
+                createTestProcessor('first', async () => {
+                    calls.push('first');
+                }),
+            );
+            registry.registerProcessor(
+                createTestProcessor('second', async () => {
+                    calls.push('second');
+                }),
+            );
+
+            await executor.executeCommand('first ; second', context);
+
+            expect(calls).toEqual(['first', 'second']);
+        });
+
+        it('should run second command even when first fails', async () => {
+            const calls: string[] = [];
+            registry.registerProcessor(
+                createTestProcessor('fail', async (_cmd, ctx) => {
+                    calls.push('fail');
+                    ctx.process.exit(-1);
+                }),
+            );
+            registry.registerProcessor(
+                createTestProcessor('second', async () => {
+                    calls.push('second');
+                }),
+            );
+
+            await executor.executeCommand('fail ; second', context);
+
+            expect(calls).toEqual(['fail', 'second']);
+        });
+
+        it('should NOT pass pipeline data across ; boundary', async () => {
+            let receivedData: any;
+            registry.registerProcessor(
+                createTestProcessor('producer', async (_cmd, ctx) => {
+                    ctx.process.output('some data');
+                }),
+            );
+            registry.registerProcessor(
+                createTestProcessor('consumer', async (cmd) => {
+                    receivedData = cmd.data;
+                }),
+            );
+
+            await executor.executeCommand('producer ; consumer', context);
+
+            expect(receivedData).toBeUndefined();
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // Operator > — overwrite redirect
+    // -----------------------------------------------------------------------
+    describe('Operator > — overwrite redirect', () => {
+        it('should write output to file via > redirect', async () => {
+            let writtenPath: string | undefined;
+            let writtenContent: string | undefined;
+            const mockFs = {
+                resolvePath: (p: string) => p.trim(),
+                exists: () => false,
+                createFile: (path: string, content: string) => {
+                    writtenPath = path;
+                    writtenContent = content;
+                },
+                writeFile: (path: string, content: string) => {
+                    writtenPath = path;
+                    writtenContent = content;
+                },
+                persist: async () => {},
+            };
+            (context.services as any).get = (token: any) => {
+                if (token === 'cli-file-system-service') return mockFs;
+                return (context.services as any).services?.get(token);
+            };
+
+            registry.registerProcessor(
+                createTestProcessor('producer', async (_cmd, ctx) => {
+                    ctx.process.output('hello world');
+                }),
+            );
+
+            await executor.executeCommand('producer > output.txt', context);
+
+            expect(writtenPath).toBe('output.txt');
+            expect(writtenContent).toBe('hello world');
+        });
+
+        it('should overwrite existing file with > redirect', async () => {
+            let writtenContent: string | undefined;
+            let appendMode: boolean | undefined;
+            const mockFs = {
+                resolvePath: (p: string) => p.trim(),
+                exists: () => true,
+                writeFile: (path: string, content: string, append?: boolean) => {
+                    writtenContent = content;
+                    appendMode = append;
+                },
+                persist: async () => {},
+            };
+            (context.services as any).get = (token: any) => {
+                if (token === 'cli-file-system-service') return mockFs;
+                return (context.services as any).services?.get(token);
+            };
+
+            registry.registerProcessor(
+                createTestProcessor('producer', async (_cmd, ctx) => {
+                    ctx.process.output('new content');
+                }),
+            );
+
+            await executor.executeCommand('producer > output.txt', context);
+
+            expect(writtenContent).toBe('new content');
+            expect(appendMode).toBeFalsy();
+        });
+    });
 });
