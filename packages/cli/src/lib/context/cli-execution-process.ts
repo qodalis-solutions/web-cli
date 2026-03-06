@@ -25,6 +25,7 @@ export class CliExecutionProcess implements ICliExecutionProcess {
 
         this.exited = true;
         this.exitCode = code;
+        this.running = false;
 
         if (!options?.silent) {
             throw new ProcessExitedError(code);
@@ -46,6 +47,8 @@ export class CliExecutionProcess implements ICliExecutionProcess {
 
     end() {
         this.running = false;
-        this.exitCode = 0;
+        if (!this.exited) {
+            this.exitCode = 0;
+        }
     }
 }

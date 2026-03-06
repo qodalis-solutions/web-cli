@@ -414,7 +414,9 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 process.data = capturingWriter.getCapturedData();
             }
 
-            process.end();
+            if (!process.exited) {
+                process.end();
+            }
         } catch (e) {
             context.spinner?.hide();
 

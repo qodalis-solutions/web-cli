@@ -1043,4 +1043,73 @@ describe('CliCommandExecutor', () => {
             expect(appendMode).toBeFalsy();
         });
     });
+
+    // -----------------------------------------------------------------------
+    // process.exit() improvements
+    // -----------------------------------------------------------------------
+    describe('process.exit() improvements', () => {
+        it('should stop pipeline on silent exit with non-zero code', async () => {
+            const calls: string[] = [];
+            registry.registerProcessor(
+                createTestProcessor('fail-silent', async (_cmd, ctx) => {
+                    calls.push('fail-silent');
+                    ctx.process.exit(-1, { silent: true });
+                }),
+            );
+            registry.registerProcessor(
+                createTestProcessor('after', async () => {
+                    calls.push('after');
+                }),
+            );
+
+            await executor.executeCommand('fail-silent && after', context);
+
+            // Silent exit with code -1 should stop the && chain
+            expect(calls).toEqual(['fail-silent']);
+        });
+
+        it('should set exitCode on silent exit', async () => {
+            registry.registerProcessor(
+                createTestProcessor('cmd', async (_cmd, ctx) => {
+                    ctx.process.exit(42, { silent: true });
+                }),
+            );
+
+            await executor.executeCommand('cmd', context);
+
+            expect(context.process.exitCode).toBe(42);
+        });
+
+        it('should preserve exitCode=0 on silent exit with code 0', async () => {
+            registry.registerProcessor(
+                createTestProcessor('cmd', async (_cmd, ctx) => {
+                    ctx.process.exit(0, { silent: true });
+                }),
+            );
+
+            await executor.executeCommand('cmd', context);
+
+            expect(context.process.exitCode).toBe(0);
+        });
+
+        it('should allow || chain after silent exit failure', async () => {
+            const calls: string[] = [];
+            registry.registerProcessor(
+                createTestProcessor('fail-silent', async (_cmd, ctx) => {
+                    calls.push('fail-silent');
+                    ctx.process.exit(-1, { silent: true });
+                }),
+            );
+            registry.registerProcessor(
+                createTestProcessor('fallback', async () => {
+                    calls.push('fallback');
+                }),
+            );
+
+            await executor.executeCommand('fail-silent || fallback', context);
+
+            // || should run fallback after failure
+            expect(calls).toEqual(['fail-silent', 'fallback']);
+        });
+    });
 });
