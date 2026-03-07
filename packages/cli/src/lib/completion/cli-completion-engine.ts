@@ -173,6 +173,20 @@ export class CliCompletionEngine {
         return [];
     }
 
+    /**
+     * Return the single best completion string for ghost-text display.
+     * Returns null if there is no clear best match or multiple candidates.
+     */
+    async completeSingle(input: string, cursor: number): Promise<string | null> {
+        if (!input) return null;
+        const ctx = this.buildContext(input, cursor);
+        const candidates = await this.fetchCompletions(ctx);
+        if (candidates.length !== 1) return null;
+        const match = candidates[0];
+        if (!match.startsWith(ctx.token)) return null;
+        return input.slice(0, ctx.tokenStart) + match;
+    }
+
     private commonPrefix(strings: string[]): string {
         if (strings.length === 0) return '';
         let prefix = strings[0];

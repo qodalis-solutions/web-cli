@@ -41,6 +41,8 @@ export class CommandLineMode implements IInputMode {
     private isExecutingCommand = false;
     private selectionStart: { x: number; y: number } | null = null;
     private selectionEnd: { x: number; y: number } | null = null;
+    private ghostText = '';
+    private ghostDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
     constructor(private readonly host: CommandLineModeHost) {}
 
@@ -54,6 +56,7 @@ export class CommandLineMode implements IInputMode {
         const buffer = this.host.lineBuffer;
 
         if (data === '\u0009') {
+            this.clearGhostText();
             await this.handleTabCompletion();
             return;
         }
@@ -61,6 +64,7 @@ export class CommandLineMode implements IInputMode {
         this.host.completionEngine.resetState();
 
         if (data === '\r') {
+            this.clearGhostText();
             this.host.terminal.write('\r\n');
 
             if (buffer.text) {
@@ -95,7 +99,12 @@ export class CommandLineMode implements IInputMode {
                 this.host.terminal.write(data);
             }
         } else if (data === '\u001B[C') {
-            if (buffer.cursorPosition < buffer.text.length) {
+            if (this.ghostText && buffer.cursorPosition === buffer.text.length) {
+                // Accept ghost text suggestion
+                buffer.insert(this.ghostText);
+                this.ghostText = '';
+                this.refreshLine();
+            } else if (buffer.cursorPosition < buffer.text.length) {
                 buffer.moveCursorRight();
                 this.host.terminal.write(data);
             }
@@ -166,12 +175,47 @@ export class CommandLineMode implements IInputMode {
 
     private handleInputText(text: string): void {
         text = text.replace(/[\r\n\t]+/g, '');
+        this.clearGhostText();
         this.host.lineBuffer.insert(text);
         this.refreshLine();
+        this.scheduleGhostText();
+    }
+
+    private clearGhostText(): void {
+        this.ghostText = '';
+        if (this.ghostDebounceTimer !== null) {
+            clearTimeout(this.ghostDebounceTimer);
+            this.ghostDebounceTimer = null;
+        }
+    }
+
+    private scheduleGhostText(): void {
+        this.ghostDebounceTimer = setTimeout(() => {
+            this.computeAndShowGhostText();
+        }, 120);
+    }
+
+    private async computeAndShowGhostText(): Promise<void> {
+        const buffer = this.host.lineBuffer;
+        if (!buffer.text || buffer.cursorPosition < buffer.text.length) return;
+
+        try {
+            const result = await this.host.completionEngine.completeSingle(
+                buffer.text,
+                buffer.cursorPosition,
+            );
+            if (result && result.startsWith(buffer.text)) {
+                this.ghostText = result.slice(buffer.text.length);
+                this.renderGhostText();
+            }
+        } catch {
+            // silently ignore completion errors
+        }
     }
 
     private handleBackspace(): void {
         const buffer = this.host.lineBuffer;
+        this.clearGhostText();
         if (buffer.cursorPosition > 0) {
             buffer.deleteCharBefore();
             this.refreshLine();
@@ -249,6 +293,7 @@ export class CommandLineMode implements IInputMode {
     }
 
     private showPreviousCommand(): void {
+        this.clearGhostText();
         if (this.historyIndex > 0) {
             this.historyIndex--;
             this.displayCommandFromHistory();
@@ -256,6 +301,7 @@ export class CommandLineMode implements IInputMode {
     }
 
     private showNextCommand(): void {
+        this.clearGhostText();
         const buffer = this.host.lineBuffer;
 
         if (this.historyIndex < this.host.commandHistory.getLastIndex() - 1) {
@@ -290,6 +336,18 @@ export class CommandLineMode implements IInputMode {
             this.host.getPromptLength(),
             promptStr,
             previousContentLength,
+        );
+        this.renderGhostText();
+    }
+
+    private renderGhostText(): void {
+        if (!this.ghostText) return;
+        const buffer = this.host.lineBuffer;
+        // Only show ghost text when cursor is at end of input
+        if (buffer.cursorPosition < buffer.text.length) return;
+        const ghost = this.ghostText;
+        this.host.terminal.write(
+            `\x1b[2m\x1b[38;5;240m${ghost}\x1b[0m\x1b[${ghost.length}D`,
         );
     }
 
