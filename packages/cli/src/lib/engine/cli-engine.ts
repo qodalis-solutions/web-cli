@@ -40,6 +40,7 @@ import {
     ICliPingServerService_TOKEN,
 } from '../tokens';
 import { CliDefaultPingServerService } from '../services/defaults/cli-default-ping-server.service';
+import { CliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
 import { CliCommandCompletionProvider } from '../completion/cli-command-completion-provider';
 import { CliParameterCompletionProvider } from '../completion/cli-parameter-completion-provider';
 import { CliServiceNameCompletionProvider } from '../completion/cli-service-name-completion-provider';
@@ -178,6 +179,15 @@ export class CliEngine {
                 {
                     provide: ICliPingServerService_TOKEN,
                     useValue: new CliDefaultPingServerService(),
+                },
+            ]);
+        }
+
+        if (!pendingTokens.has(ICliEnvironment_TOKEN)) {
+            services.set([
+                {
+                    provide: ICliEnvironment_TOKEN,
+                    useValue: new CliEnvironment(),
                 },
             ]);
         }

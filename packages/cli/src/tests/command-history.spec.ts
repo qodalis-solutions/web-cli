@@ -48,17 +48,18 @@ describe('CliCommandHistory', () => {
         expect(history.getHistory()).toEqual(['first', 'second', 'third']);
     });
 
-    it('should not add duplicate consecutive commands', async () => {
+    it('should deduplicate consecutive commands', async () => {
         await history.addCommand('echo hello');
         await history.addCommand('echo hello');
         expect(history.getHistory()).toEqual(['echo hello']);
     });
 
-    it('should allow non-consecutive duplicates', async () => {
+    it('should move duplicate to end (move-to-end deduplication)', async () => {
         await history.addCommand('a');
         await history.addCommand('b');
         await history.addCommand('a');
-        expect(history.getHistory()).toEqual(['a', 'b', 'a']);
+        // 'a' already existed; it should be removed from position 0 and appended
+        expect(history.getHistory()).toEqual(['b', 'a']);
     });
 
     it('should ignore empty and whitespace-only commands', async () => {
@@ -120,5 +121,85 @@ describe('CliCommandHistory', () => {
         await history.setHistory(['one', 'two']);
         const stored = await store.get<string[]>('cli-command-history');
         expect(stored).toEqual(['one', 'two']);
+    });
+
+    describe('search', () => {
+        beforeEach(async () => {
+            await history.addCommand('git commit -m "fix"');
+            await history.addCommand('git push origin main');
+            await history.addCommand('npm install');
+            await history.addCommand('echo hello');
+        });
+
+        it('should return all history when query is empty', () => {
+            const result = history.search('');
+            expect(result.length).toBe(4);
+        });
+
+        it('should return matching commands (case-insensitive)', () => {
+            const result = history.search('GIT');
+            expect(result).toEqual(['git commit -m "fix"', 'git push origin main']);
+        });
+
+        it('should return empty array when no match', () => {
+            const result = history.search('zzznomatch');
+            expect(result).toEqual([]);
+        });
+
+        it('should match substring anywhere in command', () => {
+            const result = history.search('hello');
+            expect(result).toEqual(['echo hello']);
+        });
+    });
+
+    describe('searchBackward', () => {
+        beforeEach(async () => {
+            await history.addCommand('git status');
+            await history.addCommand('ls -la');
+            await history.addCommand('git log');
+            await history.addCommand('echo hi');
+        });
+
+        it('should find the most recent matching command before fromIndex', () => {
+            // history: ['git status', 'ls -la', 'git log', 'echo hi']
+            // search backward from index 4 (end) for prefix 'git'
+            const idx = history.searchBackward('git', 4);
+            expect(idx).toBe(2); // 'git log'
+        });
+
+        it('should find earlier match when starting from a mid-point', () => {
+            const idx = history.searchBackward('git', 2);
+            expect(idx).toBe(0); // 'git status'
+        });
+
+        it('should return -1 when no match found', () => {
+            const idx = history.searchBackward('zzz', 4);
+            expect(idx).toBe(-1);
+        });
+    });
+
+    describe('searchForward', () => {
+        beforeEach(async () => {
+            await history.addCommand('git status');
+            await history.addCommand('ls -la');
+            await history.addCommand('git log');
+            await history.addCommand('echo hi');
+        });
+
+        it('should find the next matching command after fromIndex', () => {
+            // history: ['git status', 'ls -la', 'git log', 'echo hi']
+            const idx = history.searchForward('git', 0);
+            expect(idx).toBe(2); // 'git log'
+        });
+
+        it('should return -1 when no forward match found', () => {
+            const idx = history.searchForward('git', 2);
+            expect(idx).toBe(-1);
+        });
+
+        it('should return -1 when no match at all', () => {
+            const idx = history.searchForward('zzz', 0);
+            expect(idx).toBe(-1);
+        });
     });
 });

@@ -6,6 +6,7 @@ import {
     CliProcessorMetadata,
     CliIcon,
     CliForegroundColor,
+    ICliCommandParameterDescriptor,
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
@@ -55,6 +56,86 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
                 context.writer.writeln('Clears the command history');
             },
         });
+
+        const searchParameters: ICliCommandParameterDescriptor[] = [
+            {
+                name: 'n',
+                description: 'Maximum number of results to show',
+                required: false,
+                type: 'number',
+            },
+        ];
+
+        this.processors?.push({
+            command: 'search',
+            description: 'Search command history for a pattern',
+            parameters: searchParameters,
+            processCommand: async (
+                cmd: CliProcessCommand,
+                context: ICliExecutionContext,
+            ) => {
+                const commandHistory = context.services.get<CliCommandHistory>(
+                    CliCommandHistory_TOKEN,
+                );
+                const query = (cmd.value ?? '').trim();
+                const limit = (cmd.args?.['n'] as number) ?? 0;
+
+                const matches = commandHistory.search(query);
+
+                if (matches.length === 0) {
+                    context.writer.writeInfo(
+                        query
+                            ? `No history entries matching "${query}"`
+                            : '📜 No command history yet',
+                    );
+                    return;
+                }
+
+                const displayed = limit > 0 ? matches.slice(-limit) : matches;
+                const startOffset =
+                    limit > 0 ? matches.length - displayed.length : 0;
+
+                context.writer.writeln(
+                    context.writer.wrapInColor(
+                        `📜 ${matches.length} match${matches.length !== 1 ? 'es' : ''}${query ? ` for "${query}"` : ''}:`,
+                        CliForegroundColor.Yellow,
+                    ),
+                );
+
+                displayed.forEach((command, i) => {
+                    const globalIndex = startOffset + i;
+                    const highlighted = query
+                        ? command.replace(
+                              new RegExp(
+                                  query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+                                  'gi',
+                              ),
+                              (m) =>
+                                  context.writer.wrapInColor(
+                                      m,
+                                      CliForegroundColor.Cyan,
+                                  ),
+                          )
+                        : command;
+                    context.writer.writeln(
+                        `  ${context.writer.wrapInColor(String(globalIndex + 1).padStart(3), CliForegroundColor.Yellow)}  ${highlighted}`,
+                    );
+                });
+            },
+            writeDescription: (context: ICliExecutionContext) => {
+                context.writer.writeln(
+                    'Search command history for a pattern (case-insensitive substring match)',
+                );
+                context.writer.writeln();
+                context.writer.writeln('📋 Usage:');
+                context.writer.writeln(
+                    `  ${context.writer.wrapInColor('history search git', CliForegroundColor.Cyan)}          Show all history entries containing "git"`,
+                );
+                context.writer.writeln(
+                    `  ${context.writer.wrapInColor('history search git --n 5', CliForegroundColor.Cyan)}    Show last 5 matches`,
+                );
+            },
+        });
     }
 
     async processCommand(
@@ -73,7 +154,7 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
         } else {
             writer.writeln(
                 writer.wrapInColor(
-                    '📜 Command history:',
+                    `📜 Command history (${history.length} entries):`,
                     CliForegroundColor.Yellow,
                 ),
             );
@@ -90,14 +171,20 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
         writer.writeln();
         writer.writeln('📋 Usage:');
         writer.writeln(
-            `  ${writer.wrapInColor('history', CliForegroundColor.Cyan)}                Show command history`,
+            `  ${writer.wrapInColor('history', CliForegroundColor.Cyan)}                  Show command history`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('history clear', CliForegroundColor.Cyan)}          Clear all history`,
+            `  ${writer.wrapInColor('history search <q>', CliForegroundColor.Cyan)}      Search history for pattern`,
+        );
+        writer.writeln(
+            `  ${writer.wrapInColor('history clear', CliForegroundColor.Cyan)}            Clear all history`,
         );
         writer.writeln();
         writer.writeln(
             `💡 Use ${writer.wrapInColor('↑/↓', CliForegroundColor.Yellow)} arrow keys to navigate through history`,
+        );
+        writer.writeln(
+            `💡 Type a prefix then ${writer.wrapInColor('↑', CliForegroundColor.Yellow)} to search history by prefix`,
         );
     }
 }

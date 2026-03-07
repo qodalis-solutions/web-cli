@@ -19,6 +19,10 @@ import {
     CliDefaultPermissionService,
 } from '../lib/services';
 
+import {
+    CliUsersModuleConfig_TOKEN,
+} from '../lib/models/users-module-config';
+
 import { CliWhoamiCommandProcessor } from '../lib/processors/cli-whoami-command-processor';
 import { CliIdCommandProcessor } from '../lib/processors/cli-id-command-processor';
 import { CliGroupsCommandProcessor } from '../lib/processors/cli-groups-command-processor';
@@ -29,6 +33,10 @@ import { CliUsermodCommandProcessor } from '../lib/processors/cli-usermod-comman
 import { CliGroupaddCommandProcessor } from '../lib/processors/cli-groupadd-command-processor';
 import { CliGroupdelCommandProcessor } from '../lib/processors/cli-groupdel-command-processor';
 import { CliWhoCommandProcessor } from '../lib/processors/cli-who-command-processor';
+import { CliLoginCommandProcessor } from '../lib/processors/cli-login-command-processor';
+import { CliLogoutCommandProcessor } from '../lib/processors/cli-logout-command-processor';
+import { CliPasswdCommandProcessor } from '../lib/processors/cli-passwd-command-processor';
+import { CliSwitchUserCommandProcessor } from '../lib/processors/cli-switch-user-command-processor';
 
 // ---------------------------------------------------------------------------
 // Setup helper
@@ -69,6 +77,9 @@ async function setupHarness(): Promise<{
     harness.registerService(ICliGroupsStoreService_TOKEN, groupsStore);
     harness.registerService(ICliPermissionService_TOKEN, permissionService);
 
+    // Register module config (no password required by default for login/su)
+    harness.registerService(CliUsersModuleConfig_TOKEN, {});
+
     // Create an admin user
     const adminUser = await usersStore.createUser({
         name: 'root',
@@ -99,6 +110,10 @@ async function setupHarness(): Promise<{
         new CliGroupaddCommandProcessor(),
         new CliGroupdelCommandProcessor(),
         new CliWhoCommandProcessor(),
+        new CliLoginCommandProcessor(),
+        new CliLogoutCommandProcessor(),
+        new CliPasswdCommandProcessor(),
+        new CliSwitchUserCommandProcessor(),
     ]);
 
     // Initialize processors (injects services via initialize())
@@ -280,5 +295,194 @@ describe('Users plugin integration: group management', () => {
 
         const result = await harness.execute('groupadd forbidden');
         expect(result.stderr.some(l => l.includes('permission denied'))).toBe(true);
+    });
+});
+
+describe('Users plugin integration: login/logout/su', () => {
+    let harness: CliTestHarness;
+    let usersStore: CliDefaultUsersStoreService;
+    let authService: CliDefaultAuthService;
+    let adminUser: ICliUser;
+
+    beforeEach(async () => {
+        ({ harness, usersStore, authService, adminUser } = await setupHarness());
+
+        // Create a second user for login/su tests
+        const bob = await usersStore.createUser({
+            name: 'bob',
+            email: 'bob@test.com',
+            groups: ['dev'],
+            homeDir: '/home/bob',
+        });
+        await authService.setPassword(bob.id, 'bobpass');
+    });
+
+    it('login should log in as a user (no password required by default)', async () => {
+        const result = await harness.execute('login bob');
+        expect(result.output).toContain('Logged in as bob');
+    });
+
+    it('login with unknown user should error', async () => {
+        const result = await harness.execute('login nobody');
+        expect(result.stderr.some(l => l.includes('Unknown user'))).toBe(true);
+    });
+
+    it('login without username should prompt for it', async () => {
+        harness.setReaderResponses('bob');
+        const result = await harness.execute('login');
+        expect(result.output).toContain('Logged in as bob');
+    });
+
+    it('logout should fail from root session', async () => {
+        const result = await harness.execute('logout');
+        expect(result.stderr.some(l => l.includes('cannot logout from root'))).toBe(true);
+    });
+
+    it('logout should succeed from non-root session', async () => {
+        // Switch to bob first
+        harness.setUserSession({
+            user: {
+                id: 'bob-id',
+                name: 'bob',
+                email: 'bob@test.com',
+                groups: ['dev'],
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            },
+            loginTime: Date.now(),
+            lastActivity: Date.now(),
+        });
+
+        const result = await harness.execute('logout');
+        expect(result.output).toContain('Logged out bob');
+    });
+
+    it('su should switch to another user', async () => {
+        const result = await harness.execute('su bob');
+        expect(result.output).toContain('Switched to bob');
+    });
+
+    it('su to nonexistent user should error', async () => {
+        const result = await harness.execute('su nobody');
+        expect(result.stderr.some(l => l.includes('Unknown id'))).toBe(true);
+    });
+
+    it('su to current user should error', async () => {
+        const result = await harness.execute('su root');
+        expect(result.stderr.some(l => l.includes('Already on the user'))).toBe(true);
+    });
+
+    it('login with disabled user should error', async () => {
+        const disabled = await usersStore.createUser({
+            name: 'disabled-user',
+            email: 'disabled@test.com',
+            groups: [],
+            homeDir: '/home/disabled',
+        });
+        await usersStore.updateUser(disabled.id, { disabled: true });
+
+        const result = await harness.execute('login disabled-user');
+        expect(result.stderr.some(l => l.includes('disabled'))).toBe(true);
+    });
+
+    it('su to disabled user should error', async () => {
+        const disabled = await usersStore.createUser({
+            name: 'locked',
+            email: 'locked@test.com',
+            groups: [],
+            homeDir: '/home/locked',
+        });
+        await usersStore.updateUser(disabled.id, { disabled: true });
+
+        const result = await harness.execute('su locked');
+        expect(result.stderr.some(l => l.includes('disabled'))).toBe(true);
+    });
+});
+
+describe('Users plugin integration: passwd', () => {
+    let harness: CliTestHarness;
+    let usersStore: CliDefaultUsersStoreService;
+    let authService: CliDefaultAuthService;
+    let adminUser: ICliUser;
+
+    beforeEach(async () => {
+        ({ harness, usersStore, authService, adminUser } = await setupHarness());
+    });
+
+    it('passwd should change own password', async () => {
+        // Responses: current password, new password, confirm new password
+        harness.setReaderResponses('password', 'newpass', 'newpass');
+
+        const result = await harness.execute('passwd');
+        expect(result.output).toContain('password updated successfully');
+
+        // Verify new password works
+        const valid = await authService.verifyPassword(adminUser.id, 'newpass');
+        expect(valid).toBe(true);
+    });
+
+    it('passwd should reject wrong current password', async () => {
+        harness.setReaderResponses('wrongpass', 'newpass', 'newpass');
+
+        const result = await harness.execute('passwd');
+        expect(result.stderr.some(l => l.includes('Authentication failure'))).toBe(true);
+    });
+
+    it('passwd should reject mismatched new passwords', async () => {
+        harness.setReaderResponses('password', 'newpass1', 'newpass2');
+
+        const result = await harness.execute('passwd');
+        expect(result.stderr.some(l => l.includes('passwords do not match'))).toBe(true);
+    });
+
+    it('passwd <username> should change another user password (admin)', async () => {
+        const bob = await usersStore.createUser({
+            name: 'bob',
+            email: 'bob@test.com',
+            groups: [],
+            homeDir: '/home/bob',
+        });
+        await authService.setPassword(bob.id, 'oldpass');
+
+        // Admin changing bob's password — no current password prompt
+        harness.setReaderResponses('newbobpass', 'newbobpass');
+
+        const result = await harness.execute('passwd bob');
+        expect(result.output).toContain('password updated successfully');
+
+        const valid = await authService.verifyPassword(bob.id, 'newbobpass');
+        expect(valid).toBe(true);
+    });
+
+    it('passwd <username> should fail without admin', async () => {
+        harness.setUserSession({
+            user: {
+                id: 'user-1',
+                name: 'regular',
+                email: 'regular@test.com',
+                groups: [],
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            },
+            loginTime: Date.now(),
+            lastActivity: Date.now(),
+        });
+
+        const result = await harness.execute('passwd root');
+        expect(result.stderr.some(l => l.includes('permission denied'))).toBe(true);
+    });
+
+    it('passwd for nonexistent user should error', async () => {
+        harness.setReaderResponses('newpass', 'newpass');
+
+        const result = await harness.execute('passwd nobody');
+        expect(result.stderr.some(l => l.includes('does not exist'))).toBe(true);
+    });
+
+    it('passwd should reject empty password', async () => {
+        harness.setReaderResponses('password', '', '');
+
+        const result = await harness.execute('passwd');
+        expect(result.stderr.some(l => l.includes('cannot be empty'))).toBe(true);
     });
 });

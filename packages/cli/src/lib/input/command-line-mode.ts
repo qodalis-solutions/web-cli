@@ -43,6 +43,8 @@ export class CommandLineMode implements IInputMode {
     private selectionEnd: { x: number; y: number } | null = null;
     private ghostText = '';
     private ghostDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+    /** Non-null while the user is doing prefix-based history search (Up arrow with text in buffer). */
+    private historySearchPrefix: string | null = null;
 
     constructor(private readonly host: CommandLineModeHost) {}
 
@@ -176,6 +178,7 @@ export class CommandLineMode implements IInputMode {
     private handleInputText(text: string): void {
         text = text.replace(/[\r\n\t]+/g, '');
         this.clearGhostText();
+        this.clearHistorySearch();
         this.host.lineBuffer.insert(text);
         this.refreshLine();
         this.scheduleGhostText();
@@ -216,6 +219,7 @@ export class CommandLineMode implements IInputMode {
     private handleBackspace(): void {
         const buffer = this.host.lineBuffer;
         this.clearGhostText();
+        this.clearHistorySearch();
         if (buffer.cursorPosition > 0) {
             buffer.deleteCharBefore();
             this.refreshLine();
@@ -294,6 +298,26 @@ export class CommandLineMode implements IInputMode {
 
     private showPreviousCommand(): void {
         this.clearGhostText();
+        const buffer = this.host.lineBuffer;
+
+        // If the buffer has text and we haven't started a prefix search, begin one.
+        if (buffer.text && this.historySearchPrefix === null) {
+            this.historySearchPrefix = buffer.text;
+            this.historyIndex = this.host.commandHistory.getLastIndex();
+        }
+
+        if (this.historySearchPrefix !== null) {
+            const found = this.host.commandHistory.searchBackward(
+                this.historySearchPrefix,
+                this.historyIndex,
+            );
+            if (found !== -1) {
+                this.historyIndex = found;
+                this.displayCommandFromHistory();
+            }
+            return;
+        }
+
         if (this.historyIndex > 0) {
             this.historyIndex--;
             this.displayCommandFromHistory();
@@ -303,6 +327,26 @@ export class CommandLineMode implements IInputMode {
     private showNextCommand(): void {
         this.clearGhostText();
         const buffer = this.host.lineBuffer;
+
+        if (this.historySearchPrefix !== null) {
+            const found = this.host.commandHistory.searchForward(
+                this.historySearchPrefix,
+                this.historyIndex,
+            );
+            if (found !== -1) {
+                this.historyIndex = found;
+                this.displayCommandFromHistory();
+            } else {
+                // Restore the original search prefix in the buffer
+                const previousContentLength =
+                    this.host.getPromptLength() + buffer.text.length;
+                const prefix = this.historySearchPrefix;
+                this.clearHistorySearch();
+                buffer.setText(prefix);
+                this.refreshLine(previousContentLength);
+            }
+            return;
+        }
 
         if (this.historyIndex < this.host.commandHistory.getLastIndex() - 1) {
             this.historyIndex++;
@@ -314,6 +358,11 @@ export class CommandLineMode implements IInputMode {
             buffer.clear();
             this.refreshLine(previousContentLength);
         }
+    }
+
+    private clearHistorySearch(): void {
+        this.historySearchPrefix = null;
+        this.historyIndex = this.host.commandHistory.getLastIndex();
     }
 
     private displayCommandFromHistory(): void {

@@ -28,6 +28,7 @@ import { CliServiceContainer } from '../services/cli-service-container';
 import { CliStateStoreManager } from '../state/cli-state-store-manager';
 import { CliStateStoreManager_TOKEN, CliProcessorsRegistry_TOKEN } from '../tokens';
 import { CliProcessRegistry, CliProcessRegistry_TOKEN } from '../services/cli-process-registry';
+import { CliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
 
 /**
  * Result of executing a command through the test harness.
@@ -43,6 +44,10 @@ export interface CliTestResult {
     exitCode: number | undefined;
     /** Pipeline data produced by process.output() or auto-captured */
     data: any;
+    /** Captured table outputs from writeTable() calls */
+    tables: { headers: string[]; rows: string[][] }[];
+    /** Captured list outputs from writeList() calls */
+    lists: string[][];
 }
 
 /**
@@ -108,6 +113,12 @@ export class CliTestHarness {
         this.services.set({
             provide: CliStateStoreManager_TOKEN,
             useValue: this.stateStoreManager,
+        });
+
+        // Register environment variable store
+        this.services.set({
+            provide: ICliEnvironment_TOKEN,
+            useValue: new CliEnvironment(),
         });
     }
 
@@ -180,6 +191,8 @@ export class CliTestHarness {
             output: writer.stdout.join('\n'),
             exitCode: context.process.exitCode,
             data: context.process.data,
+            tables: writer.tables,
+            lists: writer.lists,
         };
     }
 
@@ -247,15 +260,21 @@ export class CliTestHarness {
 interface TestWriter extends ICliTerminalWriter {
     stdout: string[];
     stderr: string[];
+    tables: { headers: string[]; rows: string[][] }[];
+    lists: string[][];
 }
 
 function createTestWriter(): TestWriter {
     const stdout: string[] = [];
     const stderr: string[] = [];
+    const tables: { headers: string[]; rows: string[][] }[] = [];
+    const lists: string[][] = [];
 
     return {
         stdout,
         stderr,
+        tables,
+        lists,
         write(text: string) { stdout.push(text); },
         writeln(text?: string) { stdout.push(text ?? ''); },
         writeSuccess(msg: string) { stdout.push(`[success] ${msg}`); },
@@ -267,9 +286,21 @@ function createTestWriter(): TestWriter {
         writeJson(json: any) { stdout.push(JSON.stringify(json)); },
         writeToFile(_fn: string, _content: string) {},
         writeObjectsAsTable(objects: any[]) { stdout.push(JSON.stringify(objects)); },
-        writeTable(_h: string[], _r: string[][]) {},
+        writeTable(headers: string[], rows: string[][]) {
+            tables.push({ headers, rows });
+            // Also push to stdout so output assertions can find table data
+            stdout.push(headers.join('\t'));
+            for (const row of rows) {
+                stdout.push(row.join('\t'));
+            }
+        },
         writeDivider() {},
-        writeList(_items: string[], _options?: any) {},
+        writeList(items: string[], _options?: any) {
+            lists.push(items);
+            for (const item of items) {
+                stdout.push(item);
+            }
+        },
         writeKeyValue(entries: any, _options?: any) {
             if (typeof entries === 'object' && !Array.isArray(entries)) {
                 for (const [k, v] of Object.entries(entries)) {
@@ -277,7 +308,11 @@ function createTestWriter(): TestWriter {
                 }
             }
         },
-        writeColumns(_items: string[], _options?: any) {},
+        writeColumns(items: string[], _options?: any) {
+            for (const item of items) {
+                stdout.push(item);
+            }
+        },
     };
 }
 

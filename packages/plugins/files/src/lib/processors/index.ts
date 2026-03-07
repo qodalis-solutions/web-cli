@@ -33,3 +33,4 @@ export * from './cli-awk-command-processor';
 export * from './cli-diff-command-processor';
 export * from './cli-tee-command-processor';
 export * from './cli-xargs-command-processor';
+export * from './cli-sh-command-processor';

@@ -45,6 +45,7 @@ import { CliAwkCommandProcessor } from './lib/processors/cli-awk-command-process
 import { CliDiffCommandProcessor } from './lib/processors/cli-diff-command-processor';
 import { CliTeeCommandProcessor } from './lib/processors/cli-tee-command-processor';
 import { CliXargsCommandProcessor } from './lib/processors/cli-xargs-command-processor';
+import { CliShCommandProcessor } from './lib/processors/cli-sh-command-processor';
 
 /**
  * Configuration options for the files module.
@@ -102,6 +103,7 @@ export const filesModule: ICliFilesModule = {
         new CliDiffCommandProcessor(),
         new CliTeeCommandProcessor(),
         new CliXargsCommandProcessor(),
+        new CliShCommandProcessor(),
     ],
     services: [
         {

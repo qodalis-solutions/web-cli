@@ -489,6 +489,14 @@ export interface CliPanelConfig {
      * @default 'center'
      */
     hideAlignment?: CliPanelHideAlignment;
+
+    /**
+     * When true, the panel's chrome (header, border, background) automatically
+     * syncs its colors with the active terminal theme. CSS custom properties
+     * are derived from the xterm theme and applied as inline styles.
+     * @default false
+     */
+    syncTheme?: boolean;
 }
 
 export const enums = {

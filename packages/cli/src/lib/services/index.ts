@@ -19,3 +19,8 @@ export {
 } from './cli-input-reader';
 export { CapturingTerminalWriter } from './capturing-terminal-writer';
 export { CliProcessRegistry, CliProcessRegistry_TOKEN } from './cli-process-registry';
+export {
+    ICliEnvironment,
+    ICliEnvironment_TOKEN,
+    CliEnvironment,
+} from './cli-environment';
