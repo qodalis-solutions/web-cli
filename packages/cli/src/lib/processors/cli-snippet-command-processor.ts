@@ -1,5 +1,6 @@
 import {
     ICliCommandProcessor,
+    ICliCommandChildProcessor,
     ICliExecutionContext,
     CliProcessCommand,
     ICliCommandAuthor,
@@ -26,7 +27,7 @@ export class CliSnippetCommandProcessor implements ICliCommandProcessor {
         initialState: { snippets: {} } as SnippetState,
     };
 
-    processors: ICliCommandProcessor[] = [
+    processors: ICliCommandChildProcessor[] = [
         {
             command: 'list',
             description: 'List all saved snippets',
@@ -73,9 +74,9 @@ export class CliSnippetCommandProcessor implements ICliCommandProcessor {
                     context.writer.writeError('Usage: snippet save <name> "<template>"');
                     return;
                 }
-                const state = context.state.getState<SnippetState>();
-                state.snippets[name] = template;
-                context.state.updateState({ snippets: { ...state.snippets } });
+                const { snippets } = context.state.getState<SnippetState>();
+                const updated = { ...snippets, [name]: template };
+                context.state.updateState({ snippets: updated });
                 await context.state.persist();
                 context.writer.writeSuccess(`Snippet "${name}" saved`);
             },
@@ -88,7 +89,7 @@ export class CliSnippetCommandProcessor implements ICliCommandProcessor {
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
                 const name = (cmd.value ?? '').trim();
                 const { snippets } = context.state.getState<SnippetState>();
-                if (!snippets[name]) {
+                if (!(name in snippets)) {
                     context.writer.writeError(`Snippet "${name}" not found`);
                     return;
                 }
@@ -105,13 +106,14 @@ export class CliSnippetCommandProcessor implements ICliCommandProcessor {
             valueRequired: true,
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
                 const name = (cmd.value ?? '').trim();
-                const state = context.state.getState<SnippetState>();
-                if (!state.snippets[name]) {
+                const { snippets } = context.state.getState<SnippetState>();
+                if (!(name in snippets)) {
                     context.writer.writeError(`Snippet "${name}" not found`);
                     return;
                 }
-                delete state.snippets[name];
-                context.state.updateState({ snippets: { ...state.snippets } });
+                const updated = { ...snippets };
+                delete updated[name];
+                context.state.updateState({ snippets: updated });
                 await context.state.persist();
                 context.writer.writeSuccess(`Snippet "${name}" deleted`);
             },
@@ -128,7 +130,7 @@ export class CliSnippetCommandProcessor implements ICliCommandProcessor {
                 const argsStr = spaceIdx === -1 ? '' : raw.slice(spaceIdx + 1).trim();
 
                 const { snippets } = context.state.getState<SnippetState>();
-                if (!snippets[name]) {
+                if (!(name in snippets)) {
                     context.writer.writeError(`Snippet "${name}" not found`);
                     return;
                 }

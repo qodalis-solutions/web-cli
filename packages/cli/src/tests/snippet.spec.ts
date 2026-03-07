@@ -34,6 +34,7 @@ describe('CliSnippetCommandProcessor', () => {
         await harness.execute('snippet save greet "echo Hello {{name}}"');
         const result = await harness.execute('snippet list');
         expect(result.output).toContain('greet');
+        expect(result.output).toContain('echo Hello {{name}}');
         expect(result.exitCode).toBe(0);
     });
 
@@ -78,5 +79,12 @@ describe('CliSnippetCommandProcessor', () => {
         const result = await harness.execute('snippet');
         expect(result.output).toContain('snippet(s) saved');
         expect(result.exitCode).toBe(0);
+    });
+
+    it('snippet run resolves variables and executes command', async () => {
+        await harness.execute('snippet save greet "echo Hello {{name}}"');
+        // run with variable — echo is a built-in, its output should appear
+        const result = await harness.execute('snippet run greet name=World');
+        expect(result.output).toContain('World');
     });
 });
