@@ -41,4 +41,10 @@ describe('CliDragDropService', () => {
         container.dispatchEvent(dropEvent);
         expect(emitted).toBeFalse();
     });
+
+    it('should call preventDefault on dragover', () => {
+        const dragOverEvent = new DragEvent('dragover', { bubbles: true, cancelable: true });
+        container.dispatchEvent(dragOverEvent);
+        expect(dragOverEvent.defaultPrevented).toBeTrue();
+    });
 });
