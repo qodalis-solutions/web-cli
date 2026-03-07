@@ -30,8 +30,14 @@ export function renderBarChart(data: ChartDataPoint[], width = 40): string[] {
     if (data.length === 0) return ['No data'];
     const max = Math.max(...data.map((d) => d.value));
     const labelWidth = Math.max(...data.map((d) => d.label.length)) + 1;
+
+    // When all values are zero, show minimal bars
+    if (max === 0) {
+        return data.map(({ label }) => `${label.padStart(labelWidth)} | \u2581 0`);
+    }
+
     return data.map(({ label, value }) => {
-        const ratio = max === 0 ? 0 : value / max;
+        const ratio = value / max;
         const barLen = Math.round(ratio * width);
         const bar = '\u2588'.repeat(barLen);
         return `${label.padStart(labelWidth)} | ${bar} ${value}`;
@@ -43,7 +49,14 @@ export function renderSparkline(data: ChartDataPoint[]): string {
     const values = data.map((d) => d.value);
     const min = Math.min(...values);
     const max = Math.max(...values);
-    const range = max - min || 1;
+    const range = max - min;
+
+    // All same values → use half-block (visual middle)
+    if (range === 0) {
+        const midChar = BLOCK_CHARS[Math.floor(BLOCK_CHARS.length / 2)];
+        return values.map(() => midChar).join('');
+    }
+
     return values
         .map((v) => {
             const idx = Math.round(((v - min) / range) * (BLOCK_CHARS.length - 1));

@@ -59,6 +59,12 @@ describe('chart-utils', () => {
             const lines = renderBarChart(data, 10);
             expect(lines[0]).toContain('| ');
         });
+
+        it('renders all-zero values with minimal 1-char bars', () => {
+            const data = [{ label: 'A', value: 0 }, { label: 'B', value: 0 }];
+            const lines = renderBarChart(data, 20);
+            expect(lines.every((l) => l.includes('\u2581'))).toBeTrue();
+        });
     });
 
     describe('renderSparkline', () => {
@@ -80,6 +86,13 @@ describe('chart-utils', () => {
         it('handles all-same values gracefully', () => {
             const data = [5, 5, 5].map((v, i) => ({ label: String(i), value: v }));
             const spark = renderSparkline(data);
+            expect(spark.length).toBe(3);
+        });
+
+        it('renders all-same values with mid-level block character', () => {
+            const data = [1, 1, 1].map((v, i) => ({ label: String(i), value: v }));
+            const spark = renderSparkline(data);
+            expect(spark).not.toBe('   '); // should not be spaces
             expect(spark.length).toBe(3);
         });
     });
@@ -112,6 +125,14 @@ describe('chart-utils', () => {
             const lines = renderLineChart(data, 20, 5);
             const combined = lines.join('');
             expect(combined).toContain('\u25cf');
+        });
+
+        it('handles a single data point without errors', () => {
+            const data = [{ label: 'only', value: 42 }];
+            const lines = renderLineChart(data, 20, 5);
+            expect(lines.length).toBe(5);
+            // The single point should appear somewhere in the chart
+            expect(lines.some((l) => l.includes('\u25cf'))).toBeTrue();
         });
     });
 });
