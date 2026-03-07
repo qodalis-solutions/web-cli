@@ -86,6 +86,9 @@
       ],
       "@qodalis/cli-chart": [
         "dist/chart"
+      ],
+      "@qodalis/cli-csv": [
+        "dist/csv"
       ]
     },
     "outDir": "./dist/out-tsc",

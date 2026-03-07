@@ -548,6 +548,23 @@
           }
         }
       }
+    },
+    "csv": {
+      "projectType": "library",
+      "root": "packages/plugins/csv",
+      "sourceRoot": "packages/plugins/csv/src",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/csv/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
     }
   },
   "cli": {
