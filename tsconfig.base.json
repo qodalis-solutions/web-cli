@@ -83,6 +83,9 @@
       ],
       "@qodalis/electron-cli/main": [
         "dist/electron-cli/main"
+      ],
+      "@qodalis/cli-chart": [
+        "dist/chart"
       ]
     },
     "outDir": "./dist/out-tsc",
