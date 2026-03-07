@@ -1,4 +1,5 @@
 import { CliAliasCommandProcessor } from './cli-alias-command-processor';
+import { CliCaptureCommandProcessor } from './cli-capture-command-processor';
 import { CliBase64CommandProcessor } from './cli-base64-command-processor';
 import { CliCalCommandProcessor } from './cli-cal-command-processor';
 import { CliClearCommandProcessor } from './cli-clear-command-processor';
@@ -52,6 +53,7 @@ export * from './cli-convert-command-processor';
 export * from './cli-yes-command-processor';
 export * from './cli-eval-command-processor';
 export * from './cli-uname-command-processor';
+export * from './cli-capture-command-processor';
 
 export * from './system';
 export * from './theme/cli-theme-command-processor';
@@ -112,4 +114,5 @@ export const builtinProcessors: ICliCommandProcessor[] = [
     new CliUnsetCommandProcessor(),
     new CliEnvCommandProcessor(),
     new CliFontSizeCommandProcessor(),
+    new CliCaptureCommandProcessor(),
 ];
