@@ -41,9 +41,9 @@ export class CliDiffCommandProcessor implements ICliCommandProcessor {
         // First text: from --a param or piped value
         const a = (command.args['a'] as string | undefined) ?? (command.value ?? '');
         const b = command.args['b'] as string | undefined;
-        const contextLines = command.args['context'] !== undefined
-            ? parseInt(String(command.args['context']), 10)
-            : 3;
+        const rawContext = command.args?.['context'];
+        const parsed = rawContext !== undefined ? parseInt(String(rawContext), 10) : NaN;
+        const contextLines = Number.isFinite(parsed) && parsed >= 0 ? parsed : 3;
 
         if (b === undefined) {
             context.writer.writeError(

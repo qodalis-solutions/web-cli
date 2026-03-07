@@ -40,6 +40,11 @@ describe('computeDiff', () => {
         expect(result.some((l) => l.type === 'add')).toBe(true);
         expect(result.some((l) => l.type === 'remove')).toBe(true);
     });
+
+    it('should return empty result for both empty inputs', () => {
+        const result = computeDiff('', '');
+        expect(result.length).toBe(0);
+    });
 });
 
 describe('formatDiff', () => {
