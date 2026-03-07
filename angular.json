@@ -601,6 +601,25 @@
           }
         }
       }
+    },
+    "cron": {
+      "projectType": "library",
+      "root": "packages/plugins/cron",
+      "sourceRoot": "packages/plugins/cron/src",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/cron/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
+            "browsers": "ChromeHeadless",
+            "watch": false
+          }
+        }
+      }
     }
   },
   "cli": {

@@ -95,6 +95,9 @@
       ],
       "@qodalis/cli-stopwatch": [
         "dist/stopwatch"
+      ],
+      "@qodalis/cli-cron": [
+        "dist/cron"
       ]
     },
     "outDir": "./dist/out-tsc",
