@@ -4,7 +4,8 @@
 
 export * from './lib/index';
 
-import { ICliModule, ICliCompletionProvider_TOKEN, ICliFileTransferService_TOKEN } from '@qodalis/cli-core';
+import { ICliModule, ICliCompletionProvider_TOKEN, ICliFileTransferService_TOKEN, ICliDragDropService, ICliDragDropService_TOKEN, ICliExecutionContext } from '@qodalis/cli-core';
+import { Subscription } from 'rxjs';
 import { API_VERSION } from './lib/version';
 import { IFileSystemService_TOKEN } from './lib/interfaces';
 import { IndexedDbFileSystemService, VirtualFsFileTransferService } from './lib/services';
@@ -63,6 +64,7 @@ interface ICliFilesModule extends ICliModule {
 }
 
 const fsService = new IndexedDbFileSystemService();
+let _dragDropSubscription: Subscription | undefined;
 
 export const filesModule: ICliFilesModule = {
     apiVersion: API_VERSION,
@@ -137,5 +139,40 @@ export const filesModule: ICliFilesModule = {
         if (showPath) {
             context.promptPathProvider = () => fs.getCurrentDirectory();
         }
+
+        let dragDrop: ICliDragDropService | undefined;
+        try {
+            dragDrop = context.services.get<ICliDragDropService>(ICliDragDropService_TOKEN);
+        } catch {
+            // service not registered (e.g. test environment) — skip
+        }
+
+        if (dragDrop) {
+            _dragDropSubscription = dragDrop.onFileDrop.subscribe((files) => {
+                files.forEach((file) => {
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                        const content = reader.result as string;
+                        const dest = fs.resolvePath(
+                            fs.getCurrentDirectory() + '/' + file.name,
+                        );
+                        await fs.writeFile(dest, content);
+                        await fs.persist();
+                        context.writer.writeSuccess(
+                            `Uploaded: ${file.name} (${file.size} bytes) → ${dest}`,
+                        );
+                    };
+                    reader.onerror = () => {
+                        context.writer.writeError(`Failed to read dropped file: ${file.name}`);
+                    };
+                    reader.readAsText(file);
+                });
+            });
+        }
+    },
+
+    async onDestroy(_context: ICliExecutionContext): Promise<void> {
+        _dragDropSubscription?.unsubscribe();
+        _dragDropSubscription = undefined;
     },
 };
