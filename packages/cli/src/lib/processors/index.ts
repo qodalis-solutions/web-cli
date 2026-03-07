@@ -55,6 +55,8 @@ export * from './cli-eval-command-processor';
 export * from './cli-uname-command-processor';
 export * from './cli-capture-command-processor';
 export * from './cli-snippet-command-processor';
+export * from './cli-diff-command-processor';
+export * from './diff-utils';
 
 export * from './system';
 export * from './theme/cli-theme-command-processor';
@@ -76,6 +78,7 @@ import {
 } from './cli-env-command-processor';
 import { CliFontSizeCommandProcessor } from './cli-font-size-command-processor';
 import { CliSnippetCommandProcessor } from './cli-snippet-command-processor';
+import { CliDiffCommandProcessor } from './cli-diff-command-processor';
 
 export const miscProcessors = [
     new CliClearCommandProcessor(),
@@ -118,4 +121,5 @@ export const builtinProcessors: ICliCommandProcessor[] = [
     new CliFontSizeCommandProcessor(),
     new CliCaptureCommandProcessor(),
     new CliSnippetCommandProcessor(),
+    new CliDiffCommandProcessor(),
 ];
