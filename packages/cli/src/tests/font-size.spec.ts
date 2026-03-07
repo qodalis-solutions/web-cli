@@ -84,4 +84,25 @@ describe('CliFontSizeCommandProcessor', () => {
         const result = await harness.execute('font-size set abc');
         expect(result.stderr.some((l) => l.includes('between 8 and 40'))).toBe(true);
     });
+
+    it('should restore a non-default font size from state on initialize()', async () => {
+        // Build a minimal context with state = { fontSize: 14 } and a terminal
+        // that has an options object so initialize() can write into it.
+        const terminalOptions: { fontSize?: number } = {};
+        const fakeContext = {
+            state: {
+                getState: () => ({ fontSize: 14 }),
+                updateState: () => {},
+                select: () => ({ subscribe: () => {} }),
+                subscribe: () => ({ unsubscribe: () => {} }),
+                reset: () => {},
+                persist: async () => {},
+            },
+            terminal: { options: terminalOptions },
+        } as any;
+
+        await processor.initialize(fakeContext);
+
+        expect(terminalOptions.fontSize).toBe(14);
+    });
 });

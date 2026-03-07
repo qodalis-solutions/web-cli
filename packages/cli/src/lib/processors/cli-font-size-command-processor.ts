@@ -73,10 +73,8 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
 
     async initialize(context: ICliExecutionContext): Promise<void> {
         const state = context.state.getState<FontSizeState>();
-        if (state.fontSize && state.fontSize !== DEFAULT_FONT_SIZE) {
-            if (context.terminal?.options) {
-                context.terminal.options.fontSize = state.fontSize;
-            }
+        if (state?.fontSize && context.terminal?.options) {
+            context.terminal.options.fontSize = state.fontSize;
         }
     }
 
