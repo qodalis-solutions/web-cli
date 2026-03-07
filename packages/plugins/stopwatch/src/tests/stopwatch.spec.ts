@@ -12,6 +12,8 @@ describe('stopwatch-utils', () => {
         it('returns null for durations < 10s', () => expect(parseDuration('5s')).toBeNull());
         it('parses plain number as seconds (>= 10)', () => expect(parseDuration('60')).toBe(60000));
         it('returns null for plain number < 10s', () => expect(parseDuration('5')).toBeNull());
+        it('parses exactly 10s → 10000ms (boundary)', () => expect(parseDuration('10s')).toBe(10000));
+        it('parses plain 10 → 10000ms (boundary)', () => expect(parseDuration('10')).toBe(10000));
     });
 
     describe('formatDuration', () => {

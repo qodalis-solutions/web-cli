@@ -98,6 +98,13 @@ class CliStopwatchTimerCommandProcessor implements ICliCommandProcessor {
                 this.running = !this.running;
                 this.render(context);
                 break;
+            case 'r':
+            case 'R':
+                this.remaining = this.total;
+                this.running = false;
+                this.render(context);
+                break;
+            // L=lap not applicable to countdown timer
             case 'q':
             case 'Q':
             case '\x03': // Ctrl+C
@@ -200,7 +207,7 @@ class CliStopwatchTimerCommandProcessor implements ICliCommandProcessor {
         }
 
         // Controls hint
-        const hint = '[Space/P] Pause   [Q/Ctrl+C] Quit';
+        const hint = '[Space/P] Pause   [R] Reset   [Q] Quit';
         const hintCol = Math.max(1, Math.floor((cols - hint.length) / 2) + 1);
         buf.push(ansi.cursorTo(centerRow + 4, hintCol));
         buf.push(ansi.dim, hint, ansi.reset);
