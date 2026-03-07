@@ -565,6 +565,23 @@
           }
         }
       }
+    },
+    "markdown": {
+      "projectType": "library",
+      "root": "packages/plugins/markdown",
+      "sourceRoot": "packages/plugins/markdown/src",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/markdown/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
     }
   },
   "cli": {

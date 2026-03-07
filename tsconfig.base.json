@@ -89,6 +89,9 @@
       ],
       "@qodalis/cli-csv": [
         "dist/csv"
+      ],
+      "@qodalis/cli-markdown": [
+        "dist/markdown"
       ]
     },
     "outDir": "./dist/out-tsc",
