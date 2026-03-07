@@ -57,6 +57,7 @@ export function filterCsvRows(
             case 'contains': return cell.includes(value);
             case 'gt': return parseFloat(cell) > parseFloat(value);
             case 'lt': return parseFloat(cell) < parseFloat(value);
+            default: return false;
         }
     });
 }

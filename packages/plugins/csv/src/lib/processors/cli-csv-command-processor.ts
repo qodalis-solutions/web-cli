@@ -79,6 +79,11 @@ export class CliCsvCommandProcessor implements ICliCommandProcessor {
                     context.writer.writeError('Usage: csv filter --col=<name> --op=<op> --val=<value>');
                     return;
                 }
+                const validOps = ['eq', 'ne', 'contains', 'gt', 'lt'];
+                if (!validOps.includes(op)) {
+                    context.writer.writeError(`Invalid op "${op}". Must be one of: ${validOps.join(', ')}`);
+                    return;
+                }
                 const filtered = filterCsvRows(headers, rows, col, op, val);
                 context.writer.writeln(toCsvString(headers, filtered));
             },

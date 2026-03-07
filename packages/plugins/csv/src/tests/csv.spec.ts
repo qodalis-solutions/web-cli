@@ -69,6 +69,13 @@ describe('csv-utils', () => {
             expect(filtered).toHaveSize(2);
         });
 
+        it('lt filter compares numbers', () => {
+            const { headers, rows } = parseCsv(SAMPLE);
+            const filtered = filterCsvRows(headers, rows, 'age', 'lt', '30');
+            expect(filtered).toHaveSize(1);
+            expect(filtered[0][0]).toBe('Bob');
+        });
+
         it('returns all rows for unknown column', () => {
             const { headers, rows } = parseCsv(SAMPLE);
             const filtered = filterCsvRows(headers, rows, 'nonexistent', 'eq', 'x');
