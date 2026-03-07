@@ -60,10 +60,6 @@ describe('CliCaptureCommandProcessor', () => {
         );
     });
 
-    afterEach(() => {
-        pkillLeftovers();
-    });
-
     it('should error on unknown format', async () => {
         withTerminal(processor, fakeTerminal(['line']));
         const result = await harness.execute('capture --format=xml');
@@ -129,6 +125,3 @@ describe('CliCaptureCommandProcessor', () => {
         expect(downloadedContent).toContain('#eaeaea');
     });
 });
-
-/** No-op — Karma cleans up after itself; this is just a placeholder for symmetry. */
-function pkillLeftovers(): void {}

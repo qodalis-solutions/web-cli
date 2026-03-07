@@ -8,6 +8,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandParameterDescriptor,
 } from '@qodalis/cli-core';
+import { ITheme } from '@xterm/xterm';
 
 export class CliCaptureCommandProcessor implements ICliCommandProcessor {
     command = 'capture';
@@ -73,16 +74,22 @@ export class CliCaptureCommandProcessor implements ICliCommandProcessor {
             this.download(`${filename}.txt`, content, 'text/plain');
             context.writer.writeSuccess(`Downloaded ${filename}.txt (${lines.length} lines)`);
         } else {
-            const theme = (terminal as any)?.options?.theme;
+            const theme = context.terminal?.options?.theme;
             const content = this.toHtml(lines, theme);
             this.download(`${filename}.html`, content, 'text/html');
             context.writer.writeSuccess(`Downloaded ${filename}.html (${lines.length} lines)`);
         }
     }
 
-    private toHtml(lines: string[], theme: any): string {
-        const bg = theme?.background ?? '#0c0c0c';
-        const fg = theme?.foreground ?? '#cccccc';
+    private sanitizeCssColor(value: string | undefined, fallback: string): string {
+        if (!value) return fallback;
+        // Allow only hex colors, rgb(), rgba(), named colors (no special chars)
+        return /^[a-zA-Z0-9#(),. %]+$/.test(value) ? value : fallback;
+    }
+
+    private toHtml(lines: string[], theme: ITheme | undefined): string {
+        const bg = this.sanitizeCssColor(theme?.background, '#0c0c0c');
+        const fg = this.sanitizeCssColor(theme?.foreground, '#cccccc');
         const escaped = lines.map((l) => this.escapeHtml(l)).join('\n');
         return `<!DOCTYPE html>
 <html>
