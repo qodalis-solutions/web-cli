@@ -36,21 +36,21 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
             command: 'increase',
             description: `Increase font size by ${STEP}px (max ${MAX_FONT_SIZE})`,
             processCommand: async (_: CliProcessCommand, context: ICliExecutionContext) => {
-                this.setFontSize(context, this.getCurrent(context) + STEP);
+                await this.setFontSize(context, this.getCurrent(context) + STEP);
             },
         },
         {
             command: 'decrease',
             description: `Decrease font size by ${STEP}px (min ${MIN_FONT_SIZE})`,
             processCommand: async (_: CliProcessCommand, context: ICliExecutionContext) => {
-                this.setFontSize(context, this.getCurrent(context) - STEP);
+                await this.setFontSize(context, this.getCurrent(context) - STEP);
             },
         },
         {
             command: 'reset',
             description: `Reset font size to default (${DEFAULT_FONT_SIZE}px)`,
             processCommand: async (_: CliProcessCommand, context: ICliExecutionContext) => {
-                this.setFontSize(context, DEFAULT_FONT_SIZE);
+                await this.setFontSize(context, DEFAULT_FONT_SIZE);
             },
         },
         {
@@ -58,6 +58,8 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
             description: 'Set font size to a specific value',
             valueRequired: true,
             acceptsRawInput: true,
+            // Explicit range validation here (instead of relying solely on setFontSize's clamp)
+            // so we can surface a clear error message to the user for out-of-range input.
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
                 const n = parseInt(cmd.value ?? '', 10);
                 if (isNaN(n) || n < MIN_FONT_SIZE || n > MAX_FONT_SIZE) {
@@ -66,14 +68,14 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
                     );
                     return;
                 }
-                this.setFontSize(context, n);
+                await this.setFontSize(context, n);
             },
         },
     ];
 
     async initialize(context: ICliExecutionContext): Promise<void> {
         const state = context.state.getState<FontSizeState>();
-        if (state?.fontSize && context.terminal?.options) {
+        if (state?.fontSize != null && context.terminal?.options) {
             context.terminal.options.fontSize = state.fontSize;
         }
     }
@@ -106,13 +108,13 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
         return state?.fontSize ?? DEFAULT_FONT_SIZE;
     }
 
-    private setFontSize(context: ICliExecutionContext, size: number): void {
+    private async setFontSize(context: ICliExecutionContext, size: number): Promise<void> {
         const clamped = Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, size));
         if (context.terminal?.options) {
             context.terminal.options.fontSize = clamped;
         }
         context.state.updateState({ fontSize: clamped } as FontSizeState);
-        context.state.persist();
+        await context.state.persist();
         context.writer.writeSuccess(`Font size set to ${clamped}px`);
     }
 }
