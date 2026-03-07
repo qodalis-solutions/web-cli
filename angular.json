@@ -582,6 +582,25 @@
           }
         }
       }
+    },
+    "stopwatch": {
+      "projectType": "library",
+      "root": "packages/plugins/stopwatch",
+      "sourceRoot": "packages/plugins/stopwatch/src",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/stopwatch/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
+            "browsers": "ChromeHeadless",
+            "watch": false
+          }
+        }
+      }
     }
   },
   "cli": {

@@ -92,6 +92,9 @@
       ],
       "@qodalis/cli-markdown": [
         "dist/markdown"
+      ],
+      "@qodalis/cli-stopwatch": [
+        "dist/stopwatch"
       ]
     },
     "outDir": "./dist/out-tsc",
