@@ -30,7 +30,7 @@
           "zone.js",
           "zone.js/testing"
         ],
-        "browsers": "ChromeHeadless",
+        "karmaConfig": "packages/cli/karma.conf.js",
         "watch": false
       }
     }

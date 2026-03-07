@@ -59,11 +59,19 @@ export * from './theme/types';
 export * from './configure/cli-configure-command-processor';
 export * from './configure/types';
 export * from './cli-ping-command-processor';
+export * from './cli-env-command-processor';
+export * from './cli-font-size-command-processor';
 
 import { ICliCommandProcessor } from '@qodalis/cli-core';
 import { systemProcessors } from './system';
 import { CliThemeCommandProcessor } from './theme/cli-theme-command-processor';
 import { CliPingCommandProcessor } from './cli-ping-command-processor';
+import {
+    CliExportCommandProcessor,
+    CliUnsetCommandProcessor,
+    CliEnvCommandProcessor,
+} from './cli-env-command-processor';
+import { CliFontSizeCommandProcessor } from './cli-font-size-command-processor';
 
 export const miscProcessors = [
     new CliClearCommandProcessor(),
@@ -100,4 +108,8 @@ export const builtinProcessors: ICliCommandProcessor[] = [
     new CliThemeCommandProcessor(),
     new CliConfigureCommandProcessor(),
     new CliPingCommandProcessor(),
+    new CliExportCommandProcessor(),
+    new CliUnsetCommandProcessor(),
+    new CliEnvCommandProcessor(),
+    new CliFontSizeCommandProcessor(),
 ];
