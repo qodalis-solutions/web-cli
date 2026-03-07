@@ -24,3 +24,4 @@ export {
     ICliEnvironment_TOKEN,
     CliEnvironment,
 } from './cli-environment';
+export { CliDragDropService } from './cli-drag-drop.service';
