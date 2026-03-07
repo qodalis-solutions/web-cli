@@ -41,6 +41,8 @@ import {
 } from '../tokens';
 import { CliDefaultPingServerService } from '../services/defaults/cli-default-ping-server.service';
 import { CliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
+import { CliDragDropService } from '../services/cli-drag-drop.service';
+import { ICliDragDropService_TOKEN } from '@qodalis/cli-core';
 import { CliCommandCompletionProvider } from '../completion/cli-command-completion-provider';
 import { CliParameterCompletionProvider } from '../completion/cli-parameter-completion-provider';
 import { CliServiceNameCompletionProvider } from '../completion/cli-service-name-completion-provider';
@@ -75,6 +77,7 @@ export class CliEngine {
     private resizeVersion = 0;
     private resizeScheduled = false;
     private bootService?: CliBoot;
+    private dragDropService?: CliDragDropService;
 
     constructor(
         private readonly container: HTMLElement,
@@ -191,6 +194,11 @@ export class CliEngine {
                 },
             ]);
         }
+
+        services.set([{
+            provide: ICliDragDropService_TOKEN,
+            useValue: this.dragDropService,
+        }]);
 
         // 4. Create boot service with registry and services
         this.bootService = new CliBoot(this.registry, services);
@@ -325,6 +333,7 @@ export class CliEngine {
         this.resizeVersion = -1;
         this.resizeScheduled = false;
         this.resizeObserver?.disconnect();
+        this.dragDropService?.destroy();
         this.terminal?.dispose();
     }
 
@@ -466,6 +475,7 @@ export class CliEngine {
 
         this.terminal.focus();
         this.handleResize();
+        this.dragDropService = new CliDragDropService(this.container);
     }
 
     private handleResize(): void {
