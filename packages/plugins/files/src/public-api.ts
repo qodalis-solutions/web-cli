@@ -64,7 +64,6 @@ interface ICliFilesModule extends ICliModule {
 }
 
 const fsService = new IndexedDbFileSystemService();
-let _dragDropSubscription: Subscription | undefined;
 
 export const filesModule: ICliFilesModule = {
     apiVersion: API_VERSION,
@@ -148,7 +147,7 @@ export const filesModule: ICliFilesModule = {
         }
 
         if (dragDrop) {
-            _dragDropSubscription = dragDrop.onFileDrop.subscribe((files) => {
+            (this as any)._dragDropSubscription = dragDrop.onFileDrop.subscribe((files) => {
                 files.forEach((file) => {
                     const reader = new FileReader();
                     reader.onload = async () => {
@@ -165,6 +164,9 @@ export const filesModule: ICliFilesModule = {
                     reader.onerror = () => {
                         context.writer.writeError(`Failed to read dropped file: ${file.name}`);
                     };
+                    if (file.type && !file.type.startsWith('text/') && file.type !== 'application/json') {
+                        context.writer.writeWarning(`${file.name}: may be a binary file — uploading as text (content may be corrupted)`);
+                    }
                     reader.readAsText(file);
                 });
             });
@@ -172,7 +174,8 @@ export const filesModule: ICliFilesModule = {
     },
 
     async onDestroy(_context: ICliExecutionContext): Promise<void> {
-        _dragDropSubscription?.unsubscribe();
-        _dragDropSubscription = undefined;
+        const sub: Subscription | undefined = (this as any)._dragDropSubscription;
+        sub?.unsubscribe();
+        (this as any)._dragDropSubscription = undefined;
     },
 };

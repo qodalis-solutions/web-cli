@@ -37,7 +37,9 @@ describe('CliDragDropService', () => {
         service.onFileDrop.subscribe(() => { emitted = true; });
         service.destroy();
 
-        const dropEvent = new DragEvent('drop', { bubbles: true });
+        const dt = new DataTransfer();
+        dt.items.add(new File(['x'], 'x.txt', { type: 'text/plain' }));
+        const dropEvent = new DragEvent('drop', { bubbles: true, dataTransfer: dt });
         container.dispatchEvent(dropEvent);
         expect(emitted).toBeFalse();
     });
