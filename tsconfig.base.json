@@ -98,6 +98,12 @@
       ],
       "@qodalis/cli-cron": [
         "dist/cron"
+      ],
+      "@qodalis/cli-lang-es": [
+        "dist/lang-es"
+      ],
+      "@qodalis/cli-lang-es/*": [
+        "dist/lang-es/*"
       ]
     },
     "outDir": "./dist/out-tsc",
