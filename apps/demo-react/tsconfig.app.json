@@ -26,7 +26,8 @@
       "@qodalis/cli-minesweeper": ["dist/minesweeper"],
       "@qodalis/cli-wordle": ["dist/wordle"],
       "@qodalis/cli-scp": ["dist/scp"],
-      "@qodalis/cli-wget": ["dist/wget"]
+      "@qodalis/cli-wget": ["dist/wget"],
+      "@qodalis/cli-sudoku": ["dist/sudoku"]
     },
     "target": "ES2022",
     "useDefineForClassFields": true,

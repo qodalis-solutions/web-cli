@@ -111,6 +111,10 @@ export default defineConfig({
                 __dirname,
                 '../../dist/wget/public-api.mjs',
             ),
+            '@qodalis/cli-sudoku': path.resolve(
+                __dirname,
+                '../../dist/sudoku/public-api.mjs',
+            ),
         },
     },
 });
