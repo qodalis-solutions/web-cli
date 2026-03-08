@@ -1,0 +1,79 @@
+<h1>Language Packs</h1>
+<p>
+    Qodalis CLI supports internationalization (i18n) through language pack plugins.
+    Each language pack translates the built-in CLI interface strings (help text, error messages,
+    prompts) into the target language.
+</p>
+
+<h2>Available Language Packs</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Language</th>
+            <th>Package</th>
+            <th>Install</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let pack of languagePacks">
+            <td>{{ pack.name }}</td>
+            <td><code>{{ pack.npmPackage }}</code></td>
+            <td><code>npm install {{ pack.npmPackage }}</code></td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Usage</h2>
+<p>Install a language pack and add it to your modules array:</p>
+
+<div class="code-block">
+    <span class="code-label">npm</span>
+    <pre><code>npm install @qodalis/cli-lang-es</code></pre>
+</div>
+
+<div class="code-block">
+    <span class="code-label">Import and use</span>
+    <pre><code>import &#123; langEsModule &#125; from '@qodalis/cli-lang-es';
+
+// Angular: &lt;cli [modules]="[langEsModule]" /&gt;
+// React:   &lt;Cli modules=&#123;[langEsModule]&#125; /&gt;
+// Vue:     &lt;Cli :modules="[langEsModule]" /&gt;</code></pre>
+</div>
+
+<p>You can also install language packs at runtime without rebuilding:</p>
+<div class="code-block">
+    <span class="code-label">Terminal</span>
+    <pre><code>pkg add @qodalis/cli-lang-es</code></pre>
+</div>
+
+<h2>Creating a Language Pack</h2>
+<p>
+    Language packs are regular CLI plugins that register translations during initialization.
+    The plugin's <code>onInit</code> hook receives the execution context, which provides access
+    to the translation service.
+</p>
+
+<h3>How It Works</h3>
+<ul>
+    <li>Language packs register translations via <code>ICliTranslationService</code></li>
+    <li>Use <code>translator.addTranslations('es', translations)</code> in the <code>onInit</code> hook</li>
+    <li>Translation keys follow the <code>cli.&lt;command&gt;.&lt;key&gt;</code> pattern</li>
+</ul>
+
+<div class="code-block">
+    <span class="code-label">lang-pack-example.ts</span>
+    <pre><code>export class SpanishLanguageProcessor implements ICliCommandProcessor &#123;
+    command = '__lang_es__';
+    description = 'Spanish language pack';
+
+    onInit(context: ICliExecutionContext): void &#123;
+        const translator = context.translationService;
+        translator.addTranslations('es', &#123;
+            'cli.help.description': 'Muestra la ayuda',
+            'cli.clear.description': 'Limpia la terminal',
+            'cli.version.description': 'Muestra la version',
+            // ... more translations
+        &#125;);
+    &#125;
+&#125;</code></pre>
+</div>

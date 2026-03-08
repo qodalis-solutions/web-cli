@@ -1,0 +1,92 @@
+<h1>Server Integration</h1>
+<p>
+    Qodalis CLI can connect to a backend server to execute commands on the server side,
+    access the filesystem, stream events, and open interactive shell sessions.
+    The frontend CLI communicates with the backend via a standard REST and WebSocket API.
+</p>
+
+<h2>Architecture</h2>
+<p>
+    The integration follows a simple client-server pattern. The frontend CLI component
+    sends commands to the backend server, which executes them and returns the output.
+    Real-time features like event streaming and PTY shell sessions use WebSocket connections.
+</p>
+<div class="code-block">
+    <span class="code-label">Architecture</span>
+    <pre><code>Frontend CLI  &lt;-- REST / WebSocket --&gt;  Backend Server
+(Browser)                                 (Node.js / Python / .NET)
+  |                                          |
+  |-- POST /api/v1/cli/execute -----------&gt;  |-- Execute command
+  |-- GET  /api/v1/cli/commands -----------&gt; |-- List commands
+  |-- WS   /ws/v1/cli/shell ---------------&gt; |-- PTY shell session
+  |-- WS   /ws/v1/cli/events --------------&gt; |-- Event streaming
+  |-- GET  /api/cli/fs/* ------------------&gt; |-- Filesystem access</code></pre>
+</div>
+
+<h2>Common API</h2>
+<p>All three backend servers implement the same API surface:</p>
+<table>
+    <thead>
+        <tr>
+            <th>Endpoint</th>
+            <th>Method</th>
+            <th>Purpose</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>/api/cli/versions</code></td>
+            <td>GET</td>
+            <td>Version discovery — supported versions, preferred version</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/cli/commands</code></td>
+            <td>GET</td>
+            <td>List all registered command processors</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/cli/execute</code></td>
+            <td>POST</td>
+            <td>Execute a CLI command on the server</td>
+        </tr>
+        <tr>
+            <td><code>/ws/v1/cli/events</code></td>
+            <td>WS</td>
+            <td>Server-push event streaming</td>
+        </tr>
+        <tr>
+            <td><code>/ws/v1/cli/shell</code></td>
+            <td>WS</td>
+            <td>Interactive PTY shell session</td>
+        </tr>
+        <tr>
+            <td><code>/api/cli/fs/*</code></td>
+            <td>Various</td>
+            <td>Filesystem operations (ls, cat, stat, upload, download, mkdir, rm)</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Available Backends</h2>
+<p>Choose the backend that fits your stack. All three implement the same API:</p>
+
+<div class="server-cards">
+    <div class="server-card">
+        <h3>Node.js</h3>
+        <p>Express-based server with TypeScript support, node-pty for shell sessions.</p>
+        <p>Port: <code>8047</code></p>
+        <a routerLink="/docs/server-integration/node">View Setup Guide</a>
+    </div>
+    <div class="server-card">
+        <h3>Python</h3>
+        <p>FastAPI server with uvicorn, native PTY support via pty module.</p>
+        <p>Port: <code>8048</code></p>
+        <a routerLink="/docs/server-integration/python">View Setup Guide</a>
+    </div>
+    <div class="server-card">
+        <h3>.NET</h3>
+        <p>ASP.NET Core server with Swagger UI, NuGet package distribution.</p>
+        <p>Port: <code>8046</code></p>
+        <a routerLink="/docs/server-integration/dotnet">View Setup Guide</a>
+    </div>
+</div>

@@ -1,0 +1,231 @@
+<h1>Create Your Own Plugin</h1>
+<p>
+    Qodalis CLI has a rich plugin architecture that lets you add custom commands.
+    The easiest way to get started is with the scaffolding tool, which generates
+    all the boilerplate for you.
+</p>
+
+<!-- Scaffold -->
+<h2>Scaffold a New Plugin</h2>
+<p>Run the scaffolding tool interactively:</p>
+<div class="code-block">
+    <span class="code-label">shell</span>
+    <pre><code>npx @qodalis/create-cli-plugin</code></pre>
+</div>
+
+<p>Or use non-interactive mode with all options:</p>
+<div class="code-block">
+    <span class="code-label">shell</span>
+    <pre><code>npx @qodalis/create-cli-plugin --name weather --description "Weather forecasts" --processor-name WeatherProcessor</code></pre>
+</div>
+
+<!-- Plugin Structure -->
+<h2>Plugin Structure</h2>
+<p>The scaffolding tool generates the following structure:</p>
+<div class="code-block">
+    <span class="code-label">Generated files</span>
+    <pre><code>cli-weather/
+  src/
+    lib/
+      processors/
+        cli-weather-command-processor.ts
+    public-api.ts
+    cli-entrypoint.ts
+  tsup.config.ts
+  package.json</code></pre>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>File</th>
+            <th>Purpose</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>cli-weather-command-processor.ts</code></td>
+            <td>The command processor with your logic</td>
+        </tr>
+        <tr>
+            <td><code>public-api.ts</code></td>
+            <td>Public exports for the package</td>
+        </tr>
+        <tr>
+            <td><code>cli-entrypoint.ts</code></td>
+            <td>IIFE entry point for runtime installation via <code>pkg add</code></td>
+        </tr>
+        <tr>
+            <td><code>tsup.config.ts</code></td>
+            <td>Build configuration producing CJS, ESM, and IIFE bundles</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Implementing the Processor -->
+<h2>Implementing the Processor</h2>
+<p>
+    Every plugin command implements the <code>ICliCommandProcessor</code> interface.
+    Here are the key fields and methods:
+</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Field</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>command</code></td>
+            <td>The command name users type (e.g. <code>'weather'</code>)</td>
+        </tr>
+        <tr>
+            <td><code>description</code></td>
+            <td>Shown in help output and command listings</td>
+        </tr>
+        <tr>
+            <td><code>parameters</code></td>
+            <td>Array of parameter descriptors with name, description, and required flag</td>
+        </tr>
+        <tr>
+            <td><code>processors</code></td>
+            <td>Nested sub-command processors</td>
+        </tr>
+        <tr>
+            <td><code>processCommand(command, context)</code></td>
+            <td>The handler that runs when the command is executed</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="code-block">
+    <span class="code-label">cli-weather-command-processor.ts</span>
+    <pre><code>import &#123;
+    ICliCommandProcessor,
+    ICliExecutionContext,
+    CliProcessCommand,
+&#125; from '@qodalis/cli-core';
+
+export class WeatherProcessor implements ICliCommandProcessor &#123;
+    command = 'weather';
+    description = 'Get weather forecasts';
+
+    parameters = [
+        &#123;
+            name: 'city',
+            description: 'City name to look up',
+            required: true,
+        &#125;,
+        &#123;
+            name: '--units',
+            description: 'Temperature units (metric or imperial)',
+            required: false,
+        &#125;,
+    ];
+
+    async processCommand(
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise&lt;void&gt; &#123;
+        const city = command.args[0];
+        if (!city) &#123;
+            context.writer.writeError('Please provide a city name.');
+            return;
+        &#125;
+
+        context.spinner.show(`Fetching weather for $&#123;city&#125;...`);
+        // Your logic here
+        context.spinner.hide();
+        context.writer.writeln(`Weather in $&#123;city&#125;: Sunny, 22C`);
+    &#125;
+&#125;</code></pre>
+</div>
+
+<!-- Using the Execution Context -->
+<h2>Using the Execution Context</h2>
+<p>
+    The <code>ICliExecutionContext</code> passed to <code>processCommand</code> gives you access to
+    all the tools you need:
+</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Service</th>
+            <th>Usage</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>context.writer</code></td>
+            <td>Write text, HTML, errors, and warnings to the terminal</td>
+        </tr>
+        <tr>
+            <td><code>context.spinner</code></td>
+            <td>Show/hide a loading spinner</td>
+        </tr>
+        <tr>
+            <td><code>context.progressBar</code></td>
+            <td>Display a progress bar for long operations</td>
+        </tr>
+        <tr>
+            <td><code>context.inputReader</code></td>
+            <td>Read interactive input (text, password, confirm, select)</td>
+        </tr>
+        <tr>
+            <td><code>context.stateStore</code></td>
+            <td>Persistent key-value storage across sessions</td>
+        </tr>
+        <tr>
+            <td><code>context.clipboard</code></td>
+            <td>Read from and write to the clipboard</td>
+        </tr>
+    </tbody>
+</table>
+
+<p>See the <a routerLink="/docs/core-concepts/execution-context">Execution Context</a> page for full details.</p>
+
+<!-- Building -->
+<h2>Building</h2>
+<p>
+    The generated <code>tsup.config.ts</code> builds your plugin in three formats:
+    CommonJS, ESM, and IIFE (for browser use).
+</p>
+<div class="code-block">
+    <span class="code-label">shell</span>
+    <pre><code>npx tsup</code></pre>
+</div>
+
+<p>This produces:</p>
+<ul>
+    <li><code>dist/index.js</code> — CommonJS bundle</li>
+    <li><code>dist/index.mjs</code> — ESM bundle</li>
+    <li><code>dist/umd/index.js</code> — IIFE bundle for standalone browser use</li>
+    <li><code>dist/index.d.ts</code> — TypeScript declarations</li>
+</ul>
+
+<!-- Publishing -->
+<h2>Publishing</h2>
+<p>Publish your plugin to npm so others can install it:</p>
+<div class="code-block">
+    <span class="code-label">shell</span>
+    <pre><code>npm publish --access public</code></pre>
+</div>
+
+<!-- Runtime Installation -->
+<h2>Runtime Installation</h2>
+<p>
+    One of the most powerful features of Qodalis CLI is runtime plugin installation.
+    Users can install your published plugin directly from the terminal without rebuilding
+    their application:
+</p>
+<div class="code-block">
+    <span class="code-label">Terminal</span>
+    <pre><code>pkg add @qodalis/cli-weather</code></pre>
+</div>
+<p>
+    This downloads the IIFE bundle from npm and loads it dynamically into the running CLI.
+    No application rebuild or deployment is required.
+</p>

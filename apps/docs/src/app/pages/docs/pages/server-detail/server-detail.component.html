@@ -1,0 +1,177 @@
+<!-- Node.js -->
+<div *ngIf="server === 'node'">
+    <h1>Node.js Server</h1>
+    <p>
+        The Node.js backend is an Express-based server with TypeScript support.
+        It uses <code>node-pty</code> for interactive shell sessions and <code>ws</code> for WebSocket connections.
+    </p>
+
+    <h2>Installation</h2>
+    <div class="code-block">
+        <span class="code-label">npm</span>
+        <pre><code>npm install @qodalis/cli-server</code></pre>
+    </div>
+
+    <h2>Basic Setup</h2>
+    <div class="code-block">
+        <span class="code-label">server.ts</span>
+        <pre><code>import &#123; createCliServer &#125; from '@qodalis/cli-server';
+
+const &#123; app, builder &#125; = createCliServer(&#123; port: 8047 &#125;);
+builder.addProcessor(new MyProcessor());
+app.listen(8047);</code></pre>
+    </div>
+
+    <h2>Adding Processors</h2>
+    <p>Register command processors using the fluent builder API:</p>
+    <div class="code-block">
+        <span class="code-label">processors.ts</span>
+        <pre><code>builder.addProcessor(new EchoProcessor());
+builder.addProcessor(new HashProcessor());
+
+// Or register an entire module
+builder.addModule(new WeatherModule());</code></pre>
+    </div>
+
+    <h2>Docker</h2>
+    <div class="code-block">
+        <span class="code-label">shell</span>
+        <pre><code>docker compose up cli-server-node</code></pre>
+    </div>
+    <p>The server runs on port <strong>8047</strong> by default.</p>
+
+    <h2>Connecting the Frontend</h2>
+    <div class="code-block">
+        <span class="code-label">app.component.ts</span>
+        <pre><code>import &#123; CliOptions &#125; from '@qodalis/cli-core';
+
+const options: CliOptions = &#123;
+    serverUrl: 'http://localhost:8047',
+&#125;;
+
+// Angular: &lt;cli [options]="options"&gt;&lt;/cli&gt;
+// React:   &lt;Cli options=&#123;options&#125; /&gt;
+// Vue:     &lt;Cli :options="options" /&gt;</code></pre>
+    </div>
+</div>
+
+<!-- Python -->
+<div *ngIf="server === 'python'">
+    <h1>Python Server</h1>
+    <p>
+        The Python backend is built with FastAPI and uvicorn.
+        It uses the native <code>pty</code> module for interactive shell sessions
+        and FastAPI's built-in WebSocket support.
+    </p>
+
+    <h2>Installation</h2>
+    <div class="code-block">
+        <span class="code-label">pip</span>
+        <pre><code>pip install qodalis-cli-server</code></pre>
+    </div>
+
+    <h2>Basic Setup</h2>
+    <div class="code-block">
+        <span class="code-label">server.py</span>
+        <pre><code>from qodalis_cli import create_cli_server
+
+result = create_cli_server()
+builder = result.builder
+builder.add_processor(MyProcessor())</code></pre>
+    </div>
+
+    <h2>Adding Processors</h2>
+    <p>Register command processors using the builder API:</p>
+    <div class="code-block">
+        <span class="code-label">processors.py</span>
+        <pre><code>builder.add_processor(EchoProcessor())
+builder.add_processor(HashProcessor())
+
+# Or register an entire module
+builder.add_module(WeatherModule())</code></pre>
+    </div>
+
+    <h2>Docker</h2>
+    <div class="code-block">
+        <span class="code-label">shell</span>
+        <pre><code>docker compose up cli-server-python</code></pre>
+    </div>
+    <p>The server runs on port <strong>8048</strong> by default.</p>
+
+    <h2>Connecting the Frontend</h2>
+    <div class="code-block">
+        <span class="code-label">app.component.ts</span>
+        <pre><code>import &#123; CliOptions &#125; from '@qodalis/cli-core';
+
+const options: CliOptions = &#123;
+    serverUrl: 'http://localhost:8048',
+&#125;;
+
+// Angular: &lt;cli [options]="options"&gt;&lt;/cli&gt;
+// React:   &lt;Cli options=&#123;options&#125; /&gt;
+// Vue:     &lt;Cli :options="options" /&gt;</code></pre>
+    </div>
+</div>
+
+<!-- .NET -->
+<div *ngIf="server === 'dotnet'">
+    <h1>.NET Server</h1>
+    <p>
+        The .NET backend is built with ASP.NET Core.
+        It includes Swagger UI for API exploration and distributes as a NuGet package.
+    </p>
+
+    <h2>Installation</h2>
+    <div class="code-block">
+        <span class="code-label">NuGet</span>
+        <pre><code>dotnet add package Qodalis.Cli</code></pre>
+    </div>
+
+    <h2>Basic Setup</h2>
+    <div class="code-block">
+        <span class="code-label">Program.cs</span>
+        <pre><code>var builder = WebApplication.CreateBuilder(args);
+
+// Add CLI services
+builder.Services.AddCli();
+
+var app = builder.Build();
+
+// Enable CLI middleware
+app.UseCli();
+
+app.Run();</code></pre>
+    </div>
+
+    <h2>Adding Processors</h2>
+    <p>Register command processors via dependency injection:</p>
+    <div class="code-block">
+        <span class="code-label">Program.cs</span>
+        <pre><code>builder.Services.AddCli(options =&gt; &#123;
+    options.AddProcessor&lt;EchoProcessor&gt;();
+    options.AddProcessor&lt;HashProcessor&gt;();
+    options.AddModule&lt;WeatherModule&gt;();
+&#125;);</code></pre>
+    </div>
+
+    <h2>Docker</h2>
+    <div class="code-block">
+        <span class="code-label">shell</span>
+        <pre><code>docker compose up cli-server-dotnet</code></pre>
+    </div>
+    <p>The server runs on port <strong>8046</strong> by default.</p>
+
+    <h2>Connecting the Frontend</h2>
+    <div class="code-block">
+        <span class="code-label">app.component.ts</span>
+        <pre><code>import &#123; CliOptions &#125; from '@qodalis/cli-core';
+
+const options: CliOptions = &#123;
+    serverUrl: 'http://localhost:8046',
+&#125;;
+
+// Angular: &lt;cli [options]="options"&gt;&lt;/cli&gt;
+// React:   &lt;Cli options=&#123;options&#125; /&gt;
+// Vue:     &lt;Cli :options="options" /&gt;</code></pre>
+    </div>
+</div>
