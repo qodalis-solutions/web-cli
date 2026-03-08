@@ -56,18 +56,18 @@ export class CliOpenCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Open a URL in a new browser tab');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.open.long_description', 'Open a URL in a new browser tab'));
         writer.writeln(
-            'Automatically adds https:// if no protocol is specified',
+            t.t('cli.open.auto_https', 'Automatically adds https:// if no protocol is specified'),
         );
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('open <url>', CliForegroundColor.Cyan)}`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  open google.com                  ${writer.wrapInColor('# Opens https://google.com', CliForegroundColor.Green)}`,
         );

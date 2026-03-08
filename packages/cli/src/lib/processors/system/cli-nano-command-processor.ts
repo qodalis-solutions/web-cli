@@ -457,18 +457,19 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
         this.render();
     }
 
-    writeDescription({ writer }: ICliExecutionContext): void {
-        writer.writeln('Open the built-in nano-style text editor');
+    writeDescription(context: ICliExecutionContext): void {
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.nano.long_description', 'Open the built-in nano-style text editor'));
         writer.writeln();
-        writer.writeln('Usage:');
+        writer.writeln(t.t('cli.common.usage', 'Usage:'));
         writer.writeln(
-            `  ${writer.wrapInColor('nano', CliForegroundColor.Cyan)}                    Open empty scratch buffer`,
+            `  ${writer.wrapInColor('nano', CliForegroundColor.Cyan)}                    ${t.t('cli.nano.open_empty', 'Open empty scratch buffer')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('nano <file>', CliForegroundColor.Cyan)}              Open or create a file`,
+            `  ${writer.wrapInColor('nano <file>', CliForegroundColor.Cyan)}              ${t.t('cli.nano.open_file', 'Open or create a file')}`,
         );
         writer.writeln();
-        writer.writeln('Keyboard shortcuts:');
+        writer.writeln(t.t('cli.nano.keyboard_shortcuts', 'Keyboard shortcuts:'));
         writer.writeln(
             `  ${writer.wrapInColor('^X', CliForegroundColor.Yellow)}  Exit              ${writer.wrapInColor('^O', CliForegroundColor.Yellow)}  Write Out (save)`,
         );

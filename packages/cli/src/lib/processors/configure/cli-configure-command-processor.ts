@@ -124,30 +124,30 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription?(context: ICliExecutionContext): void {
-        const { writer } = context;
+        const { writer, translator: t } = context;
 
         writer.writeln(
-            'Manage system and plugin configuration interactively or via subcommands',
+            t.t('cli.configure.long_description', 'Manage system and plugin configuration interactively or via subcommands'),
         );
         writer.writeln();
-        writer.writeln('Usage:');
+        writer.writeln(t.t('cli.common.usage', 'Usage:'));
         writer.writeln(
-            `  ${writer.wrapInColor('configure', CliForegroundColor.Cyan)}                          Open interactive configuration menu`,
+            `  ${writer.wrapInColor('configure', CliForegroundColor.Cyan)}                          ${t.t('cli.configure.open_menu', 'Open interactive configuration menu')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('configure list', CliForegroundColor.Cyan)}                     List all configuration options`,
+            `  ${writer.wrapInColor('configure list', CliForegroundColor.Cyan)}                     ${t.t('cli.configure.list_opts', 'List all configuration options')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('configure get <category.key>', CliForegroundColor.Cyan)}       Get a configuration value`,
+            `  ${writer.wrapInColor('configure get <category.key>', CliForegroundColor.Cyan)}       ${t.t('cli.configure.get_value', 'Get a configuration value')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('configure set <category.key> <value>', CliForegroundColor.Cyan)}  Set a configuration value`,
+            `  ${writer.wrapInColor('configure set <category.key> <value>', CliForegroundColor.Cyan)}  ${t.t('cli.configure.set_value', 'Set a configuration value')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('configure reset [category]', CliForegroundColor.Cyan)}         Reset configuration to defaults`,
+            `  ${writer.wrapInColor('configure reset [category]', CliForegroundColor.Cyan)}         ${t.t('cli.configure.reset_defaults', 'Reset configuration to defaults')}`,
         );
         writer.writeln();
-        writer.writeln('Examples:');
+        writer.writeln(t.t('cli.common.examples', 'Examples:'));
         writer.writeln(
             `  configure get system.logLevel            ${writer.wrapInColor('# Get the current log level', CliForegroundColor.Green)}`,
         );
@@ -174,9 +174,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
             { processorCommand: string; options: ICliConfigurationOption[] }
         >,
     ): Promise<void> {
+        const t = context.translator;
         while (true) {
             const menuOptions: { label: string; value: string }[] = [
-                { label: 'System', value: 'system' },
+                { label: t.t('cli.configure.system', 'System'), value: 'system' },
             ];
 
             for (const [category] of pluginCategories) {
@@ -186,7 +187,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 });
             }
 
-            menuOptions.push({ label: 'Exit', value: '__exit__' });
+            menuOptions.push({ label: t.t('cli.configure.exit', 'Exit'), value: '__exit__' });
 
             const selected = await context.reader.readSelect(
                 'Configuration categories:',
@@ -259,7 +260,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 menuOptions.push({ label: display, value: opt.key });
             }
 
-            menuOptions.push({ label: 'Back', value: '__back__' });
+            menuOptions.push({ label: context.translator.t('cli.configure.back', 'Back'), value: '__back__' });
 
             const selected = await context.reader.readSelect(
                 `${label} settings:`,
@@ -363,7 +364,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         await context.state.persist();
 
         context.writer.writeSuccess(
-            `Set ${option.label} to ${context.writer.wrapInColor(String(newValue), CliForegroundColor.Cyan)}`,
+            context.translator.t('cli.configure.set_to', 'Set {label} to {value}', { label: option.label, value: String(newValue) }),
         );
     }
 
@@ -539,7 +540,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
                 if (dotIndex === -1) {
                     context.writer.writeError(
-                        'Invalid format. Use: configure get <category.key>',
+                        context.translator.t('cli.configure.invalid_format_get', 'Invalid format. Use: configure get <category.key>'),
                     );
                     return;
                 }
@@ -558,7 +559,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
                 if (!match) {
                     context.writer.writeError(
-                        `Unknown configuration key: ${path}`,
+                        context.translator.t('cli.configure.unknown_key', 'Unknown configuration key: {path}', { path }),
                     );
                     return;
                 }
@@ -593,7 +594,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
                 if (spaceIndex === -1) {
                     context.writer.writeError(
-                        'Invalid format. Use: configure set <category.key> <value>',
+                        context.translator.t('cli.configure.invalid_format_set', 'Invalid format. Use: configure set <category.key> <value>'),
                     );
                     return;
                 }
@@ -604,7 +605,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
                 if (dotIndex === -1) {
                     context.writer.writeError(
-                        'Invalid format. Use: configure set <category.key> <value>',
+                        context.translator.t('cli.configure.invalid_format_set', 'Invalid format. Use: configure set <category.key> <value>'),
                     );
                     return;
                 }
@@ -623,7 +624,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
                 if (!match) {
                     context.writer.writeError(
-                        `Unknown configuration key: ${path}`,
+                        context.translator.t('cli.configure.unknown_key', 'Unknown configuration key: {path}', { path }),
                     );
                     return;
                 }
@@ -651,7 +652,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 await context.state.persist();
 
                 context.writer.writeSuccess(
-                    `Set ${context.writer.wrapInColor(path, CliForegroundColor.Cyan)} to ${context.writer.wrapInColor(String(coerced), CliForegroundColor.Yellow)}`,
+                    context.translator.t('cli.configure.set_success', 'Set {path} to {value}', { path, value: String(coerced) }),
                 );
             },
         };
@@ -667,6 +668,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 command: CliProcessCommand,
                 context: ICliExecutionContext,
             ) => {
+                const t = context.translator;
                 const category = command.value?.trim();
 
                 if (category) {
@@ -684,7 +686,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                         this.applySystemSettings(defaults, context);
                         await context.state.persist();
                         context.writer.writeSuccess(
-                            'System configuration reset to defaults',
+                            t.t('cli.configure.system_reset', 'System configuration reset to defaults'),
                         );
                     } else {
                         const registry =
@@ -697,7 +699,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
                         if (!cat) {
                             context.writer.writeError(
-                                `Unknown category: ${category}`,
+                                t.t('cli.configure.unknown_category', 'Unknown category: {category}', { category }),
                             );
                             return;
                         }
@@ -718,18 +720,18 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                         });
                         await context.state.persist();
                         context.writer.writeSuccess(
-                            `Configuration for "${category}" reset to defaults`,
+                            t.t('cli.configure.category_reset', 'Configuration for "{category}" reset to defaults', { category }),
                         );
                     }
                 } else {
                     // Reset all
                     const confirmed = await context.reader.readConfirm(
-                        'Reset all configuration to defaults?',
+                        t.t('cli.configure.reset_confirm', 'Reset all configuration to defaults?'),
                         false,
                     );
 
                     if (!confirmed) {
-                        context.writer.writeInfo('Reset cancelled');
+                        context.writer.writeInfo(t.t('cli.configure.reset_cancelled', 'Reset cancelled'));
                         return;
                     }
 
@@ -744,7 +746,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                     this.applySystemSettings(defaults, context);
 
                     context.writer.writeSuccess(
-                        'All configuration reset to defaults',
+                        t.t('cli.configure.all_reset', 'All configuration reset to defaults'),
                     );
                 }
             },

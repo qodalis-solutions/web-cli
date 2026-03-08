@@ -83,12 +83,12 @@ export class CliHashCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
+        const { writer, translator: t } = context;
         writer.writeln(
-            'Generate cryptographic hash digests using the Web Crypto API',
+            t.t('cli.hash.long_description', 'Generate cryptographic hash digests using the Web Crypto API'),
         );
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('hash sha256 <text>', CliForegroundColor.Cyan)}        SHA-256 hash`,
         );
@@ -102,7 +102,7 @@ export class CliHashCommandProcessor implements ICliCommandProcessor {
             `  ${writer.wrapInColor('hash sha512 <text>', CliForegroundColor.Cyan)}        SHA-512 hash`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  hash sha256 hello                ${writer.wrapInColor('# → 2cf24dba5fb0a30e...', CliForegroundColor.Green)}`,
         );

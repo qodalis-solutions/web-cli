@@ -148,18 +148,18 @@ export class CliUrlCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Encode, decode, and parse URLs');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.url.long_description', 'Encode, decode, and parse URLs'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('url encode <text>', CliForegroundColor.Cyan)}        URL-encode a string`,
+            `  ${writer.wrapInColor('url encode <text>', CliForegroundColor.Cyan)}        ${t.t('cli.url.encode_desc', 'URL-encode a string')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('url decode <text>', CliForegroundColor.Cyan)}        URL-decode a string`,
+            `  ${writer.wrapInColor('url decode <text>', CliForegroundColor.Cyan)}        ${t.t('cli.url.decode_desc', 'URL-decode a string')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('url parse <url>', CliForegroundColor.Cyan)}          Parse URL components`,
+            `  ${writer.wrapInColor('url parse <url>', CliForegroundColor.Cyan)}          ${t.t('cli.url.parse_desc', 'Parse URL components')}`,
         );
     }
 }

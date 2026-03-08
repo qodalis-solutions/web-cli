@@ -707,26 +707,26 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
+        const { writer, translator: t } = context;
         writer.writeln(
-            'Displays detailed system diagnostics and CLI internals.',
+            t.t('cli.debug.long_description', 'Displays detailed system diagnostics and CLI internals.'),
         );
         writer.writeln(
-            'This command is hidden from the help listing but accessible directly.',
+            t.t('cli.debug.hidden_note', 'This command is hidden from the help listing but accessible directly.'),
         );
         writer.writeln();
-        writer.writeln('Usage:');
+        writer.writeln(t.t('cli.common.usage', 'Usage:'));
         writer.writeln(
-            `  ${writer.wrapInColor('debug', CliForegroundColor.Cyan)}                  System summary`,
+            `  ${writer.wrapInColor('debug', CliForegroundColor.Cyan)}                  ${t.t('cli.debug.summary', 'System summary')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('debug processors', CliForegroundColor.Cyan)}       All registered processors`,
+            `  ${writer.wrapInColor('debug processors', CliForegroundColor.Cyan)}       ${t.t('cli.debug.processors', 'All registered processors')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('debug modules', CliForegroundColor.Cyan)}          All loaded modules`,
+            `  ${writer.wrapInColor('debug modules', CliForegroundColor.Cyan)}          ${t.t('cli.debug.modules', 'All loaded modules')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('debug state', CliForegroundColor.Cyan)}            Inspect state stores`,
+            `  ${writer.wrapInColor('debug state', CliForegroundColor.Cyan)}            ${t.t('cli.debug.state', 'Inspect state stores')}`,
         );
         writer.writeln(
             `  ${writer.wrapInColor('debug services', CliForegroundColor.Cyan)}         List DI services`,

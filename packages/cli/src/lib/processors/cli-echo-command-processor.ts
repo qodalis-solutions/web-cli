@@ -39,16 +39,16 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Prints the specified text to the terminal');
-        writer.writeln('Supports text and JSON object output via piping');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.echo.long_description', 'Prints the specified text to the terminal'));
+        writer.writeln(t.t('cli.echo.piping_note', 'Supports text and JSON object output via piping'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('echo <text>', CliForegroundColor.Cyan)}`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  echo Hello World                 ${writer.wrapInColor('# Print text', CliForegroundColor.Green)}`,
         );

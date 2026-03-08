@@ -27,17 +27,17 @@ export class CliUnameCommandProcessor implements ICliCommandProcessor {
     };
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
+        const { writer, translator: t } = context;
         writer.writeln(
-            'Prints detailed system and browser information including:',
+            t.t('cli.uname.long_description', 'Prints detailed system and browser information including:'),
         );
-        writer.writeln('  💾 CLI core and library versions');
+        writer.writeln(`  💾 ${t.t('cli.uname.cli_versions', 'CLI core and library versions')}`);
         writer.writeln(
-            '  🌐 Browser name, version, user agent, language, and platform',
+            `  🌐 ${t.t('cli.uname.browser_info', 'Browser name, version, user agent, language, and platform')}`,
         );
-        writer.writeln('  🖥  Operating system');
+        writer.writeln(`  🖥  ${t.t('cli.uname.os', 'Operating system')}`);
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('uname', CliForegroundColor.Cyan)}`,
         );

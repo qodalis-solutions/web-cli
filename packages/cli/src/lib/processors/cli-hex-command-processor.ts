@@ -193,20 +193,20 @@ export class CliHexCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
+        const { writer, translator: t } = context;
         writer.writeln(
-            'Hex encode/decode text and convert numbers between bases',
+            t.t('cli.hex.long_description', 'Hex encode/decode text and convert numbers between bases'),
         );
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('hex encode <text>', CliForegroundColor.Cyan)}                     Text to hex`,
+            `  ${writer.wrapInColor('hex encode <text>', CliForegroundColor.Cyan)}                     ${t.t('cli.hex.text_to_hex', 'Text to hex')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('hex decode <hex>', CliForegroundColor.Cyan)}                      Hex to text`,
+            `  ${writer.wrapInColor('hex decode <hex>', CliForegroundColor.Cyan)}                      ${t.t('cli.hex.hex_to_text', 'Hex to text')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('hex convert <num> [--from --to]', CliForegroundColor.Cyan)}       Base conversion`,
+            `  ${writer.wrapInColor('hex convert <num> [--from --to]', CliForegroundColor.Cyan)}       ${t.t('cli.hex.base_conversion', 'Base conversion')}`,
         );
     }
 }

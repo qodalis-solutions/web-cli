@@ -29,15 +29,15 @@ export class CliUnAliasCommandProcessor implements ICliCommandProcessor {
     };
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Remove a previously defined command alias');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.unalias.long_description', 'Remove a previously defined command alias'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('unalias <name>', CliForegroundColor.Cyan)}`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  unalias h                    ${writer.wrapInColor('# Remove the "h" alias', CliForegroundColor.Green)}`,
         );

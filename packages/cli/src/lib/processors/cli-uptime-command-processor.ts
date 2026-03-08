@@ -74,12 +74,12 @@ export class CliUptimeCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
+        const { writer, translator: t } = context;
         writer.writeln(
-            'Show how long the current terminal session has been active',
+            t.t('cli.uptime.long_description', 'Show how long the current terminal session has been active'),
         );
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('uptime', CliForegroundColor.Cyan)}`,
         );

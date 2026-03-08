@@ -70,18 +70,18 @@ export class CliExportCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Set or display environment variables');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.export.long_description', 'Set or display environment variables'));
         writer.writeln();
-        writer.writeln('Usage:');
+        writer.writeln(t.t('cli.common.usage', 'Usage:'));
         writer.writeln(
-            `  ${writer.wrapInColor('export', CliForegroundColor.Cyan)}                    Show all variables`,
+            `  ${writer.wrapInColor('export', CliForegroundColor.Cyan)}                    ${t.t('cli.export.show_all', 'Show all variables')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('export VAR=value', CliForegroundColor.Cyan)}          Set a variable`,
+            `  ${writer.wrapInColor('export VAR=value', CliForegroundColor.Cyan)}          ${t.t('cli.export.set_var', 'Set a variable')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('export VAR="hello world"', CliForegroundColor.Cyan)}  Set with spaces`,
+            `  ${writer.wrapInColor('export VAR="hello world"', CliForegroundColor.Cyan)}  ${t.t('cli.export.set_spaces', 'Set with spaces')}`,
         );
     }
 }
@@ -120,10 +120,10 @@ export class CliUnsetCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Remove an environment variable');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.unset.long_description', 'Remove an environment variable'));
         writer.writeln();
-        writer.writeln('Usage:');
+        writer.writeln(t.t('cli.common.usage', 'Usage:'));
         writer.writeln(
             `  ${writer.wrapInColor('unset VAR', CliForegroundColor.Cyan)}`,
         );
@@ -175,15 +175,15 @@ export class CliEnvCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Display environment variables');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.env.long_description', 'Display environment variables'));
         writer.writeln();
-        writer.writeln('Usage:');
+        writer.writeln(t.t('cli.common.usage', 'Usage:'));
         writer.writeln(
-            `  ${writer.wrapInColor('env', CliForegroundColor.Cyan)}           Show all variables`,
+            `  ${writer.wrapInColor('env', CliForegroundColor.Cyan)}           ${t.t('cli.env.show_all', 'Show all variables')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('printenv VAR', CliForegroundColor.Cyan)}   Show single variable`,
+            `  ${writer.wrapInColor('printenv VAR', CliForegroundColor.Cyan)}   ${t.t('cli.env.show_single', 'Show single variable')}`,
         );
     }
 }

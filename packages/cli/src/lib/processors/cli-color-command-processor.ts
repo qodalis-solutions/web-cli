@@ -77,15 +77,15 @@ export class CliColorCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Convert between color formats and preview colors');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.color.long_description', 'Convert between color formats and preview colors'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('color <value>', CliForegroundColor.Cyan)}`,
         );
         writer.writeln();
-        writer.writeln('📝 Supported formats:');
+        writer.writeln(`📝 ${t.t('cli.color.supported_formats', 'Supported formats:')}`);
         writer.writeln(
             `  color #ff6600                    ${writer.wrapInColor('# Hex', CliForegroundColor.Green)}`,
         );

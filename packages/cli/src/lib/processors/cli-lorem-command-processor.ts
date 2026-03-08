@@ -237,18 +237,18 @@ export class CliLoremCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Generate lorem ipsum placeholder text');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.lorem.long_description', 'Generate lorem ipsum placeholder text'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('lorem words [--count=N]', CliForegroundColor.Cyan)}          Generate words`,
+            `  ${writer.wrapInColor('lorem words [--count=N]', CliForegroundColor.Cyan)}          ${t.t('cli.lorem.gen_words', 'Generate words')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('lorem sentences [--count=N]', CliForegroundColor.Cyan)}      Generate sentences`,
+            `  ${writer.wrapInColor('lorem sentences [--count=N]', CliForegroundColor.Cyan)}      ${t.t('cli.lorem.gen_sentences', 'Generate sentences')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('lorem paragraphs [--count=N]', CliForegroundColor.Cyan)}     Generate paragraphs`,
+            `  ${writer.wrapInColor('lorem paragraphs [--count=N]', CliForegroundColor.Cyan)}     ${t.t('cli.lorem.gen_paragraphs', 'Generate paragraphs')}`,
         );
     }
 

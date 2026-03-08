@@ -42,11 +42,11 @@ export class CliHotKeysCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Displays all available keyboard shortcuts and hotkeys');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.hotkeys.long_description', 'Displays all available keyboard shortcuts and hotkeys'));
         writer.writeln();
         writer.writeln(
-            writer.wrapInColor('Usage:', CliForegroundColor.Yellow),
+            writer.wrapInColor(t.t('cli.common.usage', 'Usage:'), CliForegroundColor.Yellow),
         );
         writer.writeln(
             `  ${writer.wrapInColor('hotkeys', CliForegroundColor.Cyan)}`,

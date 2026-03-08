@@ -64,16 +64,16 @@ export class CliScreenCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Display screen, viewport, and terminal dimensions');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.screen.long_description', 'Display screen, viewport, and terminal dimensions'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('screen', CliForegroundColor.Cyan)}`,
         );
         writer.writeln();
         writer.writeln(
-            '📝 Shows: resolution, color depth, pixel ratio, viewport size, terminal size',
+            `📝 ${t.t('cli.screen.shows', 'Shows: resolution, color depth, pixel ratio, viewport size, terminal size')}`,
         );
     }
 }

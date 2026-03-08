@@ -109,16 +109,16 @@ export class CliCalCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Display a monthly calendar');
-        writer.writeln('Current day is highlighted');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.cal.long_description', 'Display a monthly calendar'));
+        writer.writeln(t.t('cli.cal.highlight_note', 'Current day is highlighted'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('cal', CliForegroundColor.Cyan)}                            Current month`,
+            `  ${writer.wrapInColor('cal', CliForegroundColor.Cyan)}                            ${t.t('cli.cal.current_month', 'Current month')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('cal --month=3 --year=2024', CliForegroundColor.Cyan)}      Specific month`,
+            `  ${writer.wrapInColor('cal --month=3 --year=2024', CliForegroundColor.Cyan)}      ${t.t('cli.cal.specific_month', 'Specific month')}`,
         );
     }
 }

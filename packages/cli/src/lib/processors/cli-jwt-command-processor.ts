@@ -139,16 +139,16 @@ export class CliJwtCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Decode and inspect JSON Web Tokens (JWT)');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.jwt.long_description', 'Decode and inspect JSON Web Tokens (JWT)'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('jwt decode <token>', CliForegroundColor.Cyan)}       Decode and display JWT contents`,
+            `  ${writer.wrapInColor('jwt decode <token>', CliForegroundColor.Cyan)}       ${t.t('cli.jwt.decode_display', 'Decode and display JWT contents')}`,
         );
         writer.writeln();
         writer.writeln(
-            '📝 Shows: header, payload, expiration status, issue date',
+            `📝 ${t.t('cli.jwt.shows', 'Shows: header, payload, expiration status, issue date')}`,
         );
     }
 

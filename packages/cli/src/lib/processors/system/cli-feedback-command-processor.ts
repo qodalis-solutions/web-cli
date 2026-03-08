@@ -275,12 +275,13 @@ export class CliFeedbackCommandProcessor implements ICliCommandProcessor {
         await runInteractiveFlow(type, undefined, context);
     }
 
-    writeDescription({ writer }: ICliExecutionContext): void {
+    writeDescription(context: ICliExecutionContext): void {
+        const { writer, translator: t } = context;
         writer.writeln(
-            'Report bugs, request features, or suggest new commands — interactively or inline.',
+            t.t('cli.feedback.long_description', 'Report bugs, request features, or suggest new commands — interactively or inline.'),
         );
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('feedback', CliForegroundColor.Cyan)}                                    Interactive wizard`,
         );

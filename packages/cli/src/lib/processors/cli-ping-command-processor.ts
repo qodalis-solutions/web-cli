@@ -167,10 +167,10 @@ export class CliPingCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Send ICMP-like HTTP pings to a host and display round-trip statistics');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.ping.long_description', 'Send ICMP-like HTTP pings to a host and display round-trip statistics'));
         writer.writeln();
-        writer.writeln('Usage:');
+        writer.writeln(t.t('cli.common.usage', 'Usage:'));
         writer.writeln(
             `  ${writer.wrapInColor('ping <host>', CliForegroundColor.Cyan)}`,
         );
@@ -181,11 +181,11 @@ export class CliPingCommandProcessor implements ICliCommandProcessor {
             `  ${writer.wrapInColor('ping -c 0 -i 2 example.com', CliForegroundColor.Cyan)}  (infinite, 2s interval)`,
         );
         writer.writeln();
-        writer.writeln('Options:');
+        writer.writeln(t.t('cli.help.options', 'Options:'));
         writer.writeln('  -c, --count      Number of pings (default: 4, 0 = infinite)');
         writer.writeln('  -i, --interval   Seconds between pings (default: 1)');
         writer.writeln();
-        writer.writeln('Press Ctrl+C to stop and show statistics.');
+        writer.writeln(t.t('cli.ping.ctrl_c', 'Press Ctrl+C to stop and show statistics.'));
     }
 
     private normalizeUrl(host: string): string {

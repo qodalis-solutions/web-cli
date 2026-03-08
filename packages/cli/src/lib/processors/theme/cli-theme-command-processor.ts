@@ -695,12 +695,12 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription?(context: ICliExecutionContext): void {
-        const { writer } = context;
+        const { writer, translator: t } = context;
         writer.writeln(
-            'Customize the terminal appearance with themes and colors',
+            t.t('cli.theme.long_description', 'Customize the terminal appearance with themes and colors'),
         );
         writer.writeln();
-        writer.writeln('Usage:');
+        writer.writeln(t.t('cli.common.usage', 'Usage:'));
         writer.writeln(
             `  ${writer.wrapInColor('theme list', CliForegroundColor.Cyan)}                     List themes grouped by dark/light`,
         );
@@ -738,7 +738,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
             `  ${writer.wrapInColor('theme reset', CliForegroundColor.Cyan)}                    Reset to default`,
         );
         writer.writeln();
-        writer.writeln('Examples:');
+        writer.writeln(t.t('cli.common.examples', 'Examples:'));
         writer.writeln(
             `  theme apply dracula              ${writer.wrapInColor('# Apply the Dracula theme', CliForegroundColor.Green)}`,
         );

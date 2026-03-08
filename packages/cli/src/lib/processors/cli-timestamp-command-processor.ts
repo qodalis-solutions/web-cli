@@ -155,23 +155,23 @@ export class CliTimestampCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
+        const { writer, translator: t } = context;
         writer.writeln(
-            'Convert between Unix timestamps and human-readable dates',
+            t.t('cli.timestamp.long_description', 'Convert between Unix timestamps and human-readable dates'),
         );
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('timestamp now', CliForegroundColor.Cyan)}                     Current Unix timestamp`,
+            `  ${writer.wrapInColor('timestamp now', CliForegroundColor.Cyan)}                     ${t.t('cli.timestamp.current', 'Current Unix timestamp')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('timestamp to-date <ts>', CliForegroundColor.Cyan)}             Timestamp to date`,
+            `  ${writer.wrapInColor('timestamp to-date <ts>', CliForegroundColor.Cyan)}             ${t.t('cli.timestamp.to_date', 'Timestamp to date')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('timestamp from-date <date>', CliForegroundColor.Cyan)}         Date to timestamp`,
+            `  ${writer.wrapInColor('timestamp from-date <date>', CliForegroundColor.Cyan)}         ${t.t('cli.timestamp.from_date', 'Date to timestamp')}`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  timestamp to-date 1704067200       ${writer.wrapInColor('# → Jan 1, 2024', CliForegroundColor.Green)}`,
         );

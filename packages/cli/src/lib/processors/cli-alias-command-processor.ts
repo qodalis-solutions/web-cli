@@ -61,18 +61,18 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Create shortcut aliases for frequently used commands');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.alias.long_description', 'Create shortcut aliases for frequently used commands'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('alias --<name>=<command>', CliForegroundColor.Cyan)}    Create a new alias`,
+            `  ${writer.wrapInColor('alias --<name>=<command>', CliForegroundColor.Cyan)}    ${t.t('cli.alias.create_new', 'Create a new alias')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('alias ls', CliForegroundColor.Cyan)}                    List all aliases`,
+            `  ${writer.wrapInColor('alias ls', CliForegroundColor.Cyan)}                    ${t.t('cli.alias.list_all', 'List all aliases')}`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  alias --h=help               ${writer.wrapInColor('# "h" → runs "help"', CliForegroundColor.Green)}`,
         );
@@ -81,7 +81,7 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
         );
         writer.writeln();
         writer.writeln(
-            `💡 Use ${writer.wrapInColor('unalias <name>', CliForegroundColor.Yellow)} to remove an alias`,
+            `💡 ${t.t('cli.alias.remove_hint', 'Use {command} to remove an alias', { command: 'unalias <name>' })}`,
         );
     }
 

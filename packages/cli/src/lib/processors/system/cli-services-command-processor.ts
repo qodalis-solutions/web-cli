@@ -366,26 +366,26 @@ export class CliServicesCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Manage background services and jobs');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.services.long_description', 'Manage background services and jobs'));
         writer.writeln();
         writer.writeln(
-            `  ${writer.wrapInColor('services list', CliForegroundColor.Cyan)}              List all services`,
+            `  ${writer.wrapInColor('services list', CliForegroundColor.Cyan)}              ${t.t('cli.services.list_desc', 'List all services')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('services start <name>', CliForegroundColor.Cyan)}       Start a service`,
+            `  ${writer.wrapInColor('services start <name>', CliForegroundColor.Cyan)}       ${t.t('cli.services.start_desc', 'Start a service')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('services stop <name>', CliForegroundColor.Cyan)}        Stop a service`,
+            `  ${writer.wrapInColor('services stop <name>', CliForegroundColor.Cyan)}        ${t.t('cli.services.stop_desc', 'Stop a service')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('services restart <name>', CliForegroundColor.Cyan)}     Restart a service`,
+            `  ${writer.wrapInColor('services restart <name>', CliForegroundColor.Cyan)}     ${t.t('cli.services.restart_desc', 'Restart a service')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('services logs <name>', CliForegroundColor.Cyan)}        View service logs`,
+            `  ${writer.wrapInColor('services logs <name>', CliForegroundColor.Cyan)}        ${t.t('cli.services.logs_desc', 'View service logs')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('services info <name>', CliForegroundColor.Cyan)}        Service details`,
+            `  ${writer.wrapInColor('services info <name>', CliForegroundColor.Cyan)}        ${t.t('cli.services.info_desc', 'Service details')}`,
         );
     }
 }

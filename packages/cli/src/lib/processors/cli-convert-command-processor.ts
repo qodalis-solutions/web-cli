@@ -267,15 +267,15 @@ export class CliConvertCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Convert between various units of measurement');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.convert.long_description', 'Convert between various units of measurement'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('convert <value> <from> to <to>', CliForegroundColor.Cyan)}`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  convert 100 km to mi             ${writer.wrapInColor('# → 62.1371 miles', CliForegroundColor.Green)}`,
         );
@@ -289,7 +289,7 @@ export class CliConvertCommandProcessor implements ICliCommandProcessor {
             `  convert 5.5 lb to kg             ${writer.wrapInColor('# → 2.494 kilograms', CliForegroundColor.Green)}`,
         );
         writer.writeln();
-        writer.writeln('📐 Supported:');
+        writer.writeln(`📐 ${t.t('cli.convert.supported', 'Supported:')}`);
         writer.writeln('  Length: m, km, cm, mm, mi, ft, in, yd');
         writer.writeln('  Weight: kg, g, mg, lb, oz, t');
         writer.writeln('  Temperature: c, f, k');

@@ -101,7 +101,14 @@ function createDeps(): CliExecutionContextDeps {
     const commandHistory = new CliCommandHistory(mockStore as any);
     const registry = new CliCommandProcessorRegistry();
     const stateStoreManager = new CliStateStoreManager(services, registry);
-    return { services, logger, commandHistory, stateStoreManager };
+    const translator = {
+        t: (_key: string, defaultValue: string) => defaultValue,
+        setLocale() {},
+        getLocale: () => 'en',
+        getAvailableLocales: () => ['en'],
+        registerLocale() {},
+    } as any;
+    return { services, logger, commandHistory, stateStoreManager, translator };
 }
 
 /** Concatenate written terminal output after startIndex, stripping ANSI. */

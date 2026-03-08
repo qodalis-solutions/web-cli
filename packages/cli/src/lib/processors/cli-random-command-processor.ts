@@ -242,24 +242,24 @@ export class CliRandomCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Generate random numbers, strings, UUIDs, and more');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.random.long_description', 'Generate random numbers, strings, UUIDs, and more'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('random number', CliForegroundColor.Cyan)}              Random number (0-100)`,
+            `  ${writer.wrapInColor('random number', CliForegroundColor.Cyan)}              ${t.t('cli.random.number_desc', 'Random number (0-100)')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('random string', CliForegroundColor.Cyan)}              Random string (16 chars)`,
+            `  ${writer.wrapInColor('random string', CliForegroundColor.Cyan)}              ${t.t('cli.random.string_desc', 'Random string (16 chars)')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('random uuid', CliForegroundColor.Cyan)}                Random UUID v4`,
+            `  ${writer.wrapInColor('random uuid', CliForegroundColor.Cyan)}                ${t.t('cli.random.uuid_desc', 'Random UUID v4')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('random coin', CliForegroundColor.Cyan)}                Flip a coin`,
+            `  ${writer.wrapInColor('random coin', CliForegroundColor.Cyan)}                ${t.t('cli.random.coin_desc', 'Flip a coin')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('random dice', CliForegroundColor.Cyan)}                Roll a dice`,
+            `  ${writer.wrapInColor('random dice', CliForegroundColor.Cyan)}                ${t.t('cli.random.dice_desc', 'Roll a dice')}`,
         );
     }
 }

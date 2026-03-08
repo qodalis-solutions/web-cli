@@ -61,17 +61,17 @@ export class CliSleepCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
+        const { writer, translator: t } = context;
         writer.writeln(
-            'Pauses execution for the specified duration (in milliseconds)',
+            t.t('cli.sleep.long_description', 'Pauses execution for the specified duration (in milliseconds)'),
         );
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('sleep <milliseconds>', CliForegroundColor.Cyan)}`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  sleep 1000                   ${writer.wrapInColor('# Sleep for 1 second', CliForegroundColor.Green)}`,
         );

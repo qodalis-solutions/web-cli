@@ -125,6 +125,20 @@ function createMockContext(
         progressBar: { show: () => {}, update: () => {}, hide: () => {} },
         onAbort: new Subject<void>(),
         terminal: {} as any,
+        translator: {
+            t: (_key: string, defaultValue: string, params?: Record<string, string>) => {
+                if (!params) return defaultValue;
+                let result = defaultValue;
+                for (const [k, v] of Object.entries(params)) {
+                    result = result.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+                }
+                return result;
+            },
+            setLocale() {},
+            getLocale: () => 'en',
+            getAvailableLocales: () => ['en'],
+            registerLocale() {},
+        },
         reader: {
             readLine: jasmine
                 .createSpy('readLine')

@@ -66,13 +66,13 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
+        const { writer, translator: t } = context;
         writer.writeln(
-            'Prints the current version of the CLI and documentation link',
+            t.t('cli.version.long_description', 'Prints the current version of the CLI and documentation link'),
         );
         writer.writeln();
         writer.writeln(
-            writer.wrapInColor('Usage:', CliForegroundColor.Yellow),
+            writer.wrapInColor(t.t('cli.common.usage', 'Usage:'), CliForegroundColor.Yellow),
         );
         writer.writeln(
             `  ${writer.wrapInColor('version', CliForegroundColor.Cyan)}`,

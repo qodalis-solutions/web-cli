@@ -949,10 +949,11 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         await context.executor.showHelp(command, context);
     }
 
-    writeDescription?({ writer }: ICliExecutionContext): void {
+    writeDescription?(context: ICliExecutionContext): void {
+        const { writer, translator: t } = context;
         writer.writeln(this.description);
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('pkg ls', CliForegroundColor.Cyan)}                        List installed packages`,
         );
@@ -982,7 +983,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
             `🌐 Browse packages: ${writer.wrapInColor('https://www.npmjs.com/org/qodalis', CliForegroundColor.Blue)}`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  pkg add guid                ${writer.wrapInColor('# Install @qodalis/cli-guid', CliForegroundColor.Green)}`,
         );

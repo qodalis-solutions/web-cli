@@ -113,16 +113,16 @@ export class CliBase64CommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Encode and decode Base64 strings');
-        writer.writeln('Supports UTF-8 text encoding');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.base64.long_description', 'Encode and decode Base64 strings'));
+        writer.writeln(t.t('cli.base64.utf8_note', 'Supports UTF-8 text encoding'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('base64 encode <text>', CliForegroundColor.Cyan)}       Encode text to Base64`,
+            `  ${writer.wrapInColor('base64 encode <text>', CliForegroundColor.Cyan)}       ${t.t('cli.base64.encode_desc', 'Encode text to Base64')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('base64 decode <base64>', CliForegroundColor.Cyan)}     Decode Base64 to text`,
+            `  ${writer.wrapInColor('base64 decode <base64>', CliForegroundColor.Cyan)}     ${t.t('cli.base64.decode_desc', 'Decode Base64 to text')}`,
         );
     }
 }

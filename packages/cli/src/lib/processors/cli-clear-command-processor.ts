@@ -29,16 +29,16 @@ export class CliClearCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Clears all content from the terminal screen');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.clear.long_description', 'Clears all content from the terminal screen'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('clear', CliForegroundColor.Cyan)}`,
         );
         writer.writeln();
         writer.writeln(
-            `⌨️  Shortcut: ${writer.wrapInColor('Ctrl+L', CliForegroundColor.Yellow)}`,
+            `⌨️  ${t.t('cli.clear.shortcut', 'Shortcut:')} ${writer.wrapInColor('Ctrl+L', CliForegroundColor.Yellow)}`,
         );
     }
 }

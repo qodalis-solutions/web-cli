@@ -102,21 +102,21 @@ export class CliSeqCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Print a sequence of numbers');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.seq.long_description', 'Print a sequence of numbers'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('seq <end>', CliForegroundColor.Cyan)}                       Numbers from 1 to end`,
+            `  ${writer.wrapInColor('seq <end>', CliForegroundColor.Cyan)}                       ${t.t('cli.seq.numbers_to_end', 'Numbers from 1 to end')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('seq <start> <end>', CliForegroundColor.Cyan)}               Numbers from start to end`,
+            `  ${writer.wrapInColor('seq <start> <end>', CliForegroundColor.Cyan)}               ${t.t('cli.seq.numbers_range', 'Numbers from start to end')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('seq <start> <end> --step=N', CliForegroundColor.Cyan)}      With custom step`,
+            `  ${writer.wrapInColor('seq <start> <end> --step=N', CliForegroundColor.Cyan)}      ${t.t('cli.seq.with_step', 'With custom step')}`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  seq 5                            ${writer.wrapInColor('# 1, 2, 3, 4, 5', CliForegroundColor.Green)}`,
         );

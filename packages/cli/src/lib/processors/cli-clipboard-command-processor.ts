@@ -102,15 +102,15 @@ export class CliClipboardCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Copy text to or paste text from the system clipboard');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.clipboard.long_description', 'Copy text to or paste text from the system clipboard'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('clipboard copy <text>', CliForegroundColor.Cyan)}     Copy text to clipboard`,
+            `  ${writer.wrapInColor('clipboard copy <text>', CliForegroundColor.Cyan)}     ${t.t('cli.clipboard.copy_desc', 'Copy text to clipboard')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('clipboard paste', CliForegroundColor.Cyan)}            Paste from clipboard`,
+            `  ${writer.wrapInColor('clipboard paste', CliForegroundColor.Cyan)}            ${t.t('cli.clipboard.paste_desc', 'Paste from clipboard')}`,
         );
     }
 }

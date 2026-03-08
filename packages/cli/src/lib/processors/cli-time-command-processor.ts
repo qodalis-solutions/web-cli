@@ -60,12 +60,12 @@ export class CliTimeCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Display the current local and UTC time');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.time.long_description', 'Display the current local and UTC time'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('time now', CliForegroundColor.Cyan)}              🕒 Show current local and UTC time`,
+            `  ${writer.wrapInColor('time now', CliForegroundColor.Cyan)}              🕒 ${t.t('cli.time.show_current', 'Show current local and UTC time')}`,
         );
     }
 }

@@ -37,6 +37,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         const { writer } = context;
+        const t = context.translator;
         const registry = context.services.get<ICliCommandProcessorRegistry>(
             CliProcessorsRegistry_TOKEN,
         );
@@ -74,7 +75,11 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                     const aliasText = processor.aliases?.length
                         ? `${DIM} ${processor.aliases.join(', ')}${RESET}`
                         : '';
-                    const desc = processor?.description || '';
+                    const desc = this.translateDescription(
+                        processor.description,
+                        processor.command,
+                        context,
+                    );
                     writer.writeln(`    ${icon}  ${name} ${desc}${aliasText}`);
                 });
 
@@ -82,13 +87,13 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             });
 
             writer.writeln(
-                `  ${BOLD}${writer.wrapInColor('Shortcuts', CliForegroundColor.Yellow)}${RESET}`,
+                `  ${BOLD}${writer.wrapInColor(t.t('cli.help.shortcuts', 'Shortcuts'), CliForegroundColor.Yellow)}${RESET}`,
             );
             await context.executor.executeCommand('hotkeys', context);
 
             writer.writeln();
             writer.writeln(
-                `  ${DIM}Type${RESET} ${writer.wrapInColor('help <command>', CliForegroundColor.Cyan)} ${DIM}for detailed information${RESET}`,
+                `  ${DIM}${t.t('cli.help.type', 'Type')}${RESET} ${writer.wrapInColor(t.t('cli.help.help_command', 'help <command>'), CliForegroundColor.Cyan)} ${DIM}${t.t('cli.help.for_details', 'for detailed information')}${RESET}`,
             );
         } else {
             const processor = registry.findProcessor(
@@ -99,39 +104,53 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             if (processor) {
                 this.writeProcessorDescription(processor, context);
             } else {
-                writer.writeError(`Unknown command: ${commandsToHelp[0]}`);
+                writer.writeError(t.t('cli.help.unknown_command', 'Unknown command: {command}', { command: commandsToHelp[0] }));
                 writer.writeln();
                 writer.writeln(
-                    `  ${DIM}Type${RESET} ${writer.wrapInColor('help', CliForegroundColor.Cyan)} ${DIM}to see all available commands${RESET}`,
+                    `  ${DIM}${t.t('cli.help.type', 'Type')}${RESET} ${writer.wrapInColor('help', CliForegroundColor.Cyan)} ${DIM}${t.t('cli.help.see_all', 'to see all available commands')}${RESET}`,
                 );
             }
         }
     }
 
-    writeDescription({ writer }: ICliExecutionContext): void {
-        writer.writeln('Displays help information for commands');
+    writeDescription(context: ICliExecutionContext): void {
+        const { writer } = context;
+        const t = context.translator;
+        writer.writeln(t.t('cli.help.long_description', 'Displays help information for commands'));
         writer.writeln();
         writer.writeln(
-            writer.wrapInColor('Usage:', CliForegroundColor.Yellow),
+            writer.wrapInColor(t.t('cli.common.usage', 'Usage:'), CliForegroundColor.Yellow),
         );
         writer.writeln(
-            `  ${writer.wrapInColor('help', CliForegroundColor.Cyan)}                    Show all available commands`,
+            `  ${writer.wrapInColor('help', CliForegroundColor.Cyan)}                    ${t.t('cli.help.show_all', 'Show all available commands')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('help <command>', CliForegroundColor.Cyan)}            Show details for a command`,
+            `  ${writer.wrapInColor('help <command>', CliForegroundColor.Cyan)}            ${t.t('cli.help.show_details', 'Show details for a command')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('help <command> <sub>', CliForegroundColor.Cyan)}      Show details for a subcommand`,
+            `  ${writer.wrapInColor('help <command> <sub>', CliForegroundColor.Cyan)}      ${t.t('cli.help.show_sub_details', 'Show details for a subcommand')}`,
         );
         writer.writeln();
         writer.writeln(
-            writer.wrapInColor('Examples:', CliForegroundColor.Yellow),
+            writer.wrapInColor(t.t('cli.common.examples', 'Examples:'), CliForegroundColor.Yellow),
         );
         writer.writeln(
-            `  help pkg                         ${DIM}# Package manager help${RESET}`,
+            `  help pkg                         ${DIM}# ${t.t('cli.help.example_pkg', 'Package manager help')}${RESET}`,
         );
         writer.writeln(
-            `  help theme apply                 ${DIM}# Theme apply subcommand help${RESET}`,
+            `  help theme apply                 ${DIM}# ${t.t('cli.help.example_theme', 'Theme apply subcommand help')}${RESET}`,
+        );
+    }
+
+    private translateDescription(
+        description: string | undefined,
+        processorCommand: string,
+        context: ICliExecutionContext,
+    ): string {
+        if (!description) return '';
+        return context.translator.t(
+            `cli.${processorCommand}.description`,
+            description,
         );
     }
 
@@ -140,6 +159,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ) {
         const { writer } = context;
+        const t = context.translator;
 
         // ── Header ───────────────────────────────────────────────
         const icon = processor.metadata?.icon || '';
@@ -150,7 +170,12 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         writer.writeln(`  ${icon}${icon ? '  ' : ''}${name} ${version}`);
 
         if (processor.description) {
-            writer.writeln(`  ${processor.description}`);
+            const desc = this.translateDescription(
+                processor.description,
+                processor.command,
+                context,
+            );
+            writer.writeln(`  ${desc}`);
         }
 
         if (processor.aliases?.length) {
@@ -163,7 +188,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         if (processor.originalProcessor) {
             writer.writeln();
             writer.writeln(
-                `  ${BOLD}${writer.wrapInColor('Extension chain', CliForegroundColor.Yellow)}${RESET}`,
+                `  ${BOLD}${writer.wrapInColor(t.t('cli.help.extension_chain', 'Extension chain'), CliForegroundColor.Yellow)}${RESET}`,
             );
             let current = processor.originalProcessor;
             let depth = 1;
@@ -188,7 +213,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         if (processor.processors?.length) {
             writer.writeln();
             writer.writeln(
-                `  ${BOLD}${writer.wrapInColor('Subcommands', CliForegroundColor.Yellow)}${RESET}`,
+                `  ${BOLD}${writer.wrapInColor(t.t('cli.help.subcommands', 'Subcommands'), CliForegroundColor.Yellow)}${RESET}`,
             );
 
             processor.processors.forEach((sub) => {
@@ -199,8 +224,13 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 const subAliases = sub.aliases?.length
                     ? `${DIM} (${sub.aliases.join(', ')})${RESET}`
                     : '';
+                const subDesc = this.translateDescription(
+                    sub.description,
+                    `${processor.command}.${sub.command}`,
+                    context,
+                );
                 writer.writeln(
-                    `    ${subName} ${sub.description || ''}${subAliases}`,
+                    `    ${subName} ${subDesc}${subAliases}`,
                 );
             });
         }
@@ -212,7 +242,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         if (commandParams.length > 0) {
             writer.writeln();
             writer.writeln(
-                `  ${BOLD}${writer.wrapInColor('Options', CliForegroundColor.Yellow)}${RESET}`,
+                `  ${BOLD}${writer.wrapInColor(t.t('cli.help.options', 'Options'), CliForegroundColor.Yellow)}${RESET}`,
             );
 
             commandParams.forEach((param) => {
@@ -223,7 +253,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         if (globalParams.length > 0) {
             writer.writeln();
             writer.writeln(
-                `  ${BOLD}${writer.wrapInColor('Global options', CliForegroundColor.Yellow)}${RESET}`,
+                `  ${BOLD}${writer.wrapInColor(t.t('cli.help.global_options', 'Global options'), CliForegroundColor.Yellow)}${RESET}`,
             );
 
             globalParams.forEach((param) => {
@@ -235,7 +265,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         if (processor.metadata?.requireServer) {
             writer.writeln();
             writer.writeln(
-                `  ${writer.wrapInColor('Requires a connected server', CliForegroundColor.Red)}`,
+                `  ${writer.wrapInColor(t.t('cli.help.requires_server', 'Requires a connected server'), CliForegroundColor.Red)}`,
             );
         }
 

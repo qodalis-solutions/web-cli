@@ -141,21 +141,21 @@ export class CliJsonCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Format, minify, or validate JSON strings');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.json.long_description', 'Format, minify, or validate JSON strings'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('json format <json>', CliForegroundColor.Cyan)}       Pretty-print JSON`,
+            `  ${writer.wrapInColor('json format <json>', CliForegroundColor.Cyan)}       ${t.t('cli.json.format_desc', 'Pretty-print JSON')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('json minify <json>', CliForegroundColor.Cyan)}       Remove whitespace`,
+            `  ${writer.wrapInColor('json minify <json>', CliForegroundColor.Cyan)}       ${t.t('cli.json.minify_desc', 'Remove whitespace')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('json validate <json>', CliForegroundColor.Cyan)}     Check if valid JSON`,
+            `  ${writer.wrapInColor('json validate <json>', CliForegroundColor.Cyan)}     ${t.t('cli.json.validate_desc', 'Check if valid JSON')}`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  json format {"a":1,"b":2}        ${writer.wrapInColor('# Pretty-print', CliForegroundColor.Green)}`,
         );

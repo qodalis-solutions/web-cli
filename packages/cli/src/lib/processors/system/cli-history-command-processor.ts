@@ -166,25 +166,26 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
         }
     }
 
-    writeDescription({ writer }: ICliExecutionContext): void {
-        writer.writeln('Prints the command history of the current session');
+    writeDescription(context: ICliExecutionContext): void {
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.history.long_description', 'Prints the command history of the current session'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('history', CliForegroundColor.Cyan)}                  Show command history`,
+            `  ${writer.wrapInColor('history', CliForegroundColor.Cyan)}                  ${t.t('cli.history.show', 'Show command history')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('history search <q>', CliForegroundColor.Cyan)}      Search history for pattern`,
+            `  ${writer.wrapInColor('history search <q>', CliForegroundColor.Cyan)}      ${t.t('cli.history.search', 'Search history for pattern')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('history clear', CliForegroundColor.Cyan)}            Clear all history`,
+            `  ${writer.wrapInColor('history clear', CliForegroundColor.Cyan)}            ${t.t('cli.history.clear', 'Clear all history')}`,
         );
         writer.writeln();
         writer.writeln(
-            `💡 Use ${writer.wrapInColor('↑/↓', CliForegroundColor.Yellow)} arrow keys to navigate through history`,
+            `💡 ${t.t('cli.history.arrow_hint', 'Use {keys} arrow keys to navigate through history', { keys: '↑/↓' })}`,
         );
         writer.writeln(
-            `💡 Type a prefix then ${writer.wrapInColor('↑', CliForegroundColor.Yellow)} to search history by prefix`,
+            `💡 ${t.t('cli.history.prefix_hint', 'Type a prefix then {key} to search history by prefix', { key: '↑' })}`,
         );
     }
 }

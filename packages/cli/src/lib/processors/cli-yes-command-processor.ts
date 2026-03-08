@@ -47,15 +47,15 @@ export class CliYesCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Output a string repeatedly');
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.yes.long_description', 'Output a string repeatedly'));
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('yes [text] [--count=N]', CliForegroundColor.Cyan)}`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  yes                              ${writer.wrapInColor('# Outputs "y" 20 times', CliForegroundColor.Green)}`,
         );

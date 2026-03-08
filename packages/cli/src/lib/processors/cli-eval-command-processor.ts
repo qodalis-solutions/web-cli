@@ -47,18 +47,18 @@ export class CliEvalCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln(this.description);
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.eval.long_description', this.description));
         writer.writeln(
-            'Supports arithmetic, strings, arrays, objects, and any valid JS',
+            t.t('cli.eval.supports', 'Supports arithmetic, strings, arrays, objects, and any valid JS'),
         );
         writer.writeln();
-        writer.writeln('📋 Usage:');
+        writer.writeln(`📋 ${t.t('cli.common.usage', 'Usage:')}`);
         writer.writeln(
             `  ${writer.wrapInColor('eval <expression>', CliForegroundColor.Cyan)}`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  eval 1 + 1                       ${writer.wrapInColor('# → 2', CliForegroundColor.Green)}`,
         );
