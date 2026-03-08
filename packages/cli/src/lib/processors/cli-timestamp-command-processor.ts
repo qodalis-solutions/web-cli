@@ -90,7 +90,7 @@ export class CliTimestampCommandProcessor implements ICliCommandProcessor {
                     );
                     writer.writeln('Auto-detects seconds vs milliseconds');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('timestamp to-date <timestamp>', CliForegroundColor.Cyan)}`,
                     );
@@ -130,12 +130,12 @@ export class CliTimestampCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('Convert a date string to a Unix timestamp');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('timestamp from-date <date>', CliForegroundColor.Cyan)}`,
                     );
                     writer.writeln();
-                    writer.writeln('📝 Examples:');
+                    writer.writeln(`📝 ${context.translator.t('cli.common.examples', 'Examples:')}`);
                     writer.writeln(
                         `  timestamp from-date 2024-01-01               ${writer.wrapInColor('# ISO date', CliForegroundColor.Green)}`,
                     );

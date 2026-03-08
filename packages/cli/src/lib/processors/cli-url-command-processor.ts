@@ -44,12 +44,12 @@ export class CliUrlCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('URL-encode a string');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('url encode <text>', CliForegroundColor.Cyan)}`,
                     );
                     writer.writeln();
-                    writer.writeln('📝 Examples:');
+                    writer.writeln(`📝 ${context.translator.t('cli.common.examples', 'Examples:')}`);
                     writer.writeln(
                         `  url encode hello world           ${writer.wrapInColor('# → hello%20world', CliForegroundColor.Green)}`,
                     );
@@ -81,12 +81,12 @@ export class CliUrlCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('URL-decode a string');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('url decode <text>', CliForegroundColor.Cyan)}`,
                     );
                     writer.writeln();
-                    writer.writeln('📝 Examples:');
+                    writer.writeln(`📝 ${context.translator.t('cli.common.examples', 'Examples:')}`);
                     writer.writeln(
                         `  url decode hello%20world         ${writer.wrapInColor('# → hello world', CliForegroundColor.Green)}`,
                     );
@@ -131,7 +131,7 @@ export class CliUrlCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('Parse a URL and display its components');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('url parse <url>', CliForegroundColor.Cyan)}`,
                     );

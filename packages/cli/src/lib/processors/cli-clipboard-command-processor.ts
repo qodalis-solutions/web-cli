@@ -52,7 +52,7 @@ export class CliClipboardCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('Copy text to the system clipboard');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('clipboard copy <text>', CliForegroundColor.Cyan)}`,
                     );
@@ -85,7 +85,7 @@ export class CliClipboardCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('Read text from the system clipboard');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('clipboard paste', CliForegroundColor.Cyan)}`,
                     );

@@ -112,7 +112,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         'List all installed packages and their versions',
                     );
                     context.writer.writeln();
-                    context.writer.writeln('📋 Usage:');
+                    context.writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     context.writer.writeln(
                         `  ${context.writer.wrapInColor('pkg ls', CliForegroundColor.Cyan)}`,
                     );
@@ -340,7 +340,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         'Browse all available packages across all configured sources',
                     );
                     context.writer.writeln();
-                    context.writer.writeln('📋 Usage:');
+                    context.writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     context.writer.writeln(
                         `  ${context.writer.wrapInColor('pkg browse', CliForegroundColor.Cyan)}`,
                     );
@@ -383,17 +383,18 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
                     cleanup();
                 },
-                writeDescription({ writer }) {
+                writeDescription(context) {
+                    const { writer } = context;
                     writer.writeln(
                         'Install one or more packages from the Qodalis registry',
                     );
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('pkg add <package> [package2...]', CliForegroundColor.Cyan)}`,
                     );
                     writer.writeln();
-                    writer.writeln('📝 Examples:');
+                    writer.writeln(`📝 ${context.translator.t('cli.common.examples', 'Examples:')}`);
                     writer.writeln(
                         `  pkg add guid                        ${writer.wrapInColor('# Short name', CliForegroundColor.Green)}`,
                     );
@@ -425,15 +426,16 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
                     cleanup();
                 },
-                writeDescription({ writer }) {
+                writeDescription(context) {
+                    const { writer } = context;
                     writer.writeln('Remove one or more installed packages');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('pkg remove <package> [package2...]', CliForegroundColor.Cyan)}`,
                     );
                     writer.writeln();
-                    writer.writeln('📝 Examples:');
+                    writer.writeln(`📝 ${context.translator.t('cli.common.examples', 'Examples:')}`);
                     writer.writeln(
                         `  pkg remove guid                     ${writer.wrapInColor('# Remove one package', CliForegroundColor.Green)}`,
                     );
@@ -550,12 +552,12 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         'Show all published versions of a package from the npm registry',
                     );
                     context.writer.writeln();
-                    context.writer.writeln('📋 Usage:');
+                    context.writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     context.writer.writeln(
                         `  ${context.writer.wrapInColor('pkg versions <package>', CliForegroundColor.Cyan)}`,
                     );
                     context.writer.writeln();
-                    context.writer.writeln('📝 Examples:');
+                    context.writer.writeln(`📝 ${context.translator.t('cli.common.examples', 'Examples:')}`);
                     context.writer.writeln(
                         `  pkg versions guid                   ${context.writer.wrapInColor('# Short name', CliForegroundColor.Green)}`,
                     );
@@ -692,7 +694,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         'Check installed packages for newer versions available on the registry',
                     );
                     context.writer.writeln();
-                    context.writer.writeln('📋 Usage:');
+                    context.writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     context.writer.writeln(
                         `  ${context.writer.wrapInColor('pkg check', CliForegroundColor.Cyan)}`,
                     );
@@ -757,7 +759,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         'Update packages to their latest versions or to a specific version',
                     );
                     context.writer.writeln();
-                    context.writer.writeln('📋 Usage:');
+                    context.writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     context.writer.writeln(
                         `  ${context.writer.wrapInColor('pkg update <package>', CliForegroundColor.Cyan)}            Update to latest`,
                     );
@@ -768,7 +770,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         `  ${context.writer.wrapInColor('pkg update', CliForegroundColor.Cyan)}                      Update all packages`,
                     );
                     context.writer.writeln();
-                    context.writer.writeln('📝 Examples:');
+                    context.writer.writeln(`📝 ${context.translator.t('cli.common.examples', 'Examples:')}`);
                     context.writer.writeln(
                         `  pkg update guid             ${context.writer.wrapInColor('# Update to latest', CliForegroundColor.Green)}`,
                     );
@@ -872,7 +874,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                                 'Set the preferred source for package downloads',
                             );
                             context.writer.writeln();
-                            context.writer.writeln('📋 Usage:');
+                            context.writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                             context.writer.writeln(
                                 `  ${context.writer.wrapInColor('pkg source set <name>', CliForegroundColor.Cyan)}`,
                             );

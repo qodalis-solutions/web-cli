@@ -227,10 +227,11 @@ export class CliFeedbackCommandProcessor implements ICliCommandProcessor {
                 ): Promise<void> {
                     await runInteractiveFlow(type, value, context);
                 },
-                writeDescription({ writer }: ICliExecutionContext): void {
+                writeDescription(context: ICliExecutionContext): void {
+                    const { writer } = context;
                     writer.writeln(`${type.icon} ${type.description}`);
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor(`feedback ${type.command}`, CliForegroundColor.Cyan)}            Interactive mode`,
                     );
@@ -304,7 +305,7 @@ export class CliFeedbackCommandProcessor implements ICliCommandProcessor {
             `  ${writer.wrapInColor('feedback request-command <title>', CliForegroundColor.Cyan)}              🧩 Request with title`,
         );
         writer.writeln();
-        writer.writeln('📝 Examples:');
+        writer.writeln(`📝 ${t.t('cli.common.examples', 'Examples:')}`);
         writer.writeln(
             `  feedback                                          ${writer.wrapInColor('# Start interactive wizard', CliForegroundColor.Green)}`,
         );

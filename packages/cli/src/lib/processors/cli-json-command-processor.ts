@@ -55,7 +55,7 @@ export class CliJsonCommandProcessor implements ICliCommandProcessor {
                         'Pretty-print JSON with 2-space indentation',
                     );
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('json format <json>', CliForegroundColor.Cyan)}`,
                     );
@@ -93,7 +93,7 @@ export class CliJsonCommandProcessor implements ICliCommandProcessor {
                         'Minify JSON by removing all unnecessary whitespace',
                     );
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('json minify <json>', CliForegroundColor.Cyan)}`,
                     );
@@ -124,7 +124,7 @@ export class CliJsonCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('Check whether a string is valid JSON');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('json validate <json>', CliForegroundColor.Cyan)}`,
                     );

@@ -295,7 +295,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
             `${context.writer.wrapInColor(option.label, CliForegroundColor.Cyan)}: ${option.description}`,
         );
         context.writer.writeln(
-            `  Current value: ${context.writer.wrapInColor(String(currentValue), CliForegroundColor.Yellow)}`,
+            `  ${context.translator.t('cli.configure.current_value', 'Current value:')} ${context.writer.wrapInColor(String(currentValue), CliForegroundColor.Yellow)}`,
         );
         context.writer.writeln();
 
@@ -355,7 +355,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         if (option.validator) {
             const result = option.validator(newValue);
             if (!result.valid) {
-                context.writer.writeError(result.message || 'Invalid value');
+                context.writer.writeError(result.message || context.translator.t('cli.configure.invalid_value', 'Invalid value'));
                 return;
             }
         }
@@ -630,7 +630,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 }
 
                 // Coerce value based on type
-                const coerceResult = this.coerceValue(rawValue, match.option);
+                const coerceResult = this.coerceValue(rawValue, match.option, context.translator);
                 if (coerceResult.error) {
                     context.writer.writeError(coerceResult.error);
                     return;
@@ -758,6 +758,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
     private coerceValue(
         rawValue: string,
         option: ICliConfigurationOption,
+        translator: ICliExecutionContext['translator'],
     ): { value: any; error?: string } {
         switch (option.type) {
             case 'number': {
@@ -765,7 +766,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 if (isNaN(num)) {
                     return {
                         value: null,
-                        error: `Invalid number: ${rawValue}`,
+                        error: translator.t('cli.configure.invalid_number', 'Invalid number: {value}', { value: rawValue }),
                     };
                 }
                 return { value: num };
@@ -784,9 +785,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                             rawValue.toLowerCase(),
                     );
                     if (!match) {
+                        const validOptions = option.options.map((o) => o.value).join(', ');
                         return {
                             value: null,
-                            error: `Invalid value. Valid options: ${option.options.map((o) => o.value).join(', ')}`,
+                            error: translator.t('cli.configure.invalid_options', 'Invalid value. Valid options: {options}', { options: validOptions }),
                         };
                     }
                     return { value: match.value };

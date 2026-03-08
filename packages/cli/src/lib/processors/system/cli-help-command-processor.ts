@@ -180,7 +180,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
         if (processor.aliases?.length) {
             writer.writeln(
-                `  ${DIM}Aliases:${RESET} ${processor.aliases.map((a: string) => writer.wrapInColor(a, CliForegroundColor.Magenta)).join(', ')}`,
+                `  ${DIM}${t.t('cli.help.aliases', 'Aliases:')}${RESET} ${processor.aliases.map((a: string) => writer.wrapInColor(a, CliForegroundColor.Magenta)).join(', ')}`,
             );
         }
 
@@ -246,7 +246,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             commandParams.forEach((param) => {
-                this.writeParameter(param, writer);
+                this.writeParameter(param, writer, t);
             });
         }
 
@@ -257,7 +257,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             globalParams.forEach((param) => {
-                this.writeParameter(param, writer);
+                this.writeParameter(param, writer, t);
             });
         }
 
@@ -290,6 +290,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
     private writeParameter(
         param: { name: string; aliases?: string[]; type: string; description: string; required: boolean; defaultValue?: any },
         writer: ICliExecutionContext['writer'],
+        translator: ICliExecutionContext['translator'],
     ) {
         const aliases = param.aliases?.length
             ? `, ${param.aliases.map((a) => `-${a}`).join(', ')}`
@@ -300,7 +301,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         );
         const typeStr = `${DIM}<${param.type}>${RESET}`;
         const required = param.required
-            ? writer.wrapInColor(' (required)', CliForegroundColor.Red)
+            ? writer.wrapInColor(` ${translator.t('cli.help.required', '(required)')}`, CliForegroundColor.Red)
             : '';
         const defaultVal =
             param.defaultValue !== undefined && !param.required

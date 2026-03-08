@@ -122,7 +122,7 @@ export class CliLoremCommandProcessor implements ICliCommandProcessor {
                         'Generate a specific number of lorem ipsum words',
                     );
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('lorem words [--count=N]', CliForegroundColor.Cyan)}`,
                     );
@@ -168,7 +168,7 @@ export class CliLoremCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('Generate lorem ipsum sentences');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('lorem sentences [--count=N]', CliForegroundColor.Cyan)}`,
                     );
@@ -220,7 +220,7 @@ export class CliLoremCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('Generate lorem ipsum paragraphs');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('lorem paragraphs [--count=N]', CliForegroundColor.Cyan)}`,
                     );

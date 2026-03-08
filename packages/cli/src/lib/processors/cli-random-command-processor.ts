@@ -80,12 +80,12 @@ export class CliRandomCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('Generate random numbers within a range');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('random number [--min=N] [--max=N] [--count=N]', CliForegroundColor.Cyan)}`,
                     );
                     writer.writeln();
-                    writer.writeln('📝 Examples:');
+                    writer.writeln(`📝 ${context.translator.t('cli.common.examples', 'Examples:')}`);
                     writer.writeln(
                         `  random number                    ${writer.wrapInColor('# 0-100', CliForegroundColor.Green)}`,
                     );
@@ -160,7 +160,7 @@ export class CliRandomCommandProcessor implements ICliCommandProcessor {
                         'Generate a cryptographically random string',
                     );
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('random string [--length=N] [--charset=TYPE]', CliForegroundColor.Cyan)}`,
                     );
@@ -187,7 +187,7 @@ export class CliRandomCommandProcessor implements ICliCommandProcessor {
                         'Generate a cryptographically random UUID v4',
                     );
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('random uuid', CliForegroundColor.Cyan)}`,
                     );

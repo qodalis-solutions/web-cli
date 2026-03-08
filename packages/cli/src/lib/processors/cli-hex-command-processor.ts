@@ -46,7 +46,7 @@ export class CliHexCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('Encode text to hexadecimal representation');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('hex encode <text>', CliForegroundColor.Cyan)}`,
                     );
@@ -83,7 +83,7 @@ export class CliHexCommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('Decode hexadecimal back to text');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('hex decode <hex>', CliForegroundColor.Cyan)}`,
                     );
@@ -165,12 +165,12 @@ export class CliHexCommandProcessor implements ICliCommandProcessor {
                         'Convert a number between different bases (2-36)',
                     );
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('hex convert <number> [--from=N] [--to=N]', CliForegroundColor.Cyan)}`,
                     );
                     writer.writeln();
-                    writer.writeln('📝 Examples:');
+                    writer.writeln(`📝 ${context.translator.t('cli.common.examples', 'Examples:')}`);
                     writer.writeln(
                         `  hex convert 255                  ${writer.wrapInColor('# Decimal → Hex (ff)', CliForegroundColor.Green)}`,
                     );

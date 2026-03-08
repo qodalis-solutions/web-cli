@@ -67,7 +67,7 @@ export class CliHashCommandProcessor implements ICliCommandProcessor {
                     `Generate a ${algo} hash digest of the input text`,
                 );
                 writer.writeln();
-                writer.writeln('📋 Usage:');
+                writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                 writer.writeln(
                     `  ${writer.wrapInColor(`hash ${command} <text>`, CliForegroundColor.Cyan)}`,
                 );

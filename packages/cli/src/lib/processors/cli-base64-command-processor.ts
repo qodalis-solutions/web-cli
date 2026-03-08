@@ -52,12 +52,12 @@ export class CliBase64CommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('Encode text to Base64 format');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('base64 encode <text>', CliForegroundColor.Cyan)}`,
                     );
                     writer.writeln();
-                    writer.writeln('📝 Examples:');
+                    writer.writeln(`📝 ${context.translator.t('cli.common.examples', 'Examples:')}`);
                     writer.writeln(
                         `  base64 encode Hello World        ${writer.wrapInColor('# → SGVsbG8gV29ybGQ=', CliForegroundColor.Green)}`,
                     );
@@ -91,12 +91,12 @@ export class CliBase64CommandProcessor implements ICliCommandProcessor {
                     const { writer } = context;
                     writer.writeln('Decode a Base64 string back to text');
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('base64 decode <base64>', CliForegroundColor.Cyan)}`,
                     );
                     writer.writeln();
-                    writer.writeln('📝 Examples:');
+                    writer.writeln(`📝 ${context.translator.t('cli.common.examples', 'Examples:')}`);
                     writer.writeln(
                         `  base64 decode SGVsbG8gV29ybGQ=   ${writer.wrapInColor('# → Hello World', CliForegroundColor.Green)}`,
                     );

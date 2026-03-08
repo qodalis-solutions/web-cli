@@ -127,7 +127,7 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
                     'Search command history for a pattern (case-insensitive substring match)',
                 );
                 context.writer.writeln();
-                context.writer.writeln('📋 Usage:');
+                context.writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                 context.writer.writeln(
                     `  ${context.writer.wrapInColor('history search git', CliForegroundColor.Cyan)}          Show all history entries containing "git"`,
                 );

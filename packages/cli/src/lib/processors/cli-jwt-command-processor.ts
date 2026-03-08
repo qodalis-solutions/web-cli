@@ -122,7 +122,7 @@ export class CliJwtCommandProcessor implements ICliCommandProcessor {
                         'Shows expiration status and issue date if present',
                     );
                     writer.writeln();
-                    writer.writeln('📋 Usage:');
+                    writer.writeln(`📋 ${context.translator.t('cli.common.usage', 'Usage:')}`);
                     writer.writeln(
                         `  ${writer.wrapInColor('jwt decode <token>', CliForegroundColor.Cyan)}`,
                     );
