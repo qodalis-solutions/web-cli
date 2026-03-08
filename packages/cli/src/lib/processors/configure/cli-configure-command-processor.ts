@@ -8,6 +8,8 @@ import {
     ICliCommandProcessorRegistry,
     ICliConfigurationOption,
     ICliExecutionContext,
+    ICliTranslationService,
+    ICliTranslationService_TOKEN,
     CliLogLevel,
     DefaultLibraryAuthor,
     resolveConfigurationCategories,
@@ -44,6 +46,16 @@ const SYSTEM_OPTIONS: ICliConfigurationOption[] = [
             { label: 'Once', value: 'once' },
             { label: 'Daily', value: 'daily' },
             { label: 'Never', value: 'never' },
+        ],
+    },
+    {
+        key: 'language',
+        label: 'Language',
+        description: 'Display language for the CLI interface',
+        type: 'select',
+        defaultValue: 'en',
+        options: [
+            { label: 'English', value: 'en' },
         ],
     },
 ];
@@ -212,6 +224,27 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         stateKey: string,
         options: ICliConfigurationOption[],
     ): Promise<void> {
+        // Dynamically populate language options from available locales
+        if (stateKey === 'system') {
+            const langOption = options.find(o => o.key === 'language');
+            if (langOption) {
+                try {
+                    const translator = context.services.get<ICliTranslationService>(
+                        ICliTranslationService_TOKEN,
+                    );
+                    const locales = translator.getAvailableLocales();
+                    if (locales.length > 0) {
+                        langOption.options = locales.map(l => ({
+                            label: this.getLanguageLabel(l),
+                            value: l,
+                        }));
+                    }
+                } catch {
+                    // ignore
+                }
+            }
+        }
+
         while (true) {
             const menuOptions: { label: string; value: string }[] = [];
 
@@ -404,6 +437,18 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
             const level = LOG_LEVEL_MAP[settings['logLevel']];
             if (level !== undefined) {
                 context.logger.setCliLogLevel(level);
+            }
+        }
+
+        // Apply language
+        if (settings['language']) {
+            try {
+                const translator = context.services.get<ICliTranslationService>(
+                    ICliTranslationService_TOKEN,
+                );
+                translator.setLocale(settings['language']);
+            } catch {
+                // Translation service not available yet during early boot
             }
         }
 
@@ -748,6 +793,24 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
             default:
                 return { value: rawValue };
         }
+    }
+
+    private getLanguageLabel(locale: string): string {
+        const labels: Record<string, string> = {
+            en: 'English',
+            es: 'Español',
+            fr: 'Français',
+            de: 'Deutsch',
+            pt: 'Português',
+            it: 'Italiano',
+            ja: '日本語',
+            ko: '한국어',
+            zh: '中文',
+            ru: 'Русский',
+            ar: 'العربية',
+            ro: 'Română',
+        };
+        return labels[locale] || locale;
     }
 
     private static buildDefaults(
