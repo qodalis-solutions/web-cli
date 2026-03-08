@@ -107,6 +107,60 @@
       ],
       "@qodalis/cli-lang-es/*": [
         "dist/lang-es/*"
+      ],
+      "@qodalis/cli-lang-fr": [
+        "dist/lang-fr"
+      ],
+      "@qodalis/cli-lang-fr/*": [
+        "dist/lang-fr/*"
+      ],
+      "@qodalis/cli-lang-de": [
+        "dist/lang-de"
+      ],
+      "@qodalis/cli-lang-de/*": [
+        "dist/lang-de/*"
+      ],
+      "@qodalis/cli-lang-pt": [
+        "dist/lang-pt"
+      ],
+      "@qodalis/cli-lang-pt/*": [
+        "dist/lang-pt/*"
+      ],
+      "@qodalis/cli-lang-it": [
+        "dist/lang-it"
+      ],
+      "@qodalis/cli-lang-it/*": [
+        "dist/lang-it/*"
+      ],
+      "@qodalis/cli-lang-ja": [
+        "dist/lang-ja"
+      ],
+      "@qodalis/cli-lang-ja/*": [
+        "dist/lang-ja/*"
+      ],
+      "@qodalis/cli-lang-ko": [
+        "dist/lang-ko"
+      ],
+      "@qodalis/cli-lang-ko/*": [
+        "dist/lang-ko/*"
+      ],
+      "@qodalis/cli-lang-zh": [
+        "dist/lang-zh"
+      ],
+      "@qodalis/cli-lang-zh/*": [
+        "dist/lang-zh/*"
+      ],
+      "@qodalis/cli-lang-ru": [
+        "dist/lang-ru"
+      ],
+      "@qodalis/cli-lang-ru/*": [
+        "dist/lang-ru/*"
+      ],
+      "@qodalis/cli-lang-ro": [
+        "dist/lang-ro"
+      ],
+      "@qodalis/cli-lang-ro/*": [
+        "dist/lang-ro/*"
       ]
     },
     "outDir": "./dist/out-tsc",

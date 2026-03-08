@@ -1,0 +1,25 @@
+{
+  "name": "lang-fr",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/plugins/lang-fr/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsup",
+          "cp package.json ../../../dist/lang-fr/package.json"
+        ],
+        "cwd": "packages/plugins/lang-fr",
+        "parallel": false
+      },
+      "inputs": [
+        "production",
+        "sharedGlobals"
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/lang-fr"
+      ]
+    }
+  }
+}

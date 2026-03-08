@@ -1,0 +1,17 @@
+{
+  "name": "lang-ro",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/plugins/lang-ro/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsup", "cp package.json ../../../dist/lang-ro/package.json"],
+        "cwd": "packages/plugins/lang-ro",
+        "parallel": false
+      },
+      "inputs": ["production", "sharedGlobals"],
+      "outputs": ["{workspaceRoot}/dist/lang-ro"]
+    }
+  }
+}

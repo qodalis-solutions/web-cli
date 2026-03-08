@@ -15,6 +15,15 @@ import { stringModule } from '@qodalis/cli-string';
 import { todoModule } from '@qodalis/cli-todo';
 import { usersModule } from '@qodalis/cli-users';
 import { langEsModule } from '@qodalis/cli-lang-es';
+import { langFrModule } from '@qodalis/cli-lang-fr';
+import { langDeModule } from '@qodalis/cli-lang-de';
+import { langPtModule } from '@qodalis/cli-lang-pt';
+import { langItModule } from '@qodalis/cli-lang-it';
+import { langJaModule } from '@qodalis/cli-lang-ja';
+import { langKoModule } from '@qodalis/cli-lang-ko';
+import { langZhModule } from '@qodalis/cli-lang-zh';
+import { langRuModule } from '@qodalis/cli-lang-ru';
+import { langRoModule } from '@qodalis/cli-lang-ro';
 import {
     ICliModule,
     ICliExecutionContext,
@@ -131,6 +140,15 @@ const backgroundServicesDemo: ICliModule = {
             }),
         ),
         resolveCliModuleProvider(langEsModule),
+        resolveCliModuleProvider(langFrModule),
+        resolveCliModuleProvider(langDeModule),
+        resolveCliModuleProvider(langPtModule),
+        resolveCliModuleProvider(langItModule),
+        resolveCliModuleProvider(langJaModule),
+        resolveCliModuleProvider(langKoModule),
+        resolveCliModuleProvider(langZhModule),
+        resolveCliModuleProvider(langRuModule),
+        resolveCliModuleProvider(langRoModule),
         resolveCliModuleProvider(backgroundServicesDemo),
     ],
     bootstrap: [AppComponent],
