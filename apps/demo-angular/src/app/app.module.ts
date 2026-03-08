@@ -14,6 +14,7 @@ import { browserStorageModule } from '@qodalis/cli-browser-storage';
 import { stringModule } from '@qodalis/cli-string';
 import { todoModule } from '@qodalis/cli-todo';
 import { usersModule } from '@qodalis/cli-users';
+import { langEsModule } from '@qodalis/cli-lang-es';
 import {
     ICliModule,
     ICliExecutionContext,
@@ -129,6 +130,7 @@ const backgroundServicesDemo: ICliModule = {
                 requirePassword: true,
             }),
         ),
+        resolveCliModuleProvider(langEsModule),
         resolveCliModuleProvider(backgroundServicesDemo),
     ],
     bootstrap: [AppComponent],
