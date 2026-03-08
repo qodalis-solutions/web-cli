@@ -8,7 +8,7 @@ import {
     onMounted,
     onBeforeUnmount,
 } from 'vue';
-import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, CliPanelHideAlignment, CliEngineSnapshot, derivePanelThemeStyles, loadPanelPosition, savePanelPosition, nextPanelPosition } from '@qodalis/cli-core';
+import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, CliPanelHideAlignment, CliEngineSnapshot, derivePanelThemeStyles, loadPanelPosition, savePanelPosition } from '@qodalis/cli-core';
 import { CliEngine, CliEngineOptions } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliConfigKey } from './CliConfigProvider';
@@ -121,7 +121,7 @@ function hideTabChevron(position: CliPanelPosition) {
     ]);
 }
 
-function positionIcon(pos: string) {
+function positionIcon(pos: string, size = 20) {
     let fillRect: any;
     switch (pos) {
         case 'top':
@@ -137,7 +137,7 @@ function positionIcon(pos: string) {
             fillRect = h('rect', { x: '4', y: '15', width: '16', height: '5', rx: '1', fill: 'currentColor', stroke: 'none', opacity: '0.5' });
             break;
     }
-    return h('svg', { ...svgAttrs }, [
+    return h('svg', { ...svgAttrs, width: String(size), height: String(size) }, [
         h('rect', { x: '3', y: '3', width: '18', height: '18', rx: '2' }),
         fillRect,
     ]);
@@ -267,8 +267,13 @@ export const CliPanel = defineComponent({
             }, 200);
         }
 
+        onMounted(() => {
+            document.addEventListener('click', closePositionDropdown);
+        });
+
         onBeforeUnmount(() => {
             themeObserver?.disconnect();
+            document.removeEventListener('click', closePositionDropdown);
         });
 
         function toggle() {
@@ -527,10 +532,22 @@ export const CliPanel = defineComponent({
             collapsed.value = preHideCollapsed;
         }
 
-        const handlePositionChange = () => {
-            position.value = nextPanelPosition(position.value);
-            savePanelPosition(position.value);
-        };
+        const positionDropdownOpen = ref(false);
+
+        function closePositionDropdown() {
+            positionDropdownOpen.value = false;
+        }
+
+        function togglePositionDropdown(e: MouseEvent) {
+            e.stopPropagation();
+            positionDropdownOpen.value = !positionDropdownOpen.value;
+        }
+
+        function selectPosition(pos: CliPanelPosition) {
+            positionDropdownOpen.value = false;
+            position.value = pos;
+            savePanelPosition(pos);
+        }
 
         /* ─── Render ─────────────────────────────────────── */
 
@@ -571,11 +588,29 @@ export const CliPanel = defineComponent({
                         'CLI',
                     ]),
                     h('div', { class: 'cli-panel-action-buttons' }, [
-                        h('button', {
-                            class: 'cli-panel-btn cli-panel-btn-position',
-                            title: `Move panel (${position.value})`,
-                            onClick: handlePositionChange,
-                        }, [positionIcon(position.value)]),
+                        h('div', {
+                            class: 'cli-panel-btn-position-wrapper',
+                            onClick: (e: MouseEvent) => e.stopPropagation(),
+                        }, [
+                            h('button', {
+                                class: 'cli-panel-btn cli-panel-btn-position',
+                                title: 'Move panel',
+                                onClick: togglePositionDropdown,
+                            }, [positionIcon(position.value)]),
+                            positionDropdownOpen.value
+                                ? h('div', { class: 'cli-panel-position-dropdown' },
+                                    (['bottom', 'top', 'left', 'right'] as CliPanelPosition[]).map(pos =>
+                                        h('button', {
+                                            class: ['cli-panel-position-dropdown-item', position.value === pos ? 'active' : ''].filter(Boolean).join(' '),
+                                            onClick: () => selectPosition(pos),
+                                        }, [
+                                            positionIcon(pos, 16),
+                                            pos.charAt(0).toUpperCase() + pos.slice(1),
+                                        ]),
+                                    ),
+                                )
+                                : null,
+                        ]),
                         hideable.value
                             ? h('button', {
                                 class: 'cli-panel-btn cli-panel-btn-hide',

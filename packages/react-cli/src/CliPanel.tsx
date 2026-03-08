@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliEngineSnapshot, derivePanelThemeStyles, loadPanelPosition, savePanelPosition, nextPanelPosition, CliPanelPosition } from '@qodalis/cli-core';
+import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliEngineSnapshot, derivePanelThemeStyles, loadPanelPosition, savePanelPosition, CliPanelPosition } from '@qodalis/cli-core';
 import { CliEngineOptions, CliEngine } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliContext } from './CliContext';
@@ -118,7 +118,7 @@ function HideTabChevron({ position }: { position: string }) {
     );
 }
 
-function PositionIcon({ position }: { position: string }) {
+function PositionIcon({ position, size = 20 }: { position: string; size?: number }) {
     let fillRect: React.ReactElement;
     switch (position) {
         case 'top':
@@ -135,7 +135,7 @@ function PositionIcon({ position }: { position: string }) {
             break;
     }
     return (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" />
             {fillRect}
         </svg>
@@ -520,12 +520,25 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
         setCollapsed(preHideCollapsedRef.current);
     }, []);
 
-    const handlePositionChange = useCallback(() => {
-        setPosition(prev => {
-            const next = nextPanelPosition(prev);
-            savePanelPosition(next);
-            return next;
-        });
+    const [positionDropdownOpen, setPositionDropdownOpen] = useState(false);
+
+    const closePositionDropdown = useCallback(() => setPositionDropdownOpen(false), []);
+
+    useEffect(() => {
+        if (!positionDropdownOpen) return;
+        document.addEventListener('click', closePositionDropdown);
+        return () => document.removeEventListener('click', closePositionDropdown);
+    }, [positionDropdownOpen, closePositionDropdown]);
+
+    const handlePositionButtonClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        setPositionDropdownOpen(prev => !prev);
+    }, []);
+
+    const selectPosition = useCallback((pos: CliPanelPosition) => {
+        setPositionDropdownOpen(false);
+        setPosition(pos);
+        savePanelPosition(pos);
     }, []);
 
     /* ─── Render ─────────────────────────────────────────── */
@@ -579,9 +592,25 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
                             CLI
                         </p>
                         <div className="cli-panel-action-buttons">
-                            <button className="cli-panel-btn cli-panel-btn-position" title={`Move panel (${position})`} onClick={handlePositionChange}>
-                                <PositionIcon position={position} />
-                            </button>
+                            <div className="cli-panel-btn-position-wrapper" onClick={e => e.stopPropagation()}>
+                                <button className="cli-panel-btn cli-panel-btn-position" title="Move panel" onClick={handlePositionButtonClick}>
+                                    <PositionIcon position={position} />
+                                </button>
+                                {positionDropdownOpen && (
+                                    <div className="cli-panel-position-dropdown">
+                                        {(['bottom', 'top', 'left', 'right'] as CliPanelPosition[]).map(pos => (
+                                            <button
+                                                key={pos}
+                                                className={`cli-panel-position-dropdown-item${position === pos ? ' active' : ''}`}
+                                                onClick={() => selectPosition(pos)}
+                                            >
+                                                <PositionIcon position={pos} size={16} />
+                                                {pos.charAt(0).toUpperCase() + pos.slice(1)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                             {hideable && (
                                 <button className="cli-panel-btn cli-panel-btn-hide" title="Hide" onClick={handleHide}>
                                     <HideIcon />
