@@ -4,6 +4,7 @@ export interface NavItem {
     label: string;
     path: string;
     children?: NavItem[];
+    external?: boolean;
 }
 
 export const DOCS_NAV: NavItem[] = [
