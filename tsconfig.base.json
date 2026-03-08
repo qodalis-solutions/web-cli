@@ -75,6 +75,9 @@
       "@qodalis/cli-wget": [
         "dist/wget"
       ],
+      "@qodalis/cli-sudoku": [
+        "dist/sudoku"
+      ],
       "@qodalis/electron-cli": [
         "dist/electron-cli"
       ],

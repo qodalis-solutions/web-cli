@@ -14,6 +14,12 @@ import { qrModule } from '@qodalis/cli-qr';
 import { yesnoModule } from '@qodalis/cli-yesno';
 import { serverLogsModule } from '@qodalis/cli-server-logs';
 import { filesModule } from '@qodalis/cli-files';
+import { snakeModule } from '@qodalis/cli-snake';
+import { tetrisModule } from '@qodalis/cli-tetris';
+import { game2048Module } from '@qodalis/cli-2048';
+import { minesweeperModule } from '@qodalis/cli-minesweeper';
+import { wordleModule } from '@qodalis/cli-wordle';
+import { sudokuModule } from '@qodalis/cli-sudoku';
 
 interface Feature {
     icon: string;
@@ -66,6 +72,12 @@ export class AppComponent {
         yesnoModule,
         serverLogsModule,
         filesModule,
+        snakeModule,
+        tetrisModule,
+        game2048Module,
+        minesweeperModule,
+        wordleModule,
+        sudokuModule,
     ];
 
     options: CliOptions = {
@@ -320,6 +332,36 @@ import { filesModule } from '@qodalis/cli-files';`,
             name: 'Server Logs',
             command: 'logs',
             description: 'Stream and filter server logs',
+        },
+        {
+            name: 'Snake',
+            command: 'snake',
+            description: 'Play the classic Snake game',
+        },
+        {
+            name: 'Tetris',
+            command: 'tetris',
+            description: 'Play Tetris in the terminal',
+        },
+        {
+            name: '2048',
+            command: '2048',
+            description: 'Play the 2048 sliding-tile puzzle',
+        },
+        {
+            name: 'Minesweeper',
+            command: 'minesweeper',
+            description: 'Play Minesweeper with 3 difficulty levels',
+        },
+        {
+            name: 'Wordle',
+            command: 'wordle',
+            description: 'Play the word-guessing game Wordle',
+        },
+        {
+            name: 'Sudoku',
+            command: 'sudoku',
+            description: 'Play Sudoku with 3 difficulty levels',
         },
     ];
 

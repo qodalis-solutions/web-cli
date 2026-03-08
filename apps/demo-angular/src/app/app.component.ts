@@ -13,6 +13,7 @@ import { minesweeperModule } from '@qodalis/cli-minesweeper';
 import { wordleModule } from '@qodalis/cli-wordle';
 import { scpModule } from '@qodalis/cli-scp';
 import { wgetModule } from '@qodalis/cli-wget';
+import { sudokuModule } from '@qodalis/cli-sudoku';
 import { CliInputDemoCommandProcessor } from './processors/cli-input-demo-command-processor';
 import { CliPanelOptions } from '@qodalis/angular-cli';
 
@@ -39,6 +40,7 @@ export class AppComponent {
         wordleModule,
         scpModule,
         wgetModule,
+        sudokuModule,
         {
             apiVersion: 2,
             name: 'input-demo',

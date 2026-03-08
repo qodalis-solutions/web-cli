@@ -22,6 +22,7 @@ import { minesweeperModule } from '@qodalis/cli-minesweeper';
 import { wordleModule } from '@qodalis/cli-wordle';
 import { scpModule } from '@qodalis/cli-scp';
 import { wgetModule } from '@qodalis/cli-wget';
+import { sudokuModule } from '@qodalis/cli-sudoku';
 import {
     CliLogLevel,
     type CliOptions,
@@ -107,6 +108,7 @@ const modules: ICliModule[] = [
     wordleModule,
     scpModule,
     wgetModule,
+    sudokuModule,
     usersModule.configure({
         seedUsers: [
             { name: 'root1', email: 'root1@root.com', groups: ['admin'] },
