@@ -20,6 +20,13 @@ import { game2048Module } from '@qodalis/cli-2048';
 import { minesweeperModule } from '@qodalis/cli-minesweeper';
 import { wordleModule } from '@qodalis/cli-wordle';
 import { sudokuModule } from '@qodalis/cli-sudoku';
+import { chartModule } from '@qodalis/cli-chart';
+import { cronModule } from '@qodalis/cli-cron';
+import { csvModule } from '@qodalis/cli-csv';
+import { markdownModule } from '@qodalis/cli-markdown';
+import { scpModule } from '@qodalis/cli-scp';
+import { stopwatchModule } from '@qodalis/cli-stopwatch';
+import { wgetModule } from '@qodalis/cli-wget';
 
 @Component({
     selector: 'app-root',
@@ -50,6 +57,13 @@ export class AppComponent {
         minesweeperModule,
         wordleModule,
         sudokuModule,
+        chartModule,
+        cronModule,
+        csvModule,
+        markdownModule,
+        scpModule,
+        stopwatchModule,
+        wgetModule,
     ];
 
     options: CliOptions = {
