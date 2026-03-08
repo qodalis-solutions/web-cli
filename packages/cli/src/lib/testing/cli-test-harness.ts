@@ -19,6 +19,7 @@ import {
     ICliBackgroundServiceRegistry,
     ICliUserSession,
     ICliKeyValueStore,
+    ICliTranslationService,
 } from '@qodalis/cli-core';
 
 import { CliCommandExecutor, ICliExecutionHost } from '../executor/cli-command-executor';
@@ -28,6 +29,7 @@ import { CliServiceContainer } from '../services/cli-service-container';
 import { CliStateStoreManager } from '../state/cli-state-store-manager';
 import { CliStateStoreManager_TOKEN, CliProcessorsRegistry_TOKEN } from '../tokens';
 import { CliProcessRegistry, CliProcessRegistry_TOKEN } from '../services/cli-process-registry';
+import { CliTranslationService } from '../services/cli-translation-service';
 import { CliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
 
 /**
@@ -205,6 +207,7 @@ export class CliTestHarness {
         const context: ICliExecutionHost = {
             writer,
             services: this.services,
+            translator: new CliTranslationService(),
             spinner: createNoopSpinner(),
             progressBar: createNoopProgressBar(),
             textAnimator: createNoopTextAnimator(),

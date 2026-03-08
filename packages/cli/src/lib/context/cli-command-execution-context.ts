@@ -18,6 +18,7 @@ import {
     ICliUserSession,
     ICliTextAnimator,
     ICliBackgroundServiceRegistry,
+    ICliTranslationService,
 } from '@qodalis/cli-core';
 import { Terminal } from '@xterm/xterm';
 import { Subject } from 'rxjs';
@@ -48,6 +49,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     process: ICliExecutionProcess;
     logger: ICliLogger;
     services: ICliServiceProvider;
+    translator: ICliTranslationService;
     reader: ICliInputReader;
     readonly backgroundServices: ICliBackgroundServiceRegistry;
 
@@ -109,6 +111,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
         this.process = context.process;
         this.logger = context.logger;
         this.services = context.services;
+        this.translator = context.translator;
         this.reader = context.reader;
 
         this.enterFullScreenMode = (p) => context.enterFullScreenMode(p);

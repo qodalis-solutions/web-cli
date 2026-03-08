@@ -12,6 +12,7 @@ import {
     ICliStateStore,
     ICliTerminalWriter,
     ICliTextAnimator,
+    ICliTranslationService,
 } from '.';
 import { ICliInputReader } from './input-reader';
 import { ICliBackgroundServiceRegistry } from './background-service';
@@ -178,6 +179,12 @@ export interface ICliExecutionContext {
      * The services to use for the CLI context
      */
     services: ICliServiceProvider;
+
+    /**
+     * The translation service for i18n string resolution.
+     * Use `translator.t(key, defaultValue)` to get translated strings.
+     */
+    translator: ICliTranslationService;
 
     /**
      * Optional callback that returns the current path to display in the prompt.

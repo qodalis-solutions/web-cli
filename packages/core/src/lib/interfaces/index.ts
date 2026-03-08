@@ -534,6 +534,49 @@ export interface ICliLogger {
     debug(...args: any[]): void;
 }
 
+// ---------------------------------------------------------------------------
+// Translation service
+// ---------------------------------------------------------------------------
+
+export const ICliTranslationService_TOKEN = 'cli-translation-service';
+
+/**
+ * Provides internationalization (i18n) support for CLI strings.
+ */
+export interface ICliTranslationService {
+    /**
+     * Translate a key to the current locale.
+     * @param key The translation key (e.g. 'cli.echo.description')
+     * @param defaultValue The English fallback string (returned if no translation found)
+     * @param params Optional interpolation parameters for `{param}` placeholders
+     */
+    t(key: string, defaultValue: string, params?: Record<string, string | number>): string;
+
+    /**
+     * Get the current locale code (e.g. 'en', 'es', 'fr').
+     */
+    getLocale(): string;
+
+    /**
+     * Set the active locale.
+     * @param locale The locale code to switch to
+     */
+    setLocale(locale: string): void;
+
+    /**
+     * Register translations for a locale.
+     * Can be called multiple times — translations are merged, with later calls overriding earlier ones.
+     * @param locale The locale code
+     * @param translations Flat key-value map of translation keys to translated strings
+     */
+    addTranslations(locale: string, translations: Record<string, string>): void;
+
+    /**
+     * Get all locale codes that have at least one registered translation.
+     */
+    getAvailableLocales(): string[];
+}
+
 /**
  * Represents a service provider for the CLI
  */

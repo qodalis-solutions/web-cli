@@ -20,6 +20,7 @@ import {
     ICliCommandExecutorService,
     ICliInputReader,
     ICliBackgroundServiceRegistry,
+    ICliTranslationService,
 } from '@qodalis/cli-core';
 import { CliBackgroundServiceRegistry } from '../services/background';
 import { CliTerminalWriter } from '../services/cli-terminal-writer';
@@ -53,6 +54,7 @@ export interface CliExecutionContextDeps {
     logger: ICliLogger;
     commandHistory: CliCommandHistory;
     stateStoreManager: CliStateStoreManager;
+    translator: ICliTranslationService;
 }
 
 export class CliExecutionContext
@@ -88,6 +90,8 @@ export class CliExecutionContext
 
     public readonly services: ICliServiceProvider;
 
+    public readonly translator: ICliTranslationService;
+
     public readonly backgroundServices: ICliBackgroundServiceRegistry;
 
     public promptPathProvider?: () => string | null;
@@ -120,6 +124,7 @@ export class CliExecutionContext
     ) {
         //initialize services
         this.services = deps.services;
+        this.translator = deps.translator;
 
         //initialize state store
         const stateStoreManager = deps.stateStoreManager;

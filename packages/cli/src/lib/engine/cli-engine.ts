@@ -16,6 +16,7 @@ import {
     DefaultThemes,
     ICliCompletionProvider,
     ICliCompletionProvider_TOKEN,
+    ICliTranslationService_TOKEN,
 } from '@qodalis/cli-core';
 import { CliCommandExecutor } from '../executor/cli-command-executor';
 import { CliCommandProcessorRegistry } from '../registry/cli-command-processor-registry';
@@ -43,6 +44,7 @@ import { CliDefaultPingServerService } from '../services/defaults/cli-default-pi
 import { CliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
 import { CliDragDropService } from '../services/cli-drag-drop.service';
 import { ICliDragDropService_TOKEN } from '@qodalis/cli-core';
+import { CliTranslationService } from '../services/cli-translation-service';
 import { CliCommandCompletionProvider } from '../completion/cli-command-completion-provider';
 import { CliParameterCompletionProvider } from '../completion/cli-parameter-completion-provider';
 import { CliServiceNameCompletionProvider } from '../completion/cli-service-name-completion-provider';
@@ -200,6 +202,11 @@ export class CliEngine {
             useValue: this.dragDropService,
         }]);
 
+        const translator = new CliTranslationService();
+        services.set([
+            { provide: ICliTranslationService_TOKEN, useValue: translator },
+        ]);
+
         // 4. Create boot service with registry and services
         this.bootService = new CliBoot(this.registry, services);
 
@@ -216,7 +223,7 @@ export class CliEngine {
         const terminalOptions = this.getTerminalOptions();
 
         this.executionContext = new CliExecutionContext(
-            { services, logger, commandHistory, stateStoreManager },
+            { services, logger, commandHistory, stateStoreManager, translator },
             this.terminal,
             executor,
             { ...(this.options ?? {}), terminalOptions },
