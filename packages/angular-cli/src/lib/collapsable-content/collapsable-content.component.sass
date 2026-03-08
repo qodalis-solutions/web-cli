@@ -407,8 +407,10 @@ $header-height: 60px
 
 .position-dropdown
   position: absolute
-  top: calc(100% + 4px)
+  bottom: calc(100% + 4px)
+  top: auto
   right: 0
+  left: auto
   background-color: var(--cli-panel-header-bg, #1f2937)
   border: 1px solid var(--cli-panel-border, #374151)
   border-radius: 6px
@@ -445,13 +447,27 @@ $header-height: 60px
   svg
     flex-shrink: 0
 
-// For left/right panels (vertical header), open dropdown to the right
-.terminal-wrapper[data-position="left"],
+// Top panel: open dropdown downward (below the header)
+.terminal-wrapper[data-position="top"]
+  .position-dropdown
+    top: calc(100% + 4px)
+    bottom: auto
+
+// Left panel: open dropdown to the right
+.terminal-wrapper[data-position="left"]
+  .position-dropdown
+    top: 0
+    bottom: auto
+    left: calc(100% + 4px)
+    right: auto
+
+// Right panel: open dropdown to the left
 .terminal-wrapper[data-position="right"]
   .position-dropdown
     top: 0
-    right: auto
-    left: calc(100% + 4px)
+    bottom: auto
+    right: calc(100% + 4px)
+    left: auto
 
 // ─── Hideable toggle ──────────────────────────────────
 
