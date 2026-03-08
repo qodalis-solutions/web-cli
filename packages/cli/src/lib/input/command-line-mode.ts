@@ -45,6 +45,8 @@ export class CommandLineMode implements IInputMode {
     private ghostDebounceTimer: ReturnType<typeof setTimeout> | null = null;
     /** Non-null while the user is doing prefix-based history search (Up arrow with text in buffer). */
     private historySearchPrefix: string | null = null;
+    /** True when the buffer text was set by history navigation (not typed by user). */
+    private bufferSetByHistory = false;
 
     constructor(private readonly host: CommandLineModeHost) {}
 
@@ -72,6 +74,7 @@ export class CommandLineMode implements IInputMode {
             if (buffer.text) {
                 await this.host.commandHistory.addCommand(buffer.text);
                 this.historyIndex = this.host.commandHistory.getLastIndex();
+                this.bufferSetByHistory = false;
 
                 this.isExecutingCommand = true;
                 const ctx = this.host.getExecutionContext();
@@ -179,6 +182,7 @@ export class CommandLineMode implements IInputMode {
         text = text.replace(/[\r\n\t]+/g, '');
         this.clearGhostText();
         this.clearHistorySearch();
+        this.bufferSetByHistory = false;
         this.host.lineBuffer.insert(text);
         this.refreshLine();
         this.scheduleGhostText();
@@ -300,8 +304,8 @@ export class CommandLineMode implements IInputMode {
         this.clearGhostText();
         const buffer = this.host.lineBuffer;
 
-        // If the buffer has text and we haven't started a prefix search, begin one.
-        if (buffer.text && this.historySearchPrefix === null) {
+        // If the buffer has user-typed text and we haven't started a prefix search, begin one.
+        if (buffer.text && !this.bufferSetByHistory && this.historySearchPrefix === null) {
             this.historySearchPrefix = buffer.text;
             this.historyIndex = this.host.commandHistory.getLastIndex();
         }
@@ -362,6 +366,7 @@ export class CommandLineMode implements IInputMode {
 
     private clearHistorySearch(): void {
         this.historySearchPrefix = null;
+        this.bufferSetByHistory = false;
         this.historyIndex = this.host.commandHistory.getLastIndex();
     }
 
@@ -372,6 +377,7 @@ export class CommandLineMode implements IInputMode {
         const cmd =
             this.host.commandHistory.getCommand(this.historyIndex) || '';
         buffer.setText(cmd);
+        this.bufferSetByHistory = true;
         this.refreshLine(previousContentLength);
     }
 
