@@ -400,6 +400,59 @@ $header-height: 60px
 .cli-panel-hide-tab[data-position="right"]:hover .cli-panel-hide-tab-arrow
   animation: cli-hide-tab-pulse-vertical 0.6s ease infinite
 
+// ─── Position dropdown ────────────────────────────────
+
+.panel-btn-position-wrapper
+  position: relative
+
+.position-dropdown
+  position: absolute
+  top: calc(100% + 4px)
+  right: 0
+  background-color: var(--cli-panel-header-bg, #1f2937)
+  border: 1px solid var(--cli-panel-border, #374151)
+  border-radius: 6px
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4)
+  z-index: 1100
+  min-width: 120px
+  overflow: hidden
+  display: flex
+  flex-direction: column
+
+.position-dropdown-item
+  appearance: none
+  background: transparent
+  border: none
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6))
+  cursor: pointer
+  display: flex
+  align-items: center
+  gap: 8px
+  padding: 8px 12px
+  font-size: 0.85rem
+  font-family: inherit
+  width: 100%
+  text-align: left
+  transition: background-color 0.15s ease, color 0.15s ease
+
+  &:hover
+    background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12))
+    color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+
+  &.active
+    color: var(--cli-panel-accent, #818cf8)
+
+  svg
+    flex-shrink: 0
+
+// For left/right panels (vertical header), open dropdown to the right
+.terminal-wrapper[data-position="left"],
+.terminal-wrapper[data-position="right"]
+  .position-dropdown
+    top: 0
+    right: auto
+    left: calc(100% + 4px)
+
 // ─── Hideable toggle ──────────────────────────────────
 
 .terminal-wrapper[data-hideable="false"]

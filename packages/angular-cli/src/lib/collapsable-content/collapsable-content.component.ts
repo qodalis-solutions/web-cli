@@ -49,9 +49,10 @@ export class CollapsableContentComponent {
     public onHide = new EventEmitter<void>();
 
     @Output()
-    public onPositionChange = new EventEmitter<void>();
+    public onPositionChange = new EventEmitter<CliPanelPosition>();
 
     isHidden = false;
+    positionDropdownOpen = false;
     private preHideCollapsed = true;
 
     get isHorizontal(): boolean {
@@ -88,8 +89,19 @@ export class CollapsableContentComponent {
         this.onToggle.emit(this.isCollapsed);
     }
 
-    cyclePosition(): void {
-        this.onPositionChange.emit();
+    togglePositionDropdown(event: MouseEvent): void {
+        event.stopPropagation();
+        this.positionDropdownOpen = !this.positionDropdownOpen;
+    }
+
+    selectPosition(pos: CliPanelPosition): void {
+        this.positionDropdownOpen = false;
+        this.onPositionChange.emit(pos);
+    }
+
+    @HostListener('document:click')
+    closePositionDropdown(): void {
+        this.positionDropdownOpen = false;
     }
 
     toggleMaximizationTerminal(): void {

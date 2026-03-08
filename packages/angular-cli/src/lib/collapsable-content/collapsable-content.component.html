@@ -82,33 +82,81 @@
         CLI
       </p>
       <div class="action-buttons">
-        <!-- Position button -->
-        <button
-          class="panel-btn panel-btn-position"
-          [title]="'Move panel (' + position + ')'"
-          (click)="cyclePosition()"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+        <!-- Position dropdown -->
+        <div class="panel-btn-position-wrapper" (click)="$event.stopPropagation()">
+          <button
+            class="panel-btn panel-btn-position"
+            title="Move panel"
+            (click)="togglePositionDropdown($event)"
           >
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <!-- bottom -->
-            <rect *ngIf="position === 'bottom'" x="4" y="15" width="16" height="5" rx="1" fill="currentColor" stroke="none" opacity="0.5" />
-            <!-- top -->
-            <rect *ngIf="position === 'top'" x="4" y="4" width="16" height="5" rx="1" fill="currentColor" stroke="none" opacity="0.5" />
-            <!-- left -->
-            <rect *ngIf="position === 'left'" x="4" y="4" width="5" height="16" rx="1" fill="currentColor" stroke="none" opacity="0.5" />
-            <!-- right -->
-            <rect *ngIf="position === 'right'" x="15" y="4" width="5" height="16" rx="1" fill="currentColor" stroke="none" opacity="0.5" />
-          </svg>
-        </button>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <!-- bottom -->
+              <rect *ngIf="position === 'bottom'" x="4" y="15" width="16" height="5" rx="1" fill="currentColor" stroke="none" opacity="0.5" />
+              <!-- top -->
+              <rect *ngIf="position === 'top'" x="4" y="4" width="16" height="5" rx="1" fill="currentColor" stroke="none" opacity="0.5" />
+              <!-- left -->
+              <rect *ngIf="position === 'left'" x="4" y="4" width="5" height="16" rx="1" fill="currentColor" stroke="none" opacity="0.5" />
+              <!-- right -->
+              <rect *ngIf="position === 'right'" x="15" y="4" width="5" height="16" rx="1" fill="currentColor" stroke="none" opacity="0.5" />
+            </svg>
+          </button>
+          <div class="position-dropdown" *ngIf="positionDropdownOpen">
+            <button
+              class="position-dropdown-item"
+              [class.active]="position === 'bottom'"
+              (click)="selectPosition('bottom')"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <rect x="4" y="15" width="16" height="5" rx="1" fill="currentColor" stroke="none" opacity="0.6" />
+              </svg>
+              Bottom
+            </button>
+            <button
+              class="position-dropdown-item"
+              [class.active]="position === 'top'"
+              (click)="selectPosition('top')"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <rect x="4" y="4" width="16" height="5" rx="1" fill="currentColor" stroke="none" opacity="0.6" />
+              </svg>
+              Top
+            </button>
+            <button
+              class="position-dropdown-item"
+              [class.active]="position === 'left'"
+              (click)="selectPosition('left')"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <rect x="4" y="4" width="5" height="16" rx="1" fill="currentColor" stroke="none" opacity="0.6" />
+              </svg>
+              Left
+            </button>
+            <button
+              class="position-dropdown-item"
+              [class.active]="position === 'right'"
+              (click)="selectPosition('right')"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <rect x="15" y="4" width="5" height="16" rx="1" fill="currentColor" stroke="none" opacity="0.6" />
+              </svg>
+              Right
+            </button>
+          </div>
+        </div>
 
         <!-- Hide button -->
         <button

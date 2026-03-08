@@ -20,7 +20,6 @@ import {
     derivePanelThemeStyles,
     loadPanelPosition,
     savePanelPosition,
-    nextPanelPosition,
 } from '@qodalis/cli-core';
 import { CliEngine, CliEngineOptions } from '@qodalis/cli';
 import { CliComponent } from '../cli/cli.component';
@@ -139,8 +138,8 @@ export class CliPanelComponent implements OnInit, OnDestroy {
         this.cancelAllEditing();
     }
 
-    onPositionChange(): void {
-        this.currentPosition = nextPanelPosition(this.currentPosition);
+    onPositionChange(position: CliPanelPosition): void {
+        this.currentPosition = position;
         savePanelPosition(this.currentPosition);
     }
 
