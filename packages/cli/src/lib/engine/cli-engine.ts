@@ -42,6 +42,7 @@ import {
 } from '../tokens';
 import { CliDefaultPingServerService } from '../services/defaults/cli-default-ping-server.service';
 import { CliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
+import { CliProcessRegistry, CliProcessRegistry_TOKEN } from '../services/cli-process-registry';
 import { CliDragDropService } from '../services/cli-drag-drop.service';
 import { ICliDragDropService_TOKEN } from '@qodalis/cli-core';
 import { CliTranslationService } from '../services/cli-translation-service';
@@ -160,6 +161,8 @@ export class CliEngine {
             this.registry,
         );
 
+        const processRegistry = new CliProcessRegistry();
+
         services.set([
             {
                 provide: CliStateStoreManager_TOKEN,
@@ -167,6 +170,10 @@ export class CliEngine {
             },
             { provide: CliProcessorsRegistry_TOKEN, useValue: this.registry },
             { provide: CliCommandHistory_TOKEN, useValue: commandHistory },
+            {
+                provide: CliProcessRegistry_TOKEN,
+                useValue: processRegistry,
+            },
         ]);
 
         // Apply pending services registered before start()
