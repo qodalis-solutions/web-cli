@@ -6,7 +6,7 @@ export default defineConfig([
         ...sharedConfig,
         entry: ['src/public-api.ts'],
         outDir: '../../../dist/server-logs',
-        external: ['@qodalis/cli-core', '@microsoft/signalr'],
+        external: ['@qodalis/cli-core'],
     },
     {
         entry: ['src/cli-entrypoint.ts'],

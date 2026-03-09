@@ -1,4 +1,3 @@
-import * as signalR from '@microsoft/signalr';
 import {
     CliForegroundColor,
     CliProcessCommand,
@@ -9,7 +8,6 @@ import {
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliExecutionContext,
-    toQueryString,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -71,13 +69,6 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
             required: false,
         },
         {
-            name: 'hub',
-            type: 'string',
-            description:
-                'The hub to connect to, e.g. "loghub" (default) or "loghub2"',
-            required: false,
-        },
-        {
             name: 'file',
             type: 'boolean',
             description: 'Export logs to a file',
@@ -88,8 +79,6 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
     author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
 
     version = LIBRARY_VERSION;
-
-    private hubConnection!: signalR.HubConnection;
 
     constructor() {
         this.processors?.push({
@@ -105,87 +94,122 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        let qs = '?';
+        const serverUrl =
+            command.args['server'] || context.options?.servers?.[0]?.url;
 
-        const args = this.excludeKeys(command.args, ['server', 'hub', 'file']);
-
-        if (Object.keys(args).length > 0) {
-            qs += toQueryString(args);
+        if (!serverUrl) {
+            context.writer.writeError(
+                'No server URL provided. Use --server=<url> or configure a server in the CLI options.',
+            );
+            return;
         }
 
-        const hub = command.args['hub'] || 'loghub';
+        const cleanServerUrl = serverUrl.replace(/\/+$/, '');
+        const wsUrl = cleanServerUrl.replace(/^http/, 'ws');
 
-        let server = command.args['server'] || '';
-        server = server.replace(/\/+$/, '');
+        let fullUrl = `${wsUrl}/ws/v1/cli/logs`;
+        if (command.args['level']) {
+            fullUrl += `?level=${encodeURIComponent(command.args['level'])}`;
+        }
 
-        const url = `${server}/${hub}${qs}`;
+        let patternRegex: RegExp | null = null;
+        if (command.args['pattern']) {
+            patternRegex = new RegExp(command.args['pattern'], 'g');
+        }
 
-        console.log('Connecting to:', url);
+        const ws = new WebSocket(fullUrl);
+        const logs: string[] = [];
 
-        this.hubConnection = new signalR.HubConnectionBuilder()
-            .withUrl(url)
-            .build();
+        return new Promise<void>((resolve) => {
+            let index = 0;
 
-        const buffer: string[] = [];
-
-        await this.hubConnection
-            .start()
-            .then(() => {
-                console.log('SignalR connection started');
-
+            ws.onopen = () => {
                 context.writer.writeWarning('Connected to live logs');
-                if (qs.length) {
-                    Object.keys(args).forEach((key) => {
-                        context.writer.writeWarning(
-                            `Filtering logs by: ${key}=${command.args[key]}`,
-                        );
-                    });
+
+                if (command.args['level']) {
+                    context.writer.writeWarning(
+                        `Filtering logs by: level=${command.args['level']}`,
+                    );
+                }
+                if (command.args['pattern']) {
+                    context.writer.writeWarning(
+                        `Filtering logs by: pattern=${command.args['pattern']}`,
+                    );
                 }
 
-                let firstLog = true;
-                let index = 0;
+                context.writer.writeWarning('Press Ctrl+C to stop');
+                context.writer.writeln();
+            };
 
-                this.hubConnection.on('log', (log: string) => {
-                    if (firstLog) {
-                        context.writer.writeln();
+            ws.onmessage = (event: MessageEvent) => {
+                try {
+                    const data = JSON.parse(event.data);
+
+                    if (data.type === 'connected') {
+                        return;
                     }
 
-                    buffer.push(log);
-
-                    context.writer.writeln(
-                        `\x1b[33m${++index}\x1b[0m. ` +
-                            (command.args['pattern']
-                                ? highlightTextWithBg(
-                                      log,
-                                      new RegExp(command.args['pattern'], 'g'),
-                                  )
-                                : log),
-                    );
-                    firstLog = false;
-                });
-
-                const subscription = context.onAbort.subscribe(() => {
-                    this.hubConnection.stop();
-                    context.writer.writeWarning('Disconnected from live logs');
-
-                    if (command.args['file']) {
-                        const filename = `logs-${new Date().toISOString()}.txt`;
-                        context.writer.writeToFile(filename, buffer.join('\n'));
+                    if (data.type === 'disconnect') {
+                        ws.close();
+                        return;
                     }
 
-                    subscription.unsubscribe();
-                });
-            })
-            .catch((err) => {
-                console.error('Error starting SignalR connection:', err);
-                context.writer.writeError('Failed to connect to live logs');
-                context.writer.writeError(err?.toString());
+                    if (data.type === 'log') {
+                        const timestamp = data.timestamp || '';
+                        const level = (data.level || '').toUpperCase();
+                        const category = data.category || '';
+                        const message = data.message || '';
+
+                        const logLine = `[${timestamp}] ${level} [${category}] ${message}`;
+
+                        if (patternRegex) {
+                            patternRegex.lastIndex = 0;
+                            if (!patternRegex.test(logLine)) {
+                                return;
+                            }
+                            patternRegex.lastIndex = 0;
+                        }
+
+                        logs.push(logLine);
+
+                        const displayLine = patternRegex
+                            ? highlightTextWithBg(logLine, patternRegex)
+                            : logLine;
+
+                        context.writer.writeln(
+                            `\x1b[33m${++index}\x1b[0m. ${displayLine}`,
+                        );
+                    }
+                } catch {
+                    // Ignore non-JSON messages
+                }
+            };
+
+            ws.onclose = () => {
+                if (command.args['file'] && logs.length > 0) {
+                    const filename = `logs-${new Date().toISOString()}.txt`;
+                    context.writer.writeToFile(filename, logs.join('\n'));
+                }
+
+                context.writer.writeWarning('Disconnected from live logs');
+                resolve();
+            };
+
+            ws.onerror = () => {
+                context.writer.writeError(
+                    'WebSocket error occurred while connecting to live logs',
+                );
+            };
+
+            context.onAbort.subscribe(() => {
+                ws.close();
             });
+        });
     }
 
     writeDescription(context: ICliExecutionContext): void {
         const { writer } = context;
-        writer.writeln('Stream live server logs via SignalR');
+        writer.writeln('Stream live server logs via WebSocket');
         writer.writeln();
         writer.writeln('📋 Usage:');
         writer.writeln(
@@ -212,26 +236,12 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
             `  ${writer.wrapInColor('--server', CliForegroundColor.Yellow)}     Server URL to connect to`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('--hub', CliForegroundColor.Yellow)}        Hub name (default: loghub)`,
-        );
-        writer.writeln(
             `  ${writer.wrapInColor('--file', CliForegroundColor.Yellow)}       Export logs to a file on disconnect`,
         );
         writer.writeln();
         writer.writeln(
             `💡 Press ${writer.wrapInColor('Ctrl+C', CliForegroundColor.Yellow)} to stop streaming`,
         );
-    }
-
-    private excludeKeys<T extends Record<string, any>>(
-        record: T,
-        keysToExclude: string[],
-    ): Partial<T> {
-        return Object.fromEntries(
-            Object.entries(record).filter(
-                ([key]) => !keysToExclude.includes(key),
-            ),
-        ) as Partial<T>;
     }
 
     private isValidRegex(pattern: string): boolean {
