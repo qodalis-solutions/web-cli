@@ -22,6 +22,7 @@ type ServerShellMessage =
 export class CliSshCommandProcessor implements ICliCommandProcessor {
     command = 'ssh';
     description = 'Open a remote shell session on a server';
+    acceptsRawInput = true;
     valueRequired = false;
     metadata: CliProcessorMetadata = {
         module: '@qodalis/cli-server',
