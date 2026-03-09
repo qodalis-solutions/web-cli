@@ -84,52 +84,81 @@ describe('CliCommandProcessorRegistry', () => {
         ).toBe(child);
     });
 
-    describe('Extension / Delegation', () => {
-        it('should wire originalProcessor when extendsProcessor is true', () => {
-            const original = createProcessor('echo');
-            const extension = createProcessor('echo');
+    describe('Extension / Merging', () => {
+        it('should merge sub-processors into the existing processor', () => {
+            const original = createProcessor('server');
+            original.processors = [
+                { command: 'list', description: 'List', async processCommand() {} },
+            ];
+            const extension = createProcessor('server');
             extension.extendsProcessor = true;
+            extension.processors = [
+                { command: 'logs', description: 'Logs', async processCommand() {} },
+            ];
 
             registry.registerProcessor(original);
             registry.registerProcessor(extension);
 
-            const found = registry.findProcessor('echo', []);
-            expect(found).toBe(extension);
-            expect(found?.originalProcessor).toBe(original);
+            const found = registry.findProcessor('server', []);
+            expect(found).toBe(original);
+            expect(found?.processors?.length).toBe(2);
+            expect(found?.processors?.find(p => p.command === 'list')).toBeDefined();
+            expect(found?.processors?.find(p => p.command === 'logs')).toBeDefined();
         });
 
-        it('should chain multiple extensions (A -> B -> C)', () => {
-            const base = createProcessor('echo');
-            base.description = 'base';
-            const ext1 = createProcessor('echo');
-            ext1.extendsProcessor = true;
-            ext1.description = 'ext1';
-            const ext2 = createProcessor('echo');
-            ext2.extendsProcessor = true;
-            ext2.description = 'ext2';
+        it('should not duplicate sub-processors on repeated registration', () => {
+            const original = createProcessor('server');
+            original.processors = [
+                { command: 'list', description: 'List', async processCommand() {} },
+            ];
+            const extension = createProcessor('server');
+            extension.extendsProcessor = true;
+            extension.processors = [
+                { command: 'logs', description: 'Logs', async processCommand() {} },
+            ];
 
-            registry.registerProcessor(base);
-            registry.registerProcessor(ext1);
-            registry.registerProcessor(ext2);
+            registry.registerProcessor(original);
+            registry.registerProcessor(extension);
+            registry.registerProcessor(extension); // re-register
 
-            const found = registry.findProcessor('echo', []);
-            expect(found).toBe(ext2);
-            expect(found?.originalProcessor).toBe(ext1);
-            expect(found?.originalProcessor?.originalProcessor).toBe(base);
+            const found = registry.findProcessor('server', []);
+            expect(found?.processors?.length).toBe(2);
+        });
+
+        it('should not replace existing sub-processor with same command', () => {
+            const original = createProcessor('server');
+            const originalList = { command: 'list', description: 'Original List', async processCommand() {} };
+            original.processors = [originalList];
+            const extension = createProcessor('server');
+            extension.extendsProcessor = true;
+            extension.processors = [
+                { command: 'list', description: 'Extension List', async processCommand() {} },
+            ];
+
+            registry.registerProcessor(original);
+            registry.registerProcessor(extension);
+
+            const found = registry.findProcessor('server', []);
+            const listProc = found?.processors?.find(p => p.command === 'list');
+            expect(listProc).toBe(originalList);
         });
 
         it('should allow extending sealed processors', () => {
             const sealed = createProcessor('help');
             sealed.metadata = { sealed: true };
+            sealed.processors = [];
             const extension = createProcessor('help');
             extension.extendsProcessor = true;
+            extension.processors = [
+                { command: 'extra', description: 'Extra', async processCommand() {} },
+            ];
 
             registry.registerProcessor(sealed);
             registry.registerProcessor(extension);
 
             const found = registry.findProcessor('help', []);
-            expect(found).toBe(extension);
-            expect(found?.originalProcessor).toBe(sealed);
+            expect(found).toBe(sealed);
+            expect(found?.processors?.find(p => p.command === 'extra')).toBeDefined();
         });
 
         it('should register normally when no existing command to extend', () => {
@@ -140,85 +169,65 @@ describe('CliCommandProcessorRegistry', () => {
 
             const found = registry.findProcessor('newcmd', []);
             expect(found).toBe(extension);
-            expect(found?.originalProcessor).toBeUndefined();
         });
 
-        it('should restore original when unregistering an extending processor', () => {
-            const original = createProcessor('echo');
-            const extension = createProcessor('echo');
+        it('should initialize processors array on existing if undefined', () => {
+            const original = createProcessor('server');
+            // no processors array
+            const extension = createProcessor('server');
             extension.extendsProcessor = true;
+            extension.processors = [
+                { command: 'logs', description: 'Logs', async processCommand() {} },
+            ];
 
             registry.registerProcessor(original);
             registry.registerProcessor(extension);
-            registry.unregisterProcessor(extension);
 
-            const found = registry.findProcessor('echo', []);
+            const found = registry.findProcessor('server', []);
             expect(found).toBe(original);
+            expect(found?.processors?.length).toBe(1);
+            expect(found?.processors?.[0].command).toBe('logs');
         });
 
-        it('should allow extending processor to delegate to original', async () => {
-            const calls: string[] = [];
-            const original = createProcessor('echo');
-            original.processCommand = async () => {
-                calls.push('original');
-            };
-
-            const extension = createProcessor('echo');
+        it('should find merged sub-processor via chain commands', () => {
+            const original = createProcessor('server');
+            original.processors = [
+                { command: 'list', description: 'List', async processCommand() {} },
+            ];
+            const logsProc = { command: 'logs', description: 'Logs', async processCommand() {} };
+            const extension = createProcessor('server');
             extension.extendsProcessor = true;
-            extension.processCommand = async function (
-                this: ICliCommandProcessor,
-                cmd: any,
-                ctx: any,
-            ) {
-                calls.push('extension');
-                await this.originalProcessor!.processCommand(cmd, ctx);
-            }.bind(extension);
+            extension.processors = [logsProc];
 
             registry.registerProcessor(original);
             registry.registerProcessor(extension);
 
-            const found = registry.findProcessor('echo', [])!;
-            await found.processCommand(
-                {
-                    command: 'echo',
-                    rawCommand: 'echo hi',
-                    chainCommands: [],
-                    args: {},
-                },
-                {} as any,
-            );
-
-            expect(calls).toEqual(['extension', 'original']);
+            expect(registry.findProcessor('server', ['logs'])).toBe(logsProc);
+            expect(registry.findProcessor('server', ['list'])).toBe(original.processors![0]);
         });
 
-        it('should allow extending processor to NOT delegate', async () => {
+        it('should keep original processCommand when extending', async () => {
             const calls: string[] = [];
-            const original = createProcessor('echo');
-            original.processCommand = async () => {
-                calls.push('original');
-            };
+            const original = createProcessor('server');
+            original.processCommand = async () => { calls.push('original'); };
+            original.processors = [];
 
-            const extension = createProcessor('echo');
+            const extension = createProcessor('server');
             extension.extendsProcessor = true;
-            extension.processCommand = async () => {
-                calls.push('extension-only');
-            };
+            extension.processors = [
+                { command: 'logs', description: 'Logs', async processCommand() { calls.push('logs'); } },
+            ];
 
             registry.registerProcessor(original);
             registry.registerProcessor(extension);
 
-            const found = registry.findProcessor('echo', [])!;
+            const found = registry.findProcessor('server', [])!;
             await found.processCommand(
-                {
-                    command: 'echo',
-                    rawCommand: 'echo hi',
-                    chainCommands: [],
-                    args: {},
-                },
+                { command: 'server', rawCommand: 'server', chainCommands: [], args: {} },
                 {} as any,
             );
 
-            expect(calls).toEqual(['extension-only']);
+            expect(calls).toEqual(['original']);
         });
     });
 });

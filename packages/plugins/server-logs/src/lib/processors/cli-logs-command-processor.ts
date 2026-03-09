@@ -15,16 +15,15 @@ const levels = ['verbose', 'debug', 'information', 'warning', 'error', 'fatal'];
 
 /**
  * Extends the built-in `server` command with a `logs` sub-command.
+ * The registry merges sub-processors into the existing `server` processor,
+ * preserving all original sub-commands (list, status, reconnect, default).
+ *
  * Usage: `server logs`, `server logs live`, `server logs --server=node --level=error`
  */
 export class CliLogsCommandProcessor implements ICliCommandProcessor {
     command = 'server';
 
-    description?: string | undefined = 'Manage remote CLI server connections';
-
     extendsProcessor = true;
-
-    originalProcessor?: ICliCommandProcessor;
 
     processors?: ICliCommandProcessor[] | undefined = [
         new ServerLogsSubProcessor(),
@@ -42,19 +41,10 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
     version = LIBRARY_VERSION;
 
     async processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
+        _command: CliProcessCommand,
+        _context: ICliExecutionContext,
     ): Promise<void> {
-        // Delegate to the original server processor
-        if (this.originalProcessor?.processCommand) {
-            return this.originalProcessor.processCommand(command, context);
-        }
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        if (this.originalProcessor?.writeDescription) {
-            this.originalProcessor.writeDescription(context);
-        }
+        // Not called — the registry merges sub-processors into the existing server processor
     }
 }
 

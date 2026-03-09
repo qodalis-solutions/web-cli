@@ -20,11 +20,6 @@ describe('CliLogsCommandProcessor', () => {
             expect(processor.extendsProcessor).toBe(true);
         });
 
-        it('should have a description', () => {
-            expect(processor.description).toBeDefined();
-            expect(processor.description!.length).toBeGreaterThan(0);
-        });
-
         it('should have an author', () => {
             expect(processor.author).toBeDefined();
         });
@@ -218,18 +213,6 @@ describe('CliLogsCommandProcessor', () => {
                     expect(sub.parameters).toBe(logsProcessor.parameters);
                 });
             });
-        });
-    });
-
-    describe('processCommand', () => {
-        it('should have processCommand defined as a function', () => {
-            expect(typeof processor.processCommand).toBe('function');
-        });
-    });
-
-    describe('writeDescription', () => {
-        it('should have writeDescription defined as a function', () => {
-            expect(typeof processor.writeDescription).toBe('function');
         });
     });
 });

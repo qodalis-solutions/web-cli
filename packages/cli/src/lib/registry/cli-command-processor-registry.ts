@@ -27,9 +27,21 @@ export class CliCommandProcessorRegistry implements ICliCommandProcessorRegistry
             );
 
             if (processor.extendsProcessor) {
-                // Extension: wire the original and replace the slot
-                processor.originalProcessor = existingProcessor;
-                this.processors[existingIndex] = processor;
+                // Extension: merge sub-processors into the existing processor
+                // instead of replacing it, so existing sub-commands remain available
+                if (processor.processors?.length) {
+                    if (!existingProcessor.processors) {
+                        existingProcessor.processors = [];
+                    }
+                    for (const sub of processor.processors) {
+                        const exists = existingProcessor.processors.find(
+                            (p) => p.command === sub.command,
+                        );
+                        if (!exists) {
+                            existingProcessor.processors.push(sub);
+                        }
+                    }
+                }
                 return;
             }
 
