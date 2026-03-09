@@ -22,6 +22,13 @@ const routes: Routes = [
                     ),
             },
             {
+                path: 'built-in-commands',
+                loadChildren: () =>
+                    import('./pages/built-in-commands/built-in-commands.module').then(
+                        (m) => m.BuiltInCommandsModule,
+                    ),
+            },
+            {
                 path: 'configuration',
                 loadChildren: () =>
                     import('./pages/configuration/configuration.module').then(

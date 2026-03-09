@@ -9,6 +9,7 @@ export interface NavItem {
 
 export const DOCS_NAV: NavItem[] = [
     { label: 'Getting Started', path: '/docs/getting-started' },
+    { label: 'Built-in Commands', path: '/docs/built-in-commands' },
     { label: 'Configuration', path: '/docs/configuration' },
     {
         label: 'Core Concepts',
