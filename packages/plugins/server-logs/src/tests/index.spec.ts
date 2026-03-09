@@ -50,8 +50,8 @@ describe('CliLogsCommandProcessor', () => {
             expect(Array.isArray(processor.parameters)).toBe(true);
         });
 
-        it('should have exactly 5 parameters', () => {
-            expect(processor.parameters!.length).toBe(5);
+        it('should have exactly 4 parameters', () => {
+            expect(processor.parameters!.length).toBe(4);
         });
 
         it('should include "pattern" parameter', () => {
@@ -72,12 +72,6 @@ describe('CliLogsCommandProcessor', () => {
             const param = processor.parameters!.find(
                 (p) => p.name === 'server',
             );
-            expect(param).toBeDefined();
-            expect(param!.type).toBe('string');
-        });
-
-        it('should include "hub" parameter', () => {
-            const param = processor.parameters!.find((p) => p.name === 'hub');
             expect(param).toBeDefined();
             expect(param!.type).toBe('string');
         });
@@ -153,10 +147,6 @@ describe('CliLogsCommandProcessor', () => {
             expect(param!.validator).toBeUndefined();
         });
 
-        it('"hub" parameter should not have a validator', () => {
-            const param = processor.parameters!.find((p) => p.name === 'hub');
-            expect(param!.validator).toBeUndefined();
-        });
     });
 
     describe('sub-processors', () => {
