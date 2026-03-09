@@ -25,12 +25,16 @@ export interface ActiveInputRequest {
     onChange?: (value: string) => void;
     checkedIndices?: Set<number>;
     numberOptions?: { min?: number; max?: number; default?: number };
+    scrollOffset?: number;
+    maxVisible?: number;
+    displayLines?: number;
 }
 
 export interface CliInputReaderHost {
     readonly activeInputRequest: ActiveInputRequest | null;
     setActiveInputRequest(request: ActiveInputRequest | null): void;
     writeToTerminal(text: string): void;
+    getTerminalRows?(): number;
 }
 
 export class CliInputReader implements ICliInputReader {
@@ -85,9 +89,13 @@ export class CliInputReader implements ICliInputReader {
                 throw new Error('Another input request is already active');
             }
 
+            // Calculate how many options fit on screen (reserve 2 rows for prompt + padding)
+            const termRows = this.host.getTerminalRows?.() ?? 24;
+            const maxVisible = Math.max(3, termRows - 2);
+
             // Write prompt and render options
             this.host.writeToTerminal(prompt + '\r\n');
-            this.renderSelectOptions(options, 0);
+            const displayLines = this.renderSelectOptions(options, 0, 0, maxVisible);
 
             // Fire onChange for the initial selection
             onChange?.(options[0].value);
@@ -101,6 +109,9 @@ export class CliInputReader implements ICliInputReader {
                 options,
                 selectedIndex: 0,
                 onChange,
+                scrollOffset: 0,
+                maxVisible,
+                displayLines,
             });
         });
     }
@@ -164,9 +175,12 @@ export class CliInputReader implements ICliInputReader {
                 }
             });
 
+            const termRows = this.host.getTerminalRows?.() ?? 24;
+            const maxVisible = Math.max(3, termRows - 2);
+
             // Write prompt and render checkbox options
             this.host.writeToTerminal(prompt + '\r\n');
-            this.renderMultiSelectOptions(options, 0, checkedIndices);
+            const displayLines = this.renderMultiSelectOptions(options, 0, checkedIndices, 0, maxVisible);
 
             this.host.setActiveInputRequest({
                 type: 'multi-select',
@@ -177,6 +191,9 @@ export class CliInputReader implements ICliInputReader {
                 options,
                 selectedIndex: 0,
                 checkedIndices,
+                scrollOffset: 0,
+                maxVisible,
+                displayLines,
             });
         });
     }
@@ -231,14 +248,38 @@ export class CliInputReader implements ICliInputReader {
     renderSelectOptions(
         options: CliSelectOption[],
         selectedIndex: number,
-    ): void {
-        for (let i = 0; i < options.length; i++) {
+        scrollOffset: number = 0,
+        maxVisible: number = options.length,
+    ): number {
+        const needsScroll = options.length > maxVisible;
+        // Reserve lines for scroll indicators when scrolling is needed
+        const itemSlots = needsScroll ? maxVisible - 2 : options.length;
+        const visibleCount = Math.max(1, Math.min(itemSlots, options.length));
+        const end = Math.min(scrollOffset + visibleCount, options.length);
+        let lines = 0;
+
+        if (needsScroll) {
+            const upLabel = scrollOffset > 0 ? '↑ more' : '';
+            this.host.writeToTerminal(`    \x1b[2m${upLabel}\x1b[0m\r\n`);
+            lines++;
+        }
+
+        for (let i = scrollOffset; i < end; i++) {
             const prefix = i === selectedIndex ? '  \x1b[36m> ' : '    ';
             const suffix = i === selectedIndex ? '\x1b[0m' : '';
             this.host.writeToTerminal(
                 `${prefix}${options[i].label}${suffix}\r\n`,
             );
+            lines++;
         }
+
+        if (needsScroll) {
+            const downLabel = end < options.length ? '↓ more' : '';
+            this.host.writeToTerminal(`    \x1b[2m${downLabel}\x1b[0m\r\n`);
+            lines++;
+        }
+
+        return lines;
     }
 
     renderInlineSelectOptions(
@@ -259,8 +300,22 @@ export class CliInputReader implements ICliInputReader {
         options: CliSelectOption[],
         selectedIndex: number,
         checkedIndices: Set<number>,
-    ): void {
-        for (let i = 0; i < options.length; i++) {
+        scrollOffset: number = 0,
+        maxVisible: number = options.length,
+    ): number {
+        const needsScroll = options.length > maxVisible;
+        const itemSlots = needsScroll ? maxVisible - 2 : options.length;
+        const visibleCount = Math.max(1, Math.min(itemSlots, options.length));
+        const end = Math.min(scrollOffset + visibleCount, options.length);
+        let lines = 0;
+
+        if (needsScroll) {
+            const upLabel = scrollOffset > 0 ? '↑ more' : '';
+            this.host.writeToTerminal(`    \x1b[2m${upLabel}\x1b[0m\r\n`);
+            lines++;
+        }
+
+        for (let i = scrollOffset; i < end; i++) {
             const checkbox = checkedIndices.has(i) ? '[x]' : '[ ]';
             const prefix =
                 i === selectedIndex
@@ -270,7 +325,16 @@ export class CliInputReader implements ICliInputReader {
             this.host.writeToTerminal(
                 `${prefix}${options[i].label}${suffix}\r\n`,
             );
+            lines++;
         }
+
+        if (needsScroll) {
+            const downLabel = end < options.length ? '↓ more' : '';
+            this.host.writeToTerminal(`    \x1b[2m${downLabel}\x1b[0m\r\n`);
+            lines++;
+        }
+
+        return lines;
     }
 
     private createInputRequest(

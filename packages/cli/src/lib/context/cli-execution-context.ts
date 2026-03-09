@@ -186,6 +186,10 @@ export class CliExecutionContext
         this.terminal.write(text);
     }
 
+    public getTerminalRows(): number {
+        return this.terminal.rows;
+    }
+
     public get currentLine(): string {
         return this.lineBuffer.text;
     }

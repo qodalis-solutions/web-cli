@@ -115,6 +115,46 @@ export default defineConfig({
                 __dirname,
                 '../../dist/sudoku/public-api.mjs',
             ),
+            '@qodalis/cli-lang-es': path.resolve(
+                __dirname,
+                '../../dist/lang-es/public-api.mjs',
+            ),
+            '@qodalis/cli-lang-fr': path.resolve(
+                __dirname,
+                '../../dist/lang-fr/public-api.mjs',
+            ),
+            '@qodalis/cli-lang-de': path.resolve(
+                __dirname,
+                '../../dist/lang-de/public-api.mjs',
+            ),
+            '@qodalis/cli-lang-pt': path.resolve(
+                __dirname,
+                '../../dist/lang-pt/public-api.mjs',
+            ),
+            '@qodalis/cli-lang-it': path.resolve(
+                __dirname,
+                '../../dist/lang-it/public-api.mjs',
+            ),
+            '@qodalis/cli-lang-ja': path.resolve(
+                __dirname,
+                '../../dist/lang-ja/public-api.mjs',
+            ),
+            '@qodalis/cli-lang-ko': path.resolve(
+                __dirname,
+                '../../dist/lang-ko/public-api.mjs',
+            ),
+            '@qodalis/cli-lang-zh': path.resolve(
+                __dirname,
+                '../../dist/lang-zh/public-api.mjs',
+            ),
+            '@qodalis/cli-lang-ru': path.resolve(
+                __dirname,
+                '../../dist/lang-ru/public-api.mjs',
+            ),
+            '@qodalis/cli-lang-ro': path.resolve(
+                __dirname,
+                '../../dist/lang-ro/public-api.mjs',
+            ),
         },
     },
 });

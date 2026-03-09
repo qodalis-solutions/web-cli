@@ -33,6 +33,16 @@ import {
   type ICliModule,
   type ICliExecutionContext,
 } from "@qodalis/cli-core";
+import { langEsModule } from "@qodalis/cli-lang-es";
+import { langFrModule } from "@qodalis/cli-lang-fr";
+import { langDeModule } from "@qodalis/cli-lang-de";
+import { langPtModule } from "@qodalis/cli-lang-pt";
+import { langItModule } from "@qodalis/cli-lang-it";
+import { langJaModule } from "@qodalis/cli-lang-ja";
+import { langKoModule } from "@qodalis/cli-lang-ko";
+import { langZhModule } from "@qodalis/cli-lang-zh";
+import { langRuModule } from "@qodalis/cli-lang-ru";
+import { langRoModule } from "@qodalis/cli-lang-ro";
 import { CliInputDemoCommandProcessor } from "./processors/cli-input-demo-command-processor";
 
 /**
@@ -124,6 +134,16 @@ const modules: ICliModule[] = [
     processors: [new CliInputDemoCommandProcessor()],
   },
   backgroundServicesDemo,
+  langEsModule,
+  langFrModule,
+  langDeModule,
+  langPtModule,
+  langItModule,
+  langJaModule,
+  langKoModule,
+  langZhModule,
+  langRuModule,
+  langRoModule,
 ];
 
 const options: CliOptions = {

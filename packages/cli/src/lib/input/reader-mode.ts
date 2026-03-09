@@ -195,15 +195,33 @@ export class ReaderMode implements IInputMode {
         } else if (data === '\u001B[A') {
             if (selectedIndex > 0) {
                 request.selectedIndex = selectedIndex - 1;
+                this.adjustScrollOffset(request);
                 this.redrawSelectOptions(request);
                 request.onChange?.(options[request.selectedIndex!].value);
             }
         } else if (data === '\u001B[B') {
             if (selectedIndex < options.length - 1) {
                 request.selectedIndex = selectedIndex + 1;
+                this.adjustScrollOffset(request);
                 this.redrawSelectOptions(request);
                 request.onChange?.(options[request.selectedIndex!].value);
             }
+        }
+    }
+
+    private adjustScrollOffset(request: ActiveInputRequest): void {
+        const options = request.options!;
+        const maxVisible = request.maxVisible ?? options.length;
+        const needsScroll = options.length > maxVisible;
+        const itemSlots = needsScroll ? maxVisible - 2 : options.length;
+        const visibleCount = Math.max(1, Math.min(itemSlots, options.length));
+        const scrollOffset = request.scrollOffset ?? 0;
+        const selectedIndex = request.selectedIndex!;
+
+        if (selectedIndex < scrollOffset) {
+            request.scrollOffset = selectedIndex;
+        } else if (selectedIndex >= scrollOffset + visibleCount) {
+            request.scrollOffset = selectedIndex - visibleCount + 1;
         }
     }
 
@@ -223,18 +241,38 @@ export class ReaderMode implements IInputMode {
     private redrawSelectOptions(request: ActiveInputRequest): void {
         const options = request.options!;
         const selectedIndex = request.selectedIndex!;
+        const maxVisible = request.maxVisible ?? options.length;
+        const scrollOffset = request.scrollOffset ?? 0;
+        const displayLines = request.displayLines ?? options.length;
+        const needsScroll = options.length > maxVisible;
+        const itemSlots = needsScroll ? maxVisible - 2 : options.length;
+        const visibleCount = Math.max(1, Math.min(itemSlots, options.length));
+        const end = Math.min(scrollOffset + visibleCount, options.length);
 
-        if (options.length > 0) {
-            this.host.terminal.write(`\x1b[${options.length}A`);
+        // Move cursor up to the start of the rendered block
+        if (displayLines > 0) {
+            this.host.terminal.write(`\x1b[${displayLines}A`);
         }
 
-        for (let i = 0; i < options.length; i++) {
+        if (needsScroll) {
+            this.host.terminal.write('\x1b[2K\r');
+            const upLabel = scrollOffset > 0 ? '↑ more' : '';
+            this.host.terminal.write(`    \x1b[2m${upLabel}\x1b[0m\r\n`);
+        }
+
+        for (let i = scrollOffset; i < end; i++) {
             this.host.terminal.write('\x1b[2K\r');
             const prefix = i === selectedIndex ? '  \x1b[36m> ' : '    ';
             const suffix = i === selectedIndex ? '\x1b[0m' : '';
             this.host.terminal.write(
                 `${prefix}${options[i].label}${suffix}\r\n`,
             );
+        }
+
+        if (needsScroll) {
+            this.host.terminal.write('\x1b[2K\r');
+            const downLabel = end < options.length ? '↓ more' : '';
+            this.host.terminal.write(`    \x1b[2m${downLabel}\x1b[0m\r\n`);
         }
     }
 
@@ -312,12 +350,14 @@ export class ReaderMode implements IInputMode {
             // Up arrow
             if (selectedIndex > 0) {
                 request.selectedIndex = selectedIndex - 1;
+                this.adjustScrollOffset(request);
                 this.redrawMultiSelectOptions(request);
             }
         } else if (data === '\u001B[B') {
             // Down arrow
             if (selectedIndex < options.length - 1) {
                 request.selectedIndex = selectedIndex + 1;
+                this.adjustScrollOffset(request);
                 this.redrawMultiSelectOptions(request);
             }
         }
@@ -328,12 +368,25 @@ export class ReaderMode implements IInputMode {
         const options = request.options!;
         const selectedIndex = request.selectedIndex!;
         const checkedIndices = request.checkedIndices!;
+        const maxVisible = request.maxVisible ?? options.length;
+        const scrollOffset = request.scrollOffset ?? 0;
+        const displayLines = request.displayLines ?? options.length;
+        const needsScroll = options.length > maxVisible;
+        const itemSlots = needsScroll ? maxVisible - 2 : options.length;
+        const visibleCount = Math.max(1, Math.min(itemSlots, options.length));
+        const end = Math.min(scrollOffset + visibleCount, options.length);
 
-        if (options.length > 0) {
-            this.host.terminal.write(`\x1b[${options.length}A`);
+        if (displayLines > 0) {
+            this.host.terminal.write(`\x1b[${displayLines}A`);
         }
 
-        for (let i = 0; i < options.length; i++) {
+        if (needsScroll) {
+            this.host.terminal.write('\x1b[2K\r');
+            const upLabel = scrollOffset > 0 ? '↑ more' : '';
+            this.host.terminal.write(`    \x1b[2m${upLabel}\x1b[0m\r\n`);
+        }
+
+        for (let i = scrollOffset; i < end; i++) {
             this.host.terminal.write('\x1b[2K\r');
             const checkbox = checkedIndices.has(i) ? '[x]' : '[ ]';
             const prefix =
@@ -344,6 +397,12 @@ export class ReaderMode implements IInputMode {
             this.host.terminal.write(
                 `${prefix}${options[i].label}${suffix}\r\n`,
             );
+        }
+
+        if (needsScroll) {
+            this.host.terminal.write('\x1b[2K\r');
+            const downLabel = end < options.length ? '↓ more' : '';
+            this.host.terminal.write(`    \x1b[2m${downLabel}\x1b[0m\r\n`);
         }
     }
 

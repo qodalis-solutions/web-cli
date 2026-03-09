@@ -28,7 +28,17 @@
       "@qodalis/cli-wordle": ["dist/wordle"],
       "@qodalis/cli-scp": ["dist/scp"],
       "@qodalis/cli-wget": ["dist/wget"],
-      "@qodalis/cli-sudoku": ["dist/sudoku"]
+      "@qodalis/cli-sudoku": ["dist/sudoku"],
+      "@qodalis/cli-lang-es": ["dist/lang-es"],
+      "@qodalis/cli-lang-fr": ["dist/lang-fr"],
+      "@qodalis/cli-lang-de": ["dist/lang-de"],
+      "@qodalis/cli-lang-pt": ["dist/lang-pt"],
+      "@qodalis/cli-lang-it": ["dist/lang-it"],
+      "@qodalis/cli-lang-ja": ["dist/lang-ja"],
+      "@qodalis/cli-lang-ko": ["dist/lang-ko"],
+      "@qodalis/cli-lang-zh": ["dist/lang-zh"],
+      "@qodalis/cli-lang-ru": ["dist/lang-ru"],
+      "@qodalis/cli-lang-ro": ["dist/lang-ro"]
     },
     "types": ["vite/client"],
 

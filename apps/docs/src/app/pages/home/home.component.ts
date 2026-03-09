@@ -27,6 +27,16 @@ import { markdownModule } from '@qodalis/cli-markdown';
 import { scpModule } from '@qodalis/cli-scp';
 import { stopwatchModule } from '@qodalis/cli-stopwatch';
 import { wgetModule } from '@qodalis/cli-wget';
+import { langEsModule } from '@qodalis/cli-lang-es';
+import { langFrModule } from '@qodalis/cli-lang-fr';
+import { langDeModule } from '@qodalis/cli-lang-de';
+import { langPtModule } from '@qodalis/cli-lang-pt';
+import { langItModule } from '@qodalis/cli-lang-it';
+import { langJaModule } from '@qodalis/cli-lang-ja';
+import { langKoModule } from '@qodalis/cli-lang-ko';
+import { langZhModule } from '@qodalis/cli-lang-zh';
+import { langRuModule } from '@qodalis/cli-lang-ru';
+import { langRoModule } from '@qodalis/cli-lang-ro';
 
 import {
     UTILITY_PLUGINS,
@@ -94,6 +104,16 @@ export class HomeComponent {
         scpModule,
         stopwatchModule,
         wgetModule,
+        langEsModule,
+        langFrModule,
+        langDeModule,
+        langPtModule,
+        langItModule,
+        langJaModule,
+        langKoModule,
+        langZhModule,
+        langRuModule,
+        langRoModule,
     ];
 
     options: CliOptions = {
