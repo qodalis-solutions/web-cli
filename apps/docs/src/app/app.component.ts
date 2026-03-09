@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { CliLogLevel, CliOptions, ICliModule } from '@qodalis/cli-core';
+import { CliLogLevel, ICliModule } from '@qodalis/cli-core';
+import { CliPanelOptions } from '@qodalis/angular-cli';
 import { usersModule } from '@qodalis/cli-users';
 import { guidModule } from '@qodalis/cli-guid';
 import { regexModule } from '@qodalis/cli-regex';
@@ -66,7 +67,9 @@ export class AppComponent {
         wgetModule,
     ];
 
-    options: CliOptions = {
+    options: CliPanelOptions = {
         logLevel: CliLogLevel.DEBUG,
+        position: 'right',
+        isHidden: true,
     };
 }

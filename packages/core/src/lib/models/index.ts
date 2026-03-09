@@ -458,6 +458,12 @@ export interface CliPanelConfig {
     isCollapsed?: boolean;
 
     /**
+     * Whether the panel starts hidden (showing only the small tab/arrow).
+     * @default false
+     */
+    isHidden?: boolean;
+
+    /**
      * Position of the panel relative to the viewport.
      * @default 'bottom'
      */

@@ -14,9 +14,10 @@ export const DOCS_NAV: NavItem[] = [
         label: 'Core Concepts',
         path: '/docs/core-concepts',
         children: [
-            { label: 'Commands', path: '/docs/core-concepts/commands' },
+            { label: 'Command Processors', path: '/docs/core-concepts/command-processors' },
             { label: 'Execution Context', path: '/docs/core-concepts/execution-context' },
-            { label: 'Themes', path: '/docs/core-concepts/themes' },
+            { label: 'Theming', path: '/docs/core-concepts/theming' },
+            { label: 'Input Reader', path: '/docs/core-concepts/input-reader' },
             { label: 'Tabs & Panes', path: '/docs/core-concepts/tabs-and-panes' },
         ],
     },
@@ -38,7 +39,7 @@ export const DOCS_NAV: NavItem[] = [
             })),
         ],
     },
-    { label: 'Create a Plugin', path: '/docs/create-plugin' },
+    { label: 'Create a Plugin', path: '/docs/plugins/create-your-own' },
     {
         label: 'Server Integration',
         path: '/docs/server-integration',
@@ -48,4 +49,5 @@ export const DOCS_NAV: NavItem[] = [
             { label: 'Python Server', path: '/docs/server-integration/python' },
         ],
     },
+    { label: 'Language Packs', path: '/docs/language-packs' },
 ];

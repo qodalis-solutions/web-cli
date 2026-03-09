@@ -129,10 +129,29 @@ import &#123; Cli, CliPanel, CliConfigProvider &#125; from '@qodalis/vue-cli';
     <pre><code>pkg add @qodalis/cli-guid</code></pre>
 </div>
 
+<!-- Try It -->
+<h2>Try It</h2>
+<p>
+    This is a live terminal running in your browser. Type
+    <code>help</code> to see available commands, <code>guid generate</code> to
+    create a UUID, or <code>todo add "Buy milk"</code> to try the todo list.
+</p>
+<div class="try-it-terminal">
+    <div class="try-it-chrome">
+        <span class="chrome-dot red"></span>
+        <span class="chrome-dot yellow"></span>
+        <span class="chrome-dot green"></span>
+        <span class="chrome-title">try it live</span>
+    </div>
+    <div class="try-it-body">
+        <cli [options]="tryItOptions" [modules]="tryItModules" height="280px" />
+    </div>
+</div>
+
 <!-- Next Steps -->
 <h2>Next Steps</h2>
 <ul>
-    <li><a routerLink="/docs/getting-started/configuration">Configuration</a> — customize options, themes, and server connections</li>
-    <li><a routerLink="/docs/core-concepts/commands">Core Concepts</a> — understand how commands, processors, and context work</li>
+    <li><a routerLink="/docs/configuration">Configuration</a> — customize options, themes, and server connections</li>
+    <li><a routerLink="/docs/core-concepts/command-processors">Core Concepts</a> — understand how commands, processors, and context work</li>
     <li><a routerLink="/docs/plugins/guid">Plugins</a> — browse the full plugin catalog</li>
 </ul>

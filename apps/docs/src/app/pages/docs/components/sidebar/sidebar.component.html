@@ -1,6 +1,18 @@
 <nav class="sidebar-nav">
     <div class="sidebar-section" *ngFor="let section of nav">
-        <ng-container *ngIf="!section.external; else externalLink">
+        <ng-container *ngIf="section.external">
+            <a
+                class="sidebar-section-header external"
+                [href]="section.path"
+                target="_blank"
+                rel="noopener"
+            >
+                <span>{{ section.label }}</span>
+                <span class="arrow">&nearr;</span>
+            </a>
+        </ng-container>
+
+        <ng-container *ngIf="!section.external && section.children">
             <button
                 class="sidebar-section-header"
                 (click)="toggleSection(section.label)"
@@ -11,7 +23,7 @@
             </button>
             <div
                 class="sidebar-children"
-                *ngIf="isExpanded(section.label) && section.children"
+                *ngIf="isExpanded(section.label)"
             >
                 <a
                     *ngFor="let child of section.children"
@@ -24,16 +36,17 @@
                 >
             </div>
         </ng-container>
-        <ng-template #externalLink>
+
+        <ng-container *ngIf="!section.external && !section.children">
             <a
-                class="sidebar-section-header external"
-                [href]="section.path"
-                target="_blank"
-                rel="noopener"
+                class="sidebar-section-header leaf"
+                [routerLink]="section.path"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: true }"
+                (click)="linkClicked.emit()"
             >
                 <span>{{ section.label }}</span>
-                <span class="arrow">&nearr;</span>
             </a>
-        </ng-template>
+        </ng-container>
     </div>
 </nav>

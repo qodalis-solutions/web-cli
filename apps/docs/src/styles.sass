@@ -346,13 +346,65 @@ $radius-sm: 8px
     padding: 20px 24px
     padding-top: 36px
     overflow-x: auto
+    background: $bg-card !important
 
   code
     font-family: $mono
     font-size: 0.8rem
     line-height: 1.65
-    color: $text
     white-space: pre
+    background: transparent !important
+    text-shadow: none !important
+    color: #ccc
+
+    .token.comment,
+    .token.block-comment,
+    .token.prolog,
+    .token.doctype,
+    .token.cdata
+      color: #999
+
+    .token.punctuation
+      color: #ccc
+
+    .token.tag,
+    .token.attr-name,
+    .token.namespace,
+    .token.deleted
+      color: #e2777a
+
+    .token.function-name
+      color: #6196cc
+
+    .token.boolean,
+    .token.number,
+    .token.function
+      color: #f08d49
+
+    .token.property,
+    .token.class-name,
+    .token.constant,
+    .token.symbol
+      color: #f8c555
+
+    .token.selector,
+    .token.important,
+    .token.atrule,
+    .token.keyword,
+    .token.builtin
+      color: #cc99cd
+
+    .token.string,
+    .token.char,
+    .token.attr-value,
+    .token.regex,
+    .token.variable
+      color: #7ec699
+
+    .token.operator,
+    .token.entity,
+    .token.url
+      color: #67cdcc
 
 .code-label
   position: absolute
@@ -366,6 +418,34 @@ $radius-sm: 8px
   background: rgba(129, 140, 248, 0.1)
   padding: 2px 8px
   border-radius: 3px
+
+.code-copy-btn
+  position: absolute
+  top: 8px
+  right: 8px
+  appearance: none
+  background: rgba(255, 255, 255, 0.06)
+  border: 1px solid $border
+  color: $text-secondary
+  font-family: inherit
+  font-size: 0.7rem
+  font-weight: 600
+  padding: 4px 10px
+  border-radius: 4px
+  cursor: pointer
+  opacity: 0
+  transition: opacity 0.15s, background-color 0.15s, color 0.15s
+
+  &:hover
+    background: rgba(255, 255, 255, 0.1)
+    color: $text
+
+  &.copied
+    color: #a6e3a1
+    border-color: rgba(166, 227, 161, 0.3)
+
+.code-block:hover .code-copy-btn
+  opacity: 1
 
 // ─── Features ───
 .features-section
@@ -860,6 +940,19 @@ $radius-sm: 8px
   &.external
     color: $text-secondary
 
+  &.leaf
+    text-decoration: none
+    color: $text
+    transition: color 0.15s, background-color 0.15s
+
+    &:hover
+      background: rgba(255, 255, 255, 0.04)
+
+    &.active
+      color: $accent
+      background: rgba(129, 140, 248, 0.08)
+      border-right: 2px solid $accent
+
   .chevron
     font-size: 0.65rem
     transition: transform 0.2s
@@ -887,6 +980,128 @@ $radius-sm: 8px
     color: $accent
     background: rgba(129, 140, 248, 0.08)
     border-right: 2px solid $accent
+
+// ─── Try-it Terminal ───
+.try-it-terminal
+  border-radius: $radius
+  overflow: hidden
+  border: 1px solid $border-light
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 40px rgba(129, 140, 248, 0.04)
+  margin: 16px 0 32px
+
+.try-it-chrome
+  display: flex
+  align-items: center
+  gap: 8px
+  padding: 10px 14px
+  background: $bg-elevated
+  border-bottom: 1px solid $border
+
+  .chrome-dot
+    width: 10px
+    height: 10px
+    border-radius: 50%
+
+    &.red
+      background: #ff5f57
+
+    &.yellow
+      background: #febc2e
+
+    &.green
+      background: #28c840
+
+  .chrome-title
+    margin-left: 6px
+    font-family: $mono
+    font-size: 0.72rem
+    color: $text-secondary
+
+.try-it-body
+  background: #000
+  min-height: 260px
+
+// ─── Category Badge ───
+.category-badge
+  display: inline-block
+  font-size: 0.7rem
+  font-weight: 600
+  text-transform: uppercase
+  letter-spacing: 0.04em
+  color: $accent
+  background: rgba(129, 140, 248, 0.1)
+  border: 1px solid rgba(129, 140, 248, 0.2)
+  border-radius: 4px
+  padding: 2px 8px
+  margin-left: 8px
+  vertical-align: middle
+
+// ─── Server Cards ───
+.server-cards
+  display: grid
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))
+  gap: 16px
+  margin: 16px 0
+
+.server-card
+  background: $bg-card
+  border: 1px solid $border
+  border-radius: $radius-sm
+  padding: 24px
+  transition: border-color 0.2s, background-color 0.2s
+
+  &:hover
+    border-color: $border-light
+    background: $bg-card-hover
+
+  h3
+    font-size: 1rem
+    font-weight: 600
+    color: #fff
+    margin: 0 0 8px
+
+  p
+    font-size: 0.82rem
+    line-height: 1.55
+    color: $text-secondary
+    margin: 0 0 8px
+
+  a
+    font-size: 0.82rem
+    color: $accent
+    text-decoration: none
+
+    &:hover
+      text-decoration: underline
+
+// ─── Page ToC ───
+.page-toc
+  background: $bg-card
+  border: 1px solid $border
+  border-radius: $radius-sm
+  padding: 16px 20px
+  margin-bottom: 32px
+  display: flex
+  flex-direction: column
+  gap: 6px
+
+.toc-label
+  font-size: 0.72rem
+  font-weight: 700
+  text-transform: uppercase
+  letter-spacing: 0.06em
+  color: $text-secondary
+  margin-bottom: 4px
+
+.toc-link
+  font-size: 0.82rem
+  color: $text-secondary
+  text-decoration: none
+  padding: 3px 0
+  transition: color 0.15s
+
+  &:hover
+    color: $accent
 
 // ─── Docs Content Helpers ───
 .docs-content .subsection-heading

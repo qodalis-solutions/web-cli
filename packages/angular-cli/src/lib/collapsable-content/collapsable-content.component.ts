@@ -51,8 +51,9 @@ export class CollapsableContentComponent {
     @Output()
     public onPositionChange = new EventEmitter<CliPanelPosition>();
 
-    isHidden = false;
+    @Input() isHidden = false;
     positionDropdownOpen = false;
+    dropdownStyle: Record<string, string> = {};
     private preHideCollapsed = true;
 
     get isHorizontal(): boolean {
@@ -92,6 +93,36 @@ export class CollapsableContentComponent {
     togglePositionDropdown(event: MouseEvent): void {
         event.stopPropagation();
         this.positionDropdownOpen = !this.positionDropdownOpen;
+        if (this.positionDropdownOpen) {
+            const btn = event.currentTarget as HTMLElement;
+            const rect = btn.getBoundingClientRect();
+            switch (this.position) {
+                case 'bottom':
+                    this.dropdownStyle = {
+                        bottom: (window.innerHeight - rect.top + 4) + 'px',
+                        right: (window.innerWidth - rect.right) + 'px',
+                    };
+                    break;
+                case 'top':
+                    this.dropdownStyle = {
+                        top: (rect.bottom + 4) + 'px',
+                        right: (window.innerWidth - rect.right) + 'px',
+                    };
+                    break;
+                case 'left':
+                    this.dropdownStyle = {
+                        top: rect.top + 'px',
+                        left: (rect.right + 4) + 'px',
+                    };
+                    break;
+                case 'right':
+                    this.dropdownStyle = {
+                        top: rect.top + 'px',
+                        right: (window.innerWidth - rect.left + 4) + 'px',
+                    };
+                    break;
+            }
+        }
     }
 
     selectPosition(pos: CliPanelPosition): void {

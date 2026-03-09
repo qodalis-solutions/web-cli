@@ -4,6 +4,7 @@ export type CliTheme = ITheme;
 
 type DefaultThemesType = {
     default: CliTheme;
+    classic: CliTheme;
     dracula: CliTheme;
     monokai: CliTheme;
     solarizedDark: CliTheme;
@@ -37,6 +38,29 @@ type DefaultThemesType = {
 
 export const DefaultThemes = {
     default: {
+        background: '#070b14',
+        foreground: '#dee2ea',
+        cursor: '#818cf8',
+        selectionBackground: '#334155',
+        selectionForeground: '#ffffff',
+        black: '#0d1117',
+        red: '#f87171',
+        green: '#4ade80',
+        yellow: '#fbbf24',
+        blue: '#818cf8',
+        magenta: '#c084fc',
+        cyan: '#67e8f9',
+        white: '#dee2ea',
+        brightBlack: '#475569',
+        brightRed: '#fca5a5',
+        brightGreen: '#86efac',
+        brightYellow: '#fde68a',
+        brightBlue: '#a5b4fc',
+        brightMagenta: '#d8b4fe',
+        brightCyan: '#a5f3fc',
+        brightWhite: '#f1f5f9',
+    },
+    classic: {
         background: '#0c0c0c',
         foreground: '#cccccc',
         cursor: '#cccccc',
@@ -658,7 +682,13 @@ export const DefaultThemeInfos: Record<string, CliThemeInfo> = {
         theme: DefaultThemes.default,
         category: 'dark',
         tags: ['built-in'],
-        description: 'Default terminal palette',
+        description: 'Dark indigo theme with soft pastels',
+    },
+    classic: {
+        theme: DefaultThemes.classic,
+        category: 'dark',
+        tags: ['built-in'],
+        description: 'Classic Windows terminal palette',
     },
     dracula: {
         theme: DefaultThemes.dracula,

@@ -1,3 +1,13 @@
+<nav class="page-toc" *ngIf="toc.length > 1">
+    <span class="toc-label">On this page</span>
+    <a
+        *ngFor="let entry of toc"
+        class="toc-link"
+        (click)="scrollTo(entry.id); $event.preventDefault()"
+        href="#"
+    >{{ entry.label }}</a>
+</nav>
+
 <!-- Command Processors -->
 <div *ngIf="currentTopic === 'command-processors'">
     <h1>Command Processors</h1>
@@ -349,6 +359,197 @@ theme get</code></pre>
     --cli-yellow: #d29922
     --cli-blue: #58a6ff</code></pre>
     </div>
+
+    <h2>Try It</h2>
+    <p>
+        Switch themes live — type <code>theme set dracula</code>,
+        <code>theme set nord</code>, or <code>theme list</code> to see all options.
+    </p>
+    <div class="try-it-terminal">
+        <div class="try-it-chrome">
+            <span class="chrome-dot red"></span>
+            <span class="chrome-dot yellow"></span>
+            <span class="chrome-dot green"></span>
+            <span class="chrome-title">theme playground</span>
+        </div>
+        <div class="try-it-body">
+            <cli [options]="tryItOptions" [modules]="tryItModules" height="260px" />
+        </div>
+    </div>
+</div>
+
+<!-- Tabs & Panes -->
+<div *ngIf="currentTopic === 'tabs-and-panes'">
+    <h1>Tabs & Split Panes</h1>
+    <p>
+        The <code>cli-panel</code> component supports multiple terminal sessions through tabs
+        and horizontal split panes. Users can create, rename, duplicate, split, and close
+        terminals — all within a single collapsible panel.
+    </p>
+
+    <h2>Tab Management</h2>
+    <p>
+        Each tab contains one or more terminal panes. Users interact with tabs through the tab bar
+        at the top of the panel.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>How</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>New tab</td>
+                <td>Click the <strong>+</strong> button in the tab bar</td>
+            </tr>
+            <tr>
+                <td>Rename tab</td>
+                <td><strong>Double-click</strong> the tab title, type a new name, press Enter</td>
+            </tr>
+            <tr>
+                <td>Close tab</td>
+                <td>Click the <strong>&times;</strong> button on the tab, or right-click &rarr; Close</td>
+            </tr>
+            <tr>
+                <td>Duplicate tab</td>
+                <td>Right-click &rarr; Duplicate (preserves terminal state, history, and output)</td>
+            </tr>
+            <tr>
+                <td>Close others</td>
+                <td>Right-click &rarr; Close Others / Close to the Right / Close All</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Split Panes</h2>
+    <p>
+        Within a tab, you can split the terminal horizontally to run multiple sessions side by side.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>How</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Split right</td>
+                <td>Right-click a tab &rarr; <strong>Split Right</strong></td>
+            </tr>
+            <tr>
+                <td>Resize panes</td>
+                <td><strong>Drag</strong> the divider between panes</td>
+            </tr>
+            <tr>
+                <td>Focus a pane</td>
+                <td><strong>Click</strong> inside a pane (active pane shows an accent border)</td>
+            </tr>
+            <tr>
+                <td>Close a pane</td>
+                <td>Click the <strong>&times;</strong> in the pane's top-right corner</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        Pane widths are distributed equally when a split is created. The minimum pane width is
+        10% of the panel. Closing the last pane in a tab closes the tab itself.
+    </p>
+
+    <h2>Panel Positions</h2>
+    <p>
+        The panel can be positioned at four edges of the viewport. The position cycles through:
+    </p>
+    <div class="command-badges" style="margin-bottom: 24px">
+        <code class="command-badge">bottom</code>
+        <code class="command-badge">right</code>
+        <code class="command-badge">top</code>
+        <code class="command-badge">left</code>
+    </div>
+    <p>The position is persisted to localStorage and restored automatically.</p>
+
+    <h2>Configuration</h2>
+    <p>
+        The <code>cli-panel</code> component accepts a <code>CliPanelOptions</code> object to configure
+        panel behavior:
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Option</th>
+                <th>Type</th>
+                <th>Default</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>isCollapsed</code></td>
+                <td><code>boolean</code></td>
+                <td><code>true</code></td>
+                <td>Start collapsed or expanded</td>
+            </tr>
+            <tr>
+                <td><code>position</code></td>
+                <td><code>string</code></td>
+                <td><code>'bottom'</code></td>
+                <td>Panel edge: bottom, top, left, right</td>
+            </tr>
+            <tr>
+                <td><code>closable</code></td>
+                <td><code>boolean</code></td>
+                <td><code>true</code></td>
+                <td>Show close button in panel header</td>
+            </tr>
+            <tr>
+                <td><code>resizable</code></td>
+                <td><code>boolean</code></td>
+                <td><code>true</code></td>
+                <td>Allow drag-resizing the panel</td>
+            </tr>
+            <tr>
+                <td><code>syncTheme</code></td>
+                <td><code>boolean</code></td>
+                <td><code>false</code></td>
+                <td>Sync panel chrome colors with the active terminal theme</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Usage</h2>
+    <div class="code-block">
+        <span class="code-label">Angular</span>
+        <pre><code>&lt;cli-panel
+    [options]="{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}"
+    [modules]="modules"
+&gt;&lt;/cli-panel&gt;</code></pre>
+    </div>
+    <div class="code-block">
+        <span class="code-label">React</span>
+        <pre><code>&lt;CliPanel
+    options={{ '{' }}{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}{{ '}' }}
+    modules={{ '{' }}modules{{ '}' }}
+/&gt;</code></pre>
+    </div>
+    <div class="code-block">
+        <span class="code-label">Vue</span>
+        <pre><code>&lt;CliPanel
+    :options="{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}"
+    :modules="modules"
+/&gt;</code></pre>
+    </div>
+
+    <h2>State Preservation</h2>
+    <p>
+        When a tab is duplicated, the full terminal state is captured and restored in the new tab:
+    </p>
+    <ul>
+        <li>Terminal output buffer (serialized xterm content)</li>
+        <li>Command history</li>
+        <li>Processor state stores (todo items, config values, etc.)</li>
+    </ul>
 </div>
 
 <!-- Input Reader -->
@@ -451,5 +652,23 @@ context.writer.writeln(`Selected: $&#123;toppings.join(', ')&#125;`);</code></pr
         <span class="code-label">readNumber</span>
         <pre><code>const age = await context.inputReader.readNumber('Enter your age:');
 context.writer.writeln(`You are $&#123;age&#125; years old.`);</code></pre>
+    </div>
+
+    <h2>Try It</h2>
+    <p>
+        Try interactive input — type <code>yesno "Deploy to production?"</code>
+        for a confirmation prompt, or <code>todo add "My task"</code> to try
+        the interactive todo list.
+    </p>
+    <div class="try-it-terminal">
+        <div class="try-it-chrome">
+            <span class="chrome-dot red"></span>
+            <span class="chrome-dot yellow"></span>
+            <span class="chrome-dot green"></span>
+            <span class="chrome-title">input reader playground</span>
+        </div>
+        <div class="try-it-body">
+            <cli [options]="tryItOptions" [modules]="tryItModules" height="260px" />
+        </div>
     </div>
 </div>

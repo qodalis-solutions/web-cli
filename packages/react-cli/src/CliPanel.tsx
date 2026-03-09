@@ -167,7 +167,7 @@ export function CliPanel({ options: optionsProp, modules: modulesProp, processor
     const [panelHeight, setPanelHeight] = useState(600);
     const [panelWidth, setPanelWidth] = useState(400);
     const [initialized, setInitialized] = useState(false);
-    const [hidden, setHidden] = useState(false);
+    const [hidden, setHidden] = useState(options?.isHidden ?? false);
     const preHideCollapsedRef = useRef(true);
     const [themeStyles, setThemeStyles] = useState<Record<string, string>>({});
     const wrapperRef = useRef<HTMLDivElement>(null);

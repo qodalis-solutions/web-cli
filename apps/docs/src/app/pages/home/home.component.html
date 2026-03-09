@@ -39,16 +39,47 @@
       <button class="framework-tab" [class.active]="activeFramework === 'angular'" (click)="setFramework('angular')">Angular</button>
       <button class="framework-tab" [class.active]="activeFramework === 'react'" (click)="setFramework('react')">React</button>
       <button class="framework-tab" [class.active]="activeFramework === 'vue'" (click)="setFramework('vue')">Vue</button>
+      <button class="framework-tab" [class.active]="activeFramework === 'vanilla'" (click)="setFramework('vanilla')">Vanilla</button>
     </div>
-    <div class="framework-panels">
-      <div class="code-panel">
+    <div class="framework-panels" [ngSwitch]="activeFramework">
+      <div class="code-panel" *ngSwitchCase="'angular'">
         <div class="code-block">
           <span class="code-label">Setup</span>
-          <pre><code>{{ frameworkSnippets[activeFramework].imports }}</code></pre>
+          <pre><code>{{ frameworkSnippets.angular.imports }}</code></pre>
         </div>
         <div class="code-block">
           <span class="code-label">Template</span>
-          <pre><code>{{ frameworkSnippets[activeFramework].template }}</code></pre>
+          <pre><code>{{ frameworkSnippets.angular.template }}</code></pre>
+        </div>
+      </div>
+      <div class="code-panel" *ngSwitchCase="'react'">
+        <div class="code-block">
+          <span class="code-label">Setup</span>
+          <pre><code>{{ frameworkSnippets.react.imports }}</code></pre>
+        </div>
+        <div class="code-block">
+          <span class="code-label">Template</span>
+          <pre><code>{{ frameworkSnippets.react.template }}</code></pre>
+        </div>
+      </div>
+      <div class="code-panel" *ngSwitchCase="'vue'">
+        <div class="code-block">
+          <span class="code-label">Setup</span>
+          <pre><code>{{ frameworkSnippets.vue.imports }}</code></pre>
+        </div>
+        <div class="code-block">
+          <span class="code-label">Template</span>
+          <pre><code>{{ frameworkSnippets.vue.template }}</code></pre>
+        </div>
+      </div>
+      <div class="code-panel" *ngSwitchCase="'vanilla'">
+        <div class="code-block">
+          <span class="code-label">Setup</span>
+          <pre><code>{{ frameworkSnippets.vanilla.imports }}</code></pre>
+        </div>
+        <div class="code-block">
+          <span class="code-label">import and use</span>
+          <pre><code>{{ frameworkSnippets.vanilla.template }}</code></pre>
         </div>
       </div>
     </div>

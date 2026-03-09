@@ -22,7 +22,7 @@ const routes: Routes = [
                     ),
             },
             {
-                path: 'getting-started/configuration',
+                path: 'configuration',
                 loadChildren: () =>
                     import('./pages/configuration/configuration.module').then(
                         (m) => m.ConfigurationModule,

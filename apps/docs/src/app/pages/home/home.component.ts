@@ -56,7 +56,7 @@ export interface AdvancedFeature {
     example: string;
 }
 
-export type Framework = 'angular' | 'react' | 'vue';
+export type Framework = 'angular' | 'react' | 'vue' | 'vanilla';
 
 @Component({
     selector: 'app-home',
@@ -177,10 +177,10 @@ export class HomeComponent {
         },
         {
             icon: '\uD83D\uDCE6',
-            title: 'Runtime Packages',
+            title: 'Drop-in Plugins',
             description:
-                'Install CLI plugins at runtime with npm install. Users can extend the terminal without rebuilding.',
-            example: 'npm install @qodalis/cli-guid',
+                'Add new commands by importing a module. Each plugin is an npm package — install, import, and pass to the terminal component.',
+            example: 'import { guidModule } from \'@qodalis/cli-guid\';',
         },
         {
             icon: '\u270F\uFE0F',
@@ -236,6 +236,20 @@ import { filesModule } from '@qodalis/cli-files';`,
   :modules="[guidModule, filesModule]"
 />`,
         },
+        vanilla: {
+            imports: `import { CliEngine } from '@qodalis/cli';
+import { guidModule } from '@qodalis/cli-guid';
+import { filesModule } from '@qodalis/cli-files';`,
+            template: `const engine = new CliEngine(
+  document.getElementById('terminal')!,
+  {
+    welcomeMessage: { message: 'Welcome!', show: 'always' },
+  },
+);
+
+engine.registerModules([guidModule, filesModule]);
+await engine.start();`,
+        },
     };
 
     get installCommand(): string {
@@ -246,6 +260,8 @@ import { filesModule } from '@qodalis/cli-files';`,
                 return 'npm install @qodalis/react-cli';
             case 'vue':
                 return 'npm install @qodalis/vue-cli';
+            case 'vanilla':
+                return 'npm install @qodalis/cli';
         }
     }
 

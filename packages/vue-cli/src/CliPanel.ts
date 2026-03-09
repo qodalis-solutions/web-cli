@@ -188,7 +188,7 @@ export const CliPanel = defineComponent({
         const prevHeight = ref(600);
         const prevWidth = ref(400);
         const initialized = ref(false);
-        const hidden = ref(false);
+        const hidden = ref(props.options?.isHidden ?? false);
         let preHideCollapsed = true;
 
         const position = ref<CliPanelPosition>(loadPanelPosition() ?? mergedOptions.value?.position ?? 'bottom');
