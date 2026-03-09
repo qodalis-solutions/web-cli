@@ -386,6 +386,11 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         };
 
         for (const handler of this.globalParameters) {
+            // Skip global handler if the processor declares its own parameter
+            // with the same name or overlapping alias (e.g. curl's -v for verbose)
+            if (this.processorOwnsParameter(processor, handler.parameter)) {
+                continue;
+            }
             if (await handler.handle(args, processor, commandToProcess, context)) {
                 process.end();
                 return;
@@ -840,5 +845,30 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         }
 
         return true;
+    }
+
+    /**
+     * Returns true when the processor (or one of its ancestors) declares a
+     * parameter whose name or aliases overlap with the global handler's
+     * parameter.  In that case the global handler must be skipped so the
+     * processor can handle the flag itself.
+     */
+    private processorOwnsParameter(
+        processor: ICliCommandProcessor,
+        globalParam: ICliCommandParameterDescriptor,
+    ): boolean {
+        const globalNames = new Set<string>([
+            globalParam.name,
+            ...(globalParam.aliases ?? []),
+        ]);
+
+        const params = processor.parameters;
+        if (!params) return false;
+
+        return params.some(
+            (p) =>
+                globalNames.has(p.name) ||
+                p.aliases?.some((a) => globalNames.has(a)),
+        );
     }
 }

@@ -33,13 +33,17 @@ export const DOCS_NAV: NavItem[] = [
                 label: p.name,
                 path: `/docs/plugins/${p.id}`,
             })),
-            ...LANGUAGE_PACKS.map((p) => ({
-                label: p.name,
-                path: `/docs/plugins/${p.id}`,
-            })),
         ],
     },
     { label: 'Create a Plugin', path: '/docs/plugins/create-your-own' },
+    {
+        label: 'Language Packs',
+        path: '/docs/language-packs',
+        children: LANGUAGE_PACKS.map((p) => ({
+            label: p.name,
+            path: `/docs/plugins/${p.id}`,
+        })),
+    },
     {
         label: 'Server Integration',
         path: '/docs/server-integration',
@@ -49,5 +53,4 @@ export const DOCS_NAV: NavItem[] = [
             { label: 'Python Server', path: '/docs/server-integration/python' },
         ],
     },
-    { label: 'Language Packs', path: '/docs/language-packs' },
 ];

@@ -91,7 +91,7 @@ export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
                 `  Login:     ${new Date(fullSession.loginTime).toLocaleString()}`,
             );
         } else {
-            context.writer.writeln(session.user.email);
+            context.writer.writeln(`${session.user.name} (${session.user.email})`);
         }
     }
 

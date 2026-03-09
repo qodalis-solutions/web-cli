@@ -23,7 +23,7 @@ export class CliMarkdownCommandProcessor implements ICliCommandProcessor {
             acceptsRawInput: true,
             valueRequired: true,
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const input = cmd.value ?? '';
+                const input = cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '';
                 if (!input.trim()) {
                     context.writer.writeError('No markdown input. Pipe text or provide inline.');
                     return;

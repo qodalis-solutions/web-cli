@@ -186,9 +186,10 @@ export class CliWgetCommandCommandProcessor implements ICliCommandProcessor {
                 const text = new TextDecoder().decode(combined);
                 await fileTransfer.writeFile(outputName, text);
             } else {
-                const blob = new Blob([combined]);
-                fileTransfer.downloadToBrowser(outputName, blob);
-                context.writer.writeInfo('Binary file saved to browser downloads.');
+                // Binary file — encode as base64 and save to virtual filesystem
+                const base64 = this._uint8ArrayToBase64(combined);
+                const dataUri = `data:${contentType || 'application/octet-stream'};base64,${base64}`;
+                await fileTransfer.writeFile(outputName, dataUri);
             }
 
             context.writer.writeSuccess(`Downloaded: ${outputName} (${this._formatBytes(receivedBytes)})`);
@@ -223,6 +224,14 @@ export class CliWgetCommandCommandProcessor implements ICliCommandProcessor {
         const pathname = url.pathname;
         const segments = pathname.split('/').filter(Boolean);
         return segments.length > 0 ? segments[segments.length - 1] : 'download';
+    }
+
+    private _uint8ArrayToBase64(bytes: Uint8Array): string {
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
     }
 
     private _formatBytes(bytes: number): string {

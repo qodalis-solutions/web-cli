@@ -28,7 +28,8 @@ export class CliChartCommandProcessor implements ICliCommandProcessor {
             description: 'Horizontal bar chart. Pipe numbers or key:value pairs.',
             valueRequired: true,
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const data = parseChartInput(cmd.value ?? '');
+                const raw = cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '';
+                const data = parseChartInput(raw);
                 if (!data.length) {
                     context.writer.writeError('No data. Pipe numbers or key:value pairs.');
                     return;
@@ -60,7 +61,8 @@ export class CliChartCommandProcessor implements ICliCommandProcessor {
             description: 'Line chart. Pipe numbers or key:value pairs.',
             valueRequired: true,
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const data = parseChartInput(cmd.value ?? '');
+                const raw = cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '';
+                const data = parseChartInput(raw);
                 if (!data.length) {
                     context.writer.writeError('No data. Pipe numbers or key:value pairs.');
                     return;
@@ -89,7 +91,8 @@ export class CliChartCommandProcessor implements ICliCommandProcessor {
             description: 'Single-line sparkline. Pipe numbers or key:value pairs.',
             valueRequired: true,
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const data = parseChartInput(cmd.value ?? '');
+                const raw = cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '';
+                const data = parseChartInput(raw);
                 if (!data.length) {
                     context.writer.writeError('No data. Pipe numbers or key:value pairs.');
                     return;

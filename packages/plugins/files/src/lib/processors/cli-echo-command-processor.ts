@@ -64,6 +64,19 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
             text = text.slice(1, -1);
         }
 
+        // Interpret escape sequences (\n, \t, etc.)
+        text = text.replace(/\\([\\nrtv0])/g, (_, ch: string) => {
+            switch (ch) {
+                case 'n': return '\n';
+                case 't': return '\t';
+                case 'r': return '\r';
+                case 'v': return '\v';
+                case '0': return '\0';
+                case '\\': return '\\';
+                default: return ch;
+            }
+        });
+
         try {
             fs.writeFile(filePath, text + '\n', append);
             await fs.persist();

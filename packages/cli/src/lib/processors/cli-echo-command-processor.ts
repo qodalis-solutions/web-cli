@@ -27,15 +27,42 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const text = command.value || command.data || '';
+        const raw = command.value || command.data || '';
 
-        if (typeof text === 'object') {
-            context.writer.writeJson(text);
+        if (typeof raw === 'object') {
+            context.writer.writeJson(raw);
+            context.process.output(raw);
         } else {
+            const text = this.interpretEscapes(this.stripQuotes(raw));
             context.writer.writeln(text);
+            context.process.output(text);
         }
+    }
 
-        context.process.output(text);
+    /** Remove surrounding quotes from the text. */
+    private stripQuotes(text: string): string {
+        if (
+            (text.startsWith('"') && text.endsWith('"')) ||
+            (text.startsWith("'") && text.endsWith("'"))
+        ) {
+            return text.slice(1, -1);
+        }
+        return text;
+    }
+
+    /** Interpret common escape sequences like a POSIX echo -e. */
+    private interpretEscapes(text: string): string {
+        return text.replace(/\\([\\nrtv0])/g, (_, ch) => {
+            switch (ch) {
+                case 'n': return '\n';
+                case 't': return '\t';
+                case 'r': return '\r';
+                case 'v': return '\v';
+                case '0': return '\0';
+                case '\\': return '\\';
+                default: return ch;
+            }
+        });
     }
 
     writeDescription(context: ICliExecutionContext): void {

@@ -74,11 +74,21 @@ export class PluginDetailComponent implements OnInit {
 
     ngOnInit(): void {
         this.route.params.subscribe((params) => {
-            this.plugin = PLUGINS.find((p) => p.id === params['pluginId']);
-            if (this.plugin) {
-                const mod = MODULE_MAP[this.plugin.moduleExport];
-                this.tryItModules = mod ? [mod] : [];
-            }
+            // Briefly clear the plugin so *ngIf="plugin" destroys the entire
+            // template.  This forces Prism-highlighted code blocks AND the
+            // <cli> terminal to be recreated with the new plugin's data.
+            this.plugin = undefined;
+
+            setTimeout(() => {
+                this.plugin = PLUGINS.find((p) => p.id === params['pluginId']);
+                if (this.plugin) {
+                    const mod = MODULE_MAP[this.plugin.moduleExport];
+                    const deps = (this.plugin.tryItDeps ?? [])
+                        .map((name) => MODULE_MAP[name])
+                        .filter(Boolean);
+                    this.tryItModules = mod ? [mod, ...deps] : [];
+                }
+            });
         });
     }
 

@@ -22,7 +22,7 @@ export class CliCsvCommandProcessor implements ICliCommandProcessor {
             description: 'Parse CSV and display as a table. Input via pipe.',
             valueRequired: true,
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const { headers, rows } = parseCsv(cmd.value ?? '');
+                const { headers, rows } = parseCsv(cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '');
                 if (!headers.length) { context.writer.writeError('No CSV data'); return; }
                 const separator = headers.join(' | ');
                 context.writer.writeln(separator);
@@ -35,7 +35,7 @@ export class CliCsvCommandProcessor implements ICliCommandProcessor {
             description: 'Convert CSV to JSON array. Input via pipe.',
             valueRequired: true,
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const { headers, rows } = parseCsv(cmd.value ?? '');
+                const { headers, rows } = parseCsv(cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '');
                 if (!headers.length) { context.writer.writeError('No CSV data'); return; }
                 const json = csvToJson(headers, rows);
                 context.writer.writeJson(json);
@@ -46,7 +46,7 @@ export class CliCsvCommandProcessor implements ICliCommandProcessor {
             description: 'List column names from CSV. Input via pipe.',
             valueRequired: true,
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const { headers } = parseCsv(cmd.value ?? '');
+                const { headers } = parseCsv(cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '');
                 if (!headers.length) { context.writer.writeError('No CSV data'); return; }
                 headers.forEach((h, i) => context.writer.writeln(`  ${i}: ${h}`));
             },
@@ -56,7 +56,7 @@ export class CliCsvCommandProcessor implements ICliCommandProcessor {
             description: 'Count rows in CSV. Input via pipe.',
             valueRequired: true,
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const { rows } = parseCsv(cmd.value ?? '');
+                const { rows } = parseCsv(cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '');
                 context.writer.writeln(String(rows.length));
             },
         },
@@ -70,7 +70,7 @@ export class CliCsvCommandProcessor implements ICliCommandProcessor {
                 { name: 'val', description: 'Value to compare', required: true, type: 'string' },
             ],
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const { headers, rows } = parseCsv(cmd.value ?? '');
+                const { headers, rows } = parseCsv(cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '');
                 if (!headers.length) { context.writer.writeError('No CSV data'); return; }
                 const col = cmd.args?.['col'] as string;
                 const op = cmd.args?.['op'] as 'eq' | 'ne' | 'contains' | 'gt' | 'lt';
@@ -97,7 +97,7 @@ export class CliCsvCommandProcessor implements ICliCommandProcessor {
                 { name: 'dir', description: 'Direction: asc or desc (default: asc)', required: false, type: 'string' },
             ],
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const { headers, rows } = parseCsv(cmd.value ?? '');
+                const { headers, rows } = parseCsv(cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '');
                 if (!headers.length) { context.writer.writeError('No CSV data'); return; }
                 const col = cmd.args?.['col'] as string;
                 const dir = (cmd.args?.['dir'] as 'asc' | 'desc') ?? 'asc';

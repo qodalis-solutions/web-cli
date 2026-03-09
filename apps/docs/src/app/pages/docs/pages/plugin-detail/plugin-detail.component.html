@@ -22,6 +22,18 @@
         <code class="command-badge" *ngFor="let cmd of plugin.command.split(', ')">{{ cmd }}</code>
     </div>
 
+    <div *ngIf="plugin.examples && plugin.examples.length > 0">
+        <h2>Examples</h2>
+        <div class="examples-list">
+            <div class="example-item" *ngFor="let example of plugin.examples">
+                <p class="example-description">{{ example.description }}</p>
+                <div class="code-block">
+                    <pre><code>{{ example.command }}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <h2>Usage</h2>
     <div class="code-block">
         <span class="code-label">Setup</span>

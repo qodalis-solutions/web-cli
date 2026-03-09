@@ -1,5 +1,10 @@
 export type PluginCategory = 'utility' | 'game' | 'language';
 
+export interface PluginExample {
+    command: string;
+    description: string;
+}
+
 export interface PluginData {
     id: string;
     name: string;
@@ -9,6 +14,9 @@ export interface PluginData {
     category: PluginCategory;
     moduleExport: string;
     moduleImport: string;
+    examples?: PluginExample[];
+    /** Module exports to include alongside this plugin in the Try It terminal */
+    tryItDeps?: string[];
 }
 
 export const PLUGINS: PluginData[] = [
@@ -22,6 +30,13 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'guidModule',
         moduleImport: '@qodalis/cli-guid',
+        examples: [
+            { command: 'guid new', description: 'Generate a new UUID' },
+            { command: 'guid new --count=5 --format=uppercase', description: 'Generate 5 uppercase UUIDs' },
+            { command: 'guid validate 550e8400-e29b-41d4-a716-446655440000', description: 'Validate a UUID and detect version' },
+            { command: 'guid inspect 550e8400-e29b-41d4-a716-446655440000', description: 'Show detailed UUID info' },
+            { command: 'guid format 550e8400-e29b-41d4-a716-446655440000 --to=braces', description: 'Convert UUID to {braces} format' },
+        ],
     },
     {
         id: 'regex',
@@ -32,6 +47,13 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'regexModule',
         moduleImport: '@qodalis/cli-regex',
+        examples: [
+            { command: 'regex test "abc123" --pattern="\\d+"', description: 'Test if text matches a pattern' },
+            { command: 'regex match "2024-01-15" --pattern="(?<y>\\d{4})-(?<m>\\d{2})-(?<d>\\d{2})"', description: 'Extract named capture groups' },
+            { command: 'regex match-all "abc 123 def 456" --pattern="\\d+"', description: 'Find all matches in text' },
+            { command: 'regex replace "hello world" --pattern="world" --with="CLI"', description: 'Replace matches in text' },
+            { command: 'regex split "a1b2c3" --pattern="\\d"', description: 'Split text by regex pattern' },
+        ],
     },
     {
         id: 'qr',
@@ -42,6 +64,10 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'qrModule',
         moduleImport: '@qodalis/cli-qr',
+        examples: [
+            { command: 'qr generate --text="https://example.com"', description: 'Generate a QR code from a URL' },
+            { command: 'qr generate --text="Hello World" --fileName="my-qr"', description: 'Generate QR with custom filename' },
+        ],
     },
     {
         id: 'speed-test',
@@ -52,6 +78,11 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'speedTestModule',
         moduleImport: '@qodalis/cli-speed-test',
+        examples: [
+            { command: 'speed-test', description: 'Run full download & upload speed test' },
+            { command: 'speed-test --download-only', description: 'Test download speed only' },
+            { command: 'speed-test --upload-only', description: 'Test upload speed only' },
+        ],
     },
     {
         id: 'curl',
@@ -62,16 +93,26 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'curlModule',
         moduleImport: '@qodalis/cli-curl',
+        examples: [
+            { command: 'curl https://api.github.com', description: 'Make a GET request' },
+            { command: 'curl https://httpbin.org/post -X POST -d \'{"name":"John"}\'', description: 'POST JSON data' },
+            { command: 'curl https://api.github.com/users/octocat -v --pretty', description: 'Verbose output with pretty-printed JSON' },
+            { command: 'curl https://httpbin.org/get -H "Authorization: Bearer TOKEN"', description: 'Request with custom header' },
+        ],
     },
     {
         id: 'password-generator',
         name: 'Password Generator',
         npmPackage: '@qodalis/cli-password-generator',
-        command: 'password generate',
+        command: 'generate-password',
         description: 'Generate secure random passwords.',
         category: 'utility',
         moduleExport: 'passwordGeneratorModule',
         moduleImport: '@qodalis/cli-password-generator',
+        examples: [
+            { command: 'generate-password', description: 'Generate a 16-character password' },
+            { command: 'generate-password --length=32 --symbols', description: 'Generate a 32-char password with symbols' },
+        ],
     },
     {
         id: 'string',
@@ -82,6 +123,16 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'stringModule',
         moduleImport: '@qodalis/cli-string',
+        examples: [
+            { command: 'string upper "hello world"', description: 'Convert to UPPERCASE' },
+            { command: 'string camelCase "hello world"', description: 'Convert to camelCase' },
+            { command: 'string kebabCase "Hello World"', description: 'Convert to kebab-case' },
+            { command: 'string reverse "hello"', description: 'Reverse a string' },
+            { command: 'string slug "Hello World! 2024"', description: 'Convert to URL-friendly slug' },
+            { command: 'string repeat "ha" --count=3 --sep="-"', description: 'Repeat string with separator' },
+            { command: 'string wc "hello world"', description: 'Count lines, words, and characters' },
+            { command: 'string truncate "A very long text" --length=10', description: 'Truncate with ellipsis' },
+        ],
     },
     {
         id: 'todo',
@@ -92,6 +143,14 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'todoModule',
         moduleImport: '@qodalis/cli-todo',
+        examples: [
+            { command: 'todo add "Buy groceries" --due tomorrow', description: 'Add a task with a due date' },
+            { command: 'todo ls', description: 'List all tasks' },
+            { command: 'todo ls --pending', description: 'Show only pending tasks' },
+            { command: 'todo done 1', description: 'Mark task #1 as complete' },
+            { command: 'todo edit 1 "Buy organic groceries" --due friday', description: 'Edit a task' },
+            { command: 'todo rm 1', description: 'Remove a task' },
+        ],
     },
     {
         id: 'browser-storage',
@@ -102,6 +161,13 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'browserStorageModule',
         moduleImport: '@qodalis/cli-browser-storage',
+        examples: [
+            { command: 'local-storage set theme dark', description: 'Store a value in localStorage' },
+            { command: 'local-storage get theme', description: 'Read a value from localStorage' },
+            { command: 'cookies list', description: 'List all browser cookies' },
+            { command: 'cookies set lang en', description: 'Set a cookie' },
+            { command: 'cookies get lang', description: 'Read a cookie value' },
+        ],
     },
     {
         id: 'text-to-image',
@@ -112,6 +178,12 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'textToImageModule',
         moduleImport: '@qodalis/cli-text-to-image',
+        examples: [
+            { command: 'text-to-image "Hello World"', description: 'Convert text to a PNG image' },
+            { command: 'text-to-image "Banner" --bgColor=#1a1a2e --textColor=#e0e0e0', description: 'Custom colors' },
+            { command: 'text-to-image "Title" --font="40px Georgia" --fileName="banner"', description: 'Custom font and filename' },
+        ],
+        tryItDeps: ['filesModule'],
     },
     {
         id: 'files',
@@ -122,6 +194,16 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'filesModule',
         moduleImport: '@qodalis/cli-files',
+        examples: [
+            { command: 'ls', description: 'List files in current directory' },
+            { command: 'mkdir projects && cd projects', description: 'Create and enter a directory' },
+            { command: 'touch readme.txt', description: 'Create an empty file' },
+            { command: 'nano readme.txt', description: 'Edit a file in the built-in editor' },
+            { command: 'cat readme.txt', description: 'Display file contents' },
+            { command: 'tree', description: 'Show directory tree' },
+            { command: 'grep "pattern" readme.txt', description: 'Search for text in a file' },
+            { command: 'cp readme.txt backup.txt', description: 'Copy a file' },
+        ],
     },
     {
         id: 'yesno',
@@ -132,6 +214,11 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'yesnoModule',
         moduleImport: '@qodalis/cli-yesno',
+        examples: [
+            { command: 'yesno', description: 'Get a random yes/no answer' },
+            { command: 'yesno "Should I deploy?"', description: 'Ask a question' },
+            { command: 'yesno "Take a break?" --count=3', description: 'Run multiple rounds' },
+        ],
     },
     {
         id: 'server-logs',
@@ -142,6 +229,9 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'serverLogsModule',
         moduleImport: '@qodalis/cli-server-logs',
+        examples: [
+            { command: 'logs', description: 'Stream server log output' },
+        ],
     },
     {
         id: 'users',
@@ -152,6 +242,14 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'usersModule',
         moduleImport: '@qodalis/cli-users',
+        examples: [
+            { command: 'whoami', description: 'Show current user' },
+            { command: 'adduser john', description: 'Create a new user' },
+            { command: 'login john', description: 'Log in as a user' },
+            { command: 'passwd john', description: 'Change a user\'s password' },
+            { command: 'id john', description: 'Show user ID and groups' },
+            { command: 'who', description: 'List logged-in users' },
+        ],
     },
     {
         id: 'chart',
@@ -162,6 +260,12 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'chartModule',
         moduleImport: '@qodalis/cli-chart',
+        examples: [
+            { command: 'echo "Jan:100\\nFeb:200\\nMar:150" | chart bar', description: 'Render a horizontal bar chart' },
+            { command: 'echo "Jan:100\\nFeb:200\\nMar:150" | chart line', description: 'Render a line chart' },
+            { command: 'echo "1\\n4\\n9\\n16\\n25" | chart sparkline', description: 'Render a compact sparkline' },
+        ],
+        tryItDeps: ['filesModule'],
     },
     {
         id: 'cron',
@@ -172,6 +276,13 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'cronModule',
         moduleImport: '@qodalis/cli-cron',
+        examples: [
+            { command: 'cron add heartbeat 5m echo "alive"', description: 'Schedule a command every 5 minutes' },
+            { command: 'cron list', description: 'List all cron jobs' },
+            { command: 'cron disable heartbeat', description: 'Pause a cron job' },
+            { command: 'cron remove heartbeat', description: 'Remove a cron job' },
+        ],
+        tryItDeps: ['filesModule'],
     },
     {
         id: 'csv',
@@ -182,6 +293,13 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'csvModule',
         moduleImport: '@qodalis/cli-csv',
+        examples: [
+            { command: 'echo "name,age\\nAlice,30\\nBob,25" | csv parse', description: 'Parse CSV and display as table' },
+            { command: 'echo "name,age\\nAlice,30\\nBob,25" | csv to-json', description: 'Convert CSV to JSON' },
+            { command: 'echo "name,age\\nAlice,30\\nBob,25" | csv filter --col=age --op=gt --val=28', description: 'Filter rows by condition' },
+            { command: 'echo "name,age\\nAlice,30\\nBob,25" | csv sort --col=age --dir=desc', description: 'Sort rows by column' },
+        ],
+        tryItDeps: ['filesModule'],
     },
     {
         id: 'markdown',
@@ -192,6 +310,11 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'markdownModule',
         moduleImport: '@qodalis/cli-markdown',
+        examples: [
+            { command: 'md render "# Hello World"', description: 'Render inline Markdown' },
+            { command: 'echo "## Title\\n- item 1\\n- item 2" | md render', description: 'Render piped Markdown' },
+        ],
+        tryItDeps: ['filesModule'],
     },
     {
         id: 'scp',
@@ -202,6 +325,13 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'scpModule',
         moduleImport: '@qodalis/cli-scp',
+        examples: [
+            { command: 'scp ls myserver:/home/user/', description: 'List remote directory' },
+            { command: 'scp myserver:/home/user/file.txt', description: 'Download a remote file' },
+            { command: 'scp ./local.txt myserver:/home/user/', description: 'Upload a local file' },
+            { command: 'scp cat myserver:/home/user/config.json', description: 'View remote file contents' },
+        ],
+        tryItDeps: ['filesModule'],
     },
     {
         id: 'stopwatch',
@@ -212,6 +342,11 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'stopwatchModule',
         moduleImport: '@qodalis/cli-stopwatch',
+        examples: [
+            { command: 'stopwatch', description: 'Start an interactive stopwatch' },
+            { command: 'stopwatch timer 5m', description: 'Start a 5-minute countdown timer' },
+            { command: 'stopwatch timer 1h30m', description: 'Start a 90-minute countdown' },
+        ],
     },
     {
         id: 'wget',
@@ -222,6 +357,12 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'wgetModule',
         moduleImport: '@qodalis/cli-wget',
+        examples: [
+            { command: 'wget https://example.com/file.json', description: 'Download a file' },
+            { command: 'wget https://example.com/data.csv -o mydata.csv', description: 'Download with custom filename' },
+            { command: 'wget https://example.com/report.pdf --save', description: 'Save to browser downloads' },
+        ],
+        tryItDeps: ['filesModule'],
     },
 
     // ===== Games (6) =====
@@ -234,6 +375,9 @@ export const PLUGINS: PluginData[] = [
         category: 'game',
         moduleExport: 'snakeModule',
         moduleImport: '@qodalis/cli-snake',
+        examples: [
+            { command: 'snake', description: 'Start a game of Snake — use arrow keys to move' },
+        ],
     },
     {
         id: 'tetris',
@@ -244,6 +388,9 @@ export const PLUGINS: PluginData[] = [
         category: 'game',
         moduleExport: 'tetrisModule',
         moduleImport: '@qodalis/cli-tetris',
+        examples: [
+            { command: 'tetris', description: 'Start a game of Tetris — arrow keys to move, up to rotate' },
+        ],
     },
     {
         id: '2048',
@@ -254,6 +401,9 @@ export const PLUGINS: PluginData[] = [
         category: 'game',
         moduleExport: 'game2048Module',
         moduleImport: '@qodalis/cli-2048',
+        examples: [
+            { command: '2048', description: 'Start the 2048 puzzle — use arrow keys to slide tiles' },
+        ],
     },
     {
         id: 'minesweeper',
@@ -264,6 +414,9 @@ export const PLUGINS: PluginData[] = [
         category: 'game',
         moduleExport: 'minesweeperModule',
         moduleImport: '@qodalis/cli-minesweeper',
+        examples: [
+            { command: 'minesweeper', description: 'Start Minesweeper — arrow keys to move, space to reveal, F to flag' },
+        ],
     },
     {
         id: 'wordle',
@@ -274,6 +427,9 @@ export const PLUGINS: PluginData[] = [
         category: 'game',
         moduleExport: 'wordleModule',
         moduleImport: '@qodalis/cli-wordle',
+        examples: [
+            { command: 'wordle', description: 'Start a Wordle game — guess a 5-letter word in 6 tries' },
+        ],
     },
     {
         id: 'sudoku',
@@ -284,6 +440,9 @@ export const PLUGINS: PluginData[] = [
         category: 'game',
         moduleExport: 'sudokuModule',
         moduleImport: '@qodalis/cli-sudoku',
+        examples: [
+            { command: 'sudoku', description: 'Start a Sudoku puzzle — choose difficulty at the start' },
+        ],
     },
 
     // ===== Language Packs (10) =====

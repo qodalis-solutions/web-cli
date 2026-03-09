@@ -271,96 +271,61 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
         progressBar.show();
         progressBar.update(0);
 
-        // Fill with pseudo-random data to prevent compression from skewing results
+        // Fill with pseudo-random data to prevent compression from skewing results.
+        // crypto.getRandomValues() is limited to 65536 bytes per call.
         const payload = new Uint8Array(UPLOAD_SIZE);
-        crypto.getRandomValues(payload);
+        const chunkSize = 65536;
+        for (let offset = 0; offset < UPLOAD_SIZE; offset += chunkSize) {
+            const length = Math.min(chunkSize, UPLOAD_SIZE - offset);
+            crypto.getRandomValues(new Uint8Array(payload.buffer, offset, length));
+        }
 
-        return new Promise<number>((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
+        // Use multiple smaller fetch() calls to measure upload speed.
+        // A single large POST to Cloudflare's __up may be blocked by CORS
+        // when custom headers trigger a preflight. Chunking also lets us
+        // report progress without XHR.
+        const CHUNK = 1024 * 1024; // 1 MB per request
+        const totalChunks = Math.ceil(UPLOAD_SIZE / CHUNK);
+        let uploaded = 0;
+        const startTime = performance.now();
 
-            // Start timing from the first progress event (excludes connection setup)
-            let startTime = 0;
-            let lastUpdateTime = 0;
-
-            const onAbort = () => {
-                xhr.abort();
-                cleanup();
-                reject(new DOMException('Upload aborted', 'AbortError'));
-            };
-
-            const cleanup = () => {
-                signal.removeEventListener('abort', onAbort);
-            };
-
+        for (let i = 0; i < totalChunks; i++) {
             if (signal.aborted) {
-                reject(new DOMException('Upload aborted', 'AbortError'));
-                return;
+                throw new DOMException('Upload aborted', 'AbortError');
             }
 
-            signal.addEventListener('abort', onAbort);
+            const start = i * CHUNK;
+            const end = Math.min(start + CHUNK, UPLOAD_SIZE);
+            const chunk = payload.slice(start, end);
 
-            xhr.upload.onprogress = (e) => {
-                const now = performance.now();
+            await fetch(url, {
+                method: 'POST',
+                body: chunk,
+                signal,
+            });
 
-                // Start timing from the first progress event
-                if (startTime === 0) {
-                    startTime = now;
-                    lastUpdateTime = now;
-                    return;
-                }
+            uploaded += chunk.length;
 
-                if (now - lastUpdateTime > 250) {
-                    lastUpdateTime = now;
-                    const elapsedSec = (now - startTime) / 1000;
-                    const avgSpeed = e.loaded / elapsedSec;
+            const elapsed = (performance.now() - startTime) / 1000;
+            const speed = uploaded / elapsed;
+            const pct = (uploaded / UPLOAD_SIZE) * 100;
+            progressBar.update(pct);
+            progressBar.setText(
+                `${formatSpeed(speed)} | ${formatBytes(uploaded)} / ${formatBytes(UPLOAD_SIZE)}`,
+            );
+        }
 
-                    if (e.lengthComputable) {
-                        const pct = (e.loaded / e.total) * 100;
-                        progressBar.update(pct);
-                    }
+        const totalSec = (performance.now() - startTime) / 1000;
+        const avgSpeed = UPLOAD_SIZE / totalSec;
 
-                    progressBar.setText(
-                        `${formatSpeed(avgSpeed)} | ${formatBytes(e.loaded)} / ${formatBytes(UPLOAD_SIZE)}`,
-                    );
-                }
-            };
+        progressBar.complete();
+        progressBar.hide();
 
-            xhr.onload = () => {
-                cleanup();
-                progressBar.complete();
-                progressBar.hide();
+        context.writer.writeSuccess(
+            `Upload: ${formatSpeed(avgSpeed)} (${formatBytes(UPLOAD_SIZE)} in ${totalSec.toFixed(1)}s)`,
+        );
 
-                // Use time from first progress event, not from before xhr.send()
-                const endTime = performance.now();
-                const totalSec =
-                    startTime > 0
-                        ? (endTime - startTime) / 1000
-                        : 1; // fallback to prevent division by zero
-                const avgSpeed = UPLOAD_SIZE / totalSec;
-
-                context.writer.writeSuccess(
-                    `Upload: ${formatSpeed(avgSpeed)} (${formatBytes(UPLOAD_SIZE)} in ${totalSec.toFixed(1)}s)`,
-                );
-
-                resolve(avgSpeed);
-            };
-
-            xhr.onerror = () => {
-                cleanup();
-                progressBar.hide();
-                reject(new Error('Upload request failed'));
-            };
-
-            xhr.ontimeout = () => {
-                cleanup();
-                progressBar.hide();
-                reject(new Error('Upload request timed out'));
-            };
-
-            xhr.open('POST', url);
-            xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-            xhr.send(payload);
-        });
+        return avgSpeed;
     }
 
     private printSummary(

@@ -218,19 +218,7 @@ export const usersModule: ICliUsersModule = {
             ICliUserSessionService_TOKEN,
         );
 
-        // Step 1: Show intro
-        context.writer.writeln('');
-        context.writer.writeln('============================================');
-        context.writer.writeln('  Welcome to Qodalis CLI User Setup');
-        context.writer.writeln('============================================');
-        context.writer.writeln('');
-        context.writer.writeln('This system requires initial user configuration.');
-        context.writer.writeln('');
-        context.writer.writeln("A 'root' superuser will be created automatically.");
-        context.writer.writeln('You will now create your personal user account.');
-        context.writer.writeln('');
-
-        // Step 2: Create root user silently (skip if already exists)
+        // Create root user silently (skip if already exists)
         let rootUser: ICliUser;
         const existingRoot = await firstValueFrom(usersStore.getUser('root'));
         if (existingRoot) {
@@ -245,105 +233,28 @@ export const usersModule: ICliUsersModule = {
             await authService.setPassword(rootUser.id, 'root');
         }
 
-        // Step 3: Prompt for custom user
-        const usernameRegex = /^[a-z_][a-z0-9_-]{0,31}$/;
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-        // Username
-        let username: string;
-        while (true) {
-            const input = await context.reader.readLine('Username: ');
-            if (input === null) return false;
-            if (!usernameRegex.test(input)) {
-                context.writer.writeError(
-                    'Invalid username. Must match /^[a-z_][a-z0-9_-]{0,31}$/.',
-                );
-                continue;
-            }
-            const existingUser = await firstValueFrom(usersStore.getUser(input));
-            if (existingUser) {
-                context.writer.writeError(
-                    `Username '${input}' already exists. Choose another.`,
-                );
-                continue;
-            }
-            username = input;
-            break;
+        // Create default user and auto-login (non-blocking setup)
+        const username = 'user';
+        const homeDir = `/home/${username}`;
+        let defaultUser: ICliUser;
+        const existingDefault = await firstValueFrom(usersStore.getUser(username));
+        if (existingDefault) {
+            defaultUser = existingDefault;
+        } else {
+            defaultUser = await usersStore.createUser({
+                name: username,
+                email: `${username}@localhost`,
+                groups: [],
+                homeDir,
+            });
+            await authService.setPassword(defaultUser.id, username);
         }
 
-        // Email
-        let email: string;
-        while (true) {
-            const input = await context.reader.readLine('Email: ');
-            if (input === null) return false;
-            if (!emailRegex.test(input)) {
-                context.writer.writeError(
-                    'Invalid email address.',
-                );
-                continue;
-            }
-            email = input;
-            break;
-        }
-
-        // Home directory
-        const homeDirInput = await context.reader.readLine(
-            `Home directory [/home/${username}]: `,
-        );
-        if (homeDirInput === null) return false;
-        const homeDir = homeDirInput || `/home/${username}`;
-
-        // Groups
-        const groupsInput = await context.reader.readLine(
-            'Groups (comma-separated) []: ',
-        );
-        if (groupsInput === null) return false;
-        const groups = groupsInput
-            ? groupsInput.split(',').map((g) => g.trim()).filter(Boolean)
-            : [];
-
-        // Password
-        let password: string;
-        while (true) {
-            const pw = await context.reader.readPassword('Password: ');
-            if (pw === null) return false;
-            if (!pw) {
-                context.writer.writeError('Password cannot be empty.');
-                continue;
-            }
-
-            const confirm = await context.reader.readPassword(
-                'Confirm password: ',
-            );
-            if (confirm === null) return false;
-
-            if (pw !== confirm) {
-                context.writer.writeError(
-                    'Passwords do not match. Please try again.',
-                );
-                continue;
-            }
-            password = pw;
-            break;
-        }
-
-        // Step 4: Create user and auto-login
-        const user = await usersStore.createUser({
-            name: username,
-            email,
-            groups,
-            homeDir,
-        });
-        await authService.setPassword(user.id, password);
         await sessionService.setUserSession({
-            user,
+            user: defaultUser,
             loginTime: Date.now(),
             lastActivity: Date.now(),
         });
-
-        context.writer.writeSuccess(
-            `User '${username}' created successfully.`,
-        );
 
         // Create home directories if the files module is installed
         try {
@@ -355,11 +266,6 @@ export const usersModule: ICliUsersModule = {
                 if (!fs.exists(homeDir)) {
                     fs.createDirectory(homeDir, true);
                 }
-                // Create a welcome file in the new user's home
-                fs.createFile(
-                    `${homeDir}/welcome.txt`,
-                    'Welcome to Qodalis CLI filesystem!\n',
-                );
                 fs.setHomePath(homeDir);
                 fs.setCurrentDirectory(homeDir);
                 await fs.persist();

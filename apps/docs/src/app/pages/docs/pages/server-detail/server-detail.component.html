@@ -46,7 +46,9 @@ builder.addModule(new WeatherModule());</code></pre>
         <pre><code>import &#123; CliOptions &#125; from '@qodalis/cli-core';
 
 const options: CliOptions = &#123;
-    serverUrl: 'http://localhost:8047',
+    servers: [
+        &#123; name: 'node', url: 'http://localhost:8047' &#125;,
+    ],
 &#125;;
 
 // Angular: &lt;cli [options]="options"&gt;&lt;/cli&gt;
@@ -104,7 +106,9 @@ builder.add_module(WeatherModule())</code></pre>
         <pre><code>import &#123; CliOptions &#125; from '@qodalis/cli-core';
 
 const options: CliOptions = &#123;
-    serverUrl: 'http://localhost:8048',
+    servers: [
+        &#123; name: 'python', url: 'http://localhost:8048' &#125;,
+    ],
 &#125;;
 
 // Angular: &lt;cli [options]="options"&gt;&lt;/cli&gt;
@@ -167,7 +171,9 @@ app.Run();</code></pre>
         <pre><code>import &#123; CliOptions &#125; from '@qodalis/cli-core';
 
 const options: CliOptions = &#123;
-    serverUrl: 'http://localhost:8046',
+    servers: [
+        &#123; name: 'dotnet', url: 'http://localhost:8046' &#125;,
+    ],
 &#125;;
 
 // Angular: &lt;cli [options]="options"&gt;&lt;/cli&gt;

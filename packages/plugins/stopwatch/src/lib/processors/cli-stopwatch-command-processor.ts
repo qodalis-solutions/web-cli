@@ -40,6 +40,7 @@ class CliStopwatchTimerCommandProcessor implements ICliCommandProcessor {
     description = 'Run a countdown timer (e.g. timer 5m, timer 1h30m, timer 90s)';
     author = DefaultLibraryAuthor;
     version = LIBRARY_VERSION;
+    acceptsRawInput = true;
 
     private intervalId: ReturnType<typeof setInterval> | null = null;
     private remaining = 0;
