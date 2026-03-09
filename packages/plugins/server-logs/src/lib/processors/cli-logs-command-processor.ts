@@ -178,20 +178,20 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
             let index = 0;
 
             ws.onopen = () => {
-                context.writer.writeWarning('Connected to live logs');
+                context.writer.writeSuccess('Streaming live logs...');
 
                 if (command.args['level']) {
-                    context.writer.writeWarning(
-                        `Filtering logs by: level=${command.args['level']}`,
+                    context.writer.writeInfo(
+                        `Level filter: ${command.args['level']}`,
                     );
                 }
                 if (command.args['pattern']) {
-                    context.writer.writeWarning(
-                        `Filtering logs by: pattern=${command.args['pattern']}`,
+                    context.writer.writeInfo(
+                        `Pattern filter: ${command.args['pattern']}`,
                     );
                 }
 
-                context.writer.writeWarning('Press Ctrl+C to stop');
+                context.writer.writeInfo('Press Ctrl+C to stop');
                 context.writer.writeln();
             };
 
@@ -245,7 +245,7 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
                     context.writer.writeToFile(filename, logs.join('\n'));
                 }
 
-                context.writer.writeWarning('Disconnected from live logs');
+                context.writer.writeInfo('Disconnected from live logs');
                 resolve();
             };
 
