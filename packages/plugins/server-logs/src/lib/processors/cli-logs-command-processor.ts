@@ -65,7 +65,7 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
             name: 'server',
             type: 'string',
             description:
-                'The server to connect to, e.g. "http://localhost:5000"',
+                'Server name or URL to connect to, e.g. "node" or "http://localhost:5000"',
             required: false,
         },
         {
@@ -94,12 +94,35 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const serverUrl =
-            command.args['server'] || context.options?.servers?.[0]?.url;
+        const serverArg = command.args['server'] as string | undefined;
+        let serverUrl: string | undefined;
+
+        if (serverArg) {
+            // If it looks like a URL, use it directly; otherwise resolve as server name
+            if (serverArg.startsWith('http://') || serverArg.startsWith('https://')) {
+                serverUrl = serverArg;
+            } else {
+                const match = context.options?.servers?.find(
+                    (s) => s.name === serverArg,
+                );
+                if (match) {
+                    serverUrl = match.url;
+                } else {
+                    context.writer.writeError(
+                        `Server '${serverArg}' not found. Available servers: ${
+                            context.options?.servers?.map((s) => s.name).join(', ') || 'none'
+                        }`,
+                    );
+                    return;
+                }
+            }
+        } else {
+            serverUrl = context.options?.servers?.[0]?.url;
+        }
 
         if (!serverUrl) {
             context.writer.writeError(
-                'No server URL provided. Use --server=<url> or configure a server in the CLI options.',
+                'No server URL provided. Use --server=<name|url> or configure a server in the CLI options.',
             );
             return;
         }
