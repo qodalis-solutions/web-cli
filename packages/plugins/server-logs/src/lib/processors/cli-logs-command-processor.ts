@@ -13,18 +13,60 @@ import { LIBRARY_VERSION } from '../version';
 
 const levels = ['verbose', 'debug', 'information', 'warning', 'error', 'fatal'];
 
+/**
+ * Extends the built-in `server` command with a `logs` sub-command.
+ * Usage: `server logs`, `server logs live`, `server logs --server=node --level=error`
+ */
 export class CliLogsCommandProcessor implements ICliCommandProcessor {
-    command = 'server-logs';
+    command = 'server';
 
-    description?: string | undefined = 'Show live logs';
+    description?: string | undefined = 'Manage remote CLI server connections';
 
-    processors?: ICliCommandProcessor[] | undefined = [];
+    extendsProcessor = true;
+
+    originalProcessor?: ICliCommandProcessor;
+
+    processors?: ICliCommandProcessor[] | undefined = [
+        new ServerLogsSubProcessor(),
+    ];
 
     metadata?: CliProcessorMetadata | undefined = {
         requireServer: true,
         icon: '📜',
         requiredCoreVersion: '>=2.0.0 <3.0.0',
         requiredCliVersion: '>=2.0.0 <3.0.0',
+    };
+
+    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
+
+    version = LIBRARY_VERSION;
+
+    async processCommand(
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        // Delegate to the original server processor
+        if (this.originalProcessor?.processCommand) {
+            return this.originalProcessor.processCommand(command, context);
+        }
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        if (this.originalProcessor?.writeDescription) {
+            this.originalProcessor.writeDescription(context);
+        }
+    }
+}
+
+class ServerLogsSubProcessor implements ICliCommandProcessor {
+    command = 'logs';
+
+    description?: string | undefined = 'Stream live server logs via WebSocket';
+
+    processors?: ICliCommandProcessor[] | undefined = [];
+
+    metadata?: CliProcessorMetadata | undefined = {
+        icon: '📜',
     };
 
     parameters?: ICliCommandParameterDescriptor[] | undefined = [
@@ -34,7 +76,7 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
             description: 'The regex pattern to search for in the logs',
             required: false,
             validator: (value: string) => {
-                const isValid = this.isValidRegex(value);
+                const isValid = isValidRegex(value);
                 return {
                     valid: isValid,
                     message: isValid
@@ -98,7 +140,6 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
         let serverUrl: string | undefined;
 
         if (serverArg) {
-            // If it looks like a URL, use it directly; otherwise resolve as server name
             if (serverArg.startsWith('http://') || serverArg.startsWith('https://')) {
                 serverUrl = serverArg;
             } else {
@@ -236,16 +277,16 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
         writer.writeln();
         writer.writeln('📋 Usage:');
         writer.writeln(
-            `  ${writer.wrapInColor('server-logs', CliForegroundColor.Cyan)}                                     Start streaming`,
+            `  ${writer.wrapInColor('server logs', CliForegroundColor.Cyan)}                                     Start streaming`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('server-logs --level=error', CliForegroundColor.Cyan)}                        Filter by level`,
+            `  ${writer.wrapInColor('server logs --level=error', CliForegroundColor.Cyan)}                        Filter by level`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('server-logs --pattern="Exception"', CliForegroundColor.Cyan)}                Filter by regex`,
+            `  ${writer.wrapInColor('server logs --pattern="Exception"', CliForegroundColor.Cyan)}                Filter by regex`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('server-logs --server=http://localhost:5000', CliForegroundColor.Cyan)}       Custom server`,
+            `  ${writer.wrapInColor('server logs --server=node', CliForegroundColor.Cyan)}                        Specific server`,
         );
         writer.writeln();
         writer.writeln(`⚙️  Options:`);
@@ -256,7 +297,7 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
             `  ${writer.wrapInColor('--pattern', CliForegroundColor.Yellow)}    Regex pattern to highlight matches`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('--server', CliForegroundColor.Yellow)}     Server URL to connect to`,
+            `  ${writer.wrapInColor('--server', CliForegroundColor.Yellow)}     Server name or URL to connect to`,
         );
         writer.writeln(
             `  ${writer.wrapInColor('--file', CliForegroundColor.Yellow)}       Export logs to a file on disconnect`,
@@ -266,13 +307,13 @@ export class CliLogsCommandProcessor implements ICliCommandProcessor {
             `💡 Press ${writer.wrapInColor('Ctrl+C', CliForegroundColor.Yellow)} to stop streaming`,
         );
     }
+}
 
-    private isValidRegex(pattern: string): boolean {
-        try {
-            new RegExp(pattern);
-            return true;
-        } catch (e) {
-            return false;
-        }
+function isValidRegex(pattern: string): boolean {
+    try {
+        new RegExp(pattern);
+        return true;
+    } catch (e) {
+        return false;
     }
 }
