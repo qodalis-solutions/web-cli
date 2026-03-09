@@ -122,6 +122,19 @@ export const filesModule: ICliFilesModule = {
         },
     ],
 
+    translations: {
+        es: { 'cli.files.description': 'Sistema de archivos virtual en el navegador' },
+        fr: { 'cli.files.description': 'Système de fichiers virtuel dans le navigateur' },
+        de: { 'cli.files.description': 'Virtuelles Dateisystem im Browser' },
+        pt: { 'cli.files.description': 'Sistema de arquivos virtual no navegador' },
+        it: { 'cli.files.description': 'File system virtuale nel browser' },
+        ja: { 'cli.files.description': 'ブラウザ内仮想ファイルシステム' },
+        ko: { 'cli.files.description': '브라우저 내 가상 파일 시스템' },
+        zh: { 'cli.files.description': '浏览器内虚拟文件系统' },
+        ru: { 'cli.files.description': 'Виртуальная файловая система в браузере' },
+        ro: { 'cli.files.description': 'Sistem de fișiere virtual în browser' },
+    },
+
     configure(config: CliFilesModuleConfig): ICliModule {
         return { ...this, config };
     },

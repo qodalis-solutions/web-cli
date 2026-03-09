@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/react-cli",
-  "version": "2.0.1",
+  "version": "2.0.0-beta.1",
   "description": "React wrapper for the @qodalis CLI terminal engine.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

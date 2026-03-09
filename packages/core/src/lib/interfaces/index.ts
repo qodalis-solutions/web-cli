@@ -460,6 +460,22 @@ export interface ICliModule {
     config?: Record<string, any>;
 
     /**
+     * Per-locale translation maps shipped by this module.
+     * Keyed by locale code (e.g. 'es', 'fr'), each value is a flat
+     * key-value map of translation keys to translated strings.
+     *
+     * These are automatically registered with the translation service
+     * during module boot — no manual onInit() code required.
+     *
+     * @example
+     * translations: {
+     *   es: { 'cli.guid.description': 'Generar y validar UUIDs' },
+     *   fr: { 'cli.guid.description': 'Générer et valider des UUIDs' },
+     * }
+     */
+    translations?: Record<string, Record<string, string>>;
+
+    /**
      * Returns a configured copy of this module.
      * Modules should narrow the config type via a module-specific interface.
      */

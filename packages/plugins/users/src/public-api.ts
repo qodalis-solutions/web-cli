@@ -86,6 +86,19 @@ export const usersModule: ICliUsersModule = {
         },
     ],
 
+    translations: {
+        es: { 'cli.users.description': 'Gestión de usuarios y grupos con autenticación' },
+        fr: { 'cli.users.description': 'Gestion des utilisateurs et groupes avec authentification' },
+        de: { 'cli.users.description': 'Benutzer- und Gruppenverwaltung mit Authentifizierung' },
+        pt: { 'cli.users.description': 'Gerenciamento de usuários e grupos com autenticação' },
+        it: { 'cli.users.description': 'Gestione utenti e gruppi con autenticazione' },
+        ja: { 'cli.users.description': '認証付きユーザーとグループの管理' },
+        ko: { 'cli.users.description': '인증 기반 사용자 및 그룹 관리' },
+        zh: { 'cli.users.description': '带身份认证的用户和组管理' },
+        ru: { 'cli.users.description': 'Управление пользователями и группами с аутентификацией' },
+        ro: { 'cli.users.description': 'Gestionare utilizatori și grupuri cu autentificare' },
+    },
+
     configure(config: CliUsersModuleConfig): ICliModule {
         return { ...this, config };
     },

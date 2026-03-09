@@ -121,6 +121,13 @@ export class CliBoot {
             this.services.set(module.services);
         }
 
+        // Auto-register module translations (before onInit so modules can override)
+        if (module.translations) {
+            for (const [locale, translations] of Object.entries(module.translations)) {
+                context.translator.addTranslations(locale, translations);
+            }
+        }
+
         // Module lifecycle: onInit (before processors)
         if (module.onInit) {
             try {
