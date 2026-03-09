@@ -41,12 +41,16 @@ describe('CliTextToImageCommandProcessor', () => {
             expect(processor.metadata).toBeDefined();
             expect(processor.metadata!.icon).toBeDefined();
         });
+
+        it('should have metadata with module name', () => {
+            expect(processor.metadata!.module).toBe('text-to-image');
+        });
     });
 
     describe('parameters', () => {
-        it('should have 6 parameters', () => {
+        it('should have 8 parameters', () => {
             expect(processor.parameters).toBeDefined();
-            expect(processor.parameters!.length).toBe(6);
+            expect(processor.parameters!.length).toBe(8);
         });
 
         it('should have parameter named "fileName"', () => {
@@ -93,6 +97,22 @@ describe('CliTextToImageCommandProcessor', () => {
             expect(param!.type).toBe('string');
         });
 
+        it('should have parameter named "padding"', () => {
+            const param = processor.parameters!.find(
+                (p) => p.name === 'padding',
+            );
+            expect(param).toBeDefined();
+            expect(param!.type).toBe('integer');
+        });
+
+        it('should have parameter named "textAlign"', () => {
+            const param = processor.parameters!.find(
+                (p) => p.name === 'textAlign',
+            );
+            expect(param).toBeDefined();
+            expect(param!.type).toBe('string');
+        });
+
         it('should contain all expected parameter names', () => {
             const names = processor.parameters!.map((p) => p.name);
             expect(names).toContain('fileName');
@@ -101,6 +121,14 @@ describe('CliTextToImageCommandProcessor', () => {
             expect(names).toContain('bgColor');
             expect(names).toContain('textColor');
             expect(names).toContain('font');
+            expect(names).toContain('padding');
+            expect(names).toContain('textAlign');
+        });
+
+        it('should have all parameters marked as optional', () => {
+            for (const param of processor.parameters!) {
+                expect(param.required).toBe(false);
+            }
         });
     });
 

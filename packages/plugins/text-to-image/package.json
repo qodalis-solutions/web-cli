@@ -15,7 +15,9 @@
     "terminal",
     "text-to-image",
     "image-generation",
-    "ascii-art"
+    "canvas",
+    "png",
+    "text-rendering"
   ],
   "umd": "./umd/index.js",
   "unpkg": "./umd/index.js",
