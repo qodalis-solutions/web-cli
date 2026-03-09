@@ -30,4 +30,4 @@ server-logs --help # for more options
 
 # Dependencies
 
-This extension is dependent on a server which use signalR as a transport layer.
+This extension connects to a Qodalis CLI server via WebSocket at `/ws/v1/cli/logs`.
