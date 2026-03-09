@@ -168,6 +168,7 @@ class ServerReconnectProcessor implements ICliCommandChildProcessor {
 class ServerDefaultProcessor implements ICliCommandChildProcessor {
     command = 'default';
     description = 'Get or set the default server for ambiguous commands';
+    acceptsRawInput = true;
     parent?: ICliCommandProcessor;
     parameters?: ICliCommandParameterDescriptor[] = [
         {
