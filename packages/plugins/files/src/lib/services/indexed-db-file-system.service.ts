@@ -7,7 +7,7 @@ const STORE_NAME = 'filesystem';
 const ROOT_KEY = 'root';
 const CWD_KEY = 'cwd';
 const HOME_KEY = 'home';
-const DEFAULT_HOME = '/home/user';
+const DEFAULT_HOME = '/';
 
 function createSeedFileSystem(): IFileNode {
     const now = Date.now();

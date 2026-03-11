@@ -9,7 +9,7 @@ export default defineConfig([
         external: ['@qodalis/cli-core', 'qr-code-styling'],
     },
     {
-        entry: ['src/cli-entrypoint.ts'],
+        entry: { index: 'src/cli-entrypoint.ts' },
         format: ['iife'],
         outDir: '../../../dist/qr/umd',
         globalName: 'qr',

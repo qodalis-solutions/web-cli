@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-users",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "description": "@qodalis/cli extension for user management commands (whoami, adduser, listusers, su).",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
@@ -18,8 +18,8 @@
     "whoami",
     "adduser"
   ],
-  "umd": "./umd/index.js",
-  "unpkg": "./umd/index.js",
+  "umd": "./umd/index.global.js",
+  "unpkg": "./umd/index.global.js",
   "dependencies": {
     "@qodalis/cli-core": "workspace:*"
   },

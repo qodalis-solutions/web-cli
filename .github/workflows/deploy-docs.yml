@@ -53,6 +53,7 @@ jobs:
           cp deploy/index.html deploy/404.html
           cp assets/github/CNAME deploy/CNAME
           touch deploy/.nojekyll
+          find deploy -name '.gitignore' -delete
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
