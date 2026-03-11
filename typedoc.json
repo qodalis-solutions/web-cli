@@ -1,4 +1,5 @@
 {
+  "tsconfig": "./tsconfig.typedoc.json",
   "entryPoints": [
     "packages/core/src/public-api.ts",
     "packages/cli/src/public-api.ts",
