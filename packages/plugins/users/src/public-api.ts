@@ -182,6 +182,7 @@ export const usersModule: ICliUsersModule = {
             ((user: ICliUser) => user.name);
 
         // Subscribe session changes to execution context
+        let previousUserId: string | null = null;
         sessionService.getUserSession().subscribe((session) => {
             if (session) {
                 context.userSession = {
@@ -196,13 +197,22 @@ export const usersModule: ICliUsersModule = {
                     );
                     if (fs) {
                         if (session.user.homeDir) {
+                            // Create home directory if it doesn't exist
+                            if (!fs.exists(session.user.homeDir)) {
+                                fs.createDirectory(session.user.homeDir, true);
+                            }
                             fs.setHomePath(session.user.homeDir);
+                            // When user changes, move to their home directory
+                            if (previousUserId !== session.user.id) {
+                                fs.setCurrentDirectory(session.user.homeDir);
+                            }
                         }
                         fs.setCurrentUser(session.user.id, session.user.groups);
                     }
                 } catch {
                     // Files module not installed — skip
                 }
+                previousUserId = session.user.id;
             }
         });
     },
@@ -228,56 +238,130 @@ export const usersModule: ICliUsersModule = {
                 name: 'root',
                 email: 'root@localhost',
                 groups: ['admin'],
-                homeDir: '/home/root',
+                homeDir: '/',
             });
             await authService.setPassword(rootUser.id, 'root');
         }
 
-        // Create default user and auto-login (non-blocking setup)
-        const username = 'user';
-        const homeDir = `/home/${username}`;
-        let defaultUser: ICliUser;
-        const existingDefault = await firstValueFrom(usersStore.getUser(username));
-        if (existingDefault) {
-            defaultUser = existingDefault;
-        } else {
-            defaultUser = await usersStore.createUser({
-                name: username,
-                email: `${username}@localhost`,
-                groups: [],
-                homeDir,
-            });
-            await authService.setPassword(defaultUser.id, username);
-        }
-
-        await sessionService.setUserSession({
-            user: defaultUser,
-            loginTime: Date.now(),
-            lastActivity: Date.now(),
-        });
-
-        // Create home directories if the files module is installed
+        // Set up filesystem for root
         try {
             const fs = context.services.get<any>('cli-file-system-service');
             if (fs) {
-                if (!fs.exists(rootUser.homeDir)) {
-                    fs.createDirectory(rootUser.homeDir, true);
-                }
-                if (!fs.exists(homeDir)) {
-                    fs.createDirectory(homeDir, true);
-                }
-                fs.setHomePath(homeDir);
-                fs.setCurrentDirectory(homeDir);
+                fs.setHomePath('/');
+                fs.setCurrentDirectory('/');
                 await fs.persist();
             }
         } catch {
             // Files module not installed — skip
         }
 
+        // Log in as root initially
+        await sessionService.setUserSession({
+            user: rootUser,
+            loginTime: Date.now(),
+            lastActivity: Date.now(),
+        });
+
+        // Prompt for user creation
+        context.writer.writeln('');
+        context.writer.writeInfo('Welcome! Let\'s create your user account.');
+        context.writer.writeln('');
+
+        let newUser: ICliUser | null = null;
+
+        while (!newUser) {
+            const username = await context.reader.readLine('Username: ');
+            if (username === null || !username.trim()) {
+                context.writer.writeError('Username is required.');
+                continue;
+            }
+
+            const name = username.trim();
+
+            if (name === 'root') {
+                context.writer.writeError('Cannot create a user named "root".');
+                continue;
+            }
+
+            const email = await context.reader.readLine('Email: ');
+            if (email === null || !email.trim()) {
+                context.writer.writeError('Email is required.');
+                continue;
+            }
+
+            const password = await context.reader.readPassword('Password: ');
+            if (password === null) {
+                context.writer.writeError('Password is required.');
+                continue;
+            }
+
+            const confirmPassword = await context.reader.readPassword('Confirm password: ');
+            if (confirmPassword === null) {
+                context.writer.writeError('Password confirmation is required.');
+                continue;
+            }
+
+            if (password !== confirmPassword) {
+                context.writer.writeError('Passwords do not match.');
+                continue;
+            }
+
+            const defaultHome = `/home/${name}`;
+            const homeInput = await context.reader.readLine(`Home directory (${defaultHome}): `);
+            const homeDir = homeInput?.trim() || defaultHome;
+
+            try {
+                newUser = await usersStore.createUser({
+                    name,
+                    email: email.trim(),
+                    groups: ['admin'],
+                    homeDir,
+                });
+                await authService.setPassword(newUser.id, password);
+            } catch (e) {
+                context.writer.writeError(e?.toString() || 'Failed to create user.');
+                continue;
+            }
+        }
+
+        // Log in as the new user
+        await sessionService.setUserSession({
+            user: newUser,
+            loginTime: Date.now(),
+            lastActivity: Date.now(),
+        });
+
+        // Flag for onAfterBoot to create home dir (fs service not available yet)
+        (this as any)._pendingHomeSetup = newUser;
+
         return true;
     },
 
     async onAfterBoot(context) {
+        // Create home dir for newly created user (deferred from onSetup
+        // because the files module hasn't booted yet at that point)
+        const pendingUser = (this as any)._pendingHomeSetup as ICliUser | undefined;
+        if (pendingUser) {
+            delete (this as any)._pendingHomeSetup;
+            try {
+                const fs = context.services.get<any>('cli-file-system-service');
+                if (fs && pendingUser.homeDir) {
+                    if (!fs.exists(pendingUser.homeDir)) {
+                        fs.createDirectory(pendingUser.homeDir, true);
+                    }
+                    fs.setHomePath(pendingUser.homeDir);
+                    fs.setCurrentDirectory(pendingUser.homeDir);
+                    fs.setCurrentUser(pendingUser.id, pendingUser.groups);
+                    await fs.persist();
+                }
+            } catch {
+                // Files module not installed — skip
+            }
+            context.writer.write('\x1b[2J\x1b[H');
+            context.writer.writeSuccess(`User "${pendingUser.name}" created and logged in.`);
+            context.showPrompt();
+        }
+
         const moduleConfig = (this.config || {}) as CliUsersModuleConfig;
         if (!moduleConfig.requirePasswordOnBoot) return;
 

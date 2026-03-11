@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-cron",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "description": "Schedule commands to run on a repeating interval",
   "author": "Qodalis Solutions",
   "license": "MIT",
@@ -15,8 +15,8 @@
     "terminal",
     "cron"
   ],
-  "umd": "./umd/index.js",
-  "unpkg": "./umd/index.js",
+  "umd": "./umd/index.global.js",
+  "unpkg": "./umd/index.global.js",
   "dependencies": {
     "@qodalis/cli-core": "workspace:*"
   },

@@ -44,6 +44,7 @@ function setupHarness(): { harness: CliTestHarness; fs: IndexedDbFileSystemServi
 
     // Seed the filesystem
     fs.createDirectory('/home/user');
+    fs.setCurrentDirectory('/home/user');
     fs.createFile('/home/user/hello.txt', 'Hello World\nhello again\nGoodbye\n');
     fs.createFile('/home/user/numbers.txt', '3\n1\n4\n1\n5\n9\n2\n6\n5\n');
     fs.createFile('/home/user/data.csv', 'name,age,city\nalice,30,NYC\nbob,25,LA\ncharlie,35,NYC\n');
