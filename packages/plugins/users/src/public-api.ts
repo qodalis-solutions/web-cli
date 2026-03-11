@@ -324,37 +324,42 @@ export const usersModule: ICliUsersModule = {
             }
         }
 
-        // Log in as the new user (session subscriber handles home dir creation)
+        // Log in as the new user
         await sessionService.setUserSession({
             user: newUser,
             loginTime: Date.now(),
             lastActivity: Date.now(),
         });
 
-        context.writer.writeln('');
-        context.writer.writeSuccess(`User "${newUser.name}" created and logged in.`);
+        // Flag for onAfterBoot to create home dir (fs service not available yet)
+        (this as any)._pendingHomeSetup = newUser;
 
         return true;
     },
 
     async onAfterBoot(context) {
-        // Sync filesystem with current session now that all modules are booted
-        try {
-            const fs = context.services.get<any>('cli-file-system-service');
-            if (fs && context.userSession) {
-                const homeDir = context.userSession.user.homeDir;
-                if (homeDir) {
-                    if (!fs.exists(homeDir)) {
-                        fs.createDirectory(homeDir, true);
+        // Create home dir for newly created user (deferred from onSetup
+        // because the files module hasn't booted yet at that point)
+        const pendingUser = (this as any)._pendingHomeSetup as ICliUser | undefined;
+        if (pendingUser) {
+            delete (this as any)._pendingHomeSetup;
+            try {
+                const fs = context.services.get<any>('cli-file-system-service');
+                if (fs && pendingUser.homeDir) {
+                    if (!fs.exists(pendingUser.homeDir)) {
+                        fs.createDirectory(pendingUser.homeDir, true);
                     }
-                    fs.setHomePath(homeDir);
-                    fs.setCurrentDirectory(homeDir);
-                    fs.setCurrentUser(context.userSession.user.id, context.userSession.user.groups);
+                    fs.setHomePath(pendingUser.homeDir);
+                    fs.setCurrentDirectory(pendingUser.homeDir);
+                    fs.setCurrentUser(pendingUser.id, pendingUser.groups);
                     await fs.persist();
                 }
+            } catch {
+                // Files module not installed — skip
             }
-        } catch {
-            // Files module not installed — skip
+            context.writer.write('\x1b[2J\x1b[H');
+            context.writer.writeSuccess(`User "${pendingUser.name}" created and logged in.`);
+            context.showPrompt();
         }
 
         const moduleConfig = (this.config || {}) as CliUsersModuleConfig;
