@@ -27,6 +27,12 @@ jobs:
           node-version: 22
           cache: "pnpm"
 
+      - name: Install Rust and wasm-pack
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --target wasm32-unknown-unknown
+          source "$HOME/.cargo/env"
+          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
