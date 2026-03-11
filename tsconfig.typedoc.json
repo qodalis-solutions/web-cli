@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "allowSyntheticDefaultImports": true,
+    "noPropertyAccessFromIndexSignature": false
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "apps",
+    "tools",
+    "packages/react-cli",
+    "packages/vue-cli",
+    "packages/angular-cli",
+    "**/*.spec.ts"
+  ]
+}
