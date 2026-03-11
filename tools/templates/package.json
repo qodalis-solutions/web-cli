@@ -1,0 +1,34 @@
+{
+  "name": "@qodalis/cli-{{name}}",
+  "version": "{{version}}",
+  "description": "{{description}}",
+  "author": "Nicolae Lupei, Qodalis Solutions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qodalis-solutions/web-cli"
+  },
+  "homepage": "https://qodalis.com",
+  "keywords": [
+    "cli",
+    "qodalis",
+    "terminal",
+    "{{name}}"
+  ],
+  "umd": "./umd/index.js",
+  "unpkg": "./umd/index.js",
+  "dependencies": {
+    "@qodalis/cli-core": "workspace:*"
+  },
+  "sideEffects": false,
+  "main": "./public-api.js",
+  "module": "./public-api.mjs",
+  "types": "./public-api.d.ts",
+  "exports": {
+    ".": {
+      "types": "./public-api.d.ts",
+      "import": "./public-api.mjs",
+      "require": "./public-api.js"
+    }
+  }
+}

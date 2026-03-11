@@ -1,0 +1,37 @@
+{
+  "name": "qr",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/plugins/qr/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsup",
+          "cp package.json ../../../dist/qr/package.json"
+        ],
+        "cwd": "packages/plugins/qr",
+        "parallel": false
+      },
+      "inputs": [
+        "production",
+        "sharedGlobals"
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/qr"
+      ]
+    },
+    "test": {
+      "executor": "@angular-devkit/build-angular:karma",
+      "options": {
+        "tsConfig": "packages/plugins/qr/tsconfig.spec.json",
+        "polyfills": [
+          "zone.js",
+          "zone.js/testing"
+        ],
+        "browsers": "ChromeHeadless",
+        "watch": false
+      }
+    }
+  }
+}

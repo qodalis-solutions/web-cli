@@ -1,0 +1,47 @@
+{
+  "name": "demo-react",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "@qodalis/react-cli": "workspace:*",
+    "@qodalis/cli": "workspace:*",
+    "@qodalis/cli-core": "workspace:*",
+    "@qodalis/cli-guid": "workspace:*",
+    "@qodalis/cli-regex": "workspace:*",
+    "@qodalis/cli-text-to-image": "workspace:*",
+    "@qodalis/cli-speed-test": "workspace:*",
+    "@qodalis/cli-browser-storage": "workspace:*",
+    "@qodalis/cli-string": "workspace:*",
+    "@qodalis/cli-todo": "workspace:*",
+    "@qodalis/cli-curl": "workspace:*",
+    "@qodalis/cli-password-generator": "workspace:*",
+    "@qodalis/cli-qr": "workspace:*",
+    "@qodalis/cli-yesno": "workspace:*",
+    "@qodalis/cli-server-logs": "workspace:*",
+    "@qodalis/cli-users": "workspace:*",
+    "@qodalis/cli-files": "workspace:*"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.48.0",
+    "vite": "^7.3.1"
+  }
+}

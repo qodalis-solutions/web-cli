@@ -1,0 +1,25 @@
+{
+  "name": "2048",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/plugins/2048/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsup",
+          "cp package.json ../../../dist/2048/package.json"
+        ],
+        "cwd": "packages/plugins/2048",
+        "parallel": false
+      },
+      "inputs": [
+        "production",
+        "sharedGlobals"
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/2048"
+      ]
+    }
+  }
+}

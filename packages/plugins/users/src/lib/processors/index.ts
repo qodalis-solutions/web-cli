@@ -1,0 +1,14 @@
+export { CliWhoamiCommandProcessor } from './cli-whoami-command-processor';
+export { CliAddUserCommandProcessor } from './cli-add-user-command-processor';
+export { CliListUsersCommandProcessor } from './cli-list-users-command-processor';
+export { CliSwitchUserCommandProcessor } from './cli-switch-user-command-processor';
+export { CliUserdelCommandProcessor } from './cli-userdel-command-processor';
+export { CliUsermodCommandProcessor } from './cli-usermod-command-processor';
+export { CliPasswdCommandProcessor } from './cli-passwd-command-processor';
+export { CliLoginCommandProcessor } from './cli-login-command-processor';
+export { CliLogoutCommandProcessor } from './cli-logout-command-processor';
+export { CliIdCommandProcessor } from './cli-id-command-processor';
+export { CliGroupsCommandProcessor } from './cli-groups-command-processor';
+export { CliGroupaddCommandProcessor } from './cli-groupadd-command-processor';
+export { CliGroupdelCommandProcessor } from './cli-groupdel-command-processor';
+export { CliWhoCommandProcessor } from './cli-who-command-processor';

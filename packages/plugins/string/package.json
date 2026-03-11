@@ -1,0 +1,48 @@
+{
+  "name": "@qodalis/cli-string",
+  "version": "2.0.0-beta.1",
+  "description": "@qodalis/cli extension for string manipulation and transformation utilities.",
+  "author": "Nicolae Lupei, Qodalis Solutions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qodalis-solutions/web-cli"
+  },
+  "homepage": "https://qodalis.com",
+  "keywords": [
+    "cli",
+    "qodalis",
+    "terminal",
+    "string",
+    "text",
+    "transformation",
+    "lodash"
+  ],
+  "umd": "./umd/index.js",
+  "unpkg": "./umd/index.js",
+  "dependencies": {
+    "@qodalis/cli-core": "workspace:*",
+    "lodash": "^4.17.21",
+    "@types/lodash": "^4.17.14"
+  },
+  "sideEffects": false,
+  "cliDependencies": [
+    {
+      "name": "lodash",
+      "globalName": "_",
+      "version": "4.17.21",
+      "url": "https://unpkg.com/lodash@4.17.21/lodash.js"
+    }
+  ],
+  "devDependencies": {},
+  "main": "./public-api.js",
+  "module": "./public-api.mjs",
+  "types": "./public-api.d.ts",
+  "exports": {
+    ".": {
+      "types": "./public-api.d.ts",
+      "import": "./public-api.mjs",
+      "require": "./public-api.js"
+    }
+  }
+}

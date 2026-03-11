@@ -1,0 +1,113 @@
+{
+  "name": "docs",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/docs/src",
+  "prefix": "app",
+  "implicitDependencies": [
+    "angular-cli",
+    "cli"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:browser",
+      "options": {
+        "outputPath": "dist/docs",
+        "index": "apps/docs/src/index.html",
+        "main": "apps/docs/src/main.ts",
+        "polyfills": [
+          "zone.js"
+        ],
+        "tsConfig": "apps/docs/tsconfig.app.json",
+        "inlineStyleLanguage": "sass",
+        "assets": [
+          "apps/docs/src/favicon.ico",
+          "apps/docs/src/assets",
+          {
+            "glob": "qodalis_cli_wasm_bg.wasm",
+            "input": "dist/cli/wasm",
+            "output": "/assets/wasm"
+          }
+        ],
+        "styles": [
+          "apps/docs/src/styles.sass",
+          "packages/angular-cli/src/assets/styles.sass",
+          "node_modules/prismjs/themes/prism-tomorrow.min.css"
+        ],
+        "scripts": []
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "1MB",
+              "maximumError": "2MB"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "2kb",
+              "maximumError": "4kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": true,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        }
+      },
+      "defaultConfiguration": "production",
+      "outputs": [
+        "{workspaceRoot}/dist/docs"
+      ]
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "options": {
+        "port": 4300,
+        "proxyConfig": "proxy.conf.json"
+      },
+      "configurations": {
+        "production": {
+          "browserTarget": "docs:build:production"
+        },
+        "development": {
+          "browserTarget": "docs:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "browserTarget": "docs:build"
+      }
+    },
+    "test": {
+      "executor": "@angular-devkit/build-angular:karma",
+      "options": {
+        "polyfills": [
+          "zone.js",
+          "zone.js/testing"
+        ],
+        "tsConfig": "apps/docs/tsconfig.spec.json",
+        "inlineStyleLanguage": "sass",
+        "assets": [
+          "apps/docs/src/favicon.ico",
+          "apps/docs/src/assets"
+        ],
+        "styles": [
+          "apps/docs/src/styles.sass"
+        ],
+        "scripts": [],
+        "browsers": "ChromeHeadless",
+        "watch": false
+      }
+    }
+  }
+}

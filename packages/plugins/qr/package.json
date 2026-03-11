@@ -1,0 +1,49 @@
+{
+  "name": "@qodalis/cli-qr",
+  "version": "2.0.0-beta.1",
+  "description": "@qodalis/cli extension for generating and displaying QR codes.",
+  "author": "Nicolae Lupei, Qodalis Solutions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qodalis-solutions/web-cli"
+  },
+  "homepage": "https://qodalis.com",
+  "keywords": [
+    "cli",
+    "qodalis",
+    "terminal",
+    "qr",
+    "qr-code",
+    "barcode",
+    "generator"
+  ],
+  "umd": "./umd/index.js",
+  "unpkg": "./umd/index.js",
+  "dependencies": {
+    "@qodalis/cli-core": "workspace:*",
+    "qr-code-styling": "^1.9.1"
+  },
+  "cliDependencies": [
+    {
+      "name": "qr-code-styling",
+      "globalName": "QRCodeStyling",
+      "version": "1.9.1",
+      "url": "https://unpkg.com/qr-code-styling@1.9.1/lib/qr-code-styling.js"
+    }
+  ],
+  "sideEffects": false,
+  "devDependencies": {
+    "@types/node": "^22.13.11"
+  },
+  "main": "./public-api.js",
+  "module": "./public-api.mjs",
+  "types": "./public-api.d.ts",
+  "exports": {
+    ".": {
+      "types": "./public-api.d.ts",
+      "import": "./public-api.mjs",
+      "require": "./public-api.js"
+    }
+  }
+}

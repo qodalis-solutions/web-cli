@@ -1,0 +1,37 @@
+{
+  "name": "password-generator",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/plugins/password-generator/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsup",
+          "cp package.json ../../../dist/password-generator/package.json"
+        ],
+        "cwd": "packages/plugins/password-generator",
+        "parallel": false
+      },
+      "inputs": [
+        "production",
+        "sharedGlobals"
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/password-generator"
+      ]
+    },
+    "test": {
+      "executor": "@angular-devkit/build-angular:karma",
+      "options": {
+        "tsConfig": "packages/plugins/password-generator/tsconfig.spec.json",
+        "polyfills": [
+          "zone.js",
+          "zone.js/testing"
+        ],
+        "browsers": "ChromeHeadless",
+        "watch": false
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@qodalis/cli-curl",
+  "version": "2.0.0-beta.1",
+  "description": "@qodalis/cli extension for making HTTP requests via a curl-like interface.",
+  "author": "Nicolae Lupei, Qodalis Solutions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qodalis-solutions/web-cli"
+  },
+  "homepage": "https://qodalis.com",
+  "keywords": [
+    "cli",
+    "qodalis",
+    "terminal",
+    "curl",
+    "http",
+    "requests",
+    "fetch"
+  ],
+  "umd": "./umd/index.js",
+  "unpkg": "./umd/index.js",
+  "dependencies": {
+    "@qodalis/cli-core": "workspace:*"
+  },
+  "sideEffects": false,
+  "main": "./public-api.js",
+  "module": "./public-api.mjs",
+  "types": "./public-api.d.ts",
+  "exports": {
+    ".": {
+      "types": "./public-api.d.ts",
+      "import": "./public-api.mjs",
+      "require": "./public-api.js"
+    }
+  }
+}

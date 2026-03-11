@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Qodalis CLI</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #1e1e1e;
+      }
+      #titlebar {
+        height: 38px;
+        -webkit-app-region: drag;
+        background: #1e1e1e;
+      }
+      #root {
+        width: 100%;
+        height: calc(100% - 38px);
+        overflow: hidden;
+        background: #1e1e1e;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="titlebar"></div>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

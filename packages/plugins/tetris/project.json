@@ -1,0 +1,25 @@
+{
+  "name": "tetris",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/plugins/tetris/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsup",
+          "cp package.json ../../../dist/tetris/package.json"
+        ],
+        "cwd": "packages/plugins/tetris",
+        "parallel": false
+      },
+      "inputs": [
+        "production",
+        "sharedGlobals"
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/tetris"
+      ]
+    }
+  }
+}

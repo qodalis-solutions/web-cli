@@ -1,0 +1,803 @@
+<nav class="page-toc" *ngIf="toc.length > 1">
+    <span class="toc-label">On this page</span>
+    <a
+        *ngFor="let entry of toc"
+        class="toc-link"
+        (click)="scrollTo(entry.id); $event.preventDefault()"
+        href="#"
+    >{{ entry.label }}</a>
+</nav>
+
+<!-- Command Processors -->
+<div *ngIf="currentTopic === 'command-processors'">
+    <h1>Command Processors</h1>
+    <p>
+        Every command in Qodalis CLI is powered by a <strong>command processor</strong>.
+        A processor implements the <code>ICliCommandProcessor</code> interface and defines the
+        command name, description, parameters, and the logic that runs when the command is executed.
+    </p>
+
+    <h2>The ICliCommandProcessor Interface</h2>
+    <p>The key fields of a command processor are:</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>command</code></td>
+                <td><code>string</code></td>
+                <td>The command name that triggers this processor (e.g. <code>'greet'</code>)</td>
+            </tr>
+            <tr>
+                <td><code>description</code></td>
+                <td><code>string</code></td>
+                <td>Shown in help output and command listings</td>
+            </tr>
+            <tr>
+                <td><code>parameters</code></td>
+                <td><code>ICliCommandParameterDescriptor[]</code></td>
+                <td>Describes accepted flags and arguments</td>
+            </tr>
+            <tr>
+                <td><code>processors</code></td>
+                <td><code>ICliCommandProcessor[]</code></td>
+                <td>Nested sub-command processors (e.g. <code>git commit</code>, <code>git push</code>)</td>
+            </tr>
+            <tr>
+                <td><code>extendsProcessor</code></td>
+                <td><code>string</code></td>
+                <td>Command name to wrap/extend with additional sub-commands</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>The processCommand Method</h2>
+    <p>
+        The <code>processCommand(command, context)</code> method is called when the user types the command.
+        It receives the parsed command and an execution context that provides access to terminal I/O,
+        state, spinner, and more.
+    </p>
+
+    <h2>Example Implementation</h2>
+    <div class="code-block">
+        <span class="code-label">greet-processor.ts</span>
+        <pre><code>export class GreetProcessor implements ICliCommandProcessor &#123;
+    command = 'greet';
+    description = 'Say hello';
+
+    parameters = [
+        &#123;
+            name: 'name',
+            description: 'Name to greet',
+            required: false,
+        &#125;,
+    ];
+
+    async processCommand(
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise&lt;void&gt; &#123;
+        const name = command.args[0] || 'World';
+        context.writer.writeln(`Hello, $&#123;name&#125;!`);
+    &#125;
+&#125;</code></pre>
+    </div>
+
+    <h2>Sub-Commands</h2>
+    <p>
+        Processors can define nested <code>processors</code> to create command hierarchies.
+        For example, a <code>git</code> processor can have <code>commit</code> and <code>push</code>
+        as sub-command processors.
+    </p>
+
+    <div class="code-block">
+        <span class="code-label">nested-processor.ts</span>
+        <pre><code>export class GitProcessor implements ICliCommandProcessor &#123;
+    command = 'git';
+    description = 'Git commands';
+
+    processors = [
+        new GitCommitProcessor(),
+        new GitPushProcessor(),
+    ];
+&#125;</code></pre>
+    </div>
+
+    <h2>Extending Existing Commands</h2>
+    <p>
+        Use <code>extendsProcessor</code> to add sub-commands to an existing processor without
+        modifying it. This is useful for plugins that want to extend built-in commands.
+    </p>
+
+    <div class="code-block">
+        <span class="code-label">extend-processor.ts</span>
+        <pre><code>export class GitStashProcessor implements ICliCommandProcessor &#123;
+    command = 'stash';
+    description = 'Stash changes';
+    extendsProcessor = 'git'; // Adds 'stash' as a sub-command of 'git'
+
+    async processCommand(
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise&lt;void&gt; &#123;
+        context.writer.writeln('Changes stashed.');
+    &#125;
+&#125;</code></pre>
+    </div>
+</div>
+
+<!-- Execution Context -->
+<div *ngIf="currentTopic === 'execution-context'">
+    <h1>Execution Context</h1>
+    <p>
+        The <code>ICliExecutionContext</code> is passed to every command processor when it executes.
+        It provides access to all the services and utilities you need during command execution.
+    </p>
+
+    <h2>Context Properties</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Property</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>writer</code></td>
+                <td><code>ICliTerminalWriter</code></td>
+                <td>Write text, HTML, and formatted output to the terminal</td>
+            </tr>
+            <tr>
+                <td><code>spinner</code></td>
+                <td><code>ICliSpinner</code></td>
+                <td>Show a loading spinner with a message</td>
+            </tr>
+            <tr>
+                <td><code>progressBar</code></td>
+                <td><code>ICliProgressBar</code></td>
+                <td>Display a progress bar for long-running operations</td>
+            </tr>
+            <tr>
+                <td><code>inputReader</code></td>
+                <td><code>ICliInputReader</code></td>
+                <td>Read interactive input from the user</td>
+            </tr>
+            <tr>
+                <td><code>stateStore</code></td>
+                <td><code>ICliStateStore</code></td>
+                <td>Persistent key-value storage across sessions</td>
+            </tr>
+            <tr>
+                <td><code>clipboard</code></td>
+                <td><code>ICliClipboard</code></td>
+                <td>Read from and write to the system clipboard</td>
+            </tr>
+            <tr>
+                <td><code>abortSignal</code></td>
+                <td><code>AbortSignal</code></td>
+                <td>Signal to detect when the user cancels a command (Ctrl+C)</td>
+            </tr>
+            <tr>
+                <td><code>options</code></td>
+                <td><code>CliOptions</code></td>
+                <td>The CLI configuration options</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Writing Output</h2>
+    <p>
+        The <code>writer</code> is the primary way to send output to the terminal.
+    </p>
+    <div class="code-block">
+        <span class="code-label">writer-examples.ts</span>
+        <pre><code>// Write a line of text
+context.writer.writeln('Hello, World!');
+
+// Write styled HTML output
+context.writer.writeHtml('&lt;span style="color: green"&gt;Success!&lt;/span&gt;');
+
+// Write a warning or error
+context.writer.writeError('Something went wrong');
+context.writer.writeWarning('This is deprecated');</code></pre>
+    </div>
+
+    <h2>Spinner and Progress Bar</h2>
+    <div class="code-block">
+        <span class="code-label">spinner-example.ts</span>
+        <pre><code>// Show a spinner while loading
+context.spinner.show('Loading data...');
+const data = await fetchData();
+context.spinner.hide();
+
+// Show a progress bar
+context.progressBar.show(&#123; total: 100 &#125;);
+for (let i = 0; i &lt;= 100; i++) &#123;
+    context.progressBar.update(i);
+&#125;
+context.progressBar.hide();</code></pre>
+    </div>
+
+    <h2>Full-Screen Mode</h2>
+    <p>
+        Commands that need full control of the terminal (games, editors, pagers) can use
+        full-screen mode:
+    </p>
+    <div class="code-block">
+        <span class="code-label">fullscreen-example.ts</span>
+        <pre><code>// Enter full-screen mode
+context.enterFullScreenMode();
+
+// Render your full-screen UI...
+
+// Exit when done
+context.exitFullScreenMode();</code></pre>
+    </div>
+
+    <h2>Abort Signal</h2>
+    <p>
+        Long-running commands should check <code>context.abortSignal</code> to respond to
+        user cancellation (Ctrl+C):
+    </p>
+    <div class="code-block">
+        <span class="code-label">abort-example.ts</span>
+        <pre><code>while (!context.abortSignal.aborted) &#123;
+    // Do work...
+    await sleep(100);
+&#125;
+context.writer.writeln('Operation cancelled.');</code></pre>
+    </div>
+</div>
+
+<!-- Theming -->
+<div *ngIf="currentTopic === 'theming'">
+    <h1>Theming</h1>
+    <p>
+        Qodalis CLI uses CSS custom properties for theming, making it easy to customize the
+        terminal appearance or create entirely new themes.
+    </p>
+
+    <h2>Built-in Themes</h2>
+    <p>29 themes are available out of the box, organized by category:</p>
+
+    <h3>Dark Themes</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Theme</th>
+                <th>Description</th>
+                <th>Tags</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="command-badge">default</span></td>
+                <td>Dark indigo theme with soft pastels</td>
+                <td>built-in</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">classic</span></td>
+                <td>Classic Windows terminal palette</td>
+                <td>built-in</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">dracula</span></td>
+                <td>Popular dark theme with vibrant colors</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">monokai</span></td>
+                <td>Classic code editor dark theme</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">solarizedDark</span></td>
+                <td>Ethan Schoonover's precision dark palette</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">gruvboxDark</span></td>
+                <td>Retro groove dark color scheme</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">nord</span></td>
+                <td>Arctic, north-bluish clean palette</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">oneDark</span></td>
+                <td>Atom's iconic dark theme</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">material</span></td>
+                <td>Material Design inspired dark theme</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">tokyoNight</span></td>
+                <td>Cool blue-purple dark theme</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">catppuccinMocha</span></td>
+                <td>Soothing pastel dark theme (warmest)</td>
+                <td>popular, pastel</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">catppuccinFrappe</span></td>
+                <td>Soothing pastel mid-dark theme</td>
+                <td>popular, pastel</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">rosePine</span></td>
+                <td>All natural pine, faux fur, and a bit of soho vibes</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">kanagawa</span></td>
+                <td>Dark theme inspired by Katsushika Hokusai</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">everforestDark</span></td>
+                <td>Comfortable green-tinted dark theme</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">ayuDark</span></td>
+                <td>Simple, bright and elegant dark theme</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">cyberpunk</span></td>
+                <td>Neon-lit cyberpunk aesthetic</td>
+                <td>retro, fun</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">retroGreen</span></td>
+                <td>Classic green phosphor CRT monitor</td>
+                <td>retro, fun</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">retroAmber</span></td>
+                <td>Warm amber CRT monitor</td>
+                <td>retro, fun</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">matrix</span></td>
+                <td>Enter the Matrix - green on black</td>
+                <td>retro, fun</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">synthwave</span></td>
+                <td>80s synthwave purple/pink aesthetic</td>
+                <td>retro, fun</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">highContrastDark</span></td>
+                <td>Maximum contrast dark theme</td>
+                <td>accessibility</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Light Themes</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Theme</th>
+                <th>Description</th>
+                <th>Tags</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="command-badge">solarizedLight</span></td>
+                <td>Ethan Schoonover's precision light palette</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">gruvboxLight</span></td>
+                <td>Retro groove light color scheme</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">catppuccinLatte</span></td>
+                <td>Soothing pastel light theme</td>
+                <td>popular, pastel</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">rosePineDawn</span></td>
+                <td>Rose Pine light variant</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">everforestLight</span></td>
+                <td>Comfortable green-tinted light theme</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">githubLight</span></td>
+                <td>GitHub's clean light interface theme</td>
+                <td>popular</td>
+            </tr>
+            <tr>
+                <td><span class="command-badge">highContrastLight</span></td>
+                <td>High contrast light theme for accessibility</td>
+                <td>accessibility</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Switching Themes</h2>
+    <p>Users can switch themes at runtime using the <code>theme</code> command:</p>
+    <div class="code-block">
+        <span class="code-label">Terminal</span>
+        <pre><code>theme set dracula
+theme list
+theme get</code></pre>
+    </div>
+
+    <h2>CSS Custom Properties</h2>
+    <p>
+        Themes are defined using CSS custom properties on the terminal container.
+        The key properties you can customize:
+    </p>
+    <div class="code-block">
+        <span class="code-label">custom-theme.css</span>
+        <pre><code>:root &#123;
+    --cli-background: #1e1e2e;
+    --cli-foreground: #cdd6f4;
+    --cli-cursor-color: #f5e0dc;
+    --cli-selection-background: #585b70;
+    --cli-black: #45475a;
+    --cli-red: #f38ba8;
+    --cli-green: #a6e3a1;
+    --cli-yellow: #f9e2af;
+    --cli-blue: #89b4fa;
+    --cli-magenta: #f5c2e7;
+    --cli-cyan: #94e2d5;
+    --cli-white: #bac2de;
+&#125;</code></pre>
+    </div>
+
+    <h2>Creating a Custom Theme</h2>
+    <p>
+        To create a custom theme, define the CSS custom properties and apply them
+        to the terminal container. You can scope the theme to a specific class or
+        apply it globally:
+    </p>
+    <div class="code-block">
+        <span class="code-label">my-theme.sass</span>
+        <pre><code>.cli-theme-custom
+    --cli-background: #0d1117
+    --cli-foreground: #c9d1d9
+    --cli-cursor-color: #58a6ff
+    --cli-selection-background: #264f78
+    --cli-green: #3fb950
+    --cli-red: #f85149
+    --cli-yellow: #d29922
+    --cli-blue: #58a6ff</code></pre>
+    </div>
+
+    <h2>Try It</h2>
+    <p>
+        Switch themes live — type <code>theme set dracula</code>,
+        <code>theme set nord</code>, or <code>theme list</code> to see all options.
+    </p>
+    <div class="try-it-terminal">
+        <div class="try-it-chrome">
+            <span class="chrome-dot red"></span>
+            <span class="chrome-dot yellow"></span>
+            <span class="chrome-dot green"></span>
+            <span class="chrome-title">theme playground</span>
+        </div>
+        <div class="try-it-body">
+            <cli [options]="tryItOptions" [modules]="tryItModules" height="260px" />
+        </div>
+    </div>
+</div>
+
+<!-- Tabs & Panes -->
+<div *ngIf="currentTopic === 'tabs-and-panes'">
+    <h1>Tabs & Split Panes</h1>
+    <p>
+        The <code>cli-panel</code> component supports multiple terminal sessions through tabs
+        and horizontal split panes. Users can create, rename, duplicate, split, and close
+        terminals — all within a single collapsible panel.
+    </p>
+
+    <h2>Tab Management</h2>
+    <p>
+        Each tab contains one or more terminal panes. Users interact with tabs through the tab bar
+        at the top of the panel.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>How</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>New tab</td>
+                <td>Click the <strong>+</strong> button in the tab bar</td>
+            </tr>
+            <tr>
+                <td>Rename tab</td>
+                <td><strong>Double-click</strong> the tab title, type a new name, press Enter</td>
+            </tr>
+            <tr>
+                <td>Close tab</td>
+                <td>Click the <strong>&times;</strong> button on the tab, or right-click &rarr; Close</td>
+            </tr>
+            <tr>
+                <td>Duplicate tab</td>
+                <td>Right-click &rarr; Duplicate (preserves terminal state, history, and output)</td>
+            </tr>
+            <tr>
+                <td>Close others</td>
+                <td>Right-click &rarr; Close Others / Close to the Right / Close All</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Split Panes</h2>
+    <p>
+        Within a tab, you can split the terminal horizontally to run multiple sessions side by side.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>How</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Split right</td>
+                <td>Right-click a tab &rarr; <strong>Split Right</strong></td>
+            </tr>
+            <tr>
+                <td>Resize panes</td>
+                <td><strong>Drag</strong> the divider between panes</td>
+            </tr>
+            <tr>
+                <td>Focus a pane</td>
+                <td><strong>Click</strong> inside a pane (active pane shows an accent border)</td>
+            </tr>
+            <tr>
+                <td>Close a pane</td>
+                <td>Click the <strong>&times;</strong> in the pane's top-right corner</td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        Pane widths are distributed equally when a split is created. The minimum pane width is
+        10% of the panel. Closing the last pane in a tab closes the tab itself.
+    </p>
+
+    <h2>Panel Positions</h2>
+    <p>
+        The panel can be positioned at four edges of the viewport. The position cycles through:
+    </p>
+    <div class="command-badges" style="margin-bottom: 24px">
+        <code class="command-badge">bottom</code>
+        <code class="command-badge">right</code>
+        <code class="command-badge">top</code>
+        <code class="command-badge">left</code>
+    </div>
+    <p>The position is persisted to localStorage and restored automatically.</p>
+
+    <h2>Configuration</h2>
+    <p>
+        The <code>cli-panel</code> component accepts a <code>CliPanelOptions</code> object to configure
+        panel behavior:
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Option</th>
+                <th>Type</th>
+                <th>Default</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>isCollapsed</code></td>
+                <td><code>boolean</code></td>
+                <td><code>true</code></td>
+                <td>Start collapsed or expanded</td>
+            </tr>
+            <tr>
+                <td><code>position</code></td>
+                <td><code>string</code></td>
+                <td><code>'bottom'</code></td>
+                <td>Panel edge: bottom, top, left, right</td>
+            </tr>
+            <tr>
+                <td><code>closable</code></td>
+                <td><code>boolean</code></td>
+                <td><code>true</code></td>
+                <td>Show close button in panel header</td>
+            </tr>
+            <tr>
+                <td><code>resizable</code></td>
+                <td><code>boolean</code></td>
+                <td><code>true</code></td>
+                <td>Allow drag-resizing the panel</td>
+            </tr>
+            <tr>
+                <td><code>syncTheme</code></td>
+                <td><code>boolean</code></td>
+                <td><code>false</code></td>
+                <td>Sync panel chrome colors with the active terminal theme</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Usage</h2>
+    <div class="code-block">
+        <span class="code-label">Angular</span>
+        <pre><code>&lt;cli-panel
+    [options]="{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}"
+    [modules]="modules"
+&gt;&lt;/cli-panel&gt;</code></pre>
+    </div>
+    <div class="code-block">
+        <span class="code-label">React</span>
+        <pre><code>&lt;CliPanel
+    options={{ '{' }}{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}{{ '}' }}
+    modules={{ '{' }}modules{{ '}' }}
+/&gt;</code></pre>
+    </div>
+    <div class="code-block">
+        <span class="code-label">Vue</span>
+        <pre><code>&lt;CliPanel
+    :options="{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}"
+    :modules="modules"
+/&gt;</code></pre>
+    </div>
+
+    <h2>State Preservation</h2>
+    <p>
+        When a tab is duplicated, the full terminal state is captured and restored in the new tab:
+    </p>
+    <ul>
+        <li>Terminal output buffer (serialized xterm content)</li>
+        <li>Command history</li>
+        <li>Processor state stores (todo items, config values, etc.)</li>
+    </ul>
+</div>
+
+<!-- Input Reader -->
+<div *ngIf="currentTopic === 'input-reader'">
+    <h1>Input Reader</h1>
+    <p>
+        The <code>ICliInputReader</code> interface provides methods for reading interactive input
+        from the user. It is available through <code>context.inputReader</code> in every command processor.
+    </p>
+
+    <h2>Available Methods</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Method</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>readLine(prompt)</code></td>
+                <td>Read a line of text input</td>
+            </tr>
+            <tr>
+                <td><code>readPassword(prompt)</code></td>
+                <td>Read input with masked characters (for passwords)</td>
+            </tr>
+            <tr>
+                <td><code>readConfirm(prompt)</code></td>
+                <td>Ask a yes/no question, returns a boolean</td>
+            </tr>
+            <tr>
+                <td><code>readSelect(prompt, options)</code></td>
+                <td>Show a list of options, user picks one</td>
+            </tr>
+            <tr>
+                <td><code>readSelectInline(prompt, options)</code></td>
+                <td>Inline single-line select (compact UI)</td>
+            </tr>
+            <tr>
+                <td><code>readMultiSelect(prompt, options)</code></td>
+                <td>Select multiple items from a list</td>
+            </tr>
+            <tr>
+                <td><code>readNumber(prompt)</code></td>
+                <td>Read and validate a numeric value</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Examples</h2>
+
+    <h3>Reading Text Input</h3>
+    <div class="code-block">
+        <span class="code-label">readLine</span>
+        <pre><code>const name = await context.inputReader.readLine('What is your name?');
+context.writer.writeln(`Hello, $&#123;name&#125;!`);</code></pre>
+    </div>
+
+    <h3>Reading a Password</h3>
+    <div class="code-block">
+        <span class="code-label">readPassword</span>
+        <pre><code>const password = await context.inputReader.readPassword('Enter password:');
+// Input is masked with dots</code></pre>
+    </div>
+
+    <h3>Confirmation Prompt</h3>
+    <div class="code-block">
+        <span class="code-label">readConfirm</span>
+        <pre><code>const confirmed = await context.inputReader.readConfirm('Delete all files?');
+if (confirmed) &#123;
+    context.writer.writeln('Deleting...');
+&#125;</code></pre>
+    </div>
+
+    <h3>Selection Menu</h3>
+    <div class="code-block">
+        <span class="code-label">readSelect</span>
+        <pre><code>const color = await context.inputReader.readSelect('Pick a color:', [
+    &#123; label: 'Red', value: 'red' &#125;,
+    &#123; label: 'Green', value: 'green' &#125;,
+    &#123; label: 'Blue', value: 'blue' &#125;,
+]);
+context.writer.writeln(`You picked: $&#123;color&#125;`);</code></pre>
+    </div>
+
+    <h3>Multi-Select</h3>
+    <div class="code-block">
+        <span class="code-label">readMultiSelect</span>
+        <pre><code>const toppings = await context.inputReader.readMultiSelect('Choose toppings:', [
+    &#123; label: 'Cheese', value: 'cheese' &#125;,
+    &#123; label: 'Pepperoni', value: 'pepperoni' &#125;,
+    &#123; label: 'Mushrooms', value: 'mushrooms' &#125;,
+]);
+context.writer.writeln(`Selected: $&#123;toppings.join(', ')&#125;`);</code></pre>
+    </div>
+
+    <h3>Reading a Number</h3>
+    <div class="code-block">
+        <span class="code-label">readNumber</span>
+        <pre><code>const age = await context.inputReader.readNumber('Enter your age:');
+context.writer.writeln(`You are $&#123;age&#125; years old.`);</code></pre>
+    </div>
+
+    <h2>Try It</h2>
+    <p>
+        Try interactive input — type <code>yesno "Deploy to production?"</code>
+        for a confirmation prompt, or <code>todo add "My task"</code> to try
+        the interactive todo list.
+    </p>
+    <div class="try-it-terminal">
+        <div class="try-it-chrome">
+            <span class="chrome-dot red"></span>
+            <span class="chrome-dot yellow"></span>
+            <span class="chrome-dot green"></span>
+            <span class="chrome-title">input reader playground</span>
+        </div>
+        <div class="try-it-body">
+            <cli [options]="tryItOptions" [modules]="tryItModules" height="260px" />
+        </div>
+    </div>
+</div>

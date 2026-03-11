@@ -1,0 +1,17 @@
+{
+  "name": "react-cli",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/react-cli/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsup", "cp package.json dist/package.json"],
+        "cwd": "packages/react-cli",
+        "parallel": false
+      },
+      "inputs": ["production", "sharedGlobals"],
+      "outputs": ["{projectRoot}/dist"]
+    }
+  }
+}

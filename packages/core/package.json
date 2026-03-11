@@ -1,0 +1,35 @@
+{
+  "name": "@qodalis/cli-core",
+  "version": "2.0.0-beta.1",
+  "description": "Core interfaces, types, and utilities for the @qodalis CLI ecosystem.",
+  "author": "Nicolae Lupei, Qodalis Solutions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qodalis-solutions/web-cli"
+  },
+  "homepage": "https://qodalis.com",
+  "keywords": [
+    "core",
+    "cli",
+    "qodalis",
+    "terminal",
+    "interfaces",
+    "types",
+    "extensions"
+  ],
+  "main": "./public-api.js",
+  "module": "./public-api.mjs",
+  "types": "./public-api.d.ts",
+  "exports": {
+    ".": {
+      "types": "./public-api.d.ts",
+      "import": "./public-api.mjs",
+      "require": "./public-api.js"
+    }
+  },
+  "dependencies": {
+    "@xterm/xterm": "^5.5.0"
+  },
+  "sideEffects": false
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "dest": "../../dist/angular-cli",
+  "lib": {
+    "entryFile": "src/public-api.ts"
+  },
+  "assets": ["src/assets/styles.sass", "src/assets/styles.css"],
+  "allowedNonPeerDependencies": [
+    "@qodalis/cli-core",
+    "@qodalis/cli",
+    "@xterm/xterm",
+    "@xterm/addon-fit",
+    "@xterm/addon-web-links",
+    "@xterm/addon-webgl",
+    "@xterm/addon-unicode11"
+  ]
+}

@@ -13,21 +13,31 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: "npm"
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install Rust and wasm-pack
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --target wasm32-unknown-unknown
+          source "$HOME/.cargo/env"
+          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
-      - name: Install projects deps
-        run: npm run "install projects deps"
-
-      - name: Build all projects
-        run: npm run "build all"
+      - name: Build affected projects
+        run: pnpm exec nx affected -t build --base=origin/main
 
       - name: Run tests
-        run: npm test
+        run: pnpm exec nx affected -t test --base=origin/main -- --browsers=ChromeHeadless --no-watch

@@ -1,0 +1,673 @@
+import { Observable, Subscription } from 'rxjs';
+import {
+    CliBackgroundColor,
+    CliForegroundColor,
+    CliLogLevel,
+    CliProcessCommand,
+    CliProvider,
+    CliState,
+    ICliUser,
+    ICliUserSession,
+} from '../models';
+import { ICliExecutionContext } from './execution-context';
+import {
+    ICliCommandChildProcessor,
+    ICliCommandParameterDescriptor,
+    ICliCommandProcessor,
+} from './command-processor';
+import { ICliGlobalParameterHandler } from './global-parameter';
+
+export interface ICliTerminalWriter {
+    /**
+     * Write text to the terminal
+     * @param text The text to write
+     */
+    write(text: string): void;
+
+    /**
+     * Write text to the terminal followed by a newline
+     * @param text The text to write
+     */
+    writeln(text?: string): void;
+
+    /**
+     * Write a success message to the terminal
+     * @param messag The message to write
+     * @returns void
+     */
+    writeSuccess: (message: string) => void;
+
+    /**
+     * Write an info message to the terminal
+     * @param messag The message to write
+     * @returns void
+     */
+    writeInfo: (message: string) => void;
+
+    /**
+     * Write an error message to the terminal
+     * @param message The message to write
+     * @returns void
+     */
+    writeError: (message: string) => void;
+
+    /**
+     * Write a warning message to the terminal
+     * @param message The message to write
+     * @returns void
+     */
+    writeWarning: (message: string) => void;
+
+    /**
+     * Write a message to the terminal with the specified color
+     * @param message The message to write
+     * @param color The color to use
+     * @returns void
+     */
+    wrapInColor: (text: string, color: CliForegroundColor) => string;
+
+    /**
+     * Write a message to the terminal with the specified background color
+     * @param message The message to write
+     * @param color The background color to use
+     * @returns void
+     */
+    wrapInBackgroundColor: (text: string, color: CliBackgroundColor) => string;
+
+    /**
+     * Write a JSON object to the terminal
+     * @param json The JSON object to write
+     * @returns void
+     */
+    writeJson: (json: any) => void;
+
+    /**
+     * Write content to a file
+     * @param fileName The name of the file to write to
+     * @param content The content to write to the file
+     * @returns void
+     */
+    writeToFile: (fileName: string, content: string) => void;
+
+    /**
+     * Write an object array as a table to the terminal
+     * @param objects The objects to write to the table
+     * @returns void
+     */
+    writeObjectsAsTable(objects: any[]): void;
+
+    /**
+     * Write a table to the terminal
+     * @param headers The headers of the table
+     * @param rows The rows of the table
+     * @returns void
+     */
+    writeTable(headers: string[], rows: string[][]): void;
+
+    /**
+     * Write a divider to the terminal
+     * @param options The options for the divider
+     * @returns void
+     */
+    writeDivider(options?: {
+        color?: CliForegroundColor;
+        length?: number;
+        char?: string;
+    }): void;
+
+    /**
+     * Write a list of items to the terminal with bullet, numbered, or custom prefix.
+     * @param items The list items to display
+     * @param options Optional: ordered (numbered), prefix (custom marker), color
+     */
+    writeList(
+        items: string[],
+        options?: {
+            ordered?: boolean;
+            prefix?: string;
+            color?: CliForegroundColor;
+        },
+    ): void;
+
+    /**
+     * Write aligned key-value pairs to the terminal.
+     * @param entries Key-value pairs as a Record or array of tuples
+     * @param options Optional: separator string, key color
+     */
+    writeKeyValue(
+        entries: Record<string, string> | [string, string][],
+        options?: { separator?: string; keyColor?: CliForegroundColor },
+    ): void;
+
+    /**
+     * Write items in a multi-column layout.
+     * @param items The items to arrange in columns
+     * @param options Optional: number of columns, padding between columns
+     */
+    writeColumns(
+        items: string[],
+        options?: { columns?: number; padding?: number },
+    ): void;
+}
+
+/**
+ * Represents a clipboard for the CLI
+ */
+export interface ICliClipboard {
+    /**
+     * Write text to the clipboard
+     * @param text The text to write to the clipboard
+     * @returns void
+     */
+    write: (text: string) => Promise<void>;
+
+    /**
+     * Read text from the clipboard
+     * @returns The text read from the clipboard
+     */
+    read: () => Promise<string>;
+}
+
+/**
+ * Represents a service that executes commands
+ */
+export interface ICliCommandExecutorService {
+    /**
+     *
+     * @param command
+     * @param context
+     */
+    showHelp(
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise<void>;
+
+    /**
+     * Execute a command
+     * @param command The command to execute
+     * @param context The context in which the command is executed
+     */
+    executeCommand(
+        command: string,
+        context: ICliExecutionContext,
+    ): Promise<void>;
+
+    /**
+     * Register a global parameter handler.
+     * Global parameters (e.g. --help, --version) are evaluated for every
+     * command before the processor's own processCommand runs.
+     * @param handler The global parameter handler to register
+     */
+    registerGlobalParameter(handler: ICliGlobalParameterHandler): void;
+
+    /**
+     * Returns the descriptors of all registered global parameters.
+     * Used by help output and tab-completion.
+     */
+    getGlobalParameters(): ICliCommandParameterDescriptor[];
+}
+
+/**
+ * Represents a registry for command processors
+ */
+export interface ICliCommandProcessorRegistry {
+    /**
+     * The processors registered with the registry
+     */
+    readonly processors: ICliCommandProcessor[];
+
+    /**
+     * Find a processor for a command
+     * @param mainCommand
+     * @param chainCommands
+     */
+    findProcessor(
+        mainCommand: string,
+        chainCommands: string[],
+    ): ICliCommandProcessor | undefined;
+
+    /**
+     * Recursively searches for a processor matching the given command.
+     * @param mainCommand The main command name.
+     * @param chainCommands The remaining chain commands (if any).
+     * @param processors The list of available processors.
+     * @returns The matching processor or undefined if not found.
+     */
+    findProcessorInCollection(
+        mainCommand: string,
+        chainCommands: string[],
+        processors: ICliCommandProcessor[],
+    ): ICliCommandProcessor | undefined;
+
+    /**
+     * Get the root processor for a child processor
+     * @param child The child processor
+     */
+    getRootProcessor(child: ICliCommandChildProcessor): ICliCommandProcessor;
+
+    /**
+     * Register a processor
+     * @param processor
+     */
+    registerProcessor(processor: ICliCommandProcessor): void;
+
+    /**
+     * Unregister a processor
+     * @param processor
+     */
+    unregisterProcessor(processor: ICliCommandProcessor): void;
+}
+
+export interface ICliExecutionProcess {
+    /**
+     * Indicates if the process has exited
+     */
+    exited?: boolean;
+
+    /**
+     * The exit code of the process
+     */
+    exitCode?: number;
+
+    /**
+     * Indicates if the process is running
+     */
+    running: boolean;
+
+    /**
+     * The data of the process
+     */
+    data: any | undefined;
+
+    /**
+     * Exit the process
+     * @param code The exit code
+     * @returns void
+     */
+    exit: (
+        /**
+         * The exit code
+         */
+        code?: number,
+
+        /**
+         * Options for exiting the process
+         */
+        options?: {
+            /**
+             * Indicates if the exit should be silent, i.e. not throw an error
+             */
+            silent?: boolean;
+        },
+    ) => void;
+
+    /**
+     * Output data from the process
+     * @param data The data to output
+     */
+    output(data: any): void;
+}
+
+/**
+ * Represents a tracked CLI process entry
+ */
+export interface ICliProcessEntry {
+    pid: number;
+    command: string;
+    startTime: number;
+    status: 'running' | 'completed' | 'failed' | 'killed';
+    exitCode?: number;
+}
+
+/**
+ * Registry for tracking CLI processes
+ */
+export interface ICliProcessRegistry {
+    /** Register a new process, returns assigned PID */
+    register(command: string): { pid: number; abortController: AbortController };
+    /** Mark process as completed */
+    complete(pid: number, exitCode: number): void;
+    /** Mark process as failed */
+    fail(pid: number): void;
+    /** Kill a process by PID */
+    kill(pid: number): boolean;
+    /** List all processes (running + recent completed) */
+    list(): ICliProcessEntry[];
+    /** Get the current foreground process PID */
+    readonly currentPid: number | undefined;
+}
+
+/**
+ * Represents a key-value store for the CLI
+ */
+export interface ICliKeyValueStore {
+    /**
+     * Retrieves a value by key.
+     * @param key - The key to retrieve the value for.
+     * @returns A promise resolving to the value or undefined if not found.
+     */
+    get<T = any>(key: string): Promise<T | undefined>;
+
+    /**
+     * Sets a key-value pair in the store.
+     * @param key - The key to set.
+     * @param value - The value to store.
+     * @returns A promise resolving when the value is stored.
+     */
+    set(key: string, value: any): Promise<void>;
+
+    /**
+     * Removes a key-value pair by key.
+     * @param key - The key to remove.
+     * @returns A promise resolving when the key is removed.
+     */
+    remove(key: string): Promise<void>;
+
+    /**
+     * Clears all key-value pairs from the store.
+     * @returns A promise resolving when the store is cleared.
+     */
+    clear(): Promise<void>;
+}
+
+/**
+ * Represents a store for storing data associated with commands
+ */
+export interface ICliStateStore {
+    /**
+     * Get the current state as an object.
+     */
+    getState<T extends CliState = CliState>(): T;
+
+    /**
+     * Update the state with new values. Supports partial updates.
+     * @param newState Partial state to merge with the current state.
+     */
+    updateState(newState: Partial<CliState>): void;
+
+    /**
+     * Select a specific property or computed value from the state.
+     * @param selector A function to project a slice of the state.
+     * @returns Observable of the selected value.
+     */
+    select<K>(selector: (state: CliState) => K): Observable<K>;
+
+    /**
+     * Subscribe to state changes.
+     * @param callback Callback function to handle state changes.
+     * @returns Subscription object to manage the subscription.
+     */
+    subscribe(callback: (state: CliState) => void): Subscription;
+
+    /**
+     * Reset the state to its initial value.
+     */
+    reset(): void;
+
+    /**
+     * Persist the state to storage.
+     */
+    persist(): Promise<void>;
+
+    /**
+     * Initialize the state from storage.
+     */
+    initialize(): Promise<void>;
+}
+
+/**
+ * Represents a service that pings the server
+ */
+export interface ICliPingServerService {
+    /**
+     * Pings the server
+     */
+    ping(): Promise<void>;
+}
+
+/**
+ * Represents a module for the CLI
+ */
+export interface ICliModule {
+    /**
+     * API version this module targets.
+     * Modules with apiVersion < 2 (or missing) are rejected by v2 runtimes.
+     */
+    apiVersion: number;
+
+    /** Unique module identifier, e.g. '@qodalis/cli-guid' */
+    name: string;
+
+    /** Semver version string */
+    version?: string;
+
+    /** Human-readable description */
+    description?: string;
+
+    /** Module names this module depends on (resolved before this module boots) */
+    dependencies?: string[];
+
+    /** Boot priority — lower values boot first (default: 0) */
+    priority?: number;
+
+    /** Command processors provided by this module */
+    processors?: ICliCommandProcessor[];
+
+    /** Services registered into the shared service container */
+    services?: CliProvider[];
+
+    /** Module configuration, set via configure() */
+    config?: Record<string, any>;
+
+    /**
+     * Per-locale translation maps shipped by this module.
+     * Keyed by locale code (e.g. 'es', 'fr'), each value is a flat
+     * key-value map of translation keys to translated strings.
+     *
+     * These are automatically registered with the translation service
+     * during module boot — no manual onInit() code required.
+     *
+     * @example
+     * translations: {
+     *   es: { 'cli.guid.description': 'Generar y validar UUIDs' },
+     *   fr: { 'cli.guid.description': 'Générer et valider des UUIDs' },
+     * }
+     */
+    translations?: Record<string, Record<string, string>>;
+
+    /**
+     * Returns a configured copy of this module.
+     * Modules should narrow the config type via a module-specific interface.
+     */
+    configure?(config: any): ICliModule;
+
+    /** Called after services are registered and before processors are initialized */
+    onInit?(context: ICliExecutionContext): Promise<void>;
+
+    /**
+     * Optional first-run setup flow. Called during boot if the module
+     * has not been set up yet (determined by a persisted flag in the
+     * key-value store). Use context.reader to prompt the user for
+     * initial configuration.
+     *
+     * @returns true to mark setup as complete; false/throw to abort
+     * (module still loads, setup re-triggers next boot).
+     */
+    onSetup?(context: ICliExecutionContext): Promise<boolean>;
+
+    /** Called after all modules have booted and the terminal is interactive */
+    onAfterBoot?(context: ICliExecutionContext): Promise<void>;
+
+    /** Called when the module is being torn down */
+    onDestroy?(context: ICliExecutionContext): Promise<void>;
+}
+
+/**
+ * @deprecated Use ICliModule instead
+ */
+export type ICliUmdModule = ICliModule;
+
+/**
+ * Represents a logger for the CLI
+ */
+export interface ICliLogger {
+    /**
+     * Set the log level of the logger
+     * @param level The log level to set
+     * @returns void
+     * @default CliLogLevel.ERROR
+     */
+    setCliLogLevel(level: CliLogLevel): void;
+
+    /**
+     * Log a message
+     * @param args The arguments to log
+     */
+    log(...args: any[]): void;
+
+    /**
+     * Log a message
+     * @param args The arguments to log
+     */
+    info(...args: any[]): void;
+
+    /**
+     * Log a message
+     * @param args The arguments to log
+     */
+    warn(...args: any[]): void;
+
+    /**
+     * Log a message
+     * @param args The arguments to log
+     */
+    error(...args: any[]): void;
+
+    /**
+     * Log a message
+     * @param args The arguments to log
+     */
+    debug(...args: any[]): void;
+}
+
+// ---------------------------------------------------------------------------
+// Translation service
+// ---------------------------------------------------------------------------
+
+export const ICliTranslationService_TOKEN = 'cli-translation-service';
+
+/**
+ * Provides internationalization (i18n) support for CLI strings.
+ */
+export interface ICliTranslationService {
+    /**
+     * Translate a key to the current locale.
+     * @param key The translation key (e.g. 'cli.echo.description')
+     * @param defaultValue The English fallback string (returned if no translation found)
+     * @param params Optional interpolation parameters for `{param}` placeholders
+     */
+    t(key: string, defaultValue: string, params?: Record<string, string | number>): string;
+
+    /**
+     * Get the current locale code (e.g. 'en', 'es', 'fr').
+     */
+    getLocale(): string;
+
+    /**
+     * Set the active locale.
+     * @param locale The locale code to switch to
+     */
+    setLocale(locale: string): void;
+
+    /**
+     * Register translations for a locale.
+     * Can be called multiple times — translations are merged, with later calls overriding earlier ones.
+     * @param locale The locale code
+     * @param translations Flat key-value map of translation keys to translated strings
+     */
+    addTranslations(locale: string, translations: Record<string, string>): void;
+
+    /**
+     * Get all locale codes that have at least one registered translation.
+     */
+    getAvailableLocales(): string[];
+}
+
+/**
+ * Represents a service provider for the CLI
+ */
+export interface ICliServiceProvider {
+    /**
+     * Get a service
+     * @param service The service to get
+     */
+    get<T>(service: any): T;
+
+    /**
+     * Set a service
+     * @param definition The definition of the service
+     */
+    set(definition: CliProvider | CliProvider[]): void;
+}
+
+export * from './input-reader';
+
+export * from './completion';
+
+export * from './execution-context';
+
+export * from './command-processor';
+
+export * from './progress-bars';
+
+export * from './command-hooks';
+
+export * from './users';
+
+export * from './engine-snapshot';
+
+export * from './background-service';
+
+export * from './worker-protocol';
+
+export * from './global-parameter';
+
+export * from './file-transfer';
+
+export * from './drag-drop';
+
+// ---------------------------------------------------------------------------
+// Permission service
+// ---------------------------------------------------------------------------
+
+export const ICliPermissionService_TOKEN = 'cli-permission-service';
+
+import { ICliOwnership } from '../models/permissions';
+
+/**
+ * Abstract permission service for checking rwx permissions on resources.
+ * The default implementation lives in @qodalis/cli-users; consumers can
+ * replace it via the DI container.
+ */
+export interface ICliPermissionService {
+    /**
+     * Check whether a user may perform an action on a resource.
+     * @param user        The acting user.
+     * @param action      The requested operation.
+     * @param ownership   Owner/group of the resource.
+     * @param permissions Permission string (e.g. "rwxr-xr-x").
+     * @returns true if allowed.
+     */
+    check(
+        user: ICliUser,
+        action: 'read' | 'write' | 'execute',
+        ownership: ICliOwnership,
+        permissions: string,
+    ): boolean;
+
+    /** Parse octal (e.g. "755") to a permission string (e.g. "rwxr-xr-x"). */
+    parseOctal(octal: string): string;
+
+    /** Convert a permission string (e.g. "rwxr-xr-x") to octal (e.g. "755"). */
+    toOctal(permissions: string): string;
+}

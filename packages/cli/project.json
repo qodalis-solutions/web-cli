@@ -1,0 +1,40 @@
+{
+  "name": "cli",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/cli/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "bash wasm/build.sh",
+          "tsup",
+          "cp package.json ../../dist/cli/package.json",
+          "mkdir -p ../../dist/cli/assets && cp -r src/assets/* ../../dist/cli/assets/ 2>/dev/null || true",
+          "mkdir -p ../../dist/cli/wasm && cp wasm/pkg/qodalis_cli_wasm_bg.wasm ../../dist/cli/wasm/"
+        ],
+        "cwd": "packages/cli",
+        "parallel": false
+      },
+      "inputs": [
+        "production",
+        "sharedGlobals"
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/cli"
+      ]
+    },
+    "test": {
+      "executor": "@angular-devkit/build-angular:karma",
+      "options": {
+        "tsConfig": "packages/cli/tsconfig.spec.json",
+        "polyfills": [
+          "zone.js",
+          "zone.js/testing"
+        ],
+        "karmaConfig": "packages/cli/karma.conf.js",
+        "watch": false
+      }
+    }
+  }
+}

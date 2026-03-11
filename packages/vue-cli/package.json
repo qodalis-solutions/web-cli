@@ -1,0 +1,51 @@
+{
+  "name": "@qodalis/vue-cli",
+  "version": "2.0.0-beta.1",
+  "description": "Vue 3 wrapper for the @qodalis CLI terminal engine.",
+  "author": "Nicolae Lupei, Qodalis Solutions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qodalis-solutions/web-cli"
+  },
+  "homepage": "https://qodalis.com",
+  "keywords": [
+    "vue",
+    "vue3",
+    "cli",
+    "qodalis",
+    "terminal",
+    "web-terminal",
+    "xterm"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "vue": "^3.3.0"
+  },
+  "dependencies": {
+    "@qodalis/cli": "workspace:*",
+    "@qodalis/cli-core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vue": "^3.3.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "sideEffects": false
+}

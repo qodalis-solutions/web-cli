@@ -1,51 +1,5 @@
 {
-  "compileOnSave": false,
-  "compilerOptions": {
-    "baseUrl": "./",
-    "paths": {
-      "@qodalis/cli-core": ["dist/core"],
-      "@qodalis/angular-cli": ["dist/cli"],
-      "@qodalis/cli-server-logs": ["dist/server-logs"],
-      "@qodalis/cli-guid": ["dist/guid"],
-      "@qodalis/cli-text-to-image": ["dist/text-to-image"],
-      "@qodalis/cli-regex": ["dist/regex"],
-      "@qodalis/cli-speed-test": ["dist/speed-test"],
-      "@qodalis/cli-browser-storage": ["dist/browser-storage"],
-      "@qodalis/cli-string": [
-        "dist/string"
-      ],
-      "@qodalis/cli-todo": [
-        "dist/todo"
-      ],
-      "@qodalis/cli-curl": [
-        "dist/curl"
-      ],
-      "@qodalis/cli-password-generator": [
-        "dist/password-generator"
-      ],
-      "@qodalis/cli-qr": [
-        "dist/qr"
-      ]
-    },
-    "outDir": "./dist/out-tsc",
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "sourceMap": true,
-    "declaration": false,
-    "downlevelIteration": true,
-    "experimentalDecorators": true,
-    "moduleResolution": "node",
-    "importHelpers": true,
-    "target": "ES2022",
-    "module": "ES2022",
-    "useDefineForClassFields": false,
-    "lib": ["ES2022", "dom"],
-    "skipLibCheck": true
-  },
+  "extends": "./tsconfig.base.json",
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,

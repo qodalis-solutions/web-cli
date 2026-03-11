@@ -1,0 +1,452 @@
+// Qodalis CLI Panel
+//
+// Styled to match PrimeNG lara-dark-indigo aesthetic.
+// Override with CSS custom properties:
+//   --cli-panel-bg: #111827
+//   --cli-panel-header-bg: #1f2937
+//   --cli-panel-border: #374151
+//   --cli-panel-text: rgba(255, 255, 255, 0.87)
+//   --cli-panel-text-secondary: rgba(255, 255, 255, 0.6)
+//   --cli-panel-accent: #818cf8
+//   --cli-btn-hover-bg: rgba(129, 140, 248, 0.12)
+//   --cli-btn-active-bg: rgba(129, 140, 248, 0.2)
+
+$header-height: 60px
+
+.terminal-wrapper
+  position: fixed
+  bottom: 0
+  left: 0
+  right: 0
+  width: 100vw
+  transform: translateY(0)
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+  background-color: var(--cli-panel-bg, #111827)
+  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+  border-top: 1px solid var(--cli-panel-border, #374151)
+  display: flex
+  flex-direction: column
+  z-index: 1000
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25)
+
+  &.collapsed
+    transform: translateY(calc(100% - #{$header-height}))
+
+  &.resizing
+    transition: none
+    user-select: none
+
+.terminal-header
+  background-color: var(--cli-panel-header-bg, #1f2937)
+  display: flex
+  flex-direction: column
+  position: relative
+  flex-shrink: 0
+
+  .resize-bar
+    position: absolute
+    top: -6px
+    left: 0
+    right: 0
+    height: 12px
+    cursor: ns-resize
+    display: flex
+    align-items: center
+    justify-content: center
+    z-index: 2
+
+    .resize-grip
+      width: 32px
+      height: 4px
+      border-radius: 2px
+      background: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.3))
+      opacity: 0
+      transition: opacity 0.2s ease
+
+    &:hover .resize-grip
+      opacity: 1
+
+  .header-content
+    height: $header-height
+    display: flex
+    flex-direction: row
+    gap: 1rem
+    align-items: center
+    border-bottom: 1px solid var(--cli-panel-border, #374151)
+    padding: 0 1rem
+
+    .terminal-title
+      font-size: 0.95rem
+      display: flex
+      gap: 0.5rem
+      justify-content: center
+      align-items: center
+      margin: 0
+      font-weight: 600
+      color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+
+      .title-icon
+        color: var(--cli-panel-accent, #818cf8)
+
+    .action-buttons
+      display: flex
+      flex-direction: row
+      gap: 0.35rem
+      margin-left: auto
+
+.panel-btn
+  appearance: none
+  background: transparent
+  border: none
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6))
+  cursor: pointer
+  width: 40px
+  height: 40px
+  border-radius: 50%
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  padding: 0
+  transition: background-color 0.2s ease, color 0.2s ease
+
+  svg
+    flex-shrink: 0
+
+  &:hover:not(:disabled)
+    color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+    background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12))
+
+  &:active:not(:disabled)
+    background-color: var(--cli-btn-active-bg, rgba(129, 140, 248, 0.2))
+
+  &:disabled
+    opacity: 0.3
+    cursor: not-allowed
+
+.terminal-content
+  flex: 1
+  min-height: 0
+  overflow: hidden
+  display: flex
+  flex-direction: column
+
+// ─── Position: top ─────────────────────────────────────
+// Header at BOTTOM (column-reverse) so it stays visible when collapsed upward
+.terminal-wrapper[data-position="top"]
+  bottom: auto
+  top: 0
+  border-top: none
+  border-bottom: 1px solid var(--cli-panel-border, #374151)
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25)
+  flex-direction: column-reverse
+
+  &.collapsed
+    transform: translateY(calc(-100% + #{$header-height}))
+
+  .terminal-header
+    .header-content
+      border-bottom: none
+      border-top: 1px solid var(--cli-panel-border, #374151)
+
+    .resize-bar
+      top: auto
+      bottom: -6px
+      cursor: ns-resize
+
+// ─── Position: left ────────────────────────────────────
+// Header at RIGHT (row-reverse) so it stays visible when collapsed leftward
+.terminal-wrapper[data-position="left"]
+  bottom: 0
+  top: 0
+  left: 0
+  right: auto
+  width: auto
+  height: 100vh !important
+  border-top: none
+  border-right: 1px solid var(--cli-panel-border, #374151)
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25)
+  flex-direction: row-reverse
+
+  &.collapsed
+    transform: translateX(calc(-100% + #{$header-height}))
+
+  .terminal-header
+    width: $header-height
+    flex-shrink: 0
+    flex-direction: column
+
+    .header-content
+      height: auto
+      flex: 1
+      flex-direction: column
+      padding: 1rem 0
+      border-bottom: none
+      border-left: 1px solid var(--cli-panel-border, #374151)
+
+      .terminal-title
+        writing-mode: vertical-rl
+        text-orientation: mixed
+
+      .action-buttons
+        flex-direction: column
+        margin-left: 0
+        margin-top: auto
+
+    .resize-bar
+      position: absolute
+      top: 0
+      bottom: 0
+      left: auto
+      right: -6px
+      width: 12px
+      height: auto
+      cursor: ew-resize
+
+      .resize-grip
+        width: 4px
+        height: 32px
+
+  .terminal-content
+    flex: 1
+    min-width: 0
+
+// ─── Position: right ───────────────────────────────────
+// Header at LEFT (row) so it stays visible when collapsed rightward
+.terminal-wrapper[data-position="right"]
+  bottom: 0
+  top: 0
+  left: auto
+  right: 0
+  width: auto
+  height: 100vh !important
+  border-top: none
+  border-left: 1px solid var(--cli-panel-border, #374151)
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.25)
+  flex-direction: row
+
+  &.collapsed
+    transform: translateX(calc(100% - #{$header-height}))
+
+  .terminal-header
+    width: $header-height
+    flex-shrink: 0
+    flex-direction: column
+
+    .header-content
+      height: auto
+      flex: 1
+      flex-direction: column
+      padding: 1rem 0
+      border-bottom: none
+      border-right: 1px solid var(--cli-panel-border, #374151)
+
+      .terminal-title
+        writing-mode: vertical-rl
+        text-orientation: mixed
+
+      .action-buttons
+        flex-direction: column
+        margin-left: 0
+        margin-top: auto
+
+    .resize-bar
+      position: absolute
+      top: 0
+      bottom: 0
+      right: auto
+      left: -6px
+      width: 12px
+      height: auto
+      cursor: ew-resize
+
+      .resize-grip
+        width: 4px
+        height: 32px
+
+  .terminal-content
+    flex: 1
+    min-width: 0
+
+// ─── Resizable / Closable toggles ─────────────────────
+.terminal-wrapper[data-resizable="false"]
+  .resize-bar
+    display: none
+
+.terminal-wrapper[data-closable="false"]
+  .panel-btn-close
+    display: none
+
+// ─── Hide tab ─────────────────────────────────────────
+
+.cli-panel-hide-tab
+  position: fixed
+  z-index: 1000
+  display: flex
+  align-items: center
+  gap: 6px
+  background-color: var(--cli-panel-header-bg, #1f2937)
+  border: 1px solid var(--cli-panel-border, #374151)
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6))
+  cursor: pointer
+  padding: 6px 12px
+  appearance: none
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif
+  font-size: 0.8rem
+  font-weight: 600
+  transition: transform 0.2s ease, opacity 0.2s ease, color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3)
+  opacity: 0.85
+
+  &:hover
+    transform: scale(1.05)
+    opacity: 1
+    color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+    background-color: var(--cli-panel-bg, #111827)
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4)
+
+  &:active
+    transform: scale(0.97)
+
+  svg
+    flex-shrink: 0
+
+  .cli-panel-hide-tab-icon
+    color: var(--cli-panel-accent, #818cf8)
+
+  .cli-panel-hide-tab-label
+    letter-spacing: 0.03em
+
+  // Position: bottom
+  &[data-position="bottom"]
+    bottom: 0
+    border-bottom: none
+    border-radius: 8px 8px 0 0
+
+    &[data-hide-align="start"]
+      left: 16px
+    &[data-hide-align="center"]
+      left: 50%
+      transform: translateX(-50%)
+    &[data-hide-align="center"]:hover
+      transform: translateX(-50%) scale(1.05)
+    &[data-hide-align="end"]
+      right: 16px
+
+  // Position: top
+  &[data-position="top"]
+    top: 0
+    border-top: none
+    border-radius: 0 0 8px 8px
+
+    &[data-hide-align="start"]
+      left: 16px
+    &[data-hide-align="center"]
+      left: 50%
+      transform: translateX(-50%)
+    &[data-hide-align="center"]:hover
+      transform: translateX(-50%) scale(1.05)
+    &[data-hide-align="end"]
+      right: 16px
+
+  // Position: left
+  &[data-position="left"]
+    left: 0
+    border-left: none
+    border-radius: 0 8px 8px 0
+
+    &[data-hide-align="start"]
+      top: 16px
+    &[data-hide-align="center"]
+      top: 50%
+      transform: translateY(-50%)
+    &[data-hide-align="center"]:hover
+      transform: translateY(-50%) scale(1.05)
+    &[data-hide-align="end"]
+      bottom: 16px
+
+  // Position: right
+  &[data-position="right"]
+    right: 0
+    border-right: none
+    border-radius: 8px 0 0 8px
+
+    &[data-hide-align="start"]
+      top: 16px
+    &[data-hide-align="center"]
+      top: 50%
+      transform: translateY(-50%)
+    &[data-hide-align="center"]:hover
+      transform: translateY(-50%) scale(1.05)
+    &[data-hide-align="end"]
+      bottom: 16px
+
+@keyframes cli-hide-tab-pulse
+  0%, 100%
+    transform: translateX(0)
+  50%
+    transform: translateX(3px)
+
+@keyframes cli-hide-tab-pulse-vertical
+  0%, 100%
+    transform: translateY(0)
+  50%
+    transform: translateY(3px)
+
+.cli-panel-hide-tab:hover .cli-panel-hide-tab-arrow
+  animation: cli-hide-tab-pulse 0.6s ease infinite
+
+.cli-panel-hide-tab[data-position="left"]:hover .cli-panel-hide-tab-arrow,
+.cli-panel-hide-tab[data-position="right"]:hover .cli-panel-hide-tab-arrow
+  animation: cli-hide-tab-pulse-vertical 0.6s ease infinite
+
+// ─── Position dropdown ────────────────────────────────
+
+.panel-btn-position-wrapper
+  position: relative
+
+.position-dropdown
+  position: fixed
+  background-color: var(--cli-panel-header-bg, #1f2937)
+  border: 1px solid var(--cli-panel-border, #374151)
+  border-radius: 6px
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4)
+  z-index: 1100
+  min-width: 120px
+  overflow: hidden
+  display: flex
+  flex-direction: column
+
+.position-dropdown-item
+  appearance: none
+  background: transparent
+  border: none
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6))
+  cursor: pointer
+  display: flex
+  align-items: center
+  gap: 8px
+  padding: 8px 12px
+  font-size: 0.85rem
+  font-family: inherit
+  width: 100%
+  text-align: left
+  transition: background-color 0.15s ease, color 0.15s ease
+
+  &:hover
+    background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12))
+    color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+
+  &.active
+    color: var(--cli-panel-accent, #818cf8)
+
+  svg
+    flex-shrink: 0
+
+// Position-specific dropdown overrides removed — JS computes fixed coordinates
+
+// ─── Hideable toggle ──────────────────────────────────
+
+.terminal-wrapper[data-hideable="false"]
+  .panel-btn-hide
+    display: none
