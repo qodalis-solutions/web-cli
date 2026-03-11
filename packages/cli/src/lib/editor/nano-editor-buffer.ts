@@ -1,3 +1,5 @@
+import { getAccelerator } from '../wasm';
+
 /**
  * Text buffer for the nano-style editor.
  * Manages lines of text, cursor position, scroll offset, and edit operations.
@@ -212,38 +214,17 @@ export class NanoEditorBuffer {
     searchForward(needle: string, caseSensitive = false): boolean {
         if (!needle) return false;
 
-        const search = caseSensitive ? needle : needle.toLowerCase();
+        const accel = getAccelerator();
+        const text = this.lines.join('\n');
+        const [row, col] = accel.textSearch(
+            text, needle, this.cursorRow, this.cursorCol, caseSensitive, true,
+        );
 
-        // Search from current position to end
-        for (let row = this.cursorRow; row < this.lines.length; row++) {
-            const line = caseSensitive
-                ? this.lines[row]
-                : this.lines[row].toLowerCase();
-            const startCol = row === this.cursorRow ? this.cursorCol + 1 : 0;
-            const idx = line.indexOf(search, startCol);
-            if (idx !== -1) {
-                this.cursorRow = row;
-                this.cursorCol = idx;
-                return true;
-            }
-        }
+        if (row === -1) return false;
 
-        // Wrap around from the beginning
-        for (let row = 0; row <= this.cursorRow; row++) {
-            const line = caseSensitive
-                ? this.lines[row]
-                : this.lines[row].toLowerCase();
-            const endCol =
-                row === this.cursorRow ? this.cursorCol : line.length;
-            const idx = line.indexOf(search);
-            if (idx !== -1 && idx < endCol) {
-                this.cursorRow = row;
-                this.cursorCol = idx;
-                return true;
-            }
-        }
-
-        return false;
+        this.cursorRow = row;
+        this.cursorCol = col;
+        return true;
     }
 
     /**
@@ -284,34 +265,16 @@ export class NanoEditorBuffer {
     ): number {
         if (!needle) return 0;
 
-        let count = 0;
-        for (let row = 0; row < this.lines.length; row++) {
-            let line = this.lines[row];
-            let newLine = '';
-            let searchFrom = 0;
+        const accel = getAccelerator();
+        const text = this.lines.join('\n');
+        const result = accel.textReplaceAll(text, needle, replacement, caseSensitive);
 
-            while (searchFrom <= line.length) {
-                const haystack = caseSensitive ? line : line.toLowerCase();
-                const search = caseSensitive ? needle : needle.toLowerCase();
-                const idx = haystack.indexOf(search, searchFrom);
-                if (idx === -1) {
-                    newLine += line.slice(searchFrom);
-                    break;
-                }
-                newLine += line.slice(searchFrom, idx) + replacement;
-                searchFrom = idx + needle.length;
-                count++;
-            }
-
-            if (this.lines[row] !== newLine) {
-                this.lines[row] = newLine;
-            }
-        }
-
-        if (count > 0) {
+        if (result.count > 0) {
+            this.lines = result.text.split('\n');
             this.dirty = true;
         }
-        return count;
+
+        return result.count;
     }
 
     /**

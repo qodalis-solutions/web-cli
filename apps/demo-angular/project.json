@@ -20,6 +20,11 @@
             "glob": "qodalis.svg",
             "input": "apps/demo-angular/src",
             "output": "/"
+          },
+          {
+            "glob": "qodalis_cli_wasm_bg.wasm",
+            "input": "dist/cli/wasm",
+            "output": "/assets/wasm"
           }
         ],
         "styles": [

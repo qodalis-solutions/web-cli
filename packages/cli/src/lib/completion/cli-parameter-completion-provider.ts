@@ -5,6 +5,7 @@ import {
     ICliCommandExecutorService,
     ICliCommandParameterDescriptor,
 } from '@qodalis/cli-core';
+import { getAccelerator } from '../wasm';
 
 /**
  * Provides tab-completion for parameter/flag names (e.g. --recursive, -r).
@@ -52,30 +53,22 @@ export class CliParameterCompletionProvider implements ICliCompletionProvider {
 
         const isDoubleDash = token.startsWith('--');
         const prefix = isDoubleDash ? token.slice(2) : token.slice(1);
-        const lowerPrefix = prefix.toLowerCase();
-        const results: string[] = [];
 
+        const candidates: string[] = [];
         for (const param of allParameters) {
             if (isDoubleDash) {
-                if (param.name.toLowerCase().startsWith(lowerPrefix)) {
-                    results.push(`--${param.name}`);
-                }
+                candidates.push(`--${param.name}`);
             } else {
-                // Short aliases
                 if (param.aliases) {
                     for (const alias of param.aliases) {
-                        if (alias.toLowerCase().startsWith(lowerPrefix)) {
-                            results.push(`-${alias}`);
-                        }
+                        candidates.push(`-${alias}`);
                     }
                 }
-                // Also suggest full names with --
-                if (param.name.toLowerCase().startsWith(lowerPrefix)) {
-                    results.push(`--${param.name}`);
-                }
+                candidates.push(`--${param.name}`);
             }
         }
 
-        return results.sort();
+        const dashPrefix = isDoubleDash ? `--${prefix}` : `-${prefix}`;
+        return getAccelerator().prefixMatch(candidates, dashPrefix);
     }
 }

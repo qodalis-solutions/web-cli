@@ -15,3 +15,4 @@ export * from './state';
 export * from './engine';
 export * from './server';
 export * from './testing';
+export * from './wasm';

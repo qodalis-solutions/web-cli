@@ -25,6 +25,7 @@ import {
     CliServerManager,
     CliServerManager_TOKEN,
 } from '../../server/cli-server-manager';
+import { isWasmAccelerated } from '../../wasm';
 
 export class CliDebugCommandProcessor implements ICliCommandProcessor {
     command = 'debug';
@@ -443,6 +444,11 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
                     );
                 }
 
+                const wasmActive = isWasmAccelerated();
+                writer.writeln(
+                    `  ${wasmActive ? CliIcon.CheckIcon : CliIcon.WarningIcon} WASM Accelerator: ${wasmActive ? 'loaded' : 'using JS fallback'}`,
+                );
+
                 const historyService = context.services.get<CliCommandHistory>(
                     CliCommandHistory_TOKEN,
                 );
@@ -476,6 +482,7 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
                         core: CORE_VERSION,
                         cli: CLI_VERSION,
                     },
+                    wasmAccelerated: isWasmAccelerated(),
                     environment: {
                         userAgent:
                             typeof navigator !== 'undefined'
@@ -694,6 +701,11 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
         );
         writer.writeln(
             `  ${writer.wrapInColor('History:', CliForegroundColor.Cyan)} ${history.getHistory().length} commands`,
+        );
+
+        const wasmStatus = isWasmAccelerated() ? 'active' : 'inactive (JS fallback)';
+        writer.writeln(
+            `  ${writer.wrapInColor('WASM Accelerator:', CliForegroundColor.Cyan)} ${wasmStatus}`,
         );
 
         writer.writeDivider({ char: '=' });

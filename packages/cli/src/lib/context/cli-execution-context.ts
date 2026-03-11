@@ -228,6 +228,22 @@ export class CliExecutionContext
             }
             return true;
         });
+
+        // Window-level capture listener to intercept browser shortcuts that
+        // conflict with terminal keybindings when the terminal has focus.
+        // Note: Ctrl+W cannot be intercepted (browser closes tab before JS runs).
+        const termEl = this.terminal.element;
+        if (termEl) {
+            window.addEventListener('keydown', (event) => {
+                if (!termEl.contains(document.activeElement)) return;
+                if (event.ctrlKey && !event.altKey && !event.metaKey) {
+                    const key = event.key.toLowerCase();
+                    if (['f', 's', 'q', 'o', 'k', 'u', 'g', 'r', 'n', 'h'].includes(key)) {
+                        event.preventDefault();
+                    }
+                }
+            }, true);
+        }
     }
 
     setContextProcessor = (

@@ -59,6 +59,7 @@ import {
     CliServerManager_TOKEN,
 } from '../server/cli-server-manager';
 import { createServerModule } from '../server/cli-server-module';
+import { initWasmAccelerator } from '../wasm';
 
 export interface CliEngineOptions extends CliOptions {
     terminalOptions?: Partial<ITerminalOptions & ITerminalInitOnlyOptions>;
@@ -140,6 +141,9 @@ export class CliEngine {
      * Initialize the terminal, wire up services, boot modules, and show welcome message.
      */
     async start(): Promise<void> {
+        // 0. Eagerly load WASM accelerator (fire-and-forget — JS fallback if unavailable)
+        initWasmAccelerator().catch(() => {});
+
         // 1. Wait for container to have layout, then initialize xterm.js
         await this.waitForLayout();
         this.initializeTerminal();

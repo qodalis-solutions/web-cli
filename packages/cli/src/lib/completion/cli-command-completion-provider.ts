@@ -4,6 +4,7 @@ import {
     ICliCommandProcessorRegistry,
     ICliCommandProcessor,
 } from '@qodalis/cli-core';
+import { getAccelerator } from '../wasm';
 
 /**
  * Provides tab-completion for command names and sub-command names.
@@ -49,21 +50,12 @@ export class CliCommandCompletionProvider implements ICliCompletionProvider {
         prefix: string,
     ): string[] {
         const names: string[] = [];
-        const lowerPrefix = prefix.toLowerCase();
-
         for (const p of processors) {
-            if (p.command.toLowerCase().startsWith(lowerPrefix)) {
-                names.push(p.command);
-            }
+            names.push(p.command);
             if (p.aliases) {
-                for (const alias of p.aliases) {
-                    if (alias.toLowerCase().startsWith(lowerPrefix)) {
-                        names.push(alias);
-                    }
-                }
+                names.push(...p.aliases);
             }
         }
-
-        return names.sort();
+        return getAccelerator().prefixMatch(names, prefix);
     }
 }

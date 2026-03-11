@@ -7,9 +7,11 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
+          "bash wasm/build.sh",
           "tsup",
           "cp package.json ../../dist/cli/package.json",
-          "mkdir -p ../../dist/cli/assets && cp -r src/assets/* ../../dist/cli/assets/ 2>/dev/null || true"
+          "mkdir -p ../../dist/cli/assets && cp -r src/assets/* ../../dist/cli/assets/ 2>/dev/null || true",
+          "mkdir -p ../../dist/cli/wasm && cp wasm/pkg/qodalis_cli_wasm_bg.wasm ../../dist/cli/wasm/"
         ],
         "cwd": "packages/cli",
         "parallel": false

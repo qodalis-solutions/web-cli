@@ -92,13 +92,13 @@ export class NanoEditorRenderer {
             '',
             '  Main shortcuts:',
             '',
-            '  ^G  Help        ^O  Write Out   ^W  Where Is     ^K  Cut Line',
+            '  ^G  Help        ^O  Write Out   ^F  Search       ^K  Cut Line',
             '  ^X  Exit        ^R  Read File    ^\\  Replace      ^U  Paste Line',
             '',
             '  Navigation:',
             '',
             '  ^A  Home        ^E  End          ^Y  Page Up      ^V  Page Down',
-            '  ^P  Prev Line   ^N  Next Line    ^F  Forward      ^B  Backward',
+            '  ^P  Prev Line   ^N  Next Line    Arrow Keys       ^B  Backward',
             '',
             '  Other:',
             '',
@@ -142,7 +142,7 @@ export class NanoEditorRenderer {
 
     private renderShortcutBar(cols: number): string {
         const shortcuts =
-            '^G Help  ^O Write Out  ^W Where Is  ^K Cut     ^C Cur Pos';
+            '^G Help  ^O Write Out  ^F Search    ^K Cut     ^C Cur Pos';
         const padded = shortcuts.padEnd(cols);
         return `\x1b[7m${padded}\x1b[0m`;
     }

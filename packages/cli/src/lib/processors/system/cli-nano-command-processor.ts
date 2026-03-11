@@ -264,8 +264,8 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        // Ctrl+W — Where Is (search)
-        if (data === '\x17') {
+        // Ctrl+W or Ctrl+F — Where Is (search)
+        if (data === '\x17' || data === '\x06') {
             this.inputMode = 'search';
             this.inputBuffer = this.searchNeedle;
             this.renderPrompt(`Search: ${this.inputBuffer}`);
@@ -347,12 +347,7 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        // Ctrl+F — Forward (right)
-        if (data === '\x06') {
-            this.buffer.moveRight();
-            this.render();
-            return;
-        }
+        // Ctrl+F is remapped to Search (above) — use arrow keys for cursor movement
 
         // Ctrl+B — Backward (left)
         if (data === '\x02') {
@@ -474,7 +469,7 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
             `  ${writer.wrapInColor('^X', CliForegroundColor.Yellow)}  Exit              ${writer.wrapInColor('^O', CliForegroundColor.Yellow)}  Write Out (save)`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('^G', CliForegroundColor.Yellow)}  Help              ${writer.wrapInColor('^W', CliForegroundColor.Yellow)}  Search`,
+            `  ${writer.wrapInColor('^G', CliForegroundColor.Yellow)}  Help              ${writer.wrapInColor('^F', CliForegroundColor.Yellow)}  Search`,
         );
         writer.writeln(
             `  ${writer.wrapInColor('^K', CliForegroundColor.Yellow)}  Cut line          ${writer.wrapInColor('^U', CliForegroundColor.Yellow)}  Paste line`,
