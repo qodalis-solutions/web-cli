@@ -316,27 +316,26 @@ export const usersModule: ICliUsersModule = {
             }
         }
 
-        // Log in as the new user
-        await sessionService.setUserSession({
-            user: newUser,
-            loginTime: Date.now(),
-            lastActivity: Date.now(),
-        });
-
-        // Create home directory if the files module is installed
+        // Create home directory before logging in so session subscriber
+        // can cd into it without error
         try {
             const fs = context.services.get<any>('cli-file-system-service');
             if (fs) {
                 if (newUser.homeDir && !fs.exists(newUser.homeDir)) {
                     fs.createDirectory(newUser.homeDir, true);
                 }
-                fs.setHomePath(newUser.homeDir!);
-                fs.setCurrentDirectory(newUser.homeDir!);
                 await fs.persist();
             }
         } catch {
             // Files module not installed — skip
         }
+
+        // Log in as the new user
+        await sessionService.setUserSession({
+            user: newUser,
+            loginTime: Date.now(),
+            lastActivity: Date.now(),
+        });
 
         context.writer.writeln('');
         context.writer.writeSuccess(`User "${newUser.name}" created and logged in.`);
