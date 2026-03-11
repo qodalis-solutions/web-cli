@@ -59,6 +59,9 @@ jobs:
           cp README.md dist/react-cli/
           cp README.md dist/vue-cli/
 
+      - name: Resolve workspace:* protocol in dist package.json files
+        run: node tools/resolve-workspace-deps.js
+
       - name: Publish to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
