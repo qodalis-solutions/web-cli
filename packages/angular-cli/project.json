@@ -1,0 +1,35 @@
+{
+  "name": "angular-cli",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/angular-cli/src",
+  "prefix": "lib",
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:ng-packagr",
+      "options": {
+        "project": "packages/angular-cli/ng-package.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "packages/angular-cli/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "packages/angular-cli/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production",
+      "inputs": ["production", "sharedGlobals"],
+      "outputs": ["{workspaceRoot}/dist/angular-cli"]
+    },
+    "lint": {
+      "executor": "@angular-eslint/builder:lint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/angular-cli/**/*.ts",
+          "packages/angular-cli/**/*.html"
+        ]
+      }
+    }
+  }
+}

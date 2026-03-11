@@ -1,0 +1,17 @@
+{
+  "name": "vue-cli",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/vue-cli/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsup", "cp package.json dist/package.json"],
+        "cwd": "packages/vue-cli",
+        "parallel": false
+      },
+      "inputs": ["production", "sharedGlobals"],
+      "outputs": ["{projectRoot}/dist"]
+    }
+  }
+}

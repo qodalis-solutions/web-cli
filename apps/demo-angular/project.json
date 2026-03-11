@@ -1,0 +1,81 @@
+{
+  "name": "demo-angular",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/demo-angular/src",
+  "prefix": "app",
+  "implicitDependencies": ["angular-cli", "cli"],
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:browser",
+      "options": {
+        "outputPath": "dist/demo-angular",
+        "index": "apps/demo-angular/src/index.html",
+        "main": "apps/demo-angular/src/main.ts",
+        "polyfills": ["zone.js"],
+        "tsConfig": "apps/demo-angular/tsconfig.app.json",
+        "inlineStyleLanguage": "sass",
+        "assets": [
+          {
+            "glob": "qodalis.svg",
+            "input": "apps/demo-angular/src",
+            "output": "/"
+          },
+          {
+            "glob": "qodalis_cli_wasm_bg.wasm",
+            "input": "dist/cli/wasm",
+            "output": "/assets/wasm"
+          }
+        ],
+        "styles": [
+          "apps/demo-angular/src/styles.sass",
+          "packages/angular-cli/src/assets/styles.sass"
+        ],
+        "scripts": []
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "1MB",
+              "maximumError": "2MB"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "2kb",
+              "maximumError": "4kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": true,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        }
+      },
+      "defaultConfiguration": "production",
+      "outputs": ["{workspaceRoot}/dist/demo-angular"]
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "options": {
+        "port": 4303,
+        "proxyConfig": "proxy.conf.json"
+      },
+      "configurations": {
+        "production": {
+          "browserTarget": "demo-angular:build:production"
+        },
+        "development": {
+          "browserTarget": "demo-angular:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    }
+  }
+}

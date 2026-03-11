@@ -1,0 +1,19 @@
+import { NgModule } from '@angular/core';
+import { resolveCliModuleProvider } from '@qodalis/angular-cli';
+import { ICliModule } from '@qodalis/cli-core';
+import { Cli{{processorName}}CommandProcessor } from './processors/{{processorFileName}}';
+import { API_VERSION } from './version';
+
+const cliModule: ICliModule = {
+    apiVersion: API_VERSION,
+    name: '@qodalis/cli-{{name}}',
+    processors: [new Cli{{processorName}}CommandProcessor()],
+};
+
+@NgModule({
+    declarations: [],
+    imports: [],
+    exports: [],
+    providers: [...resolveCliModuleProvider(cliModule)],
+})
+export class Cli{{processorName}}Module {}

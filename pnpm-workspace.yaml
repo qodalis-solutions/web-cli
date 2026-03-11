@@ -1,0 +1,14 @@
+packages:
+  - packages/*
+  - packages/plugins/*
+  - apps/*
+
+ignoredBuiltDependencies:
+  - nx
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - esbuild
+  - electron
+  - less
+  - nice-napi

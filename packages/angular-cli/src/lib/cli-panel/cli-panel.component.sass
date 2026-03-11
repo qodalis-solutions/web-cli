@@ -1,0 +1,233 @@
+$tab-bar-height: 38px
+
+.terminal-tabs
+  background-color: var(--cli-panel-header-bg, #1f2937)
+  display: flex
+  align-items: center
+  height: $tab-bar-height
+  padding: 0 8px
+  gap: 4px
+  border-bottom: 1px solid var(--cli-panel-border, #374151)
+  overflow-x: auto
+  overflow-y: hidden
+  flex-shrink: 0
+
+  &::-webkit-scrollbar
+    height: 2px
+
+  &::-webkit-scrollbar-thumb
+    background: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.3))
+    border-radius: 1px
+
+  .tab-list
+    list-style: none
+    margin: 0
+    padding: 0
+    display: flex
+    gap: 2px
+    align-items: stretch
+    height: 100%
+
+  .tab
+    display: flex
+    align-items: center
+    gap: 6px
+    padding: 0 12px
+    cursor: pointer
+    background: transparent
+    border: none
+    border-top: 2px solid transparent
+    color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6))
+    font-size: 0.8rem
+    font-family: inherit
+    white-space: nowrap
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease
+    height: 100%
+
+    &:hover:not(.active)
+      background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12))
+      color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+
+    &.active
+      background-color: var(--cli-panel-bg, #111827)
+      color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+      border-top-color: var(--cli-panel-accent, #818cf8)
+
+    .tab-title
+      pointer-events: none
+
+    .tab-rename-input
+      appearance: none
+      background: var(--cli-panel-bg, #111827)
+      border: 1px solid var(--cli-panel-accent, #818cf8)
+      color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+      font-size: 0.8rem
+      font-family: inherit
+      padding: 2px 6px
+      border-radius: 3px
+      outline: none
+      width: 120px
+      height: 22px
+
+    .close-btn
+      appearance: none
+      background: none
+      border: none
+      color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.4))
+      cursor: pointer
+      font-size: 1rem
+      line-height: 1
+      padding: 0 2px
+      border-radius: 3px
+      transition: background-color 0.15s ease, color 0.15s ease
+
+      &:hover
+        color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+        background-color: rgba(255, 255, 255, 0.1)
+
+  .add-tab
+    appearance: none
+    background: transparent
+    border: 1px dashed var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.3))
+    color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.5))
+    cursor: pointer
+    font-size: 1rem
+    line-height: 1
+    width: 28px
+    height: 24px
+    border-radius: 4px
+    display: flex
+    align-items: center
+    justify-content: center
+    flex-shrink: 0
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease
+
+    &:hover
+      background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12))
+      color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+      border-color: var(--cli-panel-text, rgba(255, 255, 255, 0.5))
+
+// Context menu
+.tab-context-menu
+  position: fixed
+  z-index: 1100
+  background-color: var(--cli-panel-header-bg, #1f2937)
+  border: 1px solid var(--cli-panel-border, #374151)
+  border-radius: 6px
+  padding: 4px 0
+  min-width: 180px
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4)
+  font-family: inherit
+
+  .context-menu-item
+    appearance: none
+    background: transparent
+    border: none
+    color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+    cursor: pointer
+    display: block
+    width: 100%
+    text-align: left
+    padding: 6px 14px
+    font-size: 0.82rem
+    font-family: inherit
+    transition: background-color 0.1s ease
+
+    &:hover:not(:disabled)
+      background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12))
+
+    &:disabled
+      color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.3))
+      cursor: not-allowed
+
+    &.destructive
+      color: #f87171
+
+      &:hover:not(:disabled)
+        background-color: rgba(248, 113, 113, 0.12)
+
+  .context-menu-separator
+    height: 1px
+    background-color: var(--cli-panel-border, #374151)
+    margin: 4px 0
+
+.terminal-instances
+  flex: 1
+  min-height: 0
+  overflow: hidden
+
+.terminal-instance
+  height: 100%
+
+.terminal-panes-container
+  display: flex
+  height: 100%
+
+  &.resizing
+    user-select: none
+    cursor: ew-resize
+
+.terminal-pane
+  position: relative
+  height: 100%
+  min-width: 0
+  overflow: hidden
+
+  cli
+    display: block
+    height: 100%
+
+  &.active-pane
+    outline: 1px solid var(--cli-panel-accent, #818cf8)
+    outline-offset: -1px
+
+  &:hover .pane-close-btn
+    opacity: 1
+
+.pane-close-btn
+  appearance: none
+  position: absolute
+  top: 4px
+  right: 4px
+  z-index: 10
+  background: var(--cli-panel-header-bg, #1f2937)
+  border: 1px solid var(--cli-panel-border, #374151)
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6))
+  cursor: pointer
+  font-size: 0.9rem
+  line-height: 1
+  width: 22px
+  height: 22px
+  border-radius: 3px
+  display: flex
+  align-items: center
+  justify-content: center
+  opacity: 0
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease
+
+  &:hover
+    color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+    background-color: rgba(255, 255, 255, 0.1)
+
+.pane-divider
+  width: 6px
+  cursor: ew-resize
+  display: flex
+  align-items: center
+  justify-content: center
+  flex-shrink: 0
+  background: transparent
+  transition: background-color 0.15s ease
+
+  &:hover
+    background-color: var(--cli-panel-accent, #818cf8)
+
+  .pane-divider-grip
+    width: 2px
+    height: 24px
+    border-radius: 1px
+    background-color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.3))
+    transition: background-color 0.15s ease
+
+  &:hover .pane-divider-grip
+    background-color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))

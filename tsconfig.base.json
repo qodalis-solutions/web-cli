@@ -1,0 +1,188 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@qodalis/cli-core": [
+        "dist/core"
+      ],
+      "@qodalis/cli": [
+        "dist/cli"
+      ],
+      "@qodalis/angular-cli": [
+        "dist/angular-cli"
+      ],
+      "@qodalis/cli-server-logs": [
+        "dist/server-logs"
+      ],
+      "@qodalis/cli-guid": [
+        "dist/guid"
+      ],
+      "@qodalis/cli-text-to-image": [
+        "dist/text-to-image"
+      ],
+      "@qodalis/cli-regex": [
+        "dist/regex"
+      ],
+      "@qodalis/cli-speed-test": [
+        "dist/speed-test"
+      ],
+      "@qodalis/cli-browser-storage": [
+        "dist/browser-storage"
+      ],
+      "@qodalis/cli-string": [
+        "dist/string"
+      ],
+      "@qodalis/cli-todo": [
+        "dist/todo"
+      ],
+      "@qodalis/cli-curl": [
+        "dist/curl"
+      ],
+      "@qodalis/cli-password-generator": [
+        "dist/password-generator"
+      ],
+      "@qodalis/cli-qr": [
+        "dist/qr"
+      ],
+      "@qodalis/cli-yesno": [
+        "dist/yesno"
+      ],
+      "@qodalis/cli-users": [
+        "dist/users"
+      ],
+      "@qodalis/cli-files": [
+        "dist/files"
+      ],
+      "@qodalis/cli-snake": [
+        "dist/snake"
+      ],
+      "@qodalis/cli-tetris": [
+        "dist/tetris"
+      ],
+      "@qodalis/cli-2048": [
+        "dist/2048"
+      ],
+      "@qodalis/cli-minesweeper": [
+        "dist/minesweeper"
+      ],
+      "@qodalis/cli-wordle": [
+        "dist/wordle"
+      ],
+      "@qodalis/cli-scp": [
+        "dist/scp"
+      ],
+      "@qodalis/cli-wget": [
+        "dist/wget"
+      ],
+      "@qodalis/cli-sudoku": [
+        "dist/sudoku"
+      ],
+      "@qodalis/electron-cli": [
+        "dist/electron-cli"
+      ],
+      "@qodalis/electron-cli/preload": [
+        "dist/electron-cli/preload"
+      ],
+      "@qodalis/electron-cli/main": [
+        "dist/electron-cli/main"
+      ],
+      "@qodalis/cli-chart": [
+        "dist/chart"
+      ],
+      "@qodalis/cli-csv": [
+        "dist/csv"
+      ],
+      "@qodalis/cli-markdown": [
+        "dist/markdown"
+      ],
+      "@qodalis/cli-stopwatch": [
+        "dist/stopwatch"
+      ],
+      "@qodalis/cli-cron": [
+        "dist/cron"
+      ],
+      "@qodalis/cli-lang-es": [
+        "dist/lang-es"
+      ],
+      "@qodalis/cli-lang-es/*": [
+        "dist/lang-es/*"
+      ],
+      "@qodalis/cli-lang-fr": [
+        "dist/lang-fr"
+      ],
+      "@qodalis/cli-lang-fr/*": [
+        "dist/lang-fr/*"
+      ],
+      "@qodalis/cli-lang-de": [
+        "dist/lang-de"
+      ],
+      "@qodalis/cli-lang-de/*": [
+        "dist/lang-de/*"
+      ],
+      "@qodalis/cli-lang-pt": [
+        "dist/lang-pt"
+      ],
+      "@qodalis/cli-lang-pt/*": [
+        "dist/lang-pt/*"
+      ],
+      "@qodalis/cli-lang-it": [
+        "dist/lang-it"
+      ],
+      "@qodalis/cli-lang-it/*": [
+        "dist/lang-it/*"
+      ],
+      "@qodalis/cli-lang-ja": [
+        "dist/lang-ja"
+      ],
+      "@qodalis/cli-lang-ja/*": [
+        "dist/lang-ja/*"
+      ],
+      "@qodalis/cli-lang-ko": [
+        "dist/lang-ko"
+      ],
+      "@qodalis/cli-lang-ko/*": [
+        "dist/lang-ko/*"
+      ],
+      "@qodalis/cli-lang-zh": [
+        "dist/lang-zh"
+      ],
+      "@qodalis/cli-lang-zh/*": [
+        "dist/lang-zh/*"
+      ],
+      "@qodalis/cli-lang-ru": [
+        "dist/lang-ru"
+      ],
+      "@qodalis/cli-lang-ru/*": [
+        "dist/lang-ru/*"
+      ],
+      "@qodalis/cli-lang-ro": [
+        "dist/lang-ro"
+      ],
+      "@qodalis/cli-lang-ro/*": [
+        "dist/lang-ro/*"
+      ]
+    },
+    "outDir": "./dist/out-tsc",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "sourceMap": true,
+    "declaration": false,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "useDefineForClassFields": false,
+    "lib": [
+      "ES2022",
+      "dom"
+    ],
+    "skipLibCheck": true
+  }
+}

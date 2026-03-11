@@ -1,0 +1,67 @@
+<div *ngIf="plugin">
+    <h1>{{ plugin.name }}</h1>
+    <p>
+        <code>{{ plugin.npmPackage }}</code>
+        <span *ngIf="plugin.category === 'language'" class="category-badge"> Language Pack</span>
+        <span *ngIf="plugin.category === 'game'" class="category-badge"> Game</span>
+    </p>
+    <p>{{ plugin.description }}</p>
+
+    <h2>Installation</h2>
+    <div class="code-block">
+        <span class="code-label">npm</span>
+        <pre><code>{{ installCommand }}</code></pre>
+    </div>
+    <div class="code-block" *ngIf="plugin.category !== 'language'">
+        <span class="code-label">Runtime (no rebuild)</span>
+        <pre><code>{{ runtimeInstall }}</code></pre>
+    </div>
+
+    <h2 *ngIf="plugin.command">Commands</h2>
+    <div *ngIf="plugin.command" class="command-badges" style="margin-bottom: 24px">
+        <code class="command-badge" *ngFor="let cmd of plugin.command.split(', ')">{{ cmd }}</code>
+    </div>
+
+    <div *ngIf="plugin.examples && plugin.examples.length > 0">
+        <h2>Examples</h2>
+        <div class="examples-list">
+            <div class="example-item" *ngFor="let example of plugin.examples">
+                <p class="example-description">{{ example.description }}</p>
+                <div class="code-block">
+                    <pre><code>{{ example.command }}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2>Usage</h2>
+    <div class="code-block">
+        <span class="code-label">Setup</span>
+        <pre><code>{{ usageSnippet }}</code></pre>
+    </div>
+
+    <div *ngIf="hasTryIt">
+        <h2>Try It</h2>
+        <p *ngIf="plugin.command">
+            Type <code>{{ plugin.command.split(', ')[0] }}</code> or
+            <code>help {{ plugin.command.split(', ')[0].split(' ')[0] }}</code>
+            to explore the commands.
+        </p>
+        <div class="try-it-terminal">
+            <div class="try-it-chrome">
+                <span class="chrome-dot red"></span>
+                <span class="chrome-dot yellow"></span>
+                <span class="chrome-dot green"></span>
+                <span class="chrome-title">{{ plugin.name | lowercase }}</span>
+            </div>
+            <div class="try-it-body">
+                <cli [options]="tryItOptions" [modules]="tryItModules" height="280px" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="!plugin">
+    <h1>Plugin Not Found</h1>
+    <p>The requested plugin could not be found. <a routerLink="/docs/getting-started">Return to Getting Started</a>.</p>
+</div>

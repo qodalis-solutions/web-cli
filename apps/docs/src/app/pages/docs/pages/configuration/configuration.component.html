@@ -1,0 +1,169 @@
+<h1>Configuration</h1>
+<p>
+    Qodalis CLI can be configured at build time through component properties
+    or at runtime using built-in <code>config</code> commands.
+</p>
+
+<!-- CliOptions Table -->
+<h2>CliOptions</h2>
+<p>The following options can be passed to the CLI component:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Option</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>logLevel</code></td>
+            <td><code>CliLogLevel</code></td>
+            <td><code>INFO</code></td>
+            <td>Log verbosity level (DEBUG, INFO, WARN, ERROR)</td>
+        </tr>
+        <tr>
+            <td><code>welcomeMessage</code></td>
+            <td><code>string</code></td>
+            <td>(default)</td>
+            <td>Custom welcome message displayed when the terminal opens</td>
+        </tr>
+        <tr>
+            <td><code>theme</code></td>
+            <td><code>string</code></td>
+            <td><code>'default'</code></td>
+            <td>Terminal color theme</td>
+        </tr>
+        <tr>
+            <td><code>serverUrl</code></td>
+            <td><code>string</code></td>
+            <td><code>null</code></td>
+            <td>Server connection URL for remote command execution</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Angular Configuration -->
+<h2>Framework Configuration</h2>
+
+<div class="framework-tabs">
+    <button class="framework-tab" [class.active]="activeTab === 'angular'" (click)="activeTab = 'angular'">Angular</button>
+    <button class="framework-tab" [class.active]="activeTab === 'react'" (click)="activeTab = 'react'">React</button>
+    <button class="framework-tab" [class.active]="activeTab === 'vue'" (click)="activeTab = 'vue'">Vue</button>
+</div>
+
+<!-- Angular -->
+<div *ngIf="activeTab === 'angular'">
+    <h3>Angular Configuration</h3>
+    <p>Pass options via the <code>[options]</code> input binding:</p>
+
+    <div class="code-block">
+        <span class="code-label">app.component.ts</span>
+        <pre><code>import &#123; CliOptions &#125; from '@qodalis/angular-cli';
+
+cliOptions: CliOptions = &#123;
+    logLevel: 'DEBUG',
+    welcomeMessage: 'Welcome to my app!',
+    theme: 'default',
+    serverUrl: 'http://localhost:8046',
+&#125;;</code></pre>
+    </div>
+
+    <div class="code-block">
+        <span class="code-label">app.component.html</span>
+        <pre><code>&lt;cli [options]="cliOptions" [modules]="[]"&gt;&lt;/cli&gt;
+
+&lt;!-- Or with the panel variant --&gt;
+&lt;cli-panel [options]="cliOptions" [modules]="[]"&gt;&lt;/cli-panel&gt;</code></pre>
+    </div>
+
+    <p>Don't forget to add the styles to your <code>angular.json</code>:</p>
+
+    <div class="code-block">
+        <span class="code-label">angular.json</span>
+        <pre><code>"styles": [
+    "node_modules/@qodalis/angular-cli/src/assets/styles.sass"
+]</code></pre>
+    </div>
+</div>
+
+<!-- React -->
+<div *ngIf="activeTab === 'react'">
+    <h3>React Configuration</h3>
+    <p>Pass options through <code>CliConfigProvider</code> props:</p>
+
+    <div class="code-block">
+        <span class="code-label">App.tsx</span>
+        <pre><code>import &#123; Cli, CliPanel, CliConfigProvider &#125; from '@qodalis/react-cli';
+
+function App() &#123;
+    const options = &#123;
+        logLevel: 'DEBUG',
+        welcomeMessage: 'Welcome to my app!',
+        theme: 'default',
+        serverUrl: 'http://localhost:8046',
+    &#125;;
+
+    return (
+        &lt;CliConfigProvider modules=&#123;[]&#125; options=&#123;options&#125;&gt;
+            &lt;Cli /&gt;
+        &lt;/CliConfigProvider&gt;
+    );
+&#125;</code></pre>
+    </div>
+</div>
+
+<!-- Vue -->
+<div *ngIf="activeTab === 'vue'">
+    <h3>Vue Configuration</h3>
+    <p>Pass options through <code>CliConfigProvider</code> props:</p>
+
+    <div class="code-block">
+        <span class="code-label">App.vue</span>
+        <pre><code>&lt;script setup&gt;
+import &#123; Cli, CliPanel, CliConfigProvider &#125; from '@qodalis/vue-cli';
+
+const options = &#123;
+    logLevel: 'DEBUG',
+    welcomeMessage: 'Welcome to my app!',
+    theme: 'default',
+    serverUrl: 'http://localhost:8046',
+&#125;;
+&lt;/script&gt;
+
+&lt;template&gt;
+    &lt;CliConfigProvider :modules="[]" :options="options"&gt;
+        &lt;Cli /&gt;
+    &lt;/CliConfigProvider&gt;
+&lt;/template&gt;</code></pre>
+    </div>
+</div>
+
+<!-- Runtime Config -->
+<h2>Runtime Configuration</h2>
+<p>
+    You can view and modify configuration at runtime using the built-in
+    <code>config</code> command directly in the terminal:
+</p>
+
+<div class="code-block">
+    <span class="code-label">List all configuration values</span>
+    <pre><code>config list</code></pre>
+</div>
+
+<div class="code-block">
+    <span class="code-label">Get a specific value</span>
+    <pre><code>config get theme</code></pre>
+</div>
+
+<div class="code-block">
+    <span class="code-label">Set a value</span>
+    <pre><code>config set theme dark</code></pre>
+</div>
+
+<div class="code-block">
+    <span class="code-label">Delete a value</span>
+    <pre><code>config delete theme</code></pre>
+</div>

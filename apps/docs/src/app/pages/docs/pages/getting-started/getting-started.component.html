@@ -1,0 +1,157 @@
+<h1>Getting Started</h1>
+<p>
+    Qodalis CLI is a multi-framework terminal component for the web.
+    It provides a fully interactive xterm.js-based terminal with a plugin architecture,
+    built-in commands, and native wrappers for Angular, React, and Vue.
+</p>
+
+<!-- Installation -->
+<h2>Installation</h2>
+<p>Choose your framework and install the corresponding package:</p>
+
+<div class="framework-tabs">
+    <button class="framework-tab" [class.active]="activeTab === 'angular'" (click)="activeTab = 'angular'">Angular</button>
+    <button class="framework-tab" [class.active]="activeTab === 'react'" (click)="activeTab = 'react'">React</button>
+    <button class="framework-tab" [class.active]="activeTab === 'vue'" (click)="activeTab = 'vue'">Vue</button>
+</div>
+
+<div *ngIf="activeTab === 'angular'" class="code-block">
+    <span class="code-label">npm</span>
+    <pre><code>npm install @qodalis/angular-cli</code></pre>
+</div>
+<div *ngIf="activeTab === 'react'" class="code-block">
+    <span class="code-label">npm</span>
+    <pre><code>npm install @qodalis/react-cli</code></pre>
+</div>
+<div *ngIf="activeTab === 'vue'" class="code-block">
+    <span class="code-label">npm</span>
+    <pre><code>npm install @qodalis/vue-cli</code></pre>
+</div>
+
+<!-- Quick Start: Angular -->
+<h2>Quick Start: Angular</h2>
+<p>Import <code>CliModule</code> in your Angular module:</p>
+
+<div class="code-block">
+    <span class="code-label">app.module.ts</span>
+    <pre><code>import &#123; CliModule &#125; from '@qodalis/angular-cli';
+
+@NgModule(&#123;
+    imports: [CliModule],
+&#125;)
+export class AppModule &#123;&#125;</code></pre>
+</div>
+
+<p>Add the stylesheet to your <code>angular.json</code> styles array:</p>
+
+<div class="code-block">
+    <span class="code-label">angular.json</span>
+    <pre><code>"styles": [
+    "node_modules/@qodalis/angular-cli/src/assets/styles.sass"
+]</code></pre>
+</div>
+
+<p>Add the terminal to your template:</p>
+
+<div class="code-block">
+    <span class="code-label">app.component.html</span>
+    <pre><code>&lt;!-- Full terminal --&gt;
+&lt;cli&gt;&lt;/cli&gt;
+
+&lt;!-- Collapsible panel --&gt;
+&lt;cli-panel&gt;&lt;/cli-panel&gt;</code></pre>
+</div>
+
+<!-- Quick Start: React -->
+<h2>Quick Start: React</h2>
+<p>Import and use the <code>Cli</code> or <code>CliPanel</code> component:</p>
+
+<div class="code-block">
+    <span class="code-label">App.tsx</span>
+    <pre><code>import &#123; Cli, CliPanel, CliConfigProvider &#125; from '@qodalis/react-cli';
+
+function App() &#123;
+    return (
+        &lt;CliConfigProvider modules=&#123;[]&#125;&gt;
+            &#123;/* Full terminal */&#125;
+            &lt;Cli /&gt;
+
+            &#123;/* Or collapsible panel */&#125;
+            &lt;CliPanel /&gt;
+        &lt;/CliConfigProvider&gt;
+    );
+&#125;</code></pre>
+</div>
+
+<!-- Quick Start: Vue -->
+<h2>Quick Start: Vue</h2>
+<p>Import and use the <code>Cli</code> or <code>CliPanel</code> component:</p>
+
+<div class="code-block">
+    <span class="code-label">App.vue</span>
+    <pre><code>&lt;script setup&gt;
+import &#123; Cli, CliPanel, CliConfigProvider &#125; from '@qodalis/vue-cli';
+&lt;/script&gt;
+
+&lt;template&gt;
+    &lt;CliConfigProvider :modules="[]"&gt;
+        &lt;!-- Full terminal --&gt;
+        &lt;Cli /&gt;
+
+        &lt;!-- Or collapsible panel --&gt;
+        &lt;CliPanel /&gt;
+    &lt;/CliConfigProvider&gt;
+&lt;/template&gt;</code></pre>
+</div>
+
+<!-- Adding Plugins -->
+<h2>Adding Plugins</h2>
+<p>Install a plugin package and add it to your modules array:</p>
+
+<div class="code-block">
+    <span class="code-label">npm</span>
+    <pre><code>npm install @qodalis/cli-guid</code></pre>
+</div>
+
+<div class="code-block">
+    <span class="code-label">Import and use</span>
+    <pre><code>import &#123; guidModule &#125; from '@qodalis/cli-guid';
+
+// Angular: &lt;cli [modules]="[guidModule]"&gt;&lt;/cli&gt;
+// React:   &lt;Cli modules=&#123;[guidModule]&#125; /&gt;
+// Vue:     &lt;Cli :modules="[guidModule]" /&gt;</code></pre>
+</div>
+
+<p>You can also install plugins at runtime without rebuilding:</p>
+
+<div class="code-block">
+    <span class="code-label">Terminal</span>
+    <pre><code>pkg add @qodalis/cli-guid</code></pre>
+</div>
+
+<!-- Try It -->
+<h2>Try It</h2>
+<p>
+    This is a live terminal running in your browser. Type
+    <code>help</code> to see available commands, <code>guid generate</code> to
+    create a UUID, or <code>todo add "Buy milk"</code> to try the todo list.
+</p>
+<div class="try-it-terminal">
+    <div class="try-it-chrome">
+        <span class="chrome-dot red"></span>
+        <span class="chrome-dot yellow"></span>
+        <span class="chrome-dot green"></span>
+        <span class="chrome-title">try it live</span>
+    </div>
+    <div class="try-it-body">
+        <cli [options]="tryItOptions" [modules]="tryItModules" height="280px" />
+    </div>
+</div>
+
+<!-- Next Steps -->
+<h2>Next Steps</h2>
+<ul>
+    <li><a routerLink="/docs/configuration">Configuration</a> — customize options, themes, and server connections</li>
+    <li><a routerLink="/docs/core-concepts/command-processors">Core Concepts</a> — understand how commands, processors, and context work</li>
+    <li><a routerLink="/docs/plugins/guid">Plugins</a> — browse the full plugin catalog</li>
+</ul>

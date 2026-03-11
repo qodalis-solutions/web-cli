@@ -1,0 +1,54 @@
+<!-- ===== NAV ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <img class="brand-icon" src="assets/qodalis-icon.svg" alt="Qodalis" />
+      <span class="brand-text">Qodalis <strong>CLI</strong></span>
+    </div>
+    <div class="nav-links">
+      <a
+        routerLink="/docs"
+        class="nav-link"
+        >Docs</a
+      >
+      <a
+        href="https://www.npmjs.com/package/@qodalis/cli"
+        target="_blank"
+        rel="noopener"
+        class="nav-link"
+        >npm</a
+      >
+      <a
+        href="https://github.com/qodalis-solutions/web-cli"
+        target="_blank"
+        rel="noopener"
+        class="nav-link gh-link"
+        >GitHub <span class="arrow">&nearr;</span></a
+      >
+    </div>
+  </div>
+</nav>
+
+<router-outlet></router-outlet>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="section-inner footer-inner">
+    <span class="footer-brand">Qodalis CLI</span>
+    <span class="footer-copy">&copy; 2026 Qodalis Solutions. MIT License.</span>
+    <div class="footer-links">
+      <a href="https://qodalis.com" target="_blank" rel="noopener"
+        >qodalis.com</a
+      >
+      <a
+        href="https://github.com/qodalis-solutions/web-cli"
+        target="_blank"
+        rel="noopener"
+        >GitHub</a
+      >
+    </div>
+  </div>
+</footer>
+
+<!-- ===== PANEL (collapsible bottom) ===== -->
+<cli-panel [options]="options" [modules]="modules" />

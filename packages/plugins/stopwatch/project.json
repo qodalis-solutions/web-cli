@@ -1,0 +1,37 @@
+{
+  "name": "stopwatch",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/plugins/stopwatch/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsup",
+          "cp package.json ../../../dist/stopwatch/package.json"
+        ],
+        "cwd": "packages/plugins/stopwatch",
+        "parallel": false
+      },
+      "inputs": [
+        "production",
+        "sharedGlobals"
+      ],
+      "outputs": [
+        "{workspaceRoot}/dist/stopwatch"
+      ]
+    },
+    "test": {
+      "executor": "@angular-devkit/build-angular:karma",
+      "options": {
+        "tsConfig": "packages/plugins/stopwatch/tsconfig.spec.json",
+        "polyfills": [
+          "zone.js",
+          "zone.js/testing"
+        ],
+        "browsers": "ChromeHeadless",
+        "watch": false
+      }
+    }
+  }
+}

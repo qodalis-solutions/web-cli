@@ -1,0 +1,1 @@
+export { OverlayAddon } from './overlay';

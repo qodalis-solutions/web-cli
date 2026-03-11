@@ -13,39 +13,86 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: "npm"
+          node-version: 22
+          cache: "pnpm"
           registry-url: https://registry.npmjs.org/
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install Rust and wasm-pack
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --target wasm32-unknown-unknown
+          source "$HOME/.cargo/env"
+          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
-      - name: Install projects deps
-        run: npm run "install projects deps"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Inject versions
+        run: node tools/inject-versions.js
 
       - name: Build all projects
-        run: npm run "build all"
+        run: pnpm exec nx run-many -t build
 
-      - name: Replace README.md in main libraries
+      - name: Copy tsup wrapper builds into dist for publishing
+        run: |
+          mkdir -p dist/react-cli dist/vue-cli
+          cp -r packages/react-cli/dist/* dist/react-cli/ 2>/dev/null || true
+          cp packages/react-cli/package.json dist/react-cli/
+          cp -r packages/vue-cli/dist/* dist/vue-cli/ 2>/dev/null || true
+          cp packages/vue-cli/package.json dist/vue-cli/
+
+      - name: Copy README.md into main libraries
         run: |
           cp README.md dist/cli/
           cp README.md dist/core/
+          cp README.md dist/angular-cli/
+          cp README.md dist/react-cli/
+          cp README.md dist/vue-cli/
+
+      - name: Resolve workspace:* protocol in dist package.json files
+        run: node tools/resolve-workspace-deps.js
 
       - name: Publish to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # Define an exclusion list
-          EXCLUDED=("demo")
+          EXCLUDED=("docs" "demo-angular" "demo-react" "demo-vue")
 
-          # Dynamically build the array of library names, excluding the ones in EXCLUDED
-          LIBRARIES=($(ls dist | grep -v -E "$(IFS=\|; echo "${EXCLUDED[*]}")"))
+          # Publish in dependency order: core first, then cli, then everything else
+          PRIORITY=("core" "cli" "angular-cli" "react-cli" "vue-cli")
+          ALL=($(ls dist | grep -v -E "$(IFS=\|; echo "${EXCLUDED[*]}")"))
 
-          echo "Libraries to publish: ${LIBRARIES[@]}"
+          # Build ordered list: priority packages first, then remaining (plugins)
+          LIBRARIES=()
+          for PKG in "${PRIORITY[@]}"; do
+            for ITEM in "${ALL[@]}"; do
+              if [ "$ITEM" = "$PKG" ]; then
+                LIBRARIES+=("$PKG")
+                break
+              fi
+            done
+          done
+          for ITEM in "${ALL[@]}"; do
+            SKIP=false
+            for PKG in "${PRIORITY[@]}"; do
+              if [ "$ITEM" = "$PKG" ]; then SKIP=true; break; fi
+            done
+            if [ "$SKIP" = false ]; then
+              LIBRARIES+=("$ITEM")
+            fi
+          done
+
+          echo "Libraries to publish (in order): ${LIBRARIES[@]}"
 
           FAILED=()
 

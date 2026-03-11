@@ -1,0 +1,25 @@
+{
+  "name": "demo-vanilla",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@qodalis/cli": "workspace:*",
+    "@qodalis/cli-core": "workspace:*",
+    "@qodalis/cli-guid": "workspace:*",
+    "@qodalis/cli-string": "workspace:*",
+    "@qodalis/cli-password-generator": "workspace:*",
+    "@qodalis/cli-qr": "workspace:*",
+    "@qodalis/cli-todo": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1"
+  }
+}

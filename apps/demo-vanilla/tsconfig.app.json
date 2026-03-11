@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "baseUrl": "../..",
+    "paths": {
+      "@qodalis/cli-core": ["dist/core"],
+      "@qodalis/cli": ["dist/cli"],
+      "@qodalis/cli-guid": ["dist/guid"],
+      "@qodalis/cli-string": ["dist/string"],
+      "@qodalis/cli-password-generator": ["dist/password-generator"],
+      "@qodalis/cli-qr": ["dist/qr"],
+      "@qodalis/cli-todo": ["dist/todo"]
+    },
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src"]
+}

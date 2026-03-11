@@ -1,0 +1,11 @@
+<div class="docs-layout">
+    <button class="sidebar-toggle" (click)="sidebarOpen = !sidebarOpen">
+        &#9776;
+    </button>
+    <aside class="docs-sidebar" [class.open]="sidebarOpen">
+        <docs-sidebar (linkClicked)="sidebarOpen = false"></docs-sidebar>
+    </aside>
+    <main class="docs-content">
+        <router-outlet></router-outlet>
+    </main>
+</div>

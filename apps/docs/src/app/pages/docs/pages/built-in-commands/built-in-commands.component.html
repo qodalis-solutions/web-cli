@@ -1,0 +1,42 @@
+<h1>Built-in Commands</h1>
+<p>
+    Qodalis CLI ships with {{ totalCount }}+ commands out of the box, organized into {{ commandCategories.length }} categories.
+    Type <code>help</code> in the terminal to see all available commands, or <code>help &lt;command&gt;</code> for detailed usage of any command.
+</p>
+
+<div *ngFor="let cat of commandCategories" class="command-category">
+    <h2>{{ cat.label }}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Command</th>
+                <th>Description</th>
+                <th>Aliases</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let cmd of cat.commands">
+                <td><code>{{ cmd.command }}</code></td>
+                <td>{{ cmd.description }}</td>
+                <td><span *ngIf="cmd.aliases" class="command-aliases">{{ cmd.aliases }}</span></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<h2>Try It</h2>
+<p>
+    Try any of the commands above in this live terminal.
+    For example: <code>json format '&#123;"a":1&#125;'</code>, <code>hash sha256 hello</code>, or <code>theme list</code>.
+</p>
+<div class="try-it-terminal">
+    <div class="try-it-chrome">
+        <span class="chrome-dot red"></span>
+        <span class="chrome-dot yellow"></span>
+        <span class="chrome-dot green"></span>
+        <span class="chrome-title">command playground</span>
+    </div>
+    <div class="try-it-body">
+        <cli [options]="tryItOptions" [modules]="tryItModules" height="280px" />
+    </div>
+</div>

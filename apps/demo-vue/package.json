@@ -1,0 +1,39 @@
+{
+  "name": "demo-vue",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.25",
+    "@qodalis/vue-cli": "workspace:*",
+    "@qodalis/cli": "workspace:*",
+    "@qodalis/cli-core": "workspace:*",
+    "@qodalis/cli-guid": "workspace:*",
+    "@qodalis/cli-regex": "workspace:*",
+    "@qodalis/cli-text-to-image": "workspace:*",
+    "@qodalis/cli-speed-test": "workspace:*",
+    "@qodalis/cli-browser-storage": "workspace:*",
+    "@qodalis/cli-string": "workspace:*",
+    "@qodalis/cli-todo": "workspace:*",
+    "@qodalis/cli-curl": "workspace:*",
+    "@qodalis/cli-password-generator": "workspace:*",
+    "@qodalis/cli-qr": "workspace:*",
+    "@qodalis/cli-yesno": "workspace:*",
+    "@qodalis/cli-server-logs": "workspace:*",
+    "@qodalis/cli-users": "workspace:*",
+    "@qodalis/cli-files": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@vitejs/plugin-vue": "^6.0.2",
+    "@vue/tsconfig": "^0.8.1",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vue-tsc": "^3.1.5"
+  }
+}
