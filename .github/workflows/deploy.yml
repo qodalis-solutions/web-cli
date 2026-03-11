@@ -63,11 +63,33 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          EXCLUDED=("docs" "demo-angular")
+          EXCLUDED=("docs" "demo-angular" "demo-react" "demo-vue")
 
-          LIBRARIES=($(ls dist | grep -v -E "$(IFS=\|; echo "${EXCLUDED[*]}")"))
+          # Publish in dependency order: core first, then cli, then everything else
+          PRIORITY=("core" "cli" "angular-cli" "react-cli" "vue-cli")
+          ALL=($(ls dist | grep -v -E "$(IFS=\|; echo "${EXCLUDED[*]}")"))
 
-          echo "Libraries to publish: ${LIBRARIES[@]}"
+          # Build ordered list: priority packages first, then remaining (plugins)
+          LIBRARIES=()
+          for PKG in "${PRIORITY[@]}"; do
+            for ITEM in "${ALL[@]}"; do
+              if [ "$ITEM" = "$PKG" ]; then
+                LIBRARIES+=("$PKG")
+                break
+              fi
+            done
+          done
+          for ITEM in "${ALL[@]}"; do
+            SKIP=false
+            for PKG in "${PRIORITY[@]}"; do
+              if [ "$ITEM" = "$PKG" ]; then SKIP=true; break; fi
+            done
+            if [ "$SKIP" = false ]; then
+              LIBRARIES+=("$ITEM")
+            fi
+          done
+
+          echo "Libraries to publish (in order): ${LIBRARIES[@]}"
 
           FAILED=()
 
