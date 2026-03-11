@@ -197,6 +197,10 @@ export const usersModule: ICliUsersModule = {
                     );
                     if (fs) {
                         if (session.user.homeDir) {
+                            // Create home directory if it doesn't exist
+                            if (!fs.exists(session.user.homeDir)) {
+                                fs.createDirectory(session.user.homeDir, true);
+                            }
                             fs.setHomePath(session.user.homeDir);
                             // When user changes, move to their home directory
                             if (previousUserId !== session.user.id) {
@@ -302,12 +306,16 @@ export const usersModule: ICliUsersModule = {
                 continue;
             }
 
+            const defaultHome = `/home/${name}`;
+            const homeInput = await context.reader.readLine(`Home directory (${defaultHome}): `);
+            const homeDir = homeInput?.trim() || defaultHome;
+
             try {
                 newUser = await usersStore.createUser({
                     name,
                     email: email.trim(),
                     groups: ['admin'],
-                    homeDir: `/home/${name}`,
+                    homeDir,
                 });
                 await authService.setPassword(newUser.id, password);
             } catch (e) {
@@ -316,21 +324,7 @@ export const usersModule: ICliUsersModule = {
             }
         }
 
-        // Create home directory before logging in so session subscriber
-        // can cd into it without error
-        try {
-            const fs = context.services.get<any>('cli-file-system-service');
-            if (fs) {
-                if (newUser.homeDir && !fs.exists(newUser.homeDir)) {
-                    fs.createDirectory(newUser.homeDir, true);
-                }
-                await fs.persist();
-            }
-        } catch {
-            // Files module not installed — skip
-        }
-
-        // Log in as the new user
+        // Log in as the new user (session subscriber handles home dir creation)
         await sessionService.setUserSession({
             user: newUser,
             loginTime: Date.now(),
@@ -344,6 +338,25 @@ export const usersModule: ICliUsersModule = {
     },
 
     async onAfterBoot(context) {
+        // Sync filesystem with current session now that all modules are booted
+        try {
+            const fs = context.services.get<any>('cli-file-system-service');
+            if (fs && context.userSession) {
+                const homeDir = context.userSession.user.homeDir;
+                if (homeDir) {
+                    if (!fs.exists(homeDir)) {
+                        fs.createDirectory(homeDir, true);
+                    }
+                    fs.setHomePath(homeDir);
+                    fs.setCurrentDirectory(homeDir);
+                    fs.setCurrentUser(context.userSession.user.id, context.userSession.user.groups);
+                    await fs.persist();
+                }
+            }
+        } catch {
+            // Files module not installed — skip
+        }
+
         const moduleConfig = (this.config || {}) as CliUsersModuleConfig;
         if (!moduleConfig.requirePasswordOnBoot) return;
 
