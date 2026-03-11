@@ -182,6 +182,7 @@ export const usersModule: ICliUsersModule = {
             ((user: ICliUser) => user.name);
 
         // Subscribe session changes to execution context
+        let previousUserId: string | null = null;
         sessionService.getUserSession().subscribe((session) => {
             if (session) {
                 context.userSession = {
@@ -197,12 +198,17 @@ export const usersModule: ICliUsersModule = {
                     if (fs) {
                         if (session.user.homeDir) {
                             fs.setHomePath(session.user.homeDir);
+                            // When user changes, move to their home directory
+                            if (previousUserId !== session.user.id) {
+                                fs.setCurrentDirectory(session.user.homeDir);
+                            }
                         }
                         fs.setCurrentUser(session.user.id, session.user.groups);
                     }
                 } catch {
                     // Files module not installed — skip
                 }
+                previousUserId = session.user.id;
             }
         });
     },
