@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-regex",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "description": "@qodalis/cli extension for testing and validating regular expressions.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
@@ -17,8 +17,8 @@
     "regular-expressions",
     "pattern-matching"
   ],
-  "umd": "./umd/index.js",
-  "unpkg": "./umd/index.js",
+  "umd": "./umd/index.global.js",
+  "unpkg": "./umd/index.global.js",
   "dependencies": {
     "@qodalis/cli-core": "workspace:*"
   },
