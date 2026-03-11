@@ -228,51 +228,112 @@ export const usersModule: ICliUsersModule = {
                 name: 'root',
                 email: 'root@localhost',
                 groups: ['admin'],
-                homeDir: '/home/root',
+                homeDir: '/',
             });
             await authService.setPassword(rootUser.id, 'root');
         }
 
-        // Create default user and auto-login (non-blocking setup)
-        const username = 'user';
-        const homeDir = `/home/${username}`;
-        let defaultUser: ICliUser;
-        const existingDefault = await firstValueFrom(usersStore.getUser(username));
-        if (existingDefault) {
-            defaultUser = existingDefault;
-        } else {
-            defaultUser = await usersStore.createUser({
-                name: username,
-                email: `${username}@localhost`,
-                groups: [],
-                homeDir,
-            });
-            await authService.setPassword(defaultUser.id, username);
-        }
-
-        await sessionService.setUserSession({
-            user: defaultUser,
-            loginTime: Date.now(),
-            lastActivity: Date.now(),
-        });
-
-        // Create home directories if the files module is installed
+        // Set up filesystem for root
         try {
             const fs = context.services.get<any>('cli-file-system-service');
             if (fs) {
-                if (!fs.exists(rootUser.homeDir)) {
-                    fs.createDirectory(rootUser.homeDir, true);
-                }
-                if (!fs.exists(homeDir)) {
-                    fs.createDirectory(homeDir, true);
-                }
-                fs.setHomePath(homeDir);
-                fs.setCurrentDirectory(homeDir);
+                fs.setHomePath('/');
+                fs.setCurrentDirectory('/');
                 await fs.persist();
             }
         } catch {
             // Files module not installed — skip
         }
+
+        // Log in as root initially
+        await sessionService.setUserSession({
+            user: rootUser,
+            loginTime: Date.now(),
+            lastActivity: Date.now(),
+        });
+
+        // Prompt for user creation
+        context.writer.writeln('');
+        context.writer.writeInfo('Welcome! Let\'s create your user account.');
+        context.writer.writeln('');
+
+        let newUser: ICliUser | null = null;
+
+        while (!newUser) {
+            const username = await context.reader.readLine('Username: ');
+            if (username === null || !username.trim()) {
+                context.writer.writeError('Username is required.');
+                continue;
+            }
+
+            const name = username.trim();
+
+            if (name === 'root') {
+                context.writer.writeError('Cannot create a user named "root".');
+                continue;
+            }
+
+            const email = await context.reader.readLine('Email: ');
+            if (email === null || !email.trim()) {
+                context.writer.writeError('Email is required.');
+                continue;
+            }
+
+            const password = await context.reader.readPassword('Password: ');
+            if (password === null) {
+                context.writer.writeError('Password is required.');
+                continue;
+            }
+
+            const confirmPassword = await context.reader.readPassword('Confirm password: ');
+            if (confirmPassword === null) {
+                context.writer.writeError('Password confirmation is required.');
+                continue;
+            }
+
+            if (password !== confirmPassword) {
+                context.writer.writeError('Passwords do not match.');
+                continue;
+            }
+
+            try {
+                newUser = await usersStore.createUser({
+                    name,
+                    email: email.trim(),
+                    groups: ['admin'],
+                    homeDir: `/home/${name}`,
+                });
+                await authService.setPassword(newUser.id, password);
+            } catch (e) {
+                context.writer.writeError(e?.toString() || 'Failed to create user.');
+                continue;
+            }
+        }
+
+        // Log in as the new user
+        await sessionService.setUserSession({
+            user: newUser,
+            loginTime: Date.now(),
+            lastActivity: Date.now(),
+        });
+
+        // Create home directory if the files module is installed
+        try {
+            const fs = context.services.get<any>('cli-file-system-service');
+            if (fs) {
+                if (newUser.homeDir && !fs.exists(newUser.homeDir)) {
+                    fs.createDirectory(newUser.homeDir, true);
+                }
+                fs.setHomePath(newUser.homeDir!);
+                fs.setCurrentDirectory(newUser.homeDir!);
+                await fs.persist();
+            }
+        } catch {
+            // Files module not installed — skip
+        }
+
+        context.writer.writeln('');
+        context.writer.writeSuccess(`User "${newUser.name}" created and logged in.`);
 
         return true;
     },
