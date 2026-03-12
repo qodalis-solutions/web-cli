@@ -9,22 +9,39 @@
       <a
         routerLink="/docs"
         class="nav-link"
-        >Docs</a
+        >{{ 'nav.docs' | translate }}</a
       >
       <a
         href="https://www.npmjs.com/package/@qodalis/cli"
         target="_blank"
         rel="noopener"
         class="nav-link"
-        >npm</a
+        >{{ 'nav.npm' | translate }}</a
       >
       <a
         href="https://github.com/qodalis-solutions/web-cli"
         target="_blank"
         rel="noopener"
         class="nav-link gh-link"
-        >GitHub <span class="arrow">&nearr;</span></a
+        >{{ 'nav.github' | translate }} <span class="arrow">&nearr;</span></a
       >
+      <div class="lang-switcher" (click)="$event.stopPropagation()">
+        <button class="lang-btn" (click)="toggleLangDropdown()">
+          <span class="lang-code">{{ currentLang.code.toUpperCase() }}</span>
+          <span class="lang-chevron" [class.open]="langDropdownOpen">&#9662;</span>
+        </button>
+        <div class="lang-dropdown" *ngIf="langDropdownOpen">
+          <button
+            *ngFor="let lang of languages"
+            class="lang-option"
+            [class.active]="lang.code === currentLang.code"
+            (click)="switchLang(lang)"
+          >
+            <span class="lang-option-native">{{ lang.nativeName }}</span>
+            <span class="lang-option-name">{{ lang.name }}</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -34,8 +51,8 @@
 <!-- ===== FOOTER ===== -->
 <footer class="footer">
   <div class="section-inner footer-inner">
-    <span class="footer-brand">Qodalis CLI</span>
-    <span class="footer-copy">&copy; 2026 Qodalis Solutions. MIT License.</span>
+    <span class="footer-brand">{{ 'footer.brand' | translate }}</span>
+    <span class="footer-copy">{{ 'footer.copy' | translate }}</span>
     <div class="footer-links">
       <a href="https://qodalis.com" target="_blank" rel="noopener"
         >qodalis.com</a

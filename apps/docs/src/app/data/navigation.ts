@@ -8,22 +8,22 @@ export interface NavItem {
 }
 
 export const DOCS_NAV: NavItem[] = [
-    { label: 'Getting Started', path: '/docs/getting-started' },
-    { label: 'Built-in Commands', path: '/docs/built-in-commands' },
-    { label: 'Configuration', path: '/docs/configuration' },
+    { label: 'sidebar.getting-started', path: '/docs/getting-started' },
+    { label: 'sidebar.built-in-commands', path: '/docs/built-in-commands' },
+    { label: 'sidebar.configuration', path: '/docs/configuration' },
     {
-        label: 'Core Concepts',
+        label: 'sidebar.core-concepts',
         path: '/docs/core-concepts',
         children: [
-            { label: 'Command Processors', path: '/docs/core-concepts/command-processors' },
-            { label: 'Execution Context', path: '/docs/core-concepts/execution-context' },
-            { label: 'Theming', path: '/docs/core-concepts/theming' },
-            { label: 'Input Reader', path: '/docs/core-concepts/input-reader' },
-            { label: 'Tabs & Panes', path: '/docs/core-concepts/tabs-and-panes' },
+            { label: 'sidebar.command-processors', path: '/docs/core-concepts/command-processors' },
+            { label: 'sidebar.execution-context', path: '/docs/core-concepts/execution-context' },
+            { label: 'sidebar.theming', path: '/docs/core-concepts/theming' },
+            { label: 'sidebar.input-reader', path: '/docs/core-concepts/input-reader' },
+            { label: 'sidebar.tabs-and-panes', path: '/docs/core-concepts/tabs-and-panes' },
         ],
     },
     {
-        label: 'Plugins',
+        label: 'sidebar.plugins',
         path: '/docs/plugins',
         children: [
             ...UTILITY_PLUGINS.map((p) => ({
@@ -36,9 +36,9 @@ export const DOCS_NAV: NavItem[] = [
             })),
         ],
     },
-    { label: 'Create a Plugin', path: '/docs/plugins/create-your-own' },
+    { label: 'sidebar.create-a-plugin', path: '/docs/plugins/create-your-own' },
     {
-        label: 'Language Packs',
+        label: 'sidebar.language-packs',
         path: '/docs/language-packs',
         children: LANGUAGE_PACKS.map((p) => ({
             label: p.name,
@@ -46,12 +46,12 @@ export const DOCS_NAV: NavItem[] = [
         })),
     },
     {
-        label: 'Server Integration',
+        label: 'sidebar.server-integration',
         path: '/docs/server-integration',
         children: [
-            { label: '.NET Server', path: '/docs/server-integration/dotnet' },
-            { label: 'Node.js Server', path: '/docs/server-integration/node' },
-            { label: 'Python Server', path: '/docs/server-integration/python' },
+            { label: 'sidebar.dotnet-server', path: '/docs/server-integration/dotnet' },
+            { label: 'sidebar.node-server', path: '/docs/server-integration/node' },
+            { label: 'sidebar.python-server', path: '/docs/server-integration/python' },
         ],
     },
 ];

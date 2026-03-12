@@ -2,28 +2,28 @@
     <h1>{{ plugin.name }}</h1>
     <p>
         <code>{{ plugin.npmPackage }}</code>
-        <span *ngIf="plugin.category === 'language'" class="category-badge"> Language Pack</span>
-        <span *ngIf="plugin.category === 'game'" class="category-badge"> Game</span>
+        <span *ngIf="plugin.category === 'language'" class="category-badge"> {{ 'docs.plugin-detail.language-pack-badge' | translate }}</span>
+        <span *ngIf="plugin.category === 'game'" class="category-badge"> {{ 'docs.plugin-detail.game-badge' | translate }}</span>
     </p>
     <p>{{ plugin.description }}</p>
 
-    <h2>Installation</h2>
+    <h2>{{ 'docs.plugin-detail.installation' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">npm</span>
         <pre><code>{{ installCommand }}</code></pre>
     </div>
     <div class="code-block" *ngIf="plugin.category !== 'language'">
-        <span class="code-label">Runtime (no rebuild)</span>
+        <span class="code-label">{{ 'docs.plugin-detail.runtime-install' | translate }}</span>
         <pre><code>{{ runtimeInstall }}</code></pre>
     </div>
 
-    <h2 *ngIf="plugin.command">Commands</h2>
+    <h2 *ngIf="plugin.command">{{ 'docs.plugin-detail.commands' | translate }}</h2>
     <div *ngIf="plugin.command" class="command-badges" style="margin-bottom: 24px">
         <code class="command-badge" *ngFor="let cmd of plugin.command.split(', ')">{{ cmd }}</code>
     </div>
 
     <div *ngIf="plugin.examples && plugin.examples.length > 0">
-        <h2>Examples</h2>
+        <h2>{{ 'docs.plugin-detail.examples' | translate }}</h2>
         <div class="examples-list">
             <div class="example-item" *ngFor="let example of plugin.examples">
                 <p class="example-description">{{ example.description }}</p>
@@ -34,18 +34,16 @@
         </div>
     </div>
 
-    <h2>Usage</h2>
+    <h2>{{ 'docs.plugin-detail.usage' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">Setup</span>
         <pre><code>{{ usageSnippet }}</code></pre>
     </div>
 
     <div *ngIf="hasTryIt">
-        <h2>Try It</h2>
+        <h2>{{ 'docs.plugin-detail.try-it' | translate }}</h2>
         <p *ngIf="plugin.command">
-            Type <code>{{ plugin.command.split(', ')[0] }}</code> or
-            <code>help {{ plugin.command.split(', ')[0].split(' ')[0] }}</code>
-            to explore the commands.
+            {{ 'docs.plugin-detail.try-it-desc' | translate:{ command: plugin.command.split(', ')[0], baseCommand: plugin.command.split(', ')[0].split(' ')[0] } }}
         </p>
         <div class="try-it-terminal">
             <div class="try-it-chrome">
@@ -62,6 +60,6 @@
 </div>
 
 <div *ngIf="!plugin">
-    <h1>Plugin Not Found</h1>
-    <p>The requested plugin could not be found. <a routerLink="/docs/getting-started">Return to Getting Started</a>.</p>
+    <h1>{{ 'docs.plugin-detail.not-found-title' | translate }}</h1>
+    <p>{{ 'docs.plugin-detail.not-found-desc' | translate }} <a routerLink="/docs/getting-started">{{ 'docs.plugin-detail.return-link' | translate }}</a>.</p>
 </div>

@@ -29,6 +29,87 @@
     />
   </head>
   <body>
-    <app-root></app-root>
+    <app-root>
+      <!-- Loader: removed automatically when Angular bootstraps -->
+      <style>
+        .app-loader {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: #070b14;
+          z-index: 9999;
+          gap: 28px;
+        }
+        .app-loader-terminal {
+          width: 280px;
+          background: #0d1117;
+          border: 1px solid #1e293b;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        .app-loader-titlebar {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 10px 14px;
+          background: #111827;
+          border-bottom: 1px solid #1e293b;
+        }
+        .app-loader-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+        }
+        .app-loader-dot:nth-child(1) { background: #ef4444; }
+        .app-loader-dot:nth-child(2) { background: #eab308; }
+        .app-loader-dot:nth-child(3) { background: #22c55e; }
+        .app-loader-body {
+          padding: 16px;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 13px;
+          line-height: 1.7;
+          color: rgba(255, 255, 255, 0.7);
+        }
+        .app-loader-prompt {
+          color: #818cf8;
+        }
+        .app-loader-cursor {
+          display: inline-block;
+          width: 8px;
+          height: 15px;
+          background: #818cf8;
+          vertical-align: text-bottom;
+          margin-left: 2px;
+          animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+          50% { opacity: 0; }
+        }
+        .app-loader-text {
+          margin-top: 0;
+          font-family: 'Inter', sans-serif;
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.35);
+          letter-spacing: 0.5px;
+        }
+      </style>
+      <div class="app-loader">
+        <div class="app-loader-terminal">
+          <div class="app-loader-titlebar">
+            <div class="app-loader-dot"></div>
+            <div class="app-loader-dot"></div>
+            <div class="app-loader-dot"></div>
+          </div>
+          <div class="app-loader-body">
+            <div><span class="app-loader-prompt">$</span> loading qodalis-cli<span class="app-loader-cursor"></span></div>
+          </div>
+        </div>
+        <p class="app-loader-text">Initializing terminal&hellip;</p>
+      </div>
+    </app-root>
   </body>
 </html>

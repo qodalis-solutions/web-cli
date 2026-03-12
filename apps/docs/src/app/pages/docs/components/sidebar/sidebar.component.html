@@ -7,7 +7,7 @@
                 target="_blank"
                 rel="noopener"
             >
-                <span>{{ section.label }}</span>
+                <span>{{ section.label | translate }}</span>
                 <span class="arrow">&nearr;</span>
             </a>
         </ng-container>
@@ -18,7 +18,7 @@
                 (click)="toggleSection(section.label)"
                 [class.expanded]="isExpanded(section.label)"
             >
-                <span>{{ section.label }}</span>
+                <span>{{ section.label | translate }}</span>
                 <span class="chevron">&#9656;</span>
             </button>
             <div
@@ -32,7 +32,7 @@
                     routerLinkActive="active"
                     [routerLinkActiveOptions]="{ exact: true }"
                     (click)="linkClicked.emit()"
-                    >{{ child.label }}</a
+                    >{{ child.label | translate }}</a
                 >
             </div>
         </ng-container>
@@ -45,7 +45,7 @@
                 [routerLinkActiveOptions]="{ exact: true }"
                 (click)="linkClicked.emit()"
             >
-                <span>{{ section.label }}</span>
+                <span>{{ section.label | translate }}</span>
             </a>
         </ng-container>
     </div>

@@ -1,2 +1,64 @@
 :host
   display: block
+
+.lang-switcher
+  position: relative
+  display: inline-block
+
+.lang-btn
+  background: transparent
+  color: white
+  border: 1px solid rgba(255, 255, 255, 0.15)
+  border-radius: 6px
+  padding: 4px 8px
+  cursor: pointer
+  font-size: 13px
+  display: flex
+  align-items: center
+  gap: 4px
+  &:hover
+    border-color: rgba(255, 255, 255, 0.35)
+
+.lang-chevron
+  transition: transform 0.2s
+  &.open
+    transform: rotate(180deg)
+
+.lang-dropdown
+  position: absolute
+  top: 100%
+  right: 0
+  margin-top: 8px
+  background: #0f1729
+  border: 1px solid rgba(255, 255, 255, 0.1)
+  border-radius: 8px
+  min-width: 180px
+  padding: 4px
+  z-index: 100
+  max-height: 320px
+  overflow-y: auto
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4)
+
+.lang-option
+  display: flex
+  justify-content: space-between
+  width: 100%
+  padding: 8px 12px
+  background: none
+  border: none
+  color: rgba(255, 255, 255, 0.7)
+  cursor: pointer
+  border-radius: 4px
+  font-size: 13px
+  &:hover
+    background: rgba(255, 255, 255, 0.05)
+    color: white
+  &.active
+    color: #818cf8
+
+.lang-option-native
+  font-weight: 500
+
+.lang-option-name
+  opacity: 0.5
+  font-size: 12px

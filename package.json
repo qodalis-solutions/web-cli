@@ -37,6 +37,8 @@
     "@angular/platform-browser-dynamic": "^16.2.0",
     "@angular/router": "^16.2.0",
     "@microsoft/signalr": "^8.0.7",
+    "@ngx-translate/core": "^15.0.0",
+    "@ngx-translate/http-loader": "^8.0.0",
     "@types/prismjs": "^1.26.6",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/addon-serialize": "^0.14.0",

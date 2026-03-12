@@ -1,18 +1,15 @@
 <!-- Node.js -->
 <div *ngIf="server === 'node'">
-    <h1>Node.js Server</h1>
-    <p>
-        The Node.js backend is an Express-based server with TypeScript support.
-        It uses <code>node-pty</code> for interactive shell sessions and <code>ws</code> for WebSocket connections.
-    </p>
+    <h1>{{ 'docs.server-detail.node.title' | translate }}</h1>
+    <p>{{ 'docs.server-detail.node.intro' | translate }}</p>
 
-    <h2>Installation</h2>
+    <h2>{{ 'docs.server-detail.node.installation' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">npm</span>
         <pre><code>npm install @qodalis/cli-server</code></pre>
     </div>
 
-    <h2>Basic Setup</h2>
+    <h2>{{ 'docs.server-detail.node.basic-setup' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">server.ts</span>
         <pre><code>import &#123; createCliServer &#125; from '@qodalis/cli-server';
@@ -22,8 +19,8 @@ builder.addProcessor(new MyProcessor());
 app.listen(8047);</code></pre>
     </div>
 
-    <h2>Adding Processors</h2>
-    <p>Register command processors using the fluent builder API:</p>
+    <h2>{{ 'docs.server-detail.node.adding-processors' | translate }}</h2>
+    <p>{{ 'docs.server-detail.node.adding-processors-desc' | translate }}</p>
     <div class="code-block">
         <span class="code-label">processors.ts</span>
         <pre><code>builder.addProcessor(new EchoProcessor());
@@ -33,14 +30,14 @@ builder.addProcessor(new HashProcessor());
 builder.addModule(new WeatherModule());</code></pre>
     </div>
 
-    <h2>Docker</h2>
+    <h2>{{ 'docs.server-detail.node.docker' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">shell</span>
         <pre><code>docker compose up cli-server-node</code></pre>
     </div>
-    <p>The server runs on port <strong>8047</strong> by default.</p>
+    <p>{{ 'docs.server-detail.node.docker-port' | translate }}</p>
 
-    <h2>Connecting the Frontend</h2>
+    <h2>{{ 'docs.server-detail.node.connecting' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">app.component.ts</span>
         <pre><code>import &#123; CliOptions &#125; from '@qodalis/cli-core';
@@ -59,20 +56,16 @@ const options: CliOptions = &#123;
 
 <!-- Python -->
 <div *ngIf="server === 'python'">
-    <h1>Python Server</h1>
-    <p>
-        The Python backend is built with FastAPI and uvicorn.
-        It uses the native <code>pty</code> module for interactive shell sessions
-        and FastAPI's built-in WebSocket support.
-    </p>
+    <h1>{{ 'docs.server-detail.python.title' | translate }}</h1>
+    <p>{{ 'docs.server-detail.python.intro' | translate }}</p>
 
-    <h2>Installation</h2>
+    <h2>{{ 'docs.server-detail.python.installation' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">pip</span>
         <pre><code>pip install qodalis-cli-server</code></pre>
     </div>
 
-    <h2>Basic Setup</h2>
+    <h2>{{ 'docs.server-detail.python.basic-setup' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">server.py</span>
         <pre><code>from qodalis_cli import create_cli_server
@@ -82,8 +75,8 @@ builder = result.builder
 builder.add_processor(MyProcessor())</code></pre>
     </div>
 
-    <h2>Adding Processors</h2>
-    <p>Register command processors using the builder API:</p>
+    <h2>{{ 'docs.server-detail.python.adding-processors' | translate }}</h2>
+    <p>{{ 'docs.server-detail.python.adding-processors-desc' | translate }}</p>
     <div class="code-block">
         <span class="code-label">processors.py</span>
         <pre><code>builder.add_processor(EchoProcessor())
@@ -93,14 +86,14 @@ builder.add_processor(HashProcessor())
 builder.add_module(WeatherModule())</code></pre>
     </div>
 
-    <h2>Docker</h2>
+    <h2>{{ 'docs.server-detail.python.docker' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">shell</span>
         <pre><code>docker compose up cli-server-python</code></pre>
     </div>
-    <p>The server runs on port <strong>8048</strong> by default.</p>
+    <p>{{ 'docs.server-detail.python.docker-port' | translate }}</p>
 
-    <h2>Connecting the Frontend</h2>
+    <h2>{{ 'docs.server-detail.python.connecting' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">app.component.ts</span>
         <pre><code>import &#123; CliOptions &#125; from '@qodalis/cli-core';
@@ -119,19 +112,16 @@ const options: CliOptions = &#123;
 
 <!-- .NET -->
 <div *ngIf="server === 'dotnet'">
-    <h1>.NET Server</h1>
-    <p>
-        The .NET backend is built with ASP.NET Core.
-        It includes Swagger UI for API exploration and distributes as a NuGet package.
-    </p>
+    <h1>{{ 'docs.server-detail.dotnet.title' | translate }}</h1>
+    <p>{{ 'docs.server-detail.dotnet.intro' | translate }}</p>
 
-    <h2>Installation</h2>
+    <h2>{{ 'docs.server-detail.dotnet.installation' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">NuGet</span>
         <pre><code>dotnet add package Qodalis.Cli</code></pre>
     </div>
 
-    <h2>Basic Setup</h2>
+    <h2>{{ 'docs.server-detail.dotnet.basic-setup' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">Program.cs</span>
         <pre><code>var builder = WebApplication.CreateBuilder(args);
@@ -147,8 +137,8 @@ app.UseCli();
 app.Run();</code></pre>
     </div>
 
-    <h2>Adding Processors</h2>
-    <p>Register command processors via dependency injection:</p>
+    <h2>{{ 'docs.server-detail.dotnet.adding-processors' | translate }}</h2>
+    <p>{{ 'docs.server-detail.dotnet.adding-processors-desc' | translate }}</p>
     <div class="code-block">
         <span class="code-label">Program.cs</span>
         <pre><code>builder.Services.AddCli(options =&gt; &#123;
@@ -158,14 +148,14 @@ app.Run();</code></pre>
 &#125;);</code></pre>
     </div>
 
-    <h2>Docker</h2>
+    <h2>{{ 'docs.server-detail.dotnet.docker' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">shell</span>
         <pre><code>docker compose up cli-server-dotnet</code></pre>
     </div>
-    <p>The server runs on port <strong>8046</strong> by default.</p>
+    <p>{{ 'docs.server-detail.dotnet.docker-port' | translate }}</p>
 
-    <h2>Connecting the Frontend</h2>
+    <h2>{{ 'docs.server-detail.dotnet.connecting' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">app.component.ts</span>
         <pre><code>import &#123; CliOptions &#125; from '@qodalis/cli-core';

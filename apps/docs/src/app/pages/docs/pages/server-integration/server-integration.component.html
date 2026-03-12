@@ -1,16 +1,8 @@
-<h1>Server Integration</h1>
-<p>
-    Qodalis CLI can connect to a backend server to execute commands on the server side,
-    access the filesystem, stream events, and open interactive shell sessions.
-    The frontend CLI communicates with the backend via a standard REST and WebSocket API.
-</p>
+<h1>{{ 'docs.server-integration.title' | translate }}</h1>
+<p>{{ 'docs.server-integration.intro' | translate }}</p>
 
-<h2>Architecture</h2>
-<p>
-    The integration follows a simple client-server pattern. The frontend CLI component
-    sends commands to the backend server, which executes them and returns the output.
-    Real-time features like event streaming and PTY shell sessions use WebSocket connections.
-</p>
+<h2>{{ 'docs.server-integration.architecture' | translate }}</h2>
+<p>{{ 'docs.server-integration.architecture-desc' | translate }}</p>
 <div class="code-block">
     <span class="code-label">Architecture</span>
     <pre><code>Frontend CLI  &lt;-- REST / WebSocket --&gt;  Backend Server
@@ -23,70 +15,70 @@
   |-- GET  /api/cli/fs/* ------------------&gt; |-- Filesystem access</code></pre>
 </div>
 
-<h2>Common API</h2>
-<p>All three backend servers implement the same API surface:</p>
+<h2>{{ 'docs.server-integration.common-api' | translate }}</h2>
+<p>{{ 'docs.server-integration.common-api-desc' | translate }}</p>
 <table>
     <thead>
         <tr>
-            <th>Endpoint</th>
-            <th>Method</th>
-            <th>Purpose</th>
+            <th>{{ 'docs.server-integration.th-endpoint' | translate }}</th>
+            <th>{{ 'docs.server-integration.th-method' | translate }}</th>
+            <th>{{ 'docs.server-integration.th-purpose' | translate }}</th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td><code>/api/cli/versions</code></td>
             <td>GET</td>
-            <td>Version discovery — supported versions, preferred version</td>
+            <td>{{ 'docs.server-integration.api-versions' | translate }}</td>
         </tr>
         <tr>
             <td><code>/api/v1/cli/commands</code></td>
             <td>GET</td>
-            <td>List all registered command processors</td>
+            <td>{{ 'docs.server-integration.api-commands' | translate }}</td>
         </tr>
         <tr>
             <td><code>/api/v1/cli/execute</code></td>
             <td>POST</td>
-            <td>Execute a CLI command on the server</td>
+            <td>{{ 'docs.server-integration.api-execute' | translate }}</td>
         </tr>
         <tr>
             <td><code>/ws/v1/cli/events</code></td>
             <td>WS</td>
-            <td>Server-push event streaming</td>
+            <td>{{ 'docs.server-integration.api-events' | translate }}</td>
         </tr>
         <tr>
             <td><code>/ws/v1/cli/shell</code></td>
             <td>WS</td>
-            <td>Interactive PTY shell session</td>
+            <td>{{ 'docs.server-integration.api-shell' | translate }}</td>
         </tr>
         <tr>
             <td><code>/api/cli/fs/*</code></td>
             <td>Various</td>
-            <td>Filesystem operations (ls, cat, stat, upload, download, mkdir, rm)</td>
+            <td>{{ 'docs.server-integration.api-fs' | translate }}</td>
         </tr>
     </tbody>
 </table>
 
-<h2>Available Backends</h2>
-<p>Choose the backend that fits your stack. All three implement the same API:</p>
+<h2>{{ 'docs.server-integration.backends' | translate }}</h2>
+<p>{{ 'docs.server-integration.backends-desc' | translate }}</p>
 
 <div class="server-cards">
     <div class="server-card">
         <h3>Node.js</h3>
-        <p>Express-based server with TypeScript support, node-pty for shell sessions.</p>
+        <p>{{ 'docs.server-integration.node-desc' | translate }}</p>
         <p>Port: <code>8047</code></p>
-        <a routerLink="/docs/server-integration/node">View Setup Guide</a>
+        <a routerLink="/docs/server-integration/node">{{ 'docs.server-integration.view-guide' | translate }}</a>
     </div>
     <div class="server-card">
         <h3>Python</h3>
-        <p>FastAPI server with uvicorn, native PTY support via pty module.</p>
+        <p>{{ 'docs.server-integration.python-desc' | translate }}</p>
         <p>Port: <code>8048</code></p>
-        <a routerLink="/docs/server-integration/python">View Setup Guide</a>
+        <a routerLink="/docs/server-integration/python">{{ 'docs.server-integration.view-guide' | translate }}</a>
     </div>
     <div class="server-card">
         <h3>.NET</h3>
-        <p>ASP.NET Core server with Swagger UI, NuGet package distribution.</p>
+        <p>{{ 'docs.server-integration.dotnet-desc' | translate }}</p>
         <p>Port: <code>8046</code></p>
-        <a routerLink="/docs/server-integration/dotnet">View Setup Guide</a>
+        <a routerLink="/docs/server-integration/dotnet">{{ 'docs.server-integration.view-guide' | translate }}</a>
     </div>
 </div>

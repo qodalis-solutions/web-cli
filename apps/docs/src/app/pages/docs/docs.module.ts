@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 import { DocsComponent } from './docs.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { SharedModule } from '../../shared/shared.module';
 
 const routes: Routes = [
     {
@@ -83,6 +84,6 @@ const routes: Routes = [
 
 @NgModule({
     declarations: [DocsComponent, SidebarComponent],
-    imports: [CommonModule, RouterModule.forChild(routes)],
+    imports: [CommonModule, SharedModule, RouterModule.forChild(routes)],
 })
 export class DocsModule {}

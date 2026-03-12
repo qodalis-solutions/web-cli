@@ -131,84 +131,21 @@ export class HomeComponent {
     languagePacks: PluginInfo[] = LANGUAGE_PACKS.map(this.toPluginInfo);
 
     features: Feature[] = [
-        {
-            icon: '\u29C9',
-            title: 'Plugin Ecosystem',
-            description: `Extend functionality with drop-in plugins. ${UTILITY_PLUGINS.length + GAME_PLUGINS.length} official plugins included, or create your own with one command.`,
-        },
-        {
-            icon: '\u2261',
-            title: 'Tabs & Split Panes',
-            description:
-                'Multiple terminals in tabs with draggable split panes. Rename, duplicate, and manage sessions.',
-        },
-        {
-            icon: '\u25D0',
-            title: 'Fully Themeable',
-            description:
-                "CSS custom properties for every surface. Match your app's design system with zero friction.",
-        },
-        {
-            icon: '\u21E5',
-            title: 'Autocomplete & History',
-            description:
-                'Tab completion, command history navigation, and inline suggestions out of the box.',
-        },
-        {
-            icon: '\u2B21',
-            title: 'Multi-Framework',
-            description:
-                'Native support for Angular, React, and Vue. Same plugin ecosystem, same API across frameworks.',
-        },
-        {
-            icon: '\uD83D\uDCC1',
-            title: 'Virtual Filesystem',
-            description:
-                'Built-in ls, cat, mkdir, nano commands. A complete in-browser filesystem for your terminal.',
-        },
-        {
-            icon: '\u21C6',
-            title: 'Command Piping',
-            description:
-                'Chain commands with pipes. Stream output between processors like a real shell.',
-        },
-        {
-            icon: '\u2699',
-            title: 'Configuration System',
-            description:
-                'Persistent key-value config store. Commands can read and write settings at runtime.',
-        },
+        { icon: '\u29C9', title: 'home.features.plugin-ecosystem.title', description: 'home.features.plugin-ecosystem.description' },
+        { icon: '\u2261', title: 'home.features.tabs-panes.title', description: 'home.features.tabs-panes.description' },
+        { icon: '\u25D0', title: 'home.features.themeable.title', description: 'home.features.themeable.description' },
+        { icon: '\u21E5', title: 'home.features.autocomplete.title', description: 'home.features.autocomplete.description' },
+        { icon: '\u2B21', title: 'home.features.multi-framework.title', description: 'home.features.multi-framework.description' },
+        { icon: '\uD83D\uDCC1', title: 'home.features.virtual-fs.title', description: 'home.features.virtual-fs.description' },
+        { icon: '\u21C6', title: 'home.features.piping.title', description: 'home.features.piping.description' },
+        { icon: '\u2699', title: 'home.features.config.title', description: 'home.features.config.description' },
     ];
 
     advancedFeatures: AdvancedFeature[] = [
-        {
-            icon: '\uD83C\uDF10',
-            title: 'Server Integration',
-            description:
-                'Connect to a .NET or Node backend via REST or WebSocket. Execute server-side commands from the browser terminal.',
-            example: 'server connect ws://localhost:8046/ws/cli',
-        },
-        {
-            icon: '\u2753',
-            title: 'Interactive Input',
-            description:
-                'Yes/no prompts, confirmations, and user input flows. Build interactive CLI wizards in the browser.',
-            example: 'yesno "Deploy to production?"',
-        },
-        {
-            icon: '\uD83D\uDCE6',
-            title: 'Drop-in Plugins',
-            description:
-                'Add new commands by importing a module. Each plugin is an npm package — install, import, and pass to the terminal component.',
-            example: 'import { guidModule } from \'@qodalis/cli-guid\';',
-        },
-        {
-            icon: '\u270F\uFE0F',
-            title: 'Nano Editor',
-            description:
-                'A built-in text editor in the browser terminal. Create and edit files without leaving the CLI.',
-            example: 'nano readme.txt',
-        },
+        { icon: '\uD83C\uDF10', title: 'home.advanced.server.title', description: 'home.advanced.server.description', example: 'server connect ws://localhost:8046/ws/cli' },
+        { icon: '\u2753', title: 'home.advanced.input.title', description: 'home.advanced.input.description', example: 'yesno "Deploy to production?"' },
+        { icon: '\uD83D\uDCE6', title: 'home.advanced.plugins.title', description: 'home.advanced.plugins.description', example: "import { guidModule } from '@qodalis/cli-guid';" },
+        { icon: '\u270F\uFE0F', title: 'home.advanced.nano.title', description: 'home.advanced.nano.description', example: 'nano readme.txt' },
     ];
 
     frameworkSnippets: Record<Framework, { imports: string; template: string }> = {
