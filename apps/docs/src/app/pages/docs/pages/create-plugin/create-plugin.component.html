@@ -1,27 +1,23 @@
-<h1>Create Your Own Plugin</h1>
-<p>
-    Qodalis CLI has a rich plugin architecture that lets you add custom commands.
-    The easiest way to get started is with the scaffolding tool, which generates
-    all the boilerplate for you.
-</p>
+<h1>{{ 'docs.create-plugin.title' | translate }}</h1>
+<p>{{ 'docs.create-plugin.intro' | translate }}</p>
 
 <!-- Scaffold -->
-<h2>Scaffold a New Plugin</h2>
-<p>Run the scaffolding tool interactively:</p>
+<h2>{{ 'docs.create-plugin.scaffold-title' | translate }}</h2>
+<p>{{ 'docs.create-plugin.scaffold-interactive' | translate }}</p>
 <div class="code-block">
     <span class="code-label">shell</span>
     <pre><code>npx @qodalis/create-cli-plugin</code></pre>
 </div>
 
-<p>Or use non-interactive mode with all options:</p>
+<p>{{ 'docs.create-plugin.scaffold-non-interactive' | translate }}</p>
 <div class="code-block">
     <span class="code-label">shell</span>
     <pre><code>npx @qodalis/create-cli-plugin --name weather --description "Weather forecasts" --processor-name WeatherProcessor</code></pre>
 </div>
 
 <!-- Plugin Structure -->
-<h2>Plugin Structure</h2>
-<p>The scaffolding tool generates the following structure:</p>
+<h2>{{ 'docs.create-plugin.structure-title' | translate }}</h2>
+<p>{{ 'docs.create-plugin.structure-desc' | translate }}</p>
 <div class="code-block">
     <span class="code-label">Generated files</span>
     <pre><code>cli-weather/
@@ -38,64 +34,61 @@
 <table>
     <thead>
         <tr>
-            <th>File</th>
-            <th>Purpose</th>
+            <th>{{ 'docs.create-plugin.th-file' | translate }}</th>
+            <th>{{ 'docs.create-plugin.th-purpose' | translate }}</th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td><code>cli-weather-command-processor.ts</code></td>
-            <td>The command processor with your logic</td>
+            <td>{{ 'docs.create-plugin.file-processor' | translate }}</td>
         </tr>
         <tr>
             <td><code>public-api.ts</code></td>
-            <td>Public exports for the package</td>
+            <td>{{ 'docs.create-plugin.file-public-api' | translate }}</td>
         </tr>
         <tr>
             <td><code>cli-entrypoint.ts</code></td>
-            <td>IIFE entry point for runtime installation via <code>pkg add</code></td>
+            <td>{{ 'docs.create-plugin.file-entrypoint' | translate }}</td>
         </tr>
         <tr>
             <td><code>tsup.config.ts</code></td>
-            <td>Build configuration producing CJS, ESM, and IIFE bundles</td>
+            <td>{{ 'docs.create-plugin.file-tsup' | translate }}</td>
         </tr>
     </tbody>
 </table>
 
 <!-- Implementing the Processor -->
-<h2>Implementing the Processor</h2>
-<p>
-    Every plugin command implements the <code>ICliCommandProcessor</code> interface.
-    Here are the key fields and methods:
-</p>
+<h2>{{ 'docs.create-plugin.implementing-title' | translate }}</h2>
+<p>{{ 'docs.create-plugin.implementing-desc' | translate }}</p>
 
 <table>
     <thead>
         <tr>
-            <th>Field</th>
-            <th>Description</th>
+            <th>{{ 'docs.create-plugin.th-field' | translate }}</th>
+            <th>{{ 'docs.create-plugin.th-description' | translate }}</th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td><code>command</code></td>
-            <td>The command name users type (e.g. <code>'weather'</code>)</td>
+            <td>{{ 'docs.create-plugin.field-command' | translate }}</td>
         </tr>
         <tr>
             <td><code>description</code></td>
-            <td>Shown in help output and command listings</td>
+            <td>{{ 'docs.create-plugin.field-description' | translate }}</td>
         </tr>
         <tr>
             <td><code>parameters</code></td>
-            <td>Array of parameter descriptors with name, description, and required flag</td>
+            <td>{{ 'docs.create-plugin.field-parameters' | translate }}</td>
         </tr>
         <tr>
             <td><code>processors</code></td>
-            <td>Nested sub-command processors</td>
+            <td>{{ 'docs.create-plugin.field-processors' | translate }}</td>
         </tr>
         <tr>
             <td><code>processCommand(command, context)</code></td>
-            <td>The handler that runs when the command is executed</td>
+            <td>{{ 'docs.create-plugin.field-process-command' | translate }}</td>
         </tr>
     </tbody>
 </table>
@@ -144,88 +137,75 @@ export class WeatherProcessor implements ICliCommandProcessor &#123;
 </div>
 
 <!-- Using the Execution Context -->
-<h2>Using the Execution Context</h2>
-<p>
-    The <code>ICliExecutionContext</code> passed to <code>processCommand</code> gives you access to
-    all the tools you need:
-</p>
+<h2>{{ 'docs.create-plugin.context-title' | translate }}</h2>
+<p>{{ 'docs.create-plugin.context-desc' | translate }}</p>
 
 <table>
     <thead>
         <tr>
-            <th>Service</th>
-            <th>Usage</th>
+            <th>{{ 'docs.create-plugin.th-service' | translate }}</th>
+            <th>{{ 'docs.create-plugin.th-usage' | translate }}</th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td><code>context.writer</code></td>
-            <td>Write text, HTML, errors, and warnings to the terminal</td>
+            <td>{{ 'docs.create-plugin.ctx-writer' | translate }}</td>
         </tr>
         <tr>
             <td><code>context.spinner</code></td>
-            <td>Show/hide a loading spinner</td>
+            <td>{{ 'docs.create-plugin.ctx-spinner' | translate }}</td>
         </tr>
         <tr>
             <td><code>context.progressBar</code></td>
-            <td>Display a progress bar for long operations</td>
+            <td>{{ 'docs.create-plugin.ctx-progress' | translate }}</td>
         </tr>
         <tr>
             <td><code>context.inputReader</code></td>
-            <td>Read interactive input (text, password, confirm, select)</td>
+            <td>{{ 'docs.create-plugin.ctx-input' | translate }}</td>
         </tr>
         <tr>
             <td><code>context.stateStore</code></td>
-            <td>Persistent key-value storage across sessions</td>
+            <td>{{ 'docs.create-plugin.ctx-state' | translate }}</td>
         </tr>
         <tr>
             <td><code>context.clipboard</code></td>
-            <td>Read from and write to the clipboard</td>
+            <td>{{ 'docs.create-plugin.ctx-clipboard' | translate }}</td>
         </tr>
     </tbody>
 </table>
 
-<p>See the <a routerLink="/docs/core-concepts/execution-context">Execution Context</a> page for full details.</p>
+<p>{{ 'docs.create-plugin.context-link' | translate }} <a routerLink="/docs/core-concepts/execution-context">Execution Context</a></p>
 
 <!-- Building -->
-<h2>Building</h2>
-<p>
-    The generated <code>tsup.config.ts</code> builds your plugin in three formats:
-    CommonJS, ESM, and IIFE (for browser use).
-</p>
+<h2>{{ 'docs.create-plugin.building-title' | translate }}</h2>
+<p>{{ 'docs.create-plugin.building-desc' | translate }}</p>
 <div class="code-block">
     <span class="code-label">shell</span>
     <pre><code>npx tsup</code></pre>
 </div>
 
-<p>This produces:</p>
+<p>{{ 'docs.create-plugin.building-produces' | translate }}</p>
 <ul>
-    <li><code>dist/index.js</code> — CommonJS bundle</li>
-    <li><code>dist/index.mjs</code> — ESM bundle</li>
-    <li><code>dist/umd/index.js</code> — IIFE bundle for standalone browser use</li>
-    <li><code>dist/index.d.ts</code> — TypeScript declarations</li>
+    <li><code>dist/index.js</code> — {{ 'docs.create-plugin.build-cjs' | translate }}</li>
+    <li><code>dist/index.mjs</code> — {{ 'docs.create-plugin.build-esm' | translate }}</li>
+    <li><code>dist/umd/index.js</code> — {{ 'docs.create-plugin.build-iife' | translate }}</li>
+    <li><code>dist/index.d.ts</code> — {{ 'docs.create-plugin.build-dts' | translate }}</li>
 </ul>
 
 <!-- Publishing -->
-<h2>Publishing</h2>
-<p>Publish your plugin to npm so others can install it:</p>
+<h2>{{ 'docs.create-plugin.publishing-title' | translate }}</h2>
+<p>{{ 'docs.create-plugin.publishing-desc' | translate }}</p>
 <div class="code-block">
     <span class="code-label">shell</span>
     <pre><code>npm publish --access public</code></pre>
 </div>
 
 <!-- Runtime Installation -->
-<h2>Runtime Installation</h2>
-<p>
-    One of the most powerful features of Qodalis CLI is runtime plugin installation.
-    Users can install your published plugin directly from the terminal without rebuilding
-    their application:
-</p>
+<h2>{{ 'docs.create-plugin.runtime-title' | translate }}</h2>
+<p>{{ 'docs.create-plugin.runtime-desc' | translate }}</p>
 <div class="code-block">
     <span class="code-label">Terminal</span>
     <pre><code>pkg add @qodalis/cli-weather</code></pre>
 </div>
-<p>
-    This downloads the IIFE bundle from npm and loads it dynamically into the running CLI.
-    No application rebuild or deployment is required.
-</p>
+<p>{{ 'docs.create-plugin.runtime-detail' | translate }}</p>

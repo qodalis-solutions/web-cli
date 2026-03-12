@@ -1,20 +1,17 @@
-<h1>Configuration</h1>
-<p>
-    Qodalis CLI can be configured at build time through component properties
-    or at runtime using built-in <code>config</code> commands.
-</p>
+<h1>{{ 'docs.configuration.title' | translate }}</h1>
+<p>{{ 'docs.configuration.intro' | translate }}</p>
 
 <!-- CliOptions Table -->
-<h2>CliOptions</h2>
-<p>The following options can be passed to the CLI component:</p>
+<h2>{{ 'docs.configuration.cli-options' | translate }}</h2>
+<p>{{ 'docs.configuration.cli-options-desc' | translate }}</p>
 
 <table>
     <thead>
         <tr>
-            <th>Option</th>
-            <th>Type</th>
-            <th>Default</th>
-            <th>Description</th>
+            <th>{{ 'docs.configuration.th-option' | translate }}</th>
+            <th>{{ 'docs.configuration.th-type' | translate }}</th>
+            <th>{{ 'docs.configuration.th-default' | translate }}</th>
+            <th>{{ 'docs.configuration.th-description' | translate }}</th>
         </tr>
     </thead>
     <tbody>
@@ -22,31 +19,31 @@
             <td><code>logLevel</code></td>
             <td><code>CliLogLevel</code></td>
             <td><code>INFO</code></td>
-            <td>Log verbosity level (DEBUG, INFO, WARN, ERROR)</td>
+            <td>{{ 'docs.configuration.log-level-desc' | translate }}</td>
         </tr>
         <tr>
             <td><code>welcomeMessage</code></td>
             <td><code>string</code></td>
             <td>(default)</td>
-            <td>Custom welcome message displayed when the terminal opens</td>
+            <td>{{ 'docs.configuration.welcome-msg-desc' | translate }}</td>
         </tr>
         <tr>
             <td><code>theme</code></td>
             <td><code>string</code></td>
             <td><code>'default'</code></td>
-            <td>Terminal color theme</td>
+            <td>{{ 'docs.configuration.theme-desc' | translate }}</td>
         </tr>
         <tr>
             <td><code>serverUrl</code></td>
             <td><code>string</code></td>
             <td><code>null</code></td>
-            <td>Server connection URL for remote command execution</td>
+            <td>{{ 'docs.configuration.server-url-desc' | translate }}</td>
         </tr>
     </tbody>
 </table>
 
 <!-- Angular Configuration -->
-<h2>Framework Configuration</h2>
+<h2>{{ 'docs.configuration.framework-config' | translate }}</h2>
 
 <div class="framework-tabs">
     <button class="framework-tab" [class.active]="activeTab === 'angular'" (click)="activeTab = 'angular'">Angular</button>
@@ -56,8 +53,8 @@
 
 <!-- Angular -->
 <div *ngIf="activeTab === 'angular'">
-    <h3>Angular Configuration</h3>
-    <p>Pass options via the <code>[options]</code> input binding:</p>
+    <h3>{{ 'docs.configuration.angular-config' | translate }}</h3>
+    <p>{{ 'docs.configuration.angular-config-desc' | translate }}</p>
 
     <div class="code-block">
         <span class="code-label">app.component.ts</span>
@@ -79,7 +76,7 @@ cliOptions: CliOptions = &#123;
 &lt;cli-panel [options]="cliOptions" [modules]="[]"&gt;&lt;/cli-panel&gt;</code></pre>
     </div>
 
-    <p>Don't forget to add the styles to your <code>angular.json</code>:</p>
+    <p>{{ 'docs.configuration.angular-styles-desc' | translate }}</p>
 
     <div class="code-block">
         <span class="code-label">angular.json</span>
@@ -91,8 +88,8 @@ cliOptions: CliOptions = &#123;
 
 <!-- React -->
 <div *ngIf="activeTab === 'react'">
-    <h3>React Configuration</h3>
-    <p>Pass options through <code>CliConfigProvider</code> props:</p>
+    <h3>{{ 'docs.configuration.react-config' | translate }}</h3>
+    <p>{{ 'docs.configuration.react-config-desc' | translate }}</p>
 
     <div class="code-block">
         <span class="code-label">App.tsx</span>
@@ -117,8 +114,8 @@ function App() &#123;
 
 <!-- Vue -->
 <div *ngIf="activeTab === 'vue'">
-    <h3>Vue Configuration</h3>
-    <p>Pass options through <code>CliConfigProvider</code> props:</p>
+    <h3>{{ 'docs.configuration.vue-config' | translate }}</h3>
+    <p>{{ 'docs.configuration.vue-config-desc' | translate }}</p>
 
     <div class="code-block">
         <span class="code-label">App.vue</span>
@@ -142,28 +139,25 @@ const options = &#123;
 </div>
 
 <!-- Runtime Config -->
-<h2>Runtime Configuration</h2>
-<p>
-    You can view and modify configuration at runtime using the built-in
-    <code>config</code> command directly in the terminal:
-</p>
+<h2>{{ 'docs.configuration.runtime-config' | translate }}</h2>
+<p>{{ 'docs.configuration.runtime-config-desc' | translate }}</p>
 
 <div class="code-block">
-    <span class="code-label">List all configuration values</span>
+    <span class="code-label">{{ 'docs.configuration.list-config' | translate }}</span>
     <pre><code>config list</code></pre>
 </div>
 
 <div class="code-block">
-    <span class="code-label">Get a specific value</span>
+    <span class="code-label">{{ 'docs.configuration.get-config' | translate }}</span>
     <pre><code>config get theme</code></pre>
 </div>
 
 <div class="code-block">
-    <span class="code-label">Set a value</span>
+    <span class="code-label">{{ 'docs.configuration.set-config' | translate }}</span>
     <pre><code>config set theme dark</code></pre>
 </div>
 
 <div class="code-block">
-    <span class="code-label">Delete a value</span>
+    <span class="code-label">{{ 'docs.configuration.delete-config' | translate }}</span>
     <pre><code>config delete theme</code></pre>
 </div>

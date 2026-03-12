@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { CliLogLevel, ICliModule } from '@qodalis/cli-core';
 import { CliPanelOptions } from '@qodalis/angular-cli';
+import { TranslateService } from '@ngx-translate/core';
+import { LANGUAGES, Language, DEFAULT_LANG, LANG_STORAGE_KEY } from './data/languages';
 import { usersModule } from '@qodalis/cli-users';
 import { guidModule } from '@qodalis/cli-guid';
 import { regexModule } from '@qodalis/cli-regex';
@@ -46,6 +48,44 @@ import { langRoModule } from '@qodalis/cli-lang-ro';
 })
 export class AppComponent {
     title = 'Qodalis CLI';
+
+    languages = LANGUAGES;
+    currentLang: Language;
+    langDropdownOpen = false;
+
+    constructor(private translate: TranslateService) {
+        const browserLangPrefix = navigator.language?.split('-')[0];
+        const supportedCodes = LANGUAGES.map((l) => l.code);
+        const storedLang = localStorage.getItem(LANG_STORAGE_KEY);
+
+        let langCode: string;
+        if (storedLang && supportedCodes.includes(storedLang)) {
+            langCode = storedLang;
+        } else if (supportedCodes.includes(browserLangPrefix)) {
+            langCode = browserLangPrefix;
+        } else {
+            langCode = DEFAULT_LANG;
+        }
+
+        this.translate.use(langCode);
+        this.currentLang = LANGUAGES.find((l) => l.code === langCode) || LANGUAGES[0];
+    }
+
+    switchLang(lang: Language): void {
+        this.translate.use(lang.code);
+        this.currentLang = lang;
+        localStorage.setItem(LANG_STORAGE_KEY, lang.code);
+        this.langDropdownOpen = false;
+    }
+
+    toggleLangDropdown(): void {
+        this.langDropdownOpen = !this.langDropdownOpen;
+    }
+
+    @HostListener('document:click')
+    closeLangDropdown(): void {
+        this.langDropdownOpen = false;
+    }
 
     modules: ICliModule[] = [
         usersModule,

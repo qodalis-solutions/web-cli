@@ -3,26 +3,25 @@
   <div class="hero-glow"></div>
   <div class="hero-content">
     <div class="hero-badge">
-      Open Source &middot; Angular &middot; React &middot; Vue
+      {{ 'home.hero.badge' | translate }}
     </div>
     <h1 class="hero-title">
-      A web terminal framework<br />
-      <span class="accent">for any frontend.</span>
+      {{ 'home.hero.title' | translate }}<br />
+      <span class="accent">{{ 'home.hero.title-accent' | translate }}</span>
     </h1>
     <p class="hero-subtitle">
-      Drop a fully-featured CLI into any app. Tabs, split panes, a plugin
-      ecosystem, themes, autocomplete — everything you need, nothing you don't.
+      {{ 'home.hero.subtitle' | translate }}
     </p>
     <div class="hero-actions">
       <button class="btn btn-primary" (click)="scrollToTerminal()">
-        Try it live
+        {{ 'home.hero.try-it' | translate }}
       </button>
-      <a routerLink="/docs" class="btn btn-ghost">Read the docs</a>
+      <a routerLink="/docs" class="btn btn-ghost">{{ 'home.hero.read-docs' | translate }}</a>
     </div>
     <div class="install-bar">
       <code class="install-command">{{ installCommand }}</code>
       <button class="install-copy" (click)="copyInstall()">
-        {{ copied ? "Copied!" : "Copy" }}
+        {{ copied ? ('home.hero.copied' | translate) : ('home.hero.copy' | translate) }}
       </button>
     </div>
   </div>
@@ -31,9 +30,9 @@
 <!-- ===== FRAMEWORK CODE EXAMPLES ===== -->
 <section class="frameworks-section">
   <div class="section-inner">
-    <h2 class="section-heading">Works with Your Stack</h2>
+    <h2 class="section-heading">{{ 'home.frameworks.heading' | translate }}</h2>
     <p class="section-subheading">
-      Same plugin ecosystem. Same API. Native wrappers for every major framework.
+      {{ 'home.frameworks.subheading' | translate }}
     </p>
     <div class="framework-tabs">
       <button class="framework-tab" [class.active]="activeFramework === 'angular'" (click)="setFramework('angular')">Angular</button>
@@ -92,8 +91,8 @@
     <div class="features-grid">
       <div class="feature-card" *ngFor="let f of features">
         <div class="feature-icon">{{ f.icon }}</div>
-        <h3 class="feature-title">{{ f.title }}</h3>
-        <p class="feature-desc">{{ f.description }}</p>
+        <h3 class="feature-title">{{ f.title | translate }}</h3>
+        <p class="feature-desc">{{ f.description | translate }}</p>
       </div>
     </div>
   </div>
@@ -102,9 +101,9 @@
 <!-- ===== BUILT-IN COMMANDS ===== -->
 <section class="commands-section">
   <div class="section-inner">
-    <h2 class="section-heading">{{ totalCommandCount }}+ Built-in Commands</h2>
+    <h2 class="section-heading">{{ 'home.commands.heading' | translate:{ count: totalCommandCount } }}</h2>
     <p class="section-subheading">
-      A complete command set out of the box — dev tools, file management, editors, and system utilities.
+      {{ 'home.commands.subheading' | translate }}
     </p>
     <div class="command-groups">
       <div class="command-group" *ngFor="let g of builtInGroups">
@@ -120,11 +119,9 @@
 <!-- ===== LIVE TERMINAL ===== -->
 <section class="terminal-section" #terminalSection>
   <div class="section-inner">
-    <h2 class="section-heading">Live Terminal</h2>
+    <h2 class="section-heading">{{ 'home.terminal.heading' | translate }}</h2>
     <p class="section-subheading">
-      This is the real component running below. Type
-      <code>help</code> to explore commands, <code>ls</code> to browse files, or
-      <code>nano</code> to open the editor.
+      {{ 'home.terminal.subheading' | translate }}
     </p>
     <div class="terminal-wrapper">
       <div class="terminal-chrome">
@@ -143,15 +140,15 @@
 <!-- ===== ADVANCED FEATURES ===== -->
 <section class="advanced-section">
   <div class="section-inner">
-    <h2 class="section-heading">Power Features</h2>
+    <h2 class="section-heading">{{ 'home.advanced.heading' | translate }}</h2>
     <p class="section-subheading">
-      Beyond the basics — server connectivity, runtime extensibility, and interactive workflows.
+      {{ 'home.advanced.subheading' | translate }}
     </p>
     <div class="advanced-grid">
       <div class="advanced-card" *ngFor="let a of advancedFeatures">
         <div class="advanced-icon">{{ a.icon }}</div>
-        <h3 class="advanced-title">{{ a.title }}</h3>
-        <p class="advanced-desc">{{ a.description }}</p>
+        <h3 class="advanced-title">{{ a.title | translate }}</h3>
+        <p class="advanced-desc">{{ a.description | translate }}</p>
         <code class="advanced-example">{{ a.example }}</code>
       </div>
     </div>
@@ -161,12 +158,12 @@
 <!-- ===== PLUGINS ===== -->
 <section class="plugins-section">
   <div class="section-inner">
-    <h2 class="section-heading">{{ utilityPlugins.length + gamePlugins.length }} Official Plugins</h2>
+    <h2 class="section-heading">{{ 'home.plugins.heading' | translate:{ count: utilityPlugins.length + gamePlugins.length } }}</h2>
     <p class="section-subheading">
-      Each plugin is a standalone package. Install only what you need.
+      {{ 'home.plugins.subheading' | translate }}
     </p>
 
-    <h3 class="subsection-heading">Utilities</h3>
+    <h3 class="subsection-heading">{{ 'home.plugins.utilities' | translate }}</h3>
     <div class="plugins-grid">
       <a class="plugin-card" *ngFor="let p of utilityPlugins" [routerLink]="'/docs/plugins/' + p.id">
         <div class="plugin-header">
@@ -177,7 +174,7 @@
       </a>
     </div>
 
-    <h3 class="subsection-heading">Games</h3>
+    <h3 class="subsection-heading">{{ 'home.plugins.games' | translate }}</h3>
     <div class="plugins-grid">
       <a class="plugin-card" *ngFor="let p of gamePlugins" [routerLink]="'/docs/plugins/' + p.id">
         <div class="plugin-header">
@@ -188,9 +185,9 @@
       </a>
     </div>
 
-    <h3 class="subsection-heading">Language Packs</h3>
+    <h3 class="subsection-heading">{{ 'home.plugins.language-packs' | translate }}</h3>
     <p class="section-subheading" style="margin-bottom: 20px">
-      Translate the CLI interface into 10 languages.
+      {{ 'home.plugins.language-packs-desc' | translate }}
     </p>
     <div class="plugins-grid">
       <a class="plugin-card" *ngFor="let p of languagePacks" [routerLink]="'/docs/plugins/' + p.id">
@@ -206,51 +203,51 @@
 <!-- ===== CREATE YOUR OWN PLUGIN ===== -->
 <section class="create-plugin-section">
   <div class="section-inner">
-    <h2 class="section-heading">Create Your Own Plugin</h2>
+    <h2 class="section-heading">{{ 'home.create-plugin.heading' | translate }}</h2>
     <p class="section-subheading">
-      Scaffold a complete plugin project with a single command. Generates build config, command processor, tests, and a browser-ready IIFE bundle.
+      {{ 'home.create-plugin.subheading' | translate }}
     </p>
     <div class="create-plugin-content">
       <div class="code-block">
-        <span class="code-label">Scaffold (interactive)</span>
+        <span class="code-label">{{ 'home.create-plugin.scaffold-interactive' | translate }}</span>
         <pre><code>npx @qodalis/create-cli-plugin</code></pre>
       </div>
       <div class="code-block">
-        <span class="code-label">Scaffold (non-interactive)</span>
+        <span class="code-label">{{ 'home.create-plugin.scaffold-non-interactive' | translate }}</span>
         <pre><code>npx @qodalis/create-cli-plugin --name weather --description "Weather forecasts"</code></pre>
       </div>
       <div class="create-plugin-steps">
         <div class="create-step">
           <span class="step-number">1</span>
           <div class="step-content">
-            <strong>Scaffold</strong>
-            <span>Run the CLI tool — interactive prompts or pass <code>--name</code>, <code>--description</code>, <code>--processor-name</code> directly</span>
+            <strong>{{ 'home.create-plugin.step1-title' | translate }}</strong>
+            <span>{{ 'home.create-plugin.step1-desc' | translate }}</span>
           </div>
         </div>
         <div class="create-step">
           <span class="step-number">2</span>
           <div class="step-content">
-            <strong>Implement</strong>
-            <span>Add your command logic in <code>src/lib/processors/</code> — define sub-commands, parameters, and use the execution context API</span>
+            <strong>{{ 'home.create-plugin.step2-title' | translate }}</strong>
+            <span>{{ 'home.create-plugin.step2-desc' | translate }}</span>
           </div>
         </div>
         <div class="create-step">
           <span class="step-number">3</span>
           <div class="step-content">
-            <strong>Build</strong>
-            <span>Run <code>npx tsup</code> to produce CJS, ESM, and IIFE bundles</span>
+            <strong>{{ 'home.create-plugin.step3-title' | translate }}</strong>
+            <span>{{ 'home.create-plugin.step3-desc' | translate }}</span>
           </div>
         </div>
         <div class="create-step">
           <span class="step-number">4</span>
           <div class="step-content">
-            <strong>Publish</strong>
-            <span>Run <code>npm publish --access public</code> to publish to npm</span>
+            <strong>{{ 'home.create-plugin.step4-title' | translate }}</strong>
+            <span>{{ 'home.create-plugin.step4-desc' | translate }}</span>
           </div>
         </div>
       </div>
       <div class="code-block">
-        <span class="code-label">Register in your app</span>
+        <span class="code-label">{{ 'home.create-plugin.register-label' | translate }}</span>
         <pre><code>import {{ '{' }} weatherModule {{ '}' }} from '@qodalis/cli-weather';
 
 // Angular: &lt;cli [modules]="[weatherModule]" /&gt;
@@ -258,7 +255,7 @@
 // Vue:     &lt;CliConfigProvider :modules="[weatherModule]"&gt;</code></pre>
       </div>
       <div class="code-block">
-        <span class="code-label">Or install at runtime (no rebuild needed)</span>
+        <span class="code-label">{{ 'home.create-plugin.runtime-label' | translate }}</span>
         <pre><code>pkg add @qodalis/cli-weather</code></pre>
       </div>
     </div>
@@ -268,10 +265,10 @@
 <!-- ===== CTA ===== -->
 <section class="cta-section">
   <div class="section-inner cta-inner">
-    <h2 class="cta-title">Ready to add a terminal to your app?</h2>
+    <h2 class="cta-title">{{ 'home.cta.title' | translate }}</h2>
     <div class="cta-actions">
-      <a routerLink="/docs/getting-started" class="btn btn-primary">Get started</a>
-      <a href="https://github.com/qodalis-solutions/web-cli" target="_blank" rel="noopener" class="btn btn-ghost">View on GitHub</a>
+      <a routerLink="/docs/getting-started" class="btn btn-primary">{{ 'home.cta.get-started' | translate }}</a>
+      <a href="https://github.com/qodalis-solutions/web-cli" target="_blank" rel="noopener" class="btn btn-ghost">{{ 'home.cta.github' | translate }}</a>
     </div>
   </div>
 </section>
