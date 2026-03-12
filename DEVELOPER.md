@@ -348,6 +348,158 @@ All workflows use Node 22 and pnpm.
 - Path aliases in `tsconfig.base.json` map `@qodalis/*` to `dist/` folders
 - Always run `pnpm install` (not npm) from the workspace root
 
+## WebAssembly (WASM) Acceleration
+
+The CLI engine (`@qodalis/cli`) includes optional WASM modules written in Rust that accelerate text search (nano editor) and tab completion. If WASM is unavailable, the engine falls back to equivalent JavaScript implementations automatically.
+
+### Prerequisites
+
+To build the WASM module locally, you need **Rust** and **wasm-pack** in addition to the standard Node.js toolchain.
+
+#### macOS
+
+```bash
+# Install Rust via rustup
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+source "$HOME/.cargo/env"
+
+# Add the WASM compilation target
+rustup target add wasm32-unknown-unknown
+
+# Install wasm-pack
+curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+```
+
+> **Tip:** If you use Homebrew, you can also install Rust via `brew install rust`, but rustup is recommended for managing toolchains and targets.
+
+#### Linux (Ubuntu/Debian)
+
+```bash
+# Install build essentials (needed for linking)
+sudo apt-get update && sudo apt-get install -y build-essential
+
+# Install Rust via rustup
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+source "$HOME/.cargo/env"
+
+# Add the WASM compilation target
+rustup target add wasm32-unknown-unknown
+
+# Install wasm-pack
+curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+```
+
+For **Fedora/RHEL**:
+
+```bash
+sudo dnf groupinstall "Development Tools"
+# Then follow the same rustup + wasm-pack steps above
+```
+
+For **Arch Linux**:
+
+```bash
+sudo pacman -S base-devel
+# Then follow the same rustup + wasm-pack steps above
+```
+
+#### Windows
+
+**Option A — Native (PowerShell):**
+
+1. Download and run the Rust installer from https://rustup.rs (requires [Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/))
+2. Open a new terminal after installation, then:
+
+```powershell
+rustup target add wasm32-unknown-unknown
+cargo install wasm-pack
+```
+
+> **Note:** The `build.sh` script uses bash. On native Windows, run it via Git Bash (included with Git for Windows) or adapt the commands manually: `wasm-pack build --target web --out-dir pkg --release`
+
+**Option B — WSL2 (recommended for Windows):**
+
+```bash
+# Inside your WSL2 Ubuntu terminal, follow the Linux steps above
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+source "$HOME/.cargo/env"
+rustup target add wasm32-unknown-unknown
+curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+```
+
+#### Verify Installation (all platforms)
+
+```bash
+rustc --version            # e.g. rustc 1.82.0 (stable)
+rustup target list --installed  # Should include wasm32-unknown-unknown
+wasm-pack --version        # e.g. wasm-pack 0.13.1
+```
+
+### Building WASM
+
+The WASM build is integrated into the CLI package's Nx build target, so `pnpm run build` (or `npx nx build cli`) handles it automatically. To build the WASM module independently:
+
+```bash
+cd packages/cli/wasm
+chmod +x build.sh
+./build.sh               # Runs: wasm-pack build --target web --out-dir pkg --release
+```
+
+The compiled binary lands at `packages/cli/wasm/pkg/qodalis_cli_wasm_bg.wasm` and is copied to `dist/cli/wasm/` during the full build.
+
+### WASM Source Structure
+
+```
+packages/cli/
+  wasm/
+    Cargo.toml             # Rust crate config (wasm-bindgen, opt-level "z", LTO)
+    src/lib.rs             # Boyer-Moore text search, prefix match, common prefix, replace
+    build.sh               # Build script (wasm-pack wrapper)
+    pkg/                   # Build output (git-ignored)
+  src/lib/wasm/
+    types.ts               # ICliWasmAccelerator interface
+    fallback.ts            # JsFallbackAccelerator (pure JS fallback)
+    wasm-loader.ts         # Async loader + sync accessor (getAccelerator())
+    index.ts               # Public exports
+```
+
+### How It Works
+
+1. **Startup:** `CliEngine` calls `initWasmAccelerator()` eagerly at boot — silent failure if WASM isn't available.
+2. **Runtime:** Code calls `getAccelerator()` synchronously, which returns the WASM accelerator if loaded, or the JS fallback.
+3. **Used by:** Nano editor (`searchForward`, `replaceAll`) and tab completion (`prefixMatch`, `commonPrefix`).
+
+### Serving WASM in Consumer Apps
+
+The WASM loader searches for the binary at these paths (in order):
+
+1. `/assets/wasm/qodalis_cli_wasm_bg.wasm`
+2. `./assets/wasm/qodalis_cli_wasm_bg.wasm`
+3. `/wasm/qodalis_cli_wasm_bg.wasm`
+
+Consumer apps must copy the `.wasm` file from `node_modules/@qodalis/cli/wasm/` to one of these serving paths. In Angular, use the `assets` array in `angular.json` / `project.json`:
+
+```json
+{
+  "glob": "**/*",
+  "input": "dist/cli/wasm",
+  "output": "/assets/wasm"
+}
+```
+
+Alternatively, pass an explicit URL: `initWasmAccelerator('/custom/path/to/file.wasm')`.
+
+### Skipping WASM Build
+
+If you don't have Rust installed and don't need WASM acceleration, the build will fail at the `bash wasm/build.sh` step. You can build the CLI without WASM by running tsup directly:
+
+```bash
+cd packages/cli
+npx tsup
+```
+
+The CLI will work normally using the JavaScript fallback implementations.
+
 ## Troubleshooting
 
 ### Build fails with "Cannot find module '@qodalis/cli-core'"
