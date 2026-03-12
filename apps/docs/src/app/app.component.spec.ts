@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { TranslateModule } from '@ngx-translate/core';
 import { AppComponent } from './app.component';
 import { CliModule } from '@qodalis/angular-cli';
 
@@ -7,7 +8,7 @@ describe('AppComponent', () => {
     beforeEach(() =>
         TestBed.configureTestingModule({
             declarations: [AppComponent],
-            imports: [CliModule, RouterTestingModule],
+            imports: [CliModule, RouterTestingModule, TranslateModule.forRoot()],
         }),
     );
 
