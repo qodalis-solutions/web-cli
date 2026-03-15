@@ -126,6 +126,9 @@ MIT
 @qodalis/cli-scp
 MIT
 
+@qodalis/cli-server-jobs
+MIT
+
 @qodalis/cli-server-logs
 MIT
 
