@@ -102,6 +102,9 @@
       "@qodalis/cli-cron": [
         "dist/cron"
       ],
+      "@qodalis/cli-jobs": [
+        "dist/jobs"
+      ],
       "@qodalis/cli-lang-es": [
         "dist/lang-es"
       ],
