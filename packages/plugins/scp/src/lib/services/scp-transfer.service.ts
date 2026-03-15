@@ -2,7 +2,7 @@ import { IScpFileEntry, IScpFileStat, IScpTransferService } from '../interfaces'
 
 export class ScpTransferService implements IScpTransferService {
     async ls(serverUrl: string, path: string, headers?: Record<string, string>): Promise<IScpFileEntry[]> {
-        const res = await this._fetch(`${serverUrl}/api/cli/fs/ls?path=${encodeURIComponent(path)}`, {
+        const res = await this._fetch(`${serverUrl}/api/qcli/fs/ls?path=${encodeURIComponent(path)}`, {
             headers,
         });
         const data = await res.json();
@@ -10,7 +10,7 @@ export class ScpTransferService implements IScpTransferService {
     }
 
     async cat(serverUrl: string, path: string, headers?: Record<string, string>): Promise<string> {
-        const res = await this._fetch(`${serverUrl}/api/cli/fs/cat?path=${encodeURIComponent(path)}`, {
+        const res = await this._fetch(`${serverUrl}/api/qcli/fs/cat?path=${encodeURIComponent(path)}`, {
             headers,
         });
         const data = await res.json();
@@ -18,7 +18,7 @@ export class ScpTransferService implements IScpTransferService {
     }
 
     async stat(serverUrl: string, path: string, headers?: Record<string, string>): Promise<IScpFileStat> {
-        const res = await this._fetch(`${serverUrl}/api/cli/fs/stat?path=${encodeURIComponent(path)}`, {
+        const res = await this._fetch(`${serverUrl}/api/qcli/fs/stat?path=${encodeURIComponent(path)}`, {
             headers,
         });
         return await res.json();
@@ -31,7 +31,7 @@ export class ScpTransferService implements IScpTransferService {
         onProgress?: (received: number, total: number) => void,
         signal?: AbortSignal,
     ): Promise<{ content: string; size: number }> {
-        const res = await this._fetch(`${serverUrl}/api/cli/fs/download?path=${encodeURIComponent(path)}`, {
+        const res = await this._fetch(`${serverUrl}/api/qcli/fs/download?path=${encodeURIComponent(path)}`, {
             headers,
             signal,
         });
@@ -79,7 +79,7 @@ export class ScpTransferService implements IScpTransferService {
         formData.append('path', remotePath);
         formData.append('file', new Blob([content]), filename);
 
-        await this._fetch(`${serverUrl}/api/cli/fs/upload`, {
+        await this._fetch(`${serverUrl}/api/qcli/fs/upload`, {
             method: 'POST',
             body: formData,
             headers,
@@ -87,7 +87,7 @@ export class ScpTransferService implements IScpTransferService {
     }
 
     async mkdir(serverUrl: string, path: string, headers?: Record<string, string>): Promise<void> {
-        await this._fetch(`${serverUrl}/api/cli/fs/mkdir`, {
+        await this._fetch(`${serverUrl}/api/qcli/fs/mkdir`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...headers },
             body: JSON.stringify({ path }),
@@ -95,7 +95,7 @@ export class ScpTransferService implements IScpTransferService {
     }
 
     async rm(serverUrl: string, path: string, headers?: Record<string, string>): Promise<void> {
-        await this._fetch(`${serverUrl}/api/cli/fs/rm?path=${encodeURIComponent(path)}`, {
+        await this._fetch(`${serverUrl}/api/qcli/fs/rm?path=${encodeURIComponent(path)}`, {
             method: 'DELETE',
             headers,
         });

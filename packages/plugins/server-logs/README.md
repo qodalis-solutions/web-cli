@@ -30,4 +30,4 @@ server-logs --help # for more options
 
 # Dependencies
 
-This extension connects to a Qodalis CLI server via WebSocket at `/ws/v1/cli/logs`.
+This extension connects to a Qodalis CLI server via WebSocket at `/ws/v1/qcli/logs`.

@@ -57,7 +57,7 @@ export class CliServerConnection {
     }
 
     async fetchCommands(): Promise<CliServerCommandDescriptor[]> {
-        const url = `${this.normalizeUrl(this._config.url)}/api/v1/cli/commands`;
+        const url = `${this.normalizeUrl(this._config.url)}/api/v1/qcli/commands`;
         const response = await this.httpFetch(url);
 
         if (!response.ok) {
@@ -71,7 +71,7 @@ export class CliServerConnection {
 
     async fetchCapabilities(): Promise<CliServerCapabilities | null> {
         try {
-            const url = `${this.normalizeUrl(this._config.url)}/api/v1/cli/capabilities`;
+            const url = `${this.normalizeUrl(this._config.url)}/api/v1/qcli/capabilities`;
             const response = await this.httpFetch(url);
             if (!response.ok) return null;
             return response.json();
@@ -81,7 +81,7 @@ export class CliServerConnection {
     }
 
     async execute(command: CliProcessCommand): Promise<CliServerResponse> {
-        const url = `${this.normalizeUrl(this._config.url)}/api/v1/cli/execute`;
+        const url = `${this.normalizeUrl(this._config.url)}/api/v1/qcli/execute`;
         const response = await this.httpFetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -106,7 +106,7 @@ export class CliServerConnection {
 
     async ping(): Promise<boolean> {
         try {
-            const url = `${this.normalizeUrl(this._config.url)}/api/v1/cli/version`;
+            const url = `${this.normalizeUrl(this._config.url)}/api/v1/qcli/version`;
             const response = await this.httpFetch(url);
             return response.ok;
         } catch {
@@ -129,7 +129,7 @@ export class CliServerConnection {
                 type: 'daemon',
                 onStart: async (ctx) => {
                     const baseUrl = this.normalizeUrl(this._config.url);
-                    const wsUrl = this.toWebSocketUrl(baseUrl) + '/ws/v1/cli/events';
+                    const wsUrl = this.toWebSocketUrl(baseUrl) + '/ws/v1/qcli/events';
                     ctx.log(`Connecting to ${wsUrl}`);
 
                     this._eventSocket = new WebSocket(wsUrl);
@@ -175,7 +175,7 @@ export class CliServerConnection {
     private connectEventSocketDirect(): void {
         try {
             const baseUrl = this.normalizeUrl(this._config.url);
-            const wsUrl = this.toWebSocketUrl(baseUrl) + '/ws/v1/cli/events';
+            const wsUrl = this.toWebSocketUrl(baseUrl) + '/ws/v1/qcli/events';
             this._eventSocket = new WebSocket(wsUrl);
 
             this._eventSocket.onmessage = (event) => {
