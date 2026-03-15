@@ -23,7 +23,7 @@ import { wordleModule } from '@qodalis/cli-wordle';
 import { scpModule } from '@qodalis/cli-scp';
 import { wgetModule } from '@qodalis/cli-wget';
 import { sudokuModule } from '@qodalis/cli-sudoku';
-import { jobsModule } from '@qodalis/cli-jobs';
+import { jobsModule } from '@qodalis/cli-server-jobs';
 import {
     CliLogLevel,
     type CliOptions,

@@ -24,7 +24,7 @@ import { langKoModule } from '@qodalis/cli-lang-ko';
 import { langZhModule } from '@qodalis/cli-lang-zh';
 import { langRuModule } from '@qodalis/cli-lang-ru';
 import { langRoModule } from '@qodalis/cli-lang-ro';
-import { jobsModule } from '@qodalis/cli-jobs';
+import { jobsModule } from '@qodalis/cli-server-jobs';
 import {
     ICliModule,
     ICliExecutionContext,

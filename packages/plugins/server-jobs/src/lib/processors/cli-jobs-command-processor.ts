@@ -143,17 +143,28 @@ const serverParam: ICliCommandParameterDescriptor = {
 };
 
 export class CliJobsCommandProcessor implements ICliCommandProcessor {
-    command = 'jobs';
+    command = 'server';
+
+    extendsProcessor = true;
+
     description = 'Manage background jobs on connected servers';
     author: ICliCommandAuthor = DefaultLibraryAuthor;
     metadata: CliProcessorMetadata = {
         icon: CliIcon.Gear,
-        module: '@qodalis/cli-jobs',
+        module: '@qodalis/cli-server-jobs',
     };
 
-    parameters: ICliCommandParameterDescriptor[] = [serverParam];
-
-    processors: ICliCommandChildProcessor[] = [
+    processors?: ICliCommandProcessor[] = [
+        {
+            command: 'jobs',
+            description: 'Manage background jobs on connected servers',
+            author: DefaultLibraryAuthor,
+            metadata: {
+                icon: CliIcon.Gear,
+                module: '@qodalis/cli-server-jobs',
+            },
+            parameters: [serverParam],
+            processors: [
         // list
         {
             command: 'list',
@@ -334,14 +345,22 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 await this.handleWatch(cmd, context);
             },
         },
+            ] as ICliCommandChildProcessor[],
+            processCommand: async (
+                cmd: CliProcessCommand,
+                context: ICliExecutionContext,
+            ) => {
+                // Default action: list jobs
+                await this.handleList(cmd, context);
+            },
+        } as any,
     ];
 
     async processCommand(
-        cmd: CliProcessCommand,
-        context: ICliExecutionContext,
+        _cmd: CliProcessCommand,
+        _context: ICliExecutionContext,
     ): Promise<void> {
-        // Default action: list jobs
-        await this.handleList(cmd, context);
+        // Not called — this processor extends 'server' and delegates to child processors
     }
 
     // ── List ──────────────────────────────────────────────────────────

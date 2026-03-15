@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { DOCS_NAV, NavItem } from '../../../../data/navigation';
+import { LIBRARY_VERSION } from '@qodalis/cli-core';
 
 @Component({
     selector: 'docs-sidebar',
@@ -9,6 +10,7 @@ import { DOCS_NAV, NavItem } from '../../../../data/navigation';
 export class SidebarComponent {
     @Output() linkClicked = new EventEmitter<void>();
     nav = DOCS_NAV;
+    version = LIBRARY_VERSION;
     expandedSections: Set<string> = new Set([
         'Getting Started',
         'Core Concepts',

@@ -30,6 +30,7 @@ import { markdownModule } from '@qodalis/cli-markdown';
 import { scpModule } from '@qodalis/cli-scp';
 import { stopwatchModule } from '@qodalis/cli-stopwatch';
 import { wgetModule } from '@qodalis/cli-wget';
+import { jobsModule } from '@qodalis/cli-server-jobs';
 import { langEsModule } from '@qodalis/cli-lang-es';
 import { langFrModule } from '@qodalis/cli-lang-fr';
 import { langDeModule } from '@qodalis/cli-lang-de';
@@ -101,6 +102,7 @@ export class AppComponent {
         qrModule,
         yesnoModule,
         serverLogsModule,
+        jobsModule,
         filesModule,
         snakeModule,
         tetrisModule,

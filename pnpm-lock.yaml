@@ -359,6 +359,9 @@ importers:
       '@qodalis/cli-regex':
         specifier: workspace:*
         version: link:../../packages/plugins/regex
+      '@qodalis/cli-server-jobs':
+        specifier: workspace:*
+        version: link:../../packages/plugins/server-jobs
       '@qodalis/cli-server-logs':
         specifier: workspace:*
         version: link:../../packages/plugins/server-logs
@@ -490,6 +493,9 @@ importers:
       '@qodalis/cli-regex':
         specifier: workspace:*
         version: link:../../packages/plugins/regex
+      '@qodalis/cli-server-jobs':
+        specifier: workspace:*
+        version: link:../../packages/plugins/server-jobs
       '@qodalis/cli-server-logs':
         specifier: workspace:*
         version: link:../../packages/plugins/server-logs
@@ -658,12 +664,6 @@ importers:
         specifier: workspace:*
         version: link:../../core
 
-  packages/plugins/jobs:
-    dependencies:
-      '@qodalis/cli-core':
-        specifier: workspace:*
-        version: link:../../core
-
   packages/plugins/lang-de:
     dependencies:
       '@qodalis/cli-core':
@@ -762,6 +762,12 @@ importers:
         version: link:../../core
 
   packages/plugins/scp:
+    dependencies:
+      '@qodalis/cli-core':
+        specifier: workspace:*
+        version: link:../../core
+
+  packages/plugins/server-jobs:
     dependencies:
       '@qodalis/cli-core':
         specifier: workspace:*

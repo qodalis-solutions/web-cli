@@ -209,11 +209,15 @@
     </p>
     <div class="create-plugin-content">
       <div class="code-block">
-        <span class="code-label">{{ 'home.create-plugin.scaffold-interactive' | translate }}</span>
-        <pre><code>npx @qodalis/create-cli-plugin</code></pre>
+        <span class="code-label">{{ 'home.create-plugin.install-label' | translate }}</span>
+        <pre><code>npm install -g @qodalis/create-cli-plugin</code></pre>
       </div>
       <div class="code-block">
-        <span class="code-label">{{ 'home.create-plugin.scaffold-non-interactive' | translate }}</span>
+        <span class="code-label">{{ 'home.create-plugin.scaffold-interactive' | translate }}</span>
+        <pre><code>create-cli-plugin</code></pre>
+      </div>
+      <div class="code-block">
+        <span class="code-label">{{ 'home.create-plugin.scaffold-npx' | translate }}</span>
         <pre><code>npx @qodalis/create-cli-plugin --name weather --description "Weather forecasts"</code></pre>
       </div>
       <div class="create-plugin-steps">

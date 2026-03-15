@@ -1,7 +1,7 @@
 {
-  "name": "jobs",
+  "name": "server-jobs",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/plugins/jobs/src",
+  "sourceRoot": "packages/plugins/server-jobs/src",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -10,7 +10,7 @@
           "tsup",
           "cp package.json ../../../dist/jobs/package.json"
         ],
-        "cwd": "packages/plugins/jobs",
+        "cwd": "packages/plugins/server-jobs",
         "parallel": false
       },
       "inputs": [
@@ -24,7 +24,7 @@
     "test": {
       "executor": "@angular-devkit/build-angular:karma",
       "options": {
-        "tsConfig": "packages/plugins/jobs/tsconfig.spec.json",
+        "tsConfig": "packages/plugins/server-jobs/tsconfig.spec.json",
         "polyfills": [
           "zone.js",
           "zone.js/testing"

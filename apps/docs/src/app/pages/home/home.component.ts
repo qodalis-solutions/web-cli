@@ -27,6 +27,7 @@ import { markdownModule } from '@qodalis/cli-markdown';
 import { scpModule } from '@qodalis/cli-scp';
 import { stopwatchModule } from '@qodalis/cli-stopwatch';
 import { wgetModule } from '@qodalis/cli-wget';
+import { jobsModule } from '@qodalis/cli-server-jobs';
 import { langEsModule } from '@qodalis/cli-lang-es';
 import { langFrModule } from '@qodalis/cli-lang-fr';
 import { langDeModule } from '@qodalis/cli-lang-de';
@@ -90,6 +91,7 @@ export class HomeComponent {
         qrModule,
         yesnoModule,
         serverLogsModule,
+        jobsModule,
         filesModule,
         snakeModule,
         tetrisModule,
@@ -142,10 +144,12 @@ export class HomeComponent {
     ];
 
     advancedFeatures: AdvancedFeature[] = [
-        { icon: '\uD83C\uDF10', title: 'home.advanced.server.title', description: 'home.advanced.server.description', example: 'server connect ws://localhost:8046/ws/cli' },
+        { icon: '\uD83C\uDF10', title: 'home.advanced.server.title', description: 'home.advanced.server.description', example: 'ssh <server name>' },
         { icon: '\u2753', title: 'home.advanced.input.title', description: 'home.advanced.input.description', example: 'yesno "Deploy to production?"' },
         { icon: '\uD83D\uDCE6', title: 'home.advanced.plugins.title', description: 'home.advanced.plugins.description', example: "import { guidModule } from '@qodalis/cli-guid';" },
         { icon: '\u270F\uFE0F', title: 'home.advanced.nano.title', description: 'home.advanced.nano.description', example: 'nano readme.txt' },
+        { icon: '\uD83D\uDCE5', title: 'home.advanced.runtime-packages.title', description: 'home.advanced.runtime-packages.description', example: 'pkg add @qodalis/cli-guid' },
+        { icon: '\u2699\uFE0F', title: 'home.advanced.background-services.title', description: 'home.advanced.background-services.description', example: 'services list' },
     ];
 
     frameworkSnippets: Record<Framework, { imports: string; template: string }> = {

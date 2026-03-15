@@ -30,6 +30,7 @@ import { markdownModule } from '@qodalis/cli-markdown';
 import { scpModule } from '@qodalis/cli-scp';
 import { stopwatchModule } from '@qodalis/cli-stopwatch';
 import { wgetModule } from '@qodalis/cli-wget';
+import { jobsModule } from '@qodalis/cli-server-jobs';
 
 const MODULE_MAP: Record<string, ICliModule> = {
     guidModule,
@@ -59,6 +60,7 @@ const MODULE_MAP: Record<string, ICliModule> = {
     scpModule,
     stopwatchModule,
     wgetModule,
+    jobsModule,
 };
 
 @Component({
