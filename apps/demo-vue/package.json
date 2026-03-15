@@ -26,7 +26,8 @@
     "@qodalis/cli-yesno": "workspace:*",
     "@qodalis/cli-server-logs": "workspace:*",
     "@qodalis/cli-users": "workspace:*",
-    "@qodalis/cli-files": "workspace:*"
+    "@qodalis/cli-files": "workspace:*",
+    "@qodalis/cli-server-jobs": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

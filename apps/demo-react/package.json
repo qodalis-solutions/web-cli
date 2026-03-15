@@ -28,7 +28,8 @@
     "@qodalis/cli-yesno": "workspace:*",
     "@qodalis/cli-server-logs": "workspace:*",
     "@qodalis/cli-users": "workspace:*",
-    "@qodalis/cli-files": "workspace:*"
+    "@qodalis/cli-files": "workspace:*",
+    "@qodalis/cli-server-jobs": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

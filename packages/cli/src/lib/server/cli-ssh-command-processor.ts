@@ -408,7 +408,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             .replace(/^https:/, 'wss:')
             .replace(/^http:/, 'ws:');
 
-        let url = `${wsBase}/ws/v1/cli/shell?cols=${cols}&rows=${rows}`;
+        let url = `${wsBase}/ws/v1/qcli/shell?cols=${cols}&rows=${rows}`;
         if (cmd) {
             url += `&cmd=${encodeURIComponent(cmd)}`;
         }

@@ -56,6 +56,134 @@
             <td>Various</td>
             <td>{{ 'docs.server-integration.api-fs' | translate }}</td>
         </tr>
+        <tr>
+            <td><code>/api/v1/qcli/jobs</code></td>
+            <td>GET</td>
+            <td>{{ 'docs.server-integration.api-jobs-list' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/qcli/jobs/:id/trigger</code></td>
+            <td>POST</td>
+            <td>{{ 'docs.server-integration.api-jobs-trigger' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/qcli/jobs/:id/history</code></td>
+            <td>GET</td>
+            <td>{{ 'docs.server-integration.api-jobs-history' | translate }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>{{ 'docs.server-integration.jobs-api' | translate }}</h2>
+<p>{{ 'docs.server-integration.jobs-api-desc' | translate }}</p>
+<table>
+    <thead>
+        <tr>
+            <th>{{ 'docs.server-integration.th-endpoint' | translate }}</th>
+            <th>{{ 'docs.server-integration.th-method' | translate }}</th>
+            <th>{{ 'docs.server-integration.th-purpose' | translate }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>/api/v1/qcli/jobs</code></td>
+            <td>GET</td>
+            <td>{{ 'docs.server-integration.jobs-list' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/qcli/jobs/:id</code></td>
+            <td>GET</td>
+            <td>{{ 'docs.server-integration.jobs-get' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/qcli/jobs/:id</code></td>
+            <td>PUT</td>
+            <td>{{ 'docs.server-integration.jobs-update' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/qcli/jobs/:id/trigger</code></td>
+            <td>POST</td>
+            <td>{{ 'docs.server-integration.jobs-trigger' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/qcli/jobs/:id/pause</code></td>
+            <td>POST</td>
+            <td>{{ 'docs.server-integration.jobs-pause' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/qcli/jobs/:id/resume</code></td>
+            <td>POST</td>
+            <td>{{ 'docs.server-integration.jobs-resume' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/qcli/jobs/:id/stop</code></td>
+            <td>POST</td>
+            <td>{{ 'docs.server-integration.jobs-stop' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/qcli/jobs/:id/cancel</code></td>
+            <td>POST</td>
+            <td>{{ 'docs.server-integration.jobs-cancel' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/qcli/jobs/:id/history</code></td>
+            <td>GET</td>
+            <td>{{ 'docs.server-integration.jobs-history' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>/api/v1/qcli/jobs/:id/history/:execId</code></td>
+            <td>GET</td>
+            <td>{{ 'docs.server-integration.jobs-execution' | translate }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>{{ 'docs.server-integration.jobs-options' | translate }}</h3>
+<p>{{ 'docs.server-integration.jobs-options-desc' | translate }}</p>
+<table>
+    <thead>
+        <tr>
+            <th>{{ 'docs.server-integration.th-field' | translate }}</th>
+            <th>{{ 'docs.server-integration.th-default' | translate }}</th>
+            <th>{{ 'docs.server-integration.th-purpose' | translate }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>schedule</code></td>
+            <td>-</td>
+            <td>{{ 'docs.server-integration.jobs-opt-schedule' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>interval</code></td>
+            <td>-</td>
+            <td>{{ 'docs.server-integration.jobs-opt-interval' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>maxRetries</code></td>
+            <td>1</td>
+            <td>{{ 'docs.server-integration.jobs-opt-retries' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>retryDelay</code></td>
+            <td>5s</td>
+            <td>{{ 'docs.server-integration.jobs-opt-delay' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>retryStrategy</code></td>
+            <td>exponential</td>
+            <td>{{ 'docs.server-integration.jobs-opt-strategy' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>timeout</code></td>
+            <td>-</td>
+            <td>{{ 'docs.server-integration.jobs-opt-timeout' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>overlapPolicy</code></td>
+            <td>skip</td>
+            <td>{{ 'docs.server-integration.jobs-opt-overlap' | translate }}</td>
+        </tr>
     </tbody>
 </table>
 

@@ -13,7 +13,7 @@ export interface ServerFileSystemOptions {
 }
 
 /**
- * Response shape from GET /api/cli/fs/ls
+ * Response shape from GET /api/qcli/fs/ls
  */
 interface LsResponse {
     entries: Array<{
@@ -26,14 +26,14 @@ interface LsResponse {
 }
 
 /**
- * Response shape from GET /api/cli/fs/cat
+ * Response shape from GET /api/qcli/fs/cat
  */
 interface CatResponse {
     content: string;
 }
 
 /**
- * Response shape from GET /api/cli/fs/stat
+ * Response shape from GET /api/qcli/fs/stat
  */
 interface StatResponse {
     name: string;
@@ -90,7 +90,7 @@ function createSeedFileSystem(): IFileNode {
 
 /**
  * IFileSystemService implementation that delegates operations to a CLI server's
- * `/api/cli/fs/*` REST endpoints.
+ * `/api/qcli/fs/*` REST endpoints.
  *
  * Because the IFileSystemService interface is synchronous, this service maintains
  * an in-memory file tree that is returned immediately by read operations. Write
@@ -600,7 +600,7 @@ export class ServerFileSystemService implements IFileSystemService {
         endpoint: string,
         options?: RequestInit,
     ): Promise<T> {
-        const url = `${this.baseUrl}/api/cli/fs${endpoint}`;
+        const url = `${this.baseUrl}/api/qcli/fs${endpoint}`;
         const response = await fetch(url, options);
         if (!response.ok) {
             const body = await response.text();

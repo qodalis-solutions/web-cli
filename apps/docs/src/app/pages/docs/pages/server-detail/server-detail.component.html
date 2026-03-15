@@ -37,6 +37,28 @@ builder.addModule(new WeatherModule());</code></pre>
     </div>
     <p>{{ 'docs.server-detail.node.docker-port' | translate }}</p>
 
+    <h2>{{ 'docs.server-detail.node.background-jobs' | translate }}</h2>
+    <p>{{ 'docs.server-detail.node.background-jobs-desc' | translate }}</p>
+    <div class="code-block">
+        <span class="code-label">npm</span>
+        <pre><code>npm install @qodalis/cli-server-plugin-jobs</code></pre>
+    </div>
+    <div class="code-block">
+        <span class="code-label">server.ts</span>
+        <pre><code>import &#123; CliJobsBuilder &#125; from '@qodalis/cli-server-plugin-jobs';
+
+const jobsPlugin = new CliJobsBuilder()
+    .addJob(new HealthCheckJob(), &#123;
+        name: 'health-check',
+        description: 'Periodic health check',
+        interval: '30s',
+    &#125;)
+    .build((msg) =&gt; eventSocketManager.broadcastMessage(msg));
+
+app.use('/api/v1/qcli/jobs', jobsPlugin.router);
+await jobsPlugin.scheduler.start();</code></pre>
+    </div>
+
     <h2>{{ 'docs.server-detail.node.connecting' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">app.component.ts</span>
@@ -92,6 +114,34 @@ builder.add_module(WeatherModule())</code></pre>
         <pre><code>docker compose up cli-server-python</code></pre>
     </div>
     <p>{{ 'docs.server-detail.python.docker-port' | translate }}</p>
+
+    <h2>{{ 'docs.server-detail.python.background-jobs' | translate }}</h2>
+    <p>{{ 'docs.server-detail.python.background-jobs-desc' | translate }}</p>
+    <div class="code-block">
+        <span class="code-label">pip</span>
+        <pre><code>pip install qodalis-cli-jobs</code></pre>
+    </div>
+    <div class="code-block">
+        <span class="code-label">server.py</span>
+        <pre><code>from qodalis_cli_jobs import CliJobsBuilder
+from qodalis_cli_server_abstractions.jobs import CliJobOptions
+
+jobs_plugin = (
+    CliJobsBuilder()
+    .add_job(
+        HealthCheckJob(),
+        CliJobOptions(
+            name="health-check",
+            description="Periodic health check",
+            interval="30s",
+        ),
+    )
+    .build(broadcast_fn=event_socket_manager.broadcast_message)
+)
+
+app.include_router(jobs_plugin.router, prefix="/api/v1/qcli/jobs")
+await jobs_plugin.scheduler.start()</code></pre>
+    </div>
 
     <h2>{{ 'docs.server-detail.python.connecting' | translate }}</h2>
     <div class="code-block">
@@ -154,6 +204,23 @@ app.Run();</code></pre>
         <pre><code>docker compose up cli-server-dotnet</code></pre>
     </div>
     <p>{{ 'docs.server-detail.dotnet.docker-port' | translate }}</p>
+
+    <h2>{{ 'docs.server-detail.dotnet.background-jobs' | translate }}</h2>
+    <p>{{ 'docs.server-detail.dotnet.background-jobs-desc' | translate }}</p>
+    <div class="code-block">
+        <span class="code-label">NuGet</span>
+        <pre><code>dotnet add package Qodalis.Cli.Plugin.Jobs</code></pre>
+    </div>
+    <div class="code-block">
+        <span class="code-label">Program.cs</span>
+        <pre><code>builder.Services.AddCli(cli =&gt; &#123;
+    cli.AddJob&lt;HealthCheckJob&gt;(o =&gt; &#123;
+        o.Name = "health-check";
+        o.Description = "Periodic health check";
+        o.Interval = TimeSpan.FromSeconds(30);
+    &#125;);
+&#125;);</code></pre>
+    </div>
 
     <h2>{{ 'docs.server-detail.dotnet.connecting' | translate }}</h2>
     <div class="code-block">

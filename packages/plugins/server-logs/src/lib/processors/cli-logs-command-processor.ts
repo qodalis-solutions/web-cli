@@ -161,7 +161,7 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
         const cleanServerUrl = serverUrl.replace(/\/+$/, '');
         const wsUrl = cleanServerUrl.replace(/^http/, 'ws');
 
-        let fullUrl = `${wsUrl}/ws/v1/cli/logs`;
+        let fullUrl = `${wsUrl}/ws/v1/qcli/logs`;
         if (command.args['level']) {
             fullUrl += `?level=${encodeURIComponent(command.args['level'])}`;
         }
