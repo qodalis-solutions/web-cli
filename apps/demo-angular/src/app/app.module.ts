@@ -24,6 +24,7 @@ import { langKoModule } from '@qodalis/cli-lang-ko';
 import { langZhModule } from '@qodalis/cli-lang-zh';
 import { langRuModule } from '@qodalis/cli-lang-ru';
 import { langRoModule } from '@qodalis/cli-lang-ro';
+import { jobsModule } from '@qodalis/cli-server-jobs';
 import {
     ICliModule,
     ICliExecutionContext,
@@ -149,6 +150,7 @@ const backgroundServicesDemo: ICliModule = {
         resolveCliModuleProvider(langZhModule),
         resolveCliModuleProvider(langRuModule),
         resolveCliModuleProvider(langRoModule),
+        resolveCliModuleProvider(jobsModule),
         resolveCliModuleProvider(backgroundServicesDemo),
     ],
     bootstrap: [AppComponent],

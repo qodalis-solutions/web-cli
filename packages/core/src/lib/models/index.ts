@@ -302,7 +302,7 @@ export type CliServerResponse = {
 };
 
 /**
- * Metadata about a remote command processor, returned by GET /api/cli/commands
+ * Metadata about a remote command processor, returned by GET /api/qcli/commands
  */
 export type CliServerCommandDescriptor = {
     command: string;
@@ -320,7 +320,7 @@ export type CliServerCommandDescriptor = {
 };
 
 /**
- * Server capabilities returned by GET /api/cli/capabilities
+ * Server capabilities returned by GET /api/qcli/capabilities
  */
 export type CliServerCapabilities = {
     /** Whether this server supports remote shell access */

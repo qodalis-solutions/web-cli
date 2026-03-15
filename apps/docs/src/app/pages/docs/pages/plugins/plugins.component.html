@@ -1,0 +1,88 @@
+<h1>{{ 'docs.plugins.title' | translate }}</h1>
+<p>{{ 'docs.plugins.intro' | translate }}</p>
+
+<h2>{{ 'docs.plugins.install-title' | translate }}</h2>
+<p>{{ 'docs.plugins.install-desc' | translate }}</p>
+
+<div class="code-block">
+    <span class="code-label">npm</span>
+    <pre><code>npm install @qodalis/cli-guid</code></pre>
+</div>
+
+<p>{{ 'docs.plugins.runtime-desc' | translate }}</p>
+<div class="code-block">
+    <span class="code-label">Terminal</span>
+    <pre><code>pkg add @qodalis/cli-guid</code></pre>
+</div>
+
+<h2>{{ 'docs.plugins.utilities-title' | translate }}</h2>
+<table>
+    <thead>
+        <tr>
+            <th>{{ 'docs.plugins.th-name' | translate }}</th>
+            <th>{{ 'docs.plugins.th-package' | translate }}</th>
+            <th>{{ 'docs.plugins.th-install' | translate }}</th>
+            <th>{{ 'docs.plugins.th-description' | translate }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let plugin of utilityPlugins">
+            <td><a [routerLink]="'/docs/plugins/' + plugin.id">{{ plugin.name }}</a></td>
+            <td><code>{{ plugin.npmPackage }}</code></td>
+            <td><code>npm install {{ plugin.npmPackage }}</code></td>
+            <td>{{ plugin.description }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>{{ 'docs.plugins.games-title' | translate }}</h2>
+<table>
+    <thead>
+        <tr>
+            <th>{{ 'docs.plugins.th-name' | translate }}</th>
+            <th>{{ 'docs.plugins.th-package' | translate }}</th>
+            <th>{{ 'docs.plugins.th-install' | translate }}</th>
+            <th>{{ 'docs.plugins.th-description' | translate }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let plugin of gamePlugins">
+            <td><a [routerLink]="'/docs/plugins/' + plugin.id">{{ plugin.name }}</a></td>
+            <td><code>{{ plugin.npmPackage }}</code></td>
+            <td><code>npm install {{ plugin.npmPackage }}</code></td>
+            <td>{{ plugin.description }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>{{ 'docs.plugins.usage-title' | translate }}</h2>
+<p>{{ 'docs.plugins.usage-desc' | translate }}</p>
+
+<div class="code-block">
+    <span class="code-label">Angular</span>
+    <pre><code>import &#123; guidModule &#125; from '@qodalis/cli-guid';
+
+&lt;cli [modules]="[guidModule]" /&gt;</code></pre>
+</div>
+
+<div class="code-block">
+    <span class="code-label">React</span>
+    <pre><code>import &#123; guidModule &#125; from '@qodalis/cli-guid';
+
+&lt;Cli modules=&#123;[guidModule]&#125; /&gt;</code></pre>
+</div>
+
+<div class="code-block">
+    <span class="code-label">Vue</span>
+    <pre><code>import &#123; guidModule &#125; from '@qodalis/cli-guid';
+
+&lt;Cli :modules="[guidModule]" /&gt;</code></pre>
+</div>
+
+<h2>{{ 'docs.plugins.create-title' | translate }}</h2>
+<p>{{ 'docs.plugins.create-desc' | translate }}</p>
+<div class="code-block">
+    <span class="code-label">Terminal</span>
+    <pre><code>npx @qodalis/create-cli-plugin</code></pre>
+</div>
+<p><a routerLink="/docs/plugins/create-your-own">{{ 'docs.plugins.create-link' | translate }}</a></p>

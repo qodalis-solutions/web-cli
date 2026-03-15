@@ -44,6 +44,14 @@ const routes: Routes = [
                     ),
             },
             {
+                path: 'plugins',
+                loadChildren: () =>
+                    import('./pages/plugins/plugins.module').then(
+                        (m) => m.PluginsModule,
+                    ),
+                pathMatch: 'full',
+            },
+            {
                 path: 'plugins/create-your-own',
                 loadChildren: () =>
                     import('./pages/create-plugin/create-plugin.module').then(

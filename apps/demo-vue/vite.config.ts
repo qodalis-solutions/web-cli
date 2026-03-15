@@ -155,6 +155,10 @@ export default defineConfig({
                 __dirname,
                 '../../dist/lang-ro/public-api.mjs',
             ),
+            '@qodalis/cli-server-jobs': path.resolve(
+                __dirname,
+                '../../dist/jobs/public-api.mjs',
+            ),
         },
     },
 });
