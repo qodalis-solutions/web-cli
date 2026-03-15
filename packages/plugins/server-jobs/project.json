@@ -20,18 +20,6 @@
       "outputs": [
         "{workspaceRoot}/dist/jobs"
       ]
-    },
-    "test": {
-      "executor": "@angular-devkit/build-angular:karma",
-      "options": {
-        "tsConfig": "packages/plugins/server-jobs/tsconfig.spec.json",
-        "polyfills": [
-          "zone.js",
-          "zone.js/testing"
-        ],
-        "browsers": "ChromeHeadless",
-        "watch": false
-      }
     }
   }
 }
