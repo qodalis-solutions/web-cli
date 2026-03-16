@@ -45,10 +45,10 @@ jobs:
 
       - name: Copy tsup wrapper builds into dist for publishing
         run: |
-          mkdir -p dist/react-cli dist/vue-cli
-          cp -r packages/react-cli/dist/* dist/react-cli/ 2>/dev/null || true
+          mkdir -p dist/react-cli/dist dist/vue-cli/dist
+          cp -r packages/react-cli/dist/* dist/react-cli/dist/ 2>/dev/null || true
           cp packages/react-cli/package.json dist/react-cli/
-          cp -r packages/vue-cli/dist/* dist/vue-cli/ 2>/dev/null || true
+          cp -r packages/vue-cli/dist/* dist/vue-cli/dist/ 2>/dev/null || true
           cp packages/vue-cli/package.json dist/vue-cli/
 
       - name: Copy README.md into main libraries
