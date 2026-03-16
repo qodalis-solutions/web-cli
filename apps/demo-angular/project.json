@@ -69,10 +69,10 @@
       },
       "configurations": {
         "production": {
-          "browserTarget": "demo-angular:build:production"
+          "buildTarget": "demo-angular:build:production"
         },
         "development": {
-          "browserTarget": "demo-angular:build:development"
+          "buildTarget": "demo-angular:build:development"
         }
       },
       "defaultConfiguration": "development"
