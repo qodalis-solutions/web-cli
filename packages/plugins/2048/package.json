@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-2048",
-  "version": "2.0.0-beta.4",
+  "version": "2.0.0-beta.5",
   "description": "@qodalis/cli extension for playing 2048 in the terminal.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
