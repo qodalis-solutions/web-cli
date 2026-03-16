@@ -1051,6 +1051,36 @@ $radius-sm: 8px
   background: #000
   min-height: 260px
 
+// ─── Next Steps Grid ───
+.next-steps-grid
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))
+  gap: 12px
+  margin: 16px 0 32px
+
+.next-step-card
+  display: flex
+  align-items: center
+  gap: 12px
+  padding: 16px 20px
+  background: $bg-elevated
+  border: 1px solid $border
+  border-radius: $radius-sm
+  color: rgba(255, 255, 255, 0.87)
+  text-decoration: none
+  transition: border-color 0.2s, background 0.2s
+
+  &:hover
+    border-color: $accent
+    background: rgba(129, 140, 248, 0.06)
+
+  .next-step-icon
+    font-size: 1.4rem
+
+  .next-step-title
+    font-size: 0.9rem
+    line-height: 1.4
+
 // ─── Category Badge ───
 .category-badge
   display: inline-block
