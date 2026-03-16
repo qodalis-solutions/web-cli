@@ -84,7 +84,7 @@
   "pnpm": {
     "overrides": {
       "tar": ">=7.0.0",
-      "minimatch": ">=10.2.3",
+      "minimatch@>=10.0.0": ">=10.2.3",
       "flatted": ">=3.4.0",
       "immutable": ">=5.1.5",
       "serialize-javascript": ">=7.0.0",
