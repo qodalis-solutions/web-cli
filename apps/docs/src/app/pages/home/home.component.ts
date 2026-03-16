@@ -70,6 +70,7 @@ export interface AdvancedFeature {
 export type Framework = 'angular' | 'react' | 'vue' | 'vanilla';
 
 @Component({
+    standalone: false,
     selector: 'app-home',
     templateUrl: './home.component.html',
     styleUrls: ['./home.component.sass'],

@@ -64,6 +64,7 @@ const MODULE_MAP: Record<string, ICliModule> = {
 };
 
 @Component({
+    standalone: false,
     selector: 'docs-plugin-detail',
     templateUrl: './plugin-detail.component.html',
 })
