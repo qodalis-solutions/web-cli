@@ -142,8 +142,17 @@ import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/vue-cli
 
 <!-- Next Steps -->
 <h2>{{ 'docs.getting-started.next-steps' | translate }}</h2>
-<ul>
-    <li><a routerLink="/docs/configuration">{{ 'docs.getting-started.next-config' | translate }}</a></li>
-    <li><a routerLink="/docs/core-concepts/command-processors">{{ 'docs.getting-started.next-core' | translate }}</a></li>
-    <li><a routerLink="/docs/plugins/guid">{{ 'docs.getting-started.next-plugins' | translate }}</a></li>
-</ul>
+<div class="next-steps-grid">
+    <a routerLink="/docs/configuration" class="next-step-card">
+        <span class="next-step-icon">⚙</span>
+        <span class="next-step-title">{{ 'docs.getting-started.next-config' | translate }}</span>
+    </a>
+    <a routerLink="/docs/core-concepts/command-processors" class="next-step-card">
+        <span class="next-step-icon">⧉</span>
+        <span class="next-step-title">{{ 'docs.getting-started.next-core' | translate }}</span>
+    </a>
+    <a routerLink="/docs/plugins/guid" class="next-step-card">
+        <span class="next-step-icon">◐</span>
+        <span class="next-step-title">{{ 'docs.getting-started.next-plugins' | translate }}</span>
+    </a>
+</div>
