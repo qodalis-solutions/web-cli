@@ -6,7 +6,7 @@
 <p>{{ 'docs.create-plugin.install-desc' | translate }}</p>
 <div class="code-block">
     <span class="code-label">shell</span>
-    <pre><code>npm install -g @qodalis/create-cli-plugin</code></pre>
+    <pre><code>npm install -g &#64;qodalis/create-cli-plugin</code></pre>
 </div>
 
 <!-- Scaffold -->
@@ -19,13 +19,13 @@
 <p>{{ 'docs.create-plugin.scaffold-npx' | translate }}</p>
 <div class="code-block">
     <span class="code-label">shell</span>
-    <pre><code>npx @qodalis/create-cli-plugin</code></pre>
+    <pre><code>npx &#64;qodalis/create-cli-plugin</code></pre>
 </div>
 
 <p>{{ 'docs.create-plugin.scaffold-non-interactive' | translate }}</p>
 <div class="code-block">
     <span class="code-label">shell</span>
-    <pre><code>npx @qodalis/create-cli-plugin --name weather --description "Weather forecasts" --processor-name WeatherProcessor</code></pre>
+    <pre><code>npx &#64;qodalis/create-cli-plugin --name weather --description "Weather forecasts" --processor-name WeatherProcessor</code></pre>
 </div>
 
 <!-- Plugin Structure -->
@@ -112,7 +112,7 @@
     ICliCommandProcessor,
     ICliExecutionContext,
     CliProcessCommand,
-&#125; from '@qodalis/cli-core';
+&#125; from '&#64;qodalis/cli-core';
 
 export class WeatherProcessor implements ICliCommandProcessor &#123;
     command = 'weather';
@@ -219,6 +219,6 @@ export class WeatherProcessor implements ICliCommandProcessor &#123;
 <p>{{ 'docs.create-plugin.runtime-desc' | translate }}</p>
 <div class="code-block">
     <span class="code-label">Terminal</span>
-    <pre><code>pkg add @qodalis/cli-weather</code></pre>
+    <pre><code>pkg add &#64;qodalis/cli-weather</code></pre>
 </div>
 <p>{{ 'docs.create-plugin.runtime-detail' | translate }}</p>

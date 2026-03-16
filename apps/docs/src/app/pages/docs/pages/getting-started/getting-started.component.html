@@ -13,15 +13,15 @@
 
 <div *ngIf="activeTab === 'angular'" class="code-block">
     <span class="code-label">npm</span>
-    <pre><code>npm install @qodalis/angular-cli</code></pre>
+    <pre><code>npm install &#64;qodalis/angular-cli</code></pre>
 </div>
 <div *ngIf="activeTab === 'react'" class="code-block">
     <span class="code-label">npm</span>
-    <pre><code>npm install @qodalis/react-cli</code></pre>
+    <pre><code>npm install &#64;qodalis/react-cli</code></pre>
 </div>
 <div *ngIf="activeTab === 'vue'" class="code-block">
     <span class="code-label">npm</span>
-    <pre><code>npm install @qodalis/vue-cli</code></pre>
+    <pre><code>npm install &#64;qodalis/vue-cli</code></pre>
 </div>
 
 <!-- Quick Start: Angular -->
@@ -30,9 +30,9 @@
 
 <div class="code-block">
     <span class="code-label">app.module.ts</span>
-    <pre><code>import &#123; CliModule &#125; from '@qodalis/angular-cli';
+    <pre><code>import &#123; CliModule &#125; from '&#64;qodalis/angular-cli';
 
-@NgModule(&#123;
+&#64;NgModule(&#123;
     imports: [CliModule],
 &#125;)
 export class AppModule &#123;&#125;</code></pre>
@@ -43,7 +43,7 @@ export class AppModule &#123;&#125;</code></pre>
 <div class="code-block">
     <span class="code-label">angular.json</span>
     <pre><code>"styles": [
-    "node_modules/@qodalis/angular-cli/src/assets/styles.sass"
+    "node_modules/&#64;qodalis/angular-cli/src/assets/styles.sass"
 ]</code></pre>
 </div>
 
@@ -64,7 +64,7 @@ export class AppModule &#123;&#125;</code></pre>
 
 <div class="code-block">
     <span class="code-label">App.tsx</span>
-    <pre><code>import &#123; Cli, CliPanel, CliConfigProvider &#125; from '@qodalis/react-cli';
+    <pre><code>import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/react-cli';
 
 function App() &#123;
     return (
@@ -86,7 +86,7 @@ function App() &#123;
 <div class="code-block">
     <span class="code-label">App.vue</span>
     <pre><code>&lt;script setup&gt;
-import &#123; Cli, CliPanel, CliConfigProvider &#125; from '@qodalis/vue-cli';
+import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/vue-cli';
 &lt;/script&gt;
 
 &lt;template&gt;
@@ -106,12 +106,12 @@ import &#123; Cli, CliPanel, CliConfigProvider &#125; from '@qodalis/vue-cli';
 
 <div class="code-block">
     <span class="code-label">npm</span>
-    <pre><code>npm install @qodalis/cli-guid</code></pre>
+    <pre><code>npm install &#64;qodalis/cli-guid</code></pre>
 </div>
 
 <div class="code-block">
     <span class="code-label">Import and use</span>
-    <pre><code>import &#123; guidModule &#125; from '@qodalis/cli-guid';
+    <pre><code>import &#123; guidModule &#125; from '&#64;qodalis/cli-guid';
 
 // Angular: &lt;cli [modules]="[guidModule]"&gt;&lt;/cli&gt;
 // React:   &lt;Cli modules=&#123;[guidModule]&#125; /&gt;
@@ -122,7 +122,7 @@ import &#123; Cli, CliPanel, CliConfigProvider &#125; from '@qodalis/vue-cli';
 
 <div class="code-block">
     <span class="code-label">Terminal</span>
-    <pre><code>pkg add @qodalis/cli-guid</code></pre>
+    <pre><code>pkg add &#64;qodalis/cli-guid</code></pre>
 </div>
 
 <!-- Try It -->

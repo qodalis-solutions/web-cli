@@ -51,6 +51,7 @@ export type CliPanelOptions = CliEngineOptions & CliPanelConfig;
  * A component that displays the CLI on the bottom of page.
  */
 @Component({
+    standalone: false,
     selector: 'cli-panel',
     templateUrl: './cli-panel.component.html',
     styleUrls: ['./cli-panel.component.sass'],

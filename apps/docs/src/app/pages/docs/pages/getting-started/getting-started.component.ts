@@ -6,6 +6,7 @@ import { todoModule } from '@qodalis/cli-todo';
 import { stringModule } from '@qodalis/cli-string';
 
 @Component({
+    standalone: false,
     selector: 'docs-getting-started',
     templateUrl: './getting-started.component.html',
 })

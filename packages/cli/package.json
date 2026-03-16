@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli",
-  "version": "2.0.0-beta.5",
+  "version": "2.0.0-beta.6",
   "description": "Framework-agnostic CLI engine for @qodalis terminal applications.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

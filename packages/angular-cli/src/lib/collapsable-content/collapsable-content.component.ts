@@ -10,6 +10,7 @@ import { CliPanelPosition, CliPanelHideAlignment } from '@qodalis/cli-core';
 const HEADER_HEIGHT = 60;
 
 @Component({
+    standalone: false,
     selector: 'collapsable-content',
     templateUrl: './collapsable-content.component.html',
     styleUrls: ['./collapsable-content.component.sass'],

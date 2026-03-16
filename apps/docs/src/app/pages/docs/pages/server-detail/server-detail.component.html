@@ -6,13 +6,13 @@
     <h2>{{ 'docs.server-detail.node.installation' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">npm</span>
-        <pre><code>npm install @qodalis/cli-server</code></pre>
+        <pre><code>npm install &#64;qodalis/cli-server</code></pre>
     </div>
 
     <h2>{{ 'docs.server-detail.node.basic-setup' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">server.ts</span>
-        <pre><code>import &#123; createCliServer &#125; from '@qodalis/cli-server';
+        <pre><code>import &#123; createCliServer &#125; from '&#64;qodalis/cli-server';
 
 const &#123; app, builder &#125; = createCliServer(&#123; port: 8047 &#125;);
 builder.addProcessor(new MyProcessor());
@@ -41,11 +41,11 @@ builder.addModule(new WeatherModule());</code></pre>
     <p>{{ 'docs.server-detail.node.background-jobs-desc' | translate }}</p>
     <div class="code-block">
         <span class="code-label">npm</span>
-        <pre><code>npm install @qodalis/cli-server-plugin-jobs</code></pre>
+        <pre><code>npm install &#64;qodalis/cli-server-plugin-jobs</code></pre>
     </div>
     <div class="code-block">
         <span class="code-label">server.ts</span>
-        <pre><code>import &#123; CliJobsBuilder &#125; from '@qodalis/cli-server-plugin-jobs';
+        <pre><code>import &#123; CliJobsBuilder &#125; from '&#64;qodalis/cli-server-plugin-jobs';
 
 const jobsPlugin = new CliJobsBuilder()
     .addJob(new HealthCheckJob(), &#123;
@@ -62,7 +62,7 @@ await jobsPlugin.scheduler.start();</code></pre>
     <h2>{{ 'docs.server-detail.node.connecting' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">app.component.ts</span>
-        <pre><code>import &#123; CliOptions &#125; from '@qodalis/cli-core';
+        <pre><code>import &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
 
 const options: CliOptions = &#123;
     servers: [
@@ -146,7 +146,7 @@ await jobs_plugin.scheduler.start()</code></pre>
     <h2>{{ 'docs.server-detail.python.connecting' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">app.component.ts</span>
-        <pre><code>import &#123; CliOptions &#125; from '@qodalis/cli-core';
+        <pre><code>import &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
 
 const options: CliOptions = &#123;
     servers: [
@@ -225,7 +225,7 @@ app.Run();</code></pre>
     <h2>{{ 'docs.server-detail.dotnet.connecting' | translate }}</h2>
     <div class="code-block">
         <span class="code-label">app.component.ts</span>
-        <pre><code>import &#123; CliOptions &#125; from '@qodalis/cli-core';
+        <pre><code>import &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
 
 const options: CliOptions = &#123;
     servers: [
