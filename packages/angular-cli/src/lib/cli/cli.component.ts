@@ -25,6 +25,7 @@ import {
 } from './tokens';
 
 @Component({
+    standalone: false,
     selector: 'cli',
     template: `<div
         #terminal

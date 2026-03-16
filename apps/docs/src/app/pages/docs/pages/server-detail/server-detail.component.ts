@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 @Component({
+    standalone: false,
     selector: 'docs-server-detail',
     templateUrl: './server-detail.component.html',
 })

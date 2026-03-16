@@ -3,6 +3,7 @@ import { CliOptions, ICliModule } from '@qodalis/cli-core';
 import { COMMAND_CATEGORIES, CommandCategory, TOTAL_COMMAND_COUNT } from '../../../../data/commands';
 
 @Component({
+    standalone: false,
     selector: 'docs-built-in-commands',
     templateUrl: './built-in-commands.component.html',
 })

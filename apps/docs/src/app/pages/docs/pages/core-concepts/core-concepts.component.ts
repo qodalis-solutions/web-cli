@@ -20,6 +20,7 @@ export interface TocEntry {
 }
 
 @Component({
+    standalone: false,
     selector: 'docs-core-concepts',
     templateUrl: './core-concepts.component.html',
 })

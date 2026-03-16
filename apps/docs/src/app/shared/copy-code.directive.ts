@@ -61,6 +61,7 @@ const LABEL_LANG_MAP: Record<string, string> = {
 };
 
 @Directive({
+    standalone: false,
     selector: '.code-block',
 })
 export class CopyCodeDirective implements AfterViewInit, OnDestroy {

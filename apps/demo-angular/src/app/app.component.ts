@@ -18,6 +18,7 @@ import { CliInputDemoCommandProcessor } from './processors/cli-input-demo-comman
 import { CliPanelOptions } from '@qodalis/angular-cli';
 
 @Component({
+    standalone: false,
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrls: [],

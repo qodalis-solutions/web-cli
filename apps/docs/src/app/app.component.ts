@@ -43,6 +43,7 @@ import { langRuModule } from '@qodalis/cli-lang-ru';
 import { langRoModule } from '@qodalis/cli-lang-ro';
 
 @Component({
+    standalone: false,
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.sass'],

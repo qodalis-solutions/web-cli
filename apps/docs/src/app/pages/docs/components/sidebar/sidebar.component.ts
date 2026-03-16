@@ -3,6 +3,7 @@ import { DOCS_NAV, NavItem } from '../../../../data/navigation';
 import { LIBRARY_VERSION } from '@qodalis/cli-core';
 
 @Component({
+    standalone: false,
     selector: 'docs-sidebar',
     templateUrl: './sidebar.component.html',
     styleUrls: ['./sidebar.component.sass'],
