@@ -4,3 +4,4 @@ export { PasswordInputMode } from './password-input-mode';
 export { ConfirmInputMode } from './confirm-input-mode';
 export { NumberInputMode } from './number-input-mode';
 export type { NumberInputOptions } from './number-input-mode';
+export { SelectInputMode } from './select-input-mode';
