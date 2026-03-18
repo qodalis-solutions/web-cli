@@ -381,6 +381,8 @@ function createQueuedReader(queue: any[]): ICliInputReader {
         readSelectInline: async () => next() ?? '',
         readMultiSelect: async () => next() ?? [],
         readNumber: async () => next() ?? 0,
+        readDate: async () => next() ?? null,
+        readFile: async () => next() ?? null,
     };
 }
 

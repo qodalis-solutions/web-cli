@@ -250,13 +250,15 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                         const selected = await context.reader.readSelect(
                             'Select a theme (live preview):',
                             options,
-                            (value) => {
-                                // Live preview: apply theme as user navigates
-                                if (themes[value]) {
-                                    context.terminal.options.theme =
-                                        themes[value];
-                                    this.applyStyles(context);
-                                }
+                            {
+                                onChange: (value) => {
+                                    // Live preview: apply theme as user navigates
+                                    if (themes[value]) {
+                                        context.terminal.options.theme =
+                                            themes[value];
+                                        this.applyStyles(context);
+                                    }
+                                },
                             },
                         );
 

@@ -150,13 +150,13 @@ describe('CliInputReader', () => {
 
         it('should store onChange callback on the request', () => {
             const onChange = jasmine.createSpy('onChange');
-            reader.readSelect('Pick one:', options, onChange);
+            reader.readSelect('Pick one:', options, { onChange });
             expect(host.activeInputRequest!.onChange).toBe(onChange);
         });
 
         it('should call onChange with initial selection value on creation', () => {
             const onChange = jasmine.createSpy('onChange');
-            reader.readSelect('Pick one:', options, onChange);
+            reader.readSelect('Pick one:', options, { onChange });
             expect(onChange).toHaveBeenCalledTimes(1);
             expect(onChange).toHaveBeenCalledWith('a');
         });
@@ -218,14 +218,14 @@ describe('CliInputReader', () => {
 
         it('should fire onChange with initial value', () => {
             const onChange = jasmine.createSpy('onChange');
-            reader.readSelectInline('Pick one:', options, onChange);
+            reader.readSelectInline('Pick one:', options, { onChange });
             expect(onChange).toHaveBeenCalledTimes(1);
             expect(onChange).toHaveBeenCalledWith('a');
         });
 
         it('should store onChange callback on the request', () => {
             const onChange = jasmine.createSpy('onChange');
-            reader.readSelectInline('Pick one:', options, onChange);
+            reader.readSelectInline('Pick one:', options, { onChange });
             expect(host.activeInputRequest!.onChange).toBe(onChange);
         });
     });
