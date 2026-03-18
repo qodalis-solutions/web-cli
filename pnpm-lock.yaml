@@ -657,6 +657,12 @@ importers:
         specifier: workspace:*
         version: link:../../core
 
+  packages/plugins/encode:
+    dependencies:
+      '@qodalis/cli-core':
+        specifier: workspace:*
+        version: link:../../core
+
   packages/plugins/files:
     dependencies:
       '@qodalis/cli-core':
