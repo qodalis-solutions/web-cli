@@ -51,13 +51,44 @@ ICliInputReader (9 methods)
 
 Abstract base class providing shared behavior for all input modes:
 
-- `resolveAndPop(value: T)` — Sets active request to null, pops mode from stack, resolves promise
+- **Constructor** receives an `InputModeHost` (see below) providing access to terminal write, dimensions, push/pop mode, and file picker
+- `resolveAndPop(value: T)` — Pops mode from stack, resolves promise
 - `abort()` — Resolves with `null`, performs cleanup
-- `handleKeyEvent(event: KeyboardEvent): boolean` — Ctrl+C and Escape both call `abort()`
+- `handleKeyEvent(event: KeyboardEvent): boolean` — Default implementation: Ctrl+C and Escape both call `abort()`. Subclasses may override (e.g., search-enabled modes clear the filter first, abort on second press).
 - `redrawLine(promptText: string, displayText: string, cursorPosition: number)` — The `\x1b[2K\r` + rewrite + cursor-reposition pattern
 - `writeHelp(text: string)` — Renders the dimmed help bar below input
+- `get terminal()` — Access to terminal dimensions via host (rows, cols)
 
 Each concrete mode holds its own typed state internally. The `ActiveInputRequest` union with optional fields is eliminated — each mode class defines exactly the state it needs as private fields.
+
+### InputModeHost
+
+New host interface that `InputModeBase` depends on, replacing the role of `CliInputReaderHost` + `ReaderModeHost`:
+
+```typescript
+/**
+ * Host interface for input modes. Provides access to terminal I/O,
+ * dimensions, and mode stack management.
+ */
+export interface InputModeHost {
+    /** Write raw text/ANSI to the terminal */
+    writeToTerminal(text: string): void;
+    /** Get terminal row count for scroll window sizing */
+    getTerminalRows(): number;
+    /** Get terminal column count for overflow calculations */
+    getTerminalCols(): number;
+    /** Push a mode onto the input mode stack */
+    pushMode(mode: IInputMode): void;
+    /** Pop the current mode from the input mode stack */
+    popMode(): void;
+    /** The xterm.js Terminal instance (for direct write when needed) */
+    readonly terminal: Terminal;
+    /** File picker provider for the current environment */
+    readonly filePickerProvider: ICliFilePickerProvider;
+}
+```
+
+`CliExecutionContext` implements `InputModeHost`. `CliInputReader` receives it and passes it to each mode constructor. This replaces the separate `CliInputReaderHost` and `ReaderModeHost` interfaces with a single unified host.
 
 ### File Layout
 
@@ -124,7 +155,12 @@ export interface CliMultiSelectOption extends CliSelectOption {
  * Options for readLine input.
  */
 export interface CliLineOptions {
-    /** Pre-filled default value. Shown in the buffer when the prompt opens. */
+    /**
+     * Pre-filled default value. Shown in the buffer when the prompt opens.
+     * The cursor starts at the end of the default text. The text is rendered
+     * normally (not dimmed) — it is real buffer content the user can edit.
+     * Backspace works as usual to delete pre-filled characters.
+     */
     default?: string;
     /**
      * Validation function called on Enter.
@@ -165,6 +201,8 @@ export interface CliDateOptions {
     /**
      * Date format string. Supported tokens: YYYY (4-digit year), MM (2-digit month),
      * DD (2-digit day). Separators can be `-`, `/`, or `.`.
+     * The separator in the format string is enforced — if format is 'YYYY-MM-DD',
+     * the user must type dashes (not slashes or dots).
      * @default 'YYYY-MM-DD'
      */
     format?: string;
@@ -188,8 +226,18 @@ export interface CliFilePickerOptions {
      * and file filter in Electron.
      */
     accept?: string;
-    /** When true, pick a directory instead of files. Default: false. */
+    /**
+     * When true, pick a directory instead of files. Default: false.
+     * Cannot be combined with `multiple` — if both are set, `directory` takes precedence
+     * and a single directory is returned.
+     */
     directory?: boolean;
+    /**
+     * How to read file content. Default: 'text'.
+     * - 'text': Read as UTF-8 string (suitable for text files)
+     * - 'arraybuffer': Read as ArrayBuffer (suitable for binary files like images)
+     */
+    readAs?: 'text' | 'arraybuffer';
 }
 
 /**
@@ -200,7 +248,11 @@ export interface CliFileResult {
     name: string;
     /** Full file path. Available in Electron, undefined in browser. */
     path?: string;
-    /** File content as text (UTF-8) or ArrayBuffer (binary) */
+    /**
+     * File content. Type depends on `CliFilePickerOptions.readAs`:
+     * - 'text' (default): `string` (UTF-8 decoded)
+     * - 'arraybuffer': `ArrayBuffer` (raw bytes)
+     */
     content: string | ArrayBuffer;
     /** File size in bytes */
     size: number;
@@ -289,11 +341,13 @@ export interface ICliInputReader {
     ): Promise<string[] | null>;
 
     /**
-     * Prompt the user for numeric input with optional min/max validation.
+     * Prompt the user for integer input with optional min/max validation.
      * Supports cursor navigation (Left/Right), backspace, and negative numbers.
+     * Only accepts digits and a leading minus sign — decimal points are not supported.
+     * For floating-point input, use readLine with a custom validate function.
      * @param prompt The prompt text to display
      * @param options Optional constraints: min, max, and default value
-     * @returns The entered number, or null if aborted
+     * @returns The entered integer, or null if aborted
      */
     readNumber(
         prompt: string,
@@ -314,14 +368,15 @@ export interface ICliInputReader {
      * Open a file picker dialog appropriate to the environment.
      * In browsers, triggers the native file dialog via `<input type="file">`.
      * In Electron, uses the OS file dialog via `dialog.showOpenDialog()`.
+     * Always returns an array for consistency — single-file picks return a 1-element array.
      * @param prompt The prompt text to display while the picker is open
      * @param options Optional configuration for multiple selection, file type filter, and directory mode
-     * @returns The selected file(s) with name, content, and metadata, or null if cancelled/aborted
+     * @returns Array of selected files with name, content, and metadata, or null if cancelled/aborted
      */
     readFile(
         prompt: string,
         options?: CliFilePickerOptions,
-    ): Promise<CliFileResult | CliFileResult[] | null>;
+    ): Promise<CliFileResult[] | null>;
 }
 ```
 
@@ -368,26 +423,15 @@ export interface ICliFilePickerProvider {
 
 | Class | Package | Strategy |
 |---|---|---|
-| `BrowserFilePickerProvider` | `packages/core` | Creates hidden `<input type="file">`, triggers `click()`, reads via `FileReader` API. Sets `accept` for filters, `multiple` for multi-select, `webkitdirectory` for directories. `path` is always `undefined`. |
+| `BrowserFilePickerProvider` | `packages/cli` | Creates hidden `<input type="file">`, triggers `click()`, reads via `FileReader` API (using `readAs` option to determine text vs arraybuffer). Sets `accept` for filters, `multiple` for multi-select, `webkitdirectory` for directories. `path` is always `undefined`. Lives in `packages/cli` (not `core`) because it depends on DOM APIs; `packages/core` remains isomorphic. |
 | `ElectronFilePickerProvider` | `packages/electron-cli` | Uses `window.electronCliApi.showOpenDialog()`. Extends the existing Electron bridge to support `multiple` and `directory` options. Returns full OS `path`. |
-| `NoopFilePickerProvider` | `packages/core` | `isSupported: false`. `pickFiles()` and `pickDirectory()` resolve `null`. Used in SSR and test environments. |
+| `NoopFilePickerProvider` | `packages/cli` | `isSupported: false`. `pickFiles()` and `pickDirectory()` resolve `null`. Used in SSR and test environments. |
 
 ### Registration
 
-`CliInputReaderHost` gains an optional `filePickerProvider` property:
+The old `CliInputReaderHost` and `ReaderModeHost` interfaces are replaced by the unified `InputModeHost` (defined in the Architecture section). `CliInputReader` receives `InputModeHost` and passes it to each mode's constructor.
 
-```typescript
-export interface CliInputReaderHost {
-    readonly activeInputRequest: ActiveInputRequest | null;
-    setActiveInputRequest(request: ActiveInputRequest | null): void;
-    writeToTerminal(text: string): void;
-    getTerminalRows?(): number;
-    getTerminalCols?(): number;             // NEW — needed for inline select overflow
-    filePickerProvider?: ICliFilePickerProvider;  // NEW
-}
-```
-
-`CliExecutionContext` sets the provider during initialization:
+`CliExecutionContext` implements `InputModeHost` and sets the file picker provider during initialization:
 - If `window.electronCliApi` exists → `ElectronFilePickerProvider`
 - Else if `document` exists → `BrowserFilePickerProvider`
 - Else → `NoopFilePickerProvider`
@@ -543,9 +587,9 @@ Applies to `SelectInputMode` and `MultiSelectInputMode` when `searchable: true`.
 7. Disabled options remain in filtered results but are not selectable (skipped by arrow keys)
 8. Help bar updates to show match count: `"N of M matches · backspace to clear filter"`
 9. Enter confirms the currently highlighted option from the filtered list
-10. Escape or Ctrl+C clears filter first if non-empty; second press aborts the input
+10. Escape or Ctrl+C clears filter first if non-empty; second press aborts the input. This requires `SelectInputMode` and `MultiSelectInputMode` to **override** `InputModeBase.handleKeyEvent()` rather than relying on the base implementation — the base class always aborts on first Escape/Ctrl+C, but search-enabled modes intercept it to clear the filter first.
 
-When `searchable: false` (default): Printable keystrokes are ignored. Arrow keys only. This preserves backward compatibility.
+When `searchable: false` (default): Printable keystrokes are ignored. Arrow keys only. These modes use the base class `handleKeyEvent` directly (no override needed). This preserves backward compatibility.
 
 ## Test Strategy
 
@@ -581,9 +625,9 @@ A dedicated spec (`backward-compat.spec.ts`) that calls the interface using the 
 
 ## Migration Notes
 
-### Breaking Change: readSelect/readSelectInline/readMultiSelect Third Parameter
+### Breaking Change 1: readSelect/readSelectInline Third Parameter
 
-The third parameter changes from a bare callback to an options object:
+The third parameter on `readSelect` and `readSelectInline` changes from a bare callback to an options object:
 
 ```typescript
 // Before
@@ -597,16 +641,34 @@ readSelect(prompt, options)  // still works
 
 All callers in the monorepo passing `onChange` must be updated. Callers not using the third parameter need no changes.
 
-### ElectronCliApi Extension
+**Note:** `readMultiSelect` never had a third parameter, so adding `CliMultiSelectOptions` is purely additive — not a breaking change.
 
-`ElectronCliApi.showOpenDialog` in `packages/electron-cli/src/lib/types.ts` needs extended options:
+### Breaking Change 2: ElectronCliApi.showOpenDialog
+
+`ElectronCliApi.showOpenDialog` in `packages/electron-cli/src/lib/types.ts` changes both its options and return type:
 
 ```typescript
+// Before
+showOpenDialog(options?: {
+    accept?: string;
+}): Promise<{ name: string; content: string } | null>;
+
+// After
 showOpenDialog(options?: {
     accept?: string;
     multiple?: boolean;    // NEW
     directory?: boolean;   // NEW
-}): Promise<{ name: string; content: string; path: string; size: number; type: string }[] | null>;
+    readAs?: 'text' | 'arraybuffer';  // NEW
+}): Promise<{ name: string; content: string | ArrayBuffer; path: string; size: number; type: string }[] | null>;
 ```
 
-The return type changes from a single result to an array. The preload script and main process handler must be updated accordingly.
+Key changes:
+- Return type changes from single object to array (single-file picks return 1-element array)
+- Return object gains `path`, `size`, `type` fields
+- Options gain `multiple`, `directory`, `readAs` fields
+
+The preload script (`src/preload.ts`) and main process handler must be updated. Any Electron app consuming `@qodalis/electron-cli` that calls `showOpenDialog` must update to handle the array return type.
+
+### Internal Change: CliInputReaderHost/ReaderModeHost → InputModeHost
+
+The `CliInputReaderHost` and `ReaderModeHost` interfaces are replaced by a single `InputModeHost` interface. This is an internal change — only affects code that directly instantiates `CliInputReader` or `ReaderMode` (i.e., `CliExecutionContext`). Plugin authors and command processors using `ICliInputReader` via the execution context are not affected.
