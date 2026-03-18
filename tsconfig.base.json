@@ -164,6 +164,9 @@
       ],
       "@qodalis/cli-lang-ro/*": [
         "dist/lang-ro/*"
+      ],
+      "@qodalis/cli-encode": [
+        "dist/encode"
       ]
     },
     "outDir": "./dist/out-tsc",
