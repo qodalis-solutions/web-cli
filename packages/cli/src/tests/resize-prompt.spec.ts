@@ -186,18 +186,24 @@ describe('CliExecutionContext handleTerminalResize', () => {
         expect(context.refreshCurrentLine).not.toHaveBeenCalled();
     });
 
-    it('should be a no-op during active input request', () => {
-        (context as any)._activeInputRequest = {
-            type: 'line',
-            buffer: '',
-            cursorPosition: 0,
-            resolve: () => {},
+    it('should delegate to current mode onResize when a mode with onResize is active', () => {
+        const resizeSpy = jasmine.createSpy('onResize');
+        const mockMode = {
+            handleInput: async () => {},
+            handleKeyEvent: () => true,
+            onResize: resizeSpy,
         };
+        // Push a mode with onResize (simulates an active input mode)
+        context.pushMode(mockMode as any);
         spyOn(context, 'refreshCurrentLine');
 
         context.handleTerminalResize();
 
+        expect(resizeSpy).toHaveBeenCalledWith(terminal.cols, terminal.rows);
         expect(context.refreshCurrentLine).not.toHaveBeenCalled();
+
+        // Clean up
+        context.popMode();
     });
 });
 
