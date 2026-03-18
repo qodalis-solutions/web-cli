@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-encode",
-  "version": "2.0.0-beta.6",
+  "version": "2.0.0-beta.7",
   "description": "Encoding, decoding, and hashing utilities",
   "author": "Qodalis Solutions",
   "license": "MIT",
