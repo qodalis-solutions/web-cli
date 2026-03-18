@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-encode",
-  "version": "0.0.1",
+  "version": "2.0.0-beta.6",
   "description": "Encoding, decoding, and hashing utilities",
   "author": "Qodalis Solutions",
   "license": "MIT",
@@ -13,7 +13,15 @@
     "cli",
     "qodalis",
     "terminal",
-    "encode"
+    "encode",
+    "decode",
+    "base64",
+    "hex",
+    "hash",
+    "jwt",
+    "morse",
+    "binary",
+    "rot13"
   ],
   "umd": "./umd/index.js",
   "unpkg": "./umd/index.js",
