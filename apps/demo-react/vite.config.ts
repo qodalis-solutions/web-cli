@@ -162,6 +162,10 @@ export default defineConfig({
                 __dirname,
                 '../../dist/jobs/public-api.mjs',
             ),
+            '@qodalis/cli-encode': path.resolve(
+                __dirname,
+                '../../dist/encode/public-api.mjs',
+            ),
         },
     },
 });
