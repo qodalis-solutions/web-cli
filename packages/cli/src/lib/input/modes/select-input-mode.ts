@@ -187,9 +187,16 @@ export class SelectInputMode extends InputModeBase<string> {
      * Returns 0 if none found.
      */
     private findNextSelectable(from: number, direction: 1 | -1): number {
-        const selectables = this.filteredOptions.filter(o => !o.disabled);
-        if (selectables.length === 0) return 0;
-        return 0; // Start at first selectable
+        const len = this.filteredOptions.length;
+        if (len === 0) return 0;
+        let idx = from + direction;
+        for (let i = 0; i < len; i++) {
+            if (idx < 0) idx = len - 1;
+            if (idx >= len) idx = 0;
+            if (!this.filteredOptions[idx].disabled) return idx;
+            idx += direction;
+        }
+        return 0;
     }
 
     /**

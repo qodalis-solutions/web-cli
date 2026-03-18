@@ -25,7 +25,7 @@ export class FileInputMode extends InputModeBase<CliFileResult[]> {
         this.host.writeToTerminal(`\x1b[36m?\x1b[0m ${this.promptText}${acceptHint}: `);
 
         if (!provider.isSupported) {
-            this.host.writeToTerminal('\x1b[2m(file picker not available)\x1b[0m\r\n');
+            this.host.writeToTerminal('\x1b[2m(file picker not available)\x1b[0m');
             this.abort();
             return;
         }

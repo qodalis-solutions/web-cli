@@ -44,10 +44,10 @@ describe('ConfirmInputMode', () => {
         expect(allWritten).toContain('(y/N)');
     });
 
-    it('should default to true when no defaultValue given', () => {
+    it('should default to false when no defaultValue given', () => {
         const mode = makeMode('Continue?');
         mode.activate();
-        expect(host.written.join('')).toContain('(Y/n)');
+        expect(host.written.join('')).toContain('(y/N)');
     });
 
     it('should resolve true when y is entered and Enter pressed', async () => {
