@@ -39,7 +39,8 @@
       "@qodalis/cli-lang-zh": ["dist/lang-zh"],
       "@qodalis/cli-lang-ru": ["dist/lang-ru"],
       "@qodalis/cli-lang-ro": ["dist/lang-ro"],
-      "@qodalis/cli-server-jobs": ["dist/jobs"]
+      "@qodalis/cli-server-jobs": ["dist/jobs"],
+      "@qodalis/cli-encode": ["dist/encode"]
     },
     "types": ["vite/client"],
 
