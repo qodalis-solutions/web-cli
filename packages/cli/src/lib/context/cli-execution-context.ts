@@ -21,6 +21,7 @@ import {
     ICliInputReader,
     ICliBackgroundServiceRegistry,
     ICliTranslationService,
+    ICliFilePickerProvider,
 } from '@qodalis/cli-core';
 import { CliBackgroundServiceRegistry } from '../services/background';
 import { CliTerminalWriter } from '../services/cli-terminal-writer';
@@ -31,19 +32,15 @@ import { CliClipboard } from '../services/cli-clipboard';
 import { CliCommandHistory } from '../services/cli-command-history';
 import { CliExecutionProcess } from './cli-execution-process';
 import { CliStateStoreManager } from '../state/cli-state-store-manager';
-import {
-    CliInputReader,
-    ActiveInputRequest,
-    CliInputReaderHost,
-} from '../services/cli-input-reader';
+import { CliInputReader } from '../services/cli-input-reader';
+import { BrowserFilePickerProvider, NoopFilePickerProvider } from '../services/file-picker';
 import { CliCompletionEngine } from '../completion/cli-completion-engine';
 import {
     CliLineBuffer,
     IInputMode,
+    InputModeHost,
     CommandLineMode,
     CommandLineModeHost,
-    ReaderMode,
-    ReaderModeHost,
     RawMode,
     CliTerminalLineRenderer,
     PromptOptions,
@@ -60,9 +57,8 @@ export interface CliExecutionContextDeps {
 export class CliExecutionContext
     implements
         ICliExecutionContext,
-        CliInputReaderHost,
-        CommandLineModeHost,
-        ReaderModeHost
+        InputModeHost,
+        CommandLineModeHost
 {
     public userSession?: ICliUserSession;
 
@@ -108,7 +104,7 @@ export class CliExecutionContext
 
     public readonly commandHistory: CliCommandHistory;
 
-    private _activeInputRequest: ActiveInputRequest | null = null;
+    public readonly filePickerProvider: ICliFilePickerProvider;
 
     private readonly modeStack: IInputMode[] = [];
 
@@ -148,6 +144,10 @@ export class CliExecutionContext
         this.clipboard = new CliClipboard(this);
         this.process = new CliExecutionProcess(this);
 
+        this.filePickerProvider = typeof document !== 'undefined'
+            ? new BrowserFilePickerProvider()
+            : new NoopFilePickerProvider();
+
         this.reader = new CliInputReader(this);
 
         //initialize logger
@@ -166,28 +166,16 @@ export class CliExecutionContext
 
     // -- Public API (ICliExecutionContext) --
 
-    public get activeInputRequest(): ActiveInputRequest | null {
-        return this._activeInputRequest;
-    }
-
-    /**
-     * Sets the active input request. When a non-null request is provided,
-     * pushes ReaderMode onto the mode stack. ReaderMode pops itself on
-     * completion, so passing null here does NOT pop the mode.
-     */
-    public setActiveInputRequest(request: ActiveInputRequest | null): void {
-        this._activeInputRequest = request;
-        if (request !== null) {
-            this.pushMode(new ReaderMode(this));
-        }
-    }
-
     public writeToTerminal(text: string): void {
         this.terminal.write(text);
     }
 
     public getTerminalRows(): number {
         return this.terminal.rows;
+    }
+
+    public getTerminalCols(): number {
+        return this.terminal.cols;
     }
 
     public get currentLine(): string {
@@ -350,11 +338,13 @@ export class CliExecutionContext
             return;
         }
 
-        if (
-            this.isProgressRunning() ||
-            this.isRawModeActive() ||
-            this._activeInputRequest
-        ) {
+        if (this.isProgressRunning() || this.isRawModeActive()) {
+            return;
+        }
+
+        const mode = this.currentMode;
+        if (mode?.onResize) {
+            mode.onResize(this.terminal.cols, this.terminal.rows);
             return;
         }
 
@@ -511,12 +501,6 @@ export class CliExecutionContext
 
     getExecutionContext(): ICliExecutionContext {
         return this;
-    }
-
-    // -- ReaderModeHost interface --
-
-    getActiveInputRequest(): ActiveInputRequest | null {
-        return this._activeInputRequest;
     }
 
     // -- Managed timer cleanup --
