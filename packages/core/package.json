@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-core",
-  "version": "2.0.0-beta.6",
+  "version": "2.0.0-beta.7",
   "description": "Core interfaces, types, and utilities for the @qodalis CLI ecosystem.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
