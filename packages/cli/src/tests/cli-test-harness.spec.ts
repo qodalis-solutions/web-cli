@@ -1,7 +1,7 @@
 import { CliTestHarness } from '../lib/testing';
 import {
     CliEchoCommandProcessor,
-    CliBase64CommandProcessor,
+    CliJsonCommandProcessor,
     CliSeqCommandProcessor,
     CliExportCommandProcessor,
     CliUnsetCommandProcessor,
@@ -60,7 +60,7 @@ describe('CliTestHarness', () => {
         harness = new CliTestHarness();
         harness.registerProcessors([
             new CliEchoCommandProcessor(),
-            new CliBase64CommandProcessor(),
+            new CliJsonCommandProcessor(),
             new CliSeqCommandProcessor(),
             new CliExportCommandProcessor(),
             new CliUnsetCommandProcessor(),
@@ -156,9 +156,9 @@ describe('CliTestHarness', () => {
         expect(result.output).toContain('three');
     });
 
-    it('should handle base64 encode and decode', async () => {
-        const result = await harness.execute('base64 encode hello');
-        expect(result.output).toContain('aGVsbG8=');
+    it('should handle json format command', async () => {
+        const result = await harness.execute('json format {"a":1}');
+        expect(result.output).toContain('"a": 1');
     });
 
     it('should handle seq command', async () => {
