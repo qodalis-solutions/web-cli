@@ -24,6 +24,7 @@ import { scpModule } from '@qodalis/cli-scp';
 import { wgetModule } from '@qodalis/cli-wget';
 import { sudokuModule } from '@qodalis/cli-sudoku';
 import { jobsModule } from '@qodalis/cli-server-jobs';
+import { encodeModule } from '@qodalis/cli-encode';
 import {
     CliLogLevel,
     type CliOptions,
@@ -121,6 +122,7 @@ const modules: ICliModule[] = [
     wgetModule,
     sudokuModule,
     jobsModule,
+    encodeModule,
     usersModule.configure({
         seedUsers: [
             { name: 'root1', email: 'root1@root.com', groups: ['admin'] },
