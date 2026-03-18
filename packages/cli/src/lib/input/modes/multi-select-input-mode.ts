@@ -81,6 +81,31 @@ export class MultiSelectInputMode extends InputModeBase<string[]> {
         return super.handleKeyEvent(event);
     }
 
+    /**
+     * Clear rendered option lines and show final answer before resolving.
+     */
+    override resolveAndPop(value: string[]): void {
+        this.clearRenderedLines();
+        const labels = value.map(v => {
+            const opt = this.options.find(o => o.value === v);
+            return opt ? opt.label : v;
+        });
+        const summary = labels.length > 0 ? labels.join(', ') : 'none';
+        this.host.terminal.write('\x1b[2K\r');
+        this.host.terminal.write(`\x1b[32m\u2714\x1b[0m ${this.promptText} \x1b[36m${summary}\x1b[0m`);
+        super.resolveAndPop(value);
+    }
+
+    /**
+     * Clear rendered option lines before aborting.
+     */
+    protected override abort(): void {
+        this.clearRenderedLines();
+        this.host.terminal.write('\x1b[2K\r');
+        this.host.terminal.write(`\x1b[33m\u2718\x1b[0m ${this.promptText} \x1b[2mcancelled\x1b[0m`);
+        super.abort();
+    }
+
     async handleInput(data: string): Promise<void> {
         if (data === '\x1b[A') {
             // Up arrow
