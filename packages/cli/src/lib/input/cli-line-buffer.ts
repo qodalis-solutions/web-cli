@@ -1,7 +1,7 @@
 /**
  * Reusable text buffer with cursor management.
  * Eliminates duplicated line-editing logic across CommandLineMode,
- * ReaderMode, and any future input mode.
+ * LineInputMode, and any future input mode.
  */
 export class CliLineBuffer {
     private _text = '';
