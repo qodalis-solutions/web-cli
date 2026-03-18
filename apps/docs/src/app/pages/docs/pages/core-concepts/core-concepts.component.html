@@ -678,7 +678,7 @@ theme get</code></pre>
         </thead>
         <tbody>
             <tr>
-                <td><code>readLine(prompt)</code></td>
+                <td><code>readLine(prompt, options?)</code></td>
                 <td>{{ 'docs.core-concepts.input-reader.readline-desc' | translate }}</td>
             </tr>
             <tr>
@@ -686,11 +686,15 @@ theme get</code></pre>
                 <td>{{ 'docs.core-concepts.input-reader.readpassword-desc' | translate }}</td>
             </tr>
             <tr>
-                <td><code>readConfirm(prompt)</code></td>
+                <td><code>readConfirm(prompt, default?)</code></td>
                 <td>{{ 'docs.core-concepts.input-reader.readconfirm-desc' | translate }}</td>
             </tr>
             <tr>
-                <td><code>readSelect(prompt, options)</code></td>
+                <td><code>readNumber(prompt, options?)</code></td>
+                <td>{{ 'docs.core-concepts.input-reader.readnumber-desc' | translate }}</td>
+            </tr>
+            <tr>
+                <td><code>readSelect(prompt, options, config?)</code></td>
                 <td>{{ 'docs.core-concepts.input-reader.readselect-desc' | translate }}</td>
             </tr>
             <tr>
@@ -698,12 +702,16 @@ theme get</code></pre>
                 <td>{{ 'docs.core-concepts.input-reader.readselectinline-desc' | translate }}</td>
             </tr>
             <tr>
-                <td><code>readMultiSelect(prompt, options)</code></td>
+                <td><code>readMultiSelect(prompt, options, config?)</code></td>
                 <td>{{ 'docs.core-concepts.input-reader.readmultiselect-desc' | translate }}</td>
             </tr>
             <tr>
-                <td><code>readNumber(prompt)</code></td>
-                <td>{{ 'docs.core-concepts.input-reader.readnumber-desc' | translate }}</td>
+                <td><code>readDate(prompt, options?)</code></td>
+                <td>{{ 'docs.core-concepts.input-reader.readdate-desc' | translate }}</td>
+            </tr>
+            <tr>
+                <td><code>readFile(prompt, options?)</code></td>
+                <td>{{ 'docs.core-concepts.input-reader.readfile-desc' | translate }}</td>
             </tr>
         </tbody>
     </table>
@@ -713,53 +721,111 @@ theme get</code></pre>
     <h3>{{ 'docs.core-concepts.input-reader.reading-text' | translate }}</h3>
     <div class="code-block">
         <span class="code-label">readLine</span>
-        <pre><code>const name = await context.inputReader.readLine('What is your name?');
-context.writer.writeln(`Hello, $&#123;name&#125;!`);</code></pre>
+        <pre><code>// Simple text input
+const name = await reader.readLine('What is your name?');
+
+// With placeholder, default, and validation
+const email = await reader.readLine('Email:', &#123;
+    placeholder: 'user&#64;example.com',
+    default: 'admin&#64;example.com',
+    validate: (v) =&gt; !v.includes('&#64;') ? 'Must be a valid email' : null,
+&#125;);</code></pre>
     </div>
 
     <h3>{{ 'docs.core-concepts.input-reader.reading-password' | translate }}</h3>
     <div class="code-block">
         <span class="code-label">readPassword</span>
-        <pre><code>const password = await context.inputReader.readPassword('Enter password:');
-// Input is masked with dots</code></pre>
+        <pre><code>const password = await reader.readPassword('Enter password:');
+// Input is masked with asterisks</code></pre>
     </div>
 
     <h3>{{ 'docs.core-concepts.input-reader.confirmation' | translate }}</h3>
     <div class="code-block">
         <span class="code-label">readConfirm</span>
-        <pre><code>const confirmed = await context.inputReader.readConfirm('Delete all files?');
+        <pre><code>// Default is false (y/N), pass true for (Y/n)
+const confirmed = await reader.readConfirm('Delete all files?', true);
 if (confirmed) &#123;
-    context.writer.writeln('Deleting...');
+    writer.writeln('Deleting...');
 &#125;</code></pre>
-    </div>
-
-    <h3>{{ 'docs.core-concepts.input-reader.selection' | translate }}</h3>
-    <div class="code-block">
-        <span class="code-label">readSelect</span>
-        <pre><code>const color = await context.inputReader.readSelect('Pick a color:', [
-    &#123; label: 'Red', value: 'red' &#125;,
-    &#123; label: 'Green', value: 'green' &#125;,
-    &#123; label: 'Blue', value: 'blue' &#125;,
-]);
-context.writer.writeln(`You picked: $&#123;color&#125;`);</code></pre>
-    </div>
-
-    <h3>{{ 'docs.core-concepts.input-reader.multi-select' | translate }}</h3>
-    <div class="code-block">
-        <span class="code-label">readMultiSelect</span>
-        <pre><code>const toppings = await context.inputReader.readMultiSelect('Choose toppings:', [
-    &#123; label: 'Cheese', value: 'cheese' &#125;,
-    &#123; label: 'Pepperoni', value: 'pepperoni' &#125;,
-    &#123; label: 'Mushrooms', value: 'mushrooms' &#125;,
-]);
-context.writer.writeln(`Selected: $&#123;toppings.join(', ')&#125;`);</code></pre>
     </div>
 
     <h3>{{ 'docs.core-concepts.input-reader.reading-number' | translate }}</h3>
     <div class="code-block">
         <span class="code-label">readNumber</span>
-        <pre><code>const age = await context.inputReader.readNumber('Enter your age:');
-context.writer.writeln(`You are $&#123;age&#125; years old.`);</code></pre>
+        <pre><code>const count = await reader.readNumber('How many items?', &#123;
+    min: 1,
+    max: 100,
+    default: 10,
+&#125;);</code></pre>
+    </div>
+
+    <h3>{{ 'docs.core-concepts.input-reader.selection' | translate }}</h3>
+    <div class="code-block">
+        <span class="code-label">readSelect</span>
+        <pre><code>// With descriptions, groups, disabled options, and search
+const framework = await reader.readSelect('Pick a framework:', [
+    &#123; label: 'React', value: 'react', description: 'UI library', group: 'Frontend' &#125;,
+    &#123; label: 'Vue', value: 'vue', description: 'Progressive framework', group: 'Frontend' &#125;,
+    &#123; label: 'Express', value: 'express', description: 'Node.js framework', group: 'Backend' &#125;,
+    &#123; label: 'Legacy', value: 'legacy', description: 'Deprecated', disabled: true &#125;,
+], &#123; searchable: true, default: 'react' &#125;);</code></pre>
+    </div>
+
+    <h3>{{ 'docs.core-concepts.input-reader.inline-select' | translate }}</h3>
+    <div class="code-block">
+        <span class="code-label">readSelectInline</span>
+        <pre><code>// Compact horizontal picker with overflow handling
+const size = await reader.readSelectInline('Size:', [
+    &#123; label: 'Small', value: 'sm' &#125;,
+    &#123; label: 'Medium', value: 'md' &#125;,
+    &#123; label: 'Large', value: 'lg' &#125;,
+]);</code></pre>
+    </div>
+
+    <h3>{{ 'docs.core-concepts.input-reader.multi-select' | translate }}</h3>
+    <div class="code-block">
+        <span class="code-label">readMultiSelect</span>
+        <pre><code>// With pre-checked items, search, and select-all (press 'a')
+const toppings = await reader.readMultiSelect('Choose toppings:', [
+    &#123; label: 'Cheese', value: 'cheese', checked: true &#125;,
+    &#123; label: 'Pepperoni', value: 'pepperoni' &#125;,
+    &#123; label: 'Pineapple', value: 'pineapple', description: 'Controversial!' &#125;,
+], &#123; searchable: true &#125;);</code></pre>
+    </div>
+
+    <h3>{{ 'docs.core-concepts.input-reader.reading-date' | translate }}</h3>
+    <div class="code-block">
+        <span class="code-label">readDate</span>
+        <pre><code>const date = await reader.readDate('Start date:', &#123;
+    format: 'YYYY-MM-DD',
+    min: '2024-01-01',
+    max: '2030-12-31',
+&#125;);</code></pre>
+    </div>
+
+    <h3>{{ 'docs.core-concepts.input-reader.reading-file' | translate }}</h3>
+    <div class="code-block">
+        <span class="code-label">readFile</span>
+        <pre><code>const files = await reader.readFile('Select files:', &#123;
+    accept: '.json,.txt,.yaml',
+    multiple: true,
+&#125;);
+if (files) &#123;
+    for (const file of files) &#123;
+        writer.writeln(`$&#123;file.name&#125; ($&#123;file.size&#125; bytes)`);
+    &#125;
+&#125;</code></pre>
+    </div>
+
+    <h2>{{ 'docs.core-concepts.input-reader.cancellation-title' | translate }}</h2>
+    <p>{{ 'docs.core-concepts.input-reader.cancellation-desc' | translate }}</p>
+    <div class="code-block">
+        <span class="code-label">handling-cancel.ts</span>
+        <pre><code>const result = await reader.readLine('Enter value:');
+if (result === null) &#123;
+    writer.writeWarning('Input cancelled.');
+    return;
+&#125;</code></pre>
     </div>
 
     <h2>{{ 'docs.core-concepts.input-reader.try-it' | translate }}</h2>
