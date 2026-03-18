@@ -14,7 +14,7 @@ export class ConfirmInputMode extends InputModeBase<boolean> {
         host: InputModeHost,
         resolve: (value: boolean | null) => void,
         private readonly promptText: string,
-        private readonly defaultValue: boolean = true,
+        private readonly defaultValue: boolean = false,
     ) {
         super(host, resolve);
     }
@@ -55,6 +55,10 @@ export class ConfirmInputMode extends InputModeBase<boolean> {
             }
             // Ignore all other characters
         }
+    }
+
+    onResize(): void {
+        this.renderLine();
     }
 
     private renderLine(): void {

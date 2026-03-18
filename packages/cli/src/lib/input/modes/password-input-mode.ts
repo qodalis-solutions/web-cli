@@ -40,6 +40,10 @@ export class PasswordInputMode extends InputModeBase<string> {
         }
     }
 
+    onResize(): void {
+        this.renderLine();
+    }
+
     private renderLine(): void {
         const prompt = `\x1b[36m?\x1b[0m ${this.promptText}`;
         const masked = '*'.repeat(this.buffer.length);
