@@ -8,3 +8,4 @@ export { SelectInputMode } from './select-input-mode';
 export { InlineSelectInputMode } from './inline-select-input-mode';
 export { MultiSelectInputMode } from './multi-select-input-mode';
 export { DateInputMode } from './date-input-mode';
+export { FileInputMode } from './file-input-mode';
