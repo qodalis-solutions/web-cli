@@ -52,6 +52,29 @@ export class InlineSelectInputMode extends InputModeBase<string> {
         this.render();
     }
 
+    /**
+     * Clear the inline options and help bar, then show final answer before resolving.
+     */
+    override resolveAndPop(value: string): void {
+        this.clearExtraLines();
+        // Redraw prompt line with just the answered value
+        const selectedOpt = this.selectableOptions.find(o => o.value === value);
+        const label = selectedOpt ? selectedOpt.label : value;
+        this.host.terminal.write('\x1b[2K\r');
+        this.host.terminal.write(`\x1b[32m\u2714\x1b[0m ${this.promptText}: \x1b[36m${label}\x1b[0m`);
+        super.resolveAndPop(value);
+    }
+
+    /**
+     * Clear the inline options and help bar before aborting.
+     */
+    protected override abort(): void {
+        this.clearExtraLines();
+        this.host.terminal.write('\x1b[2K\r');
+        this.host.terminal.write(`\x1b[33m\u2718\x1b[0m ${this.promptText}: \x1b[2mcancelled\x1b[0m`);
+        super.abort();
+    }
+
     async handleInput(data: string): Promise<void> {
         if (data === '\x1b[C') {
             // Right arrow
