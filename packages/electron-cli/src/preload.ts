@@ -24,7 +24,7 @@ export function exposeElectronCliApi(): void {
     const api: ElectronCliApi = {
         // File dialogs
         showOpenDialog: (options) =>
-            ipcRenderer.invoke('electron-cli:show-open-dialog', options),
+            ipcRenderer.invoke('electron-cli:show-open-dialog', options ?? {}),
         showSaveDialog: (filename, content) =>
             ipcRenderer.invoke('electron-cli:show-save-dialog', filename, content),
 
