@@ -73,12 +73,24 @@
 
 ## Chunk 1: Core Interfaces & InputModeBase Foundation
 
-### Task 1: Update core interfaces — enhanced types and new option interfaces
+### Task 1: Update core interfaces — enhanced types, new option interfaces, file picker types
 
 **Files:**
+- Create: `packages/core/src/lib/interfaces/file-picker.ts`
 - Modify: `packages/core/src/lib/interfaces/input-reader.ts`
+- Modify: `packages/core/src/lib/interfaces/index.ts`
 
-- [ ] **Step 1: Add new option types and enhance CliSelectOption**
+> **Important:** Create `file-picker.ts` FIRST (Step 1a) because `input-reader.ts` imports `CliFilePickerOptions` and `CliFileResult` from it.
+
+- [ ] **Step 1a: Create file-picker.ts with the provider interface and types**
+
+Create `packages/core/src/lib/interfaces/file-picker.ts` with `ICliFilePickerProvider`, `CliFilePickerOptions`, `CliFileResult` (full code in Task 2 below — execute that code block first).
+
+- [ ] **Step 1b: Add re-export to index.ts**
+
+In `packages/core/src/lib/interfaces/index.ts`, add: `export * from './file-picker';`
+
+- [ ] **Step 1c: Add new option types and enhance CliSelectOption**
 
 Replace the entire file with the updated interfaces from the spec. Key changes:
 - Add `description?`, `group?`, `disabled?` to `CliSelectOption`
@@ -196,18 +208,18 @@ Copy the full JSDoc from the spec for each method.
 - [ ] **Step 2: Verify TypeScript compiles**
 
 Run: `cd /home/nicolae/work/cli-workspace/web-cli && npx tsc --project packages/core/tsconfig.json --noEmit`
-Expected: Errors in downstream packages (cli, electron-cli) that reference old signatures — that's expected and will be fixed in later tasks. Core itself should compile.
+Expected: Errors in downstream packages (cli, electron-cli) that reference old signatures — that's expected and will be fixed in later tasks. Core itself should compile cleanly.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add packages/core/src/lib/interfaces/input-reader.ts
-git commit -m "feat(core): update ICliInputReader with enhanced types, readDate, readFile"
+git add packages/core/src/lib/interfaces/file-picker.ts packages/core/src/lib/interfaces/input-reader.ts packages/core/src/lib/interfaces/index.ts
+git commit -m "feat(core): update ICliInputReader with enhanced types, readDate, readFile, file picker"
 ```
 
 ---
 
-### Task 2: Add ICliFilePickerProvider interface and file picker types
+### Task 2: (Reference only — code for file-picker.ts used in Task 1 Step 1a)
 
 **Files:**
 - Create: `packages/core/src/lib/interfaces/file-picker.ts`
@@ -350,9 +362,14 @@ export interface InputModeHost {
 }
 ```
 
-Note: The import for `Terminal` already exists via other input module files; the `@qodalis/cli-core` import path resolves via `tsconfig.base.json` path alias.
+Note: Add these imports at the top of the file. The `@qodalis/cli-core` import path resolves via `tsconfig.base.json` path alias (confirm Task 2's re-export was done first).
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 3: Verify it compiles**
+
+Run: `cd /home/nicolae/work/cli-workspace/web-cli && npx tsc --project packages/cli/tsconfig.json --noEmit 2>&1 | head -20`
+Expected: May show errors in other files that reference old ReaderMode — that's expected. `input-mode.ts` itself should have no errors.
+
+- [ ] **Step 4: Commit**
 
 ```bash
 git add packages/cli/src/lib/input/input-mode.ts
@@ -375,7 +392,7 @@ Create `packages/cli/src/tests/modes/input-mode-base.spec.ts`:
 import { InputModeBase } from '../../lib/input/modes/input-mode-base';
 import { InputModeHost } from '../../lib/input/input-mode';
 
-class MockHost implements Partial<InputModeHost> {
+class MockHost implements InputModeHost {
     written: string[] = [];
     modePushed = false;
     modePopped = false;
@@ -458,6 +475,8 @@ import { IInputMode, InputModeHost } from '../input-mode';
  */
 export abstract class InputModeBase<T> implements IInputMode {
     private _resolved = false;
+    /** Whether this mode has already resolved (prevents double-resolve from async operations) */
+    protected get isResolved(): boolean { return this._resolved; }
     /** Number of extra lines rendered below the prompt (help bar, error, etc.) */
     protected extraLines = 0;
 
@@ -1177,8 +1196,7 @@ export class FileInputMode extends InputModeBase<CliFileResult[]> {
 
         if (!provider.isSupported) {
             this.host.writeToTerminal('\x1b[2m(file picker not available)\x1b[0m\r\n');
-            this.host.popMode();
-            this.resolve(null);
+            this.abort();
             return;
         }
 
@@ -1200,12 +1218,11 @@ export class FileInputMode extends InputModeBase<CliFileResult[]> {
 
             this.waiting = false;
 
-            if (!results) {
+            if (!results || this.isResolved) {
                 // Clear "Opening file picker..." and show cancelled
                 this.host.terminal.write('\x1b[2K\r');
                 this.host.writeToTerminal(`\x1b[36m?\x1b[0m ${this.promptText}: \x1b[2m(cancelled)\x1b[0m\r\n`);
-                this.host.popMode();
-                this.resolve(null);
+                if (!this.isResolved) this.abort();
                 return;
             }
 
@@ -1222,14 +1239,13 @@ export class FileInputMode extends InputModeBase<CliFileResult[]> {
                 this.host.writeToTerminal(`    \x1b[2m${results.length} files selected · ${this.formatSize(totalSize)} total\x1b[0m\r\n`);
             }
 
-            this.host.popMode();
-            this.resolve(results);
+            this.resolveAndPop(results);
         } catch {
             this.waiting = false;
+            if (this.isResolved) return;
             this.host.terminal.write('\x1b[2K\r');
             this.host.writeToTerminal(`\x1b[36m?\x1b[0m ${this.promptText}: \x1b[31m(error)\x1b[0m\r\n`);
-            this.host.popMode();
-            this.resolve(null);
+            this.abort();
         }
     }
 
@@ -1393,8 +1409,8 @@ git commit -m "refactor(cli): rewrite CliInputReader as mode factory, remove Act
 
 Key changes:
 1. Replace `implements CliInputReaderHost, ReaderModeHost` with `implements InputModeHost`
-2. Remove `_activeInputRequest` field and `get activeInputRequest()` / `setActiveInputRequest()` methods
-3. Add `getTerminalCols(): number` method (returns `this.terminal.cols`)
+2. Remove `_activeInputRequest` field, `get activeInputRequest()`, `setActiveInputRequest()`, and `getActiveInputRequest()` (line ~518) methods
+3. Add `getTerminalCols(): number { return this.terminal.cols; }` — also ensure `getTerminalRows()` is non-optional
 4. Add `filePickerProvider` property — initialize in constructor based on environment
 5. Remove `ReaderMode` import — no longer pushed manually
 6. Update `handleTerminalResize()`: remove the `this._activeInputRequest` early return, instead call `this.currentMode?.onResize?.(this.terminal.cols, this.terminal.rows)`
@@ -1418,10 +1434,13 @@ this.filePickerProvider = typeof document !== 'undefined'
 // If window.electronCliApi exists, electron-cli module will override this
 ```
 
-In `handleTerminalResize()`, replace lines 353-358:
+In `handleTerminalResize()`, replace lines 353-358. **Keep the existing `isProgressRunning()` and `isRawModeActive()` checks** — only replace the `_activeInputRequest` part:
 ```typescript
-// OLD: if (this._activeInputRequest) return;
-// NEW:
+// Keep existing checks:
+if (this.isProgressRunning() || this.isRawModeActive()) {
+    return;
+}
+// Replace old _activeInputRequest check with mode delegation:
 const mode = this.currentMode;
 if (mode?.onResize) {
     mode.onResize(this.terminal.cols, this.terminal.rows);
@@ -1506,6 +1525,19 @@ Update all tests to assert on pushed modes rather than `activeInputRequest`. For
 
 Also add tests for `readDate` and `readFile`.
 
+**Important — migrate `onChange` callers:** The old 3-argument call `readSelect(prompt, options, onChange)` must change to `readSelect(prompt, options, { onChange })`. Grep for these in the test file and update:
+```bash
+grep -n 'readSelect.*onChange' packages/cli/src/tests/input-reader.spec.ts
+```
+Update any matches from `reader.readSelect(p, opts, fn)` → `reader.readSelect(p, opts, { onChange: fn })`.
+
+- [ ] **Step 2b: Verify no production callers use old 3-arg readSelect**
+
+```bash
+grep -rn 'readSelect.*,.*,\s*[^{]' packages/ --include='*.ts' | grep -v 'spec\.\|\.d\.'
+```
+Expected: No matches (only test files have the old pattern).
+
 - [ ] **Step 3: Run all cli tests**
 
 Run: `cd /home/nicolae/work/cli-workspace/web-cli && npx nx test cli`
@@ -1514,7 +1546,8 @@ Expected: PASS
 - [ ] **Step 4: Commit**
 
 ```bash
-git add -A packages/cli/src/
+git rm packages/cli/src/lib/input/reader-mode.ts packages/cli/src/tests/reader-mode.spec.ts
+git add packages/cli/src/tests/input-reader.spec.ts
 git commit -m "refactor(cli): delete ReaderMode, update tests for new mode architecture"
 ```
 
