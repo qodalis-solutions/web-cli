@@ -2,6 +2,10 @@ import {
     ICliInputReader,
     CliSelectOption,
     CliMultiSelectOption,
+    CliDateOptions,
+    CliFilePickerOptions,
+    CliFileResult,
+    CliSelectOptions,
 } from '@qodalis/cli-core';
 
 export type ActiveInputRequestType =
@@ -76,8 +80,9 @@ export class CliInputReader implements ICliInputReader {
     readSelect(
         prompt: string,
         options: CliSelectOption[],
-        onChange?: (value: string) => void,
+        selectOptions?: CliSelectOptions,
     ): Promise<string | null> {
+        const onChange = selectOptions?.onChange;
         if (!options || options.length === 0) {
             return Promise.reject(
                 new Error('readSelect requires at least one option'),
@@ -119,8 +124,9 @@ export class CliInputReader implements ICliInputReader {
     readSelectInline(
         prompt: string,
         options: CliSelectOption[],
-        onChange?: (value: string) => void,
+        selectOptions?: CliSelectOptions,
     ): Promise<string | null> {
+        const onChange = selectOptions?.onChange;
         if (!options || options.length === 0) {
             return Promise.reject(
                 new Error('readSelectInline requires at least one option'),
@@ -335,6 +341,16 @@ export class CliInputReader implements ICliInputReader {
         }
 
         return lines;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    readDate(_prompt: string, _options?: CliDateOptions): Promise<string | null> {
+        return Promise.resolve(null);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    readFile(_prompt: string, _options?: CliFilePickerOptions): Promise<CliFileResult[] | null> {
+        return Promise.resolve(null);
     }
 
     private createInputRequest(
