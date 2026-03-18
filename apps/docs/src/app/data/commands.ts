@@ -9,11 +9,6 @@ export const BUILT_IN_GROUPS: CommandGroup[] = [
         commands: [
             'eval',
             'json',
-            'base64',
-            'hash',
-            'hex',
-            'jwt',
-            'url',
             'diff',
             'color',
             'ping',
@@ -151,11 +146,6 @@ export const COMMAND_CATEGORIES: CommandCategory[] = [
         commands: [
             { command: 'eval', description: 'Evaluate a JavaScript expression', aliases: 'calc, js' },
             { command: 'json', description: 'Format, minify, or validate JSON' },
-            { command: 'base64', description: 'Encode or decode Base64 strings' },
-            { command: 'hash', description: 'Generate hash digests (sha256, sha512, md5, ...)' },
-            { command: 'hex', description: 'Hex encode/decode and number base conversions' },
-            { command: 'jwt', description: 'Decode and inspect JWT tokens' },
-            { command: 'url', description: 'Encode or decode URLs' },
             { command: 'diff', description: 'Show colored diff between two text inputs' },
             { command: 'color', description: 'Convert and preview colors (hex, rgb, hsl)', aliases: 'colour' },
             { command: 'ping', description: 'Send ICMP-like pings to a host' },
@@ -271,6 +261,19 @@ export const COMMAND_CATEGORIES: CommandCategory[] = [
             { command: 'su', description: 'Switch user' },
             { command: 'who', description: 'List logged-in users' },
             { command: 'id', description: 'Display user identity' },
+        ],
+    },
+    {
+        label: 'Encoding',
+        commands: [
+            { command: 'base64', description: 'Encode or decode Base64 strings', aliases: 'b64' },
+            { command: 'hex', description: 'Hex encode/decode and number base conversions' },
+            { command: 'url', description: 'Encode or decode URLs' },
+            { command: 'hash', description: 'Generate hash digests (sha256, sha512, sha384, sha1)' },
+            { command: 'jwt', description: 'Decode and inspect JWT tokens' },
+            { command: 'binary', description: 'Encode or decode binary strings', aliases: 'bin' },
+            { command: 'rot', description: 'Apply ROT cipher (letter rotation)' },
+            { command: 'morse', description: 'Encode or decode Morse code' },
         ],
     },
 ];
