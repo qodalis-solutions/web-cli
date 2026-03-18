@@ -7,7 +7,10 @@ export interface ElectronCliApi {
     // File dialogs
     showOpenDialog(options?: {
         accept?: string;
-    }): Promise<{ name: string; content: string } | null>;
+        multiple?: boolean;
+        directory?: boolean;
+        readAs?: 'text' | 'arraybuffer';
+    }): Promise<{ name: string; content: string | ArrayBuffer; path: string; size: number; type: string }[] | null>;
     showSaveDialog(
         filename: string,
         content: string,

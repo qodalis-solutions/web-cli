@@ -29,6 +29,7 @@ export { electronModule } from './lib/electron-module';
 // Individual services (for custom usage)
 export { ElectronFileTransferService } from './lib/services/electron-file-transfer.service';
 export { ElectronClipboardService } from './lib/services/electron-clipboard.service';
+export { ElectronFilePickerProvider } from './lib/services/electron-file-picker-provider';
 
 // Types
 export type { ElectronCliApi } from './lib/types';

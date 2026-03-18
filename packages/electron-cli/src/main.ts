@@ -44,7 +44,15 @@ export function registerElectronCliIpcHandlers(
 
     ipcMain.handle(
         'electron-cli:show-open-dialog',
-        async (_event, options?: { accept?: string }) => {
+        async (
+            _event,
+            options?: {
+                accept?: string;
+                multiple?: boolean;
+                directory?: boolean;
+                readAs?: 'text' | 'arraybuffer';
+            },
+        ) => {
             const win = BrowserWindow.getFocusedWindow();
             const filters: { name: string; extensions: string[] }[] = [];
             if (options?.accept) {
@@ -55,15 +63,39 @@ export function registerElectronCliIpcHandlers(
                         .map((ext) => ext.trim().replace(/^\./, '')),
                 });
             }
+
+            const properties: ('openFile' | 'openDirectory' | 'multiSelections')[] =
+                options?.directory ? ['openDirectory'] : ['openFile'];
+            if (options?.multiple && !options?.directory) {
+                properties.push('multiSelections');
+            }
+
             const result = await dialog.showOpenDialog(win!, {
-                properties: ['openFile'],
+                properties,
                 filters: filters.length > 0 ? filters : undefined,
             });
             if (result.canceled || result.filePaths.length === 0) return null;
 
-            const filePath = result.filePaths[0];
-            const content = fs.readFileSync(filePath, 'utf-8');
-            return { name: path.basename(filePath), content };
+            return result.filePaths.map((filePath) => {
+                const stat = fs.statSync(filePath);
+                let content: string | ArrayBuffer;
+                if (options?.readAs === 'arraybuffer') {
+                    const buf = fs.readFileSync(filePath);
+                    content = buf.buffer.slice(
+                        buf.byteOffset,
+                        buf.byteOffset + buf.byteLength,
+                    ) as ArrayBuffer;
+                } else {
+                    content = fs.readFileSync(filePath, 'utf-8');
+                }
+                return {
+                    name: path.basename(filePath),
+                    path: filePath,
+                    content,
+                    size: stat.size,
+                    type: 'application/octet-stream',
+                };
+            });
         },
     );
 
