@@ -5,8 +5,11 @@ import { InputModeBase } from './input-mode-base';
  * Options for NumberInputMode.
  */
 export interface NumberInputOptions {
+    /** Minimum allowed value (inclusive). Validation error shown if below. */
     min?: number;
+    /** Maximum allowed value (inclusive). Validation error shown if above. */
     max?: number;
+    /** Pre-filled default value. Used when Enter is pressed with an empty buffer. */
     default?: number;
 }
 
