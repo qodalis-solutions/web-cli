@@ -48,6 +48,12 @@ export class ElectronFileTransferService implements ICliFileTransferService {
     async uploadFromBrowser(
         accept?: string,
     ): Promise<{ name: string; content: string } | null> {
-        return this.api.showOpenDialog({ accept });
+        const results = await this.api.showOpenDialog({ accept });
+        if (!results || results.length === 0) return null;
+        const first = results[0];
+        return {
+            name: first.name,
+            content: typeof first.content === 'string' ? first.content : '',
+        };
     }
 }
