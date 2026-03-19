@@ -197,6 +197,36 @@ function wasmCommonPrefix(strings: string): string {
     }
 }
 
+// ── Tokenizer fallback for when WASM functions are not yet compiled ──
+
+const tokenizerFallback = new JsFallbackAccelerator();
+
+function wasmRegisterRuleSet(ruleSetId: string, rules: string): void {
+    const ptr0 = passStringToWasm0(ruleSetId, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(rules, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+    const len1 = WASM_VECTOR_LEN;
+    wasm.register_rule_set(ptr0, len0, ptr1, len1);
+}
+
+function wasmTokenizeLine(line: string, ruleSetId: string): string {
+    let d0: number, d1: number;
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passStringToWasm0(line, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(ruleSetId, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len1 = WASM_VECTOR_LEN;
+        wasm.tokenize_line(retptr, ptr0, len0, ptr1, len1);
+        d0 = getDataViewMemory0().getInt32(retptr + 0, true);
+        d1 = getDataViewMemory0().getInt32(retptr + 4, true);
+        return getStringFromWasm0(d0, d1);
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+        wasm.__wbindgen_export3(d0!, d1!, 1);
+    }
+}
+
 // ── WASM instantiation ─────────────────────────────────────────────
 
 async function instantiateWasm(wasmBytes: ArrayBuffer): Promise<void> {
@@ -247,6 +277,23 @@ function createWasmAccelerator(): ICliWasmAccelerator {
 
         commonPrefix(strings) {
             return wasmCommonPrefix(strings.join('\n'));
+        },
+
+        registerRuleSet(ruleSetId: string, rules: string): void {
+            // Delegate to WASM when available, otherwise JS fallback
+            try {
+                wasmRegisterRuleSet(ruleSetId, rules);
+            } catch {
+                tokenizerFallback.registerRuleSet(ruleSetId, rules);
+            }
+        },
+
+        tokenizeLine(line: string, ruleSetId: string): string {
+            try {
+                return wasmTokenizeLine(line, ruleSetId);
+            } catch {
+                return tokenizerFallback.tokenizeLine(line, ruleSetId);
+            }
         },
     };
 }
