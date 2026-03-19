@@ -22,4 +22,10 @@ export interface ICliWasmAccelerator {
 
     /** Longest common prefix of the given strings. */
     commonPrefix(strings: string[]): string;
+
+    /** Register a named rule set for syntax highlighting tokenization. */
+    registerRuleSet(ruleSetId: string, rules: string): void;
+
+    /** Tokenize a line using a previously registered rule set. Returns newline-separated "start,end,tokenType" entries. */
+    tokenizeLine(line: string, ruleSetId: string): string;
 }
