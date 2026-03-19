@@ -642,6 +642,8 @@ export * from './file-picker';
 // Permission service
 // ---------------------------------------------------------------------------
 
+export * from './syntax-highlighting';
+
 export const ICliPermissionService_TOKEN = 'cli-permission-service';
 
 import { ICliOwnership } from '../models/permissions';
