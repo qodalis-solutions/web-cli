@@ -1,6 +1,7 @@
 import { Observable } from 'rxjs';
 
-export const ICliDragDropService_TOKEN = 'cli-drag-drop-service';
+// Re-export from central tokens for backward compatibility
+export { ICliDragDropService_TOKEN } from '../tokens';
 
 export interface ICliDragDropService {
     /** Emits an array of dropped File objects each time files are dropped onto the terminal */

@@ -71,4 +71,12 @@ export class CliStateStore implements ICliStateStore {
             );
         }
     }
+
+    /**
+     * Complete the BehaviorSubject so all subscribers are notified
+     * and no further emissions occur. Called during engine teardown.
+     */
+    dispose(): void {
+        this.state$.complete();
+    }
 }

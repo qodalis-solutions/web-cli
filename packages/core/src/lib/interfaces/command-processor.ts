@@ -198,7 +198,7 @@ export interface ICliCommandProcessor {
     /**
      * Represents the state configuration for the command processor
      * @remarks The state configuration is used to store and retrieve state information for the command processor
-     * @remarks State confihuration is optional and can be used to store and retrieve state information for the command processor
+     * @remarks State configuration is optional and can be used to store and retrieve state information for the command processor
      * @remarks The state configuration is used only for root command processors and not for child command processors
      */
     stateConfiguration?: CliStateConfiguration;

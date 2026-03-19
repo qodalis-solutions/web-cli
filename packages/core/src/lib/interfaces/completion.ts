@@ -1,7 +1,5 @@
-/**
- * Token for registering completion providers via module services (multi: true).
- */
-export const ICliCompletionProvider_TOKEN = 'cli-completion-provider';
+// Re-export from central tokens for backward compatibility
+export { ICliCompletionProvider_TOKEN } from '../tokens';
 
 /**
  * Context passed to completion providers describing the current input state.

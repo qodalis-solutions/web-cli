@@ -35,5 +35,8 @@ export function savePanelPosition(position: CliPanelPosition): void {
  */
 export function nextPanelPosition(current: CliPanelPosition): CliPanelPosition {
     const index = POSITION_CYCLE.indexOf(current);
+    if (index === -1) {
+        return POSITION_CYCLE[0];
+    }
     return POSITION_CYCLE[(index + 1) % POSITION_CYCLE.length];
 }

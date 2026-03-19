@@ -119,7 +119,7 @@ export class CliAddUserCommandProcessor implements ICliCommandProcessor {
                 disabled,
             });
         } catch (e) {
-            console.error(e);
+            context.logger.error(e);
             context.writer.writeError(
                 e?.toString() || 'An error occurred while creating the user',
             );

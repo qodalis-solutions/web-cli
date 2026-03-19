@@ -5,6 +5,7 @@ import {
     CliServerResponse,
     CliServerCommandDescriptor,
     ICliBackgroundServiceRegistry,
+    ICliLogger,
 } from '@qodalis/cli-core';
 
 export class CliServerConnection {
@@ -18,6 +19,7 @@ export class CliServerConnection {
     constructor(
         private readonly _config: CliServerConfig,
         private readonly _backgroundServices?: ICliBackgroundServiceRegistry,
+        private readonly _logger?: ICliLogger,
     ) {}
 
     get config(): CliServerConfig {
@@ -42,7 +44,8 @@ export class CliServerConnection {
             this._connected = true;
             this._capabilities = await this.fetchCapabilities();
             this.connectEventSocket();
-        } catch {
+        } catch (e) {
+            this._logger?.warn(`Failed to connect to server "${this._config.name}": ${e}`);
             this._connected = false;
             this._commands = [];
             this._capabilities = null;
@@ -75,7 +78,8 @@ export class CliServerConnection {
             const response = await this.httpFetch(url);
             if (!response.ok) return null;
             return response.json();
-        } catch {
+        } catch (e) {
+            this._logger?.debug(`Failed to fetch capabilities for "${this._config.name}": ${e}`);
             return null;
         }
     }
@@ -109,7 +113,8 @@ export class CliServerConnection {
             const url = `${this.normalizeUrl(this._config.url)}/api/v1/qcli/version`;
             const response = await this.httpFetch(url);
             return response.ok;
-        } catch {
+        } catch (e) {
+            this._logger?.debug(`Ping failed for "${this._config.name}": ${e}`);
             return false;
         }
     }
@@ -164,10 +169,12 @@ export class CliServerConnection {
                 },
             });
 
-            this._backgroundServices.start(serviceName).catch(() => {
+            this._backgroundServices.start(serviceName).catch((e) => {
+                this._logger?.debug(`Background event service failed for "${this._config.name}", falling back to direct: ${e}`);
                 this.connectEventSocketDirect();
             });
-        } catch {
+        } catch (e) {
+            this._logger?.debug(`Failed to register event service for "${this._config.name}", falling back to direct: ${e}`);
             this.connectEventSocketDirect();
         }
     }
@@ -198,8 +205,8 @@ export class CliServerConnection {
             this._eventSocket.onerror = () => {
                 // onclose will fire after onerror
             };
-        } catch {
-            // WebSocket not available or URL invalid — fall back to no events
+        } catch (e) {
+            this._logger?.debug(`WebSocket not available for "${this._config.name}": ${e}`);
         }
     }
 

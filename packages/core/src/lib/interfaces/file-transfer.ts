@@ -8,10 +8,8 @@ export interface ICliFileEntry {
     modified: string;
 }
 
-/**
- * Token for the file transfer service.
- */
-export const ICliFileTransferService_TOKEN = 'cli-file-transfer-service';
+// Re-export from central tokens for backward compatibility
+export { ICliFileTransferService_TOKEN } from '../tokens';
 
 /**
  * Abstraction for file transfer operations.

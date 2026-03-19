@@ -57,4 +57,17 @@ export class CliStateStoreManager implements ICliStateStoreManager {
         });
         return entries;
     }
+
+    /**
+     * Dispose all stores (completes their BehaviorSubjects).
+     * Called during engine teardown.
+     */
+    dispose(): void {
+        this.stores.forEach((store) => {
+            if ((store as CliStateStore).dispose) {
+                (store as CliStateStore).dispose();
+            }
+        });
+        this.stores.clear();
+    }
 }

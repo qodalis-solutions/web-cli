@@ -1213,6 +1213,9 @@ describe('CapturingTerminalWriter stderr capture', () => {
             writeList: () => {},
             writeKeyValue: () => {},
             writeColumns: () => {},
+            writeLink: () => {},
+            writeBox: () => {},
+            writeIndented: () => {},
         } as ICliTerminalWriter;
     }
 

@@ -26,9 +26,10 @@ export class CliKeyValueStore implements ICliKeyValueStore {
                 resolve();
             };
 
-            request.onerror = (event) => {
-                console.error('Error initializing IndexedDB:', event);
-                reject();
+            request.onerror = () => {
+                reject(new Error(
+                    `Failed to open IndexedDB "${this.dbName}": ${request.error?.message ?? 'unknown error'}`,
+                ));
             };
         });
     }
@@ -52,13 +53,15 @@ export class CliKeyValueStore implements ICliKeyValueStore {
                     resolve(request.result as T);
                 };
 
-                request.onerror = (event) => {
-                    console.error('Error getting value:', event);
-                    reject(undefined);
+                request.onerror = () => {
+                    reject(new Error(
+                        `IndexedDB get("${key}") failed: ${request.error?.message ?? 'unknown error'}`,
+                    ));
                 };
             } catch (e) {
-                console.error('Error getting value:', e);
-                reject(undefined);
+                reject(new Error(
+                    `IndexedDB get("${key}") failed: ${e instanceof Error ? e.message : e}`,
+                ));
             }
         });
     }
@@ -80,9 +83,10 @@ export class CliKeyValueStore implements ICliKeyValueStore {
 
             request.onsuccess = () => resolve();
 
-            request.onerror = (event) => {
-                console.error('Error setting value:', event);
-                reject();
+            request.onerror = () => {
+                reject(new Error(
+                    `IndexedDB set("${key}") failed: ${request.error?.message ?? 'unknown error'}`,
+                ));
             };
         });
     }
@@ -103,9 +107,10 @@ export class CliKeyValueStore implements ICliKeyValueStore {
 
             request.onsuccess = () => resolve();
 
-            request.onerror = (event) => {
-                console.error('Error removing value:', event);
-                reject();
+            request.onerror = () => {
+                reject(new Error(
+                    `IndexedDB remove("${key}") failed: ${request.error?.message ?? 'unknown error'}`,
+                ));
             };
         });
     }
@@ -125,9 +130,10 @@ export class CliKeyValueStore implements ICliKeyValueStore {
 
             request.onsuccess = () => resolve();
 
-            request.onerror = (event) => {
-                console.error('Error clearing store:', event);
-                reject();
+            request.onerror = () => {
+                reject(new Error(
+                    `IndexedDB clear() failed: ${request.error?.message ?? 'unknown error'}`,
+                ));
             };
         });
     }

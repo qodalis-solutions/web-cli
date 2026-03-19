@@ -2,7 +2,7 @@ import {
     CliWorkerInboundMessage,
     CliWorkerOutboundMessage,
 } from '../interfaces/worker-protocol';
-import { ICliServiceEvent } from '../interfaces/background-service';
+import { ICliServiceEvent, CliServiceLogLevel } from '../interfaces/background-service';
 import { ICliManagedInterval, ICliManagedTimer } from '../interfaces/execution-context';
 
 /**
@@ -12,7 +12,7 @@ export interface WorkerServiceContext {
     /** Emit an event to the main thread */
     emit(event: Omit<ICliServiceEvent, 'timestamp'>): void;
     /** Log a message (forwarded to the main-thread log buffer) */
-    log(message: string, level?: 'info' | 'warn' | 'error'): void;
+    log(message: string, level?: CliServiceLogLevel): void;
     /** Update state on the main thread */
     updateState(patch: Record<string, unknown>): void;
     /** Create an interval that is auto-cleared on stop */

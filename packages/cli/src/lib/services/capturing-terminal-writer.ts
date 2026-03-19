@@ -2,19 +2,8 @@ import {
     CliBackgroundColor,
     CliForegroundColor,
     ICliTerminalWriter,
+    stripAnsi,
 } from '@qodalis/cli-core';
-
-/**
- * Regex that matches ANSI SGR escape sequences (colors, bold, reset, etc.)
- */
-const ANSI_RE = /\x1b\[[0-9;]*m/g;
-
-/**
- * Strip ANSI escape codes from a string so downstream commands receive clean text.
- */
-function stripAnsi(text: string): string {
-    return text.replace(ANSI_RE, '');
-}
 
 /**
  * A terminal writer wrapper that captures "stdout-equivalent" output
@@ -138,6 +127,29 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
         options?: { columns?: number; padding?: number },
     ): void {
         this.inner.writeColumns(items, options);
+    }
+
+    writeLink(text: string, url: string): void {
+        this._lines.push(stripAnsi(text));
+        this.inner.writeLink(text, url);
+    }
+
+    writeBox(
+        content: string | string[],
+        options?: {
+            title?: string;
+            borderColor?: CliForegroundColor;
+            padding?: number;
+        },
+    ): void {
+        const lines = Array.isArray(content) ? content : [content];
+        lines.forEach((l) => this._lines.push(stripAnsi(l)));
+        this.inner.writeBox(content, options);
+    }
+
+    writeIndented(text: string, level?: number): void {
+        this._lines.push(stripAnsi(text));
+        this.inner.writeIndented(text, level);
     }
 
     // -- captured data accessors ---------------------------------------------

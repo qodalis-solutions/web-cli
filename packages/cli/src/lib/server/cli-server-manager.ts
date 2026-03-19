@@ -2,6 +2,7 @@ import {
     CliServerConfig,
     ICliBackgroundServiceRegistry,
     ICliCommandProcessorRegistry,
+    ICliLogger,
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
 import { CliServerProxyProcessor } from './cli-server-proxy-processor';
@@ -15,6 +16,7 @@ export const CliServerManager_TOKEN = 'cli-server-manager';
 export class CliServerManager implements DefaultServerProvider {
     readonly connections = new Map<string, CliServerConnection>();
     private _logger?: { warn(msg: string): void; info(msg: string): void };
+    private _cliLogger?: ICliLogger;
     private _defaultServer: string | null = null;
     private _backgroundServices?: ICliBackgroundServiceRegistry;
 
@@ -38,14 +40,16 @@ export class CliServerManager implements DefaultServerProvider {
         servers: CliServerConfig[],
         logger?: { warn(msg: string): void; info(msg: string): void },
         backgroundServices?: ICliBackgroundServiceRegistry,
+        cliLogger?: ICliLogger,
     ): Promise<void> {
         this._logger = logger;
+        this._cliLogger = cliLogger;
         this._backgroundServices = backgroundServices;
 
         for (const config of servers) {
             if (config.enabled === false) continue;
 
-            const connection = new CliServerConnection(config, backgroundServices);
+            const connection = new CliServerConnection(config, backgroundServices, cliLogger);
             this.connections.set(config.name, connection);
 
             connection.onDisconnect = () => {

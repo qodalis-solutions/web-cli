@@ -12,7 +12,7 @@ import {
     satisfiesMinVersion,
 } from '../lib';
 import { CliBackgroundColor, CliForegroundColor } from '../lib/models';
-import { CancellablePromise } from '../lib/types/CancellablePromise';
+import { CancellablePromise, CANCELLATION_ERROR_MESSAGE } from '../lib/types/CancellablePromise';
 import { CliModuleRegistry } from '../lib/modules/cli-module-registry';
 import { ICliModule } from '../lib/interfaces';
 
@@ -439,7 +439,7 @@ describe('CancellablePromise', () => {
 
         await promise.then(
             () => fail('should have been cancelled'),
-            (err) => expect(err.message).toBe('Promise cancelled'),
+            (err) => expect(err.message).toBe(CANCELLATION_ERROR_MESSAGE),
         );
     });
 

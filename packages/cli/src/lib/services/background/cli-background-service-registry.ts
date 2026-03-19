@@ -191,11 +191,11 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
         await this.start(name);
     }
 
-    startJob(
+    async startJob(
         name: string,
         task: (context: ICliServiceContext) => Promise<void>,
         _options?: { workerCompatible?: boolean },
-    ): void {
+    ): Promise<void> {
         const jobService: ICliBackgroundService = {
             name,
             type: 'job',
@@ -286,7 +286,7 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
                         }
                     }
                 } catch {
-                    // Best effort during teardown
+                    // Best-effort during teardown — service may already be stopped or broken
                 }
                 entry.status = 'stopped';
                 entry.stoppedAt = new Date();
@@ -388,7 +388,7 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
             try {
                 handler(eventWithTimestamp);
             } catch {
-                // Don't let a handler error break event dispatch
+                // Don't let a faulty event handler break dispatch to other listeners
             }
         }
 

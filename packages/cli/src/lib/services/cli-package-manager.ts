@@ -7,6 +7,12 @@ export class CliPackageManagerService {
 
     private store!: ICliKeyValueStore;
 
+    /** In-memory cache; `null` means "not yet loaded from storage". */
+    private cache: Package[] | null = null;
+
+    /** Whether the one-time localStorage migration has been checked. */
+    private migrationDone = false;
+
     constructor() {}
 
     /**
@@ -17,19 +23,31 @@ export class CliPackageManagerService {
     }
 
     /**
-     * Retrieves the list of packages
-     * @returns {Package[]} Array of packages
+     * Retrieves the list of packages.
+     * Uses an in-memory cache after the first load.
      */
     async getPackages(): Promise<Package[]> {
-        const oldPackages = localStorage.getItem('cliPackages');
-        if (oldPackages) {
-            localStorage.removeItem('cliPackages');
-            await this.store.set(this.storageKey, JSON.parse(oldPackages));
+        if (this.cache !== null) {
+            return this.cache;
+        }
+
+        // One-time migration from old localStorage key
+        if (!this.migrationDone) {
+            this.migrationDone = true;
+            try {
+                const oldPackages = localStorage.getItem('cliPackages');
+                if (oldPackages) {
+                    localStorage.removeItem('cliPackages');
+                    await this.store.set(this.storageKey, JSON.parse(oldPackages));
+                }
+            } catch {
+                // localStorage unavailable — skip migration
+            }
         }
 
         const packages = await this.store.get<Package[]>(this.storageKey);
-
-        return packages ? packages : [];
+        this.cache = packages ?? [];
+        return this.cache;
     }
 
     /**
@@ -85,7 +103,7 @@ export class CliPackageManagerService {
             throw new Error(`Package with name "${packageName}" not found.`);
         }
 
-        this.savePackages(updatedPackages);
+        await this.savePackages(updatedPackages);
 
         return packageToRemove!;
     }
@@ -104,6 +122,7 @@ export class CliPackageManagerService {
     }
 
     private async savePackages(packages: Package[]): Promise<void> {
+        this.cache = packages;
         await this.store.set(this.storageKey, packages);
     }
 }

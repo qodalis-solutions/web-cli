@@ -108,9 +108,13 @@ export class CliExecutionContext
 
     private readonly modeStack: IInputMode[] = [];
 
+    private readonly stateStoreManager: CliStateStoreManager;
+
     private readonly managedTimers = new Set<{ clear(): void }>();
 
     private resizeDisposable: { dispose(): void } | null = null;
+
+    private windowKeydownListener?: (e: KeyboardEvent) => void;
 
     constructor(
         deps: CliExecutionContextDeps,
@@ -123,8 +127,8 @@ export class CliExecutionContext
         this.translator = deps.translator;
 
         //initialize state store
-        const stateStoreManager = deps.stateStoreManager;
-        this.state = stateStoreManager.getStateStore('shared');
+        this.stateStoreManager = deps.stateStoreManager;
+        this.state = this.stateStoreManager.getStateStore('shared');
 
         this.options = cliOptions;
         this.writer = new CliTerminalWriter(terminal);
@@ -222,7 +226,7 @@ export class CliExecutionContext
         // Note: Ctrl+W cannot be intercepted (browser closes tab before JS runs).
         const termEl = this.terminal.element;
         if (termEl) {
-            window.addEventListener('keydown', (event) => {
+            this.windowKeydownListener = (event: KeyboardEvent) => {
                 if (!termEl.contains(document.activeElement)) return;
                 if (event.ctrlKey && !event.altKey && !event.metaKey) {
                     const key = event.key.toLowerCase();
@@ -230,7 +234,8 @@ export class CliExecutionContext
                         event.preventDefault();
                     }
                 }
-            }, true);
+            };
+            window.addEventListener('keydown', this.windowKeydownListener, true);
         }
     }
 
@@ -527,6 +532,13 @@ export class CliExecutionContext
         this.clearAllManagedTimers();
         this.resizeDisposable?.dispose();
         this.resizeDisposable = null;
+
+        if (this.windowKeydownListener) {
+            window.removeEventListener('keydown', this.windowKeydownListener, true);
+            this.windowKeydownListener = undefined;
+        }
+
+        this.stateStoreManager.dispose();
     }
 
     // -- Mode stack management --
