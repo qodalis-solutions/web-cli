@@ -9,6 +9,10 @@ import {
 } from '@qodalis/cli-core';
 import { NanoEditorBuffer } from '../../editor/nano-editor-buffer';
 import { NanoEditorRenderer } from '../../editor/nano-editor-renderer';
+import { SyntaxHighlightEngine } from '../../editor/syntax/engine';
+import { SyntaxHighlighterRegistry } from '../../editor/syntax/registry';
+import { defaultSyntaxTheme } from '../../editor/syntax/theme';
+import { getAccelerator } from '../../wasm';
 
 /** Token string for IFileSystemService — avoid hard dependency on files plugin. */
 const FS_TOKEN = 'cli-file-system-service';
@@ -121,6 +125,9 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
         } else {
             this.filePath = null;
         }
+
+        // Set up syntax highlighting
+        this.setupHighlighting(this.filePath);
 
         // Enter full-screen editor mode
         context.enterFullScreenMode(this);
@@ -284,6 +291,7 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
         // Ctrl+K — Cut line
         if (data === '\x0B') {
             this.buffer.deleteLine();
+            this.renderer.highlightEngine?.invalidate(this.buffer.cursorRow);
             this.render();
             return;
         }
@@ -291,6 +299,7 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
         // Ctrl+U — Uncut (paste)
         if (data === '\x15') {
             if (this.buffer.uncutLines()) {
+                this.renderer.highlightEngine?.invalidate(this.buffer.cursorRow);
                 this.render();
             } else {
                 this.showStatus('Clipboard is empty');
@@ -373,13 +382,18 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
         // Enter
         if (data === '\r') {
             this.buffer.insertNewline();
+            this.renderer.highlightEngine?.invalidate(this.buffer.cursorRow - 1);
             this.render();
             return;
         }
 
         // Backspace
         if (data === '\x7F') {
+            const wasMerge = this.buffer.cursorCol === 0 && this.buffer.cursorRow > 0;
             this.buffer.deleteCharBefore();
+            if (wasMerge) {
+                this.renderer.highlightEngine?.invalidate(this.buffer.cursorRow);
+            }
             this.render();
             return;
         }
@@ -486,6 +500,33 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
         writer.writeln(
             `  ${writer.wrapInColor('^Y', CliForegroundColor.Yellow)}  Page Up           ${writer.wrapInColor('^V', CliForegroundColor.Yellow)}  Page Down`,
         );
+    }
+
+    // ── Syntax highlighting ──
+
+    private setupHighlighting(filePath: string | null): void {
+        if (!filePath) {
+            this.renderer.highlightEngine = undefined;
+            return;
+        }
+        try {
+            const registry = this.context.services.get<SyntaxHighlighterRegistry>(
+                'syntax-highlighter-registry'
+            );
+            const ext = '.' + filePath.split('.').pop()?.toLowerCase();
+            const highlighter = registry.getByExtension(ext);
+            if (highlighter) {
+                this.renderer.highlightEngine = new SyntaxHighlightEngine(
+                    highlighter,
+                    defaultSyntaxTheme,
+                    getAccelerator(),
+                );
+            } else {
+                this.renderer.highlightEngine = undefined;
+            }
+        } catch {
+            this.renderer.highlightEngine = undefined;
+        }
     }
 
     // ── Rendering helpers ──

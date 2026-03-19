@@ -18,6 +18,8 @@ import {
     ICliCompletionProvider_TOKEN,
     ICliTranslationService_TOKEN,
 } from '@qodalis/cli-core';
+import { SyntaxHighlighterRegistry } from '../editor/syntax/registry';
+import { JsonHighlighter, HtmlHighlighter, MarkdownHighlighter, YamlHighlighter } from '../editor/syntax/highlighters';
 import { CliCommandExecutor } from '../executor/cli-command-executor';
 import { CliCommandProcessorRegistry } from '../registry/cli-command-processor-registry';
 import { CliExecutionContext } from '../context/cli-execution-context';
@@ -198,6 +200,14 @@ export class CliEngine {
                 },
             ]);
         }
+
+        // Register syntax highlighter registry with built-in languages
+        const syntaxRegistry = new SyntaxHighlighterRegistry();
+        syntaxRegistry.register(new JsonHighlighter());
+        syntaxRegistry.register(new HtmlHighlighter());
+        syntaxRegistry.register(new MarkdownHighlighter());
+        syntaxRegistry.register(new YamlHighlighter());
+        services.set([{ provide: 'syntax-highlighter-registry', useValue: syntaxRegistry }]);
 
         if (!pendingTokens.has(ICliEnvironment_TOKEN)) {
             services.set([
