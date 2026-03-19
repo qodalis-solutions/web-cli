@@ -197,10 +197,6 @@ function wasmCommonPrefix(strings: string): string {
     }
 }
 
-// ── Tokenizer fallback for when WASM functions are not yet compiled ──
-
-const tokenizerFallback = new JsFallbackAccelerator();
-
 function wasmRegisterRuleSet(ruleSetId: string, rules: string): void {
     const ptr0 = passStringToWasm0(ruleSetId, wasm.__wbindgen_export, wasm.__wbindgen_export2);
     const len0 = WASM_VECTOR_LEN;
@@ -280,20 +276,11 @@ function createWasmAccelerator(): ICliWasmAccelerator {
         },
 
         registerRuleSet(ruleSetId: string, rules: string): void {
-            // Delegate to WASM when available, otherwise JS fallback
-            try {
-                wasmRegisterRuleSet(ruleSetId, rules);
-            } catch {
-                tokenizerFallback.registerRuleSet(ruleSetId, rules);
-            }
+            wasmRegisterRuleSet(ruleSetId, rules);
         },
 
         tokenizeLine(line: string, ruleSetId: string): string {
-            try {
-                return wasmTokenizeLine(line, ruleSetId);
-            } catch {
-                return tokenizerFallback.tokenizeLine(line, ruleSetId);
-            }
+            return wasmTokenizeLine(line, ruleSetId);
         },
     };
 }
