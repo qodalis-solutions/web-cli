@@ -1,4 +1,7 @@
 use wasm_bindgen::prelude::*;
+use regex::Regex;
+use std::cell::RefCell;
+use std::collections::HashMap;
 
 /// Boyer-Moore-Horspool text search across newline-separated text.
 /// Returns [row, col] of first match from (start_row, start_col), or [-1, -1].
@@ -190,6 +193,102 @@ pub fn common_prefix(strings: &str) -> String {
     }
 
     items[0][..len].to_string()
+}
+
+// ── Syntax highlighting tokenizer ────────────────────────────────────
+
+struct CompiledRule {
+    pattern: Regex,
+    token_type: String,
+    capture_group: usize,
+}
+
+thread_local! {
+    static RULE_SETS: RefCell<HashMap<String, Vec<CompiledRule>>> = RefCell::new(HashMap::new());
+}
+
+#[wasm_bindgen]
+pub fn register_rule_set(rule_set_id: &str, rules: &str) {
+    let mut compiled = Vec::new();
+    for line in rules.split('\n') {
+        if line.is_empty() { continue; }
+        let parts: Vec<&str> = line.split('\t').collect();
+        if parts.len() < 2 { continue; }
+        match Regex::new(parts[0]) {
+            Ok(re) => {
+                let cg = if parts.len() > 2 {
+                    parts[2].parse::<usize>().unwrap_or(0)
+                } else {
+                    0
+                };
+                compiled.push(CompiledRule {
+                    pattern: re,
+                    token_type: parts[1].to_string(),
+                    capture_group: cg,
+                });
+            }
+            Err(_) => {} // skip invalid regex
+        }
+    }
+    RULE_SETS.with(|rs| {
+        rs.borrow_mut().insert(rule_set_id.to_string(), compiled);
+    });
+}
+
+#[wasm_bindgen]
+pub fn tokenize_line(line: &str, rule_set_id: &str) -> String {
+    RULE_SETS.with(|rs| {
+        let sets = rs.borrow();
+        let rules = match sets.get(rule_set_id) {
+            Some(r) => r,
+            None => return String::new(),
+        };
+
+        if line.is_empty() || rules.is_empty() {
+            return String::new();
+        }
+
+        let mut tokens: Vec<String> = Vec::new();
+        let mut pos = 0;
+        let line_len = line.len();
+
+        while pos < line_len {
+            let mut found = false;
+            for rule in rules.iter() {
+                if let Some(m) = rule.pattern.find_at(line, pos) {
+                    let (start, end) = if rule.capture_group > 0 {
+                        if let Some(caps) = rule.pattern.captures_at(line, pos) {
+                            if let Some(group) = caps.get(rule.capture_group) {
+                                (group.start(), group.end())
+                            } else {
+                                (m.start(), m.end())
+                            }
+                        } else {
+                            (m.start(), m.end())
+                        }
+                    } else {
+                        (m.start(), m.end())
+                    };
+
+                    if m.end() > pos {
+                        tokens.push(format!("{},{},{}", start, end, rule.token_type));
+                        pos = m.end();
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if !found {
+                pos += 1;
+                // Advance past multi-byte UTF-8 characters
+                while pos < line_len && !line.is_char_boundary(pos) {
+                    pos += 1;
+                }
+            }
+        }
+
+        tokens.join("\n")
+    })
 }
 
 /// Boyer-Moore-Horspool search within a single haystack.
