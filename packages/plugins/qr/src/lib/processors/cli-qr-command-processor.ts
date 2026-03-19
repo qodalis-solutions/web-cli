@@ -4,7 +4,9 @@ import {
     CliProcessorMetadata,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
+    ICliConfigurationOption,
     ICliExecutionContext,
+    getPluginConfigValue,
 } from '@qodalis/cli-core';
 import QRCodeStyling from 'qr-code-styling';
 import { LIBRARY_VERSION } from '../version';
@@ -25,6 +27,31 @@ export class CliQrCommandProcessor implements ICliCommandProcessor {
         requiredCoreVersion: '>=2.0.0 <3.0.0',
         requiredCliVersion: '>=2.0.0 <3.0.0',
     };
+
+    configurationOptions?: ICliConfigurationOption[] = [
+        {
+            key: 'defaultWidth',
+            label: 'Default Width',
+            description: 'Default QR code width in pixels',
+            type: 'number',
+            defaultValue: 300,
+            validator: (v) => ({
+                valid: typeof v === 'number' && v >= 50 && v <= 2000,
+                message: 'Must be between 50 and 2000',
+            }),
+        },
+        {
+            key: 'defaultHeight',
+            label: 'Default Height',
+            description: 'Default QR code height in pixels',
+            type: 'number',
+            defaultValue: 300,
+            validator: (v) => ({
+                valid: typeof v === 'number' && v >= 50 && v <= 2000,
+                message: 'Must be between 50 and 2000',
+            }),
+        },
+    ];
 
     constructor() {
         this.processors = [
@@ -57,11 +84,13 @@ export class CliQrCommandProcessor implements ICliCommandProcessor {
                     }
 
                     const fileName = command.args['fileName'] || 'qr-code';
+                    const width = command.args['width'] ?? getPluginConfigValue(context, 'qr', 'defaultWidth', 300);
+                    const height = command.args['height'] ?? getPluginConfigValue(context, 'qr', 'defaultHeight', 300);
 
                     try {
                         const qrCode = new QRCodeStyling({
-                            width: 300,
-                            height: 300,
+                            width,
+                            height,
                             data: text,
                             type: 'svg',
                         });

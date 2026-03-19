@@ -4,7 +4,9 @@ import {
     CliProcessorMetadata,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
+    ICliConfigurationOption,
     ICliExecutionContext,
+    getPluginConfigValue,
 } from '@qodalis/cli-core';
 import {
     generateGUID,
@@ -43,6 +45,24 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
         icon: '🆔',
         module: 'guid',
     };
+
+    configurationOptions?: ICliConfigurationOption[] = [
+        {
+            key: 'defaultFormat',
+            label: 'Default Format',
+            description: 'Default output format for generated UUIDs',
+            type: 'select',
+            defaultValue: 'default',
+            options: GUID_FORMATS.map((f) => ({ label: f, value: f })),
+        },
+        {
+            key: 'autoCopy',
+            label: 'Auto-Copy to Clipboard',
+            description: 'Automatically copy generated UUIDs to clipboard',
+            type: 'boolean',
+            defaultValue: false,
+        },
+    ];
 
     constructor() {
         this.processors = [
@@ -91,8 +111,11 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
                         return;
                     }
 
+                    const cfgFormat = getPluginConfigValue(context, 'guid', 'defaultFormat', 'default');
+                    const cfgAutoCopy = getPluginConfigValue(context, 'guid', 'autoCopy', false);
+
                     const format = (command.args['format'] ||
-                        'default') as GuidFormat;
+                        cfgFormat) as GuidFormat;
 
                     if (!GUID_FORMATS.includes(format)) {
                         context.writer.writeError(
@@ -102,7 +125,9 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
                     }
 
                     const copyToClipboard =
-                        command.args['copy'] || command.args['c'];
+                        command.args['copy'] != null ? !!command.args['copy']
+                        : command.args['c'] != null ? !!command.args['c']
+                        : cfgAutoCopy;
 
                     const items: string[] = [];
 
