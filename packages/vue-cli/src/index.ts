@@ -1,4 +1,5 @@
 export { Cli } from './Cli';
+export type { CliProps } from './Cli';
 export { CliPanel } from './CliPanel';
 export type { CliPanelOptions } from './CliPanel';
 export { CliProvider } from './CliProvider';

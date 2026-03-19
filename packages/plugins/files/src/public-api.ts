@@ -4,7 +4,7 @@
 
 export * from './lib/index';
 
-import { ICliModule, ICliCompletionProvider_TOKEN, ICliFileTransferService_TOKEN, ICliDragDropService, ICliDragDropService_TOKEN, ICliExecutionContext } from '@qodalis/cli-core';
+import { ICliModule, ICliConfigurableModule, ICliCompletionProvider_TOKEN, ICliFileTransferService_TOKEN, ICliDragDropService, ICliDragDropService_TOKEN, ICliExecutionContext } from '@qodalis/cli-core';
 import { Subscription } from 'rxjs';
 import { API_VERSION } from './lib/version';
 import { IFileSystemService_TOKEN } from './lib/interfaces';
@@ -60,8 +60,9 @@ export interface CliFilesModuleConfig {
     showPathInPrompt?: boolean;
 }
 
-interface ICliFilesModule extends ICliModule {
-    configure(config: CliFilesModuleConfig): ICliModule;
+interface ICliFilesModule extends ICliConfigurableModule<CliFilesModuleConfig> {
+    /** Subscription for drag-and-drop file uploads, cleaned up in onDestroy */
+    _dragDropSubscription?: Subscription;
 }
 
 const fsService = new IndexedDbFileSystemService();
@@ -162,7 +163,7 @@ export const filesModule: ICliFilesModule = {
         }
 
         if (dragDrop) {
-            (this as any)._dragDropSubscription = dragDrop.onFileDrop.subscribe((files) => {
+            this._dragDropSubscription = dragDrop.onFileDrop.subscribe((files) => {
                 files.forEach((file) => {
                     const reader = new FileReader();
                     reader.onload = async () => {
@@ -189,8 +190,8 @@ export const filesModule: ICliFilesModule = {
     },
 
     async onDestroy(_context: ICliExecutionContext): Promise<void> {
-        const sub: Subscription | undefined = (this as any)._dragDropSubscription;
+        const sub: Subscription | undefined = this._dragDropSubscription;
         sub?.unsubscribe();
-        (this as any)._dragDropSubscription = undefined;
+        this._dragDropSubscription = undefined;
     },
 };

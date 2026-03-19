@@ -12,6 +12,19 @@ import { CliEngine, CliEngineOptions } from '@qodalis/cli';
 import { CliInjectionKey } from './cliInjection';
 import { CliConfigKey } from './CliConfigProvider';
 
+/**
+ * Props accepted by the Vue `Cli` component.
+ */
+export interface CliProps {
+    modules?: ICliModule[];
+    processors?: ICliCommandProcessor[];
+    options?: CliEngineOptions;
+    services?: Record<string, any>;
+    snapshot?: CliEngineSnapshot;
+    style?: Record<string, string>;
+    class?: string;
+}
+
 export const Cli = defineComponent({
     name: 'Cli',
     props: {

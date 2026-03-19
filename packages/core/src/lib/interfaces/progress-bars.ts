@@ -39,9 +39,9 @@ export type CliPercentageProgressBarUpdateValueOptions = {
  */
 export interface ICliPercentageProgressBar extends ICliProgressBar {
     /**
-     * Update the progress of the progress bar
-     * @param progress The progress to update to
-     * @returns void
+     * Update the progress of the progress bar.
+     * @param progress The progress value (0–100). Values outside this range are clamped.
+     * @param options Optional: update type ('replace' or 'increment')
      */
     update: (
         progress: number,
@@ -77,9 +77,9 @@ export type CliTextAnimatorOptions = {
 export interface ICliTextAnimator extends ICliProgressBar {
     /**
      * Show animated text in a typing and erasing effect.
-     * @param text
-     * @param options
-     * @returns
+     * @param text The text to animate
+     * @param options Optional: speed (ms per character), removeAfterTyping
+     * @returns A promise that resolves when the animation completes
      */
     showText: (text: string, options?: CliTextAnimatorOptions) => Promise<void>;
 }

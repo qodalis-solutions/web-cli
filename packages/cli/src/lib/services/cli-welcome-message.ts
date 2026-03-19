@@ -78,10 +78,31 @@ export const welcomeModule: ICliWelcomeModule = {
 
         recordWelcomeMessageDisplay();
         context.showPrompt();
-        await context.textAnimator?.showText(getGreetingBasedOnTime(), {
-            speed: 60,
-            removeAfterTyping: true,
-        });
+
+        // Check if animated greeting is disabled via configure
+        let showGreeting = true;
+        try {
+            const storeManager = context.services.get<ICliStateStoreManager>(
+                CliStateStoreManager_TOKEN,
+            );
+            const configureStore = storeManager.getStateStore(
+                CLI_CONFIGURE_STORE_NAME,
+            );
+            await configureStore.initialize();
+            const configState = configureStore.getState<Record<string, any>>();
+            if (configState?.['system']?.['greeting'] === false) {
+                showGreeting = false;
+            }
+        } catch {
+            // Configure store not available — show greeting by default
+        }
+
+        if (showGreeting) {
+            await context.textAnimator?.showText(getGreetingBasedOnTime(), {
+                speed: 60,
+                removeAfterTyping: true,
+            });
+        }
     },
 };
 

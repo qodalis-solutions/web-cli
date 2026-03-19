@@ -14,7 +14,7 @@ interface ThemeLike {
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-    const m = /^#?([0-9A-Fa-f]{6})$/.exec(hex);
+    const m = /^#?([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$/.exec(hex);
     if (!m) return null;
     const n = parseInt(m[1], 16);
     return { r: (n >> 16) & 0xff, g: (n >> 8) & 0xff, b: n & 0xff };
@@ -35,14 +35,21 @@ function hexToRgba(hex: string, alpha: number): string {
     return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
 }
 
+/** Default dark background when no theme background is set */
+const DEFAULT_BG = '#111827';
+/** Default foreground when no theme foreground is set */
+const DEFAULT_FG = '#ffffff';
+/** Default accent color when no theme cyan/blue/magenta is set */
+const DEFAULT_ACCENT = '#818cf8';
+
 /**
  * Derive CSS custom properties for the CLI panel from the active xterm theme.
  * Returns a record of property name → value that can be applied as inline styles.
  */
 export function derivePanelThemeStyles(theme: ThemeLike): Record<string, string> {
-    const bg = theme.background || '#111827';
-    const fg = theme.foreground || '#ffffff';
-    const accent = theme.cyan || theme.blue || theme.magenta || '#818cf8';
+    const bg = theme.background || DEFAULT_BG;
+    const fg = theme.foreground || DEFAULT_FG;
+    const accent = theme.cyan || theme.blue || theme.magenta || DEFAULT_ACCENT;
 
     return {
         '--cli-panel-bg': bg,

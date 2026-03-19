@@ -7,7 +7,10 @@ export type CliProcessCommand = {
     command: string;
 
     /**
-     * The data that was entered
+     * Pipeline data passed from the previous command in a pipe chain.
+     * When commands are piped (e.g. `cmd1 | cmd2`), the output of `cmd1`
+     * is captured and passed here as input to `cmd2`. The shape depends
+     * on what the upstream command produced (string, JSON object, array, etc.).
      */
     data?: any;
 
@@ -141,7 +144,7 @@ export enum CliIcon {
     Server = '🖥', // Server or host
     Cloud = '☁', // Cloud or remote
     Network = '🌐', // Network or connection
-    Monitor = '🖥', // Monitor or display
+    Monitor = '📺', // Monitor or display
     Printer = '🖨', // Printer or output
     USB = '🔌', // USB or connection
     Speaker = '🔊', // Speaker or audio
@@ -153,16 +156,16 @@ export enum CliIcon {
 
     // Development and Evaluation
     Package = '📦', // Package or bundle
-    Plugin = '🔌', // Plugin or extension
-    Extension = '🧩', // Extension or component
-    Module = '📦', // Module or package
+    Plugin = '🧩', // Plugin or extension
+    Extension = '🔌', // Extension or connection
+    Module = '🧱', // Module or package
     Evaluate = '🔍', // Evaluate or search
-    Variable = '🔧', // Variable or setting
+    Variable = '𝑥', // Variable or setting
     Script = '📜', // Script or code
-    Code = '💾', // Code or file
+    Code = '📝', // Code or file
 
     // Status and Completion
-    Logs = '📜', // Logs or history
+    Logs = '📋', // Logs or history
     Power = '⏻', // On/Off state
     Heart = '❤', // Love or favorite
     Flame = '🔥', // Trending or hot
@@ -257,6 +260,15 @@ export type CliOptions = Record<string, any> & {
      * Commands from each server are discovered and registered as proxy processors.
      */
     servers?: CliServerConfig[];
+
+    /**
+     * Whether the `eval` / `js` / `calc` command is enabled.
+     * Disabled by default because it runs arbitrary JavaScript via `eval()`
+     * in the host page context — a security risk in multi-tenant or
+     * user-facing deployments.
+     * @default false
+     */
+    allowEval?: boolean;
 };
 
 /**
@@ -439,11 +451,18 @@ export type CliState = Record<string, any>;
 
 /**
  * Position of the CLI panel relative to the viewport edge.
+ * - `'bottom'` — anchored to the bottom (default)
+ * - `'top'` — anchored to the top
+ * - `'left'` — anchored to the left (vertical layout)
+ * - `'right'` — anchored to the right (vertical layout)
  */
 export type CliPanelPosition = 'bottom' | 'top' | 'left' | 'right';
 
 /**
  * Alignment of the hidden-mode tab along its viewport edge.
+ * - `'start'` — left for horizontal panels, top for vertical panels
+ * - `'center'` — centered along the edge (default)
+ * - `'end'` — right for horizontal panels, bottom for vertical panels
  */
 export type CliPanelHideAlignment = 'start' | 'center' | 'end';
 

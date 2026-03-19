@@ -25,6 +25,14 @@ export class CliEvalCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
+        if (!context.options?.allowEval) {
+            context.writer.writeError(
+                'eval is disabled by default for security. Set allowEval: true in CliOptions to enable it.',
+            );
+            context.process.exit(1, { silent: true });
+            return;
+        }
+
         try {
             const output = eval(command.value ?? '');
 

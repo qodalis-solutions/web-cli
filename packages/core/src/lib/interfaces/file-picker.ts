@@ -1,3 +1,5 @@
+export { ICliFilePickerProvider_TOKEN } from '../tokens';
+
 /**
  * Options for readFile file picker.
  */

@@ -270,9 +270,9 @@ export class CliEngine {
 
         if (this.options?.servers && this.options.servers.length > 0) {
             await serverManager.connectAll(this.options.servers, {
-                warn: (msg) => console.warn(msg),
-                info: (msg) => console.log(msg),
-            }, this.executionContext.backgroundServices);
+                warn: (msg) => this.executionContext.logger.warn(msg),
+                info: (msg) => this.executionContext.logger.info(msg),
+            }, this.executionContext.backgroundServices, this.executionContext.logger);
         }
 
         // 6.5. Prepend welcome module and server module
@@ -321,7 +321,7 @@ export class CliEngine {
                 try {
                     await module.onAfterBoot(this.executionContext);
                 } catch (e) {
-                    console.error(
+                    this.executionContext.logger.error(
                         `Error in onAfterBoot for module "${module.name}":`,
                         e,
                     );
@@ -350,7 +350,7 @@ export class CliEngine {
                     try {
                         module.onDestroy(this.executionContext);
                     } catch (e) {
-                        console.error(`Error in onDestroy for module "${module.name}":`, e);
+                        this.executionContext.logger.error(`Error in onDestroy for module "${module.name}":`, e);
                     }
                 }
             }
@@ -560,18 +560,31 @@ export class CliEngine {
         });
     }
 
+    /** Maximum time (ms) to wait for container layout before rejecting. */
+    private static readonly LAYOUT_TIMEOUT_MS = 10_000;
+
     /**
      * Wait until the container element has non-zero dimensions.
      * xterm.js requires the host element to be laid out before open() is called.
+     * Rejects after {@link LAYOUT_TIMEOUT_MS} if the container stays hidden.
      */
     private waitForLayout(): Promise<void> {
-        return new Promise<void>((resolve) => {
+        return new Promise<void>((resolve, reject) => {
+            const deadline = Date.now() + CliEngine.LAYOUT_TIMEOUT_MS;
             const check = () => {
                 if (
                     this.container.offsetWidth > 0 &&
                     this.container.offsetHeight > 0
                 ) {
                     resolve();
+                    return;
+                }
+                if (Date.now() >= deadline) {
+                    reject(new Error(
+                        'CliEngine.start(): container has zero dimensions after ' +
+                        `${CliEngine.LAYOUT_TIMEOUT_MS}ms. Ensure the container ` +
+                        'element is visible and laid out before calling start().',
+                    ));
                     return;
                 }
                 requestAnimationFrame(check);

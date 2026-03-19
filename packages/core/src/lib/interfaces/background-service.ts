@@ -6,7 +6,12 @@ import {
 import type { ICliStateStore, ICliServiceProvider } from '.';
 
 /**
- * Whether a background service is a long-running daemon or a one-shot job.
+ * Background service lifecycle type.
+ * - `'daemon'` — Long-running service whose `onStart` blocks until the abort signal
+ *   fires. Suitable for event loops, polling, or WebSocket connections. Can be
+ *   stopped and restarted.
+ * - `'job'` — Run-to-completion task whose `onStart` resolves when the work is done.
+ *   Automatically transitions to `'done'` status on success. Cannot be restarted.
  */
 export type CliBackgroundServiceType = 'daemon' | 'job';
 
@@ -46,11 +51,18 @@ export interface ICliServiceEvent {
 export type CliServiceEventHandler = (event: ICliServiceEvent) => void;
 
 /**
+ * Log severity level for background service messages.
+ * Shared by `ICliServiceLogEntry`, `ICliServiceContext.log()`,
+ * and `WorkerServiceContext.log()`.
+ */
+export type CliServiceLogLevel = 'info' | 'warn' | 'error';
+
+/**
  * A single log entry from a background service.
  */
 export interface ICliServiceLogEntry {
     timestamp: Date;
-    level: 'info' | 'warn' | 'error';
+    level: CliServiceLogLevel;
     message: string;
 }
 
@@ -65,7 +77,7 @@ export interface ICliServiceContext {
     /** Emit an event from this service */
     emit(event: ICliServiceEvent): void;
     /** Log a message to this service's private log buffer */
-    log(message: string, level?: 'info' | 'warn' | 'error'): void;
+    log(message: string, level?: CliServiceLogLevel): void;
     /** Create an interval scoped to this service (auto-cleared on stop) */
     createInterval(callback: () => void, ms: number): ICliManagedInterval;
     /** Create a timeout scoped to this service (auto-cleared on stop) */
@@ -94,7 +106,11 @@ export interface ICliBackgroundService {
     onStart(context: ICliServiceContext): Promise<void>;
     /** Called for graceful shutdown */
     onStop?(context: ICliServiceContext): Promise<void>;
-    /** Called on unrecoverable error */
+    /**
+     * Called when the service throws an unrecoverable error.
+     * Use this hook for logging or cleanup; throwing from `onError` itself
+     * is safe — the registry catches it and marks the service as failed.
+     */
     onError?(error: Error, context: ICliServiceContext): void;
 }
 
@@ -129,7 +145,7 @@ export interface ICliBackgroundServiceRegistry {
         name: string,
         task: (context: ICliServiceContext) => Promise<void>,
         options?: { workerCompatible?: boolean },
-    ): void;
+    ): Promise<void>;
     getStatus(name: string): ICliBackgroundServiceInfo | undefined;
     list(): ICliBackgroundServiceInfo[];
     getLogs(name: string, limit?: number): ICliServiceLogEntry[];

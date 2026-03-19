@@ -82,19 +82,21 @@ export class CliWorkerServiceRunner {
     async stop(): Promise<void> {
         if (!this.worker) return;
 
+        const worker = this.worker;
         const stopMsg: CliWorkerInboundMessage = { type: 'stop' };
-        this.worker.postMessage(stopMsg);
+        worker.postMessage(stopMsg);
 
         // Give the worker 5 seconds to clean up, then terminate
         await Promise.race([
             new Promise<void>((resolve) => {
-                const originalOnMessage = this.worker!.onmessage;
-                this.worker!.onmessage = (ev: MessageEvent<CliWorkerOutboundMessage>) => {
-                    if (ev.data.type === 'status' && ev.data.status === 'stopped') {
-                        resolve();
-                    }
+                const originalOnMessage = worker.onmessage;
+                worker.onmessage = (ev: MessageEvent<CliWorkerOutboundMessage>) => {
+                    // Delegate to original handler first (for log/event processing)
                     if (originalOnMessage) {
                         (originalOnMessage as (ev: MessageEvent) => void)(ev);
+                    }
+                    if (ev.data.type === 'status' && ev.data.status === 'stopped') {
+                        resolve();
                     }
                 };
             }),
@@ -105,7 +107,11 @@ export class CliWorkerServiceRunner {
     }
 
     terminate(): void {
-        this.worker?.terminate();
-        this.worker = null;
+        if (this.worker) {
+            this.worker.onmessage = null;
+            this.worker.onerror = null;
+            this.worker.terminate();
+            this.worker = null;
+        }
     }
 }

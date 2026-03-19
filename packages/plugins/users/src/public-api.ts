@@ -8,6 +8,7 @@ export * from './lib/models/users-module-config';
 
 import {
     ICliModule,
+    ICliConfigurableModule,
     ICliKeyValueStore,
     ICliUsersStoreService,
     ICliGroupsStoreService,
@@ -49,8 +50,9 @@ import { firstValueFrom } from 'rxjs';
 
 import { LIBRARY_VERSION, API_VERSION } from './lib/version';
 
-interface ICliUsersModule extends ICliModule {
-    configure(config: CliUsersModuleConfig): ICliModule;
+interface ICliUsersModule extends ICliConfigurableModule<CliUsersModuleConfig> {
+    /** Temporary storage for user created during onSetup, consumed by onAfterBoot */
+    _pendingHomeSetup?: ICliUser;
 }
 
 export const usersModule: ICliUsersModule = {
@@ -332,7 +334,7 @@ export const usersModule: ICliUsersModule = {
         });
 
         // Flag for onAfterBoot to create home dir (fs service not available yet)
-        (this as any)._pendingHomeSetup = newUser;
+        this._pendingHomeSetup = newUser;
 
         return true;
     },
@@ -340,9 +342,9 @@ export const usersModule: ICliUsersModule = {
     async onAfterBoot(context) {
         // Create home dir for newly created user (deferred from onSetup
         // because the files module hasn't booted yet at that point)
-        const pendingUser = (this as any)._pendingHomeSetup as ICliUser | undefined;
+        const pendingUser = this._pendingHomeSetup as ICliUser | undefined;
         if (pendingUser) {
-            delete (this as any)._pendingHomeSetup;
+            delete this._pendingHomeSetup;
             try {
                 const fs = context.services.get<any>('cli-file-system-service');
                 if (fs && pendingUser.homeDir) {

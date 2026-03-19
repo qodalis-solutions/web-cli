@@ -64,6 +64,9 @@ function createStubWriter(): ICliTerminalWriter & { written: string[] } {
         writeList(_items: string[], _options?: any) {},
         writeKeyValue(_entries: any, _options?: any) {},
         writeColumns(_items: string[], _options?: any) {},
+        writeLink(_text: string, _url: string) {},
+        writeBox(_content: string | string[], _options?: any) {},
+        writeIndented(text: string, _level?: number) { written.push(text); },
     };
 }
 
@@ -71,7 +74,18 @@ function createStubStateStore(
     initialState?: Record<string, any>,
 ): ICliStateStore {
     const state: Record<string, any> = initialState ?? {
-        system: { logLevel: 'ERROR', welcomeMessage: 'always' },
+        system: {
+            logLevel: 'ERROR',
+            welcomeMessage: 'always',
+            language: 'en',
+            cursorBlink: true,
+            cursorStyle: 'block',
+            scrollback: 1000,
+            fontSize: 20,
+            fontFamily: 'monospace',
+            smoothScrollDuration: 0,
+            greeting: true,
+        },
         plugins: {},
     };
     return {
@@ -83,7 +97,18 @@ function createStubStateStore(
             // Reset to initial defaults
             Object.keys(state).forEach((k) => delete state[k]);
             Object.assign(state, {
-                system: { logLevel: 'ERROR', welcomeMessage: 'always' },
+                system: {
+                    logLevel: 'ERROR',
+                    welcomeMessage: 'always',
+                    language: 'en',
+                    cursorBlink: true,
+                    cursorStyle: 'block',
+                    scrollback: 1000,
+                    fontSize: 20,
+                    fontFamily: 'monospace',
+                    smoothScrollDuration: 0,
+                    greeting: true,
+                },
                 plugins: {},
             });
         },
@@ -124,7 +149,16 @@ function createMockContext(
         spinner: { show: () => {}, hide: () => {} },
         progressBar: { show: () => {}, update: () => {}, hide: () => {} },
         onAbort: new Subject<void>(),
-        terminal: {} as any,
+        terminal: {
+            options: {
+                cursorBlink: true,
+                cursorStyle: 'block',
+                scrollback: 1000,
+                fontSize: 20,
+                fontFamily: 'monospace',
+                smoothScrollDuration: 0,
+            },
+        } as any,
         translator: {
             t: (_key: string, defaultValue: string, params?: Record<string, string>) => {
                 if (!params) return defaultValue;
@@ -522,6 +556,150 @@ describe('CliConfigureCommandProcessor', () => {
             await processor.initialize!(ctx);
 
             expect(ctx.logger.setCliLogLevel).toHaveBeenCalled();
+        });
+
+        it('should apply terminal options on boot', async () => {
+            const stateStore = createStubStateStore({
+                system: {
+                    logLevel: 'ERROR',
+                    cursorBlink: false,
+                    cursorStyle: 'underline',
+                    scrollback: 5000,
+                    fontSize: 16,
+                    fontFamily: 'Fira Code',
+                    smoothScrollDuration: 200,
+                },
+                plugins: {},
+            });
+            const ctx = createMockContext(writer, registry, stateStore);
+
+            await processor.initialize!(ctx);
+
+            expect(ctx.terminal.options.cursorBlink).toBe(false);
+            expect(ctx.terminal.options.cursorStyle).toBe('underline');
+            expect(ctx.terminal.options.scrollback).toBe(5000);
+            expect(ctx.terminal.options.fontSize).toBe(16);
+            expect(ctx.terminal.options.fontFamily).toBe('Fira Code');
+            expect(ctx.terminal.options.smoothScrollDuration).toBe(200);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // 6. new system options
+    // -----------------------------------------------------------------------
+    describe('new system options', () => {
+        it('should include all new options in state defaults', () => {
+            const state = context.state.getState<any>();
+            expect(state.system.cursorBlink).toBe(true);
+            expect(state.system.cursorStyle).toBe('block');
+            expect(state.system.scrollback).toBe(1000);
+            expect(state.system.fontSize).toBe(20);
+            expect(state.system.fontFamily).toBe('monospace');
+            expect(state.system.smoothScrollDuration).toBe(0);
+            expect(state.system.greeting).toBe(true);
+        });
+
+        it('should list new options in configure list output', async () => {
+            const listProcessor = processor.processors!.find(
+                (p) => p.command === 'list',
+            )!;
+
+            const cmd: CliProcessCommand = {
+                command: 'list',
+                chainCommands: [],
+                rawCommand: 'configure list',
+                args: {},
+            };
+
+            await listProcessor.processCommand!(cmd, context);
+
+            const output = writer.written.join('\n');
+            expect(output).toContain('cursorBlink');
+            expect(output).toContain('cursorStyle');
+            expect(output).toContain('scrollback');
+            expect(output).toContain('fontSize');
+            expect(output).toContain('fontFamily');
+            expect(output).toContain('smoothScrollDuration');
+            expect(output).toContain('greeting');
+        });
+
+        it('should set cursorStyle via configure set', async () => {
+            const setProcessor = processor.processors!.find(
+                (p) => p.command === 'set',
+            )!;
+
+            const cmd: CliProcessCommand = {
+                command: 'set',
+                chainCommands: [],
+                rawCommand: 'configure set system.cursorStyle bar',
+                value: 'system.cursorStyle bar',
+                args: {},
+            };
+
+            await setProcessor.processCommand!(cmd, context);
+
+            const output = writer.written.join('\n');
+            expect(output).toContain('[success]');
+            expect(context.terminal.options.cursorStyle).toBe('bar');
+        });
+
+        it('should reject invalid scrollback value', async () => {
+            const setProcessor = processor.processors!.find(
+                (p) => p.command === 'set',
+            )!;
+
+            const cmd: CliProcessCommand = {
+                command: 'set',
+                chainCommands: [],
+                rawCommand: 'configure set system.scrollback 200000',
+                value: 'system.scrollback 200000',
+                args: {},
+            };
+
+            await setProcessor.processCommand!(cmd, context);
+
+            const output = writer.written.join('\n');
+            expect(output).toContain('[error]');
+            expect(output).toContain('between 0 and 100,000');
+        });
+
+        it('should reject invalid fontSize value', async () => {
+            const setProcessor = processor.processors!.find(
+                (p) => p.command === 'set',
+            )!;
+
+            const cmd: CliProcessCommand = {
+                command: 'set',
+                chainCommands: [],
+                rawCommand: 'configure set system.fontSize 2',
+                value: 'system.fontSize 2',
+                args: {},
+            };
+
+            await setProcessor.processCommand!(cmd, context);
+
+            const output = writer.written.join('\n');
+            expect(output).toContain('[error]');
+            expect(output).toContain('between 8 and 40');
+        });
+
+        it('should set boolean greeting option', async () => {
+            const setProcessor = processor.processors!.find(
+                (p) => p.command === 'set',
+            )!;
+
+            const cmd: CliProcessCommand = {
+                command: 'set',
+                chainCommands: [],
+                rawCommand: 'configure set system.greeting false',
+                value: 'system.greeting false',
+                args: {},
+            };
+
+            await setProcessor.processCommand!(cmd, context);
+
+            const state = context.state.getState<any>();
+            expect(state.system.greeting).toBe(false);
         });
     });
 });

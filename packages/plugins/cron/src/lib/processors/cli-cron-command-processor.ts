@@ -171,7 +171,7 @@ export class CliCronCommandProcessor implements ICliCommandProcessor {
                 );
                 context.state.updateState({ jobs: updated });
             } catch (e) {
-                console.error(`Cron job "${job.name}" failed:`, e);
+                context.logger.error(`Cron job "${job.name}" failed:`, e);
             }
         }, job.intervalMs);
         this.timers.set(job.id, timer);

@@ -1,5 +1,16 @@
 import { ICliFileEntry, ICliFileTransferService } from '../interfaces/file-transfer';
 
+/**
+ * Browser-based file transfer service using native browser APIs.
+ *
+ * This is the default implementation when no virtual filesystem is available.
+ * `readFile` and `uploadFromBrowser` open a file picker dialog.
+ * `writeFile` and `downloadToBrowser` trigger a browser download.
+ *
+ * **Limitations:** `listFiles()` and `exists()` are not supported in the
+ * browser environment and always return empty/false respectively.
+ * Use `@qodalis/cli-files` for full filesystem capabilities.
+ */
 export class BrowserFileTransferService implements ICliFileTransferService {
     async readFile(_path: string): Promise<string | null> {
         return this._pickFile().then(r => r?.content ?? null);
@@ -10,10 +21,18 @@ export class BrowserFileTransferService implements ICliFileTransferService {
         this.downloadToBrowser(filename, content);
     }
 
+    /**
+     * Not supported in browser — always returns an empty array.
+     * Use `@qodalis/cli-files` for directory listing.
+     */
     async listFiles(_path: string): Promise<ICliFileEntry[]> {
         return [];
     }
 
+    /**
+     * Not supported in browser — always returns `false`.
+     * Use `@qodalis/cli-files` for file existence checks.
+     */
     async exists(_path: string): Promise<boolean> {
         return false;
     }

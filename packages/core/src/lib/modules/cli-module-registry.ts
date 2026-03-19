@@ -10,6 +10,9 @@ export class CliModuleRegistry {
     private readonly bootHandlers: ((module: ICliModule) => Promise<void>)[] =
         [];
 
+    /** Optional warning callback — set by the engine to route through ICliLogger */
+    onWarn?: (message: string) => void;
+
     /**
      * Register a handler that is called whenever a new module is registered.
      */
@@ -19,20 +22,33 @@ export class CliModuleRegistry {
 
     /**
      * Register a module and notify all boot handlers.
-     * Modules that do not meet the required API version are silently skipped.
+     * Modules that do not meet the required API version are skipped with a warning.
      */
     async register(module: ICliModule): Promise<void> {
         const modApiVersion = module.apiVersion;
         if (typeof modApiVersion !== 'number' || modApiVersion < API_VERSION) {
-            console.warn(
+            const msg =
                 `[CLI] Plugin "${module.name}" targets API version ${modApiVersion ?? 'unknown'}, ` +
-                `but this runtime requires API version ${API_VERSION}. Skipping.`,
-            );
+                `but this runtime requires API version ${API_VERSION}. Skipping.`;
+            if (this.onWarn) {
+                this.onWarn(msg);
+            } else {
+                console.warn(msg);
+            }
             return;
         }
         this.modules.set(module.name, module);
         for (const handler of this.bootHandlers) {
-            await handler(module);
+            try {
+                await handler(module);
+            } catch (e) {
+                const msg = `[CLI] Boot handler failed for module "${module.name}": ${e instanceof Error ? e.message : e}`;
+                if (this.onWarn) {
+                    this.onWarn(msg);
+                } else {
+                    console.warn(msg);
+                }
+            }
         }
     }
 

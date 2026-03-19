@@ -25,7 +25,7 @@ import { CliOptions, ICliUserSession } from '../models';
  */
 export interface ICliManagedTimer {
     /** Clear this timer immediately. */
-    clear(): void;
+    readonly clear: () => void;
 }
 
 /**
@@ -33,7 +33,7 @@ export interface ICliManagedTimer {
  */
 export interface ICliManagedInterval extends ICliManagedTimer {
     /** Change the interval delay. Restarts the interval with the new delay. */
-    setDelay(ms: number): void;
+    readonly setDelay: (ms: number) => void;
 }
 
 /**

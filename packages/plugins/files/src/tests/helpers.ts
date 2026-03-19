@@ -30,6 +30,9 @@ export function createStubWriter(): ICliTerminalWriter & { written: string[] } {
         writeList(_items: string[], _options?: any) {},
         writeKeyValue(_entries: any, _options?: any) {},
         writeColumns(_items: string[], _options?: any) {},
+        writeLink(_text: string, _url: string) {},
+        writeBox(_content: string | string[], _options?: any) {},
+        writeIndented(_text: string, _level?: number) {},
     };
 }
 

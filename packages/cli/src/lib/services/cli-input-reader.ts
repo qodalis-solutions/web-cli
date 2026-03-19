@@ -5,6 +5,7 @@ import {
     CliLineOptions,
     CliSelectOptions,
     CliMultiSelectOptions,
+    CliNumberOptions,
     CliDateOptions,
     CliFilePickerOptions,
     CliFileResult,
@@ -80,7 +81,7 @@ export class CliInputReader implements ICliInputReader {
         });
     }
 
-    readNumber(prompt: string, options?: { min?: number; max?: number; default?: number }): Promise<number | null> {
+    readNumber(prompt: string, options?: CliNumberOptions): Promise<number | null> {
         return new Promise<number | null>((resolve) => {
             const mode = new NumberInputMode(this.host, resolve, prompt, options);
             this.host.pushMode(mode);

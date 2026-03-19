@@ -40,7 +40,6 @@ export interface ICliExecutionHost extends ICliExecutionContext {
 export class CliCommandExecutor implements ICliCommandExecutorService {
     private commandParser: CommandParser = new CommandParser();
     private globalParameters: ICliGlobalParameterHandler[] = [];
-    private lastCapturingWriter?: CapturingTerminalWriter;
 
     constructor(protected readonly registry: ICliCommandProcessorRegistry) {
         this.registerGlobalParameter(versionGlobalParameter);
@@ -79,6 +78,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         // Data flowing through the pipeline — explicitly tracked so it survives
         // process.start() resets and failed commands.
         let pipelineData: any = undefined;
+        // The capturing writer from the last executed command, used for stderr redirects.
+        let lastCapturingWriter: CapturingTerminalWriter | undefined;
 
         for (let i = 0; i < parts.length; i++) {
             const part = parts[i];
@@ -134,7 +135,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                     continue;
                 }
                 if (shouldRunNext) {
-                    await this.appendStderrToFile(nextPart.value, context);
+                    await this.appendStderrToFile(nextPart.value, context, lastCapturingWriter);
                 }
                 continue;
             } else if (part.type === '2>') {
@@ -146,7 +147,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                     continue;
                 }
                 if (shouldRunNext) {
-                    await this.writeStderrToFile(nextPart.value, context);
+                    await this.writeStderrToFile(nextPart.value, context, lastCapturingWriter);
                 }
                 continue;
             }
@@ -158,7 +159,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             }
 
             try {
-                await this.executeSingleCommand(
+                lastCapturingWriter = await this.executeSingleCommand(
                     part.value,
                     pipelineData,
                     rootContext,
@@ -260,7 +261,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         command: string,
         data: any | undefined,
         context: ICliExecutionHost,
-    ): Promise<void> {
+    ): Promise<CapturingTerminalWriter | undefined> {
         const process = context.process as CliExecutionProcess;
 
         // Substitute environment variables ($VAR / ${VAR}) before parsing
@@ -471,7 +472,6 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             commandContext.writer,
         );
         commandContext.writer = capturingWriter;
-        this.lastCapturingWriter = capturingWriter;
 
         try {
             const hooks = processor.hooks ?? [];
@@ -510,6 +510,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             if (!process.exited) {
                 process.end();
             }
+
+            return capturingWriter;
         } catch (e) {
             context.spinner?.hide();
 
@@ -541,6 +543,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         } finally {
             abortSub.unsubscribe();
         }
+
+        return capturingWriter;
     }
 
     private completeProcess(
@@ -569,8 +573,9 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
     private async writeStderrToFile(
         filePath: string,
         context: ICliExecutionContext,
+        capturingWriter?: CapturingTerminalWriter,
     ): Promise<void> {
-        const stderr = this.lastCapturingWriter?.getCapturedStderr();
+        const stderr = capturingWriter?.getCapturedStderr();
         if (!stderr) return;
 
         const FS_TOKEN = 'cli-file-system-service';
@@ -600,8 +605,9 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
     private async appendStderrToFile(
         filePath: string,
         context: ICliExecutionContext,
+        capturingWriter?: CapturingTerminalWriter,
     ): Promise<void> {
-        const stderr = this.lastCapturingWriter?.getCapturedStderr();
+        const stderr = capturingWriter?.getCapturedStderr();
         if (!stderr) return;
 
         const FS_TOKEN = 'cli-file-system-service';

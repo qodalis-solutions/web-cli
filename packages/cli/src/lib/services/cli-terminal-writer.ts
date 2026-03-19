@@ -5,19 +5,8 @@ import {
     CliIcon,
     formatJson,
     ICliTerminalWriter,
+    visibleLength,
 } from '@qodalis/cli-core';
-
-/**
- * Regex that matches ANSI SGR escape sequences (colors, bold, reset, etc.)
- */
-const ANSI_RE = /\x1b\[[0-9;]*m/g;
-
-/**
- * Return the visible length of a string, ignoring ANSI escape codes.
- */
-function visibleLength(text: string): number {
-    return text.replace(ANSI_RE, '').length;
-}
 
 export class CliTerminalWriter implements ICliTerminalWriter {
     constructor(public readonly terminal: Terminal) {}
@@ -160,6 +149,57 @@ export class CliTerminalWriter implements ICliTerminalWriter {
             const row = items.slice(i, i + cols);
             this.writeln(row.map((item) => item.padEnd(colWidth)).join(''));
         }
+    }
+
+    public writeLink(text: string, url: string): void {
+        // OSC 8 hyperlink: \x1b]8;;URL\x07TEXT\x1b]8;;\x07
+        this.writeln(`\x1b]8;;${url}\x07${text}\x1b]8;;\x07`);
+    }
+
+    public writeBox(
+        content: string | string[],
+        options?: {
+            title?: string;
+            borderColor?: CliForegroundColor;
+            padding?: number;
+        },
+    ): void {
+        const lines = Array.isArray(content) ? content : [content];
+        const pad = options?.padding ?? 1;
+        const color = options?.borderColor;
+        const wrap = (s: string) => (color ? this.wrapInColor(s, color) : s);
+
+        const maxContentWidth = Math.max(
+            ...lines.map((l) => visibleLength(l)),
+            options?.title ? visibleLength(options.title) + 2 : 0,
+        );
+        const innerWidth = maxContentWidth + pad * 2;
+
+        // Top border
+        if (options?.title) {
+            const title = ` ${options.title} `;
+            const remaining = innerWidth - visibleLength(title);
+            const left = Math.floor(remaining / 2);
+            const right = remaining - left;
+            this.writeln(wrap('┌' + '─'.repeat(left) + title + '─'.repeat(right) + '┐'));
+        } else {
+            this.writeln(wrap('┌' + '─'.repeat(innerWidth) + '┐'));
+        }
+
+        // Content lines with padding
+        const padStr = ' '.repeat(pad);
+        for (const line of lines) {
+            const rightPad = innerWidth - pad * 2 - visibleLength(line);
+            this.writeln(wrap('│') + padStr + line + ' '.repeat(Math.max(0, rightPad)) + padStr + wrap('│'));
+        }
+
+        // Bottom border
+        this.writeln(wrap('└' + '─'.repeat(innerWidth) + '┘'));
+    }
+
+    public writeIndented(text: string, level: number = 1): void {
+        const indent = '  '.repeat(level);
+        this.writeln(`${indent}${text}`);
     }
 
     public writeTable(headers: string[], rows: string[][]): void {

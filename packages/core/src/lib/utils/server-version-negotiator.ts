@@ -1,3 +1,5 @@
+import { API_VERSION } from '../version';
+
 /**
  * Describes the version information returned by a CLI server's discovery endpoint.
  */
@@ -7,17 +9,20 @@ export interface ServerVersionInfo {
     serverVersion: string;
 }
 
+/** Endpoint path for server version discovery */
+const VERSIONS_ENDPOINT = '/api/qcli/versions';
+
 /**
  * Negotiates the API version between a frontend CLI client and a backend server.
  *
  * Flow:
- * 1. Client calls `discover(baseUrl)` which hits `GET /api/qcli/versions`
+ * 1. Client calls `discover(baseUrl)` which hits `GET ${VERSIONS_ENDPOINT}`
  * 2. Server returns supported versions
  * 3. Client picks the highest mutually supported version
  * 4. All subsequent calls use `/api/v{n}/qcli/*`
  */
 export class ServerVersionNegotiator {
-    private static readonly CLIENT_SUPPORTED_VERSIONS = [2];
+    private static readonly CLIENT_SUPPORTED_VERSIONS = [API_VERSION];
 
     /**
      * Given a server's version info, pick the highest mutually compatible version.
@@ -39,7 +44,7 @@ export class ServerVersionNegotiator {
         baseUrl: string,
     ): Promise<{ apiVersion: number; basePath: string } | null> {
         try {
-            const response = await fetch(`${baseUrl}/api/qcli/versions`);
+            const response = await fetch(`${baseUrl}${VERSIONS_ENDPOINT}`);
             if (!response.ok) return null;
 
             const info: ServerVersionInfo = await response.json();

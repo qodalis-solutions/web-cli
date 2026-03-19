@@ -13,7 +13,7 @@ import { CliEngine, CliEngineOptions } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliConfigKey } from './CliConfigProvider';
 
-export type CliPanelOptions = CliEngineOptions & CliPanelConfig;
+export interface CliPanelOptions extends CliEngineOptions, CliPanelConfig {}
 
 interface TerminalPane {
     id: number;

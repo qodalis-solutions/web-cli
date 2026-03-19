@@ -66,6 +66,18 @@ export interface CliMultiSelectOptions {
 }
 
 /**
+ * Options for readNumber input.
+ */
+export interface CliNumberOptions {
+    /** Minimum allowed value */
+    min?: number;
+    /** Maximum allowed value */
+    max?: number;
+    /** Pre-filled default value */
+    default?: number;
+}
+
+/**
  * Options for readDate input.
  */
 export interface CliDateOptions {
@@ -144,7 +156,7 @@ export interface ICliInputReader {
      * @param options - Optional configuration for min, max, and default value
      * @returns The entered number, or null if aborted
      */
-    readNumber(prompt: string, options?: { min?: number; max?: number; default?: number }): Promise<number | null>;
+    readNumber(prompt: string, options?: CliNumberOptions): Promise<number | null>;
 
     /**
      * Read a date input with format validation.

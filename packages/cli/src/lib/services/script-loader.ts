@@ -164,6 +164,13 @@ export class ScriptLoaderService {
         });
     }
 
+    /**
+     * Inject an inline script into the page.
+     *
+     * **Security:** This runs `code` in the host page context with full
+     * DOM access. Only call with trusted content (e.g. verified UMD bundles
+     * loaded via the package manager). Never pass user-supplied strings.
+     */
     injectBodyScript(code: string): void {
         const script = document.createElement('script');
         script.text = code;

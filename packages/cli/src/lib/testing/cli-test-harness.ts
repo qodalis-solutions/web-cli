@@ -316,6 +316,18 @@ function createTestWriter(): TestWriter {
                 stdout.push(item);
             }
         },
+        writeLink(text: string, _url: string) {
+            stdout.push(text);
+        },
+        writeBox(content: string | string[], _options?: any) {
+            const lines = Array.isArray(content) ? content : [content];
+            for (const line of lines) {
+                stdout.push(line);
+            }
+        },
+        writeIndented(text: string, level: number = 1) {
+            stdout.push('  '.repeat(level) + text);
+        },
     };
 }
 

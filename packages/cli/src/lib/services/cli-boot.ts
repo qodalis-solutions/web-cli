@@ -1,6 +1,5 @@
 import {
     CliIcon,
-    delay,
     ICliCommandChildProcessor,
     ICliCommandProcessor,
     ICliCommandProcessorRegistry,
@@ -22,6 +21,7 @@ export class CliBoot {
     private initializing = false;
     private readonly moduleRegistry: CliModuleRegistry;
     private readonly bootedModules = new Set<string>();
+    private readonly initializedProcessors = new Set<ICliCommandProcessor>();
 
     constructor(
         private readonly registry: ICliCommandProcessorRegistry,
@@ -50,6 +50,9 @@ export class CliBoot {
         }
 
         this.initializing = true;
+
+        // Wire module registry warnings through the context logger
+        this.moduleRegistry.onWarn = (msg) => context.logger.warn(msg);
 
         // 1. Set up browser environment for dynamic UMD loading
         initializeBrowserEnvironment({
@@ -133,7 +136,7 @@ export class CliBoot {
             try {
                 await module.onInit(context);
             } catch (e) {
-                console.error(
+                context.logger.error(
                     `Error in onInit for module "${module.name}":`,
                     e,
                 );
@@ -162,7 +165,7 @@ export class CliBoot {
                         });
                     }
                 } catch (e) {
-                    console.error(
+                    context.logger.error(
                         `Setup failed for module "${module.name}":`,
                         e,
                     );
@@ -278,12 +281,15 @@ export class CliBoot {
     }
 
     private async bootShared(context: CliExecutionContext): Promise<void> {
-        await this.initializeProcessorsInternal(
-            context,
-            this.registry.processors,
+        // Only initialize processors that haven't been initialized yet
+        // (e.g. processors registered after the initial boot)
+        const uninitialized = this.registry.processors.filter(
+            (p) => !this.initializedProcessors.has(p),
         );
 
-        await delay(300);
+        if (uninitialized.length > 0) {
+            await this.initializeProcessorsInternal(context, uninitialized);
+        }
     }
 
     private async initializeProcessorsInternal(
@@ -292,6 +298,8 @@ export class CliBoot {
         parent?: ICliCommandProcessor,
     ): Promise<void> {
         for (const p of processors) {
+            if (this.initializedProcessors.has(p)) continue;
+
             try {
                 (p as ICliCommandChildProcessor).parent = parent;
 
@@ -306,6 +314,8 @@ export class CliBoot {
                     await p.initialize(processorContext);
                 }
 
+                this.initializedProcessors.add(p);
+
                 if (p.processors && p.processors.length > 0) {
                     await this.initializeProcessorsInternal(
                         context,
@@ -314,7 +324,7 @@ export class CliBoot {
                     );
                 }
             } catch (e) {
-                console.error(
+                context.logger.error(
                     `Error initializing processor "${p.command}":`,
                     e,
                 );

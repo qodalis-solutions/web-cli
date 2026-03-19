@@ -9,7 +9,8 @@ export const clearTerminalLine = (
     terminal: Terminal,
     contentLength: number,
 ): void => {
-    const lines = Math.max(1, Math.ceil(contentLength / terminal.cols));
+    if (contentLength <= 0) return;
+    const lines = Math.ceil(contentLength / terminal.cols);
 
     for (let i = 0; i < lines; i++) {
         terminal.write('\x1b[2K');

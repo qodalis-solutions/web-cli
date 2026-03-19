@@ -32,67 +32,60 @@ export interface ICliTerminalWriter {
 
     /**
      * Write a success message to the terminal
-     * @param messag The message to write
-     * @returns void
+     * @param message The message to write
      */
-    writeSuccess: (message: string) => void;
+    writeSuccess(message: string): void;
 
     /**
      * Write an info message to the terminal
-     * @param messag The message to write
-     * @returns void
+     * @param message The message to write
      */
-    writeInfo: (message: string) => void;
+    writeInfo(message: string): void;
 
     /**
      * Write an error message to the terminal
      * @param message The message to write
-     * @returns void
      */
-    writeError: (message: string) => void;
+    writeError(message: string): void;
 
     /**
      * Write a warning message to the terminal
      * @param message The message to write
-     * @returns void
      */
-    writeWarning: (message: string) => void;
+    writeWarning(message: string): void;
 
     /**
-     * Write a message to the terminal with the specified color
-     * @param message The message to write
-     * @param color The color to use
-     * @returns void
+     * Wrap text in the specified foreground color.
+     * @param text The text to wrap
+     * @param color The foreground color to apply
+     * @returns The text wrapped in ANSI color codes
      */
-    wrapInColor: (text: string, color: CliForegroundColor) => string;
+    wrapInColor(text: string, color: CliForegroundColor): string;
 
     /**
-     * Write a message to the terminal with the specified background color
-     * @param message The message to write
-     * @param color The background color to use
-     * @returns void
+     * Wrap text in the specified background color.
+     * @param text The text to wrap
+     * @param color The background color to apply
+     * @returns The text wrapped in ANSI background color codes
      */
-    wrapInBackgroundColor: (text: string, color: CliBackgroundColor) => string;
+    wrapInBackgroundColor(text: string, color: CliBackgroundColor): string;
 
     /**
      * Write a JSON object to the terminal
      * @param json The JSON object to write
-     * @returns void
      */
-    writeJson: (json: any) => void;
+    writeJson(json: any): void;
 
     /**
-     * Write content to a file
-     * @param fileName The name of the file to write to
+     * Write content to a file (triggers a browser download)
+     * @param fileName The name of the file to download
      * @param content The content to write to the file
-     * @returns void
      */
-    writeToFile: (fileName: string, content: string) => void;
+    writeToFile(fileName: string, content: string): void;
 
     /**
      * Write an object array as a table to the terminal
      * @param objects The objects to write to the table
-     * @returns void
      */
     writeObjectsAsTable(objects: any[]): void;
 
@@ -100,14 +93,12 @@ export interface ICliTerminalWriter {
      * Write a table to the terminal
      * @param headers The headers of the table
      * @param rows The rows of the table
-     * @returns void
      */
     writeTable(headers: string[], rows: string[][]): void;
 
     /**
      * Write a divider to the terminal
-     * @param options The options for the divider
-     * @returns void
+     * @param options Optional: color, length, character
      */
     writeDivider(options?: {
         color?: CliForegroundColor;
@@ -148,6 +139,38 @@ export interface ICliTerminalWriter {
         items: string[],
         options?: { columns?: number; padding?: number },
     ): void;
+
+    /**
+     * Write a clickable hyperlink using OSC 8 escape sequences.
+     * In terminals that support OSC 8, the text is clickable. In others,
+     * it falls back to displaying "text (url)".
+     * @param text The visible link text
+     * @param url The URL to link to
+     */
+    writeLink(text: string, url: string): void;
+
+    /**
+     * Write text inside a bordered box.
+     * Useful for callouts, notices, and highlighted information.
+     * @param content The content lines to display inside the box
+     * @param options Optional: title, border color, padding
+     */
+    writeBox(
+        content: string | string[],
+        options?: {
+            title?: string;
+            borderColor?: CliForegroundColor;
+            padding?: number;
+        },
+    ): void;
+
+    /**
+     * Write text with a specified indentation level.
+     * Each level adds 2 spaces of indentation.
+     * @param text The text to write
+     * @param level The indentation level (default: 1)
+     */
+    writeIndented(text: string, level?: number): void;
 }
 
 /**
@@ -173,9 +196,10 @@ export interface ICliClipboard {
  */
 export interface ICliCommandExecutorService {
     /**
-     *
-     * @param command
-     * @param context
+     * Display the help output for a command, including its description,
+     * sub-commands, and parameters.
+     * @param command The parsed command to show help for
+     * @param context The execution context
      */
     showHelp(
         command: CliProcessCommand,
@@ -385,17 +409,25 @@ export interface ICliKeyValueStore {
 }
 
 /**
- * Represents a store for storing data associated with commands
+ * Reactive state store scoped to a command processor or module.
+ *
+ * State is a plain object (`Record<string, any>`). Updates are shallow-merged
+ * (top-level keys are replaced, nested objects are not deep-merged).
+ * `getState()` returns a snapshot — mutating the returned object has no effect;
+ * always use `updateState()` to change state.
  */
 export interface ICliStateStore {
     /**
-     * Get the current state as an object.
+     * Get a snapshot of the current state.
+     * @returns A shallow copy of the state object
      */
     getState<T extends CliState = CliState>(): T;
 
     /**
-     * Update the state with new values. Supports partial updates.
-     * @param newState Partial state to merge with the current state.
+     * Shallow-merge new values into the current state.
+     * Only the provided keys are updated; other keys are preserved.
+     * Triggers subscribers and persists if a storage backend is configured.
+     * @param newState Partial state to merge with the current state
      */
     updateState(newState: Partial<CliState>): void;
 
@@ -517,6 +549,23 @@ export interface ICliModule {
 }
 
 /**
+ * A module that accepts typed configuration via `configure()`.
+ * Extend this instead of `ICliModule` when your module has a config type.
+ *
+ * @example
+ * ```ts
+ * interface MyModuleConfig { verbose?: boolean }
+ * const myModule: ICliConfigurableModule<MyModuleConfig> = {
+ *     configure(config) { return { ...this, config }; },
+ *     // ...
+ * };
+ * ```
+ */
+export interface ICliConfigurableModule<T extends Record<string, any> = Record<string, any>> extends ICliModule {
+    configure(config: T): ICliModule;
+}
+
+/**
  * @deprecated Use ICliModule instead
  */
 export type ICliUmdModule = ICliModule;
@@ -534,31 +583,31 @@ export interface ICliLogger {
     setCliLogLevel(level: CliLogLevel): void;
 
     /**
-     * Log a message
+     * Log a general message (LOG level)
      * @param args The arguments to log
      */
     log(...args: any[]): void;
 
     /**
-     * Log a message
+     * Log an informational message (INFO level)
      * @param args The arguments to log
      */
     info(...args: any[]): void;
 
     /**
-     * Log a message
+     * Log a warning message (WARN level)
      * @param args The arguments to log
      */
     warn(...args: any[]): void;
 
     /**
-     * Log a message
+     * Log an error message (ERROR level)
      * @param args The arguments to log
      */
     error(...args: any[]): void;
 
     /**
-     * Log a message
+     * Log a debug message (DEBUG level)
      * @param args The arguments to log
      */
     debug(...args: any[]): void;
@@ -568,7 +617,8 @@ export interface ICliLogger {
 // Translation service
 // ---------------------------------------------------------------------------
 
-export const ICliTranslationService_TOKEN = 'cli-translation-service';
+// Re-export from central tokens for backward compatibility
+export { ICliTranslationService_TOKEN } from '../tokens';
 
 /**
  * Provides internationalization (i18n) support for CLI strings.
@@ -608,18 +658,21 @@ export interface ICliTranslationService {
 }
 
 /**
- * Represents a service provider for the CLI
+ * Dependency injection container for CLI services.
+ * Services are registered with string tokens and retrieved by type.
  */
 export interface ICliServiceProvider {
     /**
-     * Get a service
-     * @param service The service to get
+     * Retrieve a service by its injection token.
+     * @param service The token (typically a `*_TOKEN` constant) identifying the service
+     * @returns The service instance, cast to `T`
+     * @throws If no service is registered for the given token
      */
-    get<T>(service: any): T;
+    get<T = unknown>(service: any): T;
 
     /**
-     * Set a service
-     * @param definition The definition of the service
+     * Register one or more service definitions.
+     * @param definition A single provider or an array of providers to register
      */
     set(definition: CliProvider | CliProvider[]): void;
 }
@@ -658,7 +711,8 @@ export * from './file-picker';
 
 export * from './syntax-highlighting';
 
-export const ICliPermissionService_TOKEN = 'cli-permission-service';
+// Re-export from central tokens for backward compatibility
+export { ICliPermissionService_TOKEN } from '../tokens';
 
 import { ICliOwnership } from '../models/permissions';
 
