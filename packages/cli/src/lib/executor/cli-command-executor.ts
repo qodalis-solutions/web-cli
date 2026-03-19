@@ -336,6 +336,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             const aliases = aliasProcessor?.userAliases ?? {};
 
             if (aliases[mainCommand]) {
+                this.completeProcess(processEntry, context, 0);
                 return await this.executeSingleCommand(
                     aliases[mainCommand],
                     data,
@@ -350,6 +351,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                     context,
                 );
                 if (executed) {
+                    this.completeProcess(processEntry, context, 0);
                     process.end();
                     return;
                 }
@@ -367,6 +369,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             context.writer.writeInfo(
                 `📦 Use ${context.writer.wrapInColor('pkg add <name>', CliForegroundColor.Cyan)} to install additional commands`,
             );
+
+            this.failProcess(processEntry, context);
 
             context.process.exit(-1, {
                 silent: true,
@@ -392,6 +396,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 continue;
             }
             if (await handler.handle(args, processor, commandToProcess, context)) {
+                this.completeProcess(processEntry, context, 0);
                 process.end();
                 return;
             }
@@ -500,12 +505,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 process.data = capturingWriter.getCapturedData();
             }
 
-            if (processEntry) {
-                try {
-                    const procRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
-                    procRegistry.complete(processEntry.pid, context.process.exitCode ?? 0);
-                } catch { /* ignore */ }
-            }
+            this.completeProcess(processEntry, context, context.process.exitCode ?? 0);
 
             if (!process.exited) {
                 process.end();
@@ -513,14 +513,13 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         } catch (e) {
             context.spinner?.hide();
 
-            if (processEntry) {
-                try {
-                    const procRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
-                    procRegistry.fail(processEntry.pid);
-                } catch { /* ignore */ }
-            }
-
             if (e instanceof ProcessExitedError) {
+                if (e.code === 0) {
+                    this.completeProcess(processEntry, context, 0);
+                } else {
+                    this.failProcess(processEntry, context);
+                }
+
                 cancellable?.cancel();
 
                 context.abort?.();
@@ -535,12 +534,36 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                     );
                 }
             } else {
+                this.failProcess(processEntry, context);
                 context.writer.writeError(`Error executing command: ${e}`);
                 context.process.exit(-1);
             }
         } finally {
             abortSub.unsubscribe();
         }
+    }
+
+    private completeProcess(
+        processEntry: { pid: number } | undefined,
+        context: ICliExecutionContext,
+        exitCode: number,
+    ): void {
+        if (!processEntry) return;
+        try {
+            const procRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
+            procRegistry.complete(processEntry.pid, exitCode);
+        } catch { /* ignore */ }
+    }
+
+    private failProcess(
+        processEntry: { pid: number } | undefined,
+        context: ICliExecutionContext,
+    ): void {
+        if (!processEntry) return;
+        try {
+            const procRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
+            procRegistry.fail(processEntry.pid);
+        } catch { /* ignore */ }
     }
 
     private async writeStderrToFile(

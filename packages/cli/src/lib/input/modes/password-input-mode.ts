@@ -36,7 +36,12 @@ export class PasswordInputMode extends InputModeBase<string> {
         } else {
             const text = data.replace(/[\r\n]+/g, '');
             this.buffer += text;
-            this.renderLine();
+            // Fast path: just write the mask characters (no cursor repositioning needed)
+            if (this.extraLines === 0) {
+                this.host.terminal.write('*'.repeat(text.length));
+            } else {
+                this.renderLine();
+            }
         }
     }
 

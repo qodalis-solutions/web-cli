@@ -18,7 +18,7 @@ export class CliJwtCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata = {
         icon: '🔑',
-        module: 'misc',
+        module: 'encoding',
     };
 
     constructor() {

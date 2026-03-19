@@ -18,7 +18,7 @@ export class CliHexCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata = {
         icon: '0️⃣',
-        module: 'misc',
+        module: 'encoding',
     };
 
     constructor() {

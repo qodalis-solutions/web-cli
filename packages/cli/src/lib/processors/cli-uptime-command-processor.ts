@@ -6,7 +6,6 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
-import { Terminal } from '@xterm/xterm';
 
 export class CliUptimeCommandProcessor implements ICliCommandProcessor {
     command = 'uptime';
@@ -20,11 +19,7 @@ export class CliUptimeCommandProcessor implements ICliCommandProcessor {
         module: 'misc',
     };
 
-    private sessionStartTimes = new WeakMap<Terminal, number>();
-
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.sessionStartTimes.set(context.terminal, Date.now());
-
         try {
             context.backgroundServices.register({
                 name: 'uptime-tracker',
@@ -32,11 +27,16 @@ export class CliUptimeCommandProcessor implements ICliCommandProcessor {
                 type: 'daemon',
                 onStart: async (ctx) => {
                     ctx.log('Uptime tracking started');
+                    // Keep the daemon alive by waiting on the abort signal
+                    await new Promise<void>((resolve) => {
+                        ctx.signal.addEventListener('abort', () => resolve(), { once: true });
+                    });
+                    ctx.log('Uptime tracking stopped');
                 },
             });
             await context.backgroundServices.start('uptime-tracker');
         } catch {
-            // Already registered or failed — WeakMap fallback is fine
+            // Already registered or failed
         }
     }
 
@@ -45,11 +45,18 @@ export class CliUptimeCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         const svcInfo = context.backgroundServices.getStatus('uptime-tracker');
-        const startTime = (svcInfo?.status === 'running' && svcInfo.startedAt)
-            ? svcInfo.startedAt.getTime()
-            : this.sessionStartTimes.get(context.terminal) ?? Date.now();
-        const elapsed = Date.now() - startTime;
         const { writer } = context;
+
+        if (!svcInfo || svcInfo.status !== 'running') {
+            writer.writeError('Uptime tracker is not running.');
+            writer.writeInfo(
+                `Use ${writer.wrapInColor('services start uptime-tracker', CliForegroundColor.Cyan)} to restart.`,
+            );
+            return;
+        }
+
+        const startTime = svcInfo.startedAt!.getTime();
+        const elapsed = Date.now() - startTime;
 
         const seconds = Math.floor(elapsed / 1000) % 60;
         const minutes = Math.floor(elapsed / (1000 * 60)) % 60;

@@ -102,6 +102,8 @@ export interface ICliBackgroundService {
  * Read-only snapshot of a background service's current state.
  */
 export interface ICliBackgroundServiceInfo {
+    /** Process ID assigned by the process registry */
+    pid?: number;
     name: string;
     description?: string;
     type: CliBackgroundServiceType;

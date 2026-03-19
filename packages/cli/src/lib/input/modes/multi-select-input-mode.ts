@@ -57,6 +57,9 @@ export class MultiSelectInputMode extends InputModeBase<string[]> {
     }
 
     activate(): void {
+        // Hide cursor during selection
+        this.host.terminal.write('\x1b[?25l');
+
         // Start on first non-disabled option
         this.selectedIndex = 0;
         const selectables = this.filteredOptions.filter(o => !o.disabled);
@@ -93,6 +96,7 @@ export class MultiSelectInputMode extends InputModeBase<string[]> {
         const summary = labels.length > 0 ? labels.join(', ') : 'none';
         this.host.terminal.write('\x1b[2K\r');
         this.host.terminal.write(`\x1b[32m\u2714\x1b[0m ${this.promptText} \x1b[36m${summary}\x1b[0m`);
+        this.host.terminal.write('\x1b[?25h'); // Show cursor
         super.resolveAndPop(value);
     }
 
@@ -103,6 +107,7 @@ export class MultiSelectInputMode extends InputModeBase<string[]> {
         this.clearRenderedLines();
         this.host.terminal.write('\x1b[2K\r');
         this.host.terminal.write(`\x1b[33m\u2718\x1b[0m ${this.promptText} \x1b[2mcancelled\x1b[0m`);
+        this.host.terminal.write('\x1b[?25h'); // Show cursor
         super.abort();
     }
 

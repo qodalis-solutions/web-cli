@@ -27,6 +27,8 @@ export class CliScpCommandCommandProcessor implements ICliCommandProcessor {
 
     version = LIBRARY_VERSION;
 
+    metadata = { icon: '📁', module: 'file management' };
+
     acceptsRawInput = true;
 
     processors: ICliCommandChildProcessor[] = [

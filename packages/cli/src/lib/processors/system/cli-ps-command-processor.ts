@@ -33,11 +33,13 @@ export class CliPsCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        const headers = ['PID', 'STATUS', 'EXIT', 'TIME', 'COMMAND'];
+        const headers = ['PID', 'NAME', 'TYPE', 'STATUS', 'EXIT', 'TIME', 'COMMAND'];
         const rows = processes.map((p) => {
             const elapsed = `${Math.round((Date.now() - p.startTime) / 1000)}s`;
             return [
                 String(p.pid),
+                p.name,
+                p.type,
                 p.status,
                 p.exitCode !== undefined ? String(p.exitCode) : '-',
                 elapsed,

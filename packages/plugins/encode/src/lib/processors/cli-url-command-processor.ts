@@ -18,7 +18,7 @@ export class CliUrlCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata = {
         icon: '🔗',
-        module: 'misc',
+        module: 'encoding',
     };
 
     constructor() {

@@ -79,7 +79,20 @@ export class LineInputMode extends InputModeBase<string> {
                 text +
                 this.buffer.slice(this.cursorPosition);
             this.cursorPosition += text.length;
-            this.renderLine();
+
+            // Fast path: appending at end with no extra lines — just write the chars
+            // Skip fast path when placeholder was visible (buffer length == text length
+            // means buffer was empty before this insert, so placeholder needs clearing)
+            if (
+                this.cursorPosition === this.buffer.length &&
+                this.extraLines === 0 &&
+                !this.hasError &&
+                !(this.options?.placeholder && this.buffer.length === text.length)
+            ) {
+                this.host.terminal.write(text);
+            } else {
+                this.renderLine();
+            }
         }
     }
 
@@ -90,8 +103,9 @@ export class LineInputMode extends InputModeBase<string> {
     private renderLine(): void {
         const prompt = `\x1b[36m?\x1b[0m ${this.promptText}`;
         if (this.buffer.length === 0 && this.options?.placeholder) {
-            this.redrawLine(prompt, `\x1b[2m${this.options.placeholder}\x1b[0m`, 0);
-            this.host.terminal.write(`\x1b[${this.options.placeholder.length}D`);
+            // redrawLine positions cursor at end; we need it at start of placeholder
+            const placeholder = `\x1b[2m${this.options.placeholder}\x1b[0m`;
+            this.redrawLine(prompt, placeholder, 0);
         } else {
             this.redrawLine(prompt, this.buffer, this.cursorPosition);
         }

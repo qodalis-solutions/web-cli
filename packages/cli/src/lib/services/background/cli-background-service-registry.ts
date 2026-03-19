@@ -10,6 +10,7 @@ import {
     ICliStateStore,
     ICliServiceProvider,
     ICliTerminalWriter,
+    ICliProcessRegistry,
 } from '@qodalis/cli-core';
 import { ServiceLogBuffer } from './service-log-buffer';
 import { CliMainThreadServiceRunner } from './cli-main-thread-service-runner';
@@ -23,6 +24,8 @@ interface ServiceEntry {
     error?: string;
     logBuffer: ServiceLogBuffer;
     runner: CliMainThreadServiceRunner | CliWorkerServiceRunner | null;
+    /** PID assigned by the process registry */
+    pid?: number;
 }
 
 /**
@@ -37,11 +40,18 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
     private isFullScreen = false;
     private notificationQueue: ICliServiceEvent[] = [];
 
+    private processRegistry?: ICliProcessRegistry;
+
     constructor(
         private readonly state: ICliStateStore,
         private readonly services: ICliServiceProvider,
         private readonly writer?: ICliTerminalWriter,
     ) {}
+
+    /** Attach the process registry so background services get PIDs */
+    setProcessRegistry(registry: ICliProcessRegistry): void {
+        this.processRegistry = registry;
+    }
 
     register(service: ICliBackgroundService): void {
         if (this.entries.has(service.name)) {
@@ -68,10 +78,25 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
             throw new Error(`Service "${name}" is already running`);
         }
 
+        // Register with process registry so bg services get a PID
+        if (this.processRegistry) {
+            const svcType = entry.service.type === 'daemon' ? 'daemon' as const
+                : entry.service.type === 'job' ? 'job' as const
+                : 'service' as const;
+            const proc = this.processRegistry.register(name, {
+                name,
+                type: svcType,
+                onKill: () => this.stop(name),
+            });
+            entry.pid = proc.pid;
+        }
+
         const useWorker =
             entry.service.workerCompatible &&
             entry.service.workerFactory &&
             typeof Worker !== 'undefined';
+
+        const isDaemon = entry.service.type === 'daemon';
 
         if (useWorker) {
             const workerRunner = new CliWorkerServiceRunner(
@@ -87,15 +112,20 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
             entry.stoppedAt = undefined;
             entry.error = undefined;
 
-            try {
-                await workerRunner.start();
-                this.emitLifecycleEvent('service-started', name, {
-                    name,
-                    mode: 'worker',
-                });
-            } catch (e) {
-                this.handleStartError(entry, name, e);
+            if (isDaemon) {
+                // Fire-and-forget for daemons — onStart blocks until abort
+                workerRunner.start().catch((e) => this.handleStartError(entry, name, e));
+            } else {
+                try {
+                    await workerRunner.start();
+                } catch (e) {
+                    this.handleStartError(entry, name, e);
+                }
             }
+            this.emitLifecycleEvent('service-started', name, {
+                name,
+                mode: 'worker',
+            });
         } else {
             const mainRunner = new CliMainThreadServiceRunner(
                 entry.service,
@@ -110,15 +140,20 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
             entry.stoppedAt = undefined;
             entry.error = undefined;
 
-            try {
-                await mainRunner.start();
-                this.emitLifecycleEvent('service-started', name, {
-                    name,
-                    mode: 'main-thread',
-                });
-            } catch (e) {
-                this.handleStartError(entry, name, e);
+            if (isDaemon) {
+                // Fire-and-forget for daemons — onStart blocks until abort
+                mainRunner.start().catch((e) => this.handleStartError(entry, name, e));
+            } else {
+                try {
+                    await mainRunner.start();
+                } catch (e) {
+                    this.handleStartError(entry, name, e);
+                }
             }
+            this.emitLifecycleEvent('service-started', name, {
+                name,
+                mode: 'main-thread',
+            });
         }
     }
 
@@ -126,7 +161,8 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
         const entry = this.getEntry(name);
 
         if (entry.status !== 'running') {
-            throw new Error(`Service "${name}" is not running (status: ${entry.status})`);
+            // Already stopped/killed — nothing to do
+            return;
         }
 
         if (entry.runner) {
@@ -137,6 +173,7 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
         entry.stoppedAt = new Date();
         entry.runner = null;
 
+        this.completeInProcessRegistry(entry, 0);
         this.emitLifecycleEvent('service-stopped', name, { name });
     }
 
@@ -178,6 +215,7 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
                 entry.status = 'done';
                 entry.stoppedAt = new Date();
                 entry.runner = null;
+                this.completeInProcessRegistry(entry, 0);
                 this.emitLifecycleEvent('service-completed', name, {
                     name,
                     duration,
@@ -191,6 +229,7 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
                 entry.error = error.message;
                 entry.stoppedAt = new Date();
                 entry.runner = null;
+                this.failInProcessRegistry(entry);
                 this.emitLifecycleEvent('service-failed', name, {
                     name,
                     error: error.message,
@@ -288,6 +327,7 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
                 : undefined;
 
         return {
+            pid: entry.pid,
             name: entry.service.name,
             description: entry.service.description,
             type: entry.service.type,
@@ -307,9 +347,14 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
         const from = entry.status;
         entry.status = status;
 
-        if (status === 'stopped' || status === 'failed' || status === 'done') {
+        if (status === 'stopped' || status === 'done') {
             entry.stoppedAt = new Date();
             entry.runner = null;
+            this.completeInProcessRegistry(entry, 0);
+        } else if (status === 'failed') {
+            entry.stoppedAt = new Date();
+            entry.runner = null;
+            this.failInProcessRegistry(entry);
         }
 
         this.emitLifecycleEvent('status-change', name, { name, from, to: status });
@@ -322,6 +367,7 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
         entry.stoppedAt = new Date();
         entry.runner = null;
         entry.logBuffer.add(`Failed to start: ${error.message}`, 'error');
+        this.failInProcessRegistry(entry);
 
         if (entry.service.onError) {
             entry.service.onError(error, {} as ICliServiceContext);
@@ -384,5 +430,17 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
         this.writer.writeln('');
         this.writer.writeln(`\u250C\u2500 [${event.source}] ${message}`);
         this.writer.writeln('\u2514' + '\u2500'.repeat(40));
+    }
+
+    private completeInProcessRegistry(entry: ServiceEntry, exitCode: number): void {
+        if (entry.pid !== undefined && this.processRegistry) {
+            this.processRegistry.complete(entry.pid, exitCode);
+        }
+    }
+
+    private failInProcessRegistry(entry: ServiceEntry): void {
+        if (entry.pid !== undefined && this.processRegistry) {
+            this.processRegistry.fail(entry.pid);
+        }
     }
 }

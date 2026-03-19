@@ -313,10 +313,24 @@ export interface ICliExecutionProcess {
  */
 export interface ICliProcessEntry {
     pid: number;
+    /** Display name (service name for bg services, command text for commands) */
+    name: string;
+    /** Process type */
+    type: 'command' | 'daemon' | 'job' | 'service';
     command: string;
     startTime: number;
     status: 'running' | 'completed' | 'failed' | 'killed';
     exitCode?: number;
+}
+
+/** Options for registering a process */
+export interface ICliProcessRegisterOptions {
+    /** Display name (defaults to command) */
+    name?: string;
+    /** Process type (defaults to 'command') */
+    type?: 'command' | 'daemon' | 'job' | 'service';
+    /** Custom kill handler (e.g. for background services) */
+    onKill?: () => Promise<void> | void;
 }
 
 /**
@@ -324,7 +338,7 @@ export interface ICliProcessEntry {
  */
 export interface ICliProcessRegistry {
     /** Register a new process, returns assigned PID */
-    register(command: string): { pid: number; abortController: AbortController };
+    register(command: string, options?: ICliProcessRegisterOptions): { pid: number; abortController: AbortController };
     /** Mark process as completed */
     complete(pid: number, exitCode: number): void;
     /** Mark process as failed */

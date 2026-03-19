@@ -20,7 +20,7 @@ export class CliBase64CommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata = {
         icon: '🔣',
-        module: 'misc',
+        module: 'encoding',
     };
 
     constructor() {

@@ -121,10 +121,12 @@ describe('PasswordInputMode', () => {
         const mode = makeMode('Password');
         mode.activate();
         await mode.handleInput('x');
-        const after1 = host.written.some(s => s.includes('*') && !s.includes('**'));
+        const allOutput = host.written.join('');
+        const after1 = allOutput.includes('*');
         await mode.handleInput('y');
         await mode.handleInput('z');
-        const after3 = host.written.some(s => s.includes('***'));
+        const allOutput3 = host.written.join('');
+        const after3 = allOutput3.includes('***');
         expect(after1).toBe(true);
         expect(after3).toBe(true);
     });
