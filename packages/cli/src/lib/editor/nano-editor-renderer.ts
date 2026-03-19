@@ -1,11 +1,14 @@
 import { Terminal } from '@xterm/xterm';
 import { NanoEditorBuffer } from './nano-editor-buffer';
+import { SyntaxHighlightEngine } from './syntax/engine';
 
 /**
  * Renders the nano-style editor UI to an xterm.js terminal.
  * Uses alternate screen buffer to preserve scroll history.
  */
 export class NanoEditorRenderer {
+    highlightEngine?: SyntaxHighlightEngine;
+
     constructor(private readonly terminal: Terminal) {}
 
     /** Enter alternate screen buffer and hide default cursor. */
@@ -49,7 +52,11 @@ export class NanoEditorRenderer {
 
             if (lineIdx < buffer.lines.length) {
                 const line = buffer.lines[lineIdx];
-                output += line.length > cols ? line.slice(0, cols) : line;
+                if (this.highlightEngine) {
+                    output += this.highlightEngine.renderLine(lineIdx, line, cols);
+                } else {
+                    output += line.length > cols ? line.slice(0, cols) : line;
+                }
             }
         }
 
