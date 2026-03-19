@@ -61,34 +61,53 @@ export abstract class InputModeBase<T> implements IInputMode {
     /**
      * Clear the current line and redraw prompt + display text, positioning
      * the cursor at the given position.
+     *
+     * All writes are batched into a single `terminal.write()` call to
+     * eliminate visible flicker between clear and redraw.
      */
     redrawLine(promptText: string, displayText: string, cursorPosition: number): void {
-        this.clearExtraLines();
-        this.host.terminal.write('\x1b[2K\r');
-        this.host.terminal.write(promptText + displayText);
+        let buf = '';
+
+        // Clear extra lines (help bar, errors) first
+        if (this.extraLines > 0) {
+            buf += '\x1b[s'; // save cursor
+            for (let i = 0; i < this.extraLines; i++) {
+                buf += '\x1b[B\x1b[2K'; // down + clear
+            }
+            buf += '\x1b[u'; // restore cursor
+            this.extraLines = 0;
+        }
+
+        // Clear current line + redraw prompt and text
+        buf += '\x1b[2K\r' + promptText + displayText;
+
+        // Position cursor
         const cursorOffset = displayText.length - cursorPosition;
         if (cursorOffset > 0) {
-            this.host.terminal.write(`\x1b[${cursorOffset}D`);
+            buf += `\x1b[${cursorOffset}D`;
         }
+
+        this.host.terminal.write(buf);
     }
 
     /**
      * Render a dimmed help bar below the current line.
      */
     writeHelp(text: string): void {
-        this.host.terminal.write(`\r\n    \x1b[2m${text}\x1b[0m`);
         this.extraLines++;
-        // Move cursor back up to the input line
-        this.host.terminal.write(`\x1b[${this.extraLines}A`);
+        this.host.terminal.write(
+            `\r\n    \x1b[2m${text}\x1b[0m\x1b[${this.extraLines}A`,
+        );
     }
 
     /**
      * Write a validation error below the current line.
      */
     protected writeError(message: string): void {
-        this.host.terminal.write(`\r\n  \x1b[31m✘ ${message}\x1b[0m`);
         this.extraLines++;
-        this.host.terminal.write(`\x1b[${this.extraLines}A`);
+        this.host.terminal.write(
+            `\r\n  \x1b[31m\u2718 ${message}\x1b[0m\x1b[${this.extraLines}A`,
+        );
     }
 
     /**
@@ -96,11 +115,12 @@ export abstract class InputModeBase<T> implements IInputMode {
      */
     protected clearExtraLines(): void {
         if (this.extraLines > 0) {
-            this.host.terminal.write('\x1b[s'); // save
+            let buf = '\x1b[s'; // save
             for (let i = 0; i < this.extraLines; i++) {
-                this.host.terminal.write('\x1b[B\x1b[2K'); // down + clear
+                buf += '\x1b[B\x1b[2K'; // down + clear
             }
-            this.host.terminal.write('\x1b[u'); // restore
+            buf += '\x1b[u'; // restore
+            this.host.terminal.write(buf);
             this.extraLines = 0;
         }
     }

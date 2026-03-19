@@ -25,6 +25,7 @@ export class CliWgetCommandCommandProcessor implements ICliCommandProcessor {
 
     metadata = {
         icon: '⬇',
+        module: 'file management',
     };
 
     parameters: ICliCommandParameterDescriptor[] = [

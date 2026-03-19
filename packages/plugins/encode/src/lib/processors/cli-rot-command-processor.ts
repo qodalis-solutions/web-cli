@@ -16,7 +16,7 @@ export class CliRotCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata = {
         icon: '🔄',
-        module: '@qodalis/cli-encode',
+        module: 'encoding',
     };
 
     parameters = [

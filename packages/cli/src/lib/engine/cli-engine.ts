@@ -45,6 +45,7 @@ import {
 import { CliDefaultPingServerService } from '../services/defaults/cli-default-ping-server.service';
 import { CliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
 import { CliProcessRegistry, CliProcessRegistry_TOKEN } from '../services/cli-process-registry';
+import { CliBackgroundServiceRegistry } from '../services/background/cli-background-service-registry';
 import { CliDragDropService } from '../services/cli-drag-drop.service';
 import { ICliDragDropService_TOKEN } from '@qodalis/cli-core';
 import { CliTranslationService } from '../services/cli-translation-service';
@@ -253,6 +254,9 @@ export class CliEngine {
         this.executionContext.initializeTerminalListeners();
 
         // 5.5. Register background services registry in the service container
+        // and wire it to the process registry so bg services get PIDs
+        (this.executionContext.backgroundServices as CliBackgroundServiceRegistry)
+            .setProcessRegistry(processRegistry);
         services.set([{
             provide: CliBackgroundServiceRegistry_TOKEN,
             useValue: this.executionContext.backgroundServices,

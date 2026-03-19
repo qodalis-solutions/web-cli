@@ -38,6 +38,9 @@ export class InlineSelectInputMode extends InputModeBase<string> {
     }
 
     activate(): void {
+        // Hide cursor during selection
+        this.host.terminal.write('\x1b[?25l');
+
         // Set default selection if specified
         if (this.selectOptions?.default) {
             const idx = this.selectableOptions.findIndex(
@@ -62,6 +65,7 @@ export class InlineSelectInputMode extends InputModeBase<string> {
         const label = selectedOpt ? selectedOpt.label : value;
         this.host.terminal.write('\x1b[2K\r');
         this.host.terminal.write(`\x1b[32m\u2714\x1b[0m ${this.promptText}: \x1b[36m${label}\x1b[0m`);
+        this.host.terminal.write('\x1b[?25h'); // Show cursor
         super.resolveAndPop(value);
     }
 
@@ -72,6 +76,7 @@ export class InlineSelectInputMode extends InputModeBase<string> {
         this.clearExtraLines();
         this.host.terminal.write('\x1b[2K\r');
         this.host.terminal.write(`\x1b[33m\u2718\x1b[0m ${this.promptText}: \x1b[2mcancelled\x1b[0m`);
+        this.host.terminal.write('\x1b[?25h'); // Show cursor
         super.abort();
     }
 

@@ -20,7 +20,7 @@ export class CliBinaryCommandProcessor implements ICliCommandProcessor {
 
     metadata?: CliProcessorMetadata = {
         icon: '💻',
-        module: '@qodalis/cli-encode',
+        module: 'encoding',
     };
 
     constructor() {
