@@ -46,9 +46,12 @@ export class CliUploadCommandProcessor implements ICliCommandProcessor {
         const accept = command.args?.['accept'] as string | undefined;
         const destPath = command.value?.trim() || undefined;
 
+        context.spinner?.show('Waiting for file selection...');
+
         const picked = await fileService.uploadFromBrowser(accept);
 
         if (!picked) {
+            context.spinner?.hide();
             context.writer.writeln('Upload cancelled.');
             return;
         }
@@ -59,13 +62,17 @@ export class CliUploadCommandProcessor implements ICliCommandProcessor {
             filename.startsWith('/') ? filename : cwd + '/' + filename,
         );
 
+        context.spinner?.show(`Saving "${picked.name}" (${picked.content.length} bytes)...`);
+
         try {
             fs.writeFile(resolved, picked.content);
             await fs.persist();
+            context.spinner?.hide();
             context.writer.writeSuccess(
                 `Uploaded ${context.writer.wrapInColor(picked.name, CliForegroundColor.Cyan)} (${picked.content.length} bytes) → ${resolved}`,
             );
         } catch (e: any) {
+            context.spinner?.hide();
             context.writer.writeError(e.message || 'Failed to write file');
         }
     }
