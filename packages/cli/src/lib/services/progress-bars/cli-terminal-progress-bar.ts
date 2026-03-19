@@ -116,37 +116,37 @@ export class CliTerminalProgressBar implements ICliPercentageProgressBar {
 
     private updateProgressBar(): void {
         const displayProgress = Math.round(this.progress);
-        const totalBars = 50; // Length of the progress bar
+        const totalBars = 30; // Length of the progress bar
         const filledBars = Math.round(
             (displayProgress / this.total) * totalBars,
         );
         const emptyBars = totalBars - filledBars;
 
-        // Build color-animated filled portion
         const RESET = '\x1b[0m';
+        const CYAN = '\x1b[36m';
+        const BRIGHT_CYAN = '\x1b[1;36m';
         const DIM = '\x1b[2m';
+
+        // Shimmer: a bright highlight that sweeps across the filled portion
+        const shimmerPos = this.tickCount % (filledBars + 4);
         let filledStr = '';
-        const shimmerPos = this.tickCount % (filledBars + 6);
 
         for (let i = 0; i < filledBars; i++) {
-            const ratio = filledBars > 1 ? i / (filledBars - 1) : 1;
-            const color = this.progressGradientColor(ratio);
-            const isShimmer = i >= shimmerPos - 2 && i <= shimmerPos;
-            const bright = isShimmer ? '\x1b[1m' : '';
-            filledStr += `${color}${bright}#${RESET}`;
+            const isShimmer = i >= shimmerPos - 1 && i <= shimmerPos;
+            filledStr += `${isShimmer ? BRIGHT_CYAN : CYAN}━${RESET}`;
         }
 
-        const emptyStr = `${DIM}${'.'.repeat(emptyBars)}${RESET}`;
+        const emptyStr = `${DIM}${'─'.repeat(emptyBars)}${RESET}`;
 
-        const progressBar = `[${filledStr}${emptyStr}]`;
-        const percentage = `${displayProgress}%`.padStart(4, ' ');
-        const text = this.text.length > 0 ? ` ${this.text}` : '';
+        const progressBar = `${CYAN}[${RESET}${filledStr}${emptyStr}${CYAN}]${RESET}`;
+        const percentage = `${CYAN}${displayProgress}%${RESET}`.padStart(4, ' ');
+        const text = this.text.length > 0 ? ` ${DIM}${this.text}${RESET}` : '';
 
         this.clearCurrentLine();
         this.progressText = `${progressBar} ${percentage} ${text}`;
         // Plain-text length for line-wrap calculation (no ANSI codes)
         this.progressTextPlainLength =
-            1 + totalBars + 1 + 1 + 4 + 1 + text.length;
+            1 + totalBars + 1 + 1 + 4 + 1 + this.text.length + 1;
 
         this.terminal.write(this.progressText);
         this.lastLineCount = this.calcLineCount(this.progressTextPlainLength);
@@ -154,26 +154,6 @@ export class CliTerminalProgressBar implements ICliPercentageProgressBar {
         if (this.context) {
             this.context.setCurrentLine(this.progressText);
         }
-    }
-
-    /**
-     * Returns an ANSI 256-color escape for a position in the progress bar.
-     * Gradient: red (0%) -> yellow (50%) -> green (100%).
-     */
-    private progressGradientColor(ratio: number): string {
-        let r: number, g: number;
-        if (ratio < 0.5) {
-            // red -> yellow
-            r = 5;
-            g = Math.round((ratio / 0.5) * 5);
-        } else {
-            // yellow -> green
-            r = Math.round(((1 - ratio) / 0.5) * 5);
-            g = 5;
-        }
-        // 256-color: 16 + 36*r + 6*g + b
-        const colorIndex = 16 + 36 * r + 6 * g + 0;
-        return `\x1b[38;5;${colorIndex}m`;
     }
 
     private clearCurrentLine(): void {
