@@ -5,7 +5,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
+    ICliConfigurationOption,
     ICliExecutionContext,
+    getPluginConfigValue,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -24,6 +26,41 @@ export class CliPasswordGeneratorCommandProcessor implements ICliCommandProcesso
         requiredCoreVersion: '>=2.0.0 <3.0.0',
         requiredCliVersion: '>=2.0.0 <3.0.0',
     };
+
+    configurationOptions?: ICliConfigurationOption[] = [
+        {
+            key: 'defaultLength',
+            label: 'Default Length',
+            description: 'Default password length when --length is not specified',
+            type: 'number',
+            defaultValue: 16,
+            validator: (v) => ({
+                valid: typeof v === 'number' && v >= 4 && v <= 128,
+                message: 'Must be between 4 and 128',
+            }),
+        },
+        {
+            key: 'includeSymbols',
+            label: 'Include Symbols',
+            description: 'Include symbols (!@#$%) by default',
+            type: 'boolean',
+            defaultValue: false,
+        },
+        {
+            key: 'includeUppercase',
+            label: 'Include Uppercase',
+            description: 'Include uppercase letters by default',
+            type: 'boolean',
+            defaultValue: true,
+        },
+        {
+            key: 'includeNumbers',
+            label: 'Include Numbers',
+            description: 'Include numbers (0-9) by default',
+            type: 'boolean',
+            defaultValue: true,
+        },
+    ];
 
     parameters?: ICliCommandParameterDescriptor[] | undefined = [
         {
@@ -62,14 +99,15 @@ export class CliPasswordGeneratorCommandProcessor implements ICliCommandProcesso
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const length =
-            command.args['length'] || this.parameters![0].defaultValue;
-        const useSymbols =
-            command.args['symbols'] || this.parameters![1].defaultValue;
-        const useUppercase =
-            command.args['uppercase'] ?? this.parameters![2].defaultValue;
-        const useNumbers =
-            command.args['numbers'] ?? this.parameters![3].defaultValue;
+        const cfgLength = getPluginConfigValue(context, 'generate-password', 'defaultLength', 16);
+        const cfgSymbols = getPluginConfigValue(context, 'generate-password', 'includeSymbols', false);
+        const cfgUppercase = getPluginConfigValue(context, 'generate-password', 'includeUppercase', true);
+        const cfgNumbers = getPluginConfigValue(context, 'generate-password', 'includeNumbers', true);
+
+        const length = command.args['length'] ?? cfgLength;
+        const useSymbols = command.args['symbols'] ?? cfgSymbols;
+        const useUppercase = command.args['uppercase'] ?? cfgUppercase;
+        const useNumbers = command.args['numbers'] ?? cfgNumbers;
 
         const password = this.generatePassword(
             length,

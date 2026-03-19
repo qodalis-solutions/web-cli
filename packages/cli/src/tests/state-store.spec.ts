@@ -145,6 +145,32 @@ describe('CliStateStore', () => {
     it('should expose store name', () => {
         expect(store.name).toBe('test-store');
     });
+
+    it('should complete BehaviorSubject on dispose', () => {
+        let completed = false;
+        store.subscribe({
+            complete: () => (completed = true),
+        } as any);
+
+        store.dispose();
+
+        expect(completed).toBe(true);
+    });
+
+    it('should not emit new values after dispose', () => {
+        const values: any[] = [];
+        store.subscribe((state) => values.push({ ...state }));
+
+        // Initial emission from BehaviorSubject
+        expect(values.length).toBe(1);
+
+        store.dispose();
+
+        // After dispose, updateState calls next() on a completed subject —
+        // RxJS silently ignores it, so no new emission should occur
+        store.updateState({ count: 999 });
+        expect(values.length).toBe(1);
+    });
 });
 
 // ---------------------------------------------------------------------------
@@ -228,5 +254,38 @@ describe('CliStateStoreManager', () => {
 
     it('should return empty entries when no stores exist', () => {
         expect(manager.getStoreEntries()).toEqual([]);
+    });
+
+    it('should dispose all stores and clear the map', () => {
+        const store1 = manager.getStateStore('alpha', { a: 1 });
+        const store2 = manager.getStateStore('beta', { b: 2 });
+
+        manager.dispose();
+
+        // After dispose, getStoreEntries should be empty (map was cleared)
+        expect(manager.getStoreEntries()).toEqual([]);
+
+        // Stores should be completed — subscribing after dispose should
+        // complete immediately (BehaviorSubject is completed)
+        let completed = false;
+        (store1 as CliStateStore)
+            .select((s) => s)
+            .subscribe({ complete: () => (completed = true) });
+        expect(completed).toBe(true);
+
+        let completed2 = false;
+        (store2 as CliStateStore)
+            .select((s) => s)
+            .subscribe({ complete: () => (completed2 = true) });
+        expect(completed2).toBe(true);
+    });
+
+    it('should allow creating new stores after dispose', () => {
+        manager.getStateStore('old', { x: 1 });
+        manager.dispose();
+
+        const newStore = manager.getStateStore('new', { y: 2 });
+        expect(newStore.getState()).toEqual({ y: 2 });
+        expect(manager.getStoreEntries().length).toBe(1);
     });
 });

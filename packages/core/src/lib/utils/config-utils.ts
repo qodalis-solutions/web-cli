@@ -2,6 +2,7 @@ import {
     ICliStateStore,
     ICliCommandProcessorRegistry,
     ICliConfigurationOption,
+    ICliExecutionContext,
 } from '../interfaces';
 
 /**
@@ -36,6 +37,35 @@ export function getConfigValue<T = any>(
         // State not initialized or not available
     }
     return defaultValue;
+}
+
+/**
+ * Retrieves a plugin configuration value from the execution context.
+ * This is a convenience wrapper for plugins — handles store lookup internally.
+ *
+ * @param context The execution context
+ * @param category The category (usually the processor's command name)
+ * @param key The configuration key
+ * @param defaultValue Fallback value if not configured
+ * @returns The configured value or the default
+ */
+export function getPluginConfigValue<T = any>(
+    context: ICliExecutionContext,
+    category: string,
+    key: string,
+    defaultValue: T,
+): T {
+    try {
+        const storeManager = context.services.get<any>(
+            'cli-state-store-manager',
+        );
+        if (!storeManager) return defaultValue;
+        const store = storeManager.getStateStore(CLI_CONFIGURE_STORE_NAME);
+        if (!store) return defaultValue;
+        return getConfigValue(store, category, key, defaultValue);
+    } catch {
+        return defaultValue;
+    }
 }
 
 /**

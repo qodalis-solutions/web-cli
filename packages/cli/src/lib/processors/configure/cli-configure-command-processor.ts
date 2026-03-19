@@ -58,6 +58,78 @@ const SYSTEM_OPTIONS: ICliConfigurationOption[] = [
             { label: 'English', value: 'en' },
         ],
     },
+    {
+        key: 'cursorBlink',
+        label: 'Cursor Blink',
+        description: 'Whether the terminal cursor blinks',
+        type: 'boolean',
+        defaultValue: true,
+    },
+    {
+        key: 'cursorStyle',
+        label: 'Cursor Style',
+        description: 'Terminal cursor shape',
+        type: 'select',
+        defaultValue: 'block',
+        options: [
+            { label: 'Block', value: 'block' },
+            { label: 'Underline', value: 'underline' },
+            { label: 'Bar', value: 'bar' },
+        ],
+    },
+    {
+        key: 'scrollback',
+        label: 'Scrollback',
+        description: 'Number of scrollback lines to retain',
+        type: 'number',
+        defaultValue: 1000,
+        validator: (value: number) => {
+            if (value < 0 || value > 100000) {
+                return { valid: false, message: 'Scrollback must be between 0 and 100,000' };
+            }
+            return { valid: true };
+        },
+    },
+    {
+        key: 'fontSize',
+        label: 'Font Size',
+        description: 'Terminal font size in pixels',
+        type: 'number',
+        defaultValue: 20,
+        validator: (value: number) => {
+            if (value < 8 || value > 40) {
+                return { valid: false, message: 'Font size must be between 8 and 40' };
+            }
+            return { valid: true };
+        },
+    },
+    {
+        key: 'fontFamily',
+        label: 'Font Family',
+        description: 'Terminal font family',
+        type: 'string',
+        defaultValue: 'monospace',
+    },
+    {
+        key: 'smoothScrollDuration',
+        label: 'Smooth Scroll',
+        description: 'Smooth scroll duration in milliseconds (0 to disable)',
+        type: 'number',
+        defaultValue: 0,
+        validator: (value: number) => {
+            if (value < 0 || value > 1000) {
+                return { valid: false, message: 'Smooth scroll duration must be between 0 and 1,000 ms' };
+            }
+            return { valid: true };
+        },
+    },
+    {
+        key: 'greeting',
+        label: 'Greeting',
+        description: 'Show animated time-based greeting on startup',
+        type: 'boolean',
+        defaultValue: true,
+    },
 ];
 
 /** Map of string labels to CliLogLevel enum values. */
@@ -453,9 +525,31 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
             }
         }
 
-        // Welcome message setting is persisted in state and read
-        // directly by the welcome module on next boot — no runtime
-        // mutation needed here.
+        // Terminal options
+        if (context.terminal?.options) {
+            if (settings['cursorBlink'] !== undefined) {
+                context.terminal.options.cursorBlink = settings['cursorBlink'];
+            }
+            if (settings['cursorStyle']) {
+                context.terminal.options.cursorStyle = settings['cursorStyle'];
+            }
+            if (settings['scrollback'] !== undefined) {
+                context.terminal.options.scrollback = settings['scrollback'];
+            }
+            if (settings['fontSize'] !== undefined) {
+                context.terminal.options.fontSize = settings['fontSize'];
+            }
+            if (settings['fontFamily']) {
+                context.terminal.options.fontFamily = settings['fontFamily'];
+            }
+            if (settings['smoothScrollDuration'] !== undefined) {
+                context.terminal.options.smoothScrollDuration = settings['smoothScrollDuration'];
+            }
+        }
+
+        // Welcome message and greeting settings are persisted in state
+        // and read directly by the welcome module on next boot — no
+        // runtime mutation needed here.
     }
 
     // ── Child processor builders ────────────────────────────────────────
@@ -585,6 +679,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
             description:
                 'Set a configuration value (e.g. configure set system.logLevel Debug)',
             valueRequired: true,
+            acceptsRawInput: true,
             processCommand: async (
                 command: CliProcessCommand,
                 context: ICliExecutionContext,
@@ -771,12 +866,15 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 }
                 return { value: num };
             }
-            case 'boolean':
+            case 'boolean': {
+                const lower = rawValue.toLowerCase();
+                if (['true', '1', 'yes'].includes(lower)) return { value: true };
+                if (['false', '0', 'no'].includes(lower)) return { value: false };
                 return {
-                    value: ['true', '1', 'yes'].includes(
-                        rawValue.toLowerCase(),
-                    ),
+                    value: null,
+                    error: translator.t('cli.configure.invalid_boolean', 'Invalid boolean value: "{value}". Use true or false.', { value: rawValue }),
                 };
+            }
             case 'select':
                 if (option.options) {
                     const match = option.options.find(

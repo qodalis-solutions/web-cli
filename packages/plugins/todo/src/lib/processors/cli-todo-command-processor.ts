@@ -6,7 +6,9 @@ import {
     CliStateConfiguration,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
+    ICliConfigurationOption,
     ICliExecutionContext,
+    getPluginConfigValue,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 import {
@@ -34,6 +36,23 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
         requiredCoreVersion: '>=2.0.0 <3.0.0',
         requiredCliVersion: '>=2.0.0 <3.0.0',
     };
+
+    configurationOptions?: ICliConfigurationOption[] = [
+        {
+            key: 'showCompletedFirst',
+            label: 'Show Completed First',
+            description: 'List completed tasks before pending ones',
+            type: 'boolean',
+            defaultValue: false,
+        },
+        {
+            key: 'confirmBeforeDelete',
+            label: 'Confirm Before Delete',
+            description: 'Ask for confirmation before removing tasks',
+            type: 'boolean',
+            defaultValue: false,
+        },
+    ];
 
     stateConfiguration?: CliStateConfiguration = {
         initialState: {
@@ -163,6 +182,11 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         filtered = filtered.filter((t) => t.completed);
                     } else if (args['overdue']) {
                         filtered = filtered.filter((t) => isOverdue(t));
+                    }
+
+                    const showCompletedFirst = getPluginConfigValue(context, 'todo', 'showCompletedFirst', false);
+                    if (showCompletedFirst) {
+                        filtered.sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? -1 : 1));
                     }
 
                     const doneCount = this.todos.filter((t) => t.completed).length;
@@ -419,6 +443,18 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                     if (index === -1) {
                         context.writer.writeError(`Task #${id} not found.`);
                         return;
+                    }
+
+                    const confirmBeforeDelete = getPluginConfigValue(context, 'todo', 'confirmBeforeDelete', false);
+                    if (confirmBeforeDelete) {
+                        const confirmed = await context.reader.readConfirm(
+                            `Remove task #${id}: "${this.todos[index].text}"?`,
+                            false,
+                        );
+                        if (!confirmed) {
+                            context.writer.writeInfo('Cancelled.');
+                            return;
+                        }
                     }
 
                     const removed = this.todos.splice(index, 1)[0];

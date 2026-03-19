@@ -5,7 +5,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
+    ICliConfigurationOption,
     ICliExecutionContext,
+    getPluginConfigValue,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -29,6 +31,52 @@ export class CliTextToImageCommandProcessor implements ICliCommandProcessor {
         requiredCoreVersion: '>=2.0.0 <3.0.0',
         requiredCliVersion: '>=2.0.0 <3.0.0',
     };
+
+    configurationOptions?: ICliConfigurationOption[] = [
+        {
+            key: 'defaultWidth',
+            label: 'Default Width',
+            description: 'Default image width in pixels',
+            type: 'number',
+            defaultValue: DEFAULT_WIDTH,
+            validator: (v) => ({
+                valid: typeof v === 'number' && v >= 50 && v <= 4096,
+                message: 'Must be between 50 and 4096',
+            }),
+        },
+        {
+            key: 'defaultHeight',
+            label: 'Default Height',
+            description: 'Default image height in pixels',
+            type: 'number',
+            defaultValue: DEFAULT_HEIGHT,
+            validator: (v) => ({
+                valid: typeof v === 'number' && v >= 50 && v <= 4096,
+                message: 'Must be between 50 and 4096',
+            }),
+        },
+        {
+            key: 'defaultBgColor',
+            label: 'Background Color',
+            description: 'Default background color (hex format)',
+            type: 'string',
+            defaultValue: DEFAULT_BG_COLOR,
+        },
+        {
+            key: 'defaultTextColor',
+            label: 'Text Color',
+            description: 'Default text color (hex format)',
+            type: 'string',
+            defaultValue: DEFAULT_TEXT_COLOR,
+        },
+        {
+            key: 'defaultFont',
+            label: 'Font',
+            description: 'Default font specification (e.g. "30px Arial")',
+            type: 'string',
+            defaultValue: DEFAULT_FONT,
+        },
+    ];
 
     parameters?: ICliCommandParameterDescriptor[] | undefined = [
         {
@@ -92,12 +140,12 @@ export class CliTextToImageCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         const text = command.value || '';
-        const width = command.args['width'] ?? DEFAULT_WIDTH;
-        const height = command.args['height'] ?? DEFAULT_HEIGHT;
+        const width = command.args['width'] ?? getPluginConfigValue(context, 'text-to-image', 'defaultWidth', DEFAULT_WIDTH);
+        const height = command.args['height'] ?? getPluginConfigValue(context, 'text-to-image', 'defaultHeight', DEFAULT_HEIGHT);
         const filename = command.args['fileName'] ?? DEFAULT_FILENAME;
-        const bgColor = command.args['bgColor'] || DEFAULT_BG_COLOR;
-        const textColor = command.args['textColor'] || DEFAULT_TEXT_COLOR;
-        const font = command.args['font'] || DEFAULT_FONT;
+        const bgColor = command.args['bgColor'] ?? getPluginConfigValue(context, 'text-to-image', 'defaultBgColor', DEFAULT_BG_COLOR);
+        const textColor = command.args['textColor'] ?? getPluginConfigValue(context, 'text-to-image', 'defaultTextColor', DEFAULT_TEXT_COLOR);
+        const font = command.args['font'] ?? getPluginConfigValue(context, 'text-to-image', 'defaultFont', DEFAULT_FONT);
         const padding = command.args['padding'] ?? DEFAULT_PADDING;
         const textAlign = command.args['textAlign'] || 'center';
 

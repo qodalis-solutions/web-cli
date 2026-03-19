@@ -4,7 +4,9 @@ import {
     CliProcessorMetadata,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
+    ICliConfigurationOption,
     ICliExecutionContext,
+    getPluginConfigValue,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 import {
@@ -35,6 +37,34 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
         requiredCoreVersion: '>=2.0.0 <3.0.0',
         requiredCliVersion: '>=2.0.0 <3.0.0',
     };
+
+    configurationOptions?: ICliConfigurationOption[] = [
+        {
+            key: 'defaultTimeout',
+            label: 'Default Timeout',
+            description: 'Default request timeout in milliseconds',
+            type: 'number',
+            defaultValue: 30000,
+            validator: (v) => ({
+                valid: typeof v === 'number' && v >= 1000 && v <= 300000,
+                message: 'Must be between 1000 and 300000 ms',
+            }),
+        },
+        {
+            key: 'prettyPrint',
+            label: 'Pretty-Print JSON',
+            description: 'Pretty-print JSON responses by default',
+            type: 'boolean',
+            defaultValue: false,
+        },
+        {
+            key: 'verbose',
+            label: 'Verbose Output',
+            description: 'Show request/response headers by default',
+            type: 'boolean',
+            defaultValue: false,
+        },
+    ];
 
     parameters = [
         {
@@ -119,15 +149,19 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
         }
 
         const args = command.args;
+        const cfgTimeout = getPluginConfigValue(context, 'curl', 'defaultTimeout', 30000);
+        const cfgPretty = getPluginConfigValue(context, 'curl', 'prettyPrint', false);
+        const cfgVerbose = getPluginConfigValue(context, 'curl', 'verbose', false);
+
         const explicitMethod = args['request'] || args['X'];
         const data = args['data'] || args['d'];
         const dataRaw = args['data-raw'];
         const hasBody = data != null || dataRaw != null;
-        const verbose = !!args['verbose'] || !!args['v'];
-        const pretty = !!args['pretty'];
+        const verbose = args['verbose'] != null || args['v'] != null ? (!!args['verbose'] || !!args['v']) : cfgVerbose;
+        const pretty = args['pretty'] != null ? !!args['pretty'] : cfgPretty;
         const silent = !!args['silent'] || !!args['s'];
         const useProxy = !!args['proxy'];
-        const timeout = parseInt(args['timeout'] || '30000', 10);
+        const timeout = parseInt(args['timeout'] || String(cfgTimeout), 10);
         const followRedirects = args['location'] !== false && args['L'] !== false;
 
         let method: string;
