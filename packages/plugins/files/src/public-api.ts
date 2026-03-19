@@ -47,6 +47,7 @@ import { CliDiffCommandProcessor } from './lib/processors/cli-diff-command-proce
 import { CliTeeCommandProcessor } from './lib/processors/cli-tee-command-processor';
 import { CliXargsCommandProcessor } from './lib/processors/cli-xargs-command-processor';
 import { CliShCommandProcessor } from './lib/processors/cli-sh-command-processor';
+import { CliUploadCommandProcessor } from './lib/processors/cli-upload-command-processor';
 
 /**
  * Configuration options for the files module.
@@ -105,6 +106,7 @@ export const filesModule: ICliFilesModule = {
         new CliTeeCommandProcessor(),
         new CliXargsCommandProcessor(),
         new CliShCommandProcessor(),
+        new CliUploadCommandProcessor(),
     ],
     services: [
         {

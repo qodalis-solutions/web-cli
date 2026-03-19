@@ -12,7 +12,7 @@ import { resolveServer, serverUrl, formatBytes } from './scp-utils';
 export class CliScpUploadProcessor implements ICliCommandChildProcessor {
     command = 'upload';
     aliases = ['put'];
-    description = 'Upload a local file to a remote server';
+    description = 'Upload a file to a remote server (use --local to pick from your machine)';
     acceptsRawInput = true;
     valueRequired = true;
     parent?: ICliCommandProcessor;
@@ -26,8 +26,8 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
         },
         {
             name: 'local-path',
-            description: 'Local file path',
-            required: true,
+            description: 'Local file path (from virtual filesystem)',
+            required: false,
             type: 'string' as const,
         },
         {
@@ -36,6 +36,12 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
             required: true,
             type: 'string' as const,
         },
+        {
+            name: 'local',
+            description: 'Pick a file from your local machine via browser file picker',
+            required: false,
+            type: 'boolean' as const,
+        },
     ];
 
     async processCommand(
@@ -43,34 +49,52 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         const args = command.args || {};
+        const useLocalPicker = !!args['local'];
         let serverName: string | undefined;
         let localPath: string | undefined;
         let remotePath: string | undefined;
 
         // Try named args first
-        if (args['server'] && args['local-path'] && args['remote-path']) {
+        if (args['server'] && args['remote-path']) {
             serverName = String(args['server']);
-            localPath = String(args['local-path']);
+            localPath = args['local-path'] ? String(args['local-path']) : undefined;
             remotePath = String(args['remote-path']);
         } else {
             // Fall back to positional
             const value = command.value?.trim();
             if (!value) {
-                context.writer.writeError('Usage: scp upload <server> <local-path> <remote-path>');
+                context.writer.writeError(
+                    useLocalPicker
+                        ? 'Usage: scp upload --local <server> <remote-path>'
+                        : 'Usage: scp upload <server> <local-path> <remote-path>',
+                );
                 return;
             }
             const parts = value.split(/\s+/);
-            if (parts.length < 3) {
-                context.writer.writeError('Usage: scp upload <server> <local-path> <remote-path>');
-                return;
+            if (useLocalPicker) {
+                if (parts.length < 2) {
+                    context.writer.writeError('Usage: scp upload --local <server> <remote-path>');
+                    return;
+                }
+                serverName = parts[0];
+                remotePath = parts[1];
+            } else {
+                if (parts.length < 3) {
+                    context.writer.writeError('Usage: scp upload <server> <local-path> <remote-path>');
+                    return;
+                }
+                serverName = parts[0];
+                localPath = parts[1];
+                remotePath = parts[2];
             }
-            serverName = parts[0];
-            localPath = parts[1];
-            remotePath = parts[2];
         }
 
-        if (!serverName || !localPath || !remotePath) {
-            context.writer.writeError('Usage: scp upload <server> <local-path> <remote-path>');
+        if (!serverName || (!useLocalPicker && !localPath) || !remotePath) {
+            context.writer.writeError(
+                useLocalPicker
+                    ? 'Usage: scp upload --local <server> <remote-path>'
+                    : 'Usage: scp upload <server> <local-path> <remote-path>',
+            );
             return;
         }
 
@@ -95,21 +119,33 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
             return;
         }
 
-        context.spinner?.show(`Reading local file "${localPath}"...`);
+        let content: string | null;
+        let filename: string;
 
-        try {
-            const content = await fileService.readFile(localPath);
+        if (useLocalPicker) {
+            const picked = await fileService.uploadFromBrowser();
+            if (!picked) {
+                context.writer.writeln('Upload cancelled.');
+                return;
+            }
+            content = picked.content;
+            filename = picked.name;
+        } else {
+            context.spinner?.show(`Reading local file "${localPath}"...`);
+            content = await fileService.readFile(localPath!);
             if (content === null) {
                 context.spinner?.hide();
                 context.writer.writeError(`Local file not found: ${localPath}`);
                 return;
             }
+            filename = localPath!.split('/').pop() || 'file';
+        }
 
-            const filename = localPath.split('/').pop() || 'file';
-            context.spinner?.show(
-                `Uploading "${filename}" (${formatBytes(content.length)}) to ${server.name}:${remotePath}...`,
-            );
+        context.spinner?.show(
+            `Uploading "${filename}" (${formatBytes(content.length)}) to ${server.name}:${remotePath}...`,
+        );
 
+        try {
             await transferService.upload(
                 serverUrl(server),
                 remotePath,
@@ -129,7 +165,10 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        context.writer.writeln('Upload a local file to a remote server.');
-        context.writer.writeln('Usage: scp upload <server> <local-path> <remote-path>');
+        context.writer.writeln('Upload a file to a remote server.');
+        context.writer.writeln('');
+        context.writer.writeln('Usage:');
+        context.writer.writeln('  scp upload <server> <local-path> <remote-path>    Upload from virtual filesystem');
+        context.writer.writeln('  scp upload --local <server> <remote-path>         Pick from your machine via browser');
     }
 }
