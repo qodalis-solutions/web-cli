@@ -22,6 +22,7 @@ import {
     ICliBackgroundServiceRegistry,
     ICliTranslationService,
     ICliFilePickerProvider,
+    CliFullScreenOptions,
 } from '@qodalis/cli-core';
 import { CliBackgroundServiceRegistry } from '../services/background';
 import { CliTerminalWriter } from '../services/cli-terminal-writer';
@@ -369,9 +370,14 @@ export class CliExecutionContext
         return !!this.contextProcessor?.onData;
     }
 
-    public enterFullScreenMode(processor: ICliCommandProcessor): void {
+    public enterFullScreenMode(processor: ICliCommandProcessor, options?: CliFullScreenOptions): void {
         this.terminal.write('\x1b[?1049h'); // alternate screen buffer
-        this.terminal.write('\x1b[?25l'); // hide cursor
+        this.terminal.write('\x1b[H'); // move cursor to row 1, col 1
+        if (options?.showCursor) {
+            this.terminal.write('\x1b[?25h'); // show cursor
+        } else {
+            this.terminal.write('\x1b[?25l'); // hide cursor
+        }
         (this.backgroundServices as CliBackgroundServiceRegistry).setFullScreen(true);
         this.setContextProcessor(processor, true, true);
 

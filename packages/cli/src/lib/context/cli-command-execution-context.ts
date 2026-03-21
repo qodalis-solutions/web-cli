@@ -19,6 +19,7 @@ import {
     ICliTextAnimator,
     ICliBackgroundServiceRegistry,
     ICliTranslationService,
+    CliFullScreenOptions,
 } from '@qodalis/cli-core';
 import { Terminal } from '@xterm/xterm';
 import { Subject } from 'rxjs';
@@ -114,7 +115,8 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
         this.translator = context.translator;
         this.reader = context.reader;
 
-        this.enterFullScreenMode = (p) => context.enterFullScreenMode(p);
+        this.enterFullScreenMode = (p: ICliCommandProcessor, o?: CliFullScreenOptions) =>
+            context.enterFullScreenMode(p, o);
         this.exitFullScreenMode = () => context.exitFullScreenMode();
         this.createInterval = (cb, ms) => context.createInterval(cb, ms);
         this.createTimeout = (cb, ms) => context.createTimeout(cb, ms);
