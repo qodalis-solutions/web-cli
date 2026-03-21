@@ -51,10 +51,10 @@ Add PostgreSQL, MySQL, MS SQL Server, Redis, and Elasticsearch providers to the 
 | Attribute | Value |
 |---|---|
 | Language | `sql` (existing) |
-| Query syntax | T-SQL, `;` or `GO` terminator |
+| Query syntax | T-SQL, `;` terminator (no `GO` — it is a client tool artifact, not SQL) |
 | Driver (Node) | `mssql` (tedious) |
 | Driver (.NET) | `Microsoft.Data.SqlClient` |
-| Driver (Python) | `pymssql` |
+| Driver (Python) | `pymssql` (sync-only; wrap in `asyncio.to_thread()`) |
 | Schema introspection | `information_schema.tables` + `information_schema.columns` |
 | Connection config | `{ connectionString }` |
 | Plugin directory | `data-explorer-mssql` |
@@ -68,7 +68,7 @@ Add PostgreSQL, MySQL, MS SQL Server, Redis, and Elasticsearch providers to the 
 | Driver (Node) | `ioredis` |
 | Driver (.NET) | `StackExchange.Redis` |
 | Driver (Python) | `redis.asyncio` |
-| Schema introspection | `SCAN` + `TYPE` to list keys with their types |
+| Schema introspection | `SCAN` + `TYPE` (see schema details below) |
 | Connection config | `{ connectionString }` (Redis URL format) |
 | Plugin directory | `data-explorer-redis` |
 
@@ -82,6 +82,15 @@ Add PostgreSQL, MySQL, MS SQL Server, Redis, and Elasticsearch providers to the 
 - Info/status commands: `[{ property, value }, ...]`
 
 **Query completeness**: Always single-line. Each command executes immediately on Enter.
+
+**Schema details**: Use `SCAN` with `COUNT 100` in a bounded loop (max 1000 keys sampled). Group scanned keys by type (via `TYPE` command). Return one `DataExplorerSchemaTable` per Redis type (`string`, `hash`, `list`, `set`, `zset`), with a `columns` array describing the shape:
+- `string`: columns `[{ name: "key" }, { name: "value" }]`
+- `hash`: columns `[{ name: "key" }, { name: "field" }, { name: "value" }]`
+- `list`: columns `[{ name: "key" }, { name: "index" }, { name: "value" }]`
+- `set`: columns `[{ name: "key" }, { name: "member" }]`
+- `zset`: columns `[{ name: "key" }, { name: "member" }, { name: "score" }]`
+
+Each table's `name` is the type name (e.g., `"string"`, `"hash"`). The sampled keys are not listed individually — the schema shows the structural shape per type.
 
 ### Elasticsearch
 
@@ -124,7 +133,7 @@ _cat/indices?v
 
 **Result mapping**:
 - `_search` responses: flatten `hits.hits[]`, extract `_source` fields as columns
-- `_cat` responses: parse tabular output into rows
+- `_cat` responses: append `?format=json` to force JSON output, then parse as array of objects
 - Other responses: return raw JSON
 
 **Query completeness**: If the first line contains only verb + path (no body), execute immediately. If a `{` follows, wait for balanced braces.
@@ -133,7 +142,11 @@ _cat/indices?v
 
 ### DataExplorerLanguage Enum
 
-Add two new values to `packages/core` (shared types) and `packages/plugins/data-explorer`:
+Add two new values in all locations where the enum is defined:
+- **Frontend**: `web-cli/packages/plugins/data-explorer/src/lib/models/data-explorer-types.ts`
+- **Node.js**: `cli-server-node/packages/abstractions/src/data-explorer-types.ts`
+- **.NET**: `cli-server-dotnet/src/Qodalis.Cli.Abstractions/DataExplorer/DataExplorerTypes.cs`
+- **Python**: `cli-server-python/packages/abstractions/src/qodalis_cli_server_abstractions/data_explorer_types.py`
 ```typescript
 export enum DataExplorerLanguage {
     Sql = 'sql',
@@ -210,7 +223,22 @@ builder.addDataExplorerProvider(new ElasticsearchProvider({ node: '...' }), { na
 
 Equivalent registrations in .NET and Python demos.
 
-**Docker Compose** (workspace root): Add containers for PostgreSQL, MySQL, MS SQL Server, Redis, and Elasticsearch so all providers can be tested locally.
+**Docker Compose** (workspace root `docker-compose.yml`): Add these services:
+
+| Service | Image | Port | Key env vars |
+|---|---|---|---|
+| `postgres` | `postgres:16-alpine` | 5432 | `POSTGRES_USER=demo`, `POSTGRES_PASSWORD=demo`, `POSTGRES_DB=demo` |
+| `mysql` | `mysql:8` | 3306 | `MYSQL_ROOT_PASSWORD=demo`, `MYSQL_DATABASE=demo` |
+| `mssql` | `mcr.microsoft.com/mssql/server:2022-latest` | 1433 | `ACCEPT_EULA=Y`, `MSSQL_SA_PASSWORD=Demo@12345` |
+| `redis` | `redis:7-alpine` | 6379 | (none) |
+| `elasticsearch` | `elasticsearch:8.12.0` | 9200 | `discovery.type=single-node`, `xpack.security.enabled=false` |
+
+Demo connection strings:
+- PostgreSQL: `postgresql://demo:demo@localhost:5432/demo`
+- MySQL: `mysql://root:demo@localhost:3306/demo`
+- MS SQL: `Server=localhost,1433;Database=master;User Id=sa;Password=Demo@12345;TrustServerCertificate=true`
+- Redis: `redis://localhost:6379`
+- Elasticsearch: `http://localhost:9200`
 
 ## Implementation Order
 
