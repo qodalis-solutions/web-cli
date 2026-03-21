@@ -49,6 +49,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
     private outputFormat: DataExplorerOutputFormat = DataExplorerOutputFormat.Table;
     private inputBuffer = '';
     private cursorPos = 0;
+    private queryLines: string[] = [];
     private history: string[] = [];
     private historyIndex = -1;
     private executing = false;
@@ -97,6 +98,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         this.outputFormat = selectedSource.defaultOutputFormat;
         this.inputBuffer = '';
         this.cursorPos = 0;
+        this.queryLines = [];
         this.history = [];
         this.historyIndex = -1;
         this.executing = false;
@@ -190,9 +192,34 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        // Ctrl+C — clear line or quit
+        // Ctrl+L — clear screen
+        if (data === '\x0c') {
+            context.terminal.write(`${CSI}2J${CSI}H`);
+            this.drawHeader(context);
+            if (this.queryLines.length > 0) {
+                // Re-display accumulated lines
+                for (const prevLine of this.queryLines) {
+                    this.drawContinuationPrompt(context);
+                    context.terminal.write(prevLine + '\r\n');
+                }
+                this.drawContinuationPrompt(context);
+            } else {
+                this.drawPrompt(context);
+            }
+            context.terminal.write(this.inputBuffer);
+            return;
+        }
+
+        // Ctrl+C — cancel multi-line or clear line or quit
         if (data === '\x03') {
-            if (this.inputBuffer.length > 0) {
+            if (this.queryLines.length > 0) {
+                // Cancel multi-line accumulation
+                this.queryLines = [];
+                this.inputBuffer = '';
+                this.cursorPos = 0;
+                context.terminal.write('\r\n');
+                this.drawPrompt(context);
+            } else if (this.inputBuffer.length > 0) {
                 this.inputBuffer = '';
                 this.cursorPos = 0;
                 context.terminal.write('\r\n');
@@ -206,47 +233,44 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         // Enter
         if (data === '\r' || data === '\n') {
             context.terminal.write('\r\n');
-            const line = this.inputBuffer.trim();
+            const line = this.inputBuffer;
             this.inputBuffer = '';
             this.cursorPos = 0;
 
-            if (!line) {
+            // Empty line in single-line mode → just redraw prompt
+            if (!line.trim() && this.queryLines.length === 0) {
                 this.drawPrompt(context);
                 return;
             }
 
-            // Backslash or slash commands
-            if (line.startsWith('\\') || line.startsWith('/')) {
-                // Normalize to backslash prefix for the handler
-                const normalized = line.startsWith('/')
-                    ? '\\' + line.slice(1)
-                    : line;
+            // Backslash or slash commands (only in single-line mode)
+            if (
+                this.queryLines.length === 0 &&
+                (line.trim().startsWith('\\') || line.trim().startsWith('/'))
+            ) {
+                const trimmed = line.trim();
+                const normalized = trimmed.startsWith('/')
+                    ? '\\' + trimmed.slice(1)
+                    : trimmed;
                 await this.handleBackslashCommand(normalized, context);
                 this.drawPrompt(context);
                 return;
             }
 
-            // For SQL, require semicolon terminator
-            if (
-                this.source?.language === DataExplorerLanguage.Sql &&
-                !line.endsWith(';')
-            ) {
-                this.inputBuffer = line;
-                this.cursorPos = line.length;
-                context.writer.writeln(
-                    context.writer.wrapInColor(
-                        '  (end query with ; to execute)',
-                        CliForegroundColor.Yellow,
-                    ),
-                );
-                this.drawPrompt(context);
-                context.terminal.write(this.inputBuffer);
-                return;
-            }
+            // Accumulate line
+            this.queryLines.push(line);
+            const fullQuery = this.queryLines.join('\n').trim();
 
-            // Execute query
-            await this.executeQuery(line, context);
-            this.drawPrompt(context);
+            // Check if query is complete
+            if (this.isQueryComplete(fullQuery)) {
+                const query = fullQuery;
+                this.queryLines = [];
+                await this.executeQuery(query, context);
+                this.drawPrompt(context);
+            } else {
+                // Continue accumulating
+                this.drawContinuationPrompt(context);
+            }
             return;
         }
 
@@ -274,6 +298,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         this.source = null;
         this.inputBuffer = '';
         this.cursorPos = 0;
+        this.queryLines = [];
         this.history = [];
     }
 
@@ -548,13 +573,26 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                     `  ${context.writer.wrapInColor('\\schema [table]', CliForegroundColor.Yellow)}                  Show database schema`,
                 );
                 context.writer.writeln(
-                    `  ${context.writer.wrapInColor('\\clear', CliForegroundColor.Yellow)}                          Clear screen`,
+                    `  ${context.writer.wrapInColor('\\clear', CliForegroundColor.Yellow)} / ${context.writer.wrapInColor('Ctrl+L', CliForegroundColor.Yellow)}                  Clear screen`,
                 );
                 context.writer.writeln(
                     `  ${context.writer.wrapInColor('\\help', CliForegroundColor.Yellow)}                           Show this help`,
                 );
                 context.writer.writeln(
                     `  ${context.writer.wrapInColor('\\quit', CliForegroundColor.Yellow)}                           Exit data explorer`,
+                );
+                context.writer.writeln('');
+                context.writer.writeln(
+                    context.writer.wrapInColor(
+                        'Multi-line: SQL queries execute on ";". Other queries execute when brackets are balanced.',
+                        CliForegroundColor.White,
+                    ),
+                );
+                context.writer.writeln(
+                    context.writer.wrapInColor(
+                        'Press Ctrl+C to cancel a multi-line query.',
+                        CliForegroundColor.White,
+                    ),
                 );
                 return;
             }
@@ -746,6 +784,50 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         context.terminal.write(
             `${CSI}36m${this.source.name}> ${CSI}0m`,
         );
+    }
+
+    private drawContinuationPrompt(context: ICliExecutionContext): void {
+        if (!this.source) return;
+        const pad = ' '.repeat(Math.max(0, this.source.name.length - 3));
+        context.terminal.write(
+            `${CSI}36m${pad}...> ${CSI}0m`,
+        );
+    }
+
+    private isQueryComplete(query: string): boolean {
+        if (!query) return false;
+
+        // SQL: must end with semicolon
+        if (this.source?.language === DataExplorerLanguage.Sql) {
+            return query.endsWith(';');
+        }
+
+        // MongoDB / other: check balanced brackets and parens
+        let depth = 0;
+        let inString = false;
+        let stringChar = '';
+        for (let i = 0; i < query.length; i++) {
+            const c = query[i];
+            if (inString) {
+                if (c === '\\') {
+                    i++; // skip escaped char
+                } else if (c === stringChar) {
+                    inString = false;
+                }
+            } else {
+                if (c === '"' || c === "'") {
+                    inString = true;
+                    stringChar = c;
+                } else if (c === '(' || c === '[' || c === '{') {
+                    depth++;
+                } else if (c === ')' || c === ']' || c === '}') {
+                    depth--;
+                }
+            }
+        }
+
+        // Complete when all brackets are balanced and there's actual content
+        return depth <= 0;
     }
 
     private quit(context: ICliExecutionContext): void {
