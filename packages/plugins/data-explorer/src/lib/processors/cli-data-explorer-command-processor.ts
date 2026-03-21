@@ -306,13 +306,43 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        // Printable character
-        if (data.length === 1 && data >= ' ') {
+        // Printable character(s) — handles single keystrokes and paste
+        if (data.length >= 1 && !data.includes('\x1b')) {
+            // Filter to printable characters only
+            const printable = data.replace(/[\x00-\x1f]/g, (ch) =>
+                ch === '\n' || ch === '\r' ? ch : '',
+            );
+            if (!printable) return;
+
+            // Split pasted text by newlines
+            const pastedLines = printable.split(/\r\n|\r|\n/);
+
+            // Insert first segment into current line at cursor
             const before = this.currentLine.slice(0, this.cursorPos);
             const after = this.currentLine.slice(this.cursorPos);
-            this.currentLine = before + data + after;
-            this.cursorPos++;
-            this.redrawLineContent(context);
+
+            if (pastedLines.length === 1) {
+                // Single line — simple insert
+                this.currentLine = before + pastedLines[0] + after;
+                this.cursorPos += pastedLines[0].length;
+                this.redrawLineContent(context);
+            } else {
+                // Multi-line paste: splice new lines into the lines array
+                this.currentLine = before + pastedLines[0];
+                const newLines = pastedLines.slice(1, -1);
+                const lastPasted = pastedLines[pastedLines.length - 1];
+
+                // Insert middle lines and last line (with trailing content)
+                const insertAt = this.lineIndex + 1;
+                const toInsert = [...newLines, lastPasted + after];
+                this.lines.splice(insertAt, 0, ...toInsert);
+
+                // Move cursor to end of last pasted segment
+                this.lineIndex = insertAt + toInsert.length - 1;
+                this.cursorPos = lastPasted.length;
+
+                this.redrawFromLine(insertAt - 1, context);
+            }
         }
     }
 
