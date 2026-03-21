@@ -28,6 +28,7 @@ import { scpModule } from '@qodalis/cli-scp';
 import { stopwatchModule } from '@qodalis/cli-stopwatch';
 import { wgetModule } from '@qodalis/cli-wget';
 import { jobsModule } from '@qodalis/cli-server-jobs';
+import { dataExplorerModule } from '@qodalis/cli-data-explorer';
 import { langEsModule } from '@qodalis/cli-lang-es';
 import { langFrModule } from '@qodalis/cli-lang-fr';
 import { langDeModule } from '@qodalis/cli-lang-de';
@@ -93,6 +94,7 @@ export class HomeComponent {
         yesnoModule,
         serverLogsModule,
         jobsModule,
+        dataExplorerModule,
         filesModule,
         snakeModule,
         tetrisModule,

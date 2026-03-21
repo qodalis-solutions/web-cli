@@ -20,7 +20,27 @@ export interface PluginData {
 }
 
 export const PLUGINS: PluginData[] = [
-    // ===== Utilities (21) =====
+    // ===== Utilities (22) =====
+    {
+        id: 'data-explorer',
+        name: 'Data Explorer',
+        npmPackage: '@qodalis/cli-data-explorer',
+        command: 'data-explorer',
+        description: 'Interactive query console for databases and data sources — SQL, Redis, Elasticsearch, MongoDB.',
+        category: 'utility',
+        moduleExport: 'dataExplorerModule',
+        moduleImport: '@qodalis/cli-data-explorer',
+        examples: [
+            { command: 'data-explorer', description: 'Open the data explorer and select a data source' },
+            { command: 'SELECT * FROM users LIMIT 10;', description: 'Run a SQL query (inside the explorer)' },
+            { command: 'PING', description: 'Send a Redis PING command' },
+            { command: 'SET mykey "hello"', description: 'Set a Redis key' },
+            { command: 'GET /', description: 'Query Elasticsearch cluster info' },
+            { command: 'GET /_cat/indices', description: 'List Elasticsearch indices' },
+            { command: '\\schema', description: 'Show database schema (tables, columns, types)' },
+            { command: '\\format json', description: 'Switch output format to JSON' },
+        ],
+    },
     {
         id: 'guid',
         name: 'GUID',
