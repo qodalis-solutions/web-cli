@@ -16,7 +16,7 @@ import {
     DataExplorerSchemaResult,
     DataExplorerSourceInfo,
 } from '../models/data-explorer-types';
-import { getFormatter } from '../formatters';
+import { formatCsv } from '../formatters';
 import { highlightLine } from '../syntax/highlighter';
 
 const ESC = '\x1b';
@@ -455,9 +455,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 return;
             }
 
-            const formatter = getFormatter(this.outputFormat);
-            const output = formatter(result);
-            context.writer.writeln(output);
+            this.writeResult(result, context);
         } catch (err: unknown) {
             context.spinner?.hide();
             const message =
@@ -466,6 +464,61 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         }
 
         this.executing = false;
+    }
+
+    private writeResult(
+        result: DataExplorerResult,
+        context: ICliExecutionContext,
+    ): void {
+        const columns = result.columns ?? [];
+        const rows = this.normalizeRows(result.rows, columns);
+
+        if (columns.length === 0 && rows.length === 0) {
+            context.writer.writeln(`(empty result set) (${result.executionTime}ms)`);
+            return;
+        }
+
+        switch (this.outputFormat) {
+            case DataExplorerOutputFormat.Table:
+                context.writer.writeTable(
+                    columns,
+                    rows.map((row) => row.map((v) => String(v ?? ''))),
+                );
+                break;
+            case DataExplorerOutputFormat.Json: {
+                const objects = rows.map((row) => {
+                    const obj: Record<string, unknown> = {};
+                    columns.forEach((col, i) => { obj[col] = row[i]; });
+                    return obj;
+                });
+                context.writer.writeJson(objects);
+                break;
+            }
+            case DataExplorerOutputFormat.Csv:
+                context.writer.writeln(formatCsv(result));
+                break;
+            case DataExplorerOutputFormat.Raw:
+                context.writer.writeln(JSON.stringify(result.rows));
+                break;
+        }
+
+        // Summary line
+        const rowLabel = result.rowCount === 1 ? 'row' : 'rows';
+        context.writer.writeln(`${result.rowCount} ${rowLabel} (${result.executionTime}ms)`);
+        if (result.truncated) {
+            context.writer.writeln('(results truncated)');
+        }
+    }
+
+    private normalizeRows(
+        rows: unknown[][] | Record<string, unknown>[],
+        columns: string[],
+    ): unknown[][] {
+        if (rows.length === 0) return [];
+        if (Array.isArray(rows[0])) return rows as unknown[][];
+        return (rows as Record<string, unknown>[]).map((row) =>
+            columns.map((col) => row[col]),
+        );
     }
 
     private async handleBackslashCommand(
