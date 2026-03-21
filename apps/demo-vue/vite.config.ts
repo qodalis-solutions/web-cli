@@ -163,6 +163,10 @@ export default defineConfig({
                 __dirname,
                 '../../dist/encode/public-api.mjs',
             ),
+            '@qodalis/cli-data-explorer': path.resolve(
+                __dirname,
+                '../../dist/data-explorer/public-api.mjs',
+            ),
         },
     },
 });
