@@ -167,6 +167,9 @@
       ],
       "@qodalis/cli-encode": [
         "dist/encode"
+      ],
+      "@qodalis/cli-data-explorer": [
+        "dist/data-explorer"
       ]
     },
     "outDir": "./dist/out-tsc",
