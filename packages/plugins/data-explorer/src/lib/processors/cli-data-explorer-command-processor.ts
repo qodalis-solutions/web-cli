@@ -48,6 +48,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
     private source: DataExplorerSourceInfo | null = null;
     private outputFormat: DataExplorerOutputFormat = DataExplorerOutputFormat.Table;
     private inputBuffer = '';
+    private cursorPos = 0;
     private history: string[] = [];
     private historyIndex = -1;
     private executing = false;
@@ -95,6 +96,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         this.source = selectedSource;
         this.outputFormat = selectedSource.defaultOutputFormat;
         this.inputBuffer = '';
+        this.cursorPos = 0;
         this.history = [];
         this.historyIndex = -1;
         this.executing = false;
@@ -127,11 +129,63 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
+        // Left arrow — move cursor left
+        if (data === `${ESC}[D`) {
+            if (this.cursorPos > 0) {
+                this.cursorPos--;
+                context.terminal.write(`${CSI}D`);
+            }
+            return;
+        }
+
+        // Right arrow — move cursor right
+        if (data === `${ESC}[C`) {
+            if (this.cursorPos < this.inputBuffer.length) {
+                this.cursorPos++;
+                context.terminal.write(`${CSI}C`);
+            }
+            return;
+        }
+
+        // Home — move to start of input
+        if (data === `${ESC}[H` || data === '\x01') {
+            if (this.cursorPos > 0) {
+                context.terminal.write(`${CSI}${this.cursorPos}D`);
+                this.cursorPos = 0;
+            }
+            return;
+        }
+
+        // End — move to end of input
+        if (data === `${ESC}[F` || data === '\x05') {
+            const diff = this.inputBuffer.length - this.cursorPos;
+            if (diff > 0) {
+                context.terminal.write(`${CSI}${diff}C`);
+                this.cursorPos = this.inputBuffer.length;
+            }
+            return;
+        }
+
         // Backspace
         if (data === '\x7f' || data === '\b') {
-            if (this.inputBuffer.length > 0) {
-                this.inputBuffer = this.inputBuffer.slice(0, -1);
-                context.terminal.write('\b \b');
+            if (this.cursorPos > 0) {
+                const before = this.inputBuffer.slice(0, this.cursorPos - 1);
+                const after = this.inputBuffer.slice(this.cursorPos);
+                this.inputBuffer = before + after;
+                this.cursorPos--;
+                // Redraw from cursor: move back, write rest + space, reposition
+                context.terminal.write(`\b${after} ${CSI}${after.length + 1}D`);
+            }
+            return;
+        }
+
+        // Delete key
+        if (data === `${ESC}[3~`) {
+            if (this.cursorPos < this.inputBuffer.length) {
+                const before = this.inputBuffer.slice(0, this.cursorPos);
+                const after = this.inputBuffer.slice(this.cursorPos + 1);
+                this.inputBuffer = before + after;
+                context.terminal.write(`${after} ${CSI}${after.length + 1}D`);
             }
             return;
         }
@@ -140,6 +194,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         if (data === '\x03') {
             if (this.inputBuffer.length > 0) {
                 this.inputBuffer = '';
+                this.cursorPos = 0;
                 context.terminal.write('\r\n');
                 this.drawPrompt(context);
             } else {
@@ -153,6 +208,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             context.terminal.write('\r\n');
             const line = this.inputBuffer.trim();
             this.inputBuffer = '';
+            this.cursorPos = 0;
 
             if (!line) {
                 this.drawPrompt(context);
@@ -175,10 +231,8 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 this.source?.language === DataExplorerLanguage.Sql &&
                 !line.endsWith(';')
             ) {
-                // Keep accumulating (multi-line not fully supported in raw mode,
-                // but accept the line as-is if it ends with ;)
-                // Re-submit with the current line
                 this.inputBuffer = line;
+                this.cursorPos = line.length;
                 context.writer.writeln(
                     context.writer.wrapInColor(
                         '  (end query with ; to execute)',
@@ -186,7 +240,6 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                     ),
                 );
                 this.drawPrompt(context);
-                // Echo the buffer back
                 context.terminal.write(this.inputBuffer);
                 return;
             }
@@ -199,8 +252,20 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
 
         // Printable character
         if (data.length === 1 && data >= ' ') {
-            this.inputBuffer += data;
-            context.terminal.write(data);
+            if (this.cursorPos === this.inputBuffer.length) {
+                // Append at end
+                this.inputBuffer += data;
+                this.cursorPos++;
+                context.terminal.write(data);
+            } else {
+                // Insert in middle
+                const before = this.inputBuffer.slice(0, this.cursorPos);
+                const after = this.inputBuffer.slice(this.cursorPos);
+                this.inputBuffer = before + data + after;
+                this.cursorPos++;
+                // Write inserted char + rest, then reposition cursor
+                context.terminal.write(`${data}${after}${CSI}${after.length}D`);
+            }
         }
     }
 
@@ -208,6 +273,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         this.context = null;
         this.source = null;
         this.inputBuffer = '';
+        this.cursorPos = 0;
         this.history = [];
     }
 
@@ -302,9 +368,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         this.historyIndex = -1;
 
         this.executing = true;
-        context.writer.writeln(
-            context.writer.wrapInColor('Executing...', CliForegroundColor.Yellow),
-        );
+        context.spinner?.show('Executing...');
 
         try {
             const response = await fetch(
@@ -322,6 +386,8 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                     }),
                 },
             );
+
+            context.spinner?.hide();
 
             if (!response.ok) {
                 context.writer.writeError(
@@ -343,6 +409,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             const output = formatter(result);
             context.writer.writeln(output);
         } catch (err: unknown) {
+            context.spinner?.hide();
             const message =
                 err instanceof Error ? err.message : String(err);
             context.writer.writeError(`Request failed: ${message}`);
@@ -510,15 +577,15 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         this.executing = true;
-        context.writer.writeln(
-            context.writer.wrapInColor('Fetching schema...', CliForegroundColor.Yellow),
-        );
+        context.spinner?.show('Fetching schema...');
 
         try {
             const response = await fetch(
                 `${this.serverUrl}/api/qcli/data-explorer/schema?source=${encodeURIComponent(this.source!.name)}`,
                 { headers: this.serverHeaders },
             );
+
+            context.spinner?.hide();
 
             if (!response.ok) {
                 const body = await response.json().catch(() => null);
@@ -606,6 +673,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 }
             }
         } catch (err: unknown) {
+            context.spinner?.hide();
             const message =
                 err instanceof Error ? err.message : String(err);
             context.writer.writeError(`Failed to fetch schema: ${message}`);
@@ -637,21 +705,24 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 // Clear input
                 this.clearInputLine(context);
                 this.inputBuffer = '';
+                this.cursorPos = 0;
                 return;
             }
         }
 
         this.clearInputLine(context);
         this.inputBuffer = this.history[this.historyIndex];
+        this.cursorPos = this.inputBuffer.length;
         context.terminal.write(this.inputBuffer);
     }
 
     private clearInputLine(context: ICliExecutionContext): void {
-        // Move to start of input and clear
         if (this.inputBuffer.length > 0) {
-            context.terminal.write(
-                `${CSI}${this.inputBuffer.length}D${CSI}K`,
-            );
+            // Move cursor back to start of input, then clear to end of line
+            if (this.cursorPos > 0) {
+                context.terminal.write(`${CSI}${this.cursorPos}D`);
+            }
+            context.terminal.write(`${CSI}K`);
         }
     }
 
