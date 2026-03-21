@@ -47,12 +47,31 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
     private serverHeaders: Record<string, string> = {};
     private source: DataExplorerSourceInfo | null = null;
     private outputFormat: DataExplorerOutputFormat = DataExplorerOutputFormat.Table;
-    private inputBuffer = '';
+
+    /** All lines of the current query being composed. Always has at least one entry. */
+    private lines: string[] = [''];
+    /** Which line the cursor is on (index into `lines`). */
+    private lineIndex = 0;
+    /** Cursor column within `lines[lineIndex]`. */
     private cursorPos = 0;
-    private queryLines: string[] = [];
+
     private history: string[] = [];
     private historyIndex = -1;
     private executing = false;
+
+    // ── Convenience accessors ────────────────────────────────────────
+
+    private get currentLine(): string {
+        return this.lines[this.lineIndex];
+    }
+
+    private set currentLine(value: string) {
+        this.lines[this.lineIndex] = value;
+    }
+
+    private get isMultiLine(): boolean {
+        return this.lines.length > 1 || this.lines[0].length > 0;
+    }
 
     // ── ICliCommandProcessor ────────────────────────────────────────
 
@@ -96,9 +115,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
 
         this.source = selectedSource;
         this.outputFormat = selectedSource.defaultOutputFormat;
-        this.inputBuffer = '';
-        this.cursorPos = 0;
-        this.queryLines = [];
+        this.resetInput();
         this.history = [];
         this.historyIndex = -1;
         this.executing = false;
@@ -119,15 +136,27 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        // Up arrow — history navigation
+        // Up arrow
         if (data === `${ESC}[A`) {
-            this.navigateHistory(-1, context);
+            if (this.lineIndex > 0) {
+                // Move to previous line
+                this.moveToLine(this.lineIndex - 1, context);
+            } else {
+                // Navigate history (only when on line 0)
+                this.navigateHistory(-1, context);
+            }
             return;
         }
 
-        // Down arrow — history navigation
+        // Down arrow
         if (data === `${ESC}[B`) {
-            this.navigateHistory(1, context);
+            if (this.lineIndex < this.lines.length - 1) {
+                // Move to next line
+                this.moveToLine(this.lineIndex + 1, context);
+            } else if (this.historyIndex >= 0) {
+                // Navigate history forward
+                this.navigateHistory(1, context);
+            }
             return;
         }
 
@@ -142,7 +171,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
 
         // Right arrow — move cursor right
         if (data === `${ESC}[C`) {
-            if (this.cursorPos < this.inputBuffer.length) {
+            if (this.cursorPos < this.currentLine.length) {
                 this.cursorPos++;
                 context.terminal.write(`${CSI}C`);
             }
@@ -160,10 +189,10 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
 
         // End — move to end of input
         if (data === `${ESC}[F` || data === '\x05') {
-            const diff = this.inputBuffer.length - this.cursorPos;
+            const diff = this.currentLine.length - this.cursorPos;
             if (diff > 0) {
                 context.terminal.write(`${CSI}${diff}C`);
-                this.cursorPos = this.inputBuffer.length;
+                this.cursorPos = this.currentLine.length;
             }
             return;
         }
@@ -171,23 +200,44 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         // Backspace
         if (data === '\x7f' || data === '\b') {
             if (this.cursorPos > 0) {
-                const before = this.inputBuffer.slice(0, this.cursorPos - 1);
-                const after = this.inputBuffer.slice(this.cursorPos);
-                this.inputBuffer = before + after;
+                // Delete char before cursor on current line
+                const before = this.currentLine.slice(0, this.cursorPos - 1);
+                const after = this.currentLine.slice(this.cursorPos);
+                this.currentLine = before + after;
                 this.cursorPos--;
-                // Redraw from cursor: move back, write rest + space, reposition
                 context.terminal.write(`\b${after} ${CSI}${after.length + 1}D`);
+            } else if (this.lineIndex > 0) {
+                // At start of line: merge with previous line
+                const prevLine = this.lines[this.lineIndex - 1];
+                const thisLine = this.currentLine;
+                const newCursorPos = prevLine.length;
+
+                // Remove current line
+                this.lines.splice(this.lineIndex, 1);
+                this.lineIndex--;
+                this.currentLine = prevLine + thisLine;
+                this.cursorPos = newCursorPos;
+
+                // Redraw from current line down
+                this.redrawFromLine(this.lineIndex, context);
             }
             return;
         }
 
         // Delete key
         if (data === `${ESC}[3~`) {
-            if (this.cursorPos < this.inputBuffer.length) {
-                const before = this.inputBuffer.slice(0, this.cursorPos);
-                const after = this.inputBuffer.slice(this.cursorPos + 1);
-                this.inputBuffer = before + after;
+            if (this.cursorPos < this.currentLine.length) {
+                const before = this.currentLine.slice(0, this.cursorPos);
+                const after = this.currentLine.slice(this.cursorPos + 1);
+                this.currentLine = before + after;
                 context.terminal.write(`${after} ${CSI}${after.length + 1}D`);
+            } else if (this.lineIndex < this.lines.length - 1) {
+                // At end of line: merge with next line
+                const nextLine = this.lines[this.lineIndex + 1];
+                this.currentLine = this.currentLine + nextLine;
+                this.lines.splice(this.lineIndex + 1, 1);
+                // Redraw from current line down
+                this.redrawFromLine(this.lineIndex, context);
             }
             return;
         }
@@ -196,29 +246,15 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         if (data === '\x0c') {
             context.terminal.write(`${CSI}2J${CSI}H`);
             this.drawHeader(context);
-            if (this.queryLines.length > 0) {
-                // Re-display accumulated lines
-                this.drawPrompt(context);
-                context.terminal.write(this.queryLines[0] + '\r\n');
-                for (let i = 1; i < this.queryLines.length; i++) {
-                    this.drawContinuationPrompt(context);
-                    context.terminal.write(this.queryLines[i] + '\r\n');
-                }
-                this.drawContinuationPrompt(context);
-            } else {
-                this.drawPrompt(context);
-            }
-            context.terminal.write(this.inputBuffer);
+            this.redrawAllLines(context);
             return;
         }
 
-        // Ctrl+C — cancel multi-line or clear line or quit
+        // Ctrl+C — cancel or quit
         if (data === '\x03') {
-            if (this.queryLines.length > 0 || this.inputBuffer.length > 0) {
-                this.queryLines = [];
-                this.inputBuffer = '';
-                this.cursorPos = 0;
+            if (this.isMultiLine) {
                 context.terminal.write('\r\n');
+                this.resetInput();
                 this.drawPrompt(context);
             } else {
                 this.quit(context);
@@ -228,62 +264,63 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
 
         // Enter
         if (data === '\r' || data === '\n') {
-            context.terminal.write('\r\n');
-            const line = this.inputBuffer;
-            this.inputBuffer = '';
-            this.cursorPos = 0;
-
-            // Empty line in single-line mode → just redraw prompt
-            if (!line.trim() && this.queryLines.length === 0) {
-                this.drawPrompt(context);
-                return;
-            }
-
-            // Backslash or slash commands (only in single-line mode)
+            // Backslash or slash commands (only single-line, empty query)
             if (
-                this.queryLines.length === 0 &&
-                (line.trim().startsWith('\\') || line.trim().startsWith('/'))
+                this.lines.length === 1 &&
+                (this.currentLine.trim().startsWith('\\') ||
+                    this.currentLine.trim().startsWith('/'))
             ) {
-                const trimmed = line.trim();
+                const trimmed = this.currentLine.trim();
                 const normalized = trimmed.startsWith('/')
                     ? '\\' + trimmed.slice(1)
                     : trimmed;
+                context.terminal.write('\r\n');
+                this.resetInput();
                 await this.handleBackslashCommand(normalized, context);
                 this.drawPrompt(context);
                 return;
             }
 
-            // Accumulate line
-            this.queryLines.push(line);
-            const fullQuery = this.queryLines.join('\n').trim();
-
-            // Check if query is complete
-            if (this.isQueryComplete(fullQuery)) {
-                const query = fullQuery;
-                this.queryLines = [];
-                await this.executeQuery(query, context);
+            // Check if query is complete with current content
+            const fullQuery = this.lines.join('\n').trim();
+            if (fullQuery && this.isQueryComplete(fullQuery)) {
+                context.terminal.write('\r\n');
+                this.resetInput();
+                await this.executeQuery(fullQuery, context);
                 this.drawPrompt(context);
+                return;
+            }
+
+            // Not complete — add new line after current position
+            context.terminal.write('\r\n');
+            const afterCursor = this.currentLine.slice(this.cursorPos);
+            this.currentLine = this.currentLine.slice(0, this.cursorPos);
+            this.lineIndex++;
+            this.lines.splice(this.lineIndex, 0, afterCursor);
+            this.cursorPos = 0;
+
+            // If we split a line, redraw from the new line down
+            if (afterCursor) {
+                this.redrawFromLine(this.lineIndex, context);
             } else {
-                // Continue accumulating
-                this.drawContinuationPrompt(context);
+                this.drawLinePrompt(this.lineIndex, context);
             }
             return;
         }
 
         // Printable character
         if (data.length === 1 && data >= ' ') {
-            if (this.cursorPos === this.inputBuffer.length) {
+            if (this.cursorPos === this.currentLine.length) {
                 // Append at end
-                this.inputBuffer += data;
+                this.currentLine = this.currentLine + data;
                 this.cursorPos++;
                 context.terminal.write(data);
             } else {
                 // Insert in middle
-                const before = this.inputBuffer.slice(0, this.cursorPos);
-                const after = this.inputBuffer.slice(this.cursorPos);
-                this.inputBuffer = before + data + after;
+                const before = this.currentLine.slice(0, this.cursorPos);
+                const after = this.currentLine.slice(this.cursorPos);
+                this.currentLine = before + data + after;
                 this.cursorPos++;
-                // Write inserted char + rest, then reposition cursor
                 context.terminal.write(`${data}${after}${CSI}${after.length}D`);
             }
         }
@@ -292,9 +329,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
     onDispose(): void {
         this.context = null;
         this.source = null;
-        this.inputBuffer = '';
-        this.cursorPos = 0;
-        this.queryLines = [];
+        this.resetInput();
         this.history = [];
     }
 
@@ -310,6 +345,12 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
     }
 
     // ── Private helpers ─────────────────────────────────────────────
+
+    private resetInput(): void {
+        this.lines = [''];
+        this.lineIndex = 0;
+        this.cursorPos = 0;
+    }
 
     private resolveServer(
         command: CliProcessCommand,
@@ -586,7 +627,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 );
                 context.writer.writeln(
                     context.writer.wrapInColor(
-                        'Press Ctrl+C to cancel a multi-line query.',
+                        'Use Up/Down arrows to navigate between lines. Ctrl+C to cancel.',
                         CliForegroundColor.White,
                     ),
                 );
@@ -716,6 +757,36 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         this.executing = false;
     }
 
+    // ── Line navigation ─────────────────────────────────────────────
+
+    /**
+     * Move cursor to a different line. Handles terminal cursor movement
+     * and updates lineIndex/cursorPos.
+     */
+    private moveToLine(
+        targetLine: number,
+        context: ICliExecutionContext,
+    ): void {
+        const delta = targetLine - this.lineIndex;
+        if (delta === 0) return;
+
+        // Move terminal cursor up or down by |delta| lines
+        if (delta < 0) {
+            context.terminal.write(`${CSI}${-delta}A`);
+        } else {
+            context.terminal.write(`${CSI}${delta}B`);
+        }
+
+        this.lineIndex = targetLine;
+        const targetLineText = this.currentLine;
+        // Clamp cursor to new line length
+        this.cursorPos = Math.min(this.cursorPos, targetLineText.length);
+
+        // Position cursor at correct column (after the prompt)
+        const promptLen = this.getPromptLength(targetLine);
+        context.terminal.write(`\r${CSI}${promptLen + this.cursorPos}C`);
+    }
+
     private navigateHistory(
         direction: number,
         context: ICliExecutionContext,
@@ -728,6 +799,8 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 this.historyIndex = this.history.length - 1;
             } else if (this.historyIndex > 0) {
                 this.historyIndex--;
+            } else {
+                return; // Already at oldest
             }
         } else {
             // Down
@@ -737,9 +810,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             } else {
                 this.historyIndex = -1;
                 this.clearDisplayedInput(context);
-                this.queryLines = [];
-                this.inputBuffer = '';
-                this.cursorPos = 0;
+                this.resetInput();
                 this.drawPrompt(context);
                 return;
             }
@@ -748,51 +819,89 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         this.clearDisplayedInput(context);
 
         const entry = this.history[this.historyIndex];
-        const lines = entry.split('\n');
+        this.lines = entry.split('\n');
+        this.lineIndex = this.lines.length - 1;
+        this.cursorPos = this.currentLine.length;
 
-        if (lines.length === 1) {
-            this.queryLines = [];
-            this.inputBuffer = lines[0];
-            this.cursorPos = this.inputBuffer.length;
-            this.drawPrompt(context);
-            context.terminal.write(this.inputBuffer);
-        } else {
-            // Multi-line: set queryLines to all but last, inputBuffer to last
-            this.queryLines = lines.slice(0, -1);
-            this.inputBuffer = lines[lines.length - 1];
-            this.cursorPos = this.inputBuffer.length;
+        this.redrawAllLines(context);
+    }
 
-            // Draw first line with main prompt
-            this.drawPrompt(context);
-            context.terminal.write(this.queryLines[0] + '\r\n');
+    // ── Terminal drawing helpers ─────────────────────────────────────
 
-            // Draw remaining accumulated lines with continuation prompt
-            for (let i = 1; i < this.queryLines.length; i++) {
-                this.drawContinuationPrompt(context);
-                context.terminal.write(this.queryLines[i] + '\r\n');
-            }
-
-            // Draw current editable line with continuation prompt
-            this.drawContinuationPrompt(context);
-            context.terminal.write(this.inputBuffer);
+    /**
+     * Clear all currently displayed input lines from the terminal.
+     * After this call the cursor is at the beginning of where line 0's prompt was.
+     */
+    private clearDisplayedInput(context: ICliExecutionContext): void {
+        // Move from current lineIndex up to line 0
+        if (this.lineIndex > 0) {
+            context.terminal.write(`${CSI}${this.lineIndex}A`);
         }
+        // Clear from line 0 down
+        context.terminal.write(`\r${CSI}J`);
     }
 
     /**
-     * Clear all currently displayed input lines (including multi-line).
-     * Moves cursor up to the prompt line and clears everything.
+     * Redraw all lines with prompts and position cursor on the current line.
      */
-    private clearDisplayedInput(context: ICliExecutionContext): void {
-        // Total lines on screen: queryLines.length + 1 (current inputBuffer line)
-        const totalLines = this.queryLines.length + 1;
-
-        // Clear current line
-        context.terminal.write(`\r${CSI}K`);
-
-        // Move up and clear each previous line
-        for (let i = 1; i < totalLines; i++) {
-            context.terminal.write(`${CSI}A\r${CSI}K`);
+    private redrawAllLines(context: ICliExecutionContext): void {
+        for (let i = 0; i < this.lines.length; i++) {
+            this.drawLinePrompt(i, context);
+            context.terminal.write(this.lines[i]);
+            if (i < this.lines.length - 1) {
+                context.terminal.write('\r\n');
+            }
         }
+        // If cursor is not on the last line, move up
+        const linesBelow = this.lines.length - 1 - this.lineIndex;
+        if (linesBelow > 0) {
+            context.terminal.write(`${CSI}${linesBelow}A`);
+        }
+        // Position cursor at correct column
+        const promptLen = this.getPromptLength(this.lineIndex);
+        context.terminal.write(`\r${CSI}${promptLen + this.cursorPos}C`);
+    }
+
+    /**
+     * Redraw from a specific line index to the end.
+     * Cursor ends on `this.lineIndex` at `this.cursorPos`.
+     */
+    private redrawFromLine(
+        fromLine: number,
+        context: ICliExecutionContext,
+    ): void {
+        // Move to the target line if needed
+        const currentScreenLine = this.lineIndex;
+        const moveUp = currentScreenLine - fromLine;
+
+        // We're already positioned — just need to handle the redraw
+        // First, go to start of fromLine
+        if (moveUp > 0) {
+            context.terminal.write(`${CSI}${moveUp}A`);
+        } else if (moveUp < 0) {
+            context.terminal.write(`${CSI}${-moveUp}B`);
+        }
+
+        // Clear from here to end of screen
+        context.terminal.write(`\r${CSI}J`);
+
+        // Redraw from fromLine to end
+        for (let i = fromLine; i < this.lines.length; i++) {
+            this.drawLinePrompt(i, context);
+            context.terminal.write(this.lines[i]);
+            if (i < this.lines.length - 1) {
+                context.terminal.write('\r\n');
+            }
+        }
+
+        // Move cursor back to current editing line
+        const linesBelow = this.lines.length - 1 - this.lineIndex;
+        if (linesBelow > 0) {
+            context.terminal.write(`${CSI}${linesBelow}A`);
+        }
+        // Position cursor
+        const promptLen = this.getPromptLength(this.lineIndex);
+        context.terminal.write(`\r${CSI}${promptLen + this.cursorPos}C`);
     }
 
     private drawHeader(context: ICliExecutionContext): void {
@@ -823,6 +932,25 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         context.terminal.write(
             `${CSI}36m${pad}...> ${CSI}0m`,
         );
+    }
+
+    /** Draw the appropriate prompt for a given line index. */
+    private drawLinePrompt(
+        lineIdx: number,
+        context: ICliExecutionContext,
+    ): void {
+        if (lineIdx === 0) {
+            this.drawPrompt(context);
+        } else {
+            this.drawContinuationPrompt(context);
+        }
+    }
+
+    /** Get the visible character length of the prompt for a given line. */
+    private getPromptLength(lineIdx: number): number {
+        if (!this.source) return 0;
+        // "name> " or "   ...> "
+        return this.source.name.length + 2; // both prompts have equal visible width
     }
 
     private isQueryComplete(query: string): boolean {
