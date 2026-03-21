@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-stopwatch",
-  "version": "2.0.0-beta.9",
+  "version": "2.0.0-beta.10",
   "description": "Interactive stopwatch and countdown timer",
   "author": "Qodalis Solutions",
   "license": "MIT",
