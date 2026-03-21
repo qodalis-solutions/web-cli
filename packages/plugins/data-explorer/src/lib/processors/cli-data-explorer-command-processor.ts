@@ -1098,6 +1098,19 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             return query.endsWith(';');
         }
 
+        // Redis: always single-line, always complete
+        if (this.source?.language === DataExplorerLanguage.Redis) {
+            return true;
+        }
+
+        // Elasticsearch: complete if no braces, or braces are balanced
+        if (this.source?.language === DataExplorerLanguage.Elasticsearch) {
+            const openCount = (query.match(/\{/g) || []).length;
+            const closeCount = (query.match(/\}/g) || []).length;
+            if (openCount === 0) return true;
+            return openCount > 0 && openCount === closeCount;
+        }
+
         // MongoDB / other: check balanced brackets and parens
         let depth = 0;
         let inString = false;
