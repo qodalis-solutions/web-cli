@@ -13,6 +13,7 @@ import {
     DataExplorerLanguage,
     DataExplorerOutputFormat,
     DataExplorerResult,
+    DataExplorerSchemaResult,
     DataExplorerSourceInfo,
 } from '../models/data-explorer-types';
 import { getFormatter } from '../formatters';
@@ -158,9 +159,13 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 return;
             }
 
-            // Backslash commands
-            if (line.startsWith('\\')) {
-                await this.handleBackslashCommand(line, context);
+            // Backslash or slash commands
+            if (line.startsWith('\\') || line.startsWith('/')) {
+                // Normalize to backslash prefix for the handler
+                const normalized = line.startsWith('/')
+                    ? '\\' + line.slice(1)
+                    : line;
+                await this.handleBackslashCommand(normalized, context);
                 this.drawPrompt(context);
                 return;
             }
@@ -441,6 +446,11 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 return;
             }
 
+            case '\\schema': {
+                await this.fetchAndDisplaySchema(arg || undefined, context);
+                return;
+            }
+
             case '\\clear': {
                 context.terminal.write(`${CSI}2J${CSI}H`);
                 this.drawHeader(context);
@@ -468,6 +478,9 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                     `  ${context.writer.wrapInColor('\\history', CliForegroundColor.Yellow)}                        Show query history`,
                 );
                 context.writer.writeln(
+                    `  ${context.writer.wrapInColor('\\schema [table]', CliForegroundColor.Yellow)}                  Show database schema`,
+                );
+                context.writer.writeln(
                     `  ${context.writer.wrapInColor('\\clear', CliForegroundColor.Yellow)}                          Clear screen`,
                 );
                 context.writer.writeln(
@@ -490,6 +503,115 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                     `Unknown command: ${cmd}. Type \\help for available commands.`,
                 );
         }
+    }
+
+    private async fetchAndDisplaySchema(
+        tableName: string | undefined,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        this.executing = true;
+        context.writer.writeln(
+            context.writer.wrapInColor('Fetching schema...', CliForegroundColor.Yellow),
+        );
+
+        try {
+            const response = await fetch(
+                `${this.serverUrl}/api/qcli/data-explorer/schema?source=${encodeURIComponent(this.source!.name)}`,
+                { headers: this.serverHeaders },
+            );
+
+            if (!response.ok) {
+                const body = await response.json().catch(() => null);
+                context.writer.writeError(
+                    body?.error ?? body?.detail ?? `Server error: ${response.status}`,
+                );
+                this.executing = false;
+                return;
+            }
+
+            const schema = (await response.json()) as DataExplorerSchemaResult;
+            let tables = schema.tables;
+
+            if (tableName) {
+                tables = tables.filter(
+                    (t) => t.name.toLowerCase() === tableName.toLowerCase(),
+                );
+                if (tables.length === 0) {
+                    context.writer.writeError(
+                        `Table or collection "${tableName}" not found.`,
+                    );
+                    this.executing = false;
+                    return;
+                }
+            }
+
+            context.writer.writeln('');
+
+            if (!tableName) {
+                // Overview: list all tables
+                context.writer.writeln(
+                    context.writer.wrapInColor(
+                        `Schema for ${schema.source}:`,
+                        CliForegroundColor.Cyan,
+                    ),
+                );
+                context.writer.writeln('');
+                for (const table of tables) {
+                    const colCount = table.columns.length;
+                    context.writer.writeln(
+                        `  ${context.writer.wrapInColor(table.name, CliForegroundColor.Yellow)} (${table.type}, ${colCount} column${colCount !== 1 ? 's' : ''})`,
+                    );
+                }
+                context.writer.writeln('');
+                context.writer.writeln(
+                    context.writer.wrapInColor(
+                        `${tables.length} table${tables.length !== 1 ? 's' : ''} found. Use \\schema <name> for details.`,
+                        CliForegroundColor.White,
+                    ),
+                );
+            } else {
+                // Detail: show columns for specific table
+                for (const table of tables) {
+                    context.writer.writeln(
+                        context.writer.wrapInColor(
+                            `${table.name} (${table.type}):`,
+                            CliForegroundColor.Cyan,
+                        ),
+                    );
+                    context.writer.writeln('');
+
+                    // Column header
+                    const nameW = Math.max(6, ...table.columns.map((c) => c.name.length));
+                    const typeW = Math.max(4, ...table.columns.map((c) => c.type.length));
+                    context.writer.writeln(
+                        `  ${context.writer.wrapInColor(
+                            'Column'.padEnd(nameW),
+                            CliForegroundColor.Yellow,
+                        )}  ${context.writer.wrapInColor(
+                            'Type'.padEnd(typeW),
+                            CliForegroundColor.Yellow,
+                        )}  ${context.writer.wrapInColor('Nullable', CliForegroundColor.Yellow)}  ${context.writer.wrapInColor('PK', CliForegroundColor.Yellow)}`,
+                    );
+                    context.writer.writeln(
+                        `  ${'─'.repeat(nameW)}  ${'─'.repeat(typeW)}  ${'─'.repeat(8)}  ${'─'.repeat(2)}`,
+                    );
+
+                    for (const col of table.columns) {
+                        const nullable = col.nullable ? 'YES' : 'NO';
+                        const pk = col.primaryKey ? '*' : '';
+                        context.writer.writeln(
+                            `  ${col.name.padEnd(nameW)}  ${col.type.padEnd(typeW)}  ${nullable.padEnd(8)}  ${pk}`,
+                        );
+                    }
+                }
+            }
+        } catch (err: unknown) {
+            const message =
+                err instanceof Error ? err.message : String(err);
+            context.writer.writeError(`Failed to fetch schema: ${message}`);
+        }
+
+        this.executing = false;
     }
 
     private navigateHistory(
