@@ -198,9 +198,11 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             this.drawHeader(context);
             if (this.queryLines.length > 0) {
                 // Re-display accumulated lines
-                for (const prevLine of this.queryLines) {
+                this.drawPrompt(context);
+                context.terminal.write(this.queryLines[0] + '\r\n');
+                for (let i = 1; i < this.queryLines.length; i++) {
                     this.drawContinuationPrompt(context);
-                    context.terminal.write(prevLine + '\r\n');
+                    context.terminal.write(this.queryLines[i] + '\r\n');
                 }
                 this.drawContinuationPrompt(context);
             } else {
@@ -212,14 +214,8 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
 
         // Ctrl+C — cancel multi-line or clear line or quit
         if (data === '\x03') {
-            if (this.queryLines.length > 0) {
-                // Cancel multi-line accumulation
+            if (this.queryLines.length > 0 || this.inputBuffer.length > 0) {
                 this.queryLines = [];
-                this.inputBuffer = '';
-                this.cursorPos = 0;
-                context.terminal.write('\r\n');
-                this.drawPrompt(context);
-            } else if (this.inputBuffer.length > 0) {
                 this.inputBuffer = '';
                 this.cursorPos = 0;
                 context.terminal.write('\r\n');
@@ -740,27 +736,62 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 this.historyIndex++;
             } else {
                 this.historyIndex = -1;
-                // Clear input
-                this.clearInputLine(context);
+                this.clearDisplayedInput(context);
+                this.queryLines = [];
                 this.inputBuffer = '';
                 this.cursorPos = 0;
+                this.drawPrompt(context);
                 return;
             }
         }
 
-        this.clearInputLine(context);
-        this.inputBuffer = this.history[this.historyIndex];
-        this.cursorPos = this.inputBuffer.length;
-        context.terminal.write(this.inputBuffer);
+        this.clearDisplayedInput(context);
+
+        const entry = this.history[this.historyIndex];
+        const lines = entry.split('\n');
+
+        if (lines.length === 1) {
+            this.queryLines = [];
+            this.inputBuffer = lines[0];
+            this.cursorPos = this.inputBuffer.length;
+            this.drawPrompt(context);
+            context.terminal.write(this.inputBuffer);
+        } else {
+            // Multi-line: set queryLines to all but last, inputBuffer to last
+            this.queryLines = lines.slice(0, -1);
+            this.inputBuffer = lines[lines.length - 1];
+            this.cursorPos = this.inputBuffer.length;
+
+            // Draw first line with main prompt
+            this.drawPrompt(context);
+            context.terminal.write(this.queryLines[0] + '\r\n');
+
+            // Draw remaining accumulated lines with continuation prompt
+            for (let i = 1; i < this.queryLines.length; i++) {
+                this.drawContinuationPrompt(context);
+                context.terminal.write(this.queryLines[i] + '\r\n');
+            }
+
+            // Draw current editable line with continuation prompt
+            this.drawContinuationPrompt(context);
+            context.terminal.write(this.inputBuffer);
+        }
     }
 
-    private clearInputLine(context: ICliExecutionContext): void {
-        if (this.inputBuffer.length > 0) {
-            // Move cursor back to start of input, then clear to end of line
-            if (this.cursorPos > 0) {
-                context.terminal.write(`${CSI}${this.cursorPos}D`);
-            }
-            context.terminal.write(`${CSI}K`);
+    /**
+     * Clear all currently displayed input lines (including multi-line).
+     * Moves cursor up to the prompt line and clears everything.
+     */
+    private clearDisplayedInput(context: ICliExecutionContext): void {
+        // Total lines on screen: queryLines.length + 1 (current inputBuffer line)
+        const totalLines = this.queryLines.length + 1;
+
+        // Clear current line
+        context.terminal.write(`\r${CSI}K`);
+
+        // Move up and clear each previous line
+        for (let i = 1; i < totalLines; i++) {
+            context.terminal.write(`${CSI}A\r${CSI}K`);
         }
     }
 
