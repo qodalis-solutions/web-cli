@@ -216,6 +216,7 @@ pkg source set unpkg           # Set package source directly
 | [@qodalis/cli-browser-storage](https://www.npmjs.com/package/@qodalis/cli-browser-storage) | `local-storage`, `cookies` | Browser storage operations |
 | [@qodalis/cli-text-to-image](https://www.npmjs.com/package/@qodalis/cli-text-to-image) | `text-to-image` | Generate images from text |
 | [@qodalis/cli-password-generator](https://www.npmjs.com/package/@qodalis/cli-password-generator) | `generate-password` | Password generation |
+| [@qodalis/cli-data-explorer](https://www.npmjs.com/package/@qodalis/cli-data-explorer) | `data-explorer` | Interactive REPL for querying SQL, MongoDB, and custom data sources |
 
 Any npm package with UMD support can also be loaded:
 
@@ -532,6 +533,80 @@ import { weatherModule } from '@qodalis/cli-weather';
   </CliConfigProvider>
 </template>
 ```
+
+## Data Explorer
+
+The `@qodalis/cli-data-explorer` plugin adds an interactive, full-screen REPL for querying data sources (SQL, MongoDB, and custom providers) directly from the terminal.
+
+### Setup
+
+Install and register the plugin, then configure backend servers:
+
+```typescript
+import { dataExplorerModule } from '@qodalis/cli-data-explorer';
+
+// Add to your modules array
+const modules = [dataExplorerModule, /* ... other modules */];
+
+// Configure at least one server with data explorer providers
+const options: CliOptions = {
+  servers: [
+    { name: 'node', url: 'http://localhost:8047' },
+    { name: 'dotnet', url: 'http://localhost:8046' },
+    { name: 'python', url: 'http://localhost:8048' },
+  ],
+};
+```
+
+Or install at runtime without a rebuild:
+
+```bash
+pkg add data-explorer
+```
+
+### Usage
+
+```bash
+data-explorer
+```
+
+Select a server and data source, then enter the full-screen REPL:
+
+```
+data-explorer> SELECT * FROM users WHERE active = true;
+
+3 rows (12ms)
+┌────┬───────┬──────────────┐
+│ id │ name  │ email        │
+├────┼───────┼──────────────┤
+│  1 │ Alice │ alice@ex.com │
+│  2 │ Bob   │ bob@ex.com   │
+│  3 │ Carol │ carol@ex.com │
+└────┴───────┴──────────────┘
+
+data-explorer> \format json
+Output format set to: json
+
+data-explorer> db.users.find({"age": {"$gt": 25}})
+[
+  { "_id": "abc", "name": "Alice", "age": 30 },
+  { "_id": "def", "name": "Bob", "age": 28 }
+]
+```
+
+### REPL Commands
+
+| Command | Description |
+|---------|-------------|
+| `\format <table\|json\|csv\|raw>` | Switch output format |
+| `\templates` | List available query templates |
+| `\use <name>` | Load a template query |
+| `\history` | Show query history |
+| `\clear` | Clear screen |
+| `\help` | Show all commands |
+| `\quit` / `\q` | Exit |
+
+Use **Up/Down arrows** for history navigation, **Escape** or **Ctrl+C** to exit.
 
 ## Extending with Inline Commands
 
