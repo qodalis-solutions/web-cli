@@ -101,7 +101,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         this.context = context;
 
         // Enter full-screen REPL
-        context.enterFullScreenMode(this);
+        context.enterFullScreenMode(this, { showCursor: true });
         this.drawHeader(context);
         this.drawPrompt(context);
     }

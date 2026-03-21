@@ -37,6 +37,17 @@ export interface ICliManagedInterval extends ICliManagedTimer {
 }
 
 /**
+ * Options for entering full-screen mode.
+ */
+export interface CliFullScreenOptions {
+    /**
+     * Whether to show the terminal cursor. Defaults to `false` (cursor hidden).
+     * Set to `true` for REPL / input-line interfaces where the user types text.
+     */
+    showCursor?: boolean;
+}
+
+/**
  * Represents the context in which a command is executed
  */
 export interface ICliExecutionContext {
@@ -197,11 +208,21 @@ export interface ICliExecutionContext {
 
     /**
      * Enter full-screen mode: switches to the alternate screen buffer,
-     * hides the cursor, and sets the given processor as the context processor
-     * so that all terminal input is routed to its `onData` method.
+     * positions the cursor at row 1 col 1, and sets the given processor
+     * as the context processor so that all terminal input is routed to
+     * its `onData` method.
+     *
+     * By default the cursor is hidden (suitable for games / editors that
+     * manage their own cursor). Pass `{ showCursor: true }` to keep it
+     * visible (suitable for REPL / input-line interfaces).
+     *
      * @param processor The processor that will handle all input in full-screen mode
+     * @param options Optional settings for full-screen mode
      */
-    enterFullScreenMode: (processor: ICliCommandProcessor) => void;
+    enterFullScreenMode: (
+        processor: ICliCommandProcessor,
+        options?: CliFullScreenOptions,
+    ) => void;
 
     /**
      * Exit full-screen mode: restores the cursor, leaves the alternate screen buffer,
