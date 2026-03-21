@@ -9,10 +9,10 @@ export default defineConfig([
         external: ['@qodalis/cli-core'],
     },
     {
-        entry: ['src/cli-entrypoint.ts'],
+        entry: { index: 'src/cli-entrypoint.ts' },
         format: ['iife'],
         outDir: '../../../dist/data-explorer/umd',
-        globalName: 'data-explorer',
+        globalName: 'dataExplorer',
         platform: 'browser',
         external: [],
         noExternal: [/.*/],
