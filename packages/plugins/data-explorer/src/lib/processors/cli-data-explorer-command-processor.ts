@@ -17,6 +17,7 @@ import {
     DataExplorerSourceInfo,
 } from '../models/data-explorer-types';
 import { getFormatter } from '../formatters';
+import { highlightLine } from '../syntax/highlighter';
 
 const ESC = '\x1b';
 const CSI = `${ESC}[`;
@@ -205,7 +206,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 const after = this.currentLine.slice(this.cursorPos);
                 this.currentLine = before + after;
                 this.cursorPos--;
-                context.terminal.write(`\b${after} ${CSI}${after.length + 1}D`);
+                this.redrawLineContent(context);
             } else if (this.lineIndex > 0) {
                 // At start of line: merge with previous line
                 const prevLine = this.lines[this.lineIndex - 1];
@@ -230,7 +231,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 const before = this.currentLine.slice(0, this.cursorPos);
                 const after = this.currentLine.slice(this.cursorPos + 1);
                 this.currentLine = before + after;
-                context.terminal.write(`${after} ${CSI}${after.length + 1}D`);
+                this.redrawLineContent(context);
             } else if (this.lineIndex < this.lines.length - 1) {
                 // At end of line: merge with next line
                 const nextLine = this.lines[this.lineIndex + 1];
@@ -292,37 +293,24 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             }
 
             // Not complete — add new line after current position
-            context.terminal.write('\r\n');
             const afterCursor = this.currentLine.slice(this.cursorPos);
             this.currentLine = this.currentLine.slice(0, this.cursorPos);
             this.lineIndex++;
             this.lines.splice(this.lineIndex, 0, afterCursor);
             this.cursorPos = 0;
 
-            // If we split a line, redraw from the new line down
-            if (afterCursor) {
-                this.redrawFromLine(this.lineIndex, context);
-            } else {
-                this.drawLinePrompt(this.lineIndex, context);
-            }
+            // Redraw from the truncated line so highlighting updates
+            this.redrawFromLine(this.lineIndex - 1, context);
             return;
         }
 
         // Printable character
         if (data.length === 1 && data >= ' ') {
-            if (this.cursorPos === this.currentLine.length) {
-                // Append at end
-                this.currentLine = this.currentLine + data;
-                this.cursorPos++;
-                context.terminal.write(data);
-            } else {
-                // Insert in middle
-                const before = this.currentLine.slice(0, this.cursorPos);
-                const after = this.currentLine.slice(this.cursorPos);
-                this.currentLine = before + data + after;
-                this.cursorPos++;
-                context.terminal.write(`${data}${after}${CSI}${after.length}D`);
-            }
+            const before = this.currentLine.slice(0, this.cursorPos);
+            const after = this.currentLine.slice(this.cursorPos);
+            this.currentLine = before + data + after;
+            this.cursorPos++;
+            this.redrawLineContent(context);
         }
     }
 
@@ -826,6 +814,29 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         this.redrawAllLines(context);
     }
 
+    // ── Syntax highlighting ─────────────────────────────────────────
+
+    private highlightText(text: string): string {
+        if (!this.source) return text;
+        return highlightLine(text, this.source.language);
+    }
+
+    /**
+     * Redraw the content of the current line in-place with syntax highlighting.
+     * Preserves cursor position. Used after single-character edits.
+     */
+    private redrawLineContent(context: ICliExecutionContext): void {
+        const promptLen = this.getPromptLength(this.lineIndex);
+        const highlighted = this.highlightText(this.currentLine);
+        // Move to start of content (after prompt), clear to end of line, write highlighted
+        context.terminal.write(`\r${CSI}${promptLen}C${CSI}K${highlighted}`);
+        // Move cursor back to correct position
+        const tailLen = this.currentLine.length - this.cursorPos;
+        if (tailLen > 0) {
+            context.terminal.write(`${CSI}${tailLen}D`);
+        }
+    }
+
     // ── Terminal drawing helpers ─────────────────────────────────────
 
     /**
@@ -847,7 +858,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
     private redrawAllLines(context: ICliExecutionContext): void {
         for (let i = 0; i < this.lines.length; i++) {
             this.drawLinePrompt(i, context);
-            context.terminal.write(this.lines[i]);
+            context.terminal.write(this.highlightText(this.lines[i]));
             if (i < this.lines.length - 1) {
                 context.terminal.write('\r\n');
             }
@@ -888,7 +899,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         // Redraw from fromLine to end
         for (let i = fromLine; i < this.lines.length; i++) {
             this.drawLinePrompt(i, context);
-            context.terminal.write(this.lines[i]);
+            context.terminal.write(this.highlightText(this.lines[i]));
             if (i < this.lines.length - 1) {
                 context.terminal.write('\r\n');
             }
