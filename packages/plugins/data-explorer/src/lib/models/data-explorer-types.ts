@@ -3,6 +3,8 @@ export enum DataExplorerLanguage {
     Json = 'json',
     Shell = 'shell',
     Graphql = 'graphql',
+    Redis = 'redis',
+    Elasticsearch = 'elasticsearch',
 }
 
 export enum DataExplorerOutputFormat {
