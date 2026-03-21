@@ -520,35 +520,58 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         result: DataExplorerResult,
         context: ICliExecutionContext,
     ): void {
-        const columns = result.columns ?? [];
-        const rows = this.normalizeRows(result.rows, columns);
+        const rawRows = result.rows;
+        // Derive columns: use server-provided columns, or extract keys from object rows
+        let columns = result.columns ?? [];
+        const isObjectRows = rawRows.length > 0 && !Array.isArray(rawRows[0]);
 
-        if (columns.length === 0 && rows.length === 0) {
+        if (columns.length === 0 && isObjectRows) {
+            const keySet = new Set<string>();
+            for (const row of rawRows as Record<string, unknown>[]) {
+                for (const key of Object.keys(row)) {
+                    keySet.add(key);
+                }
+            }
+            columns = Array.from(keySet);
+        }
+
+        if (columns.length === 0 && rawRows.length === 0) {
             context.writer.writeln(`(empty result set) (${result.executionTime}ms)`);
             return;
         }
 
         switch (this.outputFormat) {
-            case DataExplorerOutputFormat.Table:
+            case DataExplorerOutputFormat.Table: {
+                const rows = this.toArrayRows(rawRows, columns);
                 context.writer.writeTable(
                     columns,
-                    rows.map((row) => row.map((v) => String(v ?? ''))),
+                    rows.map((row) => row.map((v) =>
+                        v === null || v === undefined ? '' :
+                        typeof v === 'object' ? JSON.stringify(v) : String(v),
+                    )),
                 );
                 break;
+            }
             case DataExplorerOutputFormat.Json: {
-                const objects = rows.map((row) => {
-                    const obj: Record<string, unknown> = {};
-                    columns.forEach((col, i) => { obj[col] = row[i]; });
-                    return obj;
-                });
-                context.writer.writeJson(objects);
+                if (isObjectRows) {
+                    // Rows are already objects — write directly
+                    context.writer.writeJson(rawRows);
+                } else {
+                    // Convert array rows to objects
+                    const objects = (rawRows as unknown[][]).map((row) => {
+                        const obj: Record<string, unknown> = {};
+                        columns.forEach((col, i) => { obj[col] = row[i]; });
+                        return obj;
+                    });
+                    context.writer.writeJson(objects);
+                }
                 break;
             }
             case DataExplorerOutputFormat.Csv:
                 context.writer.writeln(formatCsv(result));
                 break;
             case DataExplorerOutputFormat.Raw:
-                context.writer.writeln(JSON.stringify(result.rows));
+                context.writer.writeln(JSON.stringify(rawRows));
                 break;
         }
 
@@ -560,7 +583,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         }
     }
 
-    private normalizeRows(
+    private toArrayRows(
         rows: unknown[][] | Record<string, unknown>[],
         columns: string[],
     ): unknown[][] {
