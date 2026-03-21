@@ -29,6 +29,7 @@ import { wgetModule } from "@qodalis/cli-wget";
 import { sudokuModule } from "@qodalis/cli-sudoku";
 import { jobsModule } from "@qodalis/cli-server-jobs";
 import { encodeModule } from "@qodalis/cli-encode";
+import { dataExplorerModule } from "@qodalis/cli-data-explorer";
 import {
   CliLogLevel,
   type CliOptions,
@@ -127,6 +128,7 @@ const modules: ICliModule[] = [
   sudokuModule,
   jobsModule,
   encodeModule,
+  dataExplorerModule,
   usersModule.configure({
     seedUsers: [{ name: "root1", email: "root1@root.com", groups: ["admin"] }],
     defaultPassword: "root",
