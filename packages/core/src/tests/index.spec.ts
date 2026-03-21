@@ -185,31 +185,40 @@ describe('colorFirstWord', () => {
 // colorizeJson / formatJson
 // ---------------------------------------------------------------------------
 describe('colorizeJson', () => {
-    it('should colorize JSON keys in yellow', () => {
+    it('should colorize JSON keys in cyan', () => {
         const result = colorizeJson('"name": "value"');
-        expect(result).toContain('\x1b[33m');
+        expect(result).toContain('\x1b[36m"name"');
     });
 
-    // The regexes apply sequentially: the key regex transforms the colon,
-    // so value regexes only match standalone (no key prefix) patterns.
-    it('should colorize standalone string values in green', () => {
-        const result = colorizeJson(': "hello"');
-        expect(result).toContain('\x1b[32m');
+    it('should colorize string values in green', () => {
+        const result = colorizeJson('"name": "hello"');
+        expect(result).toContain('\x1b[32m"hello"');
     });
 
-    it('should colorize standalone numbers in blue', () => {
-        const result = colorizeJson(': 42');
-        expect(result).toContain('\x1b[34m');
+    it('should colorize numbers in yellow', () => {
+        const result = colorizeJson('"count": 42');
+        expect(result).toContain('\x1b[33m42');
     });
 
-    it('should colorize standalone booleans in magenta', () => {
-        const result = colorizeJson(': true');
-        expect(result).toContain('\x1b[35m');
+    it('should colorize booleans in yellow', () => {
+        const result = colorizeJson('"flag": true');
+        expect(result).toContain('\x1b[33mtrue');
     });
 
-    it('should colorize standalone null in cyan', () => {
-        const result = colorizeJson(': null');
-        expect(result).toContain('\x1b[36m');
+    it('should colorize null in yellow', () => {
+        const result = colorizeJson('"val": null');
+        expect(result).toContain('\x1b[33mnull');
+    });
+
+    it('should colorize brackets in gray', () => {
+        const result = colorizeJson('{}');
+        expect(result).toContain('\x1b[90m{');
+        expect(result).toContain('\x1b[90m}');
+    });
+
+    it('should handle negative and decimal numbers', () => {
+        const result = colorizeJson('"n": -3.14');
+        expect(result).toContain('\x1b[33m-3.14');
     });
 
     it('should handle input with no matches', () => {

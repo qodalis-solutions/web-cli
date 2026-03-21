@@ -38,17 +38,52 @@ export const formatJson = (json: any): string => {
 };
 
 /**
- * Apply ANSI color codes to a JSON string (keys, strings, numbers, booleans, null).
+ * Apply ANSI color codes to a JSON string using token-based scanning.
+ * Handles keys, strings, numbers, booleans, null, and structural characters.
  * @param jsonString The raw JSON string to colorize
  * @returns The colorized string
  */
 export const colorizeJson = (jsonString: string): string => {
-    return jsonString
-        .replace(/"([^"]+)":/g, '\x1b[33m"$1":\x1b[0m') // Keys (yellow)
-        .replace(/: "([^"]*)"/g, ': \x1b[32m"$1"\x1b[0m') // Strings (green)
-        .replace(/: (\d+)/g, ': \x1b[34m$1\x1b[0m') // Numbers (blue)
-        .replace(/: (true|false)/g, ': \x1b[35m$1\x1b[0m') // Booleans (magenta)
-        .replace(/: (null)/g, ': \x1b[36m$1\x1b[0m'); // Null (cyan)
+    const RST = '\x1b[0m';
+    const CYN = '\x1b[36m';     // cyan — keys
+    const GRN = '\x1b[32m';     // green — string values
+    const YLW = '\x1b[33m';     // yellow — numbers, booleans, null
+    const GRY = '\x1b[90m';     // gray — brackets, punctuation
+
+    const tokenRe =
+        /("(?:[^"\\]|\\.)*"?)(\s*:)?|(\btrue\b|\bfalse\b|\bnull\b)|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|([{}[\],])/g;
+
+    let result = '';
+    let lastIndex = 0;
+    let m: RegExpExecArray | null;
+
+    while ((m = tokenRe.exec(jsonString)) !== null) {
+        if (m.index > lastIndex) {
+            result += jsonString.slice(lastIndex, m.index);
+        }
+
+        if (m[1] !== undefined) {
+            if (m[2] !== undefined) {
+                result += CYN + m[1] + RST + m[2];   // key: cyan
+            } else {
+                result += GRN + m[1] + RST;           // string value: green
+            }
+        } else if (m[3] !== undefined) {
+            result += YLW + m[3] + RST;               // boolean/null: yellow
+        } else if (m[4] !== undefined) {
+            result += YLW + m[4] + RST;               // number: yellow
+        } else if (m[5] !== undefined) {
+            result += GRY + m[5] + RST;               // brackets/punctuation: gray
+        }
+
+        lastIndex = m.index + m[0].length;
+    }
+
+    if (lastIndex < jsonString.length) {
+        result += jsonString.slice(lastIndex);
+    }
+
+    return result;
 };
 
 /**
