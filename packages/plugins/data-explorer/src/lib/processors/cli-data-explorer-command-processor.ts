@@ -117,10 +117,12 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         this.source = selectedSource;
         this.outputFormat = selectedSource.defaultOutputFormat;
         this.resetInput();
-        this.history = [];
         this.historyIndex = -1;
         this.executing = false;
         this.context = context;
+
+        // Load persisted history for this source
+        this.loadHistory(context);
 
         // Enter full-screen REPL
         context.enterFullScreenMode(this, { showCursor: true });
@@ -340,6 +342,23 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         this.cursorPos = 0;
     }
 
+    private historyStateKey(): string {
+        return `history:${this.source?.name ?? 'default'}`;
+    }
+
+    private loadHistory(context: ICliExecutionContext): void {
+        const state = context.state.getState<Record<string, unknown>>();
+        const key = this.historyStateKey();
+        const saved = state[key];
+        this.history = Array.isArray(saved) ? (saved as string[]) : [];
+    }
+
+    private saveHistory(context: ICliExecutionContext): void {
+        context.state.updateState({
+            [this.historyStateKey()]: [...this.history],
+        });
+    }
+
     private resolveServer(
         command: CliProcessCommand,
         context: ICliExecutionContext,
@@ -405,7 +424,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         query: string,
         context: ICliExecutionContext,
     ): Promise<void> {
-        // Add to history
+        // Add to history and persist
         if (
             this.history.length === 0 ||
             this.history[this.history.length - 1] !== query
@@ -414,6 +433,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             if (this.history.length > MAX_HISTORY) {
                 this.history.shift();
             }
+            this.saveHistory(context);
         }
         this.historyIndex = -1;
 
