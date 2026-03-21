@@ -1,5 +1,5 @@
 import { bootCliModule, ICliModule } from '@qodalis/cli-core';
-import { CliDataExplorerCommandProcessor } from './lib/processors/cli-data-explorer-command-processor';
+import { CliDataExplorerCommandProcessor } from './lib';
 import { API_VERSION } from './lib/version';
 
 const module: ICliModule = {
