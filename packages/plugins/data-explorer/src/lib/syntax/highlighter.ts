@@ -27,6 +27,10 @@ export function highlightLine(
             return highlightGraphql(text);
         case DataExplorerLanguage.Shell:
             return highlightShell(text);
+        case DataExplorerLanguage.Redis:
+            return highlightRedis(text);
+        case DataExplorerLanguage.Elasticsearch:
+            return highlightElasticsearch(text);
         default:
             return text;
     }
@@ -224,6 +228,65 @@ function highlightGraphql(text: string): string {
     return result;
 }
 
+// ── Redis ─────────────────────────────────────────────────────────────
+
+const REDIS_COMMANDS = new Set([
+    'GET', 'SET', 'DEL', 'KEYS', 'HGET', 'HSET', 'HGETALL', 'HDEL',
+    'HKEYS', 'HVALS', 'LPUSH', 'RPUSH', 'LRANGE', 'LLEN', 'SADD',
+    'SMEMBERS', 'SCARD', 'ZADD', 'ZRANGE', 'ZRANGEBYSCORE', 'INCR',
+    'DECR', 'EXPIRE', 'TTL', 'PTTL', 'EXISTS', 'TYPE', 'MGET', 'MSET',
+    'SCAN', 'INFO', 'DBSIZE', 'PING', 'FLUSHDB',
+]);
+
+const REDIS_FLAGS = new Set([
+    'EX', 'NX', 'XX', 'KEEPTTL', 'GT', 'LT', 'CH', 'WITHSCORES',
+    'MATCH', 'COUNT', 'LIMIT', 'REV', 'BYSCORE', 'BYLEX',
+]);
+
+// Token regex: strings (single/double), numbers, --flags, identifiers
+const REDIS_TOKEN_RE =
+    /('(?:[^'\\]|\\.)*'?)|("(?:[^"\\]|\\.)*"?)|(--[a-zA-Z_]\w*)|(-?\b\d+\b)|(\b[a-zA-Z_]\w*\b)/g;
+
+function highlightRedis(text: string): string {
+    let result = '';
+    let lastIndex = 0;
+
+    REDIS_TOKEN_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+
+    while ((m = REDIS_TOKEN_RE.exec(text)) !== null) {
+        if (m.index > lastIndex) {
+            result += text.slice(lastIndex, m.index);
+        }
+
+        const token = m[0];
+        const upper = token.toUpperCase();
+
+        if (m[1] !== undefined || m[2] !== undefined) {
+            result += G + token + R;                     // string
+        } else if (m[3] !== undefined) {
+            result += C + token + R;                     // --flag
+        } else if (m[4] !== undefined) {
+            result += Y + token + R;                     // number
+        } else if (m[5] !== undefined) {
+            if (REDIS_COMMANDS.has(upper)) {
+                result += BB + token + R;                // command
+            } else if (REDIS_FLAGS.has(upper)) {
+                result += C + token + R;                 // uppercase flag
+            } else {
+                result += token;                         // identifier / key name
+            }
+        }
+
+        lastIndex = m.index + token.length;
+    }
+
+    if (lastIndex < text.length) {
+        result += text.slice(lastIndex);
+    }
+    return result;
+}
+
 // ── Shell (MongoDB / JavaScript) ─────────────────────────────────────
 
 const SHELL_KEYWORDS = new Set([
@@ -287,4 +350,40 @@ function highlightShell(text: string): string {
         result += text.slice(lastIndex);
     }
     return result;
+}
+
+// ── Elasticsearch ─────────────────────────────────────────────────────
+
+// Matches: VERB /path?params  (e.g. "GET /my-index/_search?pretty")
+// Groups: [1] verb  [2] path (without query)  [3] query string (with ?)
+const ES_FIRST_LINE_RE = /^(GET|POST|PUT|DELETE|HEAD)\s+(\/[^?\s]*)(\?[^\s]*)?$/;
+
+// Matches bare paths: starting with _ or / (e.g. "_cat/indices", "/_cluster/health")
+const ES_BARE_PATH_RE = /^([/_][^\s?]*)(\?[^\s]*)?$/;
+
+function highlightElasticsearch(text: string): string {
+    const trimmed = text.trim();
+
+    // Try to match first-line pattern: VERB /path?params
+    const firstLine = ES_FIRST_LINE_RE.exec(trimmed);
+    if (firstLine) {
+        const leadingSpace = text.slice(0, text.indexOf(trimmed));
+        const verb = firstLine[1];
+        const path = firstLine[2];
+        const query = firstLine[3] ?? '';
+        // Reconstruct with colors, preserving any leading whitespace
+        return leadingSpace + BB + verb + R + ' ' + C + path + R + (query ? Y + query + R : '');
+    }
+
+    // Try to match bare path shortcut: _cat/indices, /_cluster/health, etc.
+    const barePath = ES_BARE_PATH_RE.exec(trimmed);
+    if (barePath) {
+        const leadingSpace = text.slice(0, text.indexOf(trimmed));
+        const path = barePath[1];
+        const query = barePath[2] ?? '';
+        return leadingSpace + C + path + R + (query ? Y + query + R : '');
+    }
+
+    // Otherwise treat as JSON body line
+    return highlightJson(text);
 }
