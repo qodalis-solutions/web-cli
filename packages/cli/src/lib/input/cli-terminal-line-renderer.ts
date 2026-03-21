@@ -27,9 +27,10 @@ export class CliTerminalLineRenderer {
      * Builds the prompt string (user:path$ ) with ANSI color codes.
      */
     getPromptString(options: PromptOptions): string {
-        let promptStart = options.hideUserName
+        const name = options.userName ?? '';
+        let promptStart = options.hideUserName || !name
             ? ''
-            : `\x1b[32m${options.userName ?? ''}\x1b[0m:`;
+            : `\x1b[32m${name}\x1b[0m:`;
 
         if (options.contextProcessor) {
             promptStart = `${options.contextProcessor}`;

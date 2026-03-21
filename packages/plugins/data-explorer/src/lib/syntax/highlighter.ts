@@ -1,3 +1,4 @@
+import { colorizeJson } from '@qodalis/cli-core';
 import { DataExplorerLanguage } from '../models/data-explorer-types';
 
 // ANSI color codes
@@ -22,7 +23,7 @@ export function highlightLine(
         case DataExplorerLanguage.Sql:
             return highlightSql(text);
         case DataExplorerLanguage.Json:
-            return highlightJson(text);
+            return colorizeJson(text);
         case DataExplorerLanguage.Graphql:
             return highlightGraphql(text);
         case DataExplorerLanguage.Shell:
@@ -119,46 +120,6 @@ function highlightSql(text: string): string {
         }
 
         lastIndex = m.index + token.length;
-    }
-
-    if (lastIndex < text.length) {
-        result += text.slice(lastIndex);
-    }
-    return result;
-}
-
-// ── JSON ─────────────────────────────────────────────────────────────
-
-const JSON_TOKEN_RE =
-    /("(?:[^"\\]|\\.)*"?)(\s*:)?|(\btrue\b|\bfalse\b|\bnull\b)|(\b-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b)|([{}[\],:])/g;
-
-function highlightJson(text: string): string {
-    let result = '';
-    let lastIndex = 0;
-
-    JSON_TOKEN_RE.lastIndex = 0;
-    let m: RegExpExecArray | null;
-
-    while ((m = JSON_TOKEN_RE.exec(text)) !== null) {
-        if (m.index > lastIndex) {
-            result += text.slice(lastIndex, m.index);
-        }
-
-        if (m[1] !== undefined) {
-            if (m[2] !== undefined) {
-                result += C + m[1] + R + m[2];           // key: cyan
-            } else {
-                result += G + m[1] + R;                  // value: green
-            }
-        } else if (m[3] !== undefined) {
-            result += Y + m[3] + R;                      // boolean/null
-        } else if (m[4] !== undefined) {
-            result += Y + m[4] + R;                      // number
-        } else if (m[5] !== undefined) {
-            result += m[5];                              // brackets/punctuation
-        }
-
-        lastIndex = m.index + m[0].length;
     }
 
     if (lastIndex < text.length) {
@@ -385,5 +346,5 @@ function highlightElasticsearch(text: string): string {
     }
 
     // Otherwise treat as JSON body line
-    return highlightJson(text);
+    return colorizeJson(text);
 }

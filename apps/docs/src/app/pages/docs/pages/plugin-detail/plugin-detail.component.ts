@@ -31,8 +31,10 @@ import { scpModule } from '@qodalis/cli-scp';
 import { stopwatchModule } from '@qodalis/cli-stopwatch';
 import { wgetModule } from '@qodalis/cli-wget';
 import { jobsModule } from '@qodalis/cli-server-jobs';
+import { dataExplorerModule } from '@qodalis/cli-data-explorer';
 
 const MODULE_MAP: Record<string, ICliModule> = {
+    dataExplorerModule,
     guidModule,
     regexModule,
     textToImageModule,
