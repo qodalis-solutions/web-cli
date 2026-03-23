@@ -56,6 +56,15 @@ export class CliServerManager implements DefaultServerProvider {
                 this.handleDisconnect(config.name);
             };
 
+            connection.onReconnected = () => {
+                logger?.info(
+                    `Server '${config.name}' reconnected (${connection.commands.length} commands, API v${connection.apiVersion}).`,
+                );
+                this.registerProxyProcessors(connection, config.name);
+                this.unregisterBareAliases();
+                this.registerBareAliases();
+            };
+
             await connection.connect();
 
             if (connection.connected) {
@@ -81,10 +90,20 @@ export class CliServerManager implements DefaultServerProvider {
             return { success: false, commandCount: 0 };
         }
 
+        connection.stopHealthCheck();
         this.unregisterServerProcessors(name);
 
         connection.onDisconnect = () => {
             this.handleDisconnect(name);
+        };
+
+        connection.onReconnected = () => {
+            this._logger?.info(
+                `Server '${name}' reconnected (${connection.commands.length} commands, API v${connection.apiVersion}).`,
+            );
+            this.registerProxyProcessors(connection, name);
+            this.unregisterBareAliases();
+            this.registerBareAliases();
         };
 
         await connection.connect();
@@ -104,9 +123,14 @@ export class CliServerManager implements DefaultServerProvider {
 
     private handleDisconnect(name: string): void {
         this._logger?.warn(
-            `Server '${name}' disconnected. Its commands are no longer available. Run 'server reconnect ${name}' to retry.`,
+            `Server '${name}' disconnected. Its commands are no longer available. Starting health check...`,
         );
         this.unregisterServerProcessors(name);
+
+        const connection = this.connections.get(name);
+        if (connection) {
+            connection.startHealthCheck();
+        }
     }
 
     private unregisterServerProcessors(name: string): void {
