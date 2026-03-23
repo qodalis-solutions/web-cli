@@ -117,7 +117,7 @@ export class CliServerConnection {
 
     async execute(command: CliProcessCommand): Promise<CliServerResponse> {
         const url = `${this._basePath}/execute`;
-        const response = await this.httpFetch(url, {
+        const response = await this.httpFetchWithRetry(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(command),
@@ -321,6 +321,25 @@ export class CliServerConnection {
             );
             this.connectEventSocket();
         }, delay);
+    }
+
+    private async httpFetchWithRetry(
+        url: string,
+        init?: RequestInit,
+        retries = 1,
+    ): Promise<Response> {
+        try {
+            return await this.httpFetch(url, init);
+        } catch (e: any) {
+            if (retries > 0 && e.name !== 'AbortError') {
+                this._logger?.debug(
+                    `Transient fetch error for "${this._config.name}", retrying in 1s: ${e.message}`,
+                );
+                await new Promise((r) => setTimeout(r, 1000));
+                return this.httpFetchWithRetry(url, init, retries - 1);
+            }
+            throw e;
+        }
     }
 
     private httpFetch(url: string, init?: RequestInit): Promise<Response> {
