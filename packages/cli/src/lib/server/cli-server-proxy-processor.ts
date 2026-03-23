@@ -79,6 +79,7 @@ export async function executeOnServer(
     descriptor: CliServerCommandDescriptor,
     command: CliProcessCommand,
     context: ICliExecutionContext,
+    commandPath?: string[],
 ): Promise<void> {
     if (!connection.connected) {
         context.writer.writeError(
@@ -88,9 +89,12 @@ export async function executeOnServer(
         return;
     }
 
+    // Build server command with full path: first element is the root command,
+    // remaining elements are chainCommands for sub-processor traversal.
     const serverCommand: CliProcessCommand = {
         ...command,
-        command: descriptor.command,
+        command: commandPath && commandPath.length > 0 ? commandPath[0] : descriptor.command,
+        chainCommands: commandPath && commandPath.length > 1 ? commandPath.slice(1) : [],
     };
 
     try {
@@ -133,13 +137,17 @@ export class CliServerProxyProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata;
     parameters?: ICliCommandParameterDescriptor[];
     processors?: ICliCommandProcessor[];
+    /** Full command path from root to this processor (e.g. ["aws", "lambda", "list"]) */
+    private readonly commandPath: string[];
 
     constructor(
         private readonly connection: CliServerConnection,
         private readonly descriptor: CliServerCommandDescriptor,
         private readonly serverName: string,
         isNested = false,
+        parentPath: string[] = [],
     ) {
+        this.commandPath = [...parentPath, descriptor.command];
         this.command = isNested
             ? descriptor.command
             : `${serverName}:${descriptor.command}`;
@@ -160,7 +168,7 @@ export class CliServerProxyProcessor implements ICliCommandProcessor {
         }));
         this.processors = descriptor.processors?.map(
             (sub) =>
-                new CliServerProxyProcessor(connection, sub, serverName, true),
+                new CliServerProxyProcessor(connection, sub, serverName, true, this.commandPath),
         );
     }
 
@@ -174,6 +182,7 @@ export class CliServerProxyProcessor implements ICliCommandProcessor {
             this.descriptor,
             command,
             context,
+            this.commandPath,
         );
     }
 }
