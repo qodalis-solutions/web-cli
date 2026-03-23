@@ -4,7 +4,7 @@ import { CliSshCommandProcessor } from './cli-ssh-command-processor';
 
 export function createServerModule(): ICliModule {
     return {
-        apiVersion: 1,
+        apiVersion: 2,
         name: '@qodalis/cli-server',
         description: 'Remote server command integration',
         priority: -10,

@@ -39,6 +39,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
 
     private socket: WebSocket | null = null;
     private context: ICliExecutionContext | null = null;
+    private resolved = false;
 
     async processCommand(
         command: CliProcessCommand,
@@ -228,7 +229,16 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
 
         context.spinner?.show(`Connecting to ${serverName}...`);
 
+        this.resolved = false;
+
         return new Promise<void>((resolve) => {
+            const resolveOnce = () => {
+                if (!this.resolved) {
+                    this.resolved = true;
+                    resolve();
+                }
+            };
+
             try {
                 this.socket = new WebSocket(wsUrl);
             } catch (e: any) {
@@ -237,7 +247,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                     `Failed to connect to '${serverName}': ${e.message}`,
                 );
                 context.process.exit(1);
-                resolve();
+                resolveOnce();
                 return;
             }
 
@@ -276,7 +286,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                             context.process.exit(msg.code);
                         }
                         this.cleanup();
-                        resolve();
+                        resolveOnce();
                         break;
 
                     case 'error':
@@ -287,31 +297,33 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                         );
                         context.process.exit(1);
                         this.cleanup();
-                        resolve();
+                        resolveOnce();
                         break;
                 }
             };
 
             this.socket.onclose = () => {
                 context.spinner?.hide();
-                if (this.context) {
+                if (this.context && !this.resolved) {
                     context.exitFullScreenMode();
                     context.writer.writeWarning(
                         `Connection to '${serverName}' closed.`,
                     );
                 }
                 this.cleanup();
-                resolve();
+                resolveOnce();
             };
 
             this.socket.onerror = () => {
                 context.spinner?.hide();
-                context.writer.writeError(
-                    `WebSocket error connecting to '${serverName}'.`,
-                );
-                context.process.exit(1);
+                if (!this.resolved) {
+                    context.writer.writeError(
+                        `WebSocket error connecting to '${serverName}'.`,
+                    );
+                    context.process.exit(1);
+                }
                 this.cleanup();
-                resolve();
+                resolveOnce();
             };
         });
     }
