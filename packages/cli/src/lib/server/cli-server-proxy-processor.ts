@@ -2,12 +2,72 @@ import {
     CliProcessCommand,
     CliProcessorMetadata,
     CliServerCommandDescriptor,
+    CliServerOutput,
     CliServerResponse,
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
+
+/**
+ * Render a single CliServerOutput to the terminal.
+ */
+export function renderSingleOutput(
+    output: CliServerOutput,
+    context: ICliExecutionContext,
+): void {
+    switch (output.type) {
+        case 'text': {
+            const style = output.style;
+            if (style === 'success')
+                context.writer.writeSuccess(output.value);
+            else if (style === 'error')
+                context.writer.writeError(output.value);
+            else if (style === 'info')
+                context.writer.writeInfo(output.value);
+            else if (style === 'warning')
+                context.writer.writeWarning(output.value);
+            else context.writer.writeln(output.value);
+            break;
+        }
+        case 'table':
+            context.writer.writeTable(output.headers, output.rows);
+            break;
+        case 'list':
+            context.writer.writeList(output.items, {
+                ordered: output.ordered,
+            });
+            break;
+        case 'json':
+            context.writer.writeJson(output.value);
+            break;
+        case 'key-value': {
+            const record: Record<string, string> = {};
+            for (const e of output.entries) {
+                record[e.key] = e.value;
+            }
+            context.writer.writeKeyValue(record);
+            break;
+        }
+    }
+}
+
+/**
+ * Render a CliServerResponse to the terminal.
+ */
+export function renderServerResponse(
+    response: CliServerResponse,
+    context: ICliExecutionContext,
+): void {
+    for (const output of response.outputs ?? []) {
+        renderSingleOutput(output, context);
+    }
+
+    if (response.exitCode !== 0) {
+        context.process.exit(response.exitCode);
+    }
+}
 
 /**
  * Execute a command on a specific server connection and render the response.
@@ -34,10 +94,22 @@ export async function executeOnServer(
     };
 
     try {
-        context.spinner?.show('Executing on server...');
-        const response = await connection.execute(serverCommand);
-        context.spinner?.hide();
-        renderServerResponse(response, context);
+        if (connection.capabilities?.streaming) {
+            // Streaming mode — render outputs as they arrive
+            const result = await connection.executeStream(
+                serverCommand,
+                (output) => renderSingleOutput(output, context),
+            );
+            if (result.exitCode !== 0) {
+                context.process.exit(result.exitCode);
+            }
+        } else {
+            // Legacy mode — wait for full response
+            context.spinner?.show('Executing on server...');
+            const response = await connection.execute(serverCommand);
+            context.spinner?.hide();
+            renderServerResponse(response, context);
+        }
     } catch (e: any) {
         context.spinner?.hide();
         if (e.name === 'AbortError') {
@@ -50,55 +122,6 @@ export async function executeOnServer(
             );
         }
         context.process.exit(1);
-    }
-}
-
-/**
- * Render a CliServerResponse to the terminal.
- */
-export function renderServerResponse(
-    response: CliServerResponse,
-    context: ICliExecutionContext,
-): void {
-    for (const output of response.outputs ?? []) {
-        switch (output.type) {
-            case 'text': {
-                const style = output.style;
-                if (style === 'success')
-                    context.writer.writeSuccess(output.value);
-                else if (style === 'error')
-                    context.writer.writeError(output.value);
-                else if (style === 'info')
-                    context.writer.writeInfo(output.value);
-                else if (style === 'warning')
-                    context.writer.writeWarning(output.value);
-                else context.writer.writeln(output.value);
-                break;
-            }
-            case 'table':
-                context.writer.writeTable(output.headers, output.rows);
-                break;
-            case 'list':
-                context.writer.writeList(output.items, {
-                    ordered: output.ordered,
-                });
-                break;
-            case 'json':
-                context.writer.writeJson(output.value);
-                break;
-            case 'key-value': {
-                const record: Record<string, string> = {};
-                for (const e of output.entries) {
-                    record[e.key] = e.value;
-                }
-                context.writer.writeKeyValue(record);
-                break;
-            }
-        }
-    }
-
-    if (response.exitCode !== 0) {
-        context.process.exit(response.exitCode);
     }
 }
 
