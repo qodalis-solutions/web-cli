@@ -3,8 +3,10 @@ import {
     CliBackgroundColor,
     CliForegroundColor,
     CliIcon,
+    CliTableOptions,
     formatJson,
     ICliTerminalWriter,
+    stripAnsi,
     visibleLength,
 } from '@qodalis/cli-core';
 
@@ -202,20 +204,73 @@ export class CliTerminalWriter implements ICliTerminalWriter {
         this.writeln(`${indent}${text}`);
     }
 
-    public writeTable(headers: string[], rows: string[][]): void {
-        // Calculate column widths using visible length (ignoring ANSI codes)
-        const colWidths = headers.map((header, colIndex) =>
+    public writeTable(headers: string[], rows: string[][], options?: CliTableOptions): void {
+        const cols = this.terminal.cols;
+
+        // Calculate natural (unconstrained) column widths
+        const naturalWidths = headers.map((header, colIndex) =>
             Math.max(
                 visibleLength(header),
                 ...rows.map((row) => visibleLength(row[colIndex] ?? '')),
             ),
         );
 
+        // Separators take 3 chars each (" | "), total overhead
+        const separatorWidth = (headers.length - 1) * 3;
+        const available = cols - separatorWidth;
+        const totalNatural = naturalWidths.reduce((s, w) => s + w, 0);
+
+        // Constrain column widths to fit within terminal
+        let colWidths: number[];
+        if (totalNatural <= available || available < headers.length) {
+            colWidths = [...naturalWidths];
+            // Expand to fill terminal width when fullWidth is set
+            if (options?.fullWidth && totalNatural < available) {
+                const extra = available - totalNatural;
+                // Distribute extra space proportionally
+                let distributed = 0;
+                colWidths = naturalWidths.map((w, i) => {
+                    const share = i < colWidths.length - 1
+                        ? Math.floor((w / totalNatural) * extra)
+                        : extra - distributed;
+                    distributed += share;
+                    return w + share;
+                });
+            }
+        } else {
+            // Shrink columns proportionally, with a minimum of 4 chars
+            const minCol = 4;
+            colWidths = naturalWidths.map((w) =>
+                Math.max(minCol, Math.floor((w / totalNatural) * available)),
+            );
+            // Distribute any remaining space to the widest columns
+            let used = colWidths.reduce((s, w) => s + w, 0);
+            for (let i = 0; used < available && i < colWidths.length; i++) {
+                const idx = naturalWidths.indexOf(
+                    Math.max(...naturalWidths.filter((_, j) => j >= i)),
+                );
+                colWidths[idx]++;
+                used++;
+            }
+        }
+
+        // Truncate text to fit column width, preserving ANSI codes
+        const truncateText = (text: string, maxWidth: number): string => {
+            const t = text ?? '';
+            const vis = visibleLength(t);
+            if (vis <= maxWidth) return t;
+            // Walk through the string, tracking visible chars
+            const raw = stripAnsi(t);
+            const truncatedRaw = raw.slice(0, Math.max(0, maxWidth - 1)) + '…';
+            return truncatedRaw;
+        };
+
         // Pad text to a visible width, accounting for invisible ANSI sequences
-        const padText = (text: string, width: number) => {
-            const visible = visibleLength(text ?? '');
+        const fitText = (text: string, width: number) => {
+            const truncated = truncateText(text, width);
+            const visible = visibleLength(truncated);
             const padding = Math.max(0, width - visible);
-            return (text ?? '') + ' '.repeat(padding);
+            return truncated + ' '.repeat(padding);
         };
 
         // Write the header
@@ -223,20 +278,22 @@ export class CliTerminalWriter implements ICliTerminalWriter {
             headers
                 .map((header, i) =>
                     this.wrapInColor(
-                        padText(header, colWidths[i]),
+                        fitText(header, colWidths[i]),
                         CliForegroundColor.Yellow,
                     ),
                 )
                 .join(' | ') + '\r\n',
         );
-        this.write(
-            '-'.repeat(colWidths.reduce((sum, w) => sum + w + 3, -3)) + '\r\n',
+        const dividerWidth = Math.min(
+            cols,
+            colWidths.reduce((sum, w) => sum + w + 3, -3),
         );
+        this.write('-'.repeat(dividerWidth) + '\r\n');
 
         // Write the rows
         rows.forEach((row) => {
             this.write(
-                row.map((cell, i) => padText(cell, colWidths[i])).join(' | ') +
+                row.map((cell, i) => fitText(cell, colWidths[i])).join(' | ') +
                     '\r\n',
             );
         });
