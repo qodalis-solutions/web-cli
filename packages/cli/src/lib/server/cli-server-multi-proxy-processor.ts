@@ -31,12 +31,16 @@ export class CliServerMultiProxyProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata;
     parameters?: ICliCommandParameterDescriptor[];
     processors?: ICliCommandProcessor[];
+    /** Full command path from root to this processor */
+    private readonly commandPath: string[];
 
     constructor(
         private readonly entries: MultiProxyEntry[],
         private readonly provider: DefaultServerProvider,
+        parentPath: string[] = [],
     ) {
         const first = entries[0].descriptor;
+        this.commandPath = [...parentPath, first.command];
         this.command = first.command;
         this.description = first.description;
         this.metadata = {
@@ -67,7 +71,7 @@ export class CliServerMultiProxyProcessor implements ICliCommandProcessor {
                         : null;
                 })
                 .filter((e): e is MultiProxyEntry => e !== null);
-            return new CliServerMultiProxyProcessor(subEntries, this.provider);
+            return new CliServerMultiProxyProcessor(subEntries, this.provider, this.commandPath);
         });
     }
 
@@ -90,6 +94,7 @@ export class CliServerMultiProxyProcessor implements ICliCommandProcessor {
                     entry.descriptor,
                     command,
                     context,
+                    this.commandPath,
                 );
             }
 
@@ -107,6 +112,7 @@ export class CliServerMultiProxyProcessor implements ICliCommandProcessor {
                     fallback.descriptor,
                     command,
                     context,
+                    this.commandPath,
                 );
             }
 
@@ -137,6 +143,7 @@ export class CliServerMultiProxyProcessor implements ICliCommandProcessor {
                 connected[0].descriptor,
                 command,
                 context,
+                this.commandPath,
             );
         }
 
@@ -161,6 +168,7 @@ export class CliServerMultiProxyProcessor implements ICliCommandProcessor {
             entry.descriptor,
             command,
             context,
+            this.commandPath,
         );
     }
 }
