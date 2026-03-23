@@ -25,6 +25,8 @@ import {
     CliFullScreenOptions,
 } from '@qodalis/cli-core';
 import { CliBackgroundServiceRegistry } from '../services/background';
+import { CliFullScreenManager } from './cli-fullscreen-manager';
+import { CliTimerManager } from './cli-timer-manager';
 import { CliTerminalWriter } from '../services/cli-terminal-writer';
 import { CliTerminalSpinner } from '../services/progress-bars/cli-terminal-spinner';
 import { CliTerminalProgressBar } from '../services/progress-bars/cli-terminal-progress-bar';
@@ -111,9 +113,9 @@ export class CliExecutionContext
 
     private readonly stateStoreManager: CliStateStoreManager;
 
-    private readonly managedTimers = new Set<{ clear(): void }>();
+    private readonly timerManager = new CliTimerManager();
 
-    private resizeDisposable: { dispose(): void } | null = null;
+    private readonly fullScreenManager: CliFullScreenManager;
 
     private windowKeydownListener?: (e: KeyboardEvent) => void;
 
@@ -166,6 +168,11 @@ export class CliExecutionContext
             this.state,
             deps.services,
             this.writer,
+        );
+
+        this.fullScreenManager = new CliFullScreenManager(
+            terminal,
+            this.backgroundServices as CliBackgroundServiceRegistry,
         );
     }
 
@@ -371,88 +378,36 @@ export class CliExecutionContext
     }
 
     public enterFullScreenMode(processor: ICliCommandProcessor, options?: CliFullScreenOptions): void {
-        this.terminal.write('\x1b[?1049h'); // alternate screen buffer
-        this.terminal.write('\x1b[H'); // move cursor to row 1, col 1
-        if (options?.showCursor) {
-            this.terminal.write('\x1b[?25h'); // show cursor
-        } else {
-            this.terminal.write('\x1b[?25l'); // hide cursor
-        }
-        (this.backgroundServices as CliBackgroundServiceRegistry).setFullScreen(true);
-        this.setContextProcessor(processor, true, true);
-
-        // Subscribe to terminal resize events and forward to the processor
-        if (processor.onResize) {
-            this.resizeDisposable = this.terminal.onResize(
-                ({ cols, rows }) => {
-                    processor.onResize!(cols, rows, this);
-                },
-            );
-        }
+        this.fullScreenManager.enter(
+            processor,
+            this.setContextProcessor,
+            this,
+            options,
+        );
     }
 
     public exitFullScreenMode(): void {
-        const processor = this.contextProcessor;
-
-        (this.backgroundServices as CliBackgroundServiceRegistry).setFullScreen(false);
-
-        // Clean up managed timers
-        this.clearAllManagedTimers();
-
-        // Dispose resize subscription
-        this.resizeDisposable?.dispose();
-        this.resizeDisposable = null;
-
-        // Notify processor of disposal
-        if (processor?.onDispose) {
-            processor.onDispose(this);
-        }
-
-        this.terminal.write('\x1b[?25h'); // show cursor
-        this.terminal.write('\x1b[?1049l'); // leave alternate screen buffer
-        this.setContextProcessor(undefined);
-        this.showPrompt();
+        this.fullScreenManager.exit(
+            this.contextProcessor,
+            this.setContextProcessor,
+            () => this.timerManager.clearAll(),
+            () => this.showPrompt(),
+            this,
+        );
     }
 
     public createInterval(
         callback: () => void,
         ms: number,
     ): ICliManagedInterval {
-        let timerId = setInterval(callback, ms);
-
-        const handle: ICliManagedInterval = {
-            clear: () => {
-                clearInterval(timerId);
-                this.managedTimers.delete(handle);
-            },
-            setDelay: (newMs: number) => {
-                clearInterval(timerId);
-                timerId = setInterval(callback, newMs);
-            },
-        };
-
-        this.managedTimers.add(handle);
-        return handle;
+        return this.timerManager.createInterval(callback, ms);
     }
 
     public createTimeout(
         callback: () => void,
         ms: number,
     ): ICliManagedTimer {
-        const timerId = setTimeout(() => {
-            this.managedTimers.delete(handle);
-            callback();
-        }, ms);
-
-        const handle: ICliManagedTimer = {
-            clear: () => {
-                clearTimeout(timerId);
-                this.managedTimers.delete(handle);
-            },
-        };
-
-        this.managedTimers.add(handle);
-        return handle;
+        return this.timerManager.createTimeout(callback, ms);
     }
 
     public isProgressRunning(): boolean {
@@ -514,15 +469,6 @@ export class CliExecutionContext
         return this;
     }
 
-    // -- Managed timer cleanup --
-
-    private clearAllManagedTimers(): void {
-        for (const timer of this.managedTimers) {
-            timer.clear();
-        }
-        this.managedTimers.clear();
-    }
-
     /**
      * Dispose all resources. Called by CliEngine.destroy() when the
      * CLI component is being torn down.
@@ -535,9 +481,8 @@ export class CliExecutionContext
 
         (this.backgroundServices as CliBackgroundServiceRegistry).destroyAll().catch(() => {});
 
-        this.clearAllManagedTimers();
-        this.resizeDisposable?.dispose();
-        this.resizeDisposable = null;
+        this.timerManager.clearAll();
+        this.fullScreenManager.dispose();
 
         if (this.windowKeydownListener) {
             window.removeEventListener('keydown', this.windowKeydownListener, true);
