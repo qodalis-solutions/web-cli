@@ -52,7 +52,7 @@ class ServerListProcessor implements ICliCommandChildProcessor {
             return;
         }
 
-        const headers = ['Name', 'URL', 'Status', 'Commands'];
+        const headers = ['Name', 'URL', 'Status', 'API', 'Commands'];
         const rows: string[][] = [];
         const defaultServer = manager.defaultServer;
 
@@ -62,6 +62,7 @@ class ServerListProcessor implements ICliCommandChildProcessor {
                 isDefault ? `${name} *` : name,
                 connection.config.url,
                 connection.connected ? 'Connected' : 'Disconnected',
+                connection.connected ? `v${connection.apiVersion}` : '-',
                 connection.connected ? String(connection.commands.length) : '-',
             ]);
         }
@@ -111,6 +112,7 @@ class ServerStatusProcessor implements ICliCommandChildProcessor {
             context.writer.writeKeyValue({
                 URL: connection.config.url,
                 Connected: String(connection.connected),
+                'API Version': connection.connected ? `v${connection.apiVersion}` : 'unknown',
                 Commands: String(connection.commands.length),
             });
         } else {
