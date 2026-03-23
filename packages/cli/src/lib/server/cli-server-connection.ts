@@ -21,7 +21,13 @@ export class CliServerConnection {
     private static readonly WS_MAX_RECONNECT_ATTEMPTS = 5;
     private static readonly WS_MAX_RECONNECT_DELAY_MS = 30000;
 
+    private _healthCheckTimer: ReturnType<typeof setTimeout> | null = null;
+    private _healthCheckAttempts = 0;
+    private static readonly HEALTH_CHECK_INTERVAL_MS = 30000;
+    private static readonly HEALTH_CHECK_MAX_ATTEMPTS = 5;
+
     onDisconnect?: () => void;
+    onReconnected?: () => void;
 
     constructor(
         private readonly _config: CliServerConfig,
@@ -68,6 +74,7 @@ export class CliServerConnection {
             this._connected = true;
             this._capabilities = await this.fetchCapabilities();
             this.connectEventSocket();
+            this.stopHealthCheck();
         } catch (e) {
             this._logger?.warn(`Failed to connect to server "${this._config.name}": ${e}`);
             this._connected = false;
@@ -82,12 +89,58 @@ export class CliServerConnection {
             this._wsReconnectTimer = null;
         }
         this._wsReconnectAttempts = 0;
+        this.stopHealthCheck();
         this._connected = false;
         this._commands = [];
         this._capabilities = null;
         this._apiVersion = 1;
         this._basePath = '';
         this.closeEventSocket();
+    }
+
+    startHealthCheck(): void {
+        this.stopHealthCheck();
+        this._healthCheckAttempts = 0;
+        this.scheduleNextHealthCheck();
+    }
+
+    private scheduleNextHealthCheck(): void {
+        this._healthCheckTimer = setTimeout(async () => {
+            this._healthCheckAttempts++;
+
+            if (this._healthCheckAttempts > CliServerConnection.HEALTH_CHECK_MAX_ATTEMPTS) {
+                this._logger?.debug(
+                    `Health check gave up for "${this._config.name}" after ${CliServerConnection.HEALTH_CHECK_MAX_ATTEMPTS} attempts.`,
+                );
+                this.stopHealthCheck();
+                return;
+            }
+
+            this._logger?.debug(
+                `Health check ${this._healthCheckAttempts}/${CliServerConnection.HEALTH_CHECK_MAX_ATTEMPTS} for "${this._config.name}"...`,
+            );
+
+            const alive = await this.ping();
+            if (alive) {
+                this._logger?.debug(`Server "${this._config.name}" is back online, reconnecting...`);
+                this.stopHealthCheck();
+                await this.connect();
+                if (this._connected) {
+                    this.onReconnected?.();
+                }
+            } else {
+                // Schedule next check only after current one completes
+                this.scheduleNextHealthCheck();
+            }
+        }, CliServerConnection.HEALTH_CHECK_INTERVAL_MS);
+    }
+
+    stopHealthCheck(): void {
+        if (this._healthCheckTimer) {
+            clearTimeout(this._healthCheckTimer);
+            this._healthCheckTimer = null;
+        }
+        this._healthCheckAttempts = 0;
     }
 
     async fetchCommands(): Promise<CliServerCommandDescriptor[]> {
