@@ -6,6 +6,7 @@ import {
     CliServerCommandDescriptor,
     ICliBackgroundServiceRegistry,
     ICliLogger,
+    ServerVersionNegotiator,
 } from '@qodalis/cli-core';
 
 export class CliServerConnection {
@@ -13,6 +14,8 @@ export class CliServerConnection {
     private _commands: CliServerCommandDescriptor[] = [];
     private _capabilities: CliServerCapabilities | null = null;
     private _eventSocket: WebSocket | null = null;
+    private _apiVersion: number = 1;
+    private _basePath: string = '';
 
     onDisconnect?: () => void;
 
@@ -38,8 +41,25 @@ export class CliServerConnection {
         return this._capabilities;
     }
 
+    get apiVersion(): number {
+        return this._apiVersion;
+    }
+
     async connect(): Promise<void> {
         try {
+            const baseUrl = this.normalizeUrl(this._config.url);
+
+            // Negotiate API version
+            const negotiated = await ServerVersionNegotiator.discover(baseUrl);
+            if (negotiated) {
+                this._apiVersion = negotiated.apiVersion;
+                this._basePath = negotiated.basePath;
+            } else {
+                // Fallback: server doesn't support version discovery
+                this._apiVersion = 1;
+                this._basePath = `${baseUrl}/api/v1/qcli`;
+            }
+
             this._commands = await this.fetchCommands();
             this._connected = true;
             this._capabilities = await this.fetchCapabilities();
@@ -56,11 +76,13 @@ export class CliServerConnection {
         this._connected = false;
         this._commands = [];
         this._capabilities = null;
+        this._apiVersion = 1;
+        this._basePath = '';
         this.closeEventSocket();
     }
 
     async fetchCommands(): Promise<CliServerCommandDescriptor[]> {
-        const url = `${this.normalizeUrl(this._config.url)}/api/v1/qcli/commands`;
+        const url = `${this._basePath}/commands`;
         const response = await this.httpFetch(url);
 
         if (!response.ok) {
@@ -74,7 +96,7 @@ export class CliServerConnection {
 
     async fetchCapabilities(): Promise<CliServerCapabilities | null> {
         try {
-            const url = `${this.normalizeUrl(this._config.url)}/api/v1/qcli/capabilities`;
+            const url = `${this._basePath}/capabilities`;
             const response = await this.httpFetch(url);
             if (!response.ok) return null;
             return response.json();
@@ -85,7 +107,7 @@ export class CliServerConnection {
     }
 
     async execute(command: CliProcessCommand): Promise<CliServerResponse> {
-        const url = `${this.normalizeUrl(this._config.url)}/api/v1/qcli/execute`;
+        const url = `${this._basePath}/execute`;
         const response = await this.httpFetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -110,7 +132,8 @@ export class CliServerConnection {
 
     async ping(): Promise<boolean> {
         try {
-            const url = `${this.normalizeUrl(this._config.url)}/api/v1/qcli/version`;
+            const baseUrl = this.normalizeUrl(this._config.url);
+            const url = `${baseUrl}/api/qcli/versions`;
             const response = await this.httpFetch(url);
             return response.ok;
         } catch (e) {
