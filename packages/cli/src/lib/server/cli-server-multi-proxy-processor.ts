@@ -52,6 +52,23 @@ export class CliServerMultiProxyProcessor implements ICliCommandProcessor {
             type: p.type,
             defaultValue: p.defaultValue,
         }));
+        this.processors = first.processors?.map((sub) => {
+            const subEntries = entries
+                .map((e) => {
+                    const subDesc = e.descriptor.processors?.find(
+                        (s) => s.command === sub.command,
+                    );
+                    return subDesc
+                        ? {
+                              serverName: e.serverName,
+                              connection: e.connection,
+                              descriptor: subDesc,
+                          }
+                        : null;
+                })
+                .filter((e): e is MultiProxyEntry => e !== null);
+            return new CliServerMultiProxyProcessor(subEntries, this.provider);
+        });
     }
 
     async processCommand(

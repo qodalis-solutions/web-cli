@@ -115,8 +115,11 @@ export class CliServerProxyProcessor implements ICliCommandProcessor {
         private readonly connection: CliServerConnection,
         private readonly descriptor: CliServerCommandDescriptor,
         private readonly serverName: string,
+        isNested = false,
     ) {
-        this.command = `${serverName}:${descriptor.command}`;
+        this.command = isNested
+            ? descriptor.command
+            : `${serverName}:${descriptor.command}`;
         this.description = descriptor.description;
         this.version = descriptor.version;
         this.metadata = {
@@ -133,7 +136,8 @@ export class CliServerProxyProcessor implements ICliCommandProcessor {
             defaultValue: p.defaultValue,
         }));
         this.processors = descriptor.processors?.map(
-            (sub) => new CliServerProxyProcessor(connection, sub, serverName),
+            (sub) =>
+                new CliServerProxyProcessor(connection, sub, serverName, true),
         );
     }
 
