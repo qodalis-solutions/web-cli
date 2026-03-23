@@ -70,4 +70,6 @@ export type CliServerCapabilities = {
     shellPath?: string;
     /** Server version string */
     version?: string;
+    /** Whether this server supports SSE streaming execution */
+    streaming?: boolean;
 };

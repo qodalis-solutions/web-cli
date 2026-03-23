@@ -2,6 +2,7 @@ import {
     CliProcessCommand,
     CliServerCapabilities,
     CliServerConfig,
+    CliServerOutput,
     CliServerResponse,
     CliServerCommandDescriptor,
     ICliBackgroundServiceRegistry,
@@ -190,6 +191,82 @@ export class CliServerConnection {
         }
 
         return response.json();
+    }
+
+    async executeStream(
+        command: CliProcessCommand,
+        onOutput: (output: CliServerOutput) => void,
+    ): Promise<{ exitCode: number }> {
+        const url = `${this._basePath}/execute/stream`;
+        const response = await this.httpFetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(command),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+            throw new Error('Response body is not readable');
+        }
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let exitCode = 0;
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+
+                // Parse SSE events from buffer
+                const parts = buffer.split('\n\n');
+                buffer = parts.pop() ?? '';
+
+                for (const part of parts) {
+                    if (!part.trim()) continue;
+
+                    let eventType = 'message';
+                    let data = '';
+
+                    for (const line of part.split('\n')) {
+                        if (line.startsWith('event: ')) {
+                            eventType = line.slice(7);
+                        } else if (line.startsWith('data: ')) {
+                            data = line.slice(6);
+                        }
+                    }
+
+                    if (!data) continue;
+
+                    try {
+                        const parsed = JSON.parse(data);
+
+                        if (eventType === 'output') {
+                            onOutput(parsed);
+                        } else if (eventType === 'done') {
+                            exitCode = parsed.exitCode ?? 0;
+                        } else if (eventType === 'error') {
+                            throw new Error(parsed.message ?? 'Stream error');
+                        }
+                    } catch (e: any) {
+                        if (e.message && !e.message.includes('JSON')) {
+                            throw e; // Re-throw non-parse errors (like our error event)
+                        }
+                        // Ignore malformed JSON
+                    }
+                }
+            }
+        } finally {
+            reader.releaseLock();
+        }
+
+        return { exitCode };
     }
 
     async ping(): Promise<boolean> {
