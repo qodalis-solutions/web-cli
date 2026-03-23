@@ -27,6 +27,13 @@ import {
     helpGlobalParameter,
     contextGlobalParameter,
 } from './global-parameters';
+import {
+    writeOutputToFile,
+    appendOutputToFile,
+    writeStderrToFile,
+    appendStderrToFile,
+} from './cli-io-redirect-handler';
+import { tryExecuteScript, expandEnvironmentVars } from './cli-script-executor';
 
 /**
  * Extended execution context interface used internally by the command executor.
@@ -108,7 +115,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                     continue;
                 }
                 if (shouldRunNext) {
-                    await this.appendOutputToFile(nextPart.value, context);
+                    await appendOutputToFile(nextPart.value, context);
                     // Data was consumed by the redirect — clear it
                     pipelineData = undefined;
                 }
@@ -122,7 +129,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                     continue;
                 }
                 if (shouldRunNext) {
-                    await this.writeOutputToFile(nextPart.value, context);
+                    await writeOutputToFile(nextPart.value, context);
                     pipelineData = undefined;
                 }
                 continue;
@@ -135,7 +142,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                     continue;
                 }
                 if (shouldRunNext) {
-                    await this.appendStderrToFile(nextPart.value, context, lastCapturingWriter);
+                    await appendStderrToFile(nextPart.value, context, lastCapturingWriter);
                 }
                 continue;
             } else if (part.type === '2>') {
@@ -147,7 +154,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                     continue;
                 }
                 if (shouldRunNext) {
-                    await this.writeStderrToFile(nextPart.value, context, lastCapturingWriter);
+                    await writeStderrToFile(nextPart.value, context, lastCapturingWriter);
                 }
                 continue;
             }
@@ -185,78 +192,6 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         }
     }
 
-    private async appendOutputToFile(
-        filePath: string,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        const FS_TOKEN = 'cli-file-system-service';
-
-        let fs: any;
-        try {
-            fs = context.services.get(FS_TOKEN);
-        } catch {
-            context.writer.writeError(
-                '>> redirect requires @qodalis/cli-files plugin',
-            );
-            return;
-        }
-
-        const output = context.process.data;
-        if (output === undefined || output === null) {
-            return;
-        }
-
-        try {
-            const resolved = fs.resolvePath(filePath.trim());
-            const content =
-                typeof output === 'string' ? output : JSON.stringify(output);
-            if (fs.exists(resolved)) {
-                fs.writeFile(resolved, content, true); // append
-            } else {
-                fs.createFile(resolved, content);
-            }
-            await fs.persist();
-        } catch (e: any) {
-            context.writer.writeError(`>> failed: ${e.message || e}`);
-        }
-    }
-
-    private async writeOutputToFile(
-        filePath: string,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        const FS_TOKEN = 'cli-file-system-service';
-
-        let fs: any;
-        try {
-            fs = context.services.get(FS_TOKEN);
-        } catch {
-            context.writer.writeError(
-                '> redirect requires @qodalis/cli-files plugin',
-            );
-            return;
-        }
-
-        const output = context.process.data;
-        if (output === undefined || output === null) {
-            return;
-        }
-
-        try {
-            const resolved = fs.resolvePath(filePath.trim());
-            const content =
-                typeof output === 'string' ? output : JSON.stringify(output);
-            if (fs.exists(resolved)) {
-                fs.writeFile(resolved, content); // overwrite (no append flag)
-            } else {
-                fs.createFile(resolved, content);
-            }
-            await fs.persist();
-        } catch (e: any) {
-            context.writer.writeError(`> failed: ${e.message || e}`);
-        }
-    }
-
     private async executeSingleCommand(
         command: string,
         data: any | undefined,
@@ -265,7 +200,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         const process = context.process as CliExecutionProcess;
 
         // Substitute environment variables ($VAR / ${VAR}) before parsing
-        command = this.expandEnvironmentVars(command, context);
+        command = expandEnvironmentVars(command, context);
 
         // Handle inline variable assignment: VAR=value (no command after it)
         const assignMatch = command.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
@@ -347,9 +282,10 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
             // Try executing as a script file (./path or /path)
             if (mainCommand.startsWith('./') || mainCommand.startsWith('/')) {
-                const executed = await this.tryExecuteScript(
+                const executed = await tryExecuteScript(
                     mainCommand,
                     context,
+                    this.executeCommand.bind(this),
                 );
                 if (executed) {
                     this.completeProcess(processEntry, context, 0);
@@ -570,70 +506,6 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         } catch { /* ignore */ }
     }
 
-    private async writeStderrToFile(
-        filePath: string,
-        context: ICliExecutionContext,
-        capturingWriter?: CapturingTerminalWriter,
-    ): Promise<void> {
-        const stderr = capturingWriter?.getCapturedStderr();
-        if (!stderr) return;
-
-        const FS_TOKEN = 'cli-file-system-service';
-        let fs: any;
-        try {
-            fs = context.services.get(FS_TOKEN);
-        } catch {
-            context.writer.writeError(
-                '2> redirect requires @qodalis/cli-files plugin',
-            );
-            return;
-        }
-
-        try {
-            const resolved = fs.resolvePath(filePath.trim());
-            if (fs.exists(resolved)) {
-                fs.writeFile(resolved, stderr);
-            } else {
-                fs.createFile(resolved, stderr);
-            }
-            await fs.persist();
-        } catch (e: any) {
-            context.writer.writeError(`2> failed: ${e.message || e}`);
-        }
-    }
-
-    private async appendStderrToFile(
-        filePath: string,
-        context: ICliExecutionContext,
-        capturingWriter?: CapturingTerminalWriter,
-    ): Promise<void> {
-        const stderr = capturingWriter?.getCapturedStderr();
-        if (!stderr) return;
-
-        const FS_TOKEN = 'cli-file-system-service';
-        let fs: any;
-        try {
-            fs = context.services.get(FS_TOKEN);
-        } catch {
-            context.writer.writeError(
-                '2>> redirect requires @qodalis/cli-files plugin',
-            );
-            return;
-        }
-
-        try {
-            const resolved = fs.resolvePath(filePath.trim());
-            if (fs.exists(resolved)) {
-                fs.writeFile(resolved, stderr, true); // append
-            } else {
-                fs.createFile(resolved, stderr);
-            }
-            await fs.persist();
-        } catch (e: any) {
-            context.writer.writeError(`2>> failed: ${e.message || e}`);
-        }
-    }
-
     public async showHelp(
         command: CliProcessCommand,
         context: ICliExecutionContext,
@@ -643,155 +515,6 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         } catch (e) {
             context.writer.writeError(`Error executing command: ${e}`);
         }
-    }
-
-    /**
-     * Attempt to execute a file path as a script.
-     * Returns true if the file was found and executed, false otherwise.
-     * Requires the @qodalis/cli-files plugin for filesystem access.
-     */
-    private async tryExecuteScript(
-        filePath: string,
-        context: ICliExecutionHost,
-    ): Promise<boolean> {
-        const FS_TOKEN = 'cli-file-system-service';
-
-        let fs: any;
-        try {
-            fs = context.services.get(FS_TOKEN);
-        } catch {
-            return false;
-        }
-
-        const resolved = fs.resolvePath(filePath);
-        const node = fs.getNode(resolved);
-
-        if (!node || node.type !== 'file') {
-            return false;
-        }
-
-        // Check execute permission (owner 'x' bit — position 2 in rwxr-xr-x)
-        const perms = node.permissions || 'rw-r--r--';
-        const ownerExecute = perms.length >= 3 && perms[2] === 'x';
-
-        if (!ownerExecute) {
-            context.writer.writeError(
-                `${filePath}: Permission denied (missing execute permission)`,
-            );
-            context.writer.writeInfo(
-                `Use ${context.writer.wrapInColor(`chmod u+x ${filePath}`, CliForegroundColor.Cyan)} to make it executable, or run with ${context.writer.wrapInColor(`sh ${filePath}`, CliForegroundColor.Cyan)}`,
-            );
-            context.process.exit(126, { silent: true });
-            return true;
-        }
-
-        const content = fs.readFile(resolved);
-        if (content === null || content === undefined) {
-            context.writer.writeError(`${filePath}: Cannot read file`);
-            context.process.exit(1, { silent: true });
-            return true;
-        }
-
-        // Execute the script content line by line
-        const lines = content.split('\n');
-        const variables: Record<string, string> = {};
-        let stopOnError = true;
-
-        for (const rawLine of lines) {
-            const line = rawLine.trim();
-
-            if (!line || line.startsWith('#')) {
-                continue;
-            }
-
-            if (line === 'set -e') {
-                stopOnError = true;
-                continue;
-            }
-            if (line === 'set +e') {
-                stopOnError = false;
-                continue;
-            }
-
-            // Variable assignment
-            const assignMatch = line.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-            if (assignMatch) {
-                const varName = assignMatch[1];
-                let varValue = assignMatch[2];
-                if (
-                    (varValue.startsWith('"') && varValue.endsWith('"')) ||
-                    (varValue.startsWith("'") && varValue.endsWith("'"))
-                ) {
-                    varValue = varValue.slice(1, -1);
-                }
-                varValue = this.substituteVars(varValue, variables);
-                variables[varName] = varValue;
-                continue;
-            }
-
-            const expanded = this.substituteVars(line, variables);
-            await this.executeCommand(expanded, context);
-
-            const exitCode = context.process.exitCode;
-            if (stopOnError && exitCode !== undefined && exitCode !== 0) {
-                context.writer.writeError(
-                    `${filePath}: script aborted at line: ${line}`,
-                );
-                return true;
-            }
-        }
-
-        return true;
-    }
-
-    private substituteVars(
-        input: string,
-        variables: Record<string, string>,
-    ): string {
-        let result = input.replace(
-            /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g,
-            (_, name) => variables[name] ?? '',
-        );
-        result = result.replace(
-            /\$([A-Za-z_][A-Za-z0-9_]*)/g,
-            (_, name) => variables[name] ?? '',
-        );
-        return result;
-    }
-
-    /**
-     * Expand $VAR and ${VAR} references using the global environment store.
-     * Variables inside single-quoted strings are NOT expanded (like bash).
-     */
-    private expandEnvironmentVars(
-        command: string,
-        context: ICliExecutionHost,
-    ): string {
-        let env: ICliEnvironment;
-        try {
-            env = context.services.get<ICliEnvironment>(ICliEnvironment_TOKEN);
-        } catch {
-            return command;
-        }
-
-        // Don't expand inside single-quoted strings
-        // Split by single quotes, expand only outside quotes
-        const parts = command.split("'");
-        for (let i = 0; i < parts.length; i++) {
-            if (i % 2 === 0) {
-                // Outside single quotes — expand variables
-                parts[i] = parts[i].replace(
-                    /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g,
-                    (_, name) => env.get(name) ?? '',
-                );
-                parts[i] = parts[i].replace(
-                    /\$([A-Za-z_][A-Za-z0-9_]*)/g,
-                    (_, name) => env.get(name) ?? '',
-                );
-            }
-        }
-
-        return parts.join("'");
     }
 
     /**

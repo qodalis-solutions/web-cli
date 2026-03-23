@@ -4,8 +4,6 @@ import {
     Terminal,
 } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
-import { WebLinksAddon } from '@xterm/addon-web-links';
-import { Unicode11Addon } from '@xterm/addon-unicode11';
 import { SerializeAddon } from '@xterm/addon-serialize';
 import {
     CliOptions,
@@ -13,42 +11,24 @@ import {
     CliEngineSnapshot,
     ICliCommandProcessor,
     ICliModule,
-    DefaultThemes,
     ICliCompletionProvider,
     ICliCompletionProvider_TOKEN,
-    ICliTranslationService_TOKEN,
 } from '@qodalis/cli-core';
-import { SyntaxHighlighterRegistry } from '../editor/syntax/registry';
-import { JsonHighlighter, HtmlHighlighter, MarkdownHighlighter, YamlHighlighter } from '../editor/syntax/highlighters';
 import { CliCommandExecutor } from '../executor/cli-command-executor';
 import { CliCommandProcessorRegistry } from '../registry/cli-command-processor-registry';
 import { CliExecutionContext } from '../context/cli-execution-context';
-import { CliServiceContainer } from '../services/cli-service-container';
-import { CliLogger } from '../services/cli-logger';
-import { CliCommandHistory } from '../services/cli-command-history';
 import {
-    CliStateStoreManager,
     ICliStateStoreManager,
 } from '../state/cli-state-store-manager';
-import { CliKeyValueStore } from '../storage/cli-key-value-store';
 import { CliBoot } from '../services/cli-boot';
 import { welcomeModule } from '../services/cli-welcome-message';
-import { OverlayAddon } from '../addons/overlay';
 import {
     CliBackgroundServiceRegistry_TOKEN,
-    CliCommandHistory_TOKEN,
     CliModuleRegistry_TOKEN,
-    CliProcessorsRegistry_TOKEN,
     CliStateStoreManager_TOKEN,
-    ICliPingServerService_TOKEN,
 } from '../tokens';
-import { CliDefaultPingServerService } from '../services/defaults/cli-default-ping-server.service';
-import { CliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
-import { CliProcessRegistry, CliProcessRegistry_TOKEN } from '../services/cli-process-registry';
 import { CliBackgroundServiceRegistry } from '../services/background/cli-background-service-registry';
 import { CliDragDropService } from '../services/cli-drag-drop.service';
-import { ICliDragDropService_TOKEN } from '@qodalis/cli-core';
-import { CliTranslationService } from '../services/cli-translation-service';
 import { CliCommandCompletionProvider } from '../completion/cli-command-completion-provider';
 import { CliParameterCompletionProvider } from '../completion/cli-parameter-completion-provider';
 import { CliServiceNameCompletionProvider } from '../completion/cli-service-name-completion-provider';
@@ -63,6 +43,12 @@ import {
 } from '../server/cli-server-manager';
 import { createServerModule } from '../server/cli-server-module';
 import { initWasmAccelerator } from '../wasm';
+import {
+    getTerminalOptions,
+    initializeTerminal,
+    waitForLayout,
+} from './cli-terminal-setup';
+import { initializeServices } from './cli-service-initializer';
 
 export interface CliEngineOptions extends CliOptions {
     terminalOptions?: Partial<ITerminalOptions & ITerminalInitOnlyOptions>;
@@ -148,88 +134,31 @@ export class CliEngine {
         initWasmAccelerator().catch(() => {});
 
         // 1. Wait for container to have layout, then initialize xterm.js
-        await this.waitForLayout();
-        this.initializeTerminal();
+        await waitForLayout(this.container);
+        const terminalOpts = getTerminalOptions(this.options?.terminalOptions);
+        const setupResult = initializeTerminal(this.container, terminalOpts);
+        this.terminal = setupResult.terminal;
+        this.fitAddon = setupResult.fitAddon;
+        this.serializeAddon = setupResult.serializeAddon;
+        this.dragDropService = setupResult.dragDropService;
+        this.wheelListener = setupResult.wheelListener;
+        this.handleResize();
 
-        // 2. Initialize storage (IndexedDB)
-        const store = new CliKeyValueStore();
-        await store.initialize();
-
-        // 3. Build service container
-        const services = new CliServiceContainer();
-        const logger = new CliLogger();
-        const commandHistory = new CliCommandHistory(store);
-        await commandHistory.initialize();
-
-        services.set([{ provide: 'cli-key-value-store', useValue: store }]);
-
-        const stateStoreManager = new CliStateStoreManager(
+        // 2. Build service container
+        const {
             services,
-            this.registry,
-        );
+            logger,
+            commandHistory,
+            stateStoreManager,
+            processRegistry,
+            translator,
+        } = await initializeServices({
+            registry: this.registry,
+            pendingServices: this.pendingServices,
+            dragDropService: this.dragDropService,
+        });
 
-        const processRegistry = new CliProcessRegistry();
-
-        services.set([
-            {
-                provide: CliStateStoreManager_TOKEN,
-                useValue: stateStoreManager,
-            },
-            { provide: CliProcessorsRegistry_TOKEN, useValue: this.registry },
-            { provide: CliCommandHistory_TOKEN, useValue: commandHistory },
-            {
-                provide: CliProcessRegistry_TOKEN,
-                useValue: processRegistry,
-            },
-        ]);
-
-        // Apply pending services registered before start()
-        if (this.pendingServices.length > 0) {
-            services.set(this.pendingServices);
-        }
-
-        // Register default services only if not already provided
-        const pendingTokens = new Set(
-            this.pendingServices.map((s) => s.provide),
-        );
-
-        if (!pendingTokens.has(ICliPingServerService_TOKEN)) {
-            services.set([
-                {
-                    provide: ICliPingServerService_TOKEN,
-                    useValue: new CliDefaultPingServerService(),
-                },
-            ]);
-        }
-
-        // Register syntax highlighter registry with built-in languages
-        const syntaxRegistry = new SyntaxHighlighterRegistry();
-        syntaxRegistry.register(new JsonHighlighter());
-        syntaxRegistry.register(new HtmlHighlighter());
-        syntaxRegistry.register(new MarkdownHighlighter());
-        syntaxRegistry.register(new YamlHighlighter());
-        services.set([{ provide: 'syntax-highlighter-registry', useValue: syntaxRegistry }]);
-
-        if (!pendingTokens.has(ICliEnvironment_TOKEN)) {
-            services.set([
-                {
-                    provide: ICliEnvironment_TOKEN,
-                    useValue: new CliEnvironment(),
-                },
-            ]);
-        }
-
-        services.set([{
-            provide: ICliDragDropService_TOKEN,
-            useValue: this.dragDropService,
-        }]);
-
-        const translator = new CliTranslationService();
-        services.set([
-            { provide: ICliTranslationService_TOKEN, useValue: translator },
-        ]);
-
-        // 4. Create boot service with registry and services
+        // 3. Create boot service with registry and services
         this.bootService = new CliBoot(this.registry, services);
 
         // Register the module registry so debug/introspection commands can access it
@@ -240,20 +169,19 @@ export class CliEngine {
             },
         ]);
 
-        // 5. Create executor and execution context
+        // 4. Create executor and execution context
         const executor = new CliCommandExecutor(this.registry);
-        const terminalOptions = this.getTerminalOptions();
 
         this.executionContext = new CliExecutionContext(
             { services, logger, commandHistory, stateStoreManager, translator },
             this.terminal,
             executor,
-            { ...(this.options ?? {}), terminalOptions },
+            { ...(this.options ?? {}), terminalOptions: terminalOpts },
         );
 
         this.executionContext.initializeTerminalListeners();
 
-        // 5.5. Register background services registry in the service container
+        // 4.5. Register background services registry in the service container
         // and wire it to the process registry so bg services get PIDs
         (this.executionContext.backgroundServices as CliBackgroundServiceRegistry)
             .setProcessRegistry(processRegistry);
@@ -262,7 +190,7 @@ export class CliEngine {
             useValue: this.executionContext.backgroundServices,
         }]);
 
-        // 6. Connect to configured servers (if any)
+        // 5. Connect to configured servers (if any)
         const serverManager = new CliServerManager(this.registry);
         services.set([
             { provide: CliServerManager_TOKEN, useValue: serverManager },
@@ -275,16 +203,16 @@ export class CliEngine {
             }, this.executionContext.backgroundServices, this.executionContext.logger);
         }
 
-        // 6.5. Prepend welcome module and server module
+        // 5.5. Prepend welcome module and server module
         const serverModule = createServerModule();
         const allModules = this.options?.snapshot
             ? [serverModule, ...this.userModules]
             : [welcomeModule, serverModule, ...this.userModules];
 
-        // 7. Boot all modules (core + welcome + user modules)
+        // 6. Boot all modules (core + welcome + user modules)
         await this.bootService.boot(this.executionContext, allModules);
 
-        // 8. Set up tab-completion providers
+        // 7. Set up tab-completion providers
         const defaultProviders: ICliCompletionProvider[] = [
             new CliServiceNameCompletionProvider(this.executionContext.backgroundServices),
             new CliPackageNameCompletionProvider(services),
@@ -312,7 +240,7 @@ export class CliEngine {
             ...defaultProviders,
         ]);
 
-        // 9. Run onAfterBoot hooks sorted by priority (lower first)
+        // 8. Run onAfterBoot hooks sorted by priority (lower first)
         const sorted = [...allModules].sort(
             (a, b) => (a.priority ?? 0) - (b.priority ?? 0),
         );
@@ -329,7 +257,7 @@ export class CliEngine {
             }
         }
 
-        // 10. Restore from snapshot if provided
+        // 9. Restore from snapshot if provided
         if (this.options?.snapshot) {
             await this.restoreSnapshot(this.options.snapshot);
         }
@@ -468,48 +396,6 @@ export class CliEngine {
         // (set up by initializeTerminalListeners) handles new input.
     }
 
-    private getTerminalOptions(): ITerminalOptions & ITerminalInitOnlyOptions {
-        return {
-            cursorBlink: true,
-            allowProposedApi: true,
-            fontSize: 20,
-            theme: DefaultThemes.default,
-            convertEol: true,
-            ...(this.options?.terminalOptions ?? {}),
-        };
-    }
-
-    private initializeTerminal(): void {
-        const opts = this.getTerminalOptions();
-        this.terminal = new Terminal(opts);
-
-        this.fitAddon = new FitAddon();
-        this.terminal.loadAddon(this.fitAddon);
-        this.terminal.loadAddon(new WebLinksAddon());
-        this.terminal.loadAddon(new OverlayAddon());
-        this.terminal.loadAddon(new Unicode11Addon());
-        this.serializeAddon = new SerializeAddon();
-        this.terminal.loadAddon(this.serializeAddon);
-
-        this.terminal.open(this.container);
-        this.fitAddon.fit();
-
-        // Mark the container so the theme processor can update its background
-        // when the theme changes, and set the initial background to match.
-        this.container.classList.add('terminal-container');
-        this.container.style.background = opts.theme?.background ?? '#000';
-
-        // Prevent wheel events from scrolling the host page
-        this.wheelListener = (e: WheelEvent) => e.preventDefault();
-        this.container.addEventListener('wheel', this.wheelListener, {
-            passive: false,
-        });
-
-        this.terminal.focus();
-        this.handleResize();
-        this.dragDropService = new CliDragDropService(this.container);
-    }
-
     private handleResize(): void {
         this.resizeListener = () => this.safeFit();
         window.addEventListener('resize', this.resizeListener);
@@ -557,39 +443,6 @@ export class CliEngine {
             }
             this.resizeScheduled = false;
             this.executionContext?.handleTerminalResize();
-        });
-    }
-
-    /** Maximum time (ms) to wait for container layout before rejecting. */
-    private static readonly LAYOUT_TIMEOUT_MS = 10_000;
-
-    /**
-     * Wait until the container element has non-zero dimensions.
-     * xterm.js requires the host element to be laid out before open() is called.
-     * Rejects after {@link LAYOUT_TIMEOUT_MS} if the container stays hidden.
-     */
-    private waitForLayout(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            const deadline = Date.now() + CliEngine.LAYOUT_TIMEOUT_MS;
-            const check = () => {
-                if (
-                    this.container.offsetWidth > 0 &&
-                    this.container.offsetHeight > 0
-                ) {
-                    resolve();
-                    return;
-                }
-                if (Date.now() >= deadline) {
-                    reject(new Error(
-                        'CliEngine.start(): container has zero dimensions after ' +
-                        `${CliEngine.LAYOUT_TIMEOUT_MS}ms. Ensure the container ` +
-                        'element is visible and laid out before calling start().',
-                    ));
-                    return;
-                }
-                requestAnimationFrame(check);
-            };
-            check();
         });
     }
 }
