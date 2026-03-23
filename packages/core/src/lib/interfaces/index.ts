@@ -17,6 +17,11 @@ import {
 } from './command-processor';
 import { ICliGlobalParameterHandler } from './global-parameter';
 
+export interface CliTableOptions {
+    /** Expand columns to fill the full terminal width. Default: false */
+    fullWidth?: boolean;
+}
+
 export interface ICliTerminalWriter {
     /**
      * Write text to the terminal
@@ -93,8 +98,9 @@ export interface ICliTerminalWriter {
      * Write a table to the terminal
      * @param headers The headers of the table
      * @param rows The rows of the table
+     * @param options Optional table rendering options
      */
-    writeTable(headers: string[], rows: string[][]): void;
+    writeTable(headers: string[], rows: string[][], options?: CliTableOptions): void;
 
     /**
      * Write a divider to the terminal
