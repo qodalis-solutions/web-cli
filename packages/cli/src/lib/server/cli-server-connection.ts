@@ -16,6 +16,10 @@ export class CliServerConnection {
     private _eventSocket: WebSocket | null = null;
     private _apiVersion: number = 1;
     private _basePath: string = '';
+    private _wsReconnectAttempts = 0;
+    private _wsReconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    private static readonly WS_MAX_RECONNECT_ATTEMPTS = 5;
+    private static readonly WS_MAX_RECONNECT_DELAY_MS = 30000;
 
     onDisconnect?: () => void;
 
@@ -73,6 +77,11 @@ export class CliServerConnection {
     }
 
     disconnect(): void {
+        if (this._wsReconnectTimer) {
+            clearTimeout(this._wsReconnectTimer);
+            this._wsReconnectTimer = null;
+        }
+        this._wsReconnectAttempts = 0;
         this._connected = false;
         this._commands = [];
         this._capabilities = null;
@@ -162,6 +171,14 @@ export class CliServerConnection {
 
                     this._eventSocket = new WebSocket(wsUrl);
 
+                    this._eventSocket.onopen = () => {
+                        this._wsReconnectAttempts = 0;
+                        if (this._wsReconnectTimer) {
+                            clearTimeout(this._wsReconnectTimer);
+                            this._wsReconnectTimer = null;
+                        }
+                    };
+
                     this._eventSocket.onmessage = (event) => {
                         try {
                             const data = JSON.parse(event.data);
@@ -178,8 +195,8 @@ export class CliServerConnection {
 
                     this._eventSocket.onclose = () => {
                         if (this._connected) {
-                            ctx.log('WebSocket closed unexpectedly', 'warn');
-                            this.handleServerDisconnect();
+                            ctx.log('WebSocket closed unexpectedly, scheduling reconnect', 'warn');
+                            this.scheduleWsReconnect();
                         }
                     };
 
@@ -208,6 +225,14 @@ export class CliServerConnection {
             const wsUrl = this.toWebSocketUrl(baseUrl) + '/ws/v1/qcli/events';
             this._eventSocket = new WebSocket(wsUrl);
 
+            this._eventSocket.onopen = () => {
+                this._wsReconnectAttempts = 0;
+                if (this._wsReconnectTimer) {
+                    clearTimeout(this._wsReconnectTimer);
+                    this._wsReconnectTimer = null;
+                }
+            };
+
             this._eventSocket.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
@@ -221,7 +246,7 @@ export class CliServerConnection {
 
             this._eventSocket.onclose = () => {
                 if (this._connected) {
-                    this.handleServerDisconnect();
+                    this.scheduleWsReconnect();
                 }
             };
 
@@ -254,6 +279,10 @@ export class CliServerConnection {
     }
 
     private closeEventSocketDirect(): void {
+        if (this._wsReconnectTimer) {
+            clearTimeout(this._wsReconnectTimer);
+            this._wsReconnectTimer = null;
+        }
         if (this._eventSocket) {
             this._eventSocket.onclose = null;
             this._eventSocket.onmessage = null;
@@ -266,6 +295,32 @@ export class CliServerConnection {
             }
             this._eventSocket = null;
         }
+    }
+
+    private scheduleWsReconnect(): void {
+        if (this._wsReconnectAttempts >= CliServerConnection.WS_MAX_RECONNECT_ATTEMPTS) {
+            this._logger?.warn(
+                `WebSocket reconnect failed after ${this._wsReconnectAttempts} attempts for "${this._config.name}". Marking disconnected.`,
+            );
+            this.handleServerDisconnect();
+            return;
+        }
+
+        // Clean up the dead socket before scheduling a new connection
+        this.closeEventSocketDirect();
+
+        const delay = Math.min(
+            1000 * Math.pow(2, this._wsReconnectAttempts),
+            CliServerConnection.WS_MAX_RECONNECT_DELAY_MS,
+        );
+
+        this._wsReconnectTimer = setTimeout(() => {
+            this._wsReconnectAttempts++;
+            this._logger?.debug(
+                `WebSocket reconnect attempt ${this._wsReconnectAttempts} for "${this._config.name}"...`,
+            );
+            this.connectEventSocket();
+        }, delay);
     }
 
     private httpFetch(url: string, init?: RequestInit): Promise<Response> {
