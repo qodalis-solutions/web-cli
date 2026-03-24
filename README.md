@@ -66,7 +66,7 @@ Add styles to `angular.json`:
 ```json
 {
   "styles": [
-    "node_modules/@qodalis/angular-cli/src/assets/styles.sass"
+    "node_modules/@qodalis/angular-cli/src/assets/styles.css"
   ]
 }
 ```
@@ -86,6 +86,7 @@ npm install @qodalis/react-cli
 ```
 
 ```tsx
+import '@qodalis/react-cli/styles.css';
 import { Cli } from '@qodalis/react-cli';
 
 function App() {
@@ -101,6 +102,7 @@ npm install @qodalis/vue-cli
 
 ```vue
 <script setup lang="ts">
+import '@qodalis/vue-cli/styles.css';
 import { Cli } from '@qodalis/vue-cli';
 </script>
 
@@ -203,26 +205,136 @@ pkg source set unpkg           # Set package source directly
 
 ### Available Packages
 
+#### Utility Plugins
+
 | Package | Command | Description |
 |---------|---------|-------------|
+| [@qodalis/cli-data-explorer](https://www.npmjs.com/package/@qodalis/cli-data-explorer) | `data-explorer` | Interactive query console for SQL, MongoDB, Redis, Elasticsearch |
 | [@qodalis/cli-guid](https://www.npmjs.com/package/@qodalis/cli-guid) | `guid` | Generate and validate UUIDs |
-| [@qodalis/cli-string](https://www.npmjs.com/package/@qodalis/cli-string) | `string` | String manipulation (case, trim, reverse, slug, wc, etc.) |
-| [@qodalis/cli-curl](https://www.npmjs.com/package/@qodalis/cli-curl) | `curl` | HTTP requests (GET, POST, PUT, DELETE) |
-| [@qodalis/cli-todo](https://www.npmjs.com/package/@qodalis/cli-todo) | `todo` | Task management |
 | [@qodalis/cli-regex](https://www.npmjs.com/package/@qodalis/cli-regex) | `regex` | Regular expression testing |
 | [@qodalis/cli-qr](https://www.npmjs.com/package/@qodalis/cli-qr) | `qr` | QR code generation |
 | [@qodalis/cli-speed-test](https://www.npmjs.com/package/@qodalis/cli-speed-test) | `speed-test` | Internet speed test |
-| [@qodalis/cli-server-logs](https://www.npmjs.com/package/@qodalis/cli-server-logs) | `server-logs` | Live server log streaming |
+| [@qodalis/cli-curl](https://www.npmjs.com/package/@qodalis/cli-curl) | `curl` | HTTP requests (GET, POST, PUT, DELETE) |
+| [@qodalis/cli-password-generator](https://www.npmjs.com/package/@qodalis/cli-password-generator) | `generate-password` | Password generation |
+| [@qodalis/cli-string](https://www.npmjs.com/package/@qodalis/cli-string) | `string` | String manipulation (case, trim, reverse, slug, wc, etc.) |
+| [@qodalis/cli-todo](https://www.npmjs.com/package/@qodalis/cli-todo) | `todo` | Task management |
 | [@qodalis/cli-browser-storage](https://www.npmjs.com/package/@qodalis/cli-browser-storage) | `local-storage`, `cookies` | Browser storage operations |
 | [@qodalis/cli-text-to-image](https://www.npmjs.com/package/@qodalis/cli-text-to-image) | `text-to-image` | Generate images from text |
-| [@qodalis/cli-password-generator](https://www.npmjs.com/package/@qodalis/cli-password-generator) | `generate-password` | Password generation |
-| [@qodalis/cli-data-explorer](https://www.npmjs.com/package/@qodalis/cli-data-explorer) | `data-explorer` | Interactive REPL for querying SQL, MongoDB, and custom data sources |
+| [@qodalis/cli-files](https://www.npmjs.com/package/@qodalis/cli-files) | `ls`, `cat`, `nano`, `mkdir`, `touch`, `rm` | Virtual filesystem |
+| [@qodalis/cli-yesno](https://www.npmjs.com/package/@qodalis/cli-yesno) | `yesno` | Interactive yes/no confirmation prompts |
+| [@qodalis/cli-server-logs](https://www.npmjs.com/package/@qodalis/cli-server-logs) | `server logs` | Live server log streaming with level filtering |
+| [@qodalis/cli-server-jobs](https://www.npmjs.com/package/@qodalis/cli-server-jobs) | `server jobs` | Manage server-side background jobs |
+| [@qodalis/cli-users](https://www.npmjs.com/package/@qodalis/cli-users) | `whoami`, `adduser`, `login` | User management and authentication |
+| [@qodalis/cli-chart](https://www.npmjs.com/package/@qodalis/cli-chart) | `chart` | Render bar, line, and sparkline charts |
+| [@qodalis/cli-cron](https://www.npmjs.com/package/@qodalis/cli-cron) | `cron` | Schedule and manage recurring commands |
+| [@qodalis/cli-csv](https://www.npmjs.com/package/@qodalis/cli-csv) | `csv` | Parse, filter, sort, and convert CSV data |
+| [@qodalis/cli-markdown](https://www.npmjs.com/package/@qodalis/cli-markdown) | `md` | Render Markdown content in the terminal |
+| [@qodalis/cli-encode](https://www.npmjs.com/package/@qodalis/cli-encode) | `base64`, `url`, `hex`, `html` | Encode/decode Base64, URL, hex, HTML entities |
+| [@qodalis/cli-scp](https://www.npmjs.com/package/@qodalis/cli-scp) | `scp` | Secure copy — transfer files between local and remote |
+| [@qodalis/cli-wget](https://www.npmjs.com/package/@qodalis/cli-wget) | `wget` | Download files from URLs |
+| [@qodalis/cli-stopwatch](https://www.npmjs.com/package/@qodalis/cli-stopwatch) | `stopwatch` | Interactive stopwatch and countdown timer |
+
+#### Game Plugins
+
+| Package | Command | Description |
+|---------|---------|-------------|
+| [@qodalis/cli-snake](https://www.npmjs.com/package/@qodalis/cli-snake) | `snake` | Classic Snake game |
+| [@qodalis/cli-tetris](https://www.npmjs.com/package/@qodalis/cli-tetris) | `tetris` | Tetris |
+| [@qodalis/cli-2048](https://www.npmjs.com/package/@qodalis/cli-2048) | `2048` | 2048 sliding puzzle |
+| [@qodalis/cli-minesweeper](https://www.npmjs.com/package/@qodalis/cli-minesweeper) | `minesweeper` | Minesweeper |
+| [@qodalis/cli-wordle](https://www.npmjs.com/package/@qodalis/cli-wordle) | `wordle` | Wordle word game |
+| [@qodalis/cli-sudoku](https://www.npmjs.com/package/@qodalis/cli-sudoku) | `sudoku` | Sudoku puzzle |
+
+#### Language Packs
+
+| Package | Language |
+|---------|----------|
+| [@qodalis/cli-lang-es](https://www.npmjs.com/package/@qodalis/cli-lang-es) | Spanish |
+| [@qodalis/cli-lang-fr](https://www.npmjs.com/package/@qodalis/cli-lang-fr) | French |
+| [@qodalis/cli-lang-de](https://www.npmjs.com/package/@qodalis/cli-lang-de) | German |
+| [@qodalis/cli-lang-it](https://www.npmjs.com/package/@qodalis/cli-lang-it) | Italian |
+| [@qodalis/cli-lang-pt](https://www.npmjs.com/package/@qodalis/cli-lang-pt) | Portuguese |
+| [@qodalis/cli-lang-ro](https://www.npmjs.com/package/@qodalis/cli-lang-ro) | Romanian |
+| [@qodalis/cli-lang-ru](https://www.npmjs.com/package/@qodalis/cli-lang-ru) | Russian |
+| [@qodalis/cli-lang-zh](https://www.npmjs.com/package/@qodalis/cli-lang-zh) | Chinese |
+| [@qodalis/cli-lang-ja](https://www.npmjs.com/package/@qodalis/cli-lang-ja) | Japanese |
+| [@qodalis/cli-lang-ko](https://www.npmjs.com/package/@qodalis/cli-lang-ko) | Korean |
 
 Any npm package with UMD support can also be loaded:
 
 ```bash
 pkg add lodash
 eval _.map([1, 2, 3], n => n * 2)
+```
+
+## Server Integration
+
+Connect the frontend terminal to a backend server for server-side command execution, interactive shell sessions, filesystem access, and event streaming. Three official backend implementations are available:
+
+| Server | Package | Port | Tech Stack |
+|--------|---------|------|------------|
+| **.NET** | [Qodalis.Cli](https://www.nuget.org/packages/Qodalis.Cli) | 8046 | ASP.NET Core, .NET 8 |
+| **Node.js** | [@qodalis/cli-server](https://www.npmjs.com/package/@qodalis/cli-server) | 8047 | Express, TypeScript, node-pty |
+| **Python** | [qodalis-cli-server](https://pypi.org/project/qodalis-cli-server/) | 8048 | FastAPI, uvicorn |
+
+All three implement the same API surface:
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/cli/versions` | GET | Version discovery |
+| `/api/v1/cli/commands` | GET | List registered command processors |
+| `/api/v1/cli/execute` | POST | Execute a CLI command |
+| `/api/v1/cli/execute/stream` | POST | Execute with SSE streaming output |
+| `/ws/v1/cli/events` | WS | Server-push event streaming |
+| `/ws/v1/cli/shell` | WS | Interactive PTY shell session |
+| `/api/cli/fs/*` | Various | Filesystem operations (ls, cat, upload, download, mkdir, rm) |
+
+### Connecting to a Server
+
+```typescript
+import { CliOptions } from '@qodalis/cli-core';
+
+const options: CliOptions = {
+  servers: [
+    { name: 'node', url: 'http://localhost:8047' },
+    { name: 'dotnet', url: 'http://localhost:8046' },
+    { name: 'python', url: 'http://localhost:8048' },
+  ],
+};
+
+// Angular: <cli [options]="options" />
+// React:   <Cli options={options} />
+// Vue:     <Cli :options="options" />
+```
+
+### SSE Streaming Execution
+
+The frontend automatically uses SSE streaming when the server supports it, with transparent fallback to the legacy POST endpoint. Streaming processors emit output chunks as they execute rather than buffering the full response.
+
+### Resilience
+
+The frontend includes built-in resilience features:
+
+- **WebSocket auto-reconnect** with exponential backoff (up to 5 attempts, max 30s delay)
+- **Periodic health checks** for disconnected servers (30s interval)
+- **HTTP retry** on transient fetch failures (1 retry with 1s delay)
+- **Configurable request timeout** per server (default 30s)
+
+### Server Plugins
+
+| Plugin | Servers | Description |
+|--------|---------|-------------|
+| **Background Jobs** | .NET, Node.js, Python | Scheduled and recurring job execution with cron/interval support |
+| **Admin Dashboard** | .NET, Node.js | React-based web UI for server management — commands, jobs, plugins, logs, filesystem, events, and an embedded terminal |
+| **AWS Cloud** | .NET, Python | S3, EC2, Lambda, DynamoDB, IAM, ECS, SQS, SNS, CloudWatch with multi-profile credential management |
+| **Data Explorer** | .NET, Node.js, Python | SQL, MongoDB, Redis, Elasticsearch, and custom data source providers |
+
+### Docker
+
+Run all three servers with Docker Compose from the [workspace root](https://github.com/qodalis-solutions/cli-workspace):
+
+```bash
+docker compose up --build
 ```
 
 ## Creating a CLI Plugin
@@ -268,7 +380,7 @@ The tool auto-detects whether you're inside the `web-cli` monorepo:
 In monorepo mode, the tool also:
 - Creates `project.json` (Nx build + test targets)
 - Creates `tsconfig.spec.json` (Karma/Jasmine test config)
-- Updates `tsconfig.base.json` with the path alias `@qodalis/cli-<name>` → `dist/<name>`
+- Updates `tsconfig.base.json` with the path alias `@qodalis/cli-<name>` -> `dist/<name>`
 
 ### Generated Project Structure
 
@@ -536,7 +648,7 @@ import { weatherModule } from '@qodalis/cli-weather';
 
 ## Data Explorer
 
-The `@qodalis/cli-data-explorer` plugin adds an interactive, full-screen REPL for querying data sources (SQL, MongoDB, and custom providers) directly from the terminal.
+The `@qodalis/cli-data-explorer` plugin adds an interactive, full-screen REPL for querying data sources (SQL, MongoDB, Redis, Elasticsearch, and custom providers) directly from the terminal.
 
 ### Setup
 
@@ -599,6 +711,7 @@ data-explorer> db.users.find({"age": {"$gt": 25}})
 | Command | Description |
 |---------|-------------|
 | `\format <table\|json\|csv\|raw>` | Switch output format |
+| `\schema` | Show database schema (tables, columns, types) |
 | `\templates` | List available query templates |
 | `\use <name>` | Load a template query |
 | `\history` | Show query history |
@@ -667,16 +780,21 @@ await engine.start();
 ## Features
 
 - **Multi-framework** — Angular, React, Vue, or vanilla JS
+- **38 official plugins** — 24 utility, 6 games, 10 language packs
 - **Command chaining** with `&&`, `||`, `|`, and `>>` operators
 - **Command history** with arrow key navigation
 - **Tab-like completions** and keyboard shortcuts (`Ctrl+C`, `Ctrl+L`, `Escape`)
-- **Theming** with built-in themes and custom color support
+- **29 built-in themes** with custom color support
+- **Tabs & split panes** — multiple terminals in tabs with horizontal splitting
 - **User sessions** with multi-user support
 - **State persistence** across sessions
 - **Interactive prompts** with live preview (select menus with real-time feedback)
-- **Full-screen mode API** for rich TUI commands
+- **Full-screen mode API** for rich TUI commands (games, editors, pagers)
 - **Progress bars, spinners, and text animations**
 - **Runtime package installation** from npm
+- **Server integration** with SSE streaming, auto-reconnect, and health checks
+- **Admin dashboard** for server management (React SPA)
+- **Data explorer** for SQL, MongoDB, Redis, and Elasticsearch
 
 ## Contributing
 

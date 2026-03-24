@@ -6,7 +6,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["tsup", "cp package.json dist/package.json"],
+        "commands": ["tsup", "cp package.json dist/package.json", "cp src/styles.css dist/styles.css"],
         "cwd": "packages/react-cli",
         "parallel": false
       },

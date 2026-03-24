@@ -6,5 +6,5 @@ import { Component } from '@angular/core';
     templateUrl: './configuration.component.html',
 })
 export class ConfigurationComponent {
-    activeTab: 'angular' | 'react' | 'vue' = 'angular';
+    activeTab: 'angular' | 'react' | 'vue' | 'vanilla' = 'angular';
 }

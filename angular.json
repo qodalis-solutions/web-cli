@@ -71,7 +71,7 @@
             ],
             "styles": [
               "apps/demo-angular/src/styles.sass",
-              "packages/angular-cli/src/assets/styles.sass"
+              "packages/angular-cli/src/assets/styles.css"
             ],
             "scripts": []
           },
@@ -147,7 +147,7 @@
             ],
             "styles": [
               "apps/docs/src/styles.sass",
-              "packages/angular-cli/src/assets/styles.sass"
+              "packages/angular-cli/src/assets/styles.css"
             ],
             "scripts": []
           },

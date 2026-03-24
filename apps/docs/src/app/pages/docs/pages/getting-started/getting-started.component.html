@@ -9,6 +9,7 @@
     <button class="framework-tab" [class.active]="activeTab === 'angular'" (click)="activeTab = 'angular'">Angular</button>
     <button class="framework-tab" [class.active]="activeTab === 'react'" (click)="activeTab = 'react'">React</button>
     <button class="framework-tab" [class.active]="activeTab === 'vue'" (click)="activeTab = 'vue'">Vue</button>
+    <button class="framework-tab" [class.active]="activeTab === 'vanilla'" (click)="activeTab = 'vanilla'">Vanilla JS</button>
 </div>
 
 <div *ngIf="activeTab === 'angular'" class="code-block">
@@ -22,6 +23,10 @@
 <div *ngIf="activeTab === 'vue'" class="code-block">
     <span class="code-label">npm</span>
     <pre><code>npm install &#64;qodalis/vue-cli</code></pre>
+</div>
+<div *ngIf="activeTab === 'vanilla'" class="code-block">
+    <span class="code-label">npm</span>
+    <pre><code>npm install &#64;qodalis/cli &#64;qodalis/cli-core</code></pre>
 </div>
 
 <!-- Quick Start: Angular -->
@@ -43,7 +48,7 @@ export class AppModule &#123;&#125;</code></pre>
 <div class="code-block">
     <span class="code-label">angular.json</span>
     <pre><code>"styles": [
-    "node_modules/&#64;qodalis/angular-cli/src/assets/styles.sass"
+    "node_modules/&#64;qodalis/angular-cli/src/assets/styles.css"
 ]</code></pre>
 </div>
 
@@ -64,7 +69,8 @@ export class AppModule &#123;&#125;</code></pre>
 
 <div class="code-block">
     <span class="code-label">App.tsx</span>
-    <pre><code>import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/react-cli';
+    <pre><code>import '&#64;qodalis/react-cli/styles.css';
+import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/react-cli';
 
 function App() &#123;
     return (
@@ -86,6 +92,7 @@ function App() &#123;
 <div class="code-block">
     <span class="code-label">App.vue</span>
     <pre><code>&lt;script setup&gt;
+import '&#64;qodalis/vue-cli/styles.css';
 import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/vue-cli';
 &lt;/script&gt;
 
@@ -98,6 +105,38 @@ import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/vue-cli
         &lt;CliPanel /&gt;
     &lt;/CliConfigProvider&gt;
 &lt;/template&gt;</code></pre>
+</div>
+
+<!-- Quick Start: Vanilla JS -->
+<h2>{{ 'docs.getting-started.quick-start-vanilla' | translate }}</h2>
+<p>{{ 'docs.getting-started.vanilla-import-desc' | translate }}</p>
+
+<div class="code-block">
+    <span class="code-label">main.ts</span>
+    <pre><code>import '&#64;qodalis/cli/assets/styles.css';
+import &#123; CliEngine &#125; from '&#64;qodalis/cli';
+import type &#123; CliOptions, ICliModule &#125; from '&#64;qodalis/cli-core';
+
+const container = document.getElementById('terminal')!;
+const engine = new CliEngine(container, &#123;
+    terminalOptions: &#123;
+        fontSize: 14,
+        cursorBlink: true,
+    &#125;,
+&#125;);
+
+engine.start().then(() =&gt; engine.focus());</code></pre>
+</div>
+
+<div class="code-block">
+    <span class="code-label">index.html</span>
+    <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+    &lt;div id="terminal" style="width:100%;height:100vh"&gt;&lt;/div&gt;
+    &lt;script type="module" src="/src/main.ts"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
 </div>
 
 <!-- Adding Plugins -->

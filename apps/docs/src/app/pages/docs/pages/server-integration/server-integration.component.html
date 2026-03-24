@@ -8,11 +8,11 @@
     <pre><code>Frontend CLI  &lt;-- REST / WebSocket --&gt;  Backend Server
 (Browser)                                 (Node.js / Python / .NET)
   |                                          |
-  |-- POST /api/v1/cli/execute -----------&gt;  |-- Execute command
-  |-- GET  /api/v1/cli/commands -----------&gt; |-- List commands
-  |-- WS   /ws/v1/cli/shell ---------------&gt; |-- PTY shell session
-  |-- WS   /ws/v1/cli/events --------------&gt; |-- Event streaming
-  |-- GET  /api/cli/fs/* ------------------&gt; |-- Filesystem access</code></pre>
+  |-- POST /api/v1/qcli/execute -----------&gt;  |-- Execute command
+  |-- GET  /api/v1/qcli/commands -----------&gt; |-- List commands
+  |-- WS   /ws/v1/qcli/shell ---------------&gt; |-- PTY shell session
+  |-- WS   /ws/v1/qcli/events --------------&gt; |-- Event streaming
+  |-- GET  /api/qcli/fs/* ------------------&gt; |-- Filesystem access</code></pre>
 </div>
 
 <h2>{{ 'docs.server-integration.common-api' | translate }}</h2>
@@ -27,32 +27,37 @@
     </thead>
     <tbody>
         <tr>
-            <td><code>/api/cli/versions</code></td>
+            <td><code>/api/qcli/versions</code></td>
             <td>GET</td>
             <td>{{ 'docs.server-integration.api-versions' | translate }}</td>
         </tr>
         <tr>
-            <td><code>/api/v1/cli/commands</code></td>
+            <td><code>/api/v1/qcli/commands</code></td>
             <td>GET</td>
             <td>{{ 'docs.server-integration.api-commands' | translate }}</td>
         </tr>
         <tr>
-            <td><code>/api/v1/cli/execute</code></td>
+            <td><code>/api/v1/qcli/execute</code></td>
             <td>POST</td>
             <td>{{ 'docs.server-integration.api-execute' | translate }}</td>
         </tr>
         <tr>
-            <td><code>/ws/v1/cli/events</code></td>
+            <td><code>/ws/v1/qcli/events</code></td>
             <td>WS</td>
             <td>{{ 'docs.server-integration.api-events' | translate }}</td>
         </tr>
         <tr>
-            <td><code>/ws/v1/cli/shell</code></td>
+            <td><code>/ws/v1/qcli/shell</code></td>
             <td>WS</td>
             <td>{{ 'docs.server-integration.api-shell' | translate }}</td>
         </tr>
         <tr>
-            <td><code>/api/cli/fs/*</code></td>
+            <td><code>/api/v1/qcli/execute/stream</code></td>
+            <td>POST</td>
+            <td>{{ 'docs.server-integration.api-execute-stream' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>/api/qcli/fs/*</code></td>
             <td>Various</td>
             <td>{{ 'docs.server-integration.api-fs' | translate }}</td>
         </tr>
@@ -186,6 +191,161 @@
         </tr>
     </tbody>
 </table>
+
+<h2>{{ 'docs.server-integration.sse-streaming' | translate }}</h2>
+<p>{{ 'docs.server-integration.sse-streaming-desc' | translate }}</p>
+<div class="code-block">
+    <span class="code-label">Request</span>
+    <pre><code>POST /api/v1/qcli/execute/stream
+Content-Type: application/json
+
+&#123; "command": "echo hello" &#125;</code></pre>
+</div>
+<p>{{ 'docs.server-integration.sse-streaming-response' | translate }}</p>
+<div class="code-block">
+    <span class="code-label">SSE Response</span>
+    <pre><code>event: output
+data: &#123; "type": "text", "content": "hello" &#125;
+
+event: done
+data: &#123; "exitCode": 0 &#125;</code></pre>
+</div>
+<p>{{ 'docs.server-integration.sse-streaming-events' | translate }}</p>
+<table>
+    <thead>
+        <tr>
+            <th>{{ 'docs.server-integration.th-event' | translate }}</th>
+            <th>{{ 'docs.server-integration.th-purpose' | translate }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>output</code></td>
+            <td>{{ 'docs.server-integration.sse-event-output' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>error</code></td>
+            <td>{{ 'docs.server-integration.sse-event-error' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>done</code></td>
+            <td>{{ 'docs.server-integration.sse-event-done' | translate }}</td>
+        </tr>
+    </tbody>
+</table>
+<p>{{ 'docs.server-integration.sse-streaming-fallback' | translate }}</p>
+
+<h2>{{ 'docs.server-integration.admin-dashboard' | translate }}</h2>
+<p>{{ 'docs.server-integration.admin-dashboard-desc' | translate }}</p>
+<table>
+    <thead>
+        <tr>
+            <th>{{ 'docs.server-integration.th-feature' | translate }}</th>
+            <th>{{ 'docs.server-integration.th-purpose' | translate }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ 'docs.server-integration.dashboard-overview' | translate }}</td>
+            <td>{{ 'docs.server-integration.dashboard-overview-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>{{ 'docs.server-integration.dashboard-commands' | translate }}</td>
+            <td>{{ 'docs.server-integration.dashboard-commands-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>{{ 'docs.server-integration.dashboard-jobs' | translate }}</td>
+            <td>{{ 'docs.server-integration.dashboard-jobs-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>{{ 'docs.server-integration.dashboard-plugins' | translate }}</td>
+            <td>{{ 'docs.server-integration.dashboard-plugins-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>{{ 'docs.server-integration.dashboard-filesystem' | translate }}</td>
+            <td>{{ 'docs.server-integration.dashboard-filesystem-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>{{ 'docs.server-integration.dashboard-logs' | translate }}</td>
+            <td>{{ 'docs.server-integration.dashboard-logs-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>{{ 'docs.server-integration.dashboard-events' | translate }}</td>
+            <td>{{ 'docs.server-integration.dashboard-events-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>{{ 'docs.server-integration.dashboard-terminal' | translate }}</td>
+            <td>{{ 'docs.server-integration.dashboard-terminal-desc' | translate }}</td>
+        </tr>
+    </tbody>
+</table>
+<p>{{ 'docs.server-integration.admin-dashboard-available' | translate }}</p>
+
+<h2>{{ 'docs.server-integration.aws-plugin' | translate }}</h2>
+<p>{{ 'docs.server-integration.aws-plugin-desc' | translate }}</p>
+<table>
+    <thead>
+        <tr>
+            <th>{{ 'docs.server-integration.th-service' | translate }}</th>
+            <th>{{ 'docs.server-integration.th-command' | translate }}</th>
+            <th>{{ 'docs.server-integration.th-purpose' | translate }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>S3</td>
+            <td><code>aws s3 ls, cp, rm, mb, rb, presign</code></td>
+            <td>{{ 'docs.server-integration.aws-s3-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>EC2</td>
+            <td><code>aws ec2 list, describe, start, stop, reboot, sg</code></td>
+            <td>{{ 'docs.server-integration.aws-ec2-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>Lambda</td>
+            <td><code>aws lambda list, invoke, logs</code></td>
+            <td>{{ 'docs.server-integration.aws-lambda-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>DynamoDB</td>
+            <td><code>aws dynamodb tables, describe, scan, query</code></td>
+            <td>{{ 'docs.server-integration.aws-dynamodb-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>IAM</td>
+            <td><code>aws iam users, roles, policies</code></td>
+            <td>{{ 'docs.server-integration.aws-iam-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>ECS</td>
+            <td><code>aws ecs clusters, services, tasks</code></td>
+            <td>{{ 'docs.server-integration.aws-ecs-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>SQS</td>
+            <td><code>aws sqs list, send, receive, purge</code></td>
+            <td>{{ 'docs.server-integration.aws-sqs-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>SNS</td>
+            <td><code>aws sns topics, publish, subscriptions</code></td>
+            <td>{{ 'docs.server-integration.aws-sns-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td>CloudWatch</td>
+            <td><code>aws cloudwatch alarms, logs, metrics</code></td>
+            <td>{{ 'docs.server-integration.aws-cloudwatch-desc' | translate }}</td>
+        </tr>
+    </tbody>
+</table>
+<p>{{ 'docs.server-integration.aws-plugin-config' | translate }}</p>
+<div class="code-block">
+    <span class="code-label">Terminal</span>
+    <pre><code>aws configure set --region us-east-1 --access-key AKIA... --secret-key ...
+aws configure set --profile staging --region eu-west-1 --access-key ...
+aws s3 ls --profile staging</code></pre>
+</div>
 
 <h2>{{ 'docs.server-integration.backends' | translate }}</h2>
 <p>{{ 'docs.server-integration.backends-desc' | translate }}</p>

@@ -4,7 +4,7 @@
   "lib": {
     "entryFile": "src/public-api.ts"
   },
-  "assets": ["src/assets/styles.sass", "src/assets/styles.css"],
+  "assets": ["src/assets/styles.css"],
   "allowedNonPeerDependencies": [
     "@qodalis/cli-core",
     "@qodalis/cli",

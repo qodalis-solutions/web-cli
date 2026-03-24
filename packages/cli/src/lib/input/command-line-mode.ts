@@ -80,15 +80,6 @@ export class CommandLineMode implements IInputMode {
                 const ctx = this.host.getExecutionContext();
                 await ctx.executor.executeCommand(buffer.text, ctx);
                 this.isExecutingCommand = false;
-
-                // Don't write post-command messages if we switched to full-screen mode
-                if (!this.host.isRawModeActive()) {
-                    if (ctx.onAbort.observed) {
-                        this.host.terminal.write(
-                            '\x1b[33mPress Ctrl+C to cancel\x1b[0m\r\n',
-                        );
-                    }
-                }
             }
 
             if (!this.host.isRawModeActive()) {
