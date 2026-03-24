@@ -1,0 +1,8 @@
+/* @qodalis/react-cli — all-in-one stylesheet
+ *
+ * Import this single file instead of manually importing xterm and cli-panel CSS:
+ *   import '@qodalis/react-cli/styles.css';
+ */
+
+@import '@xterm/xterm/css/xterm.css';
+@import '@qodalis/cli/assets/cli-panel.css';

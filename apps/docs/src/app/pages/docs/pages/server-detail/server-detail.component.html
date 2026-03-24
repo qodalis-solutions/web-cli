@@ -14,7 +14,7 @@
         <span class="code-label">server.ts</span>
         <pre><code>import &#123; createCliServer &#125; from '&#64;qodalis/cli-server';
 
-const &#123; app, builder &#125; = createCliServer(&#123; port: 8047 &#125;);
+const &#123; app, builder, mountPlugin &#125; = createCliServer();
 builder.addProcessor(new MyProcessor());
 app.listen(8047);</code></pre>
     </div>
@@ -55,8 +55,35 @@ const jobsPlugin = new CliJobsBuilder()
     &#125;)
     .build((msg) =&gt; eventSocketManager.broadcastMessage(msg));
 
-app.use('/api/v1/qcli/jobs', jobsPlugin.router);
+mountPlugin(jobsPlugin);
 await jobsPlugin.scheduler.start();</code></pre>
+    </div>
+
+    <h2>{{ 'docs.server-detail.node.sse-streaming' | translate }}</h2>
+    <p>{{ 'docs.server-detail.node.sse-streaming-desc' | translate }}</p>
+    <div class="code-block">
+        <span class="code-label">server.ts</span>
+        <pre><code>// Streaming is enabled by default on /api/v1/qcli/execute/stream
+// Processors implementing ICliStreamCommandProcessor
+// emit output chunks via SSE as they execute.
+// The frontend prefers SSE streaming with automatic
+// fallback to the legacy POST endpoint.</code></pre>
+    </div>
+
+    <h2>{{ 'docs.server-detail.node.admin-dashboard' | translate }}</h2>
+    <p>{{ 'docs.server-detail.node.admin-dashboard-desc' | translate }}</p>
+    <div class="code-block">
+        <span class="code-label">npm</span>
+        <pre><code>npm install &#64;qodalis/cli-server-plugin-admin</code></pre>
+    </div>
+    <div class="code-block">
+        <span class="code-label">server.ts</span>
+        <pre><code>import &#123; CliAdminBuilder &#125; from '&#64;qodalis/cli-server-plugin-admin';
+
+const adminPlugin = new CliAdminBuilder()
+    .build(&#123; registry, eventSocketManager &#125;);
+
+mountPlugin(adminPlugin);</code></pre>
     </div>
 
     <h2>{{ 'docs.server-detail.node.connecting' | translate }}</h2>
@@ -139,8 +166,19 @@ jobs_plugin = (
     .build(broadcast_fn=event_socket_manager.broadcast_message)
 )
 
-app.include_router(jobs_plugin.router, prefix="/api/v1/qcli/jobs")
+result.mount_plugin(jobs_plugin)
 await jobs_plugin.scheduler.start()</code></pre>
+    </div>
+
+    <h2>{{ 'docs.server-detail.python.sse-streaming' | translate }}</h2>
+    <p>{{ 'docs.server-detail.python.sse-streaming-desc' | translate }}</p>
+    <div class="code-block">
+        <span class="code-label">server.py</span>
+        <pre><code># Streaming is enabled by default on /api/v1/qcli/execute/stream
+# Processors implementing handle_stream_async emit output
+# chunks via SSE using FastAPI StreamingResponse.
+# The frontend prefers SSE streaming with automatic
+# fallback to the legacy POST endpoint.</code></pre>
     </div>
 
     <h2>{{ 'docs.server-detail.python.connecting' | translate }}</h2>
@@ -221,6 +259,43 @@ app.Run();</code></pre>
     &#125;);
 &#125;);</code></pre>
     </div>
+
+    <h2>{{ 'docs.server-detail.dotnet.sse-streaming' | translate }}</h2>
+    <p>{{ 'docs.server-detail.dotnet.sse-streaming-desc' | translate }}</p>
+    <div class="code-block">
+        <span class="code-label">Program.cs</span>
+        <pre><code>// Streaming is enabled by default on /api/v1/qcli/execute/stream
+// Processors implementing ICliStreamCommandProcessor emit
+// output chunks via SSE. The frontend prefers SSE streaming
+// with automatic fallback to the legacy POST endpoint.</code></pre>
+    </div>
+
+    <h2>{{ 'docs.server-detail.dotnet.admin-dashboard' | translate }}</h2>
+    <p>{{ 'docs.server-detail.dotnet.admin-dashboard-desc' | translate }}</p>
+    <div class="code-block">
+        <span class="code-label">NuGet</span>
+        <pre><code>dotnet add package Qodalis.Cli.Plugin.Admin</code></pre>
+    </div>
+    <div class="code-block">
+        <span class="code-label">Program.cs</span>
+        <pre><code>builder.Services.AddCli(cli =&gt; &#123;
+    cli.AddAdmin();
+&#125;);</code></pre>
+    </div>
+
+    <h2>{{ 'docs.server-detail.dotnet.aws-plugin' | translate }}</h2>
+    <p>{{ 'docs.server-detail.dotnet.aws-plugin-desc' | translate }}</p>
+    <div class="code-block">
+        <span class="code-label">NuGet</span>
+        <pre><code>dotnet add package Qodalis.Cli.Plugin.Aws</code></pre>
+    </div>
+    <div class="code-block">
+        <span class="code-label">Program.cs</span>
+        <pre><code>builder.Services.AddCli(cli =&gt; &#123;
+    cli.AddModule&lt;AwsModule&gt;();
+&#125;);</code></pre>
+    </div>
+    <p>{{ 'docs.server-detail.dotnet.aws-services' | translate }}</p>
 
     <h2>{{ 'docs.server-detail.dotnet.connecting' | translate }}</h2>
     <div class="code-block">

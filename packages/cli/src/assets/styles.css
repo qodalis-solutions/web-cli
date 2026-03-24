@@ -1,0 +1,8 @@
+/* @qodalis/cli — all-in-one stylesheet for vanilla JS usage
+ *
+ * Import this single file to get all required styles:
+ *   import '@qodalis/cli/assets/styles.css';
+ */
+
+@import '@xterm/xterm/css/xterm.css';
+@import './cli-panel.css';

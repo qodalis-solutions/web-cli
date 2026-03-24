@@ -11,7 +11,7 @@ import { stringModule } from '@qodalis/cli-string';
     templateUrl: './getting-started.component.html',
 })
 export class GettingStartedComponent {
-    activeTab: 'angular' | 'react' | 'vue' = 'angular';
+    activeTab: 'angular' | 'react' | 'vue' | 'vanilla' = 'angular';
 
     tryItModules: ICliModule[] = [
         guidModule,

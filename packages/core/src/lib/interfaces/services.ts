@@ -13,12 +13,28 @@ export interface ICliPingServerService {
 }
 
 /**
- * Represents a module for the CLI
+ * Represents a module for the web CLI (frontend).
+ *
+ * This interface is for **web/frontend plugins only** — browser-side modules
+ * that extend the CLI terminal UI (e.g. `@qodalis/cli-guid`, `@qodalis/cli-tetris`).
+ *
+ * It is **not** related to backend server processors (Node/Python/.NET).
+ * Backend command processors implement their own `ICliCommandProcessor` interfaces
+ * in their respective server packages and do not use `apiVersion`.
  */
 export interface ICliModule {
     /**
-     * API version this module targets.
-     * Modules with apiVersion < 2 (or missing) are rejected by v2 runtimes.
+     * The web plugin API version this module targets.
+     *
+     * This is a **frontend-only** concept used by the browser CLI runtime
+     * to ensure plugin compatibility. It has no relation to backend server
+     * API versioning (e.g. `/api/v1/qcli/`).
+     *
+     * Modules with `apiVersion` less than the runtime's `API_VERSION` are
+     * rejected with a warning at boot time.
+     *
+     * Use the `API_VERSION` constant exported from `@qodalis/cli-core` to
+     * target the current runtime version.
      */
     apiVersion: number;
 

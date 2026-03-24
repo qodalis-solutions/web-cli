@@ -2,8 +2,12 @@ import { ICliModule } from '../interfaces';
 import { API_VERSION } from '../version';
 
 /**
- * Registry that tracks loaded CLI modules and dispatches boot handlers
- * when new modules are registered (including dynamically via UMD).
+ * Registry that tracks loaded web CLI modules (frontend plugins) and dispatches
+ * boot handlers when new modules are registered (including dynamically via UMD).
+ *
+ * This registry is for **browser-side web plugins only**. Backend server
+ * processors (Node/Python/.NET) have their own registries and do not use
+ * this class or the `apiVersion` gating mechanism.
  */
 export class CliModuleRegistry {
     private readonly modules = new Map<string, ICliModule>();
@@ -21,8 +25,9 @@ export class CliModuleRegistry {
     }
 
     /**
-     * Register a module and notify all boot handlers.
-     * Modules that do not meet the required API version are skipped with a warning.
+     * Register a web plugin module and notify all boot handlers.
+     * Modules whose `apiVersion` is below the runtime's `API_VERSION` are
+     * skipped with a warning — this ensures only compatible frontend plugins load.
      */
     async register(module: ICliModule): Promise<void> {
         const modApiVersion = module.apiVersion;

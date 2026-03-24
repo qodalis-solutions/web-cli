@@ -282,9 +282,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                         context.writer.writeInfo(
                             `Shell exited with code ${msg.code}.`,
                         );
-                        if (msg.code !== 0) {
-                            context.process.exit(msg.code);
-                        }
+                        context.process.exit(msg.code);
                         this.cleanup();
                         resolveOnce();
                         break;
@@ -309,6 +307,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                     context.writer.writeWarning(
                         `Connection to '${serverName}' closed.`,
                     );
+                    context.process.exit(1);
                 }
                 this.cleanup();
                 resolveOnce();

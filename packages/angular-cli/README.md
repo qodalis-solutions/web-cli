@@ -26,7 +26,7 @@ Add styles to `angular.json`:
 ```json
 {
   "styles": [
-    "node_modules/@qodalis/angular-cli/src/assets/styles.sass"
+    "node_modules/@qodalis/angular-cli/src/assets/styles.css"
   ]
 }
 ```

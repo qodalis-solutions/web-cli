@@ -49,6 +49,7 @@
     <button class="framework-tab" [class.active]="activeTab === 'angular'" (click)="activeTab = 'angular'">Angular</button>
     <button class="framework-tab" [class.active]="activeTab === 'react'" (click)="activeTab = 'react'">React</button>
     <button class="framework-tab" [class.active]="activeTab === 'vue'" (click)="activeTab = 'vue'">Vue</button>
+    <button class="framework-tab" [class.active]="activeTab === 'vanilla'" (click)="activeTab = 'vanilla'">Vanilla JS</button>
 </div>
 
 <!-- Angular -->
@@ -81,7 +82,7 @@ cliOptions: CliOptions = &#123;
     <div class="code-block">
         <span class="code-label">angular.json</span>
         <pre><code>"styles": [
-    "node_modules/&#64;qodalis/angular-cli/src/assets/styles.sass"
+    "node_modules/&#64;qodalis/angular-cli/src/assets/styles.css"
 ]</code></pre>
     </div>
 </div>
@@ -135,6 +136,33 @@ const options = &#123;
         &lt;Cli /&gt;
     &lt;/CliConfigProvider&gt;
 &lt;/template&gt;</code></pre>
+    </div>
+</div>
+
+<!-- Vanilla JS -->
+<div *ngIf="activeTab === 'vanilla'">
+    <h3>{{ 'docs.configuration.vanilla-config' | translate }}</h3>
+    <p>{{ 'docs.configuration.vanilla-config-desc' | translate }}</p>
+
+    <div class="code-block">
+        <span class="code-label">main.ts</span>
+        <pre><code>import '&#64;qodalis/cli/assets/styles.css';
+import &#123; CliEngine &#125; from '&#64;qodalis/cli';
+import type &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
+
+const options: CliOptions = &#123;
+    logLevel: 'DEBUG',
+    welcomeMessage: 'Welcome to my app!',
+    theme: 'default',
+    servers: [
+        &#123; name: 'dotnet', url: 'http://localhost:8046' &#125;,
+    ],
+&#125;;
+
+const container = document.getElementById('terminal')!;
+const engine = new CliEngine(container, options);
+
+engine.start().then(() =&gt; engine.focus());</code></pre>
     </div>
 </div>
 
