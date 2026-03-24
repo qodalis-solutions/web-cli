@@ -36,8 +36,8 @@
     "react-dom": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@qodalis/cli": "workspace:*",
-    "@qodalis/cli-core": "workspace:*"
+    "@qodalis/cli": "workspace:^",
+    "@qodalis/cli-core": "workspace:^"
   },
   "devDependencies": {
     "tsup": "^8.0.0",

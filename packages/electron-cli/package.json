@@ -50,7 +50,7 @@
     }
   },
   "dependencies": {
-    "@qodalis/cli-core": "workspace:*"
+    "@qodalis/cli-core": "workspace:^"
   },
   "devDependencies": {
     "electron": "^35.0.0",

@@ -18,7 +18,7 @@
   "umd": "./umd/index.js",
   "unpkg": "./umd/index.js",
   "dependencies": {
-    "@qodalis/cli-core": "workspace:*"
+    "@qodalis/cli-core": "workspace:^"
   },
   "sideEffects": false,
   "main": "./public-api.js",
