@@ -557,10 +557,10 @@ importers:
         specifier: '>=16.2.0'
         version: 19.2.20(rxjs@7.8.2)(zone.js@0.15.1)
       '@qodalis/cli':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../cli
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       tslib:
         specifier: ^2.3.0
@@ -569,7 +569,7 @@ importers:
   packages/cli:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@xterm/addon-fit':
         specifier: ^0.10.0
@@ -608,7 +608,7 @@ importers:
   packages/electron-cli:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       electron:
@@ -624,145 +624,145 @@ importers:
   packages/plugins/2048:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/browser-storage:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/chart:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/cron:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/csv:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/curl:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/data-explorer:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/encode:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/files:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/guid:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/lang-de:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/lang-es:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/lang-fr:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/lang-it:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/lang-ja:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/lang-ko:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/lang-pt:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/lang-ro:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/lang-ru:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/lang-zh:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/markdown:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/minesweeper:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/password-generator:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/qr:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
       qr-code-styling:
         specifier: ^1.9.1
@@ -775,49 +775,49 @@ importers:
   packages/plugins/regex:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/scp:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/server-jobs:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/server-logs:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/snake:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/speed-test:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/stopwatch:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/string:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
       '@types/lodash':
         specifier: ^4.17.14
@@ -829,58 +829,58 @@ importers:
   packages/plugins/sudoku:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/tetris:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/text-to-image:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/todo:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/users:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/wget:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/wordle:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/plugins/yesno:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../core
 
   packages/react-cli:
     dependencies:
       '@qodalis/cli':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../cli
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       react:
         specifier: ^18.0.0 || ^19.0.0
@@ -902,10 +902,10 @@ importers:
   packages/vue-cli:
     dependencies:
       '@qodalis/cli':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../cli
       '@qodalis/cli-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       tsup:
