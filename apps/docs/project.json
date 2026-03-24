@@ -23,6 +23,8 @@
         "assets": [
           "apps/docs/src/favicon.ico",
           "apps/docs/src/assets",
+          "apps/docs/src/robots.txt",
+          "apps/docs/src/sitemap.xml",
           {
             "glob": "qodalis_cli_wasm_bg.wasm",
             "input": "dist/cli/wasm",
