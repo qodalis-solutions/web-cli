@@ -200,6 +200,9 @@ MIT
 @qodalis/cli-curl
 MIT
 
+@qodalis/cli-data-explorer
+MIT
+
 @qodalis/cli-files
 MIT
 
