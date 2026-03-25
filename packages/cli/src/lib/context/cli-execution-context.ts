@@ -107,6 +107,12 @@ export class CliExecutionContext
      */
     public lastCommandResult?: { command: string; success: boolean };
 
+    /**
+     * Whether a command is currently being executed.
+     * Set by the command executor at start/end of executeCommand().
+     */
+    public isExecuting = false;
+
     public readonly lineBuffer = new CliLineBuffer();
 
     public readonly lineRenderer: CliTerminalLineRenderer;

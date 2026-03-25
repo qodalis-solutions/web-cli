@@ -20,7 +20,7 @@ interface TabEntry {
     destroy$: Subject<void>;
 }
 
-const POLL_INTERVAL_MS = 2000;
+const POLL_INTERVAL_MS = 500;
 
 const DEFAULT_TAB_STATUS: TabStatus = {
     executionState: 'idle',
@@ -135,13 +135,10 @@ export class CliPanelStatusService {
             const context = engine.getContext();
             if (!context) continue;
 
-            // Check process registry for running state
-            try {
-                const processRegistry = (context as any).services?.get?.('cli-process-registry');
-                if (processRegistry?.currentPid != null) {
-                    running = true;
-                }
-            } catch { /* service not available */ }
+            // Check if a command is currently executing
+            if ((context as any).isExecuting) {
+                running = true;
+            }
 
             // Check last command result
             const result = (context as any).lastCommandResult;

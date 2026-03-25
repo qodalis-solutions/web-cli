@@ -43,6 +43,7 @@ export interface ICliExecutionHost extends ICliExecutionContext {
     contextProcessor?: ICliCommandProcessor;
     abort?(): void;
     lastCommandResult?: { command: string; success: boolean };
+    isExecuting?: boolean;
 }
 
 export class CliCommandExecutor implements ICliCommandExecutorService {
@@ -78,6 +79,9 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         } else {
             rootContext = context as ICliExecutionHost;
         }
+
+        rootContext.isExecuting = true;
+        try {
 
         // Track the last *executed* command's success — skipped commands don't change this.
         let lastExitSuccess = true;
@@ -199,6 +203,10 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
             // Default: next command runs unless an operator says otherwise
             shouldRunNext = true;
+        }
+
+        } finally {
+            rootContext.isExecuting = false;
         }
     }
 
