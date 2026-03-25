@@ -37,6 +37,7 @@ export const DOCS_NAV: NavItem[] = [
         ],
     },
     { label: 'sidebar.panel-api', path: '/docs/panel-api' },
+    { label: 'sidebar.engine-api', path: '/docs/engine-api' },
     { label: 'sidebar.create-a-plugin', path: '/docs/plugins/create-your-own' },
     {
         label: 'sidebar.language-packs',

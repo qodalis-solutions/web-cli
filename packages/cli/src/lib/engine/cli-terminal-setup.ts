@@ -61,6 +61,17 @@ export function initializeTerminal(
     // a second fit ensures the row/column count matches the actual container.
     requestAnimationFrame(() => fitAddon.fit());
 
+    // Web fonts may not be applied within a single animation frame.
+    // If cell metrics change after font loading, the row/col count from the
+    // first two fits can be wrong (e.g. 13 rows calculated at 23px/cell but
+    // rendered at 24px/cell, overflowing the container).  Re-fit once fonts
+    // have fully loaded to correct the dimensions.
+    if (document.fonts?.ready) {
+        document.fonts.ready.then(() => {
+            requestAnimationFrame(() => fitAddon.fit());
+        });
+    }
+
     // Mark the container so the theme processor can update its background
     // when the theme changes, and set the initial background to match.
     container.classList.add('terminal-container');

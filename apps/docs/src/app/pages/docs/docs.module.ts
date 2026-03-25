@@ -87,6 +87,13 @@ const routes: Routes = [
                     ),
             },
             {
+                path: 'engine-api',
+                loadChildren: () =>
+                    import('./pages/engine-api/engine-api.module').then(
+                        (m) => m.EngineApiModule,
+                    ),
+            },
+            {
                 path: 'language-packs',
                 loadChildren: () =>
                     import('./pages/language-packs/language-packs.module').then(
