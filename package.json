@@ -1,6 +1,6 @@
 {
   "name": "qodalis-cli-workspace",
-  "version": "2.0.0-beta.10",
+  "version": "2.0.0-beta.11",
   "scripts": {
     "build": "nx run-many -t build",
     "build:affected": "nx affected -t build",
@@ -10,7 +10,7 @@
     "build:react-cli": "nx build react-cli",
     "build:vue-cli": "nx build vue-cli",
     "build:electron-cli": "nx build electron-cli",
-        "serve:angular-demo": "nx serve demo-angular",
+    "serve:angular-demo": "nx serve demo-angular",
     "serve:react-demo": "cd apps/demo-react && npx vite --port 4301",
     "serve:minimal-demo": "cd apps/demo-minimal && npx vite --port 4305",
     "serve:vanilla-demo": "cd apps/demo-vanilla && npx vite --port 4304",
