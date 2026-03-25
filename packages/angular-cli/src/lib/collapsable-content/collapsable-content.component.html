@@ -90,7 +90,7 @@
           </span>
 
           <!-- Background services (only if any exist) -->
-          <span class="status-item" *ngIf="statusServiceCount.total > 0" [title]="serviceTooltip">
+          <span class="status-item status-clickable" *ngIf="statusServiceCount.total > 0" (click)="toggleServicesDropdown($event)">
               <span class="status-icon">&#9881;</span>
               <span class="status-label">{{ statusServiceCount.running }}/{{ statusServiceCount.total }} services</span>
           </span>
@@ -262,6 +262,24 @@
   </div>
   <div class="terminal-content" [style.display]="isCollapsed ? 'none' : ''">
     <ng-content></ng-content>
+  </div>
+</div>
+
+<!-- Services dropdown portaled outside terminal-wrapper -->
+<div class="services-dropdown" *ngIf="servicesDropdownOpen" [ngStyle]="servicesDropdownStyle" (click)="$event.stopPropagation()">
+  <div class="services-dropdown-header">Background Services</div>
+  <div class="services-dropdown-list">
+    <div class="services-dropdown-item" *ngFor="let svc of statusServiceDetails">
+      <span class="svc-dot" [class.svc-running]="svc.status === 'running'" [class.svc-stopped]="svc.status !== 'running'"></span>
+      <div class="svc-info">
+        <span class="svc-name">{{ svc.name }}</span>
+        <span class="svc-desc" *ngIf="svc.description">{{ svc.description }}</span>
+      </div>
+      <span class="svc-status">{{ svc.status }}</span>
+    </div>
+  </div>
+  <div class="services-dropdown-empty" *ngIf="statusServiceDetails.length === 0">
+    No services registered
   </div>
 </div>
 

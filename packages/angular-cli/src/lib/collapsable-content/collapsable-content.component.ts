@@ -76,11 +76,35 @@ export class CollapsableContentComponent {
         return this.position === 'bottom' || this.position === 'top';
     }
 
-    get serviceTooltip(): string {
-        if (this.statusServiceDetails.length === 0) return '';
-        return this.statusServiceDetails
-            .map(s => `${s.name}: ${s.status}${s.description ? ' — ' + s.description : ''}`)
-            .join('\n');
+    servicesDropdownOpen = false;
+    servicesDropdownStyle: Record<string, string> = {};
+
+    toggleServicesDropdown(event: MouseEvent): void {
+        event.stopPropagation();
+        this.servicesDropdownOpen = !this.servicesDropdownOpen;
+        if (this.servicesDropdownOpen) {
+            const el = event.currentTarget as HTMLElement;
+            const rect = el.getBoundingClientRect();
+            switch (this.position) {
+                case 'bottom':
+                    this.servicesDropdownStyle = {
+                        bottom: (window.innerHeight - rect.top + 4) + 'px',
+                        left: rect.left + 'px',
+                    };
+                    break;
+                case 'top':
+                    this.servicesDropdownStyle = {
+                        top: (rect.bottom + 4) + 'px',
+                        left: rect.left + 'px',
+                    };
+                    break;
+                default:
+                    this.servicesDropdownStyle = {
+                        bottom: (window.innerHeight - rect.top + 4) + 'px',
+                        left: rect.left + 'px',
+                    };
+            }
+        }
     }
 
     get formattedUptime(): string {
@@ -161,8 +185,9 @@ export class CollapsableContentComponent {
     }
 
     @HostListener('document:click')
-    closePositionDropdown(): void {
+    closeDropdowns(): void {
         this.positionDropdownOpen = false;
+        this.servicesDropdownOpen = false;
     }
 
     toggleMaximizationTerminal(): void {
