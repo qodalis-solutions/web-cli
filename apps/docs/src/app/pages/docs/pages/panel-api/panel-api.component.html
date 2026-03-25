@@ -1,0 +1,471 @@
+<h1>{{ 'docs.panel-api.title' | translate }}</h1>
+<p>{{ 'docs.panel-api.intro' | translate }}</p>
+
+<!-- Live Demo -->
+<h2 id="live-demo">{{ 'docs.panel-api.live-demo' | translate }}</h2>
+<p>{{ 'docs.panel-api.live-demo-desc' | translate }}</p>
+
+<div class="panel-api-demo">
+    <div class="demo-controls">
+        <div class="control-group">
+            <span class="control-label">{{ 'docs.panel-api.chrome' | translate }}</span>
+            <button class="demo-btn" (click)="doOpen()">open()</button>
+            <button class="demo-btn" (click)="doCollapse()">collapse()</button>
+            <button class="demo-btn" (click)="doToggleCollapse()">toggleCollapse()</button>
+            <button class="demo-btn" (click)="doMaximize()">maximize()</button>
+            <button class="demo-btn" (click)="doRestore()">restore()</button>
+            <button class="demo-btn" (click)="doHide()">hide()</button>
+            <button class="demo-btn" (click)="doUnhide()">unhide()</button>
+            <button class="demo-btn destructive" (click)="doClose()">close()</button>
+        </div>
+        <div class="control-group">
+            <span class="control-label">{{ 'docs.panel-api.tabs' | translate }}</span>
+            <button class="demo-btn" (click)="doAddTab()">addTab()</button>
+            <button class="demo-btn" (click)="doCloseTab()">closeTab(active)</button>
+            <button class="demo-btn" (click)="doRenameTab()">renameTab(active)</button>
+        </div>
+        <div class="control-group">
+            <span class="control-label">{{ 'docs.panel-api.panes' | translate }}</span>
+            <button class="demo-btn" (click)="doSplitPane()">splitPane()</button>
+        </div>
+        <div class="control-group">
+            <span class="control-label">{{ 'docs.panel-api.position' | translate }}</span>
+            <button class="demo-btn" (click)="doSetPosition('bottom')">bottom</button>
+            <button class="demo-btn" (click)="doSetPosition('right')">right</button>
+            <button class="demo-btn" (click)="doSetPosition('left')">left</button>
+            <button class="demo-btn" (click)="doSetPosition('top')">top</button>
+        </div>
+        <div class="control-group">
+            <span class="control-label">{{ 'docs.panel-api.state' | translate }}</span>
+            <button class="demo-btn" (click)="doGetState()">getState()</button>
+            <button class="demo-btn" (click)="clearLog()">{{ 'docs.panel-api.clear-log' | translate }}</button>
+        </div>
+    </div>
+
+    <div class="demo-log" *ngIf="stateLog.length > 0">
+        <div class="log-entry" *ngFor="let entry of stateLog">{{ entry }}</div>
+    </div>
+</div>
+
+<!-- Interface Reference -->
+<h2 id="interface">{{ 'docs.panel-api.interface' | translate }}</h2>
+<p>{{ 'docs.panel-api.interface-desc' | translate }}</p>
+
+<div class="code-block">
+    <span class="code-label">ICliPanelRef</span>
+    <pre><code>export interface ICliPanelRef&lt;TEngine = unknown&gt; &#123;
+    // Panel chrome
+    open(): void;
+    collapse(): void;
+    toggleCollapse(): void;
+    hide(): void;
+    unhide(): void;
+    toggleHide(): void;
+    close(): void;
+    maximize(): void;
+    restore(): void;
+    toggleMaximize(): void;
+    resize(dimensions: &#123; height?: number; width?: number &#125;): void;
+    setPosition(position: CliPanelPosition): void;
+
+    // Tabs
+    addTab(title?: string): number;
+    closeTab(tabId: number): void;
+    selectTab(tabId: number): void;
+    renameTab(tabId: number, title: string): void;
+
+    // Panes
+    splitPane(tabId?: number): number;
+    closePane(paneId: number): void;
+
+    // Engine access
+    getEngine(paneId?: number): TEngine | undefined;
+
+    // State
+    getState(): CliPanelState;
+&#125;</code></pre>
+</div>
+
+<!-- Bindable Properties -->
+<h2 id="bindable-properties">{{ 'docs.panel-api.bindable-properties' | translate }}</h2>
+<p>{{ 'docs.panel-api.bindable-properties-desc' | translate }}</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>{{ 'docs.panel-api.th-property' | translate }}</th>
+            <th>{{ 'docs.panel-api.th-type' | translate }}</th>
+            <th>{{ 'docs.panel-api.th-default' | translate }}</th>
+            <th>{{ 'docs.panel-api.th-description' | translate }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>collapsed</code></td>
+            <td><code>boolean</code></td>
+            <td><code>true</code></td>
+            <td>{{ 'docs.panel-api.prop-collapsed' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>hidden</code></td>
+            <td><code>boolean</code></td>
+            <td><code>false</code></td>
+            <td>{{ 'docs.panel-api.prop-hidden' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>maximized</code></td>
+            <td><code>boolean</code></td>
+            <td><code>false</code></td>
+            <td>{{ 'docs.panel-api.prop-maximized' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>activeTabId</code></td>
+            <td><code>number</code></td>
+            <td>first tab</td>
+            <td>{{ 'docs.panel-api.prop-activeTabId' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>position</code></td>
+            <td><code>CliPanelPosition</code></td>
+            <td><code>'bottom'</code></td>
+            <td>{{ 'docs.panel-api.prop-position' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>height</code> / <code>width</code></td>
+            <td><code>number</code></td>
+            <td><code>600</code> / <code>400</code></td>
+            <td>{{ 'docs.panel-api.prop-dimensions' | translate }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Framework Examples -->
+<h2 id="framework-usage">{{ 'docs.panel-api.framework-usage' | translate }}</h2>
+
+<div class="framework-tabs">
+    <button class="framework-tab" [class.active]="activeTab === 'angular'" (click)="activeTab = 'angular'">Angular</button>
+    <button class="framework-tab" [class.active]="activeTab === 'react'" (click)="activeTab = 'react'">React</button>
+    <button class="framework-tab" [class.active]="activeTab === 'vue'" (click)="activeTab = 'vue'">Vue</button>
+</div>
+
+<!-- Angular -->
+<div *ngIf="activeTab === 'angular'">
+    <h3>{{ 'docs.panel-api.angular-imperative' | translate }}</h3>
+    <p>{{ 'docs.panel-api.angular-imperative-desc' | translate }}</p>
+
+    <div class="code-block">
+        <span class="code-label">app.component.ts</span>
+        <pre><code>import &#123; Component, ViewChild &#125; from '&#64;angular/core';
+import &#123; CliPanelComponent &#125; from '&#64;qodalis/angular-cli';
+
+&#64;Component(&#123;
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+&#125;)
+export class AppComponent &#123;
+    &#64;ViewChild('panel') panel!: CliPanelComponent;
+
+    openPanel() &#123;
+        this.panel.open();
+    &#125;
+
+    addLogsTab() &#123;
+        const tabId = this.panel.addTab('Logs');
+        this.panel.selectTab(tabId);
+    &#125;
+
+    inspectState() &#123;
+        const state = this.panel.getState();
+        console.log('Panel state:', state);
+    &#125;
+&#125;</code></pre>
+    </div>
+
+    <div class="code-block">
+        <span class="code-label">app.component.html</span>
+        <pre><code>&lt;button (click)="openPanel()"&gt;Open Panel&lt;/button&gt;
+&lt;button (click)="addLogsTab()"&gt;Add Logs Tab&lt;/button&gt;
+
+&lt;cli-panel #panel [options]="options" [modules]="modules"&gt;&lt;/cli-panel&gt;</code></pre>
+    </div>
+
+    <h3>{{ 'docs.panel-api.angular-two-way' | translate }}</h3>
+    <p>{{ 'docs.panel-api.angular-two-way-desc' | translate }}</p>
+
+    <div class="code-block">
+        <span class="code-label">app.component.html</span>
+        <pre><code>&lt;!-- Two-way binding with banana-in-a-box syntax --&gt;
+&lt;cli-panel
+    [(collapsed)]="isCollapsed"
+    [(maximized)]="isMaximized"
+    [(position)]="panelPosition"
+    [(activeTabId)]="currentTab"
+    (onTabAdded)="onNewTab($event)"
+    (onTabClosed)="onTabRemoved($event)"
+&gt;&lt;/cli-panel&gt;
+
+&lt;!-- Your controls stay in sync automatically --&gt;
+&lt;label&gt;
+    &lt;input type="checkbox" [(ngModel)]="isCollapsed" /&gt;
+    Collapsed
+&lt;/label&gt;</code></pre>
+    </div>
+</div>
+
+<!-- React -->
+<div *ngIf="activeTab === 'react'">
+    <h3>{{ 'docs.panel-api.react-imperative' | translate }}</h3>
+    <p>{{ 'docs.panel-api.react-imperative-desc' | translate }}</p>
+
+    <div class="code-block">
+        <span class="code-label">App.tsx</span>
+        <pre><code>import &#123; useRef &#125; from 'react';
+import &#123; CliPanel &#125; from '&#64;qodalis/react-cli';
+import type &#123; ICliPanelRef &#125; from '&#64;qodalis/cli-core';
+import type &#123; CliEngine &#125; from '&#64;qodalis/cli';
+
+function App() &#123;
+    const panelRef = useRef&lt;ICliPanelRef&lt;CliEngine&gt;&gt;(null);
+
+    return (
+        &lt;&gt;
+            &lt;button onClick=&#123;() =&gt; panelRef.current?.open()&#125;&gt;
+                Open Panel
+            &lt;/button&gt;
+            &lt;button onClick=&#123;() =&gt; panelRef.current?.addTab('Logs')&#125;&gt;
+                Add Logs Tab
+            &lt;/button&gt;
+
+            &lt;CliPanel
+                ref=&#123;panelRef&#125;
+                options=&#123;options&#125;
+                modules=&#123;modules&#125;
+            /&gt;
+        &lt;/&gt;
+    );
+&#125;</code></pre>
+    </div>
+
+    <h3>{{ 'docs.panel-api.react-controlled' | translate }}</h3>
+    <p>{{ 'docs.panel-api.react-controlled-desc' | translate }}</p>
+
+    <div class="code-block">
+        <span class="code-label">App.tsx</span>
+        <pre><code>import &#123; useState &#125; from 'react';
+import &#123; CliPanel &#125; from '&#64;qodalis/react-cli';
+
+function App() &#123;
+    const [collapsed, setCollapsed] = useState(true);
+    const [position, setPosition] = useState('bottom');
+
+    return (
+        &lt;&gt;
+            &lt;button onClick=&#123;() =&gt; setCollapsed(c =&gt; !c)&#125;&gt;
+                Toggle Panel
+            &lt;/button&gt;
+
+            &lt;CliPanel
+                collapsed=&#123;collapsed&#125;
+                onCollapsedChange=&#123;setCollapsed&#125;
+                position=&#123;position&#125;
+                onPositionChange=&#123;setPosition&#125;
+                onTabAdded=&#123;(&#123; tabId &#125;) =&gt; console.log('New tab:', tabId)&#125;
+                options=&#123;options&#125;
+                modules=&#123;modules&#125;
+            /&gt;
+        &lt;/&gt;
+    );
+&#125;</code></pre>
+    </div>
+</div>
+
+<!-- Vue -->
+<div *ngIf="activeTab === 'vue'">
+    <h3>{{ 'docs.panel-api.vue-imperative' | translate }}</h3>
+    <p>{{ 'docs.panel-api.vue-imperative-desc' | translate }}</p>
+
+    <div class="code-block">
+        <span class="code-label">App.vue</span>
+        <pre><code>&lt;script setup&gt;
+import &#123; ref &#125; from 'vue';
+import &#123; CliPanel &#125; from '&#64;qodalis/vue-cli';
+
+const panel = ref();
+
+function openPanel() &#123;
+    panel.value.open();
+&#125;
+
+function addLogsTab() &#123;
+    const tabId = panel.value.addTab('Logs');
+    panel.value.selectTab(tabId);
+&#125;
+&lt;/script&gt;
+
+&lt;template&gt;
+    &lt;button &#64;click="openPanel"&gt;Open Panel&lt;/button&gt;
+    &lt;button &#64;click="addLogsTab"&gt;Add Logs Tab&lt;/button&gt;
+
+    &lt;CliPanel ref="panel" :options="options" :modules="modules" /&gt;
+&lt;/template&gt;</code></pre>
+    </div>
+
+    <h3>{{ 'docs.panel-api.vue-v-model' | translate }}</h3>
+    <p>{{ 'docs.panel-api.vue-v-model-desc' | translate }}</p>
+
+    <div class="code-block">
+        <span class="code-label">App.vue</span>
+        <pre><code>&lt;script setup&gt;
+import &#123; ref &#125; from 'vue';
+import &#123; CliPanel &#125; from '&#64;qodalis/vue-cli';
+
+const isCollapsed = ref(true);
+const position = ref('bottom');
+&lt;/script&gt;
+
+&lt;template&gt;
+    &lt;label&gt;
+        &lt;input type="checkbox" v-model="isCollapsed" /&gt;
+        Collapsed
+    &lt;/label&gt;
+
+    &lt;CliPanel
+        v-model:collapsed="isCollapsed"
+        v-model:position="position"
+        &#64;tab-added="(&#123; tabId &#125;) =&gt; console.log('New tab:', tabId)"
+        :options="options"
+        :modules="modules"
+    /&gt;
+&lt;/template&gt;</code></pre>
+    </div>
+</div>
+
+<!-- Events -->
+<h2 id="events">{{ 'docs.panel-api.events' | translate }}</h2>
+<p>{{ 'docs.panel-api.events-desc' | translate }}</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>{{ 'docs.panel-api.th-event' | translate }}</th>
+            <th>Angular</th>
+            <th>React</th>
+            <th>Vue</th>
+            <th>{{ 'docs.panel-api.th-payload' | translate }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Panel closed</td>
+            <td><code>onClose</code></td>
+            <td><code>onClose</code></td>
+            <td><code>close</code></td>
+            <td><code>void</code></td>
+        </tr>
+        <tr>
+            <td>Tab added</td>
+            <td><code>onTabAdded</code></td>
+            <td><code>onTabAdded</code></td>
+            <td><code>tab-added</code></td>
+            <td><code>&#123; tabId: number &#125;</code></td>
+        </tr>
+        <tr>
+            <td>Tab closed</td>
+            <td><code>onTabClosed</code></td>
+            <td><code>onTabClosed</code></td>
+            <td><code>tab-closed</code></td>
+            <td><code>&#123; tabId: number &#125;</code></td>
+        </tr>
+        <tr>
+            <td>Pane split</td>
+            <td><code>onPaneSplit</code></td>
+            <td><code>onPaneSplit</code></td>
+            <td><code>pane-split</code></td>
+            <td><code>&#123; paneId: number; tabId: number &#125;</code></td>
+        </tr>
+        <tr>
+            <td>Pane closed</td>
+            <td><code>onPaneClosed</code></td>
+            <td><code>onPaneClosed</code></td>
+            <td><code>pane-closed</code></td>
+            <td><code>&#123; paneId: number &#125;</code></td>
+        </tr>
+    </tbody>
+</table>
+
+<p>{{ 'docs.panel-api.change-events-note' | translate }}</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>{{ 'docs.panel-api.th-property' | translate }}</th>
+            <th>Angular</th>
+            <th>React</th>
+            <th>Vue</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>collapsed</code></td>
+            <td><code>collapsedChange</code></td>
+            <td><code>onCollapsedChange</code></td>
+            <td><code>update:collapsed</code></td>
+        </tr>
+        <tr>
+            <td><code>hidden</code></td>
+            <td><code>hiddenChange</code></td>
+            <td><code>onHiddenChange</code></td>
+            <td><code>update:hidden</code></td>
+        </tr>
+        <tr>
+            <td><code>maximized</code></td>
+            <td><code>maximizedChange</code></td>
+            <td><code>onMaximizedChange</code></td>
+            <td><code>update:maximized</code></td>
+        </tr>
+        <tr>
+            <td><code>activeTabId</code></td>
+            <td><code>activeTabIdChange</code></td>
+            <td><code>onActiveTabIdChange</code></td>
+            <td><code>update:activeTabId</code></td>
+        </tr>
+        <tr>
+            <td><code>position</code></td>
+            <td><code>positionChange</code></td>
+            <td><code>onPositionChange</code></td>
+            <td><code>update:position</code></td>
+        </tr>
+        <tr>
+            <td><code>height</code></td>
+            <td><code>heightChange</code></td>
+            <td><code>onHeightChange</code></td>
+            <td><code>update:height</code></td>
+        </tr>
+        <tr>
+            <td><code>width</code></td>
+            <td><code>widthChange</code></td>
+            <td><code>onWidthChange</code></td>
+            <td><code>update:width</code></td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Hybrid Controlled/Uncontrolled -->
+<h2 id="controlled-uncontrolled">{{ 'docs.panel-api.controlled-uncontrolled' | translate }}</h2>
+<p>{{ 'docs.panel-api.controlled-uncontrolled-desc' | translate }}</p>
+
+<div class="code-block">
+    <span class="code-label">{{ 'docs.panel-api.uncontrolled-label' | translate }}</span>
+    <pre><code>&lt;!-- Panel manages its own state (default) --&gt;
+&lt;cli-panel [options]="options" [modules]="modules"&gt;&lt;/cli-panel&gt;</code></pre>
+</div>
+
+<div class="code-block">
+    <span class="code-label">{{ 'docs.panel-api.controlled-label' | translate }}</span>
+    <pre><code>&lt;!-- Parent controls collapsed state --&gt;
+&lt;cli-panel
+    [(collapsed)]="isCollapsed"
+    [options]="options"
+    [modules]="modules"
+&gt;&lt;/cli-panel&gt;</code></pre>
+</div>

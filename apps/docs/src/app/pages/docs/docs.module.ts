@@ -80,6 +80,13 @@ const routes: Routes = [
                     ),
             },
             {
+                path: 'panel-api',
+                loadChildren: () =>
+                    import('./pages/panel-api/panel-api.module').then(
+                        (m) => m.PanelApiModule,
+                    ),
+            },
+            {
                 path: 'language-packs',
                 loadChildren: () =>
                     import('./pages/language-packs/language-packs.module').then(

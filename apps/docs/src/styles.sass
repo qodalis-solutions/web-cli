@@ -1171,3 +1171,69 @@ $radius-sm: 8px
   margin: 32px 0 16px
   padding-bottom: 8px
   border-bottom: 1px solid $border
+
+// ─── Panel API Demo ───
+.panel-api-demo
+  margin: 24px 0
+
+  .demo-controls
+    display: flex
+    flex-direction: column
+    gap: 12px
+    margin-bottom: 16px
+
+  .control-group
+    display: flex
+    align-items: center
+    flex-wrap: wrap
+    gap: 8px
+
+  .control-label
+    font-size: 0.8rem
+    font-weight: 600
+    color: $text-secondary
+    text-transform: uppercase
+    letter-spacing: 0.05em
+    min-width: 70px
+
+  .demo-btn
+    padding: 6px 14px
+    font-size: 0.85rem
+    font-family: $mono
+    background: $bg-card
+    color: #fff
+    border: 1px solid $border
+    border-radius: 6px
+    cursor: pointer
+    transition: background 0.15s, border-color 0.15s
+
+    &:hover
+      background: lighten($bg-card, 5%)
+      border-color: lighten($border, 10%)
+
+    &.destructive
+      color: #f87171
+      border-color: rgba(248, 113, 113, 0.3)
+
+      &:hover
+        background: rgba(248, 113, 113, 0.1)
+
+  .demo-log
+    max-height: 200px
+    overflow-y: auto
+    background: $bg-card
+    border: 1px solid $border
+    border-radius: 8px
+    padding: 12px
+    margin-bottom: 16px
+    font-family: $mono
+    font-size: 0.8rem
+    line-height: 1.6
+
+    .log-entry
+      color: $text-secondary
+      white-space: pre-wrap
+
+      &:first-child
+        color: #fff
+

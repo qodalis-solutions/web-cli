@@ -65,7 +65,8 @@ export class AppComponent {
     };
 
     panelOptions: CliPanelOptions = {
-        position: 'bottom',
+        position: 'right',
+        isHidden: true,
         syncTheme: true,
     };
 }
