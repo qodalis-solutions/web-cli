@@ -114,13 +114,16 @@ export class CliExecutionContext
     public isExecuting = false;
 
     private _statusText?: string;
+    public readonly statusTextChange$ = new Subject<string | undefined>();
 
     setStatusText(text: string): void {
         this._statusText = text;
+        this.statusTextChange$.next(text);
     }
 
     clearStatusText(): void {
         this._statusText = undefined;
+        this.statusTextChange$.next(undefined);
     }
 
     getStatusText(): string | undefined {

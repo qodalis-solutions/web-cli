@@ -19,6 +19,7 @@ interface TabEntry {
     engines: Map<number, CliEngine>; // paneId -> engine
     status$: BehaviorSubject<TabStatus>;
     destroy$: Subject<void>;
+    refresh$: Subject<void>;
 }
 
 /** Slow poll for uptime display only. */
@@ -65,11 +66,23 @@ export class CliPanelStatusService {
                 engines: new Map(),
                 status$: new BehaviorSubject<TabStatus>(DEFAULT_TAB_STATUS),
                 destroy$: new Subject<void>(),
+                refresh$: new Subject<void>(),
             };
             this.tabs.set(tabId, entry);
             this.startPollingTab(entry);
         }
         entry.engines.set(paneId, engine);
+
+        // Listen to statusText changes for immediate tab refresh
+        const context = engine.getContext();
+        if (context && (context as any).statusTextChange$) {
+            (context as any).statusTextChange$.pipe(
+                takeUntil(entry.destroy$),
+                takeUntil(this.destroy$),
+            ).subscribe(() => {
+                entry!.refresh$.next();
+            });
+        }
 
         // Listen to background service events for immediate global refresh
         this.listenToBackgroundServices(engine);
@@ -149,8 +162,10 @@ export class CliPanelStatusService {
     }
 
     private startPollingTab(entry: TabEntry): void {
-        interval(EXEC_POLL_MS).pipe(
-            startWith(0),
+        merge(
+            interval(EXEC_POLL_MS).pipe(startWith(0)),
+            entry.refresh$,
+        ).pipe(
             map(() => this.computeTabStatus(entry)),
             distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
             takeUntil(entry.destroy$),
