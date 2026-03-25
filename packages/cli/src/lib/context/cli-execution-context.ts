@@ -323,6 +323,22 @@ export class CliExecutionContext
         );
     }
 
+    /**
+     * Submit and execute a command — shared by interactive Enter key
+     * and programmatic engine.execute(). Adds to history, runs the
+     * command, and shows a new prompt afterwards.
+     */
+    async submitCommand(command: string): Promise<void> {
+        if (command.trim()) {
+            await this.commandHistory.addCommand(command);
+            await this.executor.executeCommand(command, this);
+        }
+
+        if (!this.isRawModeActive()) {
+            this.showPrompt();
+        }
+    }
+
     clearCurrentLine(): void {
         this.clearLine();
         this.showPrompt();

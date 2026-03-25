@@ -88,6 +88,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     exitFullScreenMode: () => void;
     createInterval: (callback: () => void, ms: number) => ICliManagedInterval;
     createTimeout: (callback: () => void, ms: number) => ICliManagedTimer;
+    submitCommand: (command: string) => Promise<void>;
 
     constructor(
         public readonly context: ICliExecutionContext,
@@ -118,6 +119,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
         this.enterFullScreenMode = (p: ICliCommandProcessor, o?: CliFullScreenOptions) =>
             context.enterFullScreenMode(p, o);
         this.exitFullScreenMode = () => context.exitFullScreenMode();
+        this.submitCommand = (command: string) => context.submitCommand(command);
         this.createInterval = (cb, ms) => context.createInterval(cb, ms);
         this.createTimeout = (cb, ms) => context.createTimeout(cb, ms);
         this.backgroundServices = context.backgroundServices;

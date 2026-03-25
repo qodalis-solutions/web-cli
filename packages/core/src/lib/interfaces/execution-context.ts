@@ -128,6 +128,13 @@ export interface ICliExecutionContext {
     }) => void;
 
     /**
+     * Submit and execute a command — adds to history, runs the command,
+     * and shows a new prompt afterwards. Used by both interactive input
+     * and programmatic execution to ensure identical behaviour.
+     */
+    submitCommand(command: string): Promise<void>;
+
+    /**
      * Set the current processor as the context processor, i.e. the processor that will handle the command
      * @param processor The processor to set
      * @param silent Indicates if the setting should be silent, i.e. not write to the terminal
