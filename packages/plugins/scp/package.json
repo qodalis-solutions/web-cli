@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-scp",
-  "version": "2.0.0-beta.10",
+  "version": "2.0.0-beta.11",
   "description": "SCP-like file transfer between browser and remote servers",
   "author": "Qodalis Solutions",
   "license": "MIT",

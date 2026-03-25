@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-chart",
-  "version": "2.0.0-beta.10",
+  "version": "2.0.0-beta.11",
   "description": "ASCII chart and graph rendering",
   "author": "Qodalis Solutions",
   "license": "MIT",
