@@ -6,6 +6,7 @@ import {
     HostListener,
 } from '@angular/core';
 import { CliPanelPosition, CliPanelHideAlignment } from '@qodalis/cli-core';
+import { ServiceDetail } from '../cli-panel/cli-panel-status.service';
 
 const HEADER_HEIGHT = 60;
 
@@ -58,6 +59,7 @@ export class CollapsableContentComponent {
     @Input() statusExecutionState: 'idle' | 'running' = 'idle';
     @Input() statusLastCommand: { name: string; success: boolean } | null = null;
     @Input() statusServiceCount: { running: number; total: number } = { running: 0, total: 0 };
+    @Input() statusServiceDetails: ServiceDetail[] = [];
     @Input() statusServerState: 'connected' | 'disconnected' | 'none' = 'none';
     @Input() statusUptime = 0;
     @Input() statusText: string | null = null;
@@ -72,6 +74,13 @@ export class CollapsableContentComponent {
 
     get showStatusIndicators(): boolean {
         return this.position === 'bottom' || this.position === 'top';
+    }
+
+    get serviceTooltip(): string {
+        if (this.statusServiceDetails.length === 0) return '';
+        return this.statusServiceDetails
+            .map(s => `${s.name}: ${s.status}${s.description ? ' — ' + s.description : ''}`)
+            .join('\n');
     }
 
     get formattedUptime(): string {

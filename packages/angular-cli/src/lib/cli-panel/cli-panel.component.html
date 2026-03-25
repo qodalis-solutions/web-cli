@@ -11,6 +11,7 @@
   [statusExecutionState]="tabStatuses[resolvedActiveTabId]?.executionState || 'idle'"
   [statusLastCommand]="tabStatuses[resolvedActiveTabId]?.lastCommandStatus ? { name: tabStatuses[resolvedActiveTabId]?.lastCommandName || '', success: tabStatuses[resolvedActiveTabId]?.lastCommandStatus === 'success' } : null"
   [statusServiceCount]="{ running: globalStatus.runningServiceCount, total: globalStatus.totalServiceCount }"
+  [statusServiceDetails]="globalStatus.serviceDetails"
   [statusServerState]="globalStatus.serverConnectionState"
   [statusUptime]="globalStatus.uptime"
   [statusText]="tabStatuses[resolvedActiveTabId]?.statusText || null"

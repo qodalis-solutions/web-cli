@@ -90,9 +90,9 @@
           </span>
 
           <!-- Background services (only if any exist) -->
-          <span class="status-item" *ngIf="statusServiceCount.total > 0">
+          <span class="status-item" *ngIf="statusServiceCount.total > 0" [title]="serviceTooltip">
               <span class="status-icon">&#9881;</span>
-              <span class="status-label">{{ statusServiceCount.running }}/{{ statusServiceCount.total }}</span>
+              <span class="status-label">{{ statusServiceCount.running }}/{{ statusServiceCount.total }} services</span>
           </span>
 
           <!-- Last command -->

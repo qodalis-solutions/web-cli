@@ -8,9 +8,16 @@ export interface TabStatus {
     statusText: string | null;
 }
 
+export interface ServiceDetail {
+    name: string;
+    status: string;
+    description?: string;
+}
+
 export interface GlobalStatus {
     runningServiceCount: number;
     totalServiceCount: number;
+    serviceDetails: ServiceDetail[];
     serverConnectionState: 'connected' | 'disconnected' | 'none';
     uptime: number;
 }
@@ -38,6 +45,7 @@ const DEFAULT_TAB_STATUS: TabStatus = {
 const DEFAULT_GLOBAL_STATUS: GlobalStatus = {
     runningServiceCount: 0,
     totalServiceCount: 0,
+    serviceDetails: [],
     serverConnectionState: 'none',
     uptime: 0,
 };
@@ -240,12 +248,18 @@ export class CliPanelStatusService {
         // Background services
         let runningServiceCount = 0;
         let totalServiceCount = 0;
+        let serviceDetails: ServiceDetail[] = [];
         try {
             const services = context.backgroundServices?.list() ?? [];
             totalServiceCount = services.length;
             runningServiceCount = services.filter(
                 (s: any) => s.status === 'running',
             ).length;
+            serviceDetails = services.map((s: any) => ({
+                name: s.name,
+                status: s.status,
+                description: s.description,
+            }));
         } catch { /* not available */ }
 
         // Server connection
@@ -267,6 +281,6 @@ export class CliPanelStatusService {
         // Uptime
         const uptime = engine.startedAt ? Date.now() - engine.startedAt : 0;
 
-        return { runningServiceCount, totalServiceCount, serverConnectionState, uptime };
+        return { runningServiceCount, totalServiceCount, serviceDetails, serverConnectionState, uptime };
     }
 }
