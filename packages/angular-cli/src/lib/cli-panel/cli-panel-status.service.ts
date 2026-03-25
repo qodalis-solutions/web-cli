@@ -195,7 +195,7 @@ export class CliPanelStatusService {
             }
 
             // Pick up custom status text from processors
-            const text = context.statusText;
+            const text = context.getStatusText?.();
             if (text) {
                 statusText = text;
             }

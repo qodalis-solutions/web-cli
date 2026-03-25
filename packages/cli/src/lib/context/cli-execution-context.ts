@@ -113,8 +113,19 @@ export class CliExecutionContext
      */
     public isExecuting = false;
 
-    /** @inheritdoc */
-    public statusText?: string;
+    private _statusText?: string;
+
+    setStatusText(text: string): void {
+        this._statusText = text;
+    }
+
+    clearStatusText(): void {
+        this._statusText = undefined;
+    }
+
+    getStatusText(): string | undefined {
+        return this._statusText;
+    }
 
     public readonly lineBuffer = new CliLineBuffer();
 
