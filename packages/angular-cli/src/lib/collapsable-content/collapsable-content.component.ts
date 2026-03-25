@@ -53,12 +53,31 @@ export class CollapsableContentComponent {
     public onPositionChange = new EventEmitter<CliPanelPosition>();
 
     @Input() isHidden = false;
+
+    // Status bar inputs
+    @Input() statusExecutionState: 'idle' | 'running' = 'idle';
+    @Input() statusLastCommand: { name: string; success: boolean } | null = null;
+    @Input() statusServiceCount: { running: number; total: number } = { running: 0, total: 0 };
+    @Input() statusServerState: 'connected' | 'disconnected' | 'none' = 'none';
+    @Input() statusUptime = 0;
+
     positionDropdownOpen = false;
     dropdownStyle: Record<string, string> = {};
     private preHideCollapsed = true;
 
     get isHorizontal(): boolean {
         return this.position === 'left' || this.position === 'right';
+    }
+
+    get showStatusIndicators(): boolean {
+        return this.position === 'bottom' || this.position === 'top';
+    }
+
+    get formattedUptime(): string {
+        const mins = Math.floor(this.statusUptime / 60000);
+        if (mins < 60) return `${mins}m`;
+        const hrs = Math.floor(mins / 60);
+        return `${hrs}h${mins % 60}m`;
     }
 
     get wrapperStyle(): Record<string, string> {

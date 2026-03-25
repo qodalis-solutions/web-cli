@@ -81,6 +81,41 @@
         </svg>
         CLI
       </p>
+      <!-- Status indicators (bottom/top positions only) -->
+      <div class="status-indicators" *ngIf="showStatusIndicators">
+          <!-- Execution state -->
+          <span class="status-item" [class.status-running]="statusExecutionState === 'running'">
+              <span class="status-dot" [class.dot-idle]="statusExecutionState === 'idle'" [class.dot-running]="statusExecutionState === 'running'"></span>
+              <span class="status-label">{{ statusExecutionState }}</span>
+          </span>
+
+          <!-- Background services (only if any exist) -->
+          <span class="status-item" *ngIf="statusServiceCount.total > 0">
+              <span class="status-icon">&#9881;</span>
+              <span class="status-label">{{ statusServiceCount.running }}/{{ statusServiceCount.total }}</span>
+          </span>
+
+          <!-- Last command -->
+          <span class="status-item" *ngIf="statusLastCommand">
+              <span class="status-icon" [class.status-success]="statusLastCommand.success" [class.status-error]="!statusLastCommand.success">
+                  {{ statusLastCommand.success ? '&#10003;' : '&#10005;' }}
+              </span>
+              <span class="status-label">{{ statusLastCommand.name }}</span>
+          </span>
+
+          <!-- Server connection -->
+          <span class="status-item" *ngIf="statusServerState !== 'none'">
+              <span class="status-dot" [class.dot-idle]="statusServerState === 'connected'" [class.dot-error]="statusServerState === 'disconnected'"></span>
+              <span class="status-label">{{ statusServerState === 'connected' ? 'connected' : 'disconnected' }}</span>
+          </span>
+
+          <!-- Uptime -->
+          <span class="status-item status-muted" *ngIf="statusUptime > 0">
+              <span class="status-icon">&uarr;</span>
+              <span class="status-label">{{ formattedUptime }}</span>
+          </span>
+      </div>
+
       <div class="action-buttons">
         <!-- Position dropdown -->
         <div class="panel-btn-position-wrapper" (click)="$event.stopPropagation()">
@@ -217,6 +252,8 @@
         </button>
       </div>
     </div>
+    <!-- Ambient glow line -->
+    <div class="glow-line" [class.glow-active]="statusExecutionState === 'running'"></div>
   </div>
   <div class="terminal-content" [style.display]="isCollapsed ? 'none' : ''">
     <ng-content></ng-content>

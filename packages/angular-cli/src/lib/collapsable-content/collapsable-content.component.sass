@@ -18,7 +18,7 @@ $header-height: 60px
   bottom: 0
   left: 0
   right: 0
-  width: 100vw
+  // width derived from left: 0 + right: 0 — avoids 100vw overflow when page scrollbar is present
   transform: translateY(0)
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
   background-color: var(--cli-panel-bg, #111827)
@@ -450,3 +450,119 @@ $header-height: 60px
 .terminal-wrapper[data-hideable="false"]
   .panel-btn-hide
     display: none
+
+// ─── Status indicators ──────────────────────────────────
+
+.status-indicators
+  display: flex
+  align-items: center
+  gap: 14px
+  margin-left: 24px
+  font-size: 12px
+  overflow: hidden
+  white-space: nowrap
+
+.status-item
+  display: flex
+  align-items: center
+  gap: 5px
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6))
+
+.status-dot
+  width: 6px
+  height: 6px
+  border-radius: 50%
+  flex-shrink: 0
+  background: var(--cli-status-neutral, #6b7280)
+
+  &.dot-idle
+    background: var(--cli-status-idle, #3fb950)
+
+  &.dot-running
+    background: var(--cli-status-running, #f0883e)
+    animation: statusPulse 1.5s ease-in-out infinite
+
+  &.dot-error
+    background: var(--cli-status-error, #f85149)
+
+.status-icon
+  flex-shrink: 0
+
+  &.status-success
+    color: var(--cli-status-idle, #3fb950)
+
+  &.status-error
+    color: var(--cli-status-error, #f85149)
+
+.status-label
+  overflow: hidden
+  text-overflow: ellipsis
+
+.status-muted
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.4))
+
+.status-running
+  color: var(--cli-status-running, #f0883e)
+
+// ─── Glow line ──────────────────────────────────────────
+
+.glow-line
+  position: absolute
+  bottom: 0
+  left: 0
+  right: 0
+  height: 2px
+  background: linear-gradient(90deg, transparent, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), #a78bfa, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), transparent)
+  background-size: 200% 100%
+  opacity: 0.4
+  animation: glowShift 8s ease-in-out infinite
+  transition: opacity 0.6s ease
+  pointer-events: none
+
+  &.glow-active
+    opacity: 0.8
+    animation-duration: 3s
+
+// Glow line for vertical positions (left/right)
+.terminal-wrapper[data-position="left"]
+  .glow-line
+    bottom: auto
+    top: 0
+    left: auto
+    right: 0
+    width: 2px
+    height: 100%
+    background: linear-gradient(180deg, transparent, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), #a78bfa, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), transparent)
+    background-size: 100% 200%
+
+.terminal-wrapper[data-position="right"]
+  .glow-line
+    bottom: auto
+    top: 0
+    left: 0
+    right: auto
+    width: 2px
+    height: 100%
+    background: linear-gradient(180deg, transparent, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), #a78bfa, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), transparent)
+    background-size: 100% 200%
+
+// ─── Animations ─────────────────────────────────────────
+
+@keyframes glowShift
+  0%
+    background-position: 200% center
+  100%
+    background-position: -200% center
+
+@keyframes statusPulse
+  0%, 100%
+    opacity: 1
+  50%
+    opacity: 0.3
+
+// ─── Accessibility ──────────────────────────────────────
+
+@media (prefers-reduced-motion: reduce)
+  .glow-line,
+  .status-dot
+    animation: none !important
