@@ -301,11 +301,10 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
 
     getTabDotClass(tabId: number): string {
         const status = this.tabStatuses[tabId];
-        if (!status) return 'dot-neutral';
+        if (!status) return 'dot-idle';
         if (status.executionState === 'running') return 'dot-running';
         if (status.lastCommandStatus === 'error') return 'dot-error';
-        if (status.lastCommandStatus === 'success') return 'dot-idle';
-        return 'dot-neutral';
+        return 'dot-idle';
     }
 
     onPaneEngineReady(tabId: number, paneId: number, engine: CliEngine): void {
