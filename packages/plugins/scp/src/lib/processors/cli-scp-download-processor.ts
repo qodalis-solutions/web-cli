@@ -99,6 +99,7 @@ export class CliScpDownloadProcessor implements ICliCommandChildProcessor {
         const useBrowserDownload = command.args?.['save'] === true;
 
         context.spinner?.show(`Downloading ${remotePath} from ${server.name}...`);
+        context.setStatusText(`scp: downloading from ${server.name}`);
 
         const abortController = new AbortController();
         const abortSub = context.onAbort.subscribe(() => abortController.abort());
@@ -119,10 +120,12 @@ export class CliScpDownloadProcessor implements ICliCommandChildProcessor {
                         context.spinner?.show(
                             `Downloading ${remotePath}... ${pct}% (${formatBytes(received)}/${formatBytes(total)})`,
                         );
+                        context.setStatusText(`scp: download ${pct}%`);
                     } else {
                         context.spinner?.show(
                             `Downloading ${remotePath}... ${formatBytes(received)}`,
                         );
+                        context.setStatusText(`scp: download ${formatBytes(received)}`);
                     }
                 },
                 abortController.signal,

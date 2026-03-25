@@ -88,6 +88,7 @@ export class CliQrCommandProcessor implements ICliCommandProcessor {
                     const height = command.args['height'] ?? getPluginConfigValue(context, 'qr', 'defaultHeight', 300);
 
                     try {
+                        context.setStatusText('Generating QR code');
                         const qrCode = new QRCodeStyling({
                             width,
                             height,
