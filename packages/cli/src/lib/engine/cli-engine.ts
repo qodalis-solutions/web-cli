@@ -71,6 +71,7 @@ export class CliEngine {
     private resizeScheduled = false;
     private bootService?: CliBoot;
     private dragDropService?: CliDragDropService;
+    private _startedAt?: number;
 
     constructor(
         private readonly container: HTMLElement,
@@ -261,6 +262,12 @@ export class CliEngine {
         if (this.options?.snapshot) {
             await this.restoreSnapshot(this.options.snapshot);
         }
+
+        this._startedAt = Date.now();
+
+        // 10. Final refit — by this point fonts are loaded and all boot
+        //     content has been written, so cell metrics are stable.
+        this.safeFit();
     }
 
     /**
@@ -326,6 +333,13 @@ export class CliEngine {
      */
     getRegistry(): CliCommandProcessorRegistry {
         return this.registry;
+    }
+
+    /**
+     * Timestamp (ms since epoch) when the engine finished starting.
+     */
+    get startedAt(): number | undefined {
+        return this._startedAt;
     }
 
     /**
