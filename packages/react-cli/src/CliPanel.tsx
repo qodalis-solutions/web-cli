@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliEngineSnapshot, derivePanelThemeStyles, loadPanelPosition, savePanelPosition, CliPanelPosition } from '@qodalis/cli-core';
+import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliEngineSnapshot, derivePanelThemeStyles, loadPanelPosition, savePanelPosition, CliPanelPosition, ICliPanelRef, CliPanelState } from '@qodalis/cli-core';
 import { CliEngineOptions, CliEngine } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliContext } from './CliContext';
@@ -15,6 +15,28 @@ export interface CliPanelProps {
     onClose?: () => void;
     style?: React.CSSProperties;
     className?: string;
+
+    // Bindable properties (controlled mode)
+    collapsed?: boolean;
+    onCollapsedChange?: (collapsed: boolean) => void;
+    hidden?: boolean;
+    onHiddenChange?: (hidden: boolean) => void;
+    maximized?: boolean;
+    onMaximizedChange?: (maximized: boolean) => void;
+    activeTabId?: number;
+    onActiveTabIdChange?: (tabId: number) => void;
+    position?: CliPanelPosition;
+    onPositionChange?: (position: CliPanelPosition) => void;
+    height?: number;
+    onHeightChange?: (height: number) => void;
+    width?: number;
+    onWidthChange?: (width: number) => void;
+
+    // Structural events
+    onTabAdded?: (event: { tabId: number }) => void;
+    onTabClosed?: (event: { tabId: number }) => void;
+    onPaneSplit?: (event: { paneId: number; tabId: number }) => void;
+    onPaneClosed?: (event: { paneId: number }) => void;
 }
 
 interface TerminalPane {
@@ -144,628 +166,722 @@ function PositionIcon({ position, size = 20 }: { position: string; size?: number
 
 /* ─── Component ──────────────────────────────────────────── */
 
-export function CliPanel({ options: optionsProp, modules: modulesProp, processors: processorsProp, services: servicesProp, onClose, style, className }: CliPanelProps) {
-    const config = useCliConfig();
-    const options = optionsProp ?? config.options as CliPanelOptions | undefined;
-    const modules = modulesProp ?? config.modules;
-    const processors = processorsProp ?? config.processors;
-    const services = servicesProp ?? config.services;
+export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>(
+    function CliPanel(props, ref) {
+        const { options: optionsProp, modules: modulesProp, processors: processorsProp, services: servicesProp, onClose, style, className } = props;
+        const config = useCliConfig();
+        const options = optionsProp ?? config.options as CliPanelOptions | undefined;
+        const modules = modulesProp ?? config.modules;
+        const processors = processorsProp ?? config.processors;
+        const services = servicesProp ?? config.services;
 
-    const [position, setPosition] = useState<CliPanelPosition>(
-        () => loadPanelPosition() ?? options?.position ?? 'bottom'
-    );
-    const closable = options?.closable ?? true;
-    const resizable = options?.resizable ?? true;
-    const isHorizontal = position === 'left' || position === 'right';
-    const hideable = options?.hideable ?? true;
-    const hideAlignment = options?.hideAlignment ?? 'center';
-    const syncTheme = options?.syncTheme ?? false;
+        /* ─── Hybrid controlled/uncontrolled state ────────── */
 
-    const [visible, setVisible] = useState(true);
-    const [collapsed, setCollapsed] = useState(options?.isCollapsed ?? true);
-    const [maximized, setMaximized] = useState(false);
-    const [panelHeight, setPanelHeight] = useState(600);
-    const [panelWidth, setPanelWidth] = useState(400);
-    const [initialized, setInitialized] = useState(false);
-    const [hidden, setHidden] = useState(options?.isHidden ?? false);
-    const preHideCollapsedRef = useRef(true);
-    const [themeStyles, setThemeStyles] = useState<Record<string, string>>({});
-    const wrapperRef = useRef<HTMLDivElement>(null);
+        const [internalPosition, setInternalPosition] = useState<CliPanelPosition>(
+            () => loadPanelPosition() ?? options?.position ?? 'bottom'
+        );
+        const [internalCollapsed, setInternalCollapsed] = useState(options?.isCollapsed ?? true);
+        const [internalHidden, setInternalHidden] = useState(options?.isHidden ?? false);
+        const [internalMaximized, setInternalMaximized] = useState(false);
+        const [internalHeight, setInternalHeight] = useState(600);
+        const [internalWidth, setInternalWidth] = useState(400);
+        const [internalActiveTabId, setInternalActiveTabId] = useState(0);
 
-    const [tabs, setTabs] = useState<TerminalTab[]>([]);
-    const [activeTabId, setActiveTabId] = useState(0);
-    const [activePaneId, setActivePaneId] = useState(0);
-    const nextIdRef = useRef({ tab: 1, pane: 1 });
+        // Resolved values: controlled props override internal state
+        const position = props.position !== undefined ? props.position : internalPosition;
+        const collapsed = props.collapsed !== undefined ? props.collapsed : internalCollapsed;
+        const hidden = props.hidden !== undefined ? props.hidden : internalHidden;
+        const maximized = props.maximized !== undefined ? props.maximized : internalMaximized;
+        const panelHeight = props.height !== undefined ? props.height : internalHeight;
+        const panelWidth = props.width !== undefined ? props.width : internalWidth;
+        const activeTabId = props.activeTabId !== undefined ? props.activeTabId : internalActiveTabId;
 
-    const [contextMenu, setContextMenu] = useState<TabContextMenu>({ visible: false, x: 0, y: 0, tabId: 0 });
-    const engineMapRef = useRef<Map<number, CliEngine>>(new Map());
+        // Update helpers that sync internal state + call callbacks
+        const updateCollapsed = useCallback((value: boolean) => {
+            setInternalCollapsed(value);
+            props.onCollapsedChange?.(value);
+        }, [props.onCollapsedChange]);
 
-    // Pane resize state
-    const [paneResizing, setPaneResizing] = useState(false);
-    const paneResizeRef = useRef({ tabId: 0, dividerIndex: 0, startX: 0, startWidths: [] as number[], containerWidth: 0 });
+        const updateHidden = useCallback((value: boolean) => {
+            setInternalHidden(value);
+            props.onHiddenChange?.(value);
+        }, [props.onHiddenChange]);
 
-    // Panel resize state
-    const [panelResizing, setPanelResizing] = useState(false);
-    const panelResizeRef = useRef({ startY: 0, startHeight: 0, startX: 0, startWidth: 0 });
-    const prevHeightRef = useRef(600);
-    const prevWidthRef = useRef(400);
+        const updateMaximized = useCallback((value: boolean) => {
+            setInternalMaximized(value);
+            props.onMaximizedChange?.(value);
+        }, [props.onMaximizedChange]);
 
-    // Terminal height is handled via CSS flex layout (height: 100% default in Cli)
+        const updateHeight = useCallback((value: number) => {
+            setInternalHeight(value);
+            props.onHeightChange?.(value);
+        }, [props.onHeightChange]);
 
-    /* ─── Tab management ─────────────────────────────────── */
+        const updateWidth = useCallback((value: number) => {
+            setInternalWidth(value);
+            props.onWidthChange?.(value);
+        }, [props.onWidthChange]);
 
-    const addTab = useCallback(() => {
-        const paneId = nextIdRef.current.pane++;
-        const tabId = nextIdRef.current.tab++;
-        const pane: TerminalPane = { id: paneId, widthPercent: 100 };
-        const tab: TerminalTab = { id: tabId, title: `Terminal ${tabId}`, isEditing: false, panes: [pane] };
-        setTabs(prev => [...prev, tab]);
-        setActiveTabId(tabId);
-        setActivePaneId(paneId);
-    }, []);
+        const updateActiveTabId = useCallback((value: number) => {
+            setInternalActiveTabId(value);
+            props.onActiveTabIdChange?.(value);
+        }, [props.onActiveTabIdChange]);
 
-    const toggle = useCallback(() => {
-        setCollapsed(prev => {
-            const next = !prev;
-            if (!next && !initialized) {
-                setInitialized(true);
-                // Add first tab
-                const paneId = nextIdRef.current.pane++;
-                const tabId = nextIdRef.current.tab++;
-                const pane: TerminalPane = { id: paneId, widthPercent: 100 };
-                const tab: TerminalTab = { id: tabId, title: `Terminal ${tabId}`, isEditing: false, panes: [pane] };
-                setTabs([tab]);
-                setActiveTabId(tabId);
-                setActivePaneId(paneId);
-            }
-            return next;
-        });
-    }, [initialized]);
+        const updatePosition = useCallback((value: CliPanelPosition) => {
+            setInternalPosition(value);
+            savePanelPosition(value);
+            props.onPositionChange?.(value);
+        }, [props.onPositionChange]);
 
-    const closeTab = useCallback((id: number) => {
-        setTabs(prev => {
-            const tab = prev.find(t => t.id === id);
-            if (tab) {
-                tab.panes.forEach(p => engineMapRef.current.delete(p.id));
-            }
-            const next = prev.filter(t => t.id !== id);
-            if (next.length === 0) {
-                setInitialized(false);
-                setCollapsed(true);
-                return [];
-            }
-            setActiveTabId(current => {
-                if (current === id) {
-                    const oldIdx = prev.findIndex(t => t.id === id);
-                    const newIdx = Math.min(oldIdx, next.length - 1);
-                    return next[newIdx].id;
+        const closable = options?.closable ?? true;
+        const resizable = options?.resizable ?? true;
+        const isHorizontal = position === 'left' || position === 'right';
+        const hideable = options?.hideable ?? true;
+        const hideAlignment = options?.hideAlignment ?? 'center';
+        const syncTheme = options?.syncTheme ?? false;
+
+        const [visible, setVisible] = useState(true);
+        const [initialized, setInitialized] = useState(false);
+        const preHideCollapsedRef = useRef(true);
+        const [themeStyles, setThemeStyles] = useState<Record<string, string>>({});
+        const wrapperRef = useRef<HTMLDivElement>(null);
+
+        const [tabs, setTabs] = useState<TerminalTab[]>([]);
+        const [activePaneId, setActivePaneId] = useState(0);
+        const nextIdRef = useRef({ tab: 1, pane: 1 });
+
+        const [contextMenu, setContextMenu] = useState<TabContextMenu>({ visible: false, x: 0, y: 0, tabId: 0 });
+        const engineMapRef = useRef<Map<number, CliEngine>>(new Map());
+
+        // Refs to avoid stale closures in functional updaters
+        const activeTabIdRef = useRef(activeTabId);
+        activeTabIdRef.current = activeTabId;
+        const activePaneIdRef = useRef(activePaneId);
+        activePaneIdRef.current = activePaneId;
+
+        // Pane resize state
+        const [paneResizing, setPaneResizing] = useState(false);
+        const paneResizeRef = useRef({ tabId: 0, dividerIndex: 0, startX: 0, startWidths: [] as number[], containerWidth: 0 });
+
+        // Panel resize state
+        const [panelResizing, setPanelResizing] = useState(false);
+        const panelResizeRef = useRef({ startY: 0, startHeight: 0, startX: 0, startWidth: 0 });
+        const prevHeightRef = useRef(600);
+        const prevWidthRef = useRef(400);
+
+        // Terminal height is handled via CSS flex layout (height: 100% default in Cli)
+
+        /* ─── Pane helpers ────────────────────────────────── */
+
+        const normalizePanes = useCallback((panes: TerminalPane[]) => {
+            const total = panes.reduce((s, p) => s + p.widthPercent, 0);
+            if (total === 0) return;
+            const scale = 100 / total;
+            panes.forEach(p => { p.widthPercent *= scale; });
+        }, []);
+
+        /* ─── Tab management ─────────────────────────────── */
+
+        const addTab = useCallback((title?: string): number => {
+            const tabId = nextIdRef.current.tab++;
+            const paneId = nextIdRef.current.pane++;
+            const pane: TerminalPane = { id: paneId, widthPercent: 100 };
+            const tab: TerminalTab = { id: tabId, title: title ?? `Terminal ${tabId}`, isEditing: false, panes: [pane] };
+            setTabs(prev => [...prev, tab]);
+            updateActiveTabId(tabId);
+            setActivePaneId(paneId);
+            props.onTabAdded?.({ tabId });
+            return tabId;
+        }, [updateActiveTabId, props.onTabAdded]);
+
+        const toggle = useCallback(() => {
+            if (collapsed) {
+                updateCollapsed(false);
+                if (!initialized) {
+                    setInitialized(true);
+                    addTab();
                 }
-                return current;
-            });
-            return next;
-        });
-    }, []);
-
-    const selectTab = useCallback((id: number) => {
-        setActiveTabId(id);
-        setTabs(prev => {
-            const tab = prev.find(t => t.id === id);
-            if (tab && tab.panes.length > 0) {
-                setActivePaneId(tab.panes[0].id);
+            } else {
+                updateCollapsed(true);
             }
-            return prev;
-        });
-    }, []);
+        }, [collapsed, initialized, updateCollapsed, addTab]);
 
-    /* ─── Split / close pane ─────────────────────────────── */
-
-    const normalizePanes = (panes: TerminalPane[]) => {
-        const total = panes.reduce((s, p) => s + p.widthPercent, 0);
-        if (total === 0) return;
-        const scale = 100 / total;
-        panes.forEach(p => { p.widthPercent *= scale; });
-    };
-
-    const splitRight = useCallback((tabId?: number, afterPaneId?: number) => {
-        setTabs(prev => {
-            const next = prev.map(t => ({ ...t, panes: t.panes.map(p => ({ ...p })) }));
-            const tab = next.find(t => t.id === (tabId ?? activeTabId));
-            if (!tab) return prev;
-
-            const targetPaneId = afterPaneId ?? activePaneId;
-            const idx = tab.panes.findIndex(p => p.id === targetPaneId);
-            const insertIdx = idx === -1 ? tab.panes.length : idx + 1;
-
-            const newPaneId = nextIdRef.current.pane++;
-            const newPane: TerminalPane = { id: newPaneId, widthPercent: 0 };
-            tab.panes.splice(insertIdx, 0, newPane);
-
-            const evenWidth = 100 / tab.panes.length;
-            tab.panes.forEach(p => { p.widthPercent = evenWidth; });
-            normalizePanes(tab.panes);
-
-            setActivePaneId(newPaneId);
-            return next;
-        });
-    }, [activeTabId, activePaneId]);
-
-    const closePane = useCallback((tabId: number, paneId: number) => {
-        setTabs(prev => {
-            const tab = prev.find(t => t.id === tabId);
-            if (!tab) return prev;
-
-            if (tab.panes.length <= 1) {
-                const next = prev.filter(t => t.id !== tabId);
+        const closeTab = useCallback((id: number) => {
+            setTabs(prev => {
+                const tab = prev.find(t => t.id === id);
+                if (tab) {
+                    tab.panes.forEach(p => {
+                        engineMapRef.current.get(p.id)?.destroy();
+                        engineMapRef.current.delete(p.id);
+                    });
+                }
+                const next = prev.filter(t => t.id !== id);
                 if (next.length === 0) {
                     setInitialized(false);
-                    setCollapsed(true);
+                    updateCollapsed(true);
                     return [];
                 }
-                return next;
-            }
-
-            const next = prev.map(t => ({ ...t, panes: t.panes.map(p => ({ ...p })) }));
-            const updatedTab = next.find(t => t.id === tabId)!;
-            const idx = updatedTab.panes.findIndex(p => p.id === paneId);
-            if (idx === -1) return prev;
-
-            updatedTab.panes.splice(idx, 1);
-            const totalRemaining = updatedTab.panes.reduce((s, p) => s + p.widthPercent, 0);
-            if (totalRemaining > 0) {
-                updatedTab.panes.forEach(p => { p.widthPercent = (p.widthPercent / totalRemaining) * 100; });
-            }
-            normalizePanes(updatedTab.panes);
-
-            setActivePaneId(curr => {
-                if (curr === paneId) {
-                    const newIdx = Math.min(idx, updatedTab.panes.length - 1);
-                    return updatedTab.panes[newIdx].id;
+                if (activeTabIdRef.current === id) {
+                    const oldIdx = prev.findIndex(t => t.id === id);
+                    const newIdx = Math.min(oldIdx, next.length - 1);
+                    updateActiveTabId(next[newIdx].id);
                 }
-                return curr;
+                return next;
             });
-            return next;
-        });
-    }, []);
+            props.onTabClosed?.({ tabId: id });
+        }, [updateCollapsed, updateActiveTabId, props.onTabClosed]);
 
-    /* ─── Rename ─────────────────────────────────────────── */
-
-    const startRename = useCallback((tabId: number) => {
-        setTabs(prev => prev.map(t => ({ ...t, isEditing: t.id === tabId })));
-    }, []);
-
-    const commitRename = useCallback((tabId: number, value: string) => {
-        const trimmed = value.trim();
-        setTabs(prev => prev.map(t =>
-            t.id === tabId ? { ...t, title: trimmed || t.title, isEditing: false } : t,
-        ));
-    }, []);
-
-    /* ─── Context menu ───────────────────────────────────── */
-
-    const closeContextMenu = useCallback(() => {
-        setContextMenu(prev => ({ ...prev, visible: false }));
-    }, []);
-
-    useEffect(() => {
-        if (!contextMenu.visible) return;
-        const handler = () => closeContextMenu();
-        document.addEventListener('click', handler);
-        return () => document.removeEventListener('click', handler);
-    }, [contextMenu.visible, closeContextMenu]);
-
-    /* ─── Panel resize ───────────────────────────────────── */
-
-    const onPanelResizeStart = useCallback((e: React.MouseEvent) => {
-        if (!resizable) return;
-        e.preventDefault();
-        if (collapsed) {
-            toggle();
-        }
-        setPanelResizing(true);
-        panelResizeRef.current = {
-            startY: e.clientY,
-            startHeight: panelHeight,
-            startX: e.clientX,
-            startWidth: panelWidth,
-        };
-    }, [collapsed, toggle, panelHeight, panelWidth, resizable]);
-
-    useEffect(() => {
-        if (!panelResizing) return;
-        const onMove = (e: MouseEvent) => {
-            if (isHorizontal) {
-                const deltaX = position === 'left'
-                    ? e.clientX - panelResizeRef.current.startX
-                    : panelResizeRef.current.startX - e.clientX;
-                let next = Math.max(100, panelResizeRef.current.startWidth + deltaX);
-                if (next > window.innerWidth) next = window.innerWidth;
-                setPanelWidth(next);
-            } else {
-                const deltaY = position === 'top'
-                    ? e.clientY - panelResizeRef.current.startY
-                    : panelResizeRef.current.startY - e.clientY;
-                let next = Math.max(100, panelResizeRef.current.startHeight + deltaY);
-                if (next > window.innerHeight) next = window.innerHeight;
-                setPanelHeight(next);
-            }
-        };
-        const onUp = () => setPanelResizing(false);
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
-        return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
-    }, [panelResizing, isHorizontal, position]);
-
-    /* ─── Pane resize ────────────────────────────────────── */
-
-    const onPaneResizeStart = useCallback((e: React.MouseEvent, tabId: number, dividerIndex: number) => {
-        e.preventDefault();
-        const tab = tabs.find(t => t.id === tabId);
-        if (!tab) return;
-        setPaneResizing(true);
-        const container = (e.target as HTMLElement).closest('.cli-panel-panes-container');
-        paneResizeRef.current = {
-            tabId,
-            dividerIndex,
-            startX: e.clientX,
-            startWidths: tab.panes.map(p => p.widthPercent),
-            containerWidth: container ? container.clientWidth : 1,
-        };
-    }, [tabs]);
-
-    useEffect(() => {
-        if (!paneResizing) return;
-        const onMove = (e: MouseEvent) => {
-            const ref = paneResizeRef.current;
-            const deltaX = e.clientX - ref.startX;
-            const deltaPct = (deltaX / ref.containerWidth) * 100;
-            const i = ref.dividerIndex;
-
-            let leftWidth = ref.startWidths[i] + deltaPct;
-            let rightWidth = ref.startWidths[i + 1] - deltaPct;
-
-            if (leftWidth < MIN_PANE_WIDTH_PERCENT) {
-                leftWidth = MIN_PANE_WIDTH_PERCENT;
-                rightWidth = ref.startWidths[i] + ref.startWidths[i + 1] - MIN_PANE_WIDTH_PERCENT;
-            }
-            if (rightWidth < MIN_PANE_WIDTH_PERCENT) {
-                rightWidth = MIN_PANE_WIDTH_PERCENT;
-                leftWidth = ref.startWidths[i] + ref.startWidths[i + 1] - MIN_PANE_WIDTH_PERCENT;
-            }
-
+        const selectTab = useCallback((id: number) => {
+            updateActiveTabId(id);
             setTabs(prev => {
-                const next = prev.map(t => ({ ...t, panes: t.panes.map(p => ({ ...p })) }));
-                const tab = next.find(t => t.id === ref.tabId);
-                if (tab) {
-                    tab.panes[i].widthPercent = leftWidth;
-                    tab.panes[i + 1].widthPercent = rightWidth;
+                const tab = prev.find(t => t.id === id);
+                if (tab && tab.panes.length > 0) {
+                    setActivePaneId(tab.panes[0].id);
                 }
-                return next;
+                return prev;
             });
-        };
-        const onUp = () => {
-            setPaneResizing(false);
-            document.body.classList.remove('cli-pane-resizing');
-        };
-        document.body.classList.add('cli-pane-resizing');
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
-        return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
-    }, [paneResizing]);
+        }, [updateActiveTabId]);
 
-    /* ─── Theme sync ──────────────────────────────────────── */
+        /* ─── Rename ─────────────────────────────────────── */
 
-    useEffect(() => {
-        if (!syncTheme || !initialized) return;
+        const renameTab = useCallback((tabId: number, title: string) => {
+            setTabs(prev => prev.map(t => (t.id === tabId ? { ...t, title } : t)));
+        }, []);
 
-        const syncFromEngine = () => {
-            const engine = engineMapRef.current.values().next().value;
-            if (!engine) return;
-            const theme = engine.getTerminal().options.theme;
-            if (theme) setThemeStyles(derivePanelThemeStyles(theme));
-        };
+        const startRename = useCallback((tabId: number) => {
+            setTabs(prev => prev.map(t => ({ ...t, isEditing: t.id === tabId })));
+        }, []);
 
-        // Initial sync after terminals render
-        const timer = setTimeout(() => {
-            syncFromEngine();
+        const commitRename = useCallback((tabId: number, value: string) => {
+            const trimmed = value.trim();
+            setTabs(prev => prev.map(t =>
+                t.id === tabId ? { ...t, title: trimmed || t.title, isEditing: false } : t,
+            ));
+        }, []);
 
-            const container = wrapperRef.current?.querySelector('.terminal-container');
-            if (!container) return;
+        /* ─── Split / close pane ─────────────────────────── */
 
-            const observer = new MutationObserver(syncFromEngine);
-            observer.observe(container, { attributes: true, attributeFilter: ['style'] });
+        const splitPane = useCallback((tabId?: number): number => {
+            const targetTabId = tabId ?? activeTabIdRef.current;
+            const paneId = nextIdRef.current.pane++;
+            setTabs(prev => prev.map(t => {
+                if (t.id !== targetTabId) return t;
+                const newPanes = [...t.panes.map(p => ({ ...p })), { id: paneId, widthPercent: 0 }];
+                normalizePanes(newPanes);
+                return { ...t, panes: newPanes };
+            }));
+            setActivePaneId(paneId);
+            props.onPaneSplit?.({ paneId, tabId: targetTabId });
+            return paneId;
+        }, [normalizePanes, props.onPaneSplit]);
 
-            return () => observer.disconnect();
-        }, 200);
+        const closePane = useCallback((paneId: number) => {
+            setTabs(prev => {
+                for (let i = 0; i < prev.length; i++) {
+                    const tab = prev[i];
+                    const idx = tab.panes.findIndex(p => p.id === paneId);
+                    if (idx === -1) continue;
 
-        return () => clearTimeout(timer);
-    }, [syncTheme, initialized]);
+                    if (tab.panes.length <= 1) {
+                        setTimeout(() => closeTab(tab.id), 0);
+                        return prev;
+                    }
 
-    /* ─── Maximize ───────────────────────────────────────── */
+                    const newPanes = tab.panes.filter(p => p.id !== paneId);
+                    normalizePanes(newPanes);
+                    const newTabs = [...prev];
+                    newTabs[i] = { ...tab, panes: newPanes };
 
-    const toggleMaximize = useCallback(() => {
-        setMaximized(prev => {
-            if (!prev) {
+                    engineMapRef.current.get(paneId)?.destroy();
+                    engineMapRef.current.delete(paneId);
+
+                    if (activePaneIdRef.current === paneId) {
+                        setActivePaneId(newPanes[Math.min(idx, newPanes.length - 1)].id);
+                    }
+
+                    props.onPaneClosed?.({ paneId });
+                    return newTabs;
+                }
+                return prev;
+            });
+        }, [closeTab, normalizePanes, props.onPaneClosed]);
+
+        /* ─── Context menu ───────────────────────────────── */
+
+        const closeContextMenu = useCallback(() => {
+            setContextMenu(prev => ({ ...prev, visible: false }));
+        }, []);
+
+        useEffect(() => {
+            if (!contextMenu.visible) return;
+            const handler = () => closeContextMenu();
+            document.addEventListener('click', handler);
+            return () => document.removeEventListener('click', handler);
+        }, [contextMenu.visible, closeContextMenu]);
+
+        /* ─── Panel resize ───────────────────────────────── */
+
+        const onPanelResizeStart = useCallback((e: React.MouseEvent) => {
+            if (!resizable) return;
+            e.preventDefault();
+            if (collapsed) {
+                toggle();
+            }
+            setPanelResizing(true);
+            panelResizeRef.current = {
+                startY: e.clientY,
+                startHeight: panelHeight,
+                startX: e.clientX,
+                startWidth: panelWidth,
+            };
+        }, [collapsed, toggle, panelHeight, panelWidth, resizable]);
+
+        useEffect(() => {
+            if (!panelResizing) return;
+            const onMove = (e: MouseEvent) => {
+                if (isHorizontal) {
+                    const deltaX = position === 'left'
+                        ? e.clientX - panelResizeRef.current.startX
+                        : panelResizeRef.current.startX - e.clientX;
+                    let next = Math.max(100, panelResizeRef.current.startWidth + deltaX);
+                    if (next > window.innerWidth) next = window.innerWidth;
+                    updateWidth(next);
+                } else {
+                    const deltaY = position === 'top'
+                        ? e.clientY - panelResizeRef.current.startY
+                        : panelResizeRef.current.startY - e.clientY;
+                    let next = Math.max(100, panelResizeRef.current.startHeight + deltaY);
+                    if (next > window.innerHeight) next = window.innerHeight;
+                    updateHeight(next);
+                }
+            };
+            const onUp = () => setPanelResizing(false);
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+            return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+        }, [panelResizing, isHorizontal, position, updateWidth, updateHeight]);
+
+        /* ─── Pane resize ────────────────────────────────── */
+
+        const onPaneResizeStart = useCallback((e: React.MouseEvent, tabId: number, dividerIndex: number) => {
+            e.preventDefault();
+            const tab = tabs.find(t => t.id === tabId);
+            if (!tab) return;
+            setPaneResizing(true);
+            const container = (e.target as HTMLElement).closest('.cli-panel-panes-container');
+            paneResizeRef.current = {
+                tabId,
+                dividerIndex,
+                startX: e.clientX,
+                startWidths: tab.panes.map(p => p.widthPercent),
+                containerWidth: container ? container.clientWidth : 1,
+            };
+        }, [tabs]);
+
+        useEffect(() => {
+            if (!paneResizing) return;
+            const onMove = (e: MouseEvent) => {
+                const ref = paneResizeRef.current;
+                const deltaX = e.clientX - ref.startX;
+                const deltaPct = (deltaX / ref.containerWidth) * 100;
+                const i = ref.dividerIndex;
+
+                let leftWidth = ref.startWidths[i] + deltaPct;
+                let rightWidth = ref.startWidths[i + 1] - deltaPct;
+
+                if (leftWidth < MIN_PANE_WIDTH_PERCENT) {
+                    leftWidth = MIN_PANE_WIDTH_PERCENT;
+                    rightWidth = ref.startWidths[i] + ref.startWidths[i + 1] - MIN_PANE_WIDTH_PERCENT;
+                }
+                if (rightWidth < MIN_PANE_WIDTH_PERCENT) {
+                    rightWidth = MIN_PANE_WIDTH_PERCENT;
+                    leftWidth = ref.startWidths[i] + ref.startWidths[i + 1] - MIN_PANE_WIDTH_PERCENT;
+                }
+
+                setTabs(prev => {
+                    const next = prev.map(t => ({ ...t, panes: t.panes.map(p => ({ ...p })) }));
+                    const tab = next.find(t => t.id === ref.tabId);
+                    if (tab) {
+                        tab.panes[i].widthPercent = leftWidth;
+                        tab.panes[i + 1].widthPercent = rightWidth;
+                    }
+                    return next;
+                });
+            };
+            const onUp = () => {
+                setPaneResizing(false);
+                document.body.classList.remove('cli-pane-resizing');
+            };
+            document.body.classList.add('cli-pane-resizing');
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+            return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+        }, [paneResizing]);
+
+        /* ─── Theme sync ──────────────────────────────────── */
+
+        useEffect(() => {
+            if (!syncTheme || !initialized) return;
+
+            const syncFromEngine = () => {
+                const engine = engineMapRef.current.values().next().value;
+                if (!engine) return;
+                const theme = engine.getTerminal().options.theme;
+                if (theme) setThemeStyles(derivePanelThemeStyles(theme));
+            };
+
+            // Initial sync after terminals render
+            const timer = setTimeout(() => {
+                syncFromEngine();
+
+                const container = wrapperRef.current?.querySelector('.terminal-container');
+                if (!container) return;
+
+                const observer = new MutationObserver(syncFromEngine);
+                observer.observe(container, { attributes: true, attributeFilter: ['style'] });
+
+                return () => observer.disconnect();
+            }, 200);
+
+            return () => clearTimeout(timer);
+        }, [syncTheme, initialized]);
+
+        /* ─── Maximize ───────────────────────────────────── */
+
+        const toggleMaximize = useCallback(() => {
+            const nextMaximized = !maximized;
+            if (nextMaximized) {
                 if (isHorizontal) {
                     prevWidthRef.current = panelWidth;
-                    setPanelWidth(window.innerWidth);
+                    updateWidth(window.innerWidth);
                 } else {
                     prevHeightRef.current = panelHeight;
-                    setPanelHeight(window.innerHeight);
+                    updateHeight(window.innerHeight);
                 }
             } else {
                 if (isHorizontal) {
-                    setPanelWidth(prevWidthRef.current);
+                    updateWidth(prevWidthRef.current);
                 } else {
-                    setPanelHeight(prevHeightRef.current);
+                    updateHeight(prevHeightRef.current);
                 }
             }
-            return !prev;
-        });
-    }, [panelHeight, panelWidth, isHorizontal]);
+            updateMaximized(nextMaximized);
+        }, [maximized, panelHeight, panelWidth, isHorizontal, updateMaximized, updateWidth, updateHeight]);
 
-    /* ─── Close handler ──────────────────────────────────── */
+        /* ─── Close handler ──────────────────────────────── */
 
-    const handleClose = useCallback(() => {
-        setVisible(false);
-        onClose?.();
-    }, [onClose]);
+        const handleClose = useCallback(() => {
+            setVisible(false);
+            onClose?.();
+        }, [onClose]);
 
-    const handleHide = useCallback(() => {
-        preHideCollapsedRef.current = collapsed;
-        setHidden(true);
-    }, [collapsed]);
+        const handleHide = useCallback(() => {
+            preHideCollapsedRef.current = collapsed;
+            updateHidden(true);
+        }, [collapsed, updateHidden]);
 
-    const handleUnhide = useCallback(() => {
-        setHidden(false);
-        setCollapsed(preHideCollapsedRef.current);
-    }, []);
+        const handleUnhide = useCallback(() => {
+            updateHidden(false);
+            updateCollapsed(preHideCollapsedRef.current);
+        }, [updateHidden, updateCollapsed]);
 
-    const [positionDropdownOpen, setPositionDropdownOpen] = useState(false);
+        const [positionDropdownOpen, setPositionDropdownOpen] = useState(false);
 
-    const closePositionDropdown = useCallback(() => setPositionDropdownOpen(false), []);
+        const closePositionDropdown = useCallback(() => setPositionDropdownOpen(false), []);
 
-    useEffect(() => {
-        if (!positionDropdownOpen) return;
-        document.addEventListener('click', closePositionDropdown);
-        return () => document.removeEventListener('click', closePositionDropdown);
-    }, [positionDropdownOpen, closePositionDropdown]);
+        useEffect(() => {
+            if (!positionDropdownOpen) return;
+            document.addEventListener('click', closePositionDropdown);
+            return () => document.removeEventListener('click', closePositionDropdown);
+        }, [positionDropdownOpen, closePositionDropdown]);
 
-    const handlePositionButtonClick = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        setPositionDropdownOpen(prev => !prev);
-    }, []);
+        const handlePositionButtonClick = useCallback((e: React.MouseEvent) => {
+            e.stopPropagation();
+            setPositionDropdownOpen(prev => !prev);
+        }, []);
 
-    const selectPosition = useCallback((pos: CliPanelPosition) => {
-        setPositionDropdownOpen(false);
-        setPosition(pos);
-        savePanelPosition(pos);
-    }, []);
+        const selectPosition = useCallback((pos: CliPanelPosition) => {
+            setPositionDropdownOpen(false);
+            updatePosition(pos);
+        }, [updatePosition]);
 
-    /* ─── Render ─────────────────────────────────────────── */
+        /* ─── Engine / state accessors ───────────────────── */
 
-    if (!visible) return null;
+        const getEngine = useCallback((paneId?: number): CliEngine | undefined => {
+            const targetId = paneId ?? activePaneIdRef.current;
+            return engineMapRef.current.get(targetId);
+        }, []);
 
-    const wrapperStyle: React.CSSProperties = {
-        ...(isHorizontal ? { width: `${panelWidth}px` } : { height: `${panelHeight}px` }),
-        ...(hidden ? { display: 'none' } : {}),
-        ...themeStyles,
-        ...style,
-    } as React.CSSProperties;
+        const getState = useCallback((): CliPanelState => ({
+            collapsed, hidden, maximized, position,
+            height: panelHeight, width: panelWidth,
+            activeTabId, activePaneId,
+            tabs: tabs.map(t => ({
+                id: t.id, title: t.title,
+                panes: t.panes.map(p => ({ id: p.id, widthPercent: p.widthPercent })),
+            })),
+        }), [collapsed, hidden, maximized, position, panelHeight, panelWidth, activeTabId, activePaneId, tabs]);
 
-    return (
-        <>
-            {/* Hide tab (shown when panel is hidden) */}
-            {hidden && (
-                <button
-                    className="cli-panel-hide-tab"
+        /* ─── Imperative handle ──────────────────────────── */
+
+        React.useImperativeHandle(ref, () => ({
+            open: () => {
+                if (collapsed) {
+                    updateCollapsed(false);
+                    if (!initialized) { setInitialized(true); addTab(); }
+                }
+            },
+            collapse: () => { if (!collapsed) updateCollapsed(true); },
+            toggleCollapse: () => {
+                if (collapsed) {
+                    updateCollapsed(false);
+                    if (!initialized) { setInitialized(true); addTab(); }
+                } else { updateCollapsed(true); }
+            },
+            hide: () => { if (!hidden) updateHidden(true); },
+            unhide: () => { if (hidden) updateHidden(false); },
+            toggleHide: () => { updateHidden(!hidden); },
+            close: handleClose,
+            maximize: () => { if (!maximized) updateMaximized(true); },
+            restore: () => { if (maximized) updateMaximized(false); },
+            toggleMaximize: () => { updateMaximized(!maximized); },
+            resize: (dims) => {
+                if (dims.height !== undefined) updateHeight(dims.height);
+                if (dims.width !== undefined) updateWidth(dims.width);
+            },
+            setPosition: updatePosition,
+            addTab, closeTab, selectTab, renameTab, splitPane, closePane, getEngine, getState,
+        }), [collapsed, hidden, maximized, initialized, updateCollapsed, updateHidden, updateMaximized,
+            updateHeight, updateWidth, updatePosition, handleClose, addTab, closeTab, selectTab,
+            renameTab, splitPane, closePane, getEngine, getState]);
+
+        /* ─── Render ─────────────────────────────────────── */
+
+        if (!visible) return null;
+
+        const wrapperStyle: React.CSSProperties = {
+            ...(isHorizontal ? { width: `${panelWidth}px` } : { height: `${panelHeight}px` }),
+            ...(hidden ? { display: 'none' } : {}),
+            ...themeStyles,
+            ...style,
+        } as React.CSSProperties;
+
+        return (
+            <>
+                {/* Hide tab (shown when panel is hidden) */}
+                {hidden && (
+                    <button
+                        className="cli-panel-hide-tab"
+                        data-position={position}
+                        data-hide-align={hideAlignment}
+                        style={themeStyles as React.CSSProperties}
+                        title="Show CLI"
+                        onClick={handleUnhide}
+                    >
+                        <svg className="cli-panel-hide-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="4 17 10 11 4 5" />
+                            <line x1="12" y1="19" x2="20" y2="19" />
+                        </svg>
+                        <span className="cli-panel-hide-tab-label">CLI</span>
+                        <HideTabChevron position={position} />
+                    </button>
+                )}
+                <div
+                    ref={wrapperRef}
+                    className={`cli-panel-wrapper ${collapsed ? 'collapsed' : ''} ${maximized ? 'maximized' : ''} ${panelResizing ? 'resizing' : ''} ${className ?? ''}`}
+                    style={wrapperStyle}
                     data-position={position}
-                    data-hide-align={hideAlignment}
-                    style={themeStyles as React.CSSProperties}
-                    title="Show CLI"
-                    onClick={handleUnhide}
+                    data-resizable={String(resizable)}
+                    data-closable={String(closable)}
+                    data-hideable={String(hideable)}
                 >
-                    <svg className="cli-panel-hide-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="4 17 10 11 4 5" />
-                        <line x1="12" y1="19" x2="20" y2="19" />
-                    </svg>
-                    <span className="cli-panel-hide-tab-label">CLI</span>
-                    <HideTabChevron position={position} />
-                </button>
-            )}
-            <div
-                ref={wrapperRef}
-                className={`cli-panel-wrapper ${collapsed ? 'collapsed' : ''} ${maximized ? 'maximized' : ''} ${panelResizing ? 'resizing' : ''} ${className ?? ''}`}
-                style={wrapperStyle}
-                data-position={position}
-                data-resizable={String(resizable)}
-                data-closable={String(closable)}
-                data-hideable={String(hideable)}
-            >
-                {/* Header */}
-                <div className="cli-panel-header">
-                    <div className="cli-panel-resize-bar" onMouseDown={onPanelResizeStart}>
-                        <div className="cli-panel-resize-grip" />
-                    </div>
-                    <div className="cli-panel-header-content">
-                        <p className="cli-panel-title">
-                            <span className="cli-panel-title-icon"><TerminalIcon /></span>
-                            CLI
-                        </p>
-                        <div className="cli-panel-action-buttons">
-                            <div className="cli-panel-btn-position-wrapper" onClick={e => e.stopPropagation()}>
-                                <button className="cli-panel-btn cli-panel-btn-position" title="Move panel" onClick={handlePositionButtonClick}>
-                                    <PositionIcon position={position} />
+                    {/* Header */}
+                    <div className="cli-panel-header">
+                        <div className="cli-panel-resize-bar" onMouseDown={onPanelResizeStart}>
+                            <div className="cli-panel-resize-grip" />
+                        </div>
+                        <div className="cli-panel-header-content">
+                            <p className="cli-panel-title">
+                                <span className="cli-panel-title-icon"><TerminalIcon /></span>
+                                CLI
+                            </p>
+                            <div className="cli-panel-action-buttons">
+                                <div className="cli-panel-btn-position-wrapper" onClick={e => e.stopPropagation()}>
+                                    <button className="cli-panel-btn cli-panel-btn-position" title="Move panel" onClick={handlePositionButtonClick}>
+                                        <PositionIcon position={position} />
+                                    </button>
+                                    {positionDropdownOpen && (
+                                        <div className="cli-panel-position-dropdown">
+                                            {(['bottom', 'top', 'left', 'right'] as CliPanelPosition[]).map(pos => (
+                                                <button
+                                                    key={pos}
+                                                    className={`cli-panel-position-dropdown-item${position === pos ? ' active' : ''}`}
+                                                    onClick={() => selectPosition(pos)}
+                                                >
+                                                    <PositionIcon position={pos} size={16} />
+                                                    {pos.charAt(0).toUpperCase() + pos.slice(1)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                {hideable && (
+                                    <button className="cli-panel-btn cli-panel-btn-hide" title="Hide" onClick={handleHide}>
+                                        <HideIcon />
+                                    </button>
+                                )}
+                                <button className="cli-panel-btn" title={maximized ? 'Restore' : 'Maximize'} disabled={collapsed} onClick={toggleMaximize}>
+                                    {maximized ? <RestoreIcon /> : <MaximizeIcon />}
                                 </button>
-                                {positionDropdownOpen && (
-                                    <div className="cli-panel-position-dropdown">
-                                        {(['bottom', 'top', 'left', 'right'] as CliPanelPosition[]).map(pos => (
-                                            <button
-                                                key={pos}
-                                                className={`cli-panel-position-dropdown-item${position === pos ? ' active' : ''}`}
-                                                onClick={() => selectPosition(pos)}
-                                            >
-                                                <PositionIcon position={pos} size={16} />
-                                                {pos.charAt(0).toUpperCase() + pos.slice(1)}
-                                            </button>
-                                        ))}
-                                    </div>
+                                <button className="cli-panel-btn" title={collapsed ? 'Expand' : 'Collapse'} onClick={toggle}>
+                                    <CollapseChevron position={position} isCollapsed={collapsed} />
+                                </button>
+                                {closable && (
+                                    <button className="cli-panel-btn cli-panel-btn-close" title="Close" onClick={handleClose}>
+                                        <CloseIcon />
+                                    </button>
                                 )}
                             </div>
-                            {hideable && (
-                                <button className="cli-panel-btn cli-panel-btn-hide" title="Hide" onClick={handleHide}>
-                                    <HideIcon />
-                                </button>
-                            )}
-                            <button className="cli-panel-btn" title={maximized ? 'Restore' : 'Maximize'} disabled={collapsed} onClick={toggleMaximize}>
-                                {maximized ? <RestoreIcon /> : <MaximizeIcon />}
-                            </button>
-                            <button className="cli-panel-btn" title={collapsed ? 'Expand' : 'Collapse'} onClick={toggle}>
-                                <CollapseChevron position={position} isCollapsed={collapsed} />
-                            </button>
-                            {closable && (
-                                <button className="cli-panel-btn cli-panel-btn-close" title="Close" onClick={handleClose}>
-                                    <CloseIcon />
-                                </button>
-                            )}
                         </div>
                     </div>
+
+                    {/* Content (kept in DOM to preserve terminal state) */}
+                    {initialized && (
+                        <div className="cli-panel-content" style={collapsed ? { display: 'none' } : undefined}>
+                            {/* Tab bar */}
+                            <div className="cli-panel-tabs">
+                                <ul className="cli-panel-tab-list">
+                                    {tabs.map(tab => (
+                                        <li
+                                            key={tab.id}
+                                            className={`cli-panel-tab ${tab.id === activeTabId ? 'active' : ''}`}
+                                            onClick={() => selectTab(tab.id)}
+                                            onDoubleClick={() => startRename(tab.id)}
+                                            onContextMenu={e => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setContextMenu({ visible: true, x: e.clientX, y: e.clientY, tabId: tab.id });
+                                            }}
+                                        >
+                                            {tab.isEditing ? (
+                                                <input
+                                                    className="cli-panel-tab-rename-input"
+                                                    type="text"
+                                                    defaultValue={tab.title}
+                                                    autoFocus
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter') commitRename(tab.id, (e.target as HTMLInputElement).value);
+                                                        else if (e.key === 'Escape') setTabs(prev => prev.map(t => ({ ...t, isEditing: false })));
+                                                    }}
+                                                    onBlur={e => commitRename(tab.id, e.target.value)}
+                                                    onClick={e => e.stopPropagation()}
+                                                    onDoubleClick={e => e.stopPropagation()}
+                                                />
+                                            ) : (
+                                                <>
+                                                    <span className="cli-panel-tab-title">{tab.title}</span>
+                                                    <button
+                                                        className="cli-panel-tab-close-btn"
+                                                        title="Close tab"
+                                                        onClick={e => { e.stopPropagation(); closeTab(tab.id); }}
+                                                    >&times;</button>
+                                                </>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button className="cli-panel-add-tab" title="New terminal" onClick={() => addTab()}>+</button>
+                            </div>
+
+                            {/* Terminal instances */}
+                            <div className="cli-panel-instances">
+                                {tabs.map(tab => (
+                                    <div key={tab.id} className="cli-panel-instance" style={{ display: tab.id === activeTabId ? undefined : 'none' }}>
+                                        <div className={`cli-panel-panes-container ${paneResizing ? 'resizing' : ''}`}>
+                                            {tab.panes.map((pane, i) => (
+                                                <React.Fragment key={pane.id}>
+                                                    {i > 0 && (
+                                                        <div className="cli-panel-pane-divider" onMouseDown={e => onPaneResizeStart(e, tab.id, i - 1)}>
+                                                            <div className="cli-panel-pane-divider-grip" />
+                                                        </div>
+                                                    )}
+                                                    <div
+                                                        className={`cli-panel-pane ${pane.id === activePaneId && tab.id === activeTabId ? 'active-pane' : ''}`}
+                                                        style={{ flex: `${pane.widthPercent} 1 0` }}
+                                                        onClick={() => { setActivePaneId(pane.id); updateActiveTabId(tab.id); }}
+                                                    >
+                                                        {tab.panes.length > 1 && (
+                                                            <button
+                                                                className="cli-panel-pane-close-btn"
+                                                                onClick={e => { e.stopPropagation(); closePane(pane.id); }}
+                                                                title="Close pane"
+                                                            >&times;</button>
+                                                        )}
+                                                        <CliContext.Provider value={{ engine: null }}>
+                                                            <Cli
+                                                                options={options}
+                                                                modules={modules}
+                                                                processors={processors}
+                                                                services={services}
+                                                                snapshot={pane.snapshot}
+                                                                onReady={(engine) => engineMapRef.current.set(pane.id, engine)}
+                                                            />
+                                                        </CliContext.Provider>
+                                                    </div>
+                                                </React.Fragment>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {/* Content (kept in DOM to preserve terminal state) */}
-                {initialized && (
-                    <div className="cli-panel-content" style={collapsed ? { display: 'none' } : undefined}>
-                        {/* Tab bar */}
-                        <div className="cli-panel-tabs">
-                            <ul className="cli-panel-tab-list">
-                                {tabs.map(tab => (
-                                    <li
-                                        key={tab.id}
-                                        className={`cli-panel-tab ${tab.id === activeTabId ? 'active' : ''}`}
-                                        onClick={() => selectTab(tab.id)}
-                                        onDoubleClick={() => startRename(tab.id)}
-                                        onContextMenu={e => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            setContextMenu({ visible: true, x: e.clientX, y: e.clientY, tabId: tab.id });
-                                        }}
-                                    >
-                                        {tab.isEditing ? (
-                                            <input
-                                                className="cli-panel-tab-rename-input"
-                                                type="text"
-                                                defaultValue={tab.title}
-                                                autoFocus
-                                                onKeyDown={e => {
-                                                    if (e.key === 'Enter') commitRename(tab.id, (e.target as HTMLInputElement).value);
-                                                    else if (e.key === 'Escape') setTabs(prev => prev.map(t => ({ ...t, isEditing: false })));
-                                                }}
-                                                onBlur={e => commitRename(tab.id, e.target.value)}
-                                                onClick={e => e.stopPropagation()}
-                                                onDoubleClick={e => e.stopPropagation()}
-                                            />
-                                        ) : (
-                                            <>
-                                                <span className="cli-panel-tab-title">{tab.title}</span>
-                                                <button
-                                                    className="cli-panel-tab-close-btn"
-                                                    title="Close tab"
-                                                    onClick={e => { e.stopPropagation(); closeTab(tab.id); }}
-                                                >&times;</button>
-                                            </>
-                                        )}
-                                    </li>
-                                ))}
-                            </ul>
-                            <button className="cli-panel-add-tab" title="New terminal" onClick={addTab}>+</button>
-                        </div>
+                {/* Context menu */}
+                {contextMenu.visible && (
+                    <div
+                        className="cli-panel-context-menu"
+                        style={{ left: contextMenu.x, top: contextMenu.y }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button className="cli-panel-context-menu-item" onClick={() => { closeContextMenu(); startRename(contextMenu.tabId); }}>Rename</button>
+                        <button className="cli-panel-context-menu-item" onClick={() => {
+                            closeContextMenu();
+                            const tab = tabs.find(t => t.id === contextMenu.tabId);
+                            if (!tab) return;
 
-                        {/* Terminal instances */}
-                        <div className="cli-panel-instances">
-                            {tabs.map(tab => (
-                                <div key={tab.id} className="cli-panel-instance" style={{ display: tab.id === activeTabId ? undefined : 'none' }}>
-                                    <div className={`cli-panel-panes-container ${paneResizing ? 'resizing' : ''}`}>
-                                        {tab.panes.map((pane, i) => (
-                                            <React.Fragment key={pane.id}>
-                                                {i > 0 && (
-                                                    <div className="cli-panel-pane-divider" onMouseDown={e => onPaneResizeStart(e, tab.id, i - 1)}>
-                                                        <div className="cli-panel-pane-divider-grip" />
-                                                    </div>
-                                                )}
-                                                <div
-                                                    className={`cli-panel-pane ${pane.id === activePaneId && tab.id === activeTabId ? 'active-pane' : ''}`}
-                                                    style={{ flex: `${pane.widthPercent} 1 0` }}
-                                                    onClick={() => { setActivePaneId(pane.id); setActiveTabId(tab.id); }}
-                                                >
-                                                    {tab.panes.length > 1 && (
-                                                        <button
-                                                            className="cli-panel-pane-close-btn"
-                                                            onClick={e => { e.stopPropagation(); closePane(tab.id, pane.id); }}
-                                                            title="Close pane"
-                                                        >&times;</button>
-                                                    )}
-                                                    <CliContext.Provider value={{ engine: null }}>
-                                                        <Cli
-                                                            options={options}
-                                                            modules={modules}
-                                                            processors={processors}
-                                                            services={services}
-                                                            snapshot={pane.snapshot}
-                                                            onReady={(engine) => engineMapRef.current.set(pane.id, engine)}
-                                                        />
-                                                    </CliContext.Provider>
-                                                </div>
-                                            </React.Fragment>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                            const sourceEngine = engineMapRef.current.get(tab.panes[0]?.id);
+                            const snapshot = sourceEngine?.snapshot();
+
+                            const paneId = nextIdRef.current.pane++;
+                            const tabId = nextIdRef.current.tab++;
+                            const pane: TerminalPane = { id: paneId, widthPercent: 100, snapshot };
+                            const newTab: TerminalTab = { id: tabId, title: `${tab.title} (copy)`, isEditing: false, panes: [pane] };
+                            const idx = tabs.indexOf(tab);
+                            setTabs(prev => { const next = [...prev]; next.splice(idx + 1, 0, newTab); return next; });
+                            updateActiveTabId(tabId);
+                            setActivePaneId(paneId);
+                            props.onTabAdded?.({ tabId });
+                        }}>Duplicate</button>
+                        <button className="cli-panel-context-menu-item" onClick={() => { closeContextMenu(); splitPane(contextMenu.tabId); }}>Split Right</button>
+                        <div className="cli-panel-context-menu-separator" />
+                        <button className="cli-panel-context-menu-item" onClick={() => { closeContextMenu(); closeTab(contextMenu.tabId); }}>Close</button>
+                        <button className="cli-panel-context-menu-item" disabled={tabs.length <= 1} onClick={() => { closeContextMenu(); setTabs(prev => prev.filter(t => t.id === contextMenu.tabId)); updateActiveTabId(contextMenu.tabId); }}>Close Others</button>
+                        <button className="cli-panel-context-menu-item" onClick={() => {
+                            const id = contextMenu.tabId;
+                            closeContextMenu();
+                            setTabs(prev => {
+                                const idx = prev.findIndex(t => t.id === id);
+                                if (idx === -1) return prev;
+                                return prev.slice(0, idx + 1);
+                            });
+                        }}>Close to the Right</button>
+                        <div className="cli-panel-context-menu-separator" />
+                        <button className="cli-panel-context-menu-item destructive" onClick={() => { closeContextMenu(); setTabs([]); setInitialized(false); updateCollapsed(true); }}>Close All</button>
                     </div>
                 )}
-            </div>
-
-            {/* Context menu */}
-            {contextMenu.visible && (
-                <div
-                    className="cli-panel-context-menu"
-                    style={{ left: contextMenu.x, top: contextMenu.y }}
-                    onClick={e => e.stopPropagation()}
-                >
-                    <button className="cli-panel-context-menu-item" onClick={() => { closeContextMenu(); startRename(contextMenu.tabId); }}>Rename</button>
-                    <button className="cli-panel-context-menu-item" onClick={() => {
-                        closeContextMenu();
-                        const tab = tabs.find(t => t.id === contextMenu.tabId);
-                        if (!tab) return;
-
-                        const sourceEngine = engineMapRef.current.get(tab.panes[0]?.id);
-                        const snapshot = sourceEngine?.snapshot();
-
-                        const paneId = nextIdRef.current.pane++;
-                        const tabId = nextIdRef.current.tab++;
-                        const pane: TerminalPane = { id: paneId, widthPercent: 100, snapshot };
-                        const newTab: TerminalTab = { id: tabId, title: `${tab.title} (copy)`, isEditing: false, panes: [pane] };
-                        const idx = tabs.indexOf(tab);
-                        setTabs(prev => { const next = [...prev]; next.splice(idx + 1, 0, newTab); return next; });
-                        setActiveTabId(tabId);
-                        setActivePaneId(paneId);
-                    }}>Duplicate</button>
-                    <button className="cli-panel-context-menu-item" onClick={() => { closeContextMenu(); splitRight(contextMenu.tabId); }}>Split Right</button>
-                    <div className="cli-panel-context-menu-separator" />
-                    <button className="cli-panel-context-menu-item" onClick={() => { closeContextMenu(); closeTab(contextMenu.tabId); }}>Close</button>
-                    <button className="cli-panel-context-menu-item" disabled={tabs.length <= 1} onClick={() => { closeContextMenu(); setTabs(prev => prev.filter(t => t.id === contextMenu.tabId)); setActiveTabId(contextMenu.tabId); }}>Close Others</button>
-                    <button className="cli-panel-context-menu-item" onClick={() => {
-                        const id = contextMenu.tabId;
-                        closeContextMenu();
-                        setTabs(prev => {
-                            const idx = prev.findIndex(t => t.id === id);
-                            if (idx === -1) return prev;
-                            return prev.slice(0, idx + 1);
-                        });
-                    }}>Close to the Right</button>
-                    <div className="cli-panel-context-menu-separator" />
-                    <button className="cli-panel-context-menu-item destructive" onClick={() => { closeContextMenu(); setTabs([]); setInitialized(false); setCollapsed(true); }}>Close All</button>
-                </div>
-            )}
-        </>
-    );
-}
+            </>
+        );
+    }
+);
