@@ -43,3 +43,5 @@ export * from './drag-drop';
 export * from './file-picker';
 
 export * from './syntax-highlighting';
+
+export * from './cli-panel-ref';
