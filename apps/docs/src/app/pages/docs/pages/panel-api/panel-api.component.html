@@ -469,3 +469,64 @@ const position = ref('bottom');
     [modules]="modules"
 &gt;&lt;/cli-panel&gt;</code></pre>
 </div>
+
+<!-- Status Bar -->
+<h2 id="status-bar">{{ 'docs.panel-api.status-bar' | translate }}</h2>
+<p>{{ 'docs.panel-api.status-bar-desc' | translate }}</p>
+
+<h3>{{ 'docs.panel-api.status-bar-indicators' | translate }}</h3>
+<table>
+    <thead>
+        <tr>
+            <th>{{ 'docs.panel-api.th-indicator' | translate }}</th>
+            <th>{{ 'docs.panel-api.th-description' | translate }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>{{ 'docs.panel-api.indicator-execution' | translate }}</strong></td>
+            <td>{{ 'docs.panel-api.indicator-execution-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td><strong>{{ 'docs.panel-api.indicator-services' | translate }}</strong></td>
+            <td>{{ 'docs.panel-api.indicator-services-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td><strong>{{ 'docs.panel-api.indicator-last-command' | translate }}</strong></td>
+            <td>{{ 'docs.panel-api.indicator-last-command-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td><strong>{{ 'docs.panel-api.indicator-servers' | translate }}</strong></td>
+            <td>{{ 'docs.panel-api.indicator-servers-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td><strong>{{ 'docs.panel-api.indicator-uptime' | translate }}</strong></td>
+            <td>{{ 'docs.panel-api.indicator-uptime-desc' | translate }}</td>
+        </tr>
+        <tr>
+            <td><strong>{{ 'docs.panel-api.indicator-status-text' | translate }}</strong></td>
+            <td>{{ 'docs.panel-api.indicator-status-text-desc' | translate }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>{{ 'docs.panel-api.status-bar-glow' | translate }}</h3>
+<p>{{ 'docs.panel-api.status-bar-glow-desc' | translate }}</p>
+
+<h3>{{ 'docs.panel-api.status-bar-tab-dots' | translate }}</h3>
+<p>{{ 'docs.panel-api.status-bar-tab-dots-desc' | translate }}</p>
+
+<h3>{{ 'docs.panel-api.status-bar-custom' | translate }}</h3>
+<p>{{ 'docs.panel-api.status-bar-custom-desc' | translate }}</p>
+
+<div class="code-block">
+    <span class="code-label">{{ 'docs.panel-api.status-bar-custom-example' | translate }}</span>
+    <pre><code>async processCommand(command, context) &#123;
+    context.setStatusText('downloading file...');
+    await this.download(command.args);
+    // Status text is cleared automatically when the command finishes
+&#125;</code></pre>
+</div>
+
+<h3>{{ 'docs.panel-api.status-bar-visibility' | translate }}</h3>
+<p>{{ 'docs.panel-api.status-bar-visibility-desc' | translate }}</p>
