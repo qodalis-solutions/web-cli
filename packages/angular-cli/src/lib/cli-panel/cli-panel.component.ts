@@ -26,7 +26,8 @@ import {
 import { CliEngine, CliEngineOptions } from '@qodalis/cli';
 import { CliComponent } from '../cli/cli.component';
 import { CollapsableContentComponent } from '../collapsable-content/collapsable-content.component';
-import { TabStatus } from './cli-panel-status.service';
+import { CliPanelStatusService, TabStatus, GlobalStatus } from './cli-panel-status.service';
+import { Subject, takeUntil } from 'rxjs';
 
 export interface TerminalPane {
     id: number;
@@ -128,6 +129,14 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
     private _internalWidth = 400;
     private nextTabId = 1;
     private nextPaneId = 1;
+    private statusService = new CliPanelStatusService();
+    private destroy$ = new Subject<void>();
+    globalStatus: GlobalStatus = {
+        runningServiceCount: 0,
+        totalServiceCount: 0,
+        serverConnectionState: 'none',
+        uptime: 0,
+    };
 
     protected get resolvedCollapsed(): boolean {
         return this.collapsed !== undefined ? this.collapsed : this._internalCollapsed;
@@ -183,10 +192,18 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
         if (this.options?.isCollapsed != null) {
             this._internalCollapsed = this.options.isCollapsed;
         }
+        this.statusService.getGlobalStatus$().pipe(
+            takeUntil(this.destroy$),
+        ).subscribe(status => {
+            this.globalStatus = status;
+        });
     }
 
     ngOnDestroy(): void {
         this.themeObserver?.disconnect();
+        this.statusService.destroy();
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     @HostListener('document:click', ['$event'])
@@ -239,6 +256,7 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
         this._internalActiveTabId = tabId;
         this.activeTabIdChange.emit(tabId);
         this.activePaneId = pane.id;
+        this.statusService.setActiveTab(tabId);
         this.onTabAdded.emit({ tabId });
         return tabId;
     }
@@ -249,6 +267,8 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
 
         this.tabs.splice(index, 1);
         this.onTabClosed.emit({ tabId: id });
+        this.statusService.unregisterTab(id);
+        delete this.tabStatuses[id];
 
         if (this.tabs.length === 0) {
             this.initialized = false;
@@ -265,6 +285,7 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
     selectTab(id: number): void {
         this._internalActiveTabId = id;
         this.activeTabIdChange.emit(id);
+        this.statusService.setActiveTab(id);
         const tab = this.findTab(id);
         if (tab && tab.panes.length > 0) {
             this.activePaneId = tab.panes[0].id;
@@ -285,6 +306,15 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
         if (status.lastCommandStatus === 'error') return 'dot-error';
         if (status.lastCommandStatus === 'success') return 'dot-idle';
         return 'dot-neutral';
+    }
+
+    onPaneEngineReady(tabId: number, paneId: number, engine: CliEngine): void {
+        this.statusService.registerEngine(tabId, paneId, engine);
+        this.statusService.getTabStatus$(tabId).pipe(
+            takeUntil(this.destroy$),
+        ).subscribe(status => {
+            this.tabStatuses[tabId] = status;
+        });
     }
 
     trackByPaneId(_index: number, pane: TerminalPane): number {

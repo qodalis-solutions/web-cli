@@ -8,6 +8,11 @@
   [hideable]="options?.hideable ?? true"
   [hideAlignment]="options?.hideAlignment ?? 'center'"
   [themeStyles]="themeStyles"
+  [statusExecutionState]="tabStatuses[resolvedActiveTabId]?.executionState || 'idle'"
+  [statusLastCommand]="tabStatuses[resolvedActiveTabId]?.lastCommandStatus ? { name: tabStatuses[resolvedActiveTabId]?.lastCommandName || '', success: tabStatuses[resolvedActiveTabId]?.lastCommandStatus === 'success' } : null"
+  [statusServiceCount]="{ running: globalStatus.runningServiceCount, total: globalStatus.totalServiceCount }"
+  [statusServerState]="globalStatus.serverConnectionState"
+  [statusUptime]="globalStatus.uptime"
   (onToggle)="onToggle($event)"
   (onContentSizeChange)="onContentSizeChange($event)"
   (onPositionChange)="onPositionChange($event)"
@@ -97,6 +102,7 @@
                 [modules]="modules"
                 [processors]="processors"
                 [snapshot]="pane.snapshot"
+                (engineReady)="onPaneEngineReady(tab.id, pane.id, $event)"
               />
             </div>
           </ng-container>
