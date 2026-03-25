@@ -8,7 +8,7 @@ import {
     onMounted,
     onBeforeUnmount,
 } from 'vue';
-import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, CliPanelHideAlignment, CliEngineSnapshot, derivePanelThemeStyles, loadPanelPosition, savePanelPosition } from '@qodalis/cli-core';
+import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, CliPanelHideAlignment, CliEngineSnapshot, CliPanelState, derivePanelThemeStyles, loadPanelPosition, savePanelPosition } from '@qodalis/cli-core';
 import { CliEngine, CliEngineOptions } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliConfigKey } from './CliConfigProvider';
@@ -165,13 +165,25 @@ export const CliPanel = defineComponent({
             type: Function as PropType<() => void>,
             default: undefined,
         },
+        collapsed: { type: Boolean, default: undefined },
+        hidden: { type: Boolean, default: undefined },
+        maximized: { type: Boolean, default: undefined },
+        activeTabId: { type: Number, default: undefined },
+        position: { type: String as PropType<CliPanelPosition>, default: undefined },
+        height: { type: Number, default: undefined },
+        width: { type: Number, default: undefined },
         style: {
             type: Object as PropType<Record<string, string>>,
             default: undefined,
         },
         class: { type: String, default: undefined },
     },
-    setup(props) {
+    emits: [
+        'update:collapsed', 'update:hidden', 'update:maximized',
+        'update:activeTabId', 'update:position', 'update:height', 'update:width',
+        'close', 'tab-added', 'tab-closed', 'pane-split', 'pane-closed',
+    ],
+    setup(props, { expose, emit }) {
         const config = inject(CliConfigKey, null);
 
         // Merge: local props override config context
@@ -181,27 +193,78 @@ export const CliPanel = defineComponent({
         const mergedServices = computed(() => props.services ?? config?.services);
 
         const visible = ref(true);
-        const collapsed = ref(mergedOptions.value?.isCollapsed ?? true);
-        const maximized = ref(false);
-        const panelHeight = ref(600);
-        const panelWidth = ref(400);
+        const internalCollapsed = ref(mergedOptions.value?.isCollapsed ?? true);
+        const internalMaximized = ref(false);
+        const internalHeight = ref(600);
+        const internalWidth = ref(400);
         const prevHeight = ref(600);
         const prevWidth = ref(400);
         const initialized = ref(false);
-        const hidden = ref(props.options?.isHidden ?? false);
+        const internalHidden = ref(props.options?.isHidden ?? false);
         let preHideCollapsed = true;
+        const internalActiveTabId = ref(0);
 
-        const position = ref<CliPanelPosition>(loadPanelPosition() ?? mergedOptions.value?.position ?? 'bottom');
+        const internalPosition = ref<CliPanelPosition>(
+            loadPanelPosition() ?? mergedOptions.value?.position ?? 'bottom',
+        );
+
+        /* ─── Resolved (controlled/uncontrolled) ────────── */
+
+        const resolvedCollapsed = computed(() =>
+            props.collapsed !== undefined ? props.collapsed : internalCollapsed.value);
+        const resolvedHidden = computed(() =>
+            props.hidden !== undefined ? props.hidden : internalHidden.value);
+        const resolvedMaximized = computed(() =>
+            props.maximized !== undefined ? props.maximized : internalMaximized.value);
+        const resolvedActiveTabId = computed(() =>
+            props.activeTabId !== undefined ? props.activeTabId : internalActiveTabId.value);
+        const resolvedHeight = computed(() =>
+            props.height !== undefined ? props.height : internalHeight.value);
+        const resolvedWidth = computed(() =>
+            props.width !== undefined ? props.width : internalWidth.value);
+        const resolvedPosition = computed(() =>
+            props.position !== undefined ? props.position as CliPanelPosition : internalPosition.value);
+
+        /* ─── Update helpers ────────────────────────────── */
+
+        function updateCollapsed(value: boolean) {
+            internalCollapsed.value = value;
+            emit('update:collapsed', value);
+        }
+        function updateHidden(value: boolean) {
+            internalHidden.value = value;
+            emit('update:hidden', value);
+        }
+        function updateMaximized(value: boolean) {
+            internalMaximized.value = value;
+            emit('update:maximized', value);
+        }
+        function updateActiveTabId(value: number) {
+            internalActiveTabId.value = value;
+            emit('update:activeTabId', value);
+        }
+        function updateHeight(value: number) {
+            internalHeight.value = value;
+            emit('update:height', value);
+        }
+        function updateWidth(value: number) {
+            internalWidth.value = value;
+            emit('update:width', value);
+        }
+        function updatePosition(value: CliPanelPosition) {
+            internalPosition.value = value;
+            savePanelPosition(value);
+            emit('update:position', value);
+        }
         const closable = computed(() => mergedOptions.value?.closable ?? true);
         const resizable = computed(() => mergedOptions.value?.resizable ?? true);
-        const isHorizontal = computed(() => position.value === 'left' || position.value === 'right');
+        const isHorizontal = computed(() => resolvedPosition.value === 'left' || resolvedPosition.value === 'right');
         const hideable = computed(() => mergedOptions.value?.hideable ?? true);
         const hideAlignment = computed<CliPanelHideAlignment>(() => mergedOptions.value?.hideAlignment ?? 'center');
         const syncTheme = computed(() => mergedOptions.value?.syncTheme ?? false);
         const themeStyles = ref<Record<string, string>>({});
 
         const tabs = ref<TerminalTab[]>([]);
-        const activeTabId = ref(0);
         const activePaneId = ref(0);
         let nextTabId = 1;
         let nextPaneId = 1;
@@ -231,19 +294,19 @@ export const CliPanel = defineComponent({
 
         /* ─── Tab management ─────────────────────────────── */
 
-        function addTab() {
-            const paneId = nextPaneId++;
+        function addTab(title?: string): number {
             const tabId = nextTabId++;
-            const pane: TerminalPane = { id: paneId, widthPercent: 100 };
-            const tab: TerminalTab = {
+            const paneId = nextPaneId++;
+            tabs.value = [...tabs.value, {
                 id: tabId,
-                title: `Terminal ${tabId}`,
+                title: title ?? `Terminal ${tabId}`,
                 isEditing: false,
-                panes: [pane],
-            };
-            tabs.value.push(tab);
-            activeTabId.value = tabId;
+                panes: [{ id: paneId, widthPercent: 100 }],
+            }];
+            updateActiveTabId(tabId);
             activePaneId.value = paneId;
+            emit('tab-added', { tabId });
+            return tabId;
         }
 
         let themeObserver: MutationObserver | undefined;
@@ -277,8 +340,9 @@ export const CliPanel = defineComponent({
         });
 
         function toggle() {
-            collapsed.value = !collapsed.value;
-            if (!collapsed.value && !initialized.value) {
+            const newVal = !resolvedCollapsed.value;
+            updateCollapsed(newVal);
+            if (!newVal && !initialized.value) {
                 initialized.value = true;
                 addTab();
                 setupThemeSync();
@@ -289,19 +353,20 @@ export const CliPanel = defineComponent({
             const idx = tabs.value.findIndex((t) => t.id === id);
             if (idx === -1) return;
             tabs.value.splice(idx, 1);
+            emit('tab-closed', { tabId: id });
             if (tabs.value.length === 0) {
                 initialized.value = false;
-                collapsed.value = true;
+                updateCollapsed(true);
                 return;
             }
-            if (activeTabId.value === id) {
+            if (resolvedActiveTabId.value === id) {
                 const newIdx = Math.min(idx, tabs.value.length - 1);
                 selectTab(tabs.value[newIdx].id);
             }
         }
 
         function selectTab(id: number) {
-            activeTabId.value = id;
+            updateActiveTabId(id);
             const tab = tabs.value.find((t) => t.id === id);
             if (tab && tab.panes.length > 0) {
                 activePaneId.value = tab.panes[0].id;
@@ -310,43 +375,43 @@ export const CliPanel = defineComponent({
 
         /* ─── Split / close pane ─────────────────────────── */
 
-        function splitRight(tabId?: number) {
-            const tab = tabs.value.find(
-                (t) => t.id === (tabId ?? activeTabId.value),
-            );
-            if (!tab) return;
-            const idx = tab.panes.findIndex((p) => p.id === activePaneId.value);
-            const insertIdx = idx === -1 ? tab.panes.length : idx + 1;
-            const newPaneId = nextPaneId++;
-            tab.panes.splice(insertIdx, 0, { id: newPaneId, widthPercent: 0 });
-            const evenWidth = 100 / tab.panes.length;
-            tab.panes.forEach((p) => {
-                p.widthPercent = evenWidth;
+        function splitPane(tabId?: number): number {
+            const targetTabId = tabId ?? resolvedActiveTabId.value;
+            const paneId = nextPaneId++;
+            tabs.value = tabs.value.map(t => {
+                if (t.id !== targetTabId) return t;
+                const newPanes = [...t.panes, { id: paneId, widthPercent: 0 }];
+                normalizePanes(newPanes);
+                return { ...t, panes: newPanes };
             });
-            normalizePanes(tab.panes);
-            activePaneId.value = newPaneId;
+            activePaneId.value = paneId;
+            emit('pane-split', { paneId, tabId: targetTabId });
+            return paneId;
         }
 
-        function closePane(tabId: number, paneId: number) {
-            const tab = tabs.value.find((t) => t.id === tabId);
-            if (!tab) return;
-            if (tab.panes.length <= 1) {
-                closeTab(tabId);
+        function closePane(paneId: number): void {
+            for (const tab of tabs.value) {
+                const idx = tab.panes.findIndex(p => p.id === paneId);
+                if (idx === -1) continue;
+                if (tab.panes.length <= 1) { closeTab(tab.id); return; }
+                engineMap.get(paneId)?.destroy();
+                engineMap.delete(paneId);
+                const newPanes = tab.panes.filter(p => p.id !== paneId);
+                normalizePanes(newPanes);
+                if (activePaneId.value === paneId) {
+                    activePaneId.value = newPanes[Math.min(idx, newPanes.length - 1)].id;
+                }
+                emit('pane-closed', { paneId });
+                tabs.value = tabs.value.map(t =>
+                    t.id === tab.id ? { ...t, panes: newPanes } : t,
+                );
                 return;
             }
-            const idx = tab.panes.findIndex((p) => p.id === paneId);
-            if (idx === -1) return;
-            tab.panes.splice(idx, 1);
-            const total = tab.panes.reduce((s, p) => s + p.widthPercent, 0);
-            if (total > 0)
-                tab.panes.forEach((p) => {
-                    p.widthPercent = (p.widthPercent / total) * 100;
-                });
-            normalizePanes(tab.panes);
-            if (activePaneId.value === paneId) {
-                activePaneId.value =
-                    tab.panes[Math.min(idx, tab.panes.length - 1)].id;
-            }
+        }
+
+        /** Add renameTab for programmatic use */
+        function renameTab(tabId: number, title: string): void {
+            tabs.value = tabs.value.map(t => t.id === tabId ? { ...t, title } : t);
         }
 
         /* ─── Rename ─────────────────────────────────────── */
@@ -385,32 +450,32 @@ export const CliPanel = defineComponent({
         function onPanelResizeStart(e: MouseEvent) {
             if (!resizable.value) return;
             e.preventDefault();
-            if (collapsed.value) toggle();
+            if (resolvedCollapsed.value) toggle();
             panelResizing.value = true;
             panelResizeState = {
                 startY: e.clientY,
-                startHeight: panelHeight.value,
+                startHeight: resolvedHeight.value,
                 startX: e.clientX,
-                startWidth: panelWidth.value,
+                startWidth: resolvedWidth.value,
             };
         }
 
         function onPanelResizeMove(e: MouseEvent) {
             if (!panelResizing.value) return;
             if (isHorizontal.value) {
-                const deltaX = position.value === 'left'
+                const deltaX = resolvedPosition.value === 'left'
                     ? e.clientX - panelResizeState.startX
                     : panelResizeState.startX - e.clientX;
                 let next = Math.max(100, panelResizeState.startWidth + deltaX);
                 if (next > window.innerWidth) next = window.innerWidth;
-                panelWidth.value = next;
+                updateWidth(next);
             } else {
-                const deltaY = position.value === 'top'
+                const deltaY = resolvedPosition.value === 'top'
                     ? e.clientY - panelResizeState.startY
                     : panelResizeState.startY - e.clientY;
                 let next = Math.max(100, panelResizeState.startHeight + deltaY);
                 if (next > window.innerHeight) next = window.innerHeight;
-                panelHeight.value = next;
+                updateHeight(next);
             }
         }
 
@@ -497,39 +562,40 @@ export const CliPanel = defineComponent({
         /* ─── Maximize ───────────────────────────────────── */
 
         function toggleMaximize() {
-            if (!maximized.value) {
+            if (!resolvedMaximized.value) {
                 if (isHorizontal.value) {
-                    prevWidth.value = panelWidth.value;
-                    panelWidth.value = window.innerWidth;
+                    prevWidth.value = resolvedWidth.value;
+                    updateWidth(window.innerWidth);
                 } else {
-                    prevHeight.value = panelHeight.value;
-                    panelHeight.value = window.innerHeight;
+                    prevHeight.value = resolvedHeight.value;
+                    updateHeight(window.innerHeight);
                 }
             } else {
                 if (isHorizontal.value) {
-                    panelWidth.value = prevWidth.value;
+                    updateWidth(prevWidth.value);
                 } else {
-                    panelHeight.value = prevHeight.value;
+                    updateHeight(prevHeight.value);
                 }
             }
-            maximized.value = !maximized.value;
+            updateMaximized(!resolvedMaximized.value);
         }
 
         /* ─── Close handler ──────────────────────────────── */
 
         function handleClose() {
             visible.value = false;
+            emit('close');
             props.onClose?.();
         }
 
         function handleHide() {
-            preHideCollapsed = collapsed.value;
-            hidden.value = true;
+            preHideCollapsed = resolvedCollapsed.value;
+            updateHidden(true);
         }
 
         function handleUnhide() {
-            hidden.value = false;
-            collapsed.value = preHideCollapsed;
+            updateHidden(false);
+            updateCollapsed(preHideCollapsed);
         }
 
         const positionDropdownOpen = ref(false);
@@ -545,9 +611,67 @@ export const CliPanel = defineComponent({
 
         function selectPosition(pos: CliPanelPosition) {
             positionDropdownOpen.value = false;
-            position.value = pos;
-            savePanelPosition(pos);
+            updatePosition(pos);
         }
+
+        /* ─── Engine access & state ──────────────────────── */
+
+        function getEngine(paneId?: number): CliEngine | undefined {
+            const targetId = paneId ?? activePaneId.value;
+            return engineMap.get(targetId);
+        }
+
+        function getState(): CliPanelState {
+            return {
+                collapsed: resolvedCollapsed.value,
+                hidden: resolvedHidden.value,
+                maximized: resolvedMaximized.value,
+                position: resolvedPosition.value,
+                height: resolvedHeight.value,
+                width: resolvedWidth.value,
+                activeTabId: resolvedActiveTabId.value,
+                activePaneId: activePaneId.value,
+                tabs: tabs.value.map(t => ({
+                    id: t.id, title: t.title,
+                    panes: t.panes.map(p => ({ id: p.id, widthPercent: p.widthPercent })),
+                })),
+            };
+        }
+
+        /* ─── Expose programmatic API (ICliPanelRef) ──── */
+
+        expose({
+            open: () => {
+                if (resolvedCollapsed.value) {
+                    updateCollapsed(false);
+                    if (!initialized.value) {
+                        initialized.value = true;
+                        addTab();
+                        setupThemeSync();
+                    }
+                }
+            },
+            collapse: () => { if (!resolvedCollapsed.value) updateCollapsed(true); },
+            toggleCollapse: () => {
+                if (resolvedCollapsed.value) {
+                    updateCollapsed(false);
+                    if (!initialized.value) { initialized.value = true; addTab(); setupThemeSync(); }
+                } else { updateCollapsed(true); }
+            },
+            hide: () => { if (!resolvedHidden.value) updateHidden(true); },
+            unhide: () => { if (resolvedHidden.value) updateHidden(false); },
+            toggleHide: () => { updateHidden(!resolvedHidden.value); },
+            close: handleClose,
+            maximize: () => { if (!resolvedMaximized.value) updateMaximized(true); },
+            restore: () => { if (resolvedMaximized.value) updateMaximized(false); },
+            toggleMaximize: () => { updateMaximized(!resolvedMaximized.value); },
+            resize: (dims: { height?: number; width?: number }) => {
+                if (dims.height !== undefined) updateHeight(dims.height);
+                if (dims.width !== undefined) updateWidth(dims.width);
+            },
+            setPosition: updatePosition,
+            addTab, closeTab, selectTab, renameTab, splitPane, closePane, getEngine, getState,
+        });
 
         /* ─── Render ─────────────────────────────────────── */
 
@@ -556,8 +680,8 @@ export const CliPanel = defineComponent({
 
             const wrapperClass = [
                 'cli-panel-wrapper',
-                collapsed.value && 'collapsed',
-                maximized.value && 'maximized',
+                resolvedCollapsed.value && 'collapsed',
+                resolvedMaximized.value && 'maximized',
                 panelResizing.value && 'resizing',
                 props.class,
             ]
@@ -565,8 +689,8 @@ export const CliPanel = defineComponent({
                 .join(' ');
 
             const wrapperStyle = {
-                ...(isHorizontal.value ? { width: `${panelWidth.value}px` } : { height: `${panelHeight.value}px` }),
-                ...(hidden.value ? { display: 'none' } : {}),
+                ...(isHorizontal.value ? { width: `${resolvedWidth.value}px` } : { height: `${resolvedHeight.value}px` }),
+                ...(resolvedHidden.value ? { display: 'none' } : {}),
                 ...themeStyles.value,
                 ...props.style,
             };
@@ -596,12 +720,12 @@ export const CliPanel = defineComponent({
                                 class: 'cli-panel-btn cli-panel-btn-position',
                                 title: 'Move panel',
                                 onClick: togglePositionDropdown,
-                            }, [positionIcon(position.value)]),
+                            }, [positionIcon(resolvedPosition.value)]),
                             positionDropdownOpen.value
                                 ? h('div', { class: 'cli-panel-position-dropdown' },
                                     (['bottom', 'top', 'left', 'right'] as CliPanelPosition[]).map(pos =>
                                         h('button', {
-                                            class: ['cli-panel-position-dropdown-item', position.value === pos ? 'active' : ''].filter(Boolean).join(' '),
+                                            class: ['cli-panel-position-dropdown-item', resolvedPosition.value === pos ? 'active' : ''].filter(Boolean).join(' '),
                                             onClick: () => selectPosition(pos),
                                         }, [
                                             positionIcon(pos, 16),
@@ -622,20 +746,20 @@ export const CliPanel = defineComponent({
                             'button',
                             {
                                 class: 'cli-panel-btn',
-                                title: maximized.value ? 'Restore' : 'Maximize',
-                                disabled: collapsed.value,
+                                title: resolvedMaximized.value ? 'Restore' : 'Maximize',
+                                disabled: resolvedCollapsed.value,
                                 onClick: toggleMaximize,
                             },
-                            [maximized.value ? restoreIcon() : maximizeIcon()],
+                            [resolvedMaximized.value ? restoreIcon() : maximizeIcon()],
                         ),
                         h(
                             'button',
                             {
                                 class: 'cli-panel-btn',
-                                title: collapsed.value ? 'Expand' : 'Collapse',
+                                title: resolvedCollapsed.value ? 'Expand' : 'Collapse',
                                 onClick: toggle,
                             },
-                            [collapseChevron(position.value, collapsed.value)],
+                            [collapseChevron(resolvedPosition.value, resolvedCollapsed.value)],
                         ),
                         closable.value
                             ? h(
@@ -654,7 +778,7 @@ export const CliPanel = defineComponent({
 
             const contentEl =
                 initialized.value
-                    ? h('div', { class: 'cli-panel-content', style: collapsed.value ? { display: 'none' } : undefined }, [
+                    ? h('div', { class: 'cli-panel-content', style: resolvedCollapsed.value ? { display: 'none' } : undefined }, [
                           // Tab bar
                           h('div', { class: 'cli-panel-tabs' }, [
                               h(
@@ -668,7 +792,7 @@ export const CliPanel = defineComponent({
                                               class: [
                                                   'cli-panel-tab',
                                                   tab.id ===
-                                                      activeTabId.value &&
+                                                      resolvedActiveTabId.value &&
                                                       'active',
                                               ]
                                                   .filter(Boolean)
@@ -784,7 +908,7 @@ export const CliPanel = defineComponent({
                                           class: 'cli-panel-instance',
                                           style: {
                                               display:
-                                                  tab.id === activeTabId.value
+                                                  tab.id === resolvedActiveTabId.value
                                                       ? undefined
                                                       : 'none',
                                           },
@@ -835,7 +959,7 @@ export const CliPanel = defineComponent({
                                                                   pane.id ===
                                                                       activePaneId.value &&
                                                                       tab.id ===
-                                                                          activeTabId.value &&
+                                                                          resolvedActiveTabId.value &&
                                                                       'active-pane',
                                                               ]
                                                                   .filter(
@@ -848,8 +972,7 @@ export const CliPanel = defineComponent({
                                                               onClick: () => {
                                                                   activePaneId.value =
                                                                       pane.id;
-                                                                  activeTabId.value =
-                                                                      tab.id;
+                                                                  updateActiveTabId(tab.id);
                                                               },
                                                           },
                                                           [
@@ -866,7 +989,6 @@ export const CliPanel = defineComponent({
                                                                                 ) => {
                                                                                     e.stopPropagation();
                                                                                     closePane(
-                                                                                        tab.id,
                                                                                         pane.id,
                                                                                     );
                                                                                 },
@@ -953,7 +1075,7 @@ export const CliPanel = defineComponent({
                                               { id: paneId, widthPercent: 100, snapshot },
                                           ],
                                       });
-                                      activeTabId.value = tabId;
+                                      updateActiveTabId(tabId);
                                       activePaneId.value = paneId;
                                   },
                               },
@@ -965,7 +1087,7 @@ export const CliPanel = defineComponent({
                                   class: 'cli-panel-context-menu-item',
                                   onClick: () => {
                                       closeContextMenu();
-                                      splitRight(contextMenu.value.tabId);
+                                      splitPane(contextMenu.value.tabId);
                                   },
                               },
                               'Split Right',
@@ -995,7 +1117,7 @@ export const CliPanel = defineComponent({
                                       tabs.value = tabs.value.filter(
                                           (t) => t.id === id,
                                       );
-                                      activeTabId.value = id;
+                                      updateActiveTabId(id);
                                   },
                               },
                               'Close Others',
@@ -1030,7 +1152,7 @@ export const CliPanel = defineComponent({
                                       closeContextMenu();
                                       tabs.value = [];
                                       initialized.value = false;
-                                      collapsed.value = true;
+                                      updateCollapsed(true);
                                   },
                               },
                               'Close All',
@@ -1039,10 +1161,10 @@ export const CliPanel = defineComponent({
                   )
                 : null;
 
-            const hideTabEl = hidden.value
+            const hideTabEl = resolvedHidden.value
                 ? h('button', {
                     class: 'cli-panel-hide-tab',
-                    'data-position': position.value,
+                    'data-position': resolvedPosition.value,
                     'data-hide-align': hideAlignment.value,
                     style: themeStyles.value,
                     title: 'Show CLI',
@@ -1053,7 +1175,7 @@ export const CliPanel = defineComponent({
                         h('line', { x1: '12', y1: '19', x2: '20', y2: '19' }),
                     ]),
                     h('span', { class: 'cli-panel-hide-tab-label' }, 'CLI'),
-                    hideTabChevron(position.value),
+                    hideTabChevron(resolvedPosition.value),
                 ])
                 : null;
 
@@ -1064,7 +1186,7 @@ export const CliPanel = defineComponent({
                     {
                         class: wrapperClass,
                         style: wrapperStyle,
-                        'data-position': position.value,
+                        'data-position': resolvedPosition.value,
                         'data-resizable': String(resizable.value),
                         'data-closable': String(closable.value),
                         'data-hideable': String(hideable.value),
