@@ -231,3 +231,35 @@ $tab-bar-height: 38px
 
   &:hover .pane-divider-grip
     background-color: var(--cli-panel-text, rgba(255, 255, 255, 0.87))
+
+// ─── Tab status dots ─────────────────────────────────────
+
+.tab-dot
+  width: 7px
+  height: 7px
+  border-radius: 50%
+  flex-shrink: 0
+  background: var(--cli-status-neutral, #6b7280)
+
+  &.dot-idle
+    background: var(--cli-status-idle, #3fb950)
+
+  &.dot-running
+    background: var(--cli-status-running, #f0883e)
+    animation: statusPulse 1.5s ease-in-out infinite
+
+  &.dot-error
+    background: var(--cli-status-error, #f85149)
+
+  &.dot-neutral
+    background: var(--cli-status-neutral, #6b7280)
+
+@keyframes statusPulse
+  0%, 100%
+    opacity: 1
+  50%
+    opacity: 0.3
+
+@media (prefers-reduced-motion: reduce)
+  .tab-dot
+    animation: none !important

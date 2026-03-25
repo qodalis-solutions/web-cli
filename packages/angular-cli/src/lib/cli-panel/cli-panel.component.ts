@@ -26,6 +26,7 @@ import {
 import { CliEngine, CliEngineOptions } from '@qodalis/cli';
 import { CliComponent } from '../cli/cli.component';
 import { CollapsableContentComponent } from '../collapsable-content/collapsable-content.component';
+import { TabStatus } from './cli-panel-status.service';
 
 export interface TerminalPane {
     id: number;
@@ -117,6 +118,7 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
     visible = true;
 
     tabs: TerminalTab[] = [];
+    tabStatuses: Record<number, TabStatus> = {};
     activePaneId = 0;
     private _internalActiveTabId = 0;
     private _internalCollapsed = true;
@@ -274,6 +276,15 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
 
     trackByTabId(_index: number, tab: TerminalTab): number {
         return tab.id;
+    }
+
+    getTabDotClass(tabId: number): string {
+        const status = this.tabStatuses[tabId];
+        if (!status) return 'dot-neutral';
+        if (status.executionState === 'running') return 'dot-running';
+        if (status.lastCommandStatus === 'error') return 'dot-error';
+        if (status.lastCommandStatus === 'success') return 'dot-idle';
+        return 'dot-neutral';
     }
 
     trackByPaneId(_index: number, pane: TerminalPane): number {

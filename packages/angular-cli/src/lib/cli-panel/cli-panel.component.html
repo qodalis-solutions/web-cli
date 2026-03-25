@@ -36,6 +36,7 @@
             (dblclick)="$event.stopPropagation()"
             #renameInput
           />
+          <span *ngIf="!tab.isEditing" class="tab-dot" [ngClass]="getTabDotClass(tab.id)"></span>
           <span *ngIf="!tab.isEditing" class="tab-title">{{ tab.title }}</span>
           <button
             *ngIf="!tab.isEditing"
