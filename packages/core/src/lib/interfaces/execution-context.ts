@@ -135,6 +135,14 @@ export interface ICliExecutionContext {
     submitCommand(command: string): Promise<void>;
 
     /**
+     * Custom status text displayed in the panel header bar.
+     * Command processors can set this to show progress or state
+     * (e.g. "Downloading 45%...", "Connected to server").
+     * Cleared automatically when the command finishes.
+     */
+    statusText?: string;
+
+    /**
      * Set the current processor as the context processor, i.e. the processor that will handle the command
      * @param processor The processor to set
      * @param silent Indicates if the setting should be silent, i.e. not write to the terminal

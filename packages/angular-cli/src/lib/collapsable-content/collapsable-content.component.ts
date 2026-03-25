@@ -60,6 +60,7 @@ export class CollapsableContentComponent {
     @Input() statusServiceCount: { running: number; total: number } = { running: 0, total: 0 };
     @Input() statusServerState: 'connected' | 'disconnected' | 'none' = 'none';
     @Input() statusUptime = 0;
+    @Input() statusText: string | null = null;
 
     positionDropdownOpen = false;
     dropdownStyle: Record<string, string> = {};

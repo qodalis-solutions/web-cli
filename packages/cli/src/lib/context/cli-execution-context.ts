@@ -113,6 +113,9 @@ export class CliExecutionContext
      */
     public isExecuting = false;
 
+    /** @inheritdoc */
+    public statusText?: string;
+
     public readonly lineBuffer = new CliLineBuffer();
 
     public readonly lineRenderer: CliTerminalLineRenderer;

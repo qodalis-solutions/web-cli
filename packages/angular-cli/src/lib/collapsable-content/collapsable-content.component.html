@@ -114,6 +114,11 @@
               <span class="status-icon">&uarr;</span>
               <span class="status-label">{{ formattedUptime }}</span>
           </span>
+
+          <!-- Custom processor status text -->
+          <span class="status-item status-text" *ngIf="statusText">
+              <span class="status-label">{{ statusText }}</span>
+          </span>
       </div>
 
       <div class="action-buttons">

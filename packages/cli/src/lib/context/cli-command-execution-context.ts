@@ -54,6 +54,13 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     reader: ICliInputReader;
     readonly backgroundServices: ICliBackgroundServiceRegistry;
 
+    get statusText(): string | undefined {
+        return this.context.statusText;
+    }
+    set statusText(value: string | undefined) {
+        this.context.statusText = value;
+    }
+
     get promptLength(): number {
         return this.context.promptLength;
     }

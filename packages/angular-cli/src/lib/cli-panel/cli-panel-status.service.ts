@@ -5,6 +5,7 @@ export interface TabStatus {
     executionState: 'idle' | 'running';
     lastCommandStatus: 'success' | 'error' | null;
     lastCommandName: string | null;
+    statusText: string | null;
 }
 
 export interface GlobalStatus {
@@ -30,6 +31,7 @@ const DEFAULT_TAB_STATUS: TabStatus = {
     executionState: 'idle',
     lastCommandStatus: null,
     lastCommandName: null,
+    statusText: null,
 };
 
 const DEFAULT_GLOBAL_STATUS: GlobalStatus = {
@@ -175,6 +177,7 @@ export class CliPanelStatusService {
     private computeTabStatus(entry: TabEntry): TabStatus {
         let running = false;
         let latestResult: { command: string; success: boolean } | undefined;
+        let statusText: string | null = null;
 
         for (const engine of entry.engines.values()) {
             const context = engine.getContext();
@@ -190,12 +193,19 @@ export class CliPanelStatusService {
             if (result) {
                 latestResult = result;
             }
+
+            // Pick up custom status text from processors
+            const text = context.statusText;
+            if (text) {
+                statusText = text;
+            }
         }
 
         return {
             executionState: running ? 'running' : 'idle',
             lastCommandStatus: latestResult ? (latestResult.success ? 'success' : 'error') : null,
             lastCommandName: latestResult?.command ?? null,
+            statusText,
         };
     }
 

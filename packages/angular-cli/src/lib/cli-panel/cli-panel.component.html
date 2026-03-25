@@ -13,6 +13,7 @@
   [statusServiceCount]="{ running: globalStatus.runningServiceCount, total: globalStatus.totalServiceCount }"
   [statusServerState]="globalStatus.serverConnectionState"
   [statusUptime]="globalStatus.uptime"
+  [statusText]="tabStatuses[resolvedActiveTabId]?.statusText || null"
   (onToggle)="onToggle($event)"
   (onContentSizeChange)="onContentSizeChange($event)"
   (onPositionChange)="onPositionChange($event)"

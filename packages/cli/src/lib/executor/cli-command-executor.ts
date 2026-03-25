@@ -44,6 +44,7 @@ export interface ICliExecutionHost extends ICliExecutionContext {
     abort?(): void;
     lastCommandResult?: { command: string; success: boolean };
     isExecuting?: boolean;
+    statusText?: string;
 }
 
 export class CliCommandExecutor implements ICliCommandExecutorService {
@@ -207,6 +208,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
         } finally {
             rootContext.isExecuting = false;
+            rootContext.statusText = undefined;
         }
     }
 
