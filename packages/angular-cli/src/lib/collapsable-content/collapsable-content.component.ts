@@ -210,6 +210,46 @@ export class CollapsableContentComponent {
         this.isResizing = false;
     }
 
+    /** Set collapsed state directly (called by parent CliPanelComponent). */
+    setCollapsed(value: boolean): void {
+        this.isCollapsed = value;
+        this.onToggle.emit(value);
+    }
+
+    /** Set maximized state directly (called by parent CliPanelComponent). */
+    setMaximized(value: boolean): void {
+        if (value && !this.isMaximized) {
+            if (this.isHorizontal) {
+                this.previousPanelWidth = this.panelWidth;
+                this.panelWidth = window.innerWidth;
+            } else {
+                this.previousPanelHeight = this.panelHeight;
+                this.panelHeight = window.innerHeight;
+            }
+        } else if (!value && this.isMaximized) {
+            if (this.isHorizontal) {
+                this.panelWidth = this.previousPanelWidth;
+            } else {
+                this.panelHeight = this.previousPanelHeight;
+            }
+        }
+        this.isMaximized = value;
+        this.updateTerminalSize();
+    }
+
+    /** Programmatically set panel dimensions. */
+    setDimensions(dims: { height?: number; width?: number }): void {
+        if (dims.height !== undefined) {
+            this.panelHeight = dims.height;
+            this.previousPanelHeight = dims.height;
+        }
+        if (dims.width !== undefined) {
+            this.panelWidth = dims.width;
+            this.previousPanelWidth = dims.width;
+        }
+        this.updateTerminalSize();
+    }
+
     private updateTerminalSize() {
         if (this.isHorizontal) {
             this.onContentSizeChange.emit(this.panelWidth - HEADER_HEIGHT);

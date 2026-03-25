@@ -1,7 +1,7 @@
 <collapsable-content
-  [isCollapsed]="options?.isCollapsed ?? true"
-  [isHidden]="options?.isHidden ?? false"
-  [position]="currentPosition"
+  [isCollapsed]="resolvedCollapsed"
+  [isHidden]="resolvedHidden"
+  [position]="resolvedPosition"
   [closable]="options?.closable ?? true"
   [resizable]="options?.resizable ?? true"
   [hideable]="options?.hideable ?? true"
@@ -19,7 +19,7 @@
         <li
           *ngFor="let tab of tabs; trackBy: trackByTabId"
           class="tab"
-          [class.active]="tab.id === activeTabId"
+          [class.active]="tab.id === resolvedActiveTabId"
           (click)="selectTab(tab.id)"
           (dblclick)="onTabDoubleClick(tab)"
           (contextmenu)="onTabContextMenu($event, tab)"
@@ -52,7 +52,7 @@
       <div
         *ngFor="let tab of tabs; trackBy: trackByTabId"
         class="terminal-instance"
-        [hidden]="tab.id !== activeTabId"
+        [hidden]="tab.id !== resolvedActiveTabId"
       >
         <div
           class="terminal-panes-container"
@@ -76,7 +76,7 @@
             <div
               class="terminal-pane"
               [class.active-pane]="
-                pane.id === activePaneId && tab.id === activeTabId
+                pane.id === activePaneId && tab.id === resolvedActiveTabId
               "
               [style.flex]="pane.widthPercent + ' 1 0'"
               (click)="onPaneClick(tab.id, pane.id)"
@@ -84,7 +84,7 @@
               <button
                 *ngIf="tab.panes.length > 1"
                 class="pane-close-btn"
-                (click)="closePane(tab.id, pane.id); $event.stopPropagation()"
+                (click)="closePane(pane.id); $event.stopPropagation()"
                 title="Close pane"
               >
                 &times;
