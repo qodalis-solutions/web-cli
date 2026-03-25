@@ -56,6 +56,11 @@ export function initializeTerminal(
     terminal.open(container);
     fitAddon.fit();
 
+    // Refit after the browser has fully settled layout (fonts, flex, etc.).
+    // The initial fit() can run before final dimensions are known; deferring
+    // a second fit ensures the row/column count matches the actual container.
+    requestAnimationFrame(() => fitAddon.fit());
+
     // Mark the container so the theme processor can update its background
     // when the theme changes, and set the initial background to match.
     container.classList.add('terminal-container');
