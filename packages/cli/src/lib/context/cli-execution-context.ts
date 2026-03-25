@@ -101,6 +101,12 @@ export class CliExecutionContext
 
     public readonly reader: ICliInputReader;
 
+    /**
+     * Result of the most recently executed command.
+     * Updated by the command executor after each command completes.
+     */
+    public lastCommandResult?: { command: string; success: boolean };
+
     public readonly lineBuffer = new CliLineBuffer();
 
     public readonly lineRenderer: CliTerminalLineRenderer;
