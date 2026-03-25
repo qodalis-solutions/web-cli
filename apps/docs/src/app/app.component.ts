@@ -1,6 +1,7 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, ViewChild, AfterViewInit } from '@angular/core';
 import { CliLogLevel, ICliModule } from '@qodalis/cli-core';
-import { CliPanelOptions } from '@qodalis/angular-cli';
+import { CliPanelComponent, CliPanelOptions } from '@qodalis/angular-cli';
+import { PanelRefService } from './services/panel-ref.service';
 import { TranslateService } from '@ngx-translate/core';
 import { LANGUAGES, Language, DEFAULT_LANG, LANG_STORAGE_KEY } from './data/languages';
 import { usersModule } from '@qodalis/cli-users';
@@ -48,14 +49,19 @@ import { langRoModule } from '@qodalis/cli-lang-ro';
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.sass'],
 })
-export class AppComponent {
+export class AppComponent implements AfterViewInit {
     title = 'Qodalis CLI';
+
+    @ViewChild(CliPanelComponent) panel!: CliPanelComponent;
 
     languages = LANGUAGES;
     currentLang: Language;
     langDropdownOpen = false;
 
-    constructor(private translate: TranslateService) {
+    constructor(
+        private translate: TranslateService,
+        private panelRef: PanelRefService,
+    ) {
         const browserLangPrefix = navigator.language?.split('-')[0];
         const supportedCodes = LANGUAGES.map((l) => l.code);
         const storedLang = localStorage.getItem(LANG_STORAGE_KEY);
@@ -82,6 +88,10 @@ export class AppComponent {
 
     toggleLangDropdown(): void {
         this.langDropdownOpen = !this.langDropdownOpen;
+    }
+
+    ngAfterViewInit(): void {
+        this.panelRef.panel = this.panel;
     }
 
     @HostListener('document:click')

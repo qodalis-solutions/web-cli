@@ -642,6 +642,8 @@ export const CliPanel = defineComponent({
 
         expose({
             open: () => {
+                if (!visible.value) { visible.value = true; }
+                if (resolvedHidden.value) { updateHidden(false); }
                 if (resolvedCollapsed.value) {
                     updateCollapsed(false);
                     if (!initialized.value) {

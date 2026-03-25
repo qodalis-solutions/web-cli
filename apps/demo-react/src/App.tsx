@@ -166,7 +166,8 @@ const options: CliOptions = {
 };
 
 const panelOptions: CliPanelOptions = {
-  position: "bottom",
+  position: "right",
+  isHidden: true,
 };
 
 function App() {

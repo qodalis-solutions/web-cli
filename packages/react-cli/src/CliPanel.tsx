@@ -626,6 +626,8 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
 
         React.useImperativeHandle(ref, () => ({
             open: () => {
+                if (!visible) { setVisible(true); }
+                if (hidden) { updateHidden(false); }
                 if (collapsed) {
                     updateCollapsed(false);
                     if (!initialized) { setInitialized(true); addTab(); }

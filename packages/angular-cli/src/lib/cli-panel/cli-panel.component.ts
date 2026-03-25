@@ -175,6 +175,12 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
 
     ngOnInit(): void {
         this.currentPosition = loadPanelPosition() ?? this.options?.position ?? 'bottom';
+        if (this.options?.isHidden != null) {
+            this._internalHidden = this.options.isHidden;
+        }
+        if (this.options?.isCollapsed != null) {
+            this._internalCollapsed = this.options.isCollapsed;
+        }
     }
 
     ngOnDestroy(): void {
@@ -542,6 +548,13 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
     // --- ICliPanelRef methods ---
 
     open(): void {
+        if (!this.visible) {
+            this.visible = true;
+        }
+        if (this.resolvedHidden) {
+            this._internalHidden = false;
+            this.hiddenChange.emit(false);
+        }
         if (this.resolvedCollapsed) {
             this._internalCollapsed = false;
             this.collapsedChange.emit(false);
