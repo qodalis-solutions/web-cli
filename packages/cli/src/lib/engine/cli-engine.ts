@@ -343,14 +343,30 @@ export class CliEngine {
     }
 
     /**
-     * Execute a command programmatically.
+     * Execute a command programmatically, behaving the same as if the user
+     * typed it and pressed Enter: echoes the command, adds it to history,
+     * executes it, and shows a new prompt afterwards.
      */
     async execute(command: string): Promise<void> {
-        if (this.executionContext) {
-            await this.executionContext.executor.executeCommand(
-                command,
-                this.executionContext,
-            );
+        if (!this.executionContext) return;
+
+        const ctx = this.executionContext;
+
+        // Echo the command as if the user typed it and pressed Enter
+        ctx.showPrompt({ reset: true });
+        this.terminal.write(command + '\r\n');
+
+        if (command.trim()) {
+            // Add to command history
+            await ctx.commandHistory.addCommand(command);
+
+            // Execute the command
+            await ctx.executor.executeCommand(command, ctx);
+        }
+
+        // Show prompt for next input (unless a raw-mode processor took over)
+        if (!(ctx as any).isRawModeActive?.()) {
+            ctx.showPrompt();
         }
     }
 
