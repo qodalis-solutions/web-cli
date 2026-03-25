@@ -198,8 +198,9 @@ export class CliPanelStatusService {
             const context = engine.getContext();
             if (!context) continue;
 
-            // Check if a command is currently executing
-            if ((context as any).isExecuting) {
+            // Check if a command is currently executing or a context processor
+            // (raw/fullscreen mode, e.g. games) is active
+            if ((context as any).isExecuting || (context as any).contextProcessor) {
                 running = true;
             }
 
