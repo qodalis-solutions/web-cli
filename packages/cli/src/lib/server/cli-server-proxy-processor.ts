@@ -97,6 +97,9 @@ export async function executeOnServer(
         chainCommands: commandPath && commandPath.length > 1 ? commandPath.slice(1) : [],
     };
 
+    const cmdLabel = commandPath && commandPath.length > 0 ? commandPath.join(' ') : descriptor.command;
+    context.setStatusText(`executing command: ${cmdLabel} on server ${serverName}`);
+
     try {
         if (connection.capabilities?.streaming) {
             // Streaming mode — render outputs as they arrive

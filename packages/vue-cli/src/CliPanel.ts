@@ -3,6 +3,7 @@ import {
     ref,
     computed,
     inject,
+    watch,
     PropType,
     h,
     onMounted,
@@ -187,7 +188,9 @@ export const CliPanel = defineComponent({
         const config = inject(CliConfigKey, null);
 
         // Merge: local props override config context
-        const mergedOptions = computed(() => props.options ?? config?.options as CliPanelOptions | undefined);
+        const mergedOptions = computed(() => props.options
+            ? { ...(config?.options as CliPanelOptions | undefined), ...props.options }
+            : config?.options as CliPanelOptions | undefined);
         const mergedModules = computed(() => props.modules ?? config?.modules);
         const mergedProcessors = computed(() => props.processors ?? config?.processors);
         const mergedServices = computed(() => props.services ?? config?.services);
@@ -290,6 +293,115 @@ export const CliPanel = defineComponent({
         const panelResizing = ref(false);
         let panelResizeState = { startY: 0, startHeight: 0, startX: 0, startWidth: 0 };
 
+        /* ─── Status bar state ──────────────────────────── */
+
+        const statusExecutionState = ref<'idle' | 'running'>('idle');
+        const statusLastCommand = ref<{ name: string; success: boolean } | null>(null);
+        const statusServiceCount = ref({ running: 0, total: 0 });
+        const statusServiceDetails = ref<Array<{ name: string; status: string; description?: string }>>([]);
+        const statusServerState = ref<'connected' | 'disconnected' | 'none'>('none');
+        const statusServerDetails = ref<Array<{ name: string; url: string; connected: boolean; apiVersion?: string; commandCount?: number }>>([]);
+        const statusUptime = ref(0);
+        const statusText = ref<string | null>(null);
+        const servicesDropdownOpen = ref(false);
+        const serversDropdownOpen = ref(false);
+        const servicesDropdownTriggerRect = ref<DOMRect | null>(null);
+        const serversDropdownTriggerRect = ref<DOMRect | null>(null);
+
+        const formattedUptime = computed(() => {
+            const mins = Math.floor(statusUptime.value / 60000);
+            if (mins < 60) return `${mins}m`;
+            const hrs = Math.floor(mins / 60);
+            return `${hrs}h${mins % 60}m`;
+        });
+
+        let execPollTimer: ReturnType<typeof setInterval> | undefined;
+        let globalPollTimer: ReturnType<typeof setInterval> | undefined;
+
+        function startStatusPolling() {
+            stopStatusPolling();
+            execPollTimer = setInterval(() => {
+                const tab = tabs.value.find(t => t.id === resolvedActiveTabId.value);
+                if (!tab) return;
+                const engine = engineMap.get(tab.panes[0]?.id);
+                if (!engine) return;
+                const context = engine.getContext();
+                if (!context) return;
+
+                const running = !!(context as any).isExecuting || !!(context as any).contextProcessor;
+                statusExecutionState.value = running ? 'running' : 'idle';
+
+                const result = (context as any).lastCommandResult;
+                statusLastCommand.value = result ? { name: result.command, success: result.success } : null;
+
+                const text = context.getStatusText?.();
+                statusText.value = text || null;
+            }, 300);
+
+            globalPollTimer = setInterval(() => {
+                const tab = tabs.value.find(t => t.id === resolvedActiveTabId.value);
+                if (!tab) return;
+                const engine = engineMap.get(tab.panes[0]?.id);
+                if (!engine) return;
+                const context = engine.getContext();
+                if (!context) return;
+
+                try {
+                    const services = context.backgroundServices?.list() ?? [];
+                    statusServiceCount.value = { running: services.filter((s: any) => s.status === 'running').length, total: services.length };
+                    statusServiceDetails.value = services.map((s: any) => ({ name: s.name, status: s.status, description: s.description }));
+                } catch { /* not available */ }
+
+                try {
+                    const serverManager = (context as any).services?.get?.('cli-server-manager');
+                    const details: Array<{ name: string; url: string; connected: boolean; apiVersion?: string; commandCount?: number }> = [];
+                    if (serverManager?.connections?.size > 0) {
+                        let anyConnected = false;
+                        for (const [name, conn] of serverManager.connections) {
+                            if ((conn as any).connected) anyConnected = true;
+                            details.push({
+                                name,
+                                url: (conn as any).config?.url ?? '',
+                                connected: !!(conn as any).connected,
+                                apiVersion: (conn as any).connected ? (conn as any).apiVersion : undefined,
+                                commandCount: (conn as any).connected ? (conn as any).commands?.length : undefined,
+                            });
+                        }
+                        statusServerState.value = anyConnected ? 'connected' : 'disconnected';
+                    } else {
+                        // Fall back to configured servers from engine options
+                        const configuredServers = (engine as any).options?.servers;
+                        if (Array.isArray(configuredServers) && configuredServers.length > 0) {
+                            for (const srv of configuredServers) {
+                                if (srv.enabled === false) continue;
+                                details.push({
+                                    name: srv.name,
+                                    url: srv.url ?? '',
+                                    connected: false,
+                                });
+                            }
+                            statusServerState.value = 'disconnected';
+                        } else {
+                            statusServerState.value = 'none';
+                        }
+                    }
+                    statusServerDetails.value = details;
+                } catch { /* not available */ }
+
+                statusUptime.value = engine.startedAt ? Date.now() - engine.startedAt : 0;
+            }, 2000);
+        }
+
+        function stopStatusPolling() {
+            if (execPollTimer) { clearInterval(execPollTimer); execPollTimer = undefined; }
+            if (globalPollTimer) { clearInterval(globalPollTimer); globalPollTimer = undefined; }
+        }
+
+        watch(initialized, (val) => {
+            if (val) startStatusPolling();
+            else stopStatusPolling();
+        });
+
         // Terminal height is handled via CSS flex layout (height: 100% default in Cli)
 
         /* ─── Tab management ─────────────────────────────── */
@@ -381,6 +493,8 @@ export const CliPanel = defineComponent({
             tabs.value = tabs.value.map(t => {
                 if (t.id !== targetTabId) return t;
                 const newPanes = [...t.panes, { id: paneId, widthPercent: 0 }];
+                const evenWidth = 100 / newPanes.length;
+                newPanes.forEach(p => { p.widthPercent = evenWidth; });
                 normalizePanes(newPanes);
                 return { ...t, panes: newPanes };
             });
@@ -557,6 +671,7 @@ export const CliPanel = defineComponent({
         onBeforeUnmount(() => {
             document.removeEventListener('mousemove', onPaneResizeMove);
             document.removeEventListener('mouseup', onPaneResizeEnd);
+            stopStatusPolling();
         });
 
         /* ─── Maximize ───────────────────────────────────── */
@@ -602,6 +717,8 @@ export const CliPanel = defineComponent({
 
         function closePositionDropdown() {
             positionDropdownOpen.value = false;
+            servicesDropdownOpen.value = false;
+            serversDropdownOpen.value = false;
         }
 
         function togglePositionDropdown(e: MouseEvent) {
@@ -713,6 +830,67 @@ export const CliPanel = defineComponent({
                         ]),
                         'CLI',
                     ]),
+                    // Status indicators (bottom/top only)
+
+                    (resolvedPosition.value === 'bottom' || resolvedPosition.value === 'top')
+                        ? h('div', { class: 'cli-panel-status-indicators' }, [
+                            // Execution state
+                            h('span', { class: ['cli-panel-status-item', statusExecutionState.value === 'running' ? 'status-running' : ''].filter(Boolean).join(' ') }, [
+                                h('span', { class: ['cli-panel-status-dot', statusExecutionState.value === 'running' ? 'dot-running' : 'dot-idle'].join(' ') }),
+                                h('span', { class: 'cli-panel-status-label' }, statusExecutionState.value),
+                            ]),
+                            // Background services
+                            statusServiceCount.value.total > 0
+                                ? h('span', {
+                                    class: 'cli-panel-status-item status-clickable',
+                                    onClick: (e: MouseEvent) => {
+                                        e.stopPropagation();
+                                        servicesDropdownTriggerRect.value = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                        servicesDropdownOpen.value = !servicesDropdownOpen.value;
+                                        serversDropdownOpen.value = false;
+                                    },
+                                }, [
+                                    h('span', { class: 'cli-panel-status-icon', innerHTML: '&#9881;' }),
+                                    h('span', { class: 'cli-panel-status-label' }, `${statusServiceCount.value.running}/${statusServiceCount.value.total} services`),
+                                ])
+                                : null,
+                            // Last command
+                            statusLastCommand.value
+                                ? h('span', { class: 'cli-panel-status-item' }, [
+                                    h('span', { class: ['cli-panel-status-icon', statusLastCommand.value.success ? 'status-success' : 'status-error'].join(' '), innerHTML: statusLastCommand.value.success ? '&#10003;' : '&#10005;' }),
+                                    h('span', { class: 'cli-panel-status-label' }, statusLastCommand.value.name),
+                                ])
+                                : null,
+                            // Server connection
+                            statusServerState.value !== 'none'
+                                ? h('span', {
+                                    class: 'cli-panel-status-item status-clickable',
+                                    onClick: (e: MouseEvent) => {
+                                        e.stopPropagation();
+                                        serversDropdownTriggerRect.value = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                        serversDropdownOpen.value = !serversDropdownOpen.value;
+                                        servicesDropdownOpen.value = false;
+                                    },
+                                }, [
+                                    h('span', { class: ['cli-panel-status-dot', statusServerState.value === 'connected' ? 'dot-idle' : 'dot-error'].join(' ') }),
+                                    h('span', { class: 'cli-panel-status-label' }, `${statusServerDetails.value.filter(s => s.connected).length}/${statusServerDetails.value.length} servers`),
+                                ])
+                                : null,
+                            // Uptime
+                            statusUptime.value > 0
+                                ? h('span', { class: 'cli-panel-status-item status-muted' }, [
+                                    h('span', { class: 'cli-panel-status-icon', innerHTML: '&uarr;' }),
+                                    h('span', { class: 'cli-panel-status-label' }, formattedUptime.value),
+                                ])
+                                : null,
+                            // Custom status text
+                            statusText.value
+                                ? h('span', { class: 'cli-panel-status-item status-text' }, [
+                                    h('span', { class: 'cli-panel-status-label' }, statusText.value),
+                                ])
+                                : null,
+                        ].filter(Boolean))
+                        : null,
                     h('div', { class: 'cli-panel-action-buttons' }, [
                         h('div', {
                             class: 'cli-panel-btn-position-wrapper',
@@ -776,6 +954,7 @@ export const CliPanel = defineComponent({
                             : null,
                     ]),
                 ]),
+                h('div', { class: ['cli-panel-glow-line', statusExecutionState.value === 'running' ? 'glow-active' : ''].filter(Boolean).join(' ') }),
             ]);
 
             const contentEl =
@@ -861,6 +1040,12 @@ export const CliPanel = defineComponent({
                                                     }),
                                                 ]
                                               : [
+                                                    h('span', { class: ['cli-panel-tab-dot', (() => {
+                                                        if (tab.id !== resolvedActiveTabId.value) return 'dot-idle';
+                                                        if (statusExecutionState.value === 'running') return 'dot-running';
+                                                        if (statusLastCommand.value && !statusLastCommand.value.success) return 'dot-error';
+                                                        return 'dot-idle';
+                                                    })()].join(' ') }),
                                                     h(
                                                         'span',
                                                         {
@@ -893,7 +1078,7 @@ export const CliPanel = defineComponent({
                                   {
                                       class: 'cli-panel-add-tab',
                                       title: 'New terminal',
-                                      onClick: addTab,
+                                      onClick: () => addTab(),
                                   },
                                   '+',
                               ),
@@ -1181,6 +1366,74 @@ export const CliPanel = defineComponent({
                 ])
                 : null;
 
+            // Services dropdown
+            const servicesDropdownEl = servicesDropdownOpen.value && statusServiceCount.value.total > 0
+                ? h('div', {
+                    class: 'cli-panel-services-dropdown',
+                    style: (() => {
+                        const rect = servicesDropdownTriggerRect.value;
+                        if (!rect) return {};
+                        return resolvedPosition.value === 'top'
+                            ? { position: 'fixed', top: `${rect.bottom + 4}px`, left: `${rect.left}px`, zIndex: 1100 }
+                            : { position: 'fixed', bottom: `${window.innerHeight - rect.top + 4}px`, left: `${rect.left}px`, zIndex: 1100 };
+                    })(),
+                    onClick: (e: MouseEvent) => e.stopPropagation(),
+                }, [
+                    h('div', { class: 'cli-panel-services-dropdown-header' }, 'Background Services'),
+                    h('div', { class: 'cli-panel-services-dropdown-list' },
+                        statusServiceDetails.value.map((svc, i) =>
+                            h('div', { key: i, class: 'cli-panel-services-dropdown-item' }, [
+                                h('span', { class: ['cli-panel-svc-dot', svc.status === 'running' ? 'svc-running' : 'svc-stopped'].join(' ') }),
+                                h('div', { class: 'cli-panel-svc-info' }, [
+                                    h('span', { class: 'cli-panel-svc-name' }, svc.name),
+                                    svc.description ? h('span', { class: 'cli-panel-svc-desc' }, svc.description) : null,
+                                ].filter(Boolean)),
+                                h('span', { class: 'cli-panel-svc-status' }, svc.status),
+                            ]),
+                        ),
+                    ),
+                    statusServiceDetails.value.length === 0
+                        ? h('div', { class: 'cli-panel-services-dropdown-empty' }, 'No services registered')
+                        : null,
+                ].filter(Boolean))
+                : null;
+
+            // Servers dropdown
+            const serversDropdownEl = serversDropdownOpen.value && statusServerState.value !== 'none'
+                ? h('div', {
+                    class: 'cli-panel-services-dropdown',
+                    style: (() => {
+                        const rect = serversDropdownTriggerRect.value;
+                        if (!rect) return {};
+                        return resolvedPosition.value === 'top'
+                            ? { position: 'fixed', top: `${rect.bottom + 4}px`, left: `${rect.left}px`, zIndex: 1100 }
+                            : { position: 'fixed', bottom: `${window.innerHeight - rect.top + 4}px`, left: `${rect.left}px`, zIndex: 1100 };
+                    })(),
+                    onClick: (e: MouseEvent) => e.stopPropagation(),
+                }, [
+                    h('div', { class: 'cli-panel-services-dropdown-header' }, 'Server Connections'),
+                    h('div', { class: 'cli-panel-services-dropdown-list' },
+                        statusServerDetails.value.map((srv, i) =>
+                            h('div', { key: i, class: 'cli-panel-services-dropdown-item' }, [
+                                h('span', { class: ['cli-panel-svc-dot', srv.connected ? 'svc-running' : 'svc-stopped'].join(' ') }),
+                                h('div', { class: 'cli-panel-svc-info' }, [
+                                    h('span', { class: 'cli-panel-svc-name' }, srv.name),
+                                    srv.url ? h('span', { class: 'cli-panel-svc-desc' }, srv.url) : null,
+                                ].filter(Boolean)),
+                                h('div', { class: 'cli-panel-srv-meta' }, [
+                                    h('span', { class: 'cli-panel-svc-status' }, srv.connected ? 'connected' : 'disconnected'),
+                                    srv.apiVersion ? h('span', { class: 'cli-panel-svc-desc' }, `v${srv.apiVersion}`) : null,
+                                    srv.commandCount ? h('span', { class: 'cli-panel-svc-desc' }, `${srv.commandCount} cmds`) : null,
+                                ].filter(Boolean)),
+                            ]),
+                        ),
+                    ),
+                    statusServerDetails.value.length === 0
+                        ? h('div', { class: 'cli-panel-services-dropdown-empty' }, 'No servers configured')
+                        : null,
+                ].filter(Boolean))
+                : null;
+
             return h('div', {}, [
                 hideTabEl,
                 h(
@@ -1196,6 +1449,8 @@ export const CliPanel = defineComponent({
                     [headerEl, contentEl],
                 ),
                 contextMenuEl,
+                servicesDropdownEl,
+                serversDropdownEl,
             ]);
         };
     },

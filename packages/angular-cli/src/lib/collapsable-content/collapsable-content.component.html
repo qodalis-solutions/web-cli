@@ -104,9 +104,9 @@
           </span>
 
           <!-- Server connection -->
-          <span class="status-item" *ngIf="statusServerState !== 'none'">
+          <span class="status-item status-clickable" *ngIf="statusServerState !== 'none'" (click)="toggleServersDropdown($event)">
               <span class="status-dot" [class.dot-idle]="statusServerState === 'connected'" [class.dot-error]="statusServerState === 'disconnected'"></span>
-              <span class="status-label">{{ statusServerState === 'connected' ? 'connected' : 'disconnected' }}</span>
+              <span class="status-label">{{ connectedServerCount }}/{{ totalServerCount }} servers</span>
           </span>
 
           <!-- Uptime -->
@@ -280,6 +280,28 @@
   </div>
   <div class="services-dropdown-empty" *ngIf="statusServiceDetails.length === 0">
     No services registered
+  </div>
+</div>
+
+<!-- Servers dropdown portaled outside terminal-wrapper -->
+<div class="services-dropdown" *ngIf="serversDropdownOpen" [ngStyle]="serversDropdownStyle" (click)="$event.stopPropagation()">
+  <div class="services-dropdown-header">Server Connections</div>
+  <div class="services-dropdown-list">
+    <div class="services-dropdown-item" *ngFor="let srv of statusServerDetails">
+      <span class="svc-dot" [class.svc-running]="srv.connected" [class.svc-stopped]="!srv.connected"></span>
+      <div class="svc-info">
+        <span class="svc-name">{{ srv.name }}</span>
+        <span class="svc-desc" *ngIf="srv.url">{{ srv.url }}</span>
+      </div>
+      <div class="srv-meta">
+        <span class="svc-status">{{ srv.connected ? 'connected' : 'disconnected' }}</span>
+        <span class="svc-desc" *ngIf="srv.apiVersion">v{{ srv.apiVersion }}</span>
+        <span class="svc-desc" *ngIf="srv.commandCount">{{ srv.commandCount }} cmds</span>
+      </div>
+    </div>
+  </div>
+  <div class="services-dropdown-empty" *ngIf="statusServerDetails.length === 0">
+    No servers configured
   </div>
 </div>
 

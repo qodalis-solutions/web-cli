@@ -170,7 +170,9 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
     function CliPanel(props, ref) {
         const { options: optionsProp, modules: modulesProp, processors: processorsProp, services: servicesProp, onClose, style, className } = props;
         const config = useCliConfig();
-        const options = optionsProp ?? config.options as CliPanelOptions | undefined;
+        const options = optionsProp
+            ? { ...(config.options as CliPanelOptions | undefined), ...optionsProp }
+            : config.options as CliPanelOptions | undefined;
         const modules = modulesProp ?? config.modules;
         const processors = processorsProp ?? config.processors;
         const services = servicesProp ?? config.services;
@@ -268,6 +270,20 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
         const panelResizeRef = useRef({ startY: 0, startHeight: 0, startX: 0, startWidth: 0 });
         const prevHeightRef = useRef(600);
         const prevWidthRef = useRef(400);
+
+        // Status bar state
+        const [statusExecutionState, setStatusExecutionState] = useState<'idle' | 'running'>('idle');
+        const [statusLastCommand, setStatusLastCommand] = useState<{ name: string; success: boolean } | null>(null);
+        const [statusServiceCount, setStatusServiceCount] = useState({ running: 0, total: 0 });
+        const [statusServiceDetails, setStatusServiceDetails] = useState<Array<{ name: string; status: string; description?: string }>>([]);
+        const [statusServerState, setStatusServerState] = useState<'connected' | 'disconnected' | 'none'>('none');
+        const [statusServerDetails, setStatusServerDetails] = useState<Array<{ name: string; url: string; connected: boolean; apiVersion?: string; commandCount?: number }>>([]);
+        const [statusUptime, setStatusUptime] = useState(0);
+        const [statusText, setStatusText] = useState<string | null>(null);
+        const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
+        const [serversDropdownOpen, setServersDropdownOpen] = useState(false);
+        const servicesDropdownRef = useRef<HTMLSpanElement>(null);
+        const serversDropdownRef = useRef<HTMLSpanElement>(null);
 
         // Terminal height is handled via CSS flex layout (height: 100% default in Cli)
 
@@ -367,6 +383,8 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
             setTabs(prev => prev.map(t => {
                 if (t.id !== targetTabId) return t;
                 const newPanes = [...t.panes.map(p => ({ ...p })), { id: paneId, widthPercent: 0 }];
+                const evenWidth = 100 / newPanes.length;
+                newPanes.forEach(p => { p.widthPercent = evenWidth; });
                 normalizePanes(newPanes);
                 return { ...t, panes: newPanes };
             }));
@@ -546,6 +564,94 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
             return () => clearTimeout(timer);
         }, [syncTheme, initialized]);
 
+        /* ─── Status polling ──────────────────────────────── */
+
+        useEffect(() => {
+            if (!initialized) return;
+            const pollExec = setInterval(() => {
+                // Find the first engine in the active tab
+                const tab = tabs.find(t => t.id === activeTabIdRef.current);
+                if (!tab) return;
+                const engine = engineMapRef.current.get(tab.panes[0]?.id);
+                if (!engine) return;
+                const context = engine.getContext();
+                if (!context) return;
+
+                // Execution state
+                const running = !!(context as any).isExecuting || !!(context as any).contextProcessor;
+                setStatusExecutionState(running ? 'running' : 'idle');
+
+                // Last command
+                const result = (context as any).lastCommandResult;
+                setStatusLastCommand(result ? { name: result.command, success: result.success } : null);
+
+                // Status text
+                const text = context.getStatusText?.();
+                setStatusText(text || null);
+            }, 300);
+
+            const pollGlobal = setInterval(() => {
+                const tab = tabs.find(t => t.id === activeTabIdRef.current);
+                if (!tab) return;
+                const engine = engineMapRef.current.get(tab.panes[0]?.id);
+                if (!engine) return;
+                const context = engine.getContext();
+                if (!context) return;
+
+                // Background services
+                try {
+                    const services = context.backgroundServices?.list() ?? [];
+                    setStatusServiceCount({ running: services.filter((s: any) => s.status === 'running').length, total: services.length });
+                    setStatusServiceDetails(services.map((s: any) => ({ name: s.name, status: s.status, description: s.description })));
+                } catch { /* not available */ }
+
+                // Server connection
+                try {
+                    let serverManager: any;
+                    try {
+                        serverManager = context.services?.get?.('cli-server-manager');
+                    } catch { /* token not registered yet */ }
+                    const details: Array<{ name: string; url: string; connected: boolean; apiVersion?: string; commandCount?: number }> = [];
+                    if (serverManager?.connections?.size > 0) {
+                        let anyConnected = false;
+                        for (const [name, conn] of serverManager.connections) {
+                            if ((conn as any).connected) anyConnected = true;
+                            details.push({
+                                name,
+                                url: (conn as any).config?.url ?? '',
+                                connected: !!(conn as any).connected,
+                                apiVersion: (conn as any).connected ? (conn as any).apiVersion : undefined,
+                                commandCount: (conn as any).connected ? (conn as any).commands?.length : undefined,
+                            });
+                        }
+                        setStatusServerState(anyConnected ? 'connected' : 'disconnected');
+                    } else {
+                        // Fall back to configured servers from engine options
+                        const configuredServers = (engine as any).options?.servers;
+                        if (Array.isArray(configuredServers) && configuredServers.length > 0) {
+                            for (const srv of configuredServers) {
+                                if (srv.enabled === false) continue;
+                                details.push({
+                                    name: srv.name,
+                                    url: srv.url ?? '',
+                                    connected: false,
+                                });
+                            }
+                            setStatusServerState('disconnected');
+                        } else {
+                            setStatusServerState('none');
+                        }
+                    }
+                    setStatusServerDetails(details);
+                } catch { /* not available */ }
+
+                // Uptime
+                setStatusUptime(engine.startedAt ? Date.now() - engine.startedAt : 0);
+            }, 2000);
+
+            return () => { clearInterval(pollExec); clearInterval(pollGlobal); };
+        }, [initialized, tabs]);
+
         /* ─── Maximize ───────────────────────────────────── */
 
         const toggleMaximize = useCallback(() => {
@@ -594,6 +700,13 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
             document.addEventListener('click', closePositionDropdown);
             return () => document.removeEventListener('click', closePositionDropdown);
         }, [positionDropdownOpen, closePositionDropdown]);
+
+        useEffect(() => {
+            if (!servicesDropdownOpen && !serversDropdownOpen) return;
+            const handler = () => { setServicesDropdownOpen(false); setServersDropdownOpen(false); };
+            document.addEventListener('click', handler);
+            return () => document.removeEventListener('click', handler);
+        }, [servicesDropdownOpen, serversDropdownOpen]);
 
         const handlePositionButtonClick = useCallback((e: React.MouseEvent) => {
             e.stopPropagation();
@@ -659,6 +772,13 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
 
         /* ─── Render ─────────────────────────────────────── */
 
+        const formattedUptime = (() => {
+            const mins = Math.floor(statusUptime / 60000);
+            if (mins < 60) return `${mins}m`;
+            const hrs = Math.floor(mins / 60);
+            return `${hrs}h${mins % 60}m`;
+        })();
+
         if (!visible) return null;
 
         const wrapperStyle: React.CSSProperties = {
@@ -707,6 +827,65 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                                 <span className="cli-panel-title-icon"><TerminalIcon /></span>
                                 CLI
                             </p>
+                            {/* Status indicators (bottom/top positions only) */}
+                            {(position === 'bottom' || position === 'top') && (
+                                <div className="cli-panel-status-indicators">
+                                    {/* Execution state */}
+                                    <span className={`cli-panel-status-item${statusExecutionState === 'running' ? ' status-running' : ''}`}>
+                                        <span className={`cli-panel-status-dot ${statusExecutionState === 'running' ? 'dot-running' : 'dot-idle'}`} />
+                                        <span className="cli-panel-status-label">{statusExecutionState}</span>
+                                    </span>
+
+                                    {/* Background services */}
+                                    {statusServiceCount.total > 0 && (
+                                        <span
+                                            ref={servicesDropdownRef}
+                                            className="cli-panel-status-item status-clickable"
+                                            onClick={e => { e.stopPropagation(); setServicesDropdownOpen(prev => !prev); setServersDropdownOpen(false); }}
+                                        >
+                                            <span className="cli-panel-status-icon">&#9881;</span>
+                                            <span className="cli-panel-status-label">{statusServiceCount.running}/{statusServiceCount.total} services</span>
+                                        </span>
+                                    )}
+
+                                    {/* Last command */}
+                                    {statusLastCommand && (
+                                        <span className="cli-panel-status-item">
+                                            <span className={`cli-panel-status-icon ${statusLastCommand.success ? 'status-success' : 'status-error'}`}>
+                                                {statusLastCommand.success ? '\u2713' : '\u2717'}
+                                            </span>
+                                            <span className="cli-panel-status-label">{statusLastCommand.name}</span>
+                                        </span>
+                                    )}
+
+                                    {/* Server connection */}
+                                    {statusServerState !== 'none' && (
+                                        <span
+                                            ref={serversDropdownRef}
+                                            className="cli-panel-status-item status-clickable"
+                                            onClick={e => { e.stopPropagation(); setServersDropdownOpen(prev => !prev); setServicesDropdownOpen(false); }}
+                                        >
+                                            <span className={`cli-panel-status-dot ${statusServerState === 'connected' ? 'dot-idle' : 'dot-error'}`} />
+                                            <span className="cli-panel-status-label">{statusServerDetails.filter(s => s.connected).length}/{statusServerDetails.length} servers</span>
+                                        </span>
+                                    )}
+
+                                    {/* Uptime */}
+                                    {statusUptime > 0 && (
+                                        <span className="cli-panel-status-item status-muted">
+                                            <span className="cli-panel-status-icon">&uarr;</span>
+                                            <span className="cli-panel-status-label">{formattedUptime}</span>
+                                        </span>
+                                    )}
+
+                                    {/* Custom status text */}
+                                    {statusText && (
+                                        <span className="cli-panel-status-item status-text">
+                                            <span className="cli-panel-status-label">{statusText}</span>
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                             <div className="cli-panel-action-buttons">
                                 <div className="cli-panel-btn-position-wrapper" onClick={e => e.stopPropagation()}>
                                     <button className="cli-panel-btn cli-panel-btn-position" title="Move panel" onClick={handlePositionButtonClick}>
@@ -745,6 +924,8 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                                 )}
                             </div>
                         </div>
+                        {/* Ambient glow line */}
+                        <div className={`cli-panel-glow-line${statusExecutionState === 'running' ? ' glow-active' : ''}`} />
                     </div>
 
                     {/* Content (kept in DOM to preserve terminal state) */}
@@ -781,6 +962,13 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                                                 />
                                             ) : (
                                                 <>
+                                                    <span className={`cli-panel-tab-dot ${(() => {
+                                                        // Only compute for active tab since we poll only the active engine
+                                                        if (tab.id !== activeTabId) return 'dot-idle';
+                                                        if (statusExecutionState === 'running') return 'dot-running';
+                                                        if (statusLastCommand && !statusLastCommand.success) return 'dot-error';
+                                                        return 'dot-idle';
+                                                    })()}`} />
                                                     <span className="cli-panel-tab-title">{tab.title}</span>
                                                     <button
                                                         className="cli-panel-tab-close-btn"
@@ -881,6 +1069,76 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                         }}>Close to the Right</button>
                         <div className="cli-panel-context-menu-separator" />
                         <button className="cli-panel-context-menu-item destructive" onClick={() => { closeContextMenu(); setTabs([]); setInitialized(false); updateCollapsed(true); }}>Close All</button>
+                    </div>
+                )}
+
+                {/* Services dropdown */}
+                {servicesDropdownOpen && statusServiceCount.total > 0 && (
+                    <div
+                        className="cli-panel-services-dropdown"
+                        style={(() => {
+                            const el = servicesDropdownRef.current;
+                            if (!el) return {};
+                            const rect = el.getBoundingClientRect();
+                            return position === 'top'
+                                ? { position: 'fixed' as const, top: rect.bottom + 4, left: rect.left, zIndex: 1100 }
+                                : { position: 'fixed' as const, bottom: window.innerHeight - rect.top + 4, left: rect.left, zIndex: 1100 };
+                        })()}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="cli-panel-services-dropdown-header">Background Services</div>
+                        <div className="cli-panel-services-dropdown-list">
+                            {statusServiceDetails.map((svc, i) => (
+                                <div key={i} className="cli-panel-services-dropdown-item">
+                                    <span className={`cli-panel-svc-dot ${svc.status === 'running' ? 'svc-running' : 'svc-stopped'}`} />
+                                    <div className="cli-panel-svc-info">
+                                        <span className="cli-panel-svc-name">{svc.name}</span>
+                                        {svc.description && <span className="cli-panel-svc-desc">{svc.description}</span>}
+                                    </div>
+                                    <span className="cli-panel-svc-status">{svc.status}</span>
+                                </div>
+                            ))}
+                        </div>
+                        {statusServiceDetails.length === 0 && (
+                            <div className="cli-panel-services-dropdown-empty">No services registered</div>
+                        )}
+                    </div>
+                )}
+
+                {/* Servers dropdown */}
+                {serversDropdownOpen && statusServerState !== 'none' && (
+                    <div
+                        className="cli-panel-services-dropdown"
+                        style={(() => {
+                            const el = serversDropdownRef.current;
+                            if (!el) return {};
+                            const rect = el.getBoundingClientRect();
+                            return position === 'top'
+                                ? { position: 'fixed' as const, top: rect.bottom + 4, left: rect.left, zIndex: 1100 }
+                                : { position: 'fixed' as const, bottom: window.innerHeight - rect.top + 4, left: rect.left, zIndex: 1100 };
+                        })()}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="cli-panel-services-dropdown-header">Server Connections</div>
+                        <div className="cli-panel-services-dropdown-list">
+                            {statusServerDetails.map((srv, i) => (
+                                <div key={i} className="cli-panel-services-dropdown-item">
+                                    <span className={`cli-panel-svc-dot ${srv.connected ? 'svc-running' : 'svc-stopped'}`} />
+                                    <div className="cli-panel-svc-info">
+                                        <span className="cli-panel-svc-name">{srv.name}</span>
+                                        {srv.url && <span className="cli-panel-svc-desc">{srv.url}</span>}
+                                    </div>
+                                    <div className="cli-panel-srv-meta">
+                                        <span className="cli-panel-svc-status">{srv.connected ? 'connected' : 'disconnected'}</span>
+                                        {srv.apiVersion && <span className="cli-panel-svc-desc">v{srv.apiVersion}</span>}
+                                        {srv.commandCount && <span className="cli-panel-svc-desc">{srv.commandCount} cmds</span>}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {statusServerDetails.length === 0 && (
+                            <div className="cli-panel-services-dropdown-empty">No servers configured</div>
+                        )}
                     </div>
                 )}
             </>

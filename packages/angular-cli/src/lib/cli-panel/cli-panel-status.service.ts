@@ -14,11 +14,20 @@ export interface ServiceDetail {
     description?: string;
 }
 
+export interface ServerDetail {
+    name: string;
+    url: string;
+    connected: boolean;
+    apiVersion?: string;
+    commandCount?: number;
+}
+
 export interface GlobalStatus {
     runningServiceCount: number;
     totalServiceCount: number;
     serviceDetails: ServiceDetail[];
     serverConnectionState: 'connected' | 'disconnected' | 'none';
+    serverDetails: ServerDetail[];
     uptime: number;
 }
 
@@ -47,6 +56,7 @@ const DEFAULT_GLOBAL_STATUS: GlobalStatus = {
     totalServiceCount: 0,
     serviceDetails: [],
     serverConnectionState: 'none',
+    serverDetails: [],
     uptime: 0,
 };
 
@@ -264,23 +274,44 @@ export class CliPanelStatusService {
 
         // Server connection
         let serverConnectionState: GlobalStatus['serverConnectionState'] = 'none';
+        const serverDetails: ServerDetail[] = [];
         try {
             const serverManager = (context as any).services?.get?.('cli-server-manager');
             if (serverManager?.connections?.size > 0) {
                 let anyConnected = false;
-                for (const conn of serverManager.connections.values()) {
+                for (const [name, conn] of serverManager.connections) {
                     if (conn.connected) {
                         anyConnected = true;
-                        break;
                     }
+                    serverDetails.push({
+                        name,
+                        url: conn.config?.url ?? '',
+                        connected: !!conn.connected,
+                        apiVersion: conn.connected ? conn.apiVersion : undefined,
+                        commandCount: conn.connected ? conn.commands?.length : undefined,
+                    });
                 }
                 serverConnectionState = anyConnected ? 'connected' : 'disconnected';
+            } else {
+                // Fall back to configured servers from engine options
+                const configuredServers = (engine as any).options?.servers;
+                if (Array.isArray(configuredServers) && configuredServers.length > 0) {
+                    for (const srv of configuredServers) {
+                        if (srv.enabled === false) continue;
+                        serverDetails.push({
+                            name: srv.name,
+                            url: srv.url ?? '',
+                            connected: false,
+                        });
+                    }
+                    serverConnectionState = 'disconnected';
+                }
             }
         } catch { /* not available */ }
 
         // Uptime
         const uptime = engine.startedAt ? Date.now() - engine.startedAt : 0;
 
-        return { runningServiceCount, totalServiceCount, serviceDetails, serverConnectionState, uptime };
+        return { runningServiceCount, totalServiceCount, serviceDetails, serverConnectionState, serverDetails, uptime };
     }
 }

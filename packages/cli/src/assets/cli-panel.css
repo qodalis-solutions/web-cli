@@ -171,6 +171,8 @@
   overflow-x: auto;
   overflow-y: hidden;
   flex-shrink: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.3)) transparent;
 }
 
 .cli-panel-tabs::-webkit-scrollbar {
@@ -807,6 +809,321 @@
   bottom: auto;
   right: calc(100% + 4px);
   left: auto;
+}
+
+/* ─── Status indicators ──────────────────────────────────── */
+
+.cli-panel-status-indicators {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: 24px;
+  font-size: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.cli-panel-status-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6));
+}
+
+.cli-panel-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--cli-status-neutral, #6b7280);
+}
+
+.cli-panel-status-dot.dot-idle {
+  background: var(--cli-status-idle, #3fb950);
+}
+
+.cli-panel-status-dot.dot-running {
+  background: var(--cli-status-running, #f0883e);
+  animation: cliStatusPulse 1.5s ease-in-out infinite;
+}
+
+.cli-panel-status-dot.dot-error {
+  background: var(--cli-status-error, #f85149);
+}
+
+.cli-panel-status-icon {
+  flex-shrink: 0;
+}
+
+.cli-panel-status-icon.status-success {
+  color: var(--cli-status-idle, #3fb950);
+}
+
+.cli-panel-status-icon.status-error {
+  color: var(--cli-status-error, #f85149);
+}
+
+.cli-panel-status-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cli-panel-status-item.status-muted {
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.4));
+}
+
+.cli-panel-status-item.status-text {
+  color: var(--cli-panel-accent, #818cf8);
+  max-width: 200px;
+}
+
+.cli-panel-status-item.status-running {
+  color: var(--cli-status-running, #f0883e);
+}
+
+.cli-panel-status-item.status-clickable {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: -2px -6px;
+  transition: background-color 0.15s ease;
+}
+
+.cli-panel-status-item.status-clickable:hover {
+  background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12));
+}
+
+/* ─── Tab dot ────────────────────────────────────────────── */
+
+.cli-panel-tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--cli-status-idle, #3fb950);
+}
+
+.cli-panel-tab-dot.dot-running {
+  background: var(--cli-status-running, #f0883e);
+  animation: cliStatusPulse 1.5s ease-in-out infinite;
+}
+
+.cli-panel-tab-dot.dot-error {
+  background: var(--cli-status-error, #f85149);
+}
+
+/* ─── Services / Servers dropdown ────────────────────────── */
+
+.cli-panel-services-dropdown {
+  position: fixed;
+  background-color: var(--cli-panel-header-bg, #1f2937);
+  border: 1px solid var(--cli-panel-border, #374151);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 1100;
+  min-width: 260px;
+  max-width: 380px;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.cli-panel-services-dropdown-header {
+  padding: 10px 14px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.5));
+  border-bottom: 1px solid var(--cli-panel-border, #374151);
+}
+
+.cli-panel-services-dropdown-list {
+  max-height: 240px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.2)) transparent;
+}
+
+.cli-panel-services-dropdown-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cli-panel-services-dropdown-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cli-panel-services-dropdown-list::-webkit-scrollbar-thumb {
+  background: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.2));
+  border-radius: 3px;
+}
+
+.cli-panel-services-dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.35));
+}
+
+.cli-panel-services-dropdown-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background-color 0.15s ease;
+}
+
+.cli-panel-services-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.cli-panel-services-dropdown-item:hover {
+  background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.08));
+}
+
+.cli-panel-svc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.cli-panel-svc-dot.svc-running {
+  background: var(--cli-status-idle, #3fb950);
+}
+
+.cli-panel-svc-dot.svc-stopped {
+  background: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.3));
+}
+
+.cli-panel-svc-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cli-panel-svc-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cli-panel-svc-desc {
+  font-size: 11px;
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.5));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cli-panel-svc-status {
+  font-size: 11px;
+  flex-shrink: 0;
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.5));
+  margin-top: 1px;
+}
+
+.cli-panel-srv-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.cli-panel-services-dropdown-empty {
+  padding: 16px 14px;
+  font-size: 12px;
+  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.4));
+  text-align: center;
+}
+
+/* ─── Glow line ──────────────────────────────────────────── */
+
+.cli-panel-glow-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), #a78bfa, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), transparent);
+  background-size: 200% 100%;
+  opacity: 0.4;
+  animation: cliGlowShift 8s ease-in-out infinite;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.cli-panel-glow-line.glow-active {
+  opacity: 0.8;
+  animation-duration: 3s;
+}
+
+/* Glow line for vertical positions */
+.cli-panel-wrapper[data-position="left"] .cli-panel-glow-line {
+  bottom: auto;
+  top: 0;
+  left: auto;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), #a78bfa, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), transparent);
+  background-size: 100% 200%;
+}
+
+.cli-panel-wrapper[data-position="right"] .cli-panel-glow-line {
+  bottom: auto;
+  top: 0;
+  left: 0;
+  right: auto;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), #a78bfa, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), transparent);
+  background-size: 100% 200%;
+}
+
+/* ─── Animations ─────────────────────────────────────────── */
+
+@keyframes cliStatusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes cliGlowShift {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+/* ─── Accessibility ──────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .cli-panel-glow-line,
+  .cli-panel-status-dot,
+  .cli-panel-tab-dot {
+    animation: none !important;
+  }
+}
+
+/* ─── Scrollbar styling — scoped to CLI containers ────────── */
+
+.cli-panel-wrapper .xterm .xterm-viewport {
+  overscroll-behavior: contain;
+}
+
+.cli-panel-wrapper .xterm .xterm-viewport::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cli-panel-wrapper .xterm .xterm-viewport::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+.cli-panel-wrapper .xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: #666;
 }
 
 /* ─── Global helper ──────────────────────────────────────── */

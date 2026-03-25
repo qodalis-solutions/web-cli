@@ -549,6 +549,22 @@ $header-height: 60px
   max-height: 240px
   overflow-y: auto
 
+  &::-webkit-scrollbar
+    width: 6px
+
+  &::-webkit-scrollbar-track
+    background: transparent
+
+  &::-webkit-scrollbar-thumb
+    background: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.2))
+    border-radius: 3px
+
+  &::-webkit-scrollbar-thumb:hover
+    background: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.35))
+
+  scrollbar-width: thin
+  scrollbar-color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.2)) transparent
+
 .services-dropdown-item
   display: flex
   align-items: flex-start
@@ -603,6 +619,13 @@ $header-height: 60px
   flex-shrink: 0
   color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.5))
   margin-top: 1px
+
+.srv-meta
+  display: flex
+  flex-direction: column
+  align-items: flex-end
+  gap: 2px
+  flex-shrink: 0
 
 .services-dropdown-empty
   padding: 16px 14px

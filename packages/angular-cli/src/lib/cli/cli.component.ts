@@ -82,9 +82,17 @@ export class CliComponent implements AfterViewInit, OnDestroy {
             );
         }
 
-        // Register processors provided via Angular DI (from resolveCommandProcessorProvider)
+        // Register processors provided via Angular DI (from resolveCommandProcessorProvider).
+        // Exclude processors that already belong to a module — those will be
+        // initialized as part of the module boot (which registers services first).
         if (this.diProcessors && this.diProcessors.length > 0) {
-            this.engine.registerProcessors(this.diProcessors);
+            const moduleProcessors = new Set(
+                (this.diModules ?? []).flatMap(m => m.processors ?? []),
+            );
+            const standalone = this.diProcessors.filter(p => !moduleProcessors.has(p));
+            if (standalone.length > 0) {
+                this.engine.registerProcessors(standalone);
+            }
         }
 
         // Register processors provided via @Input

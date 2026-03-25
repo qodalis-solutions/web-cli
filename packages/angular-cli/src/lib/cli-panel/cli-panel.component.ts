@@ -136,6 +136,7 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
         totalServiceCount: 0,
         serviceDetails: [],
         serverConnectionState: 'none',
+        serverDetails: [],
         uptime: 0,
     };
 
