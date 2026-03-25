@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable, Subject, interval, map, distinctUntilChanged, takeUntil, startWith } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, interval, map, distinctUntilChanged, takeUntil, startWith, merge } from 'rxjs';
 import { CliEngine } from '@qodalis/cli';
 
 export interface TabStatus {
@@ -20,7 +20,11 @@ interface TabEntry {
     destroy$: Subject<void>;
 }
 
-const POLL_INTERVAL_MS = 500;
+/** Slow poll for uptime display only. */
+const UPTIME_POLL_MS = 2000;
+
+/** Fast poll to catch execution state changes. */
+const EXEC_POLL_MS = 300;
 
 const DEFAULT_TAB_STATUS: TabStatus = {
     executionState: 'idle',
@@ -41,6 +45,14 @@ export class CliPanelStatusService {
     private globalStatus$ = new BehaviorSubject<GlobalStatus>(DEFAULT_GLOBAL_STATUS);
     private destroy$ = new Subject<void>();
 
+    /** Push to trigger an immediate global status recalculation. */
+    private globalRefresh$ = new Subject<void>();
+
+    /** Cleanup functions for background-service event listeners. */
+    private bgUnsubscribes: Array<() => void> = [];
+
+    private globalPollingStarted = false;
+
     /**
      * Register an engine for a specific pane within a tab.
      */
@@ -53,9 +65,17 @@ export class CliPanelStatusService {
                 destroy$: new Subject<void>(),
             };
             this.tabs.set(tabId, entry);
-            this.startPollingTab(tabId, entry);
+            this.startPollingTab(entry);
         }
         entry.engines.set(paneId, engine);
+
+        // Listen to background service events for immediate global refresh
+        this.listenToBackgroundServices(engine);
+
+        if (!this.globalPollingStarted) {
+            this.globalPollingStarted = true;
+            this.startGlobalPolling();
+        }
     }
 
     /**
@@ -75,6 +95,7 @@ export class CliPanelStatusService {
      */
     setActiveTab(tabId: number): void {
         this.activeTabId = tabId;
+        this.globalRefresh$.next();
     }
 
     /**
@@ -103,10 +124,30 @@ export class CliPanelStatusService {
             entry.destroy$.complete();
         }
         this.tabs.clear();
+        for (const unsub of this.bgUnsubscribes) {
+            unsub();
+        }
+        this.bgUnsubscribes.length = 0;
     }
 
-    private startPollingTab(tabId: number, entry: TabEntry): void {
-        interval(POLL_INTERVAL_MS).pipe(
+    /**
+     * Hook into an engine's background service events so that
+     * service start/stop/status-change triggers an immediate refresh.
+     */
+    private listenToBackgroundServices(engine: CliEngine): void {
+        const context = engine.getContext();
+        if (!context?.backgroundServices) return;
+
+        try {
+            const unsub = context.backgroundServices.on(() => {
+                this.globalRefresh$.next();
+            });
+            this.bgUnsubscribes.push(unsub);
+        } catch { /* not available */ }
+    }
+
+    private startPollingTab(entry: TabEntry): void {
+        interval(EXEC_POLL_MS).pipe(
             startWith(0),
             map(() => this.computeTabStatus(entry)),
             distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
@@ -115,10 +156,14 @@ export class CliPanelStatusService {
         ).subscribe(status => {
             entry.status$.next(status);
         });
+    }
 
-        // Also poll global status from active tab
-        interval(POLL_INTERVAL_MS).pipe(
-            startWith(0),
+    private startGlobalPolling(): void {
+        // Merge: slow timer for uptime ticking + immediate refresh signals
+        merge(
+            interval(UPTIME_POLL_MS).pipe(startWith(0)),
+            this.globalRefresh$,
+        ).pipe(
             map(() => this.computeGlobalStatus()),
             distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
             takeUntil(this.destroy$),
@@ -143,8 +188,6 @@ export class CliPanelStatusService {
             // Check last command result
             const result = (context as any).lastCommandResult;
             if (result) {
-                // Use the most recent result across panes
-                // (we don't have timestamps, so just take the last one encountered)
                 latestResult = result;
             }
         }
