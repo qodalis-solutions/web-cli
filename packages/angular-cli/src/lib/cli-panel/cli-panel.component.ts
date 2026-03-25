@@ -88,7 +88,7 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
     @Input() maximized?: boolean;
     @Output() maximizedChange = new EventEmitter<boolean>();
 
-    @Input() activeTabInput?: number;
+    @Input() activeTabId?: number;
     @Output() activeTabIdChange = new EventEmitter<number>();
 
     @Input() position?: CliPanelPosition;
@@ -137,7 +137,7 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
         return this.maximized !== undefined ? this.maximized : this._internalMaximized;
     }
     protected get resolvedActiveTabId(): number {
-        return this.activeTabInput !== undefined ? this.activeTabInput : this._internalActiveTabId;
+        return this.activeTabId !== undefined ? this.activeTabId : this._internalActiveTabId;
     }
     protected get resolvedHeight(): number {
         return this.height !== undefined ? this.height : this._internalHeight;
