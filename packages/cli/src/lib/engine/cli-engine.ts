@@ -71,6 +71,7 @@ export class CliEngine {
     private resizeScheduled = false;
     private bootService?: CliBoot;
     private dragDropService?: CliDragDropService;
+    private _startedAt?: number;
 
     constructor(
         private readonly container: HTMLElement,
@@ -261,6 +262,12 @@ export class CliEngine {
         if (this.options?.snapshot) {
             await this.restoreSnapshot(this.options.snapshot);
         }
+
+        this._startedAt = Date.now();
+
+        // 10. Final refit — by this point fonts are loaded and all boot
+        //     content has been written, so cell metrics are stable.
+        this.safeFit();
     }
 
     /**
@@ -329,15 +336,27 @@ export class CliEngine {
     }
 
     /**
-     * Execute a command programmatically.
+     * Timestamp (ms since epoch) when the engine finished starting.
+     */
+    get startedAt(): number | undefined {
+        return this._startedAt;
+    }
+
+    /**
+     * Execute a command programmatically, behaving the same as if the user
+     * typed it and pressed Enter: echoes the command, adds it to history,
+     * executes it, and shows a new prompt afterwards.
      */
     async execute(command: string): Promise<void> {
-        if (this.executionContext) {
-            await this.executionContext.executor.executeCommand(
-                command,
-                this.executionContext,
-            );
-        }
+        if (!this.executionContext) return;
+
+        const ctx = this.executionContext;
+
+        // Echo the command as if the user typed it and pressed Enter
+        ctx.showPrompt({ reset: true });
+        this.terminal.write(command + '\r\n');
+
+        await ctx.submitCommand(command);
     }
 
     /**

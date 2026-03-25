@@ -8,6 +8,14 @@
   [hideable]="options?.hideable ?? true"
   [hideAlignment]="options?.hideAlignment ?? 'center'"
   [themeStyles]="themeStyles"
+  [statusExecutionState]="tabStatuses[resolvedActiveTabId]?.executionState || 'idle'"
+  [statusLastCommand]="tabStatuses[resolvedActiveTabId]?.lastCommandStatus ? { name: tabStatuses[resolvedActiveTabId]?.lastCommandName || '', success: tabStatuses[resolvedActiveTabId]?.lastCommandStatus === 'success' } : null"
+  [statusServiceCount]="{ running: globalStatus.runningServiceCount, total: globalStatus.totalServiceCount }"
+  [statusServiceDetails]="globalStatus.serviceDetails"
+  [statusServerState]="globalStatus.serverConnectionState"
+  [statusServerDetails]="globalStatus.serverDetails"
+  [statusUptime]="globalStatus.uptime"
+  [statusText]="tabStatuses[resolvedActiveTabId]?.statusText || null"
   (onToggle)="onToggle($event)"
   (onContentSizeChange)="onContentSizeChange($event)"
   (onPositionChange)="onPositionChange($event)"
@@ -36,6 +44,7 @@
             (dblclick)="$event.stopPropagation()"
             #renameInput
           />
+          <span *ngIf="!tab.isEditing" class="tab-dot" [ngClass]="getTabDotClass(tab.id)"></span>
           <span *ngIf="!tab.isEditing" class="tab-title">{{ tab.title }}</span>
           <button
             *ngIf="!tab.isEditing"
@@ -96,6 +105,7 @@
                 [modules]="modules"
                 [processors]="processors"
                 [snapshot]="pane.snapshot"
+                (engineReady)="onPaneEngineReady(tab.id, pane.id, $event)"
               />
             </div>
           </ng-container>

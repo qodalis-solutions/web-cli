@@ -233,6 +233,12 @@ export class CliTestHarness {
             refreshCurrentLine: () => {},
             enterFullScreenMode: () => {},
             exitFullScreenMode: () => {},
+            submitCommand: async (command: string) => {
+                await this.executor.executeCommand(command, context);
+            },
+            setStatusText: () => {},
+            clearStatusText: () => {},
+            getStatusText: () => undefined,
             createInterval: (cb: () => void, ms: number): ICliManagedInterval => {
                 const id = setInterval(cb, ms);
                 return {

@@ -6,6 +6,7 @@ import {
     HostListener,
 } from '@angular/core';
 import { CliPanelPosition, CliPanelHideAlignment } from '@qodalis/cli-core';
+import { ServiceDetail, ServerDetail } from '../cli-panel/cli-panel-status.service';
 
 const HEADER_HEIGHT = 60;
 
@@ -53,12 +54,103 @@ export class CollapsableContentComponent {
     public onPositionChange = new EventEmitter<CliPanelPosition>();
 
     @Input() isHidden = false;
+
+    // Status bar inputs
+    @Input() statusExecutionState: 'idle' | 'running' = 'idle';
+    @Input() statusLastCommand: { name: string; success: boolean } | null = null;
+    @Input() statusServiceCount: { running: number; total: number } = { running: 0, total: 0 };
+    @Input() statusServiceDetails: ServiceDetail[] = [];
+    @Input() statusServerState: 'connected' | 'disconnected' | 'none' = 'none';
+    @Input() statusServerDetails: ServerDetail[] = [];
+    @Input() statusUptime = 0;
+    @Input() statusText: string | null = null;
+
     positionDropdownOpen = false;
     dropdownStyle: Record<string, string> = {};
     private preHideCollapsed = true;
 
     get isHorizontal(): boolean {
         return this.position === 'left' || this.position === 'right';
+    }
+
+    get showStatusIndicators(): boolean {
+        return this.position === 'bottom' || this.position === 'top';
+    }
+
+    get connectedServerCount(): number {
+        return this.statusServerDetails.filter(s => s.connected).length;
+    }
+
+    get totalServerCount(): number {
+        return this.statusServerDetails.length;
+    }
+
+    servicesDropdownOpen = false;
+    servicesDropdownStyle: Record<string, string> = {};
+    serversDropdownOpen = false;
+    serversDropdownStyle: Record<string, string> = {};
+
+    toggleServicesDropdown(event: MouseEvent): void {
+        event.stopPropagation();
+        this.servicesDropdownOpen = !this.servicesDropdownOpen;
+        if (this.servicesDropdownOpen) {
+            const el = event.currentTarget as HTMLElement;
+            const rect = el.getBoundingClientRect();
+            switch (this.position) {
+                case 'bottom':
+                    this.servicesDropdownStyle = {
+                        bottom: (window.innerHeight - rect.top + 4) + 'px',
+                        left: rect.left + 'px',
+                    };
+                    break;
+                case 'top':
+                    this.servicesDropdownStyle = {
+                        top: (rect.bottom + 4) + 'px',
+                        left: rect.left + 'px',
+                    };
+                    break;
+                default:
+                    this.servicesDropdownStyle = {
+                        bottom: (window.innerHeight - rect.top + 4) + 'px',
+                        left: rect.left + 'px',
+                    };
+            }
+        }
+    }
+
+    toggleServersDropdown(event: MouseEvent): void {
+        event.stopPropagation();
+        this.serversDropdownOpen = !this.serversDropdownOpen;
+        if (this.serversDropdownOpen) {
+            const el = event.currentTarget as HTMLElement;
+            const rect = el.getBoundingClientRect();
+            switch (this.position) {
+                case 'bottom':
+                    this.serversDropdownStyle = {
+                        bottom: (window.innerHeight - rect.top + 4) + 'px',
+                        left: rect.left + 'px',
+                    };
+                    break;
+                case 'top':
+                    this.serversDropdownStyle = {
+                        top: (rect.bottom + 4) + 'px',
+                        left: rect.left + 'px',
+                    };
+                    break;
+                default:
+                    this.serversDropdownStyle = {
+                        bottom: (window.innerHeight - rect.top + 4) + 'px',
+                        left: rect.left + 'px',
+                    };
+            }
+        }
+    }
+
+    get formattedUptime(): string {
+        const mins = Math.floor(this.statusUptime / 60000);
+        if (mins < 60) return `${mins}m`;
+        const hrs = Math.floor(mins / 60);
+        return `${hrs}h${mins % 60}m`;
     }
 
     get wrapperStyle(): Record<string, string> {
@@ -132,8 +224,10 @@ export class CollapsableContentComponent {
     }
 
     @HostListener('document:click')
-    closePositionDropdown(): void {
+    closeDropdowns(): void {
         this.positionDropdownOpen = false;
+        this.servicesDropdownOpen = false;
+        this.serversDropdownOpen = false;
     }
 
     toggleMaximizationTerminal(): void {

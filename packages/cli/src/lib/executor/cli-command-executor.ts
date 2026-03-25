@@ -42,6 +42,8 @@ import { tryExecuteScript, expandEnvironmentVars } from './cli-script-executor';
 export interface ICliExecutionHost extends ICliExecutionContext {
     contextProcessor?: ICliCommandProcessor;
     abort?(): void;
+    lastCommandResult?: { command: string; success: boolean };
+    isExecuting?: boolean;
 }
 
 export class CliCommandExecutor implements ICliCommandExecutorService {
@@ -77,6 +79,9 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         } else {
             rootContext = context as ICliExecutionHost;
         }
+
+        rootContext.isExecuting = true;
+        try {
 
         // Track the last *executed* command's success — skipped commands don't change this.
         let lastExitSuccess = true;
@@ -176,10 +181,19 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                     context.process.exitCode === undefined ||
                     context.process.exitCode === 0;
 
+                rootContext.lastCommandResult = {
+                    command: part.value,
+                    success: lastExitSuccess,
+                };
+
                 // Capture output for the next command in the chain
                 pipelineData = context.process.data;
             } catch (e) {
                 lastExitSuccess = false;
+                rootContext.lastCommandResult = {
+                    command: part.value,
+                    success: false,
+                };
                 // Failed command didn't produce usable output — preserve
                 // whatever data was available before the failure so that
                 // a >> redirect after || can still access it.
@@ -189,6 +203,11 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
             // Default: next command runs unless an operator says otherwise
             shouldRunNext = true;
+        }
+
+        } finally {
+            rootContext.isExecuting = false;
+            rootContext.clearStatusText?.();
         }
     }
 

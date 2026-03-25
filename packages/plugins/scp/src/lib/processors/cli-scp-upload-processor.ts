@@ -144,6 +144,7 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
         context.spinner?.show(
             `Uploading "${filename}" (${formatBytes(content.length)}) to ${server.name}:${remotePath}...`,
         );
+        context.setStatusText(`scp: uploading to ${server.name}`);
 
         try {
             await transferService.upload(

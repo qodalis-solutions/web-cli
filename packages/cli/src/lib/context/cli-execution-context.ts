@@ -101,6 +101,35 @@ export class CliExecutionContext
 
     public readonly reader: ICliInputReader;
 
+    /**
+     * Result of the most recently executed command.
+     * Updated by the command executor after each command completes.
+     */
+    public lastCommandResult?: { command: string; success: boolean };
+
+    /**
+     * Whether a command is currently being executed.
+     * Set by the command executor at start/end of executeCommand().
+     */
+    public isExecuting = false;
+
+    private _statusText?: string;
+    public readonly statusTextChange$ = new Subject<string | undefined>();
+
+    setStatusText(text: string): void {
+        this._statusText = text;
+        this.statusTextChange$.next(text);
+    }
+
+    clearStatusText(): void {
+        this._statusText = undefined;
+        this.statusTextChange$.next(undefined);
+    }
+
+    getStatusText(): string | undefined {
+        return this._statusText;
+    }
+
     public readonly lineBuffer = new CliLineBuffer();
 
     public readonly lineRenderer: CliTerminalLineRenderer;
@@ -309,6 +338,22 @@ export class CliExecutionContext
         this.promptLength = this.lineRenderer.renderPrompt(
             this.getPromptOptions(),
         );
+    }
+
+    /**
+     * Submit and execute a command — shared by interactive Enter key
+     * and programmatic engine.execute(). Adds to history, runs the
+     * command, and shows a new prompt afterwards.
+     */
+    async submitCommand(command: string): Promise<void> {
+        if (command.trim()) {
+            await this.commandHistory.addCommand(command);
+            await this.executor.executeCommand(command, this);
+        }
+
+        if (!this.isRawModeActive()) {
+            this.showPrompt();
+        }
     }
 
     clearCurrentLine(): void {

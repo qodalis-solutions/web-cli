@@ -173,11 +173,13 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
 
         const ws = new WebSocket(fullUrl);
         const logs: string[] = [];
+        context.setStatusText('Connecting to log stream');
 
         return new Promise<void>((resolve) => {
             let index = 0;
 
             ws.onopen = () => {
+                context.setStatusText('Streaming live logs');
                 context.writer.writeSuccess('Streaming live logs...');
 
                 if (command.args['level']) {
@@ -245,6 +247,7 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
                     context.writer.writeToFile(filename, logs.join('\n'));
                 }
 
+                context.setStatusText('Log stream disconnected');
                 context.writer.writeInfo('Disconnected from live logs');
                 resolve();
             };

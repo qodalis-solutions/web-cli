@@ -68,5 +68,10 @@ export class AppComponent {
         position: 'right',
         isHidden: true,
         syncTheme: true,
+        servers: [
+            { name: 'dotnet', url: 'http://localhost:8046' },
+            { name: 'node', url: 'http://localhost:8047' },
+            { name: 'python', url: 'http://localhost:8048' },
+        ],
     };
 }

@@ -71,20 +71,16 @@ export class CommandLineMode implements IInputMode {
             this.clearGhostText();
             this.host.terminal.write('\r\n');
 
-            if (buffer.text) {
-                await this.host.commandHistory.addCommand(buffer.text);
+            const text = buffer.text;
+            if (text) {
                 this.historyIndex = this.host.commandHistory.getLastIndex();
                 this.bufferSetByHistory = false;
-
-                this.isExecutingCommand = true;
-                const ctx = this.host.getExecutionContext();
-                await ctx.executor.executeCommand(buffer.text, ctx);
-                this.isExecutingCommand = false;
             }
 
-            if (!this.host.isRawModeActive()) {
-                this.host.showPrompt();
-            }
+            this.isExecutingCommand = true;
+            const ctx = this.host.getExecutionContext();
+            await ctx.submitCommand(text);
+            this.isExecutingCommand = false;
         } else if (data === '\u001B[A') {
             this.showPreviousCommand();
         } else if (data === '\u001B[B') {
