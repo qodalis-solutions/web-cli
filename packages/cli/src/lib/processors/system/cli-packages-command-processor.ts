@@ -128,6 +128,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                         scope.createAbortSignal(context);
 
                     progressBar.show();
+                    context.setStatusText('Browsing packages');
 
                     const prefix = packagesManager.QODALIS_COMMAND_PREFIX;
 
@@ -378,6 +379,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     const packages = command.value!.split(' ');
                     for (const pkg of packages) {
                         if (signal.aborted) break;
+                        context.setStatusText(`Installing ${pkg}`);
                         await scope.addPackage(pkg, context, signal);
                     }
 
@@ -421,6 +423,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     const packages = command.value!.split(' ');
                     for (const pkg of packages) {
                         if (signal.aborted) break;
+                        context.setStatusText(`Removing ${pkg}`);
                         await scope.removePackage(pkg, context);
                     }
 
@@ -462,6 +465,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
 
                     progressBar.show();
                     progressBar.setText(`Fetching versions for ${name}`);
+                    context.setStatusText(`Fetching versions for ${name}`);
 
                     try {
                         const response = await scriptsLoader.getScript(
