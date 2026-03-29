@@ -886,6 +886,58 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                                     )}
                                 </div>
                             )}
+                            {/* Compact status indicators (left/right positions — CSS controls visibility) */}
+                            <div className="cli-panel-status-indicators-compact">
+                                {/* Execution state */}
+                                <span className="cli-panel-status-compact-item" title={statusExecutionState}>
+                                    <span className={`cli-panel-status-dot ${statusExecutionState === 'running' ? 'dot-running' : 'dot-idle'}`} />
+                                </span>
+
+                                {/* Background services */}
+                                {statusServiceCount.total > 0 && (
+                                    <span
+                                        className="cli-panel-status-compact-item status-clickable"
+                                        title={`${statusServiceCount.running}/${statusServiceCount.total} services`}
+                                        onClick={e => { e.stopPropagation(); setServicesDropdownOpen(prev => !prev); setServersDropdownOpen(false); }}
+                                    >
+                                        <span className="cli-panel-status-icon">&#9881;</span>
+                                    </span>
+                                )}
+
+                                {/* Last command */}
+                                {statusLastCommand && (
+                                    <span className="cli-panel-status-compact-item" title={`${statusLastCommand.success ? '✓' : '✗'} ${statusLastCommand.name}`}>
+                                        <span className={`cli-panel-status-icon ${statusLastCommand.success ? 'status-success' : 'status-error'}`}>
+                                            {statusLastCommand.success ? '\u2713' : '\u2717'}
+                                        </span>
+                                    </span>
+                                )}
+
+                                {/* Server connection */}
+                                {statusServerState !== 'none' && (
+                                    <span
+                                        className="cli-panel-status-compact-item status-clickable"
+                                        title={`${statusServerDetails.filter(s => s.connected).length}/${statusServerDetails.length} servers`}
+                                        onClick={e => { e.stopPropagation(); setServersDropdownOpen(prev => !prev); setServicesDropdownOpen(false); }}
+                                    >
+                                        <span className={`cli-panel-status-dot ${statusServerState === 'connected' ? 'dot-idle' : 'dot-error'}`} />
+                                    </span>
+                                )}
+
+                                {/* Uptime */}
+                                {statusUptime > 0 && (
+                                    <span className="cli-panel-status-compact-item status-muted" title={formattedUptime}>
+                                        <span className="cli-panel-status-icon">&uarr;</span>
+                                    </span>
+                                )}
+
+                                {/* Notification */}
+                                {notification && (
+                                    <span className="cli-panel-status-compact-item" title={notification.message}>
+                                        <span className={`cli-panel-status-compact-dot level-${notification.level}`} />
+                                    </span>
+                                )}
+                            </div>
                             <div className="cli-panel-action-buttons">
                                 <div className="cli-panel-btn-position-wrapper" onClick={e => e.stopPropagation()}>
                                     <button className="cli-panel-btn cli-panel-btn-position" title="Move panel" onClick={handlePositionButtonClick}>
@@ -1080,9 +1132,17 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                             const el = servicesDropdownRef.current;
                             if (!el) return {};
                             const rect = el.getBoundingClientRect();
-                            return position === 'top'
-                                ? { position: 'fixed' as const, top: rect.bottom + 4, left: rect.left, zIndex: 1100 }
-                                : { position: 'fixed' as const, bottom: window.innerHeight - rect.top + 4, left: rect.left, zIndex: 1100 };
+                            const base = { position: 'fixed' as const, zIndex: 1100 };
+                            switch (position) {
+                                case 'top':
+                                    return { ...base, top: rect.bottom + 4, left: rect.left };
+                                case 'left':
+                                    return { ...base, top: rect.top, left: rect.right + 4 };
+                                case 'right':
+                                    return { ...base, top: rect.top, right: window.innerWidth - rect.left + 4 };
+                                default:
+                                    return { ...base, bottom: window.innerHeight - rect.top + 4, left: rect.left };
+                            }
                         })()}
                         onClick={e => e.stopPropagation()}
                     >
@@ -1113,9 +1173,17 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                             const el = serversDropdownRef.current;
                             if (!el) return {};
                             const rect = el.getBoundingClientRect();
-                            return position === 'top'
-                                ? { position: 'fixed' as const, top: rect.bottom + 4, left: rect.left, zIndex: 1100 }
-                                : { position: 'fixed' as const, bottom: window.innerHeight - rect.top + 4, left: rect.left, zIndex: 1100 };
+                            const base = { position: 'fixed' as const, zIndex: 1100 };
+                            switch (position) {
+                                case 'top':
+                                    return { ...base, top: rect.bottom + 4, left: rect.left };
+                                case 'left':
+                                    return { ...base, top: rect.top, left: rect.right + 4 };
+                                case 'right':
+                                    return { ...base, top: rect.top, right: window.innerWidth - rect.left + 4 };
+                                default:
+                                    return { ...base, bottom: window.innerHeight - rect.top + 4, left: rect.left };
+                            }
                         })()}
                         onClick={e => e.stopPropagation()}
                     >
