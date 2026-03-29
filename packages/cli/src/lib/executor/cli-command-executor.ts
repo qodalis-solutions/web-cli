@@ -208,7 +208,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
         } finally {
             rootContext.isExecuting = false;
-            rootContext.clearStatusText?.();
+            rootContext.notifier?.clear();
         }
     }
 

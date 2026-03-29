@@ -14,6 +14,7 @@ import {
     ICliTextAnimator,
     ICliTranslationService,
     ICliHttpClient,
+    ICliNotifier,
 } from '.';
 import { ICliInputReader } from './input-reader';
 import { ICliBackgroundServiceRegistry } from './background-service';
@@ -136,21 +137,20 @@ export interface ICliExecutionContext {
     submitCommand(command: string): Promise<void>;
 
     /**
-     * Set a custom status text displayed in the panel header bar.
-     * Use to show progress or state (e.g. "Downloading 45%...", "Connected to server").
+     * Notifier service for displaying status notifications in the panel header bar.
+     * Supports severity levels: info, success, warn, error.
      * Cleared automatically when the command finishes.
+     *
+     * @example
+     * ```ts
+     * context.notifier.info('Downloading 45%...');
+     * context.notifier.success('Connected to server');
+     * context.notifier.warn('Rate limited, retrying...');
+     * context.notifier.error('Connection failed');
+     * context.notifier.clear();
+     * ```
      */
-    setStatusText(text: string): void;
-
-    /**
-     * Clear the custom status text from the panel header bar.
-     */
-    clearStatusText(): void;
-
-    /**
-     * Get the current custom status text, if any.
-     */
-    getStatusText(): string | undefined;
+    notifier: ICliNotifier;
 
     /**
      * Set the current processor as the context processor, i.e. the processor that will handle the command

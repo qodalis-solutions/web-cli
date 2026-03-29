@@ -104,7 +104,7 @@ class ServerStatusProcessor implements ICliCommandChildProcessor {
         }
 
         context.spinner?.show(`Pinging ${serverName}...`);
-        context.setStatusText(`Pinging ${serverName}`);
+        context.notifier.info(`Pinging ${serverName}`);
         const reachable = await connection.ping();
         context.spinner?.hide();
 
@@ -152,7 +152,7 @@ class ServerReconnectProcessor implements ICliCommandChildProcessor {
         }
 
         context.spinner?.show(`Reconnecting to ${serverName}...`);
-        context.setStatusText(`Reconnecting to ${serverName}`);
+        context.notifier.info(`Reconnecting to ${serverName}`);
         const result = await manager.reconnect(serverName);
         context.spinner?.hide();
 
