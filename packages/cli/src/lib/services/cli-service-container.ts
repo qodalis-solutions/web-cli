@@ -47,6 +47,13 @@ export class CliServiceContainer implements ICliServiceProvider {
     }
 
     /**
+     * Check whether a service is registered for the given token.
+     */
+    has(token: any): boolean {
+        return this.services.has(token) || this.multiServices.has(token);
+    }
+
+    /**
      * Register one or more providers.
      *
      * @param definition A single CliProvider or an array of CliProviders.
@@ -165,12 +172,14 @@ export class CliServiceContainer implements ICliServiceProvider {
             return provider.useValue;
         }
 
+        const deps = (provider['deps'] ?? []).map((dep: any) => this.get(dep));
+
         if ('useFactory' in provider) {
-            return provider.useFactory();
+            return provider.useFactory(...deps);
         }
 
         if ('useClass' in provider) {
-            return new provider.useClass();
+            return new provider.useClass(...deps);
         }
 
         throw new Error(
