@@ -5,7 +5,7 @@ import {
     Output,
     HostListener,
 } from '@angular/core';
-import { CliPanelPosition, CliPanelHideAlignment } from '@qodalis/cli-core';
+import { CliPanelPosition, CliPanelHideAlignment, CliNotification } from '@qodalis/cli-core';
 import { ServiceDetail, ServerDetail } from '../cli-panel/cli-panel-status.service';
 
 const HEADER_HEIGHT = 60;
@@ -63,7 +63,7 @@ export class CollapsableContentComponent {
     @Input() statusServerState: 'connected' | 'disconnected' | 'none' = 'none';
     @Input() statusServerDetails: ServerDetail[] = [];
     @Input() statusUptime = 0;
-    @Input() statusText: string | null = null;
+    @Input() notification: CliNotification | null = null;
 
     positionDropdownOpen = false;
     dropdownStyle: Record<string, string> = {};
