@@ -896,6 +896,7 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                                 {/* Background services */}
                                 {statusServiceCount.total > 0 && (
                                     <span
+                                        ref={servicesDropdownRef}
                                         className="cli-panel-status-compact-item status-clickable"
                                         title={`${statusServiceCount.running}/${statusServiceCount.total} services`}
                                         onClick={e => { e.stopPropagation(); setServicesDropdownOpen(prev => !prev); setServersDropdownOpen(false); }}
@@ -916,6 +917,7 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                                 {/* Server connection */}
                                 {statusServerState !== 'none' && (
                                     <span
+                                        ref={serversDropdownRef}
                                         className="cli-panel-status-compact-item status-clickable"
                                         title={`${statusServerDetails.filter(s => s.connected).length}/${statusServerDetails.length} servers`}
                                         onClick={e => { e.stopPropagation(); setServersDropdownOpen(prev => !prev); setServicesDropdownOpen(false); }}
