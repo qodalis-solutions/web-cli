@@ -6,6 +6,7 @@ export * from './options';
 export * from './services';
 export * from './users';
 export * from './permissions';
+export * from './notification';
 
 import { CliForegroundColor, CliBackgroundColor } from './colors';
 import { CliIcon } from './icons';
