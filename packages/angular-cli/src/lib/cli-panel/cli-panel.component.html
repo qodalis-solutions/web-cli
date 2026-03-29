@@ -15,7 +15,7 @@
   [statusServerState]="globalStatus.serverConnectionState"
   [statusServerDetails]="globalStatus.serverDetails"
   [statusUptime]="globalStatus.uptime"
-  [statusText]="tabStatuses[resolvedActiveTabId]?.statusText || null"
+  [notification]="tabStatuses[resolvedActiveTabId]?.notification || null"
   (onToggle)="onToggle($event)"
   (onContentSizeChange)="onContentSizeChange($event)"
   (onPositionChange)="onPositionChange($event)"

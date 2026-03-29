@@ -1,11 +1,12 @@
 import { BehaviorSubject, Observable, Subject, interval, map, distinctUntilChanged, takeUntil, startWith, merge } from 'rxjs';
 import { CliEngine } from '@qodalis/cli';
+import { CliNotification } from '@qodalis/cli-core';
 
 export interface TabStatus {
     executionState: 'idle' | 'running';
     lastCommandStatus: 'success' | 'error' | null;
     lastCommandName: string | null;
-    statusText: string | null;
+    notification: CliNotification | null;
 }
 
 export interface ServiceDetail {
@@ -48,7 +49,7 @@ const DEFAULT_TAB_STATUS: TabStatus = {
     executionState: 'idle',
     lastCommandStatus: null,
     lastCommandName: null,
-    statusText: null,
+    notification: null,
 };
 
 const DEFAULT_GLOBAL_STATUS: GlobalStatus = {
@@ -91,10 +92,10 @@ export class CliPanelStatusService {
         }
         entry.engines.set(paneId, engine);
 
-        // Listen to statusText changes for immediate tab refresh
+        // Listen to notifier changes for immediate tab refresh
         const context = engine.getContext();
-        if (context && (context as any).statusTextChange$) {
-            (context as any).statusTextChange$.pipe(
+        if (context?.notifier?.change$) {
+            context.notifier.change$.pipe(
                 takeUntil(entry.destroy$),
                 takeUntil(this.destroy$),
             ).subscribe(() => {
@@ -210,7 +211,7 @@ export class CliPanelStatusService {
     private computeTabStatus(entry: TabEntry): TabStatus {
         let running = false;
         let latestResult: { command: string; success: boolean } | undefined;
-        let statusText: string | null = null;
+        let notification: CliNotification | null = null;
 
         for (const engine of entry.engines.values()) {
             const context = engine.getContext();
@@ -228,10 +229,10 @@ export class CliPanelStatusService {
                 latestResult = result;
             }
 
-            // Pick up custom status text from processors
-            const text = context.getStatusText?.();
-            if (text) {
-                statusText = text;
+            // Pick up notification from processors
+            const notif = context.notifier?.current;
+            if (notif) {
+                notification = notif;
             }
         }
 
@@ -239,7 +240,7 @@ export class CliPanelStatusService {
             executionState: running ? 'running' : 'idle',
             lastCommandStatus: latestResult ? (latestResult.success ? 'success' : 'error') : null,
             lastCommandName: latestResult?.command ?? null,
-            statusText,
+            notification,
         };
     }
 
