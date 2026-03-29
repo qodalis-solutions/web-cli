@@ -12,10 +12,14 @@ export type CliValueProvider = MultiServices & {
 
 export type CliTypeProvider = MultiServices & {
     useClass: any;
+    /** DI tokens resolved from the container and passed as constructor arguments. */
+    deps?: any[];
 };
 
 export type CliFactoryProvider = MultiServices & {
     useFactory: Function;
+    /** DI tokens resolved from the container and passed as factory arguments. */
+    deps?: any[];
 };
 
 export type CliProvider = { provide: any } & (

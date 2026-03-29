@@ -69,6 +69,45 @@ describe('CliServiceContainer', () => {
     });
 
     // -----------------------------------------------------------------------
+    // useFactory with deps
+    // -----------------------------------------------------------------------
+    describe('useFactory with deps', () => {
+        it('should resolve deps and pass as factory arguments', () => {
+            container.set({ provide: 'baseUrl', useValue: 'https://api.example.com' });
+            container.set({
+                provide: 'client',
+                useFactory: (url: string) => ({ endpoint: url }),
+                deps: ['baseUrl'],
+            });
+
+            const client = container.get<{ endpoint: string }>('client');
+            expect(client.endpoint).toBe('https://api.example.com');
+        });
+
+        it('should resolve multiple deps for factory', () => {
+            container.set({ provide: 'host', useValue: 'localhost' });
+            container.set({ provide: 'port', useValue: 3000 });
+            container.set({
+                provide: 'url',
+                useFactory: (h: string, p: number) => `${h}:${p}`,
+                deps: ['host', 'port'],
+            });
+
+            expect(container.get('url')).toBe('localhost:3000');
+        });
+
+        it('should throw when a dep token is not registered', () => {
+            expect(() =>
+                container.set({
+                    provide: 'broken',
+                    useFactory: (x: any) => x,
+                    deps: ['nonexistent'],
+                }),
+            ).toThrowError(/No provider found for token "nonexistent"/);
+        });
+    });
+
+    // -----------------------------------------------------------------------
     // useClass
     // -----------------------------------------------------------------------
     describe('useClass provider', () => {
@@ -91,6 +130,60 @@ describe('CliServiceContainer', () => {
             a.count = 5;
             const b = container.get<Counter>('counter');
             expect(b.count).toBe(5);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // useClass with deps
+    // -----------------------------------------------------------------------
+    describe('useClass with deps', () => {
+        it('should resolve deps and pass as constructor arguments', () => {
+            class Logger {
+                name = 'logger';
+            }
+            class AppService {
+                constructor(public logger: Logger) {}
+            }
+
+            container.set({ provide: 'logger', useClass: Logger });
+            container.set({
+                provide: 'app',
+                useClass: AppService,
+                deps: ['logger'],
+            });
+
+            const app = container.get<AppService>('app');
+            expect(app.logger).toBeDefined();
+            expect(app.logger.name).toBe('logger');
+        });
+
+        it('should resolve multiple deps in order', () => {
+            class MultiDep {
+                constructor(
+                    public a: string,
+                    public b: number,
+                ) {}
+            }
+
+            container.set({ provide: 'valA', useValue: 'hello' });
+            container.set({ provide: 'valB', useValue: 42 });
+            container.set({
+                provide: 'multi',
+                useClass: MultiDep,
+                deps: ['valA', 'valB'],
+            });
+
+            const instance = container.get<MultiDep>('multi');
+            expect(instance.a).toBe('hello');
+            expect(instance.b).toBe(42);
+        });
+
+        it('should work without deps (backward compatible)', () => {
+            class Simple {
+                value = 'ok';
+            }
+            container.set({ provide: 'simple', useClass: Simple });
+            expect(container.get<Simple>('simple').value).toBe('ok');
         });
     });
 
