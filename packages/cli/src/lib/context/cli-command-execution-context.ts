@@ -21,6 +21,7 @@ import {
     ICliTranslationService,
     ICliHttpClient,
     CliFullScreenOptions,
+    ICliNotifier,
 } from '@qodalis/cli-core';
 import { Terminal } from '@xterm/xterm';
 import { Subject } from 'rxjs';
@@ -55,18 +56,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     reader: ICliInputReader;
     readonly backgroundServices: ICliBackgroundServiceRegistry;
     http: ICliHttpClient;
-
-    setStatusText(text: string): void {
-        this.context.setStatusText(text);
-    }
-
-    clearStatusText(): void {
-        this.context.clearStatusText();
-    }
-
-    getStatusText(): string | undefined {
-        return this.context.getStatusText();
-    }
+    notifier: ICliNotifier;
 
     get promptLength(): number {
         return this.context.promptLength;
@@ -138,6 +128,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
         this.createTimeout = (cb, ms) => context.createTimeout(cb, ms);
         this.backgroundServices = context.backgroundServices;
         this.http = context.http;
+        this.notifier = context.notifier;
 
         this.state = context.services
             .getRequired<ICliStateStoreManager>(CliStateStoreManager_TOKEN)

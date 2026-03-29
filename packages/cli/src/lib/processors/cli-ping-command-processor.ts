@@ -67,7 +67,7 @@ export class CliPingCommandProcessor implements ICliCommandProcessor {
         context.writer.writeln(
             `PING ${host} (${url}):`,
         );
-        context.setStatusText(`ping ${host}`);
+        context.notifier.info(`ping ${host}`);
 
         const times: number[] = [];
         let transmitted = 0;
@@ -100,7 +100,7 @@ export class CliPingCommandProcessor implements ICliCommandProcessor {
                     times.push(elapsed);
 
                     const status = response.type === 'opaque' ? 'ok' : `status=${response.status}`;
-                    context.setStatusText(`ping ${host}: seq=${seq} time=${ms}ms`);
+                    context.notifier.info(`ping ${host}: seq=${seq} time=${ms}ms`);
                     context.writer.writeln(
                         `${url}: seq=${seq} ${status} time=${ms} ms`,
                     );

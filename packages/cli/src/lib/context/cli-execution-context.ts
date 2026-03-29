@@ -24,9 +24,11 @@ import {
     ICliFilePickerProvider,
     CliFullScreenOptions,
     ICliHttpClient,
+    ICliNotifier,
 } from '@qodalis/cli-core';
 import { CliBackgroundServiceRegistry } from '../services/background';
 import { CliHttpClient } from '../services/cli-http-client';
+import { CliNotifier } from '../services/cli-notifier';
 import { CliFullScreenManager } from './cli-fullscreen-manager';
 import { CliTimerManager } from './cli-timer-manager';
 import { CliTerminalWriter } from '../services/cli-terminal-writer';
@@ -97,6 +99,8 @@ export class CliExecutionContext
 
     public http: ICliHttpClient;
 
+    public readonly notifier: ICliNotifier;
+
     public promptPathProvider?: () => string | null;
 
     public readonly completionEngine = new CliCompletionEngine();
@@ -116,23 +120,6 @@ export class CliExecutionContext
      * Set by the command executor at start/end of executeCommand().
      */
     public isExecuting = false;
-
-    private _statusText?: string;
-    public readonly statusTextChange$ = new Subject<string | undefined>();
-
-    setStatusText(text: string): void {
-        this._statusText = text;
-        this.statusTextChange$.next(text);
-    }
-
-    clearStatusText(): void {
-        this._statusText = undefined;
-        this.statusTextChange$.next(undefined);
-    }
-
-    getStatusText(): string | undefined {
-        return this._statusText;
-    }
 
     public readonly lineBuffer = new CliLineBuffer();
 
@@ -198,6 +185,7 @@ export class CliExecutionContext
         this.lineRenderer = new CliTerminalLineRenderer(terminal, this.writer);
 
         this.http = new CliHttpClient();
+        this.notifier = new CliNotifier();
 
         this.backgroundServices = new CliBackgroundServiceRegistry(
             this.state,

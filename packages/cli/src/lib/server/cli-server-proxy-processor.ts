@@ -98,7 +98,7 @@ export async function executeOnServer(
     };
 
     const cmdLabel = commandPath && commandPath.length > 0 ? commandPath.join(' ') : descriptor.command;
-    context.setStatusText(`executing command: ${cmdLabel} on server ${serverName}`);
+    context.notifier.info(`executing command: ${cmdLabel} on server ${serverName}`);
 
     try {
         if (connection.capabilities?.streaming) {

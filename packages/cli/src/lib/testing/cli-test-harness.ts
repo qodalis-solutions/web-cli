@@ -32,6 +32,7 @@ import { CliProcessRegistry, CliProcessRegistry_TOKEN } from '../services/cli-pr
 import { CliTranslationService } from '../services/cli-translation-service';
 import { CliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
 import { CliHttpClient } from '../services/cli-http-client';
+import { CliNotifier } from '../services/cli-notifier';
 
 /**
  * Result of executing a command through the test harness.
@@ -238,9 +239,7 @@ export class CliTestHarness {
             submitCommand: async (command: string) => {
                 await this.executor.executeCommand(command, context);
             },
-            setStatusText: () => {},
-            clearStatusText: () => {},
-            getStatusText: () => undefined,
+            notifier: new CliNotifier(),
             createInterval: (cb: () => void, ms: number): ICliManagedInterval => {
                 const id = setInterval(cb, ms);
                 return {
