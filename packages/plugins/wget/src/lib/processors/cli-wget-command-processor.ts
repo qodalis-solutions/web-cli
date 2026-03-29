@@ -103,7 +103,7 @@ export class CliWgetCommandCommandProcessor implements ICliCommandProcessor {
             if (showProgress) {
                 context.spinner?.show(`Connecting to ${parsedUrl.hostname}...`);
             }
-            context.setStatusText(`Connecting to ${parsedUrl.hostname}`);
+            context.notifier.info(`Connecting to ${parsedUrl.hostname}`);
 
             const response = await context.http.fetch(url, {
                 headers,
@@ -120,7 +120,7 @@ export class CliWgetCommandCommandProcessor implements ICliCommandProcessor {
             const contentType = response.headers.get('content-type') || '';
 
             context.spinner?.hide();
-            context.setStatusText(`Downloading ${outputName}`);
+            context.notifier.info(`Downloading ${outputName}`);
 
             if (showProgress && contentLength > 0) {
                 context.progressBar.show(`Downloading ${outputName}`);
@@ -157,10 +157,10 @@ export class CliWgetCommandCommandProcessor implements ICliCommandProcessor {
                     context.progressBar.setText(
                         `${outputName} (${this._formatBytes(receivedBytes)}/${this._formatBytes(contentLength)})`,
                     );
-                    context.setStatusText(`Downloading ${outputName}: ${Math.round(progress * 100)}%`);
+                    context.notifier.info(`Downloading ${outputName}: ${Math.round(progress * 100)}%`);
                 } else if (showProgress) {
                     context.spinner?.setText(`Downloading ${outputName}... ${this._formatBytes(receivedBytes)}`);
-                    context.setStatusText(`Downloading ${outputName}: ${this._formatBytes(receivedBytes)}`);
+                    context.notifier.info(`Downloading ${outputName}: ${this._formatBytes(receivedBytes)}`);
                 }
             }
 

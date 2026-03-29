@@ -140,7 +140,7 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
                 const downloadUrl =
                     (command.args['download-url'] as string) ||
                     DEFAULT_DOWNLOAD_URL;
-                context.setStatusText('Speed test: download');
+                context.notifier.info('Speed test: download');
                 results.download = await this.testDownload(
                     downloadUrl,
                     context,
@@ -151,7 +151,7 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
                 const uploadUrl =
                     (command.args['upload-url'] as string) ||
                     DEFAULT_UPLOAD_URL;
-                context.setStatusText('Speed test: upload');
+                context.notifier.info('Speed test: upload');
                 results.upload = await this.testUpload(
                     uploadUrl,
                     context,
@@ -228,12 +228,12 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
                     progressBar.setText(
                         `${formatSpeed(avgSpeed)} | ${formatBytes(totalBytes)} / ${formatBytes(contentLength)}`,
                     );
-                    context.setStatusText(`Download: ${Math.round(pct)}% ${formatSpeed(avgSpeed)}`);
+                    context.notifier.info(`Download: ${Math.round(pct)}% ${formatSpeed(avgSpeed)}`);
                 } else {
                     progressBar.setText(
                         `${formatSpeed(avgSpeed)} | ${formatBytes(totalBytes)}`,
                     );
-                    context.setStatusText(`Download: ${formatSpeed(avgSpeed)}`);
+                    context.notifier.info(`Download: ${formatSpeed(avgSpeed)}`);
                 }
             }
         }
@@ -305,7 +305,7 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
             progressBar.setText(
                 `${formatSpeed(speed)} | ${formatBytes(uploaded)} / ${formatBytes(UPLOAD_SIZE)}`,
             );
-            context.setStatusText(`Upload: ${Math.round(pct)}% ${formatSpeed(speed)}`);
+            context.notifier.info(`Upload: ${Math.round(pct)}% ${formatSpeed(speed)}`);
         }
 
         const totalSec = (performance.now() - startTime) / 1000;
