@@ -522,9 +522,14 @@ const position = ref('bottom');
 <div class="code-block">
     <span class="code-label">{{ 'docs.panel-api.status-bar-custom-example' | translate }}</span>
     <pre><code>async processCommand(command, context) &#123;
-    context.setStatusText('downloading file...');
+    context.notifier.info('downloading file...');
     await this.download(command.args);
-    // Status text is cleared automatically when the command finishes
+    context.notifier.success('download complete');
+
+    // Other notification levels:
+    // context.notifier.warn('disk space low');
+    // context.notifier.error('download failed');
+    // context.notifier.clear();  // remove notification
 &#125;</code></pre>
 </div>
 
