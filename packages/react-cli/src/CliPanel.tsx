@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliEngineSnapshot, derivePanelThemeStyles, loadPanelPosition, savePanelPosition, CliPanelPosition, ICliPanelRef, CliPanelState } from '@qodalis/cli-core';
+import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliEngineSnapshot, derivePanelThemeStyles, loadPanelPosition, savePanelPosition, CliPanelPosition, ICliPanelRef, CliPanelState, CliNotification } from '@qodalis/cli-core';
 import { CliEngineOptions, CliEngine } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliContext } from './CliContext';
@@ -279,7 +279,7 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
         const [statusServerState, setStatusServerState] = useState<'connected' | 'disconnected' | 'none'>('none');
         const [statusServerDetails, setStatusServerDetails] = useState<Array<{ name: string; url: string; connected: boolean; apiVersion?: string; commandCount?: number }>>([]);
         const [statusUptime, setStatusUptime] = useState(0);
-        const [statusText, setStatusText] = useState<string | null>(null);
+        const [notification, setNotification] = useState<CliNotification | null>(null);
         const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
         const [serversDropdownOpen, setServersDropdownOpen] = useState(false);
         const servicesDropdownRef = useRef<HTMLSpanElement>(null);
@@ -585,9 +585,9 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                 const result = (context as any).lastCommandResult;
                 setStatusLastCommand(result ? { name: result.command, success: result.success } : null);
 
-                // Status text
-                const text = context.getStatusText?.();
-                setStatusText(text || null);
+                // Notification
+                const notif = context.notifier?.current;
+                setNotification(notif || null);
             }, 300);
 
             const pollGlobal = setInterval(() => {
@@ -878,10 +878,10 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                                         </span>
                                     )}
 
-                                    {/* Custom status text */}
-                                    {statusText && (
-                                        <span className="cli-panel-status-item status-text">
-                                            <span className="cli-panel-status-label">{statusText}</span>
+                                    {/* Custom notification */}
+                                    {notification && (
+                                        <span className={`cli-panel-status-item status-text level-${notification.level}`}>
+                                            <span className="cli-panel-status-label">{notification.message}</span>
                                         </span>
                                     )}
                                 </div>
