@@ -9,7 +9,7 @@ export const langJaModule: ICliModule = {
     version: '1.0.0',
     description: 'Japanese language pack for Qodalis CLI',
     async onInit(context) {
-        const translator = context.services.get<ICliTranslationService>(ICliTranslationService_TOKEN);
+        const translator = context.services.getRequired<ICliTranslationService>(ICliTranslationService_TOKEN);
         translator.addTranslations('ja', jaTranslations);
     },
 };

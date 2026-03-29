@@ -92,8 +92,24 @@ class MockServiceProvider implements ICliServiceProvider {
         });
     }
 
-    get<T>(token: any): T {
+    get<T>(token: any): T | undefined {
+        return this.services.get(token) as T | undefined;
+    }
+
+    getRequired<T>(token: any): T {
+        if (!this.services.has(token)) {
+            throw new Error(`No provider for ${token}`);
+        }
         return this.services.get(token) as T;
+    }
+
+    getAll<T>(token: any): T[] {
+        const val = this.services.get(token);
+        return val !== undefined ? (Array.isArray(val) ? val : [val]) : [];
+    }
+
+    has(token: any): boolean {
+        return this.services.has(token);
     }
 
     set(_def: CliProvider | CliProvider[]): void {}

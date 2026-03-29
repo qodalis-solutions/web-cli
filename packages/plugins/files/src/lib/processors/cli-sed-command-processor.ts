@@ -62,7 +62,7 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const fs = context.services.get<IFileSystemService>(
+        const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
 

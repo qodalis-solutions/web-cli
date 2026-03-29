@@ -7,6 +7,7 @@ import {
     ICliCommandAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    resolveServerHeaders,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 import {
@@ -45,7 +46,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
 
     private context: ICliExecutionContext | null = null;
     private serverUrl = '';
-    private serverHeaders: Record<string, string> = {};
+    private serverConfig: CliServerConfig | null = null;
     private source: DataExplorerSourceInfo | null = null;
     private outputFormat: DataExplorerOutputFormat = DataExplorerOutputFormat.Table;
 
@@ -74,6 +75,15 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         return this.lines.length > 1 || this.lines[0].length > 0;
     }
 
+    /** Resolve auth headers fresh on each call (supports JWT refresh). */
+    private getServerHeaders(): Record<string, string> {
+        return resolveServerHeaders(
+            this.context?.services,
+            this.serverConfig?.name ?? '',
+            this.serverConfig?.headers,
+        );
+    }
+
     // ── ICliCommandProcessor ────────────────────────────────────────
 
     async processCommand(
@@ -85,7 +95,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         if (!server) return;
 
         this.serverUrl = server.url.replace(/\/+$/, '');
-        this.serverHeaders = server.headers ?? {};
+        this.serverConfig = server;
 
         // Fetch sources
         const sources = await this.fetchSources(context);
@@ -429,9 +439,9 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<DataExplorerSourceInfo[] | null> {
         try {
-            const response = await fetch(
+            const response = await context.http.fetch(
                 `${this.serverUrl}/api/qcli/data-explorer/sources`,
-                { headers: this.serverHeaders },
+                { headers: this.getServerHeaders() },
             );
             if (!response.ok) {
                 context.writer.writeError(
@@ -471,13 +481,13 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         context.spinner?.show('Executing...');
 
         try {
-            const response = await fetch(
+            const response = await context.http.fetch(
                 `${this.serverUrl}/api/qcli/data-explorer/execute`,
                 {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        ...this.serverHeaders,
+                        ...this.getServerHeaders(),
                     },
                     body: JSON.stringify({
                         source: this.source!.name,
@@ -769,9 +779,9 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         context.spinner?.show('Fetching schema...');
 
         try {
-            const response = await fetch(
+            const response = await context.http.fetch(
                 `${this.serverUrl}/api/qcli/data-explorer/schema?source=${encodeURIComponent(this.source!.name)}`,
-                { headers: this.serverHeaders },
+                { headers: this.getServerHeaders() },
             );
 
             context.spinner?.hide();

@@ -184,6 +184,8 @@ export * from './config-utils';
 
 export * from './server-version-negotiator';
 
+export * from './websocket-auth';
+
 export * from './panel-theme-sync';
 
 export * from './panel-position-store';

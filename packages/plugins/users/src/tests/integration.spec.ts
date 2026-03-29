@@ -1,4 +1,4 @@
-import { CliTestHarness } from '@qodalis/cli';
+import { CliTestHarness, CliKeyValueStore_TOKEN } from '@qodalis/cli';
 import {
     ICliKeyValueStore,
     ICliUsersStoreService_TOKEN,
@@ -53,7 +53,7 @@ async function setupHarness(): Promise<{
     const harness = new CliTestHarness();
 
     // Get the in-memory KV store already created by the harness
-    const kvStore = harness.services.get<ICliKeyValueStore>('cli-key-value-store');
+    const kvStore = harness.services.getRequired<ICliKeyValueStore>(CliKeyValueStore_TOKEN);
 
     // Create and initialize services
     const usersStore = new CliDefaultUsersStoreService();

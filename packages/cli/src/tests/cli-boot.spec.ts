@@ -1,5 +1,6 @@
 import { ICliModule, ICliCommandProcessor } from '@qodalis/cli-core';
 import { CliBoot } from '../lib/services/cli-boot';
+import { CliKeyValueStore_TOKEN } from '../lib/tokens';
 
 // ---------------------------------------------------------------------------
 // Minimal mocks — only the parts topologicalSort and bootModule need
@@ -46,7 +47,7 @@ function createMockContext(writer: ReturnType<typeof createMockWriter>): any {
     };
 
     const serviceMap: Record<string, any> = {
-        'cli-key-value-store': kvStore,
+        [CliKeyValueStore_TOKEN]: kvStore,
         'cli-state-store-manager': stateStoreManager,
     };
 
@@ -65,6 +66,8 @@ function createMockContext(writer: ReturnType<typeof createMockWriter>): any {
         },
         services: {
             get: (token: string) => serviceMap[token] ?? kvStore,
+            getAll: () => [],
+            getRequired: (token: string) => serviceMap[token] ?? kvStore,
             set: () => {},
         },
         process: { exit: () => {} },

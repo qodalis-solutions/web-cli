@@ -88,11 +88,10 @@ export class CliPingCommandProcessor implements ICliCommandProcessor {
                 const start = performance.now();
 
                 try {
-                    const response = await fetch(url, {
+                    const response = await context.http.fetch(url, {
                         method: 'HEAD',
                         mode: 'no-cors',
                         cache: 'no-store',
-                        signal: context.signal,
                     });
 
                     const elapsed = performance.now() - start;

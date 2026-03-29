@@ -10,10 +10,8 @@ export async function writeOutputToFile(
     filePath: string,
     context: ICliExecutionContext,
 ): Promise<void> {
-    let fs: any;
-    try {
-        fs = context.services.get(FS_TOKEN);
-    } catch {
+    const fs: any = context.services.get(FS_TOKEN);
+    if (!fs) {
         context.writer.writeError(
             '> redirect requires @qodalis/cli-files plugin',
         );
@@ -47,10 +45,8 @@ export async function appendOutputToFile(
     filePath: string,
     context: ICliExecutionContext,
 ): Promise<void> {
-    let fs: any;
-    try {
-        fs = context.services.get(FS_TOKEN);
-    } catch {
+    const fs: any = context.services.get(FS_TOKEN);
+    if (!fs) {
         context.writer.writeError(
             '>> redirect requires @qodalis/cli-files plugin',
         );
@@ -88,10 +84,8 @@ export async function writeStderrToFile(
     const stderr = capturingWriter?.getCapturedStderr();
     if (!stderr) return;
 
-    let fs: any;
-    try {
-        fs = context.services.get(FS_TOKEN);
-    } catch {
+    const fs: any = context.services.get(FS_TOKEN);
+    if (!fs) {
         context.writer.writeError(
             '2> redirect requires @qodalis/cli-files plugin',
         );
@@ -122,10 +116,8 @@ export async function appendStderrToFile(
     const stderr = capturingWriter?.getCapturedStderr();
     if (!stderr) return;
 
-    let fs: any;
-    try {
-        fs = context.services.get(FS_TOKEN);
-    } catch {
+    const fs: any = context.services.get(FS_TOKEN);
+    if (!fs) {
         context.writer.writeError(
             '2>> redirect requires @qodalis/cli-files plugin',
         );

@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/vue-cli",
-  "version": "2.0.0-beta.12",
+  "version": "2.0.0-beta.13",
   "description": "Vue 3 wrapper for the @qodalis CLI terminal engine.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

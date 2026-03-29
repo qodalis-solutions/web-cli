@@ -34,10 +34,10 @@ export const welcomeModule: ICliWelcomeModule = {
 
         // Check the configure command's persisted state first, then fall back to module config
         let showOption = config.show;
-        try {
-            const storeManager = context.services.get<ICliStateStoreManager>(
-                CliStateStoreManager_TOKEN,
-            );
+        const storeManager = context.services.get<ICliStateStoreManager>(
+            CliStateStoreManager_TOKEN,
+        );
+        if (storeManager) {
             const configureStore = storeManager.getStateStore(
                 CLI_CONFIGURE_STORE_NAME,
             );
@@ -46,8 +46,6 @@ export const welcomeModule: ICliWelcomeModule = {
             if (state?.['system']?.['welcomeMessage']) {
                 showOption = state['system']['welcomeMessage'];
             }
-        } catch {
-            // Configure store not available — use module config
         }
 
         if (showOption) {
@@ -81,11 +79,11 @@ export const welcomeModule: ICliWelcomeModule = {
 
         // Check if animated greeting is disabled via configure
         let showGreeting = true;
-        try {
-            const storeManager = context.services.get<ICliStateStoreManager>(
-                CliStateStoreManager_TOKEN,
-            );
-            const configureStore = storeManager.getStateStore(
+        const greetingStoreManager = context.services.get<ICliStateStoreManager>(
+            CliStateStoreManager_TOKEN,
+        );
+        if (greetingStoreManager) {
+            const configureStore = greetingStoreManager.getStateStore(
                 CLI_CONFIGURE_STORE_NAME,
             );
             await configureStore.initialize();
@@ -93,8 +91,6 @@ export const welcomeModule: ICliWelcomeModule = {
             if (configState?.['system']?.['greeting'] === false) {
                 showGreeting = false;
             }
-        } catch {
-            // Configure store not available — show greeting by default
         }
 
         if (showGreeting) {

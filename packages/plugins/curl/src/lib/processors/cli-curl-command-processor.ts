@@ -199,16 +199,16 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
             context.writer.writeln();
         }
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        fetchOptions.signal = controller.signal;
+        const timeoutController = new AbortController();
+        const timeoutId = setTimeout(() => timeoutController.abort(), timeout);
+        fetchOptions.signal = timeoutController.signal;
 
         const startTime = performance.now();
 
         try {
             const hostname = (() => { try { return new URL(url).hostname; } catch { return url; } })();
             context.setStatusText(`${method} ${hostname}`);
-            const response = await fetch(requestUrl, fetchOptions);
+            const response = await context.http.fetch(requestUrl, fetchOptions);
             const elapsed = Math.round(performance.now() - startTime);
             context.setStatusText(`${method} ${hostname} — ${response.status}`);
             const responseText = await response.text();
@@ -266,7 +266,11 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
             context.process.output(curlResponse);
         } catch (error: any) {
             if (error.name === 'AbortError') {
-                context.writer.writeError(`Request timed out after ${timeout}ms`);
+                if (timeoutController.signal.aborted) {
+                    context.writer.writeError(`Request timed out after ${timeout}ms`);
+                } else {
+                    context.writer.writeWarning('Request cancelled.');
+                }
             } else {
                 context.writer.writeError(`Request failed: ${error.message}`);
             }

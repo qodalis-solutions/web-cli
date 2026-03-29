@@ -4,6 +4,7 @@ import {
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    buildAuthenticatedWebSocketUrl,
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
 import { CliServerManager, CliServerManager_TOKEN } from './cli-server-manager';
@@ -45,7 +46,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const manager = context.services.get<CliServerManager>(
+        const manager = context.services.getRequired<CliServerManager>(
             CliServerManager_TOKEN,
         );
         if (!manager) {
@@ -180,7 +181,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         }
 
         // 4. Use default server if set and shell-capable
-        const manager = context.services.get<CliServerManager>(
+        const manager = context.services.getRequired<CliServerManager>(
             CliServerManager_TOKEN,
         );
         if (manager?.defaultServer) {
@@ -423,7 +424,10 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         if (cmd) {
             url += `&cmd=${encodeURIComponent(cmd)}`;
         }
-        return url;
+        return buildAuthenticatedWebSocketUrl(
+            url,
+            () => connection.resolveAuthHeaders(),
+        );
     }
 
     private cleanup(): void {

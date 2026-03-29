@@ -101,7 +101,7 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
         const server = resolveServer(serverName, context);
         if (!server) return;
 
-        const fileService = context.services.get<ICliFileTransferService>(
+        const fileService = context.services.getRequired<ICliFileTransferService>(
             ICliFileTransferService_TOKEN,
         );
 
@@ -110,7 +110,7 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
             return;
         }
 
-        const transferService = context.services.get<IScpTransferService>(
+        const transferService = context.services.getRequired<IScpTransferService>(
             IScpTransferService_TOKEN,
         );
 

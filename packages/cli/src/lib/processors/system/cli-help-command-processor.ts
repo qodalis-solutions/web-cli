@@ -38,7 +38,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         const { writer } = context;
         const t = context.translator;
-        const registry = context.services.get<ICliCommandProcessorRegistry>(
+        const registry = context.services.getRequired<ICliCommandProcessorRegistry>(
             CliProcessorsRegistry_TOKEN,
         );
 
@@ -162,27 +162,27 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         const t = context.translator;
 
         // ── Header ───────────────────────────────────────────────
-        const icon = processor.metadata?.icon || '';
-        const name = `${BOLD}${writer.wrapInColor(processor.command, CliForegroundColor.Cyan)}${RESET}`;
         const version = `${DIM}v${processor.version || '1.0.0'}${RESET}`;
 
-        writer.writeln();
-        writer.writeln(`  ${icon}${icon ? '  ' : ''}${name} ${version}`);
+        const headerLines: string[] = [];
 
         if (processor.description) {
-            const desc = this.translateDescription(
-                processor.description,
-                processor.command,
-                context,
+            headerLines.push(
+                this.translateDescription(processor.description, processor.command, context),
             );
-            writer.writeln(`  ${desc}`);
         }
 
         if (processor.aliases?.length) {
-            writer.writeln(
-                `  ${DIM}${t.t('cli.help.aliases', 'Aliases:')}${RESET} ${processor.aliases.map((a: string) => writer.wrapInColor(a, CliForegroundColor.Magenta)).join(', ')}`,
+            headerLines.push(
+                `${DIM}${t.t('cli.help.aliases', 'Aliases:')}${RESET} ${processor.aliases.map((a: string) => writer.wrapInColor(a, CliForegroundColor.Magenta)).join(', ')}`,
             );
         }
+
+        writer.writeln();
+        writer.writeBox(headerLines, {
+            title: `${writer.wrapInColor(processor.command, CliForegroundColor.Cyan)} ${version}`,
+            borderColor: CliForegroundColor.White,
+        });
 
         // ── Extension chain ──────────────────────────────────────
         if (processor.originalProcessor) {

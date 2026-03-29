@@ -56,7 +56,7 @@ export function getPluginConfigValue<T = any>(
     defaultValue: T,
 ): T {
     try {
-        const storeManager = context.services.get<any>(
+        const storeManager = context.services.getRequired<any>(
             'cli-state-store-manager',
         );
         if (!storeManager) return defaultValue;

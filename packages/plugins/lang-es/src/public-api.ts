@@ -9,7 +9,7 @@ export const langEsModule: ICliModule = {
     version: '1.0.0',
     description: 'Spanish language pack for Qodalis CLI',
     async onInit(context) {
-        const translator = context.services.get<ICliTranslationService>(
+        const translator = context.services.getRequired<ICliTranslationService>(
             ICliTranslationService_TOKEN,
         );
         translator.addTranslations('es', esTranslations);

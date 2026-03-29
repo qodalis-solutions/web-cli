@@ -28,7 +28,7 @@ export class CliExportCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const env = context.services.get<ICliEnvironment>(
+        const env = context.services.getRequired<ICliEnvironment>(
             ICliEnvironment_TOKEN,
         );
 
@@ -100,7 +100,7 @@ export class CliUnsetCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const env = context.services.get<ICliEnvironment>(
+        const env = context.services.getRequired<ICliEnvironment>(
             ICliEnvironment_TOKEN,
         );
 
@@ -145,7 +145,7 @@ export class CliEnvCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const env = context.services.get<ICliEnvironment>(
+        const env = context.services.getRequired<ICliEnvironment>(
             ICliEnvironment_TOKEN,
         );
 

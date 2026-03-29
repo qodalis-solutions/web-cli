@@ -133,11 +133,6 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
         const downloadOnly = !!command.args['download-only'];
         const uploadOnly = !!command.args['upload-only'];
 
-        const controller = new AbortController();
-        const subscription = context.onAbort.subscribe(() => {
-            controller.abort();
-        });
-
         const results: { download?: number; upload?: number } = {};
 
         try {
@@ -149,7 +144,6 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
                 results.download = await this.testDownload(
                     downloadUrl,
                     context,
-                    controller.signal,
                 );
             }
 
@@ -161,28 +155,24 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
                 results.upload = await this.testUpload(
                     uploadUrl,
                     context,
-                    controller.signal,
                 );
             }
 
             this.printSummary(results, context);
         } catch (error: any) {
-            if (error.name === 'AbortError' || controller.signal.aborted) {
+            if (error.name === 'AbortError' || context.signal?.aborted) {
                 context.writer.writeWarning('Speed test aborted');
             } else {
                 context.writer.writeError(
                     `Speed test failed: ${error.message || error}`,
                 );
             }
-        } finally {
-            subscription.unsubscribe();
         }
     }
 
     private async testDownload(
         url: string,
         context: ICliExecutionContext,
-        signal: AbortSignal,
     ): Promise<number> {
         context.writer.writeln();
 
@@ -192,7 +182,7 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
         // Show spinner while waiting for connection (DNS, TLS, TTFB)
         spinner?.show('Connecting...');
 
-        const response = await fetch(url, { signal });
+        const response = await context.http.fetch(url);
 
         if (!response.ok) {
             spinner?.hide();
@@ -264,7 +254,6 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
     private async testUpload(
         url: string,
         context: ICliExecutionContext,
-        signal: AbortSignal,
     ): Promise<number> {
         context.writer.writeln();
         context.writer.writeInfo(
@@ -294,7 +283,7 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
         const startTime = performance.now();
 
         for (let i = 0; i < totalChunks; i++) {
-            if (signal.aborted) {
+            if (context.signal?.aborted) {
                 throw new DOMException('Upload aborted', 'AbortError');
             }
 
@@ -302,10 +291,9 @@ export class CliSpeedTestCommandProcessor implements ICliCommandProcessor {
             const end = Math.min(start + CHUNK, UPLOAD_SIZE);
             const chunk = payload.slice(start, end);
 
-            await fetch(url, {
+            await context.http.fetch(url, {
                 method: 'POST',
                 body: chunk,
-                signal,
             });
 
             uploaded += chunk.length;

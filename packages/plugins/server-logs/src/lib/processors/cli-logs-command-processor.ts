@@ -1,4 +1,5 @@
 import {
+    CliHeadersProvider,
     CliForegroundColor,
     CliProcessCommand,
     CliProcessorMetadata,
@@ -8,6 +9,8 @@ import {
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    buildAuthenticatedWebSocketUrl,
+    resolveServerHeaders,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -128,16 +131,21 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         const serverArg = command.args['server'] as string | undefined;
         let serverUrl: string | undefined;
+        let serverName: string | undefined;
+        let serverHeaders: CliHeadersProvider | undefined;
 
         if (serverArg) {
             if (serverArg.startsWith('http://') || serverArg.startsWith('https://')) {
                 serverUrl = serverArg;
+                serverName = 'custom';
             } else {
                 const match = context.options?.servers?.find(
                     (s) => s.name === serverArg,
                 );
                 if (match) {
                     serverUrl = match.url;
+                    serverName = match.name;
+                    serverHeaders = match.headers;
                 } else {
                     context.writer.writeError(
                         `Server '${serverArg}' not found. Available servers: ${
@@ -148,7 +156,10 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
                 }
             }
         } else {
-            serverUrl = context.options?.servers?.[0]?.url;
+            const defaultServer = context.options?.servers?.[0];
+            serverUrl = defaultServer?.url;
+            serverName = defaultServer?.name;
+            serverHeaders = defaultServer?.headers;
         }
 
         if (!serverUrl) {
@@ -171,7 +182,10 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
             patternRegex = new RegExp(command.args['pattern'], 'g');
         }
 
-        const ws = new WebSocket(fullUrl);
+        const ws = new WebSocket(buildAuthenticatedWebSocketUrl(
+            fullUrl,
+            () => resolveServerHeaders(context.services, serverName ?? 'custom', serverHeaders),
+        ));
         const logs: string[] = [];
         context.setStatusText('Connecting to log stream');
 

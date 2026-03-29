@@ -13,6 +13,7 @@ import {
     ICliTerminalWriter,
     ICliTextAnimator,
     ICliTranslationService,
+    ICliHttpClient,
 } from '.';
 import { ICliInputReader } from './input-reader';
 import { ICliBackgroundServiceRegistry } from './background-service';
@@ -281,4 +282,15 @@ export interface ICliExecutionContext {
      * are scoped to this session and destroyed when the engine shuts down.
      */
     backgroundServices: ICliBackgroundServiceRegistry;
+
+    /**
+     * HTTP client for making requests. Automatically wires the command's
+     * abort signal so requests are cancelled on Ctrl+C.
+     *
+     * @example
+     * ```ts
+     * const data = await context.http.get<MyData>('https://api.example.com/data');
+     * ```
+     */
+    http: ICliHttpClient;
 }

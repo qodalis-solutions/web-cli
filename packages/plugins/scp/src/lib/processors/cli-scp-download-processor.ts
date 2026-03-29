@@ -87,7 +87,7 @@ export class CliScpDownloadProcessor implements ICliCommandChildProcessor {
         const server = resolveServer(serverName, context);
         if (!server) return;
 
-        const transferService = context.services.get<IScpTransferService>(
+        const transferService = context.services.getRequired<IScpTransferService>(
             IScpTransferService_TOKEN,
         );
 
@@ -133,7 +133,7 @@ export class CliScpDownloadProcessor implements ICliCommandChildProcessor {
             context.spinner?.hide();
 
             if (useBrowserDownload) {
-                const fileService = context.services.get<ICliFileTransferService>(
+                const fileService = context.services.getRequired<ICliFileTransferService>(
                     ICliFileTransferService_TOKEN,
                 );
                 if (fileService) {
@@ -145,7 +145,7 @@ export class CliScpDownloadProcessor implements ICliCommandChildProcessor {
                     context.writer.writeError('File transfer service not available for browser download.');
                 }
             } else {
-                const fileService = context.services.get<ICliFileTransferService>(
+                const fileService = context.services.getRequired<ICliFileTransferService>(
                     ICliFileTransferService_TOKEN,
                 );
                 if (fileService) {

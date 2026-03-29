@@ -125,7 +125,7 @@ function createMockContext(
     const state = stateStore ?? createStubStateStore();
 
     const services: ICliServiceProvider = {
-        get<T>(token: any): T {
+        get<T>(token: any): T | undefined {
             if (token === CliProcessorsRegistry_TOKEN) {
                 return registry as unknown as T;
             }
@@ -136,8 +136,17 @@ function createMockContext(
                     getStoreEntries: () => [],
                 } as unknown as T;
             }
-            return undefined as unknown as T;
+            return undefined;
         },
+        getAll<T>(_token: any): T[] { return []; },
+        getRequired<T>(token: any): T {
+            const result = this.get<T>(token);
+            if (result === undefined) {
+                throw new Error(`No provider for ${token}`);
+            }
+            return result;
+        },
+        has(_token: any): boolean { return false; },
         set(_def: CliProvider | CliProvider[]): void {},
     };
 

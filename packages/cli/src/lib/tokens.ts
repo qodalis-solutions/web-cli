@@ -40,6 +40,18 @@ export const CliBackgroundServiceRegistry_TOKEN = 'cli-background-service-regist
  */
 export const CliPackageManagerService_TOKEN = 'cli-package-manager-service';
 
+/**
+ * Framework-agnostic token for the CLI key-value store.
+ * Used as a key in the service provider to retrieve the persistent storage.
+ */
+export const CliKeyValueStore_TOKEN = 'cli-key-value-store';
+
+/**
+ * Framework-agnostic token for the syntax highlighter registry.
+ * Used as a key in the service provider to retrieve the syntax highlighter registry.
+ */
+export const SyntaxHighlighterRegistry_TOKEN = 'syntax-highlighter-registry';
+
 // Re-exported from @qodalis/cli-core for backward compatibility
 export {
     ICliUserSessionService_TOKEN,

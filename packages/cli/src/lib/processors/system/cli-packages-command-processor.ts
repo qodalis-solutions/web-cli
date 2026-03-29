@@ -14,6 +14,7 @@ import {
     Package,
 } from '@qodalis/cli-core';
 import {
+    CliKeyValueStore_TOKEN,
     CliPackageManagerService_TOKEN,
     CliProcessorsRegistry_TOKEN,
 } from '../../tokens';
@@ -1002,12 +1003,12 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
     }
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.registry = context.services.get<ICliCommandProcessorRegistry>(
+        this.registry = context.services.getRequired<ICliCommandProcessorRegistry>(
             CliProcessorsRegistry_TOKEN,
         );
 
-        const store = context.services.get<ICliKeyValueStore>(
-            'cli-key-value-store',
+        const store = context.services.getRequired<ICliKeyValueStore>(
+            CliKeyValueStore_TOKEN,
         );
         this.packagesManager.setStore(store);
 

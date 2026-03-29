@@ -7,7 +7,10 @@ import {
     CliServerCommandDescriptor,
     ICliBackgroundServiceRegistry,
     ICliLogger,
+    ICliServerAuthService,
     ServerVersionNegotiator,
+    buildAuthenticatedWebSocketUrl,
+    resolveHeaders,
 } from '@qodalis/cli-core';
 
 export class CliServerConnection {
@@ -34,6 +37,7 @@ export class CliServerConnection {
         private readonly _config: CliServerConfig,
         private readonly _backgroundServices?: ICliBackgroundServiceRegistry,
         private readonly _logger?: ICliLogger,
+        private readonly _authService?: ICliServerAuthService,
     ) {}
 
     get config(): CliServerConfig {
@@ -56,12 +60,24 @@ export class CliServerConnection {
         return this._apiVersion;
     }
 
+    /**
+     * Resolve auth headers for this server connection.
+     * Uses the auth service (which merges config headers with registered
+     * ICliServerAuthTokenProviders), or falls back to config headers directly.
+     */
+    resolveAuthHeaders(): Record<string, string> {
+        if (this._authService) {
+            return this._authService.getHeaders(this._config.name, this._config.headers);
+        }
+        return resolveHeaders(this._config.headers) as Record<string, string>;
+    }
+
     async connect(): Promise<void> {
         try {
             const baseUrl = this.normalizeUrl(this._config.url);
 
             // Negotiate API version
-            const negotiated = await ServerVersionNegotiator.discover(baseUrl);
+            const negotiated = await ServerVersionNegotiator.discover(baseUrl, () => this.resolveAuthHeaders());
             if (negotiated) {
                 this._apiVersion = negotiated.apiVersion;
                 this._basePath = negotiated.basePath;
@@ -296,7 +312,10 @@ export class CliServerConnection {
                 type: 'daemon',
                 onStart: async (ctx) => {
                     const baseUrl = this.normalizeUrl(this._config.url);
-                    const wsUrl = this.toWebSocketUrl(baseUrl) + '/ws/v1/qcli/events';
+                    const wsUrl = buildAuthenticatedWebSocketUrl(
+                        this.toWebSocketUrl(baseUrl) + '/ws/v1/qcli/events',
+                        () => this.resolveAuthHeaders(),
+                    );
                     ctx.log(`Connecting to ${wsUrl}`);
 
                     this._eventSocket = new WebSocket(wsUrl);
@@ -352,7 +371,10 @@ export class CliServerConnection {
     private connectEventSocketDirect(): void {
         try {
             const baseUrl = this.normalizeUrl(this._config.url);
-            const wsUrl = this.toWebSocketUrl(baseUrl) + '/ws/v1/qcli/events';
+            const wsUrl = buildAuthenticatedWebSocketUrl(
+                this.toWebSocketUrl(baseUrl) + '/ws/v1/qcli/events',
+                () => this.resolveAuthHeaders(),
+            );
             this._eventSocket = new WebSocket(wsUrl);
 
             this._eventSocket.onopen = () => {
@@ -478,7 +500,7 @@ export class CliServerConnection {
         const timer = setTimeout(() => controller.abort(), timeout);
 
         const headers: Record<string, string> = {
-            ...(this._config.headers ?? {}),
+            ...this.resolveAuthHeaders(),
             ...((init?.headers as Record<string, string>) ?? {}),
         };
 

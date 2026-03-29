@@ -133,11 +133,10 @@ export class CliHtopCommandProcessor implements ICliCommandProcessor {
         _command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        try {
-            this.registry = context.services.get<ICliProcessRegistry>(
-                CliProcessRegistry_TOKEN,
-            );
-        } catch {
+        this.registry = context.services.get<ICliProcessRegistry>(
+            CliProcessRegistry_TOKEN,
+        ) ?? null;
+        if (!this.registry) {
             context.writer.writeError('Process registry not available');
             return;
         }

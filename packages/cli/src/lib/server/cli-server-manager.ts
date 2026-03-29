@@ -3,6 +3,7 @@ import {
     ICliBackgroundServiceRegistry,
     ICliCommandProcessorRegistry,
     ICliLogger,
+    ICliServerAuthService,
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
 import { CliServerProxyProcessor } from './cli-server-proxy-processor';
@@ -20,7 +21,10 @@ export class CliServerManager implements DefaultServerProvider {
     private _defaultServer: string | null = null;
     private _backgroundServices?: ICliBackgroundServiceRegistry;
 
-    constructor(private readonly registry: ICliCommandProcessorRegistry) {}
+    constructor(
+        private readonly registry: ICliCommandProcessorRegistry,
+        private readonly authService?: ICliServerAuthService,
+    ) {}
 
     get defaultServer(): string | null {
         return this._defaultServer;
@@ -49,7 +53,7 @@ export class CliServerManager implements DefaultServerProvider {
         for (const config of servers) {
             if (config.enabled === false) continue;
 
-            const connection = new CliServerConnection(config, backgroundServices, cliLogger);
+            const connection = new CliServerConnection(config, backgroundServices, cliLogger, this.authService);
             this.connections.set(config.name, connection);
 
             connection.onDisconnect = () => {

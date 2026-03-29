@@ -47,7 +47,7 @@ export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
     private userSessionService!: ICliUserSessionService;
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.userSessionService = context.services.get<ICliUserSessionService>(
+        this.userSessionService = context.services.getRequired<ICliUserSessionService>(
             ICliUserSessionService_TOKEN,
         );
     }

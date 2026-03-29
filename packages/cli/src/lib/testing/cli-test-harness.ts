@@ -27,10 +27,11 @@ import { CliCommandProcessorRegistry } from '../registry/cli-command-processor-r
 import { CliExecutionProcess } from '../context/cli-execution-process';
 import { CliServiceContainer } from '../services/cli-service-container';
 import { CliStateStoreManager } from '../state/cli-state-store-manager';
-import { CliStateStoreManager_TOKEN, CliProcessorsRegistry_TOKEN } from '../tokens';
+import { CliKeyValueStore_TOKEN, CliStateStoreManager_TOKEN, CliProcessorsRegistry_TOKEN } from '../tokens';
 import { CliProcessRegistry, CliProcessRegistry_TOKEN } from '../services/cli-process-registry';
 import { CliTranslationService } from '../services/cli-translation-service';
 import { CliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
+import { CliHttpClient } from '../services/cli-http-client';
 
 /**
  * Result of executing a command through the test harness.
@@ -92,7 +93,7 @@ export class CliTestHarness {
 
         // Register an in-memory KV store
         this.services.set({
-            provide: 'cli-key-value-store',
+            provide: CliKeyValueStore_TOKEN,
             useValue: createInMemoryKvStore(),
         });
 
@@ -222,6 +223,7 @@ export class CliTestHarness {
             userSession: this.userSession,
             state: this.stateStoreManager.getStateStore('shared'),
             backgroundServices: createNoopBackgroundServices(),
+            http: new CliHttpClient(),
             promptLength: 0,
             currentLine: '',
             cursorPosition: 0,

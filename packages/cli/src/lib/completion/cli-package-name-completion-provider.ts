@@ -51,12 +51,10 @@ export class CliPackageNameCompletionProvider
             return [];
         }
 
-        let manager: CliPackageManagerService;
-        try {
-            manager = this.services.get<CliPackageManagerService>(
-                CliPackageManagerService_TOKEN,
-            );
-        } catch {
+        const manager = this.services.get<CliPackageManagerService>(
+            CliPackageManagerService_TOKEN,
+        );
+        if (!manager) {
             return [];
         }
 

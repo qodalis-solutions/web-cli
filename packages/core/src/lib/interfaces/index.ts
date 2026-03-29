@@ -45,3 +45,5 @@ export * from './file-picker';
 export * from './syntax-highlighting';
 
 export * from './cli-panel-ref';
+
+export * from './http-client';

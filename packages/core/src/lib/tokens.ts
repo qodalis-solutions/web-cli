@@ -52,3 +52,8 @@ export const ICliPermissionService_TOKEN = 'cli-permission-service';
  * Token for the file picker provider.
  */
 export const ICliFilePickerProvider_TOKEN = 'cli-file-picker-provider';
+
+/**
+ * Token for the HTTP client service.
+ */
+export const ICliHttpClient_TOKEN = 'cli-http-client';

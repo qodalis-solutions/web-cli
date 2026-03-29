@@ -217,15 +217,104 @@ export interface ICliTranslationService {
 export interface ICliServiceProvider {
     /**
      * Retrieve a service by its injection token.
+     * Returns `undefined` when no provider is registered for the token.
+     * For multi-provider tokens, returns the last registered value (use `getAll` for the full array).
+     * @param service The token (typically a `*_TOKEN` constant) identifying the service
+     * @returns The service instance cast to `T`, or `undefined` if not registered
+     */
+    get<T = unknown>(service: any): T | undefined;
+
+    /**
+     * Retrieve all registered services for a multi-provider token.
+     * Returns an empty array when no provider is registered for the token.
+     * @param service The token (typically a `*_TOKEN` constant) identifying the service
+     * @returns Array of all resolved service instances
+     */
+    getAll<T = unknown>(service: any): T[];
+
+    /**
+     * Retrieve a service by its injection token, throwing if not registered.
+     * Use this when the service is required and its absence is a programming error.
+     * For multi-provider tokens, returns the last registered value (use `getAll` for the full array).
      * @param service The token (typically a `*_TOKEN` constant) identifying the service
      * @returns The service instance, cast to `T`
      * @throws If no service is registered for the given token
      */
-    get<T = unknown>(service: any): T;
+    getRequired<T = unknown>(service: any): T;
+
+    /**
+     * Check whether a service is registered for the given token.
+     * @param service The token identifying the service
+     * @returns `true` if a service is registered, `false` otherwise
+     */
+    has(service: any): boolean;
 
     /**
      * Register one or more service definitions.
      * @param definition A single provider or an array of providers to register
      */
     set(definition: CliProvider | CliProvider[]): void;
+}
+
+// ── Authentication ─────────────────────────────────────────────────
+
+/** DI token for `ICliServerAuthTokenProvider` (multi-provider) */
+export const ICliServerAuthTokenProvider_TOKEN = 'cli-server-auth-token-provider';
+
+/** DI token for `ICliServerAuthService` */
+export const ICliServerAuthService_TOKEN = 'cli-server-auth-service';
+
+/**
+ * Integrators implement this interface to supply auth credentials
+ * for server requests. Multiple providers can be registered — the
+ * auth service merges headers from all of them (later providers
+ * override earlier ones for the same header name).
+ *
+ * @example
+ * ```ts
+ * class MyAuthProvider implements ICliServerAuthTokenProvider {
+ *     getHeaders(serverName: string) {
+ *         return { Authorization: `Bearer ${this.oauthService.getAccessToken()}` };
+ *     }
+ * }
+ *
+ * // Register in a module:
+ * const myModule: ICliModule = {
+ *     name: 'my-auth',
+ *     services: [{
+ *         provide: ICliServerAuthTokenProvider_TOKEN,
+ *         useValue: new MyAuthProvider(),
+ *         multi: true,
+ *     }],
+ * };
+ * ```
+ */
+export interface ICliServerAuthTokenProvider {
+    /**
+     * Return headers for a given server. Called on every request,
+     * so implementations can return fresh tokens.
+     *
+     * @param serverName  The `name` field from `CliServerConfig`
+     * @returns Headers to merge into the request, or an empty object
+     */
+    getHeaders(serverName: string): Record<string, string>;
+}
+
+/**
+ * Internal service that resolves auth headers for a server by merging:
+ * 1. Static/dynamic headers from `CliServerConfig.headers`
+ * 2. Headers from all registered `ICliServerAuthTokenProvider`s
+ *
+ * Consumers should use this service instead of reading `config.headers` directly.
+ */
+export interface ICliServerAuthService {
+    /**
+     * Resolve the final set of headers for a server request.
+     * Merges config headers with all registered token providers.
+     *
+     * @param serverName  The server's `name` field
+     * @param configHeaders  The `headers` field from `CliServerConfig`
+     * @returns Merged headers ready for use in fetch/WebSocket calls
+     */
+    getHeaders(serverName: string, configHeaders?: import('../models/server').CliHeadersProvider): Record<string, string>;
 }

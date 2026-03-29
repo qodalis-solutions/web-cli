@@ -9,7 +9,7 @@ export const langRuModule: ICliModule = {
     version: '1.0.0',
     description: 'Russian language pack for Qodalis CLI',
     async onInit(context) {
-        const translator = context.services.get<ICliTranslationService>(ICliTranslationService_TOKEN);
+        const translator = context.services.getRequired<ICliTranslationService>(ICliTranslationService_TOKEN);
         translator.addTranslations('ru', ruTranslations);
     },
 };

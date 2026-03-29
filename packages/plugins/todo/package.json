@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-todo",
-  "version": "2.0.0-beta.12",
+  "version": "2.0.0-beta.13",
   "description": "@qodalis/cli extension for managing TODO tasks with add, list, complete, and remove commands.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

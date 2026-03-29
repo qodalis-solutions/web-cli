@@ -7,6 +7,7 @@ import {
     CliForegroundColor,
     DefaultLibraryAuthor,
 } from '@qodalis/cli-core';
+import { SyntaxHighlighterRegistry_TOKEN } from '../../tokens';
 import { NanoEditorBuffer } from '../../editor/nano-editor-buffer';
 import { NanoEditorRenderer } from '../../editor/nano-editor-renderer';
 import { SyntaxHighlightEngine } from '../../editor/syntax/engine';
@@ -81,7 +82,7 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
 
         // Try to get filesystem service (optional)
         try {
-            this.fs = context.services.get<FileSystemLike>(FS_TOKEN);
+            this.fs = context.services.getRequired<FileSystemLike>(FS_TOKEN);
         } catch {
             this.fs = null;
         }
@@ -510,8 +511,8 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
             return;
         }
         try {
-            const registry = this.context.services.get<SyntaxHighlighterRegistry>(
-                'syntax-highlighter-registry'
+            const registry = this.context.services.getRequired<SyntaxHighlighterRegistry>(
+                SyntaxHighlighterRegistry_TOKEN
             );
             const ext = '.' + filePath.split('.').pop()?.toLowerCase();
             const highlighter = registry.getByExtension(ext);

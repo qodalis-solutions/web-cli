@@ -44,23 +44,14 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
             writer.wrapInColor(getCliNameArt(context.terminal.cols), CliForegroundColor.Cyan),
         );
 
-        writer.writeln(
-            `  ${DIM}CLI${RESET}  ${writer.wrapInColor(`v${LIBRARY_VERSION}`, CliForegroundColor.Green)}    ${DIM}Core${RESET}  ${writer.wrapInColor(`v${CORE_VERSION}`, CliForegroundColor.Green)}`,
-        );
+        const framework = context.services.get<string>('cli-framework') ?? 'vanilla';
 
-        let framework = 'vanilla';
-        try {
-            framework = context.services.get<string>('cli-framework');
-        } catch {
-            // no framework registered — standalone usage
-        }
-        writer.writeln(
-            `  ${DIM}Framework${RESET}  ${writer.wrapInColor(framework, CliForegroundColor.Cyan)}`,
-        );
-
-        writer.writeln(
-            `  ${DIM}Docs${RESET}  ${writer.wrapInColor('https://cli.qodalis.com/docs/', CliForegroundColor.Blue)}`,
-        );
+        writer.writeBox([
+            `${DIM}CLI${RESET}        ${writer.wrapInColor(`v${LIBRARY_VERSION}`, CliForegroundColor.Green)}`,
+            `${DIM}Core${RESET}       ${writer.wrapInColor(`v${CORE_VERSION}`, CliForegroundColor.Green)}`,
+            `${DIM}Framework${RESET}  ${writer.wrapInColor(framework, CliForegroundColor.Cyan)}`,
+            `${DIM}Docs${RESET}       ${writer.wrapInColor('https://cli.qodalis.com/docs/', CliForegroundColor.Blue)}`,
+        ], { borderColor: CliForegroundColor.White });
 
         writer.writeln();
     }

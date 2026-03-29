@@ -13,7 +13,9 @@ import {
     ICliModule,
     ICliCompletionProvider,
     ICliCompletionProvider_TOKEN,
+    ICliServerAuthService_TOKEN,
 } from '@qodalis/cli-core';
+import { CliServerAuthService } from '../services/cli-server-auth.service';
 import { CliCommandExecutor } from '../executor/cli-command-executor';
 import { CliCommandProcessorRegistry } from '../registry/cli-command-processor-registry';
 import { CliExecutionContext } from '../context/cli-execution-context';
@@ -25,6 +27,7 @@ import { welcomeModule } from '../services/cli-welcome-message';
 import {
     CliBackgroundServiceRegistry_TOKEN,
     CliModuleRegistry_TOKEN,
+    CliProcessorsRegistry_TOKEN,
     CliStateStoreManager_TOKEN,
 } from '../tokens';
 import { CliBackgroundServiceRegistry } from '../services/background/cli-background-service-registry';
@@ -191,11 +194,20 @@ export class CliEngine {
             useValue: this.executionContext.backgroundServices,
         }]);
 
-        // 5. Connect to configured servers (if any)
-        const serverManager = new CliServerManager(this.registry);
+        // 5. Register server auth service and connect to configured servers
+        const serverAuthService = new CliServerAuthService(services);
         services.set([
-            { provide: CliServerManager_TOKEN, useValue: serverManager },
+            { provide: ICliServerAuthService_TOKEN, useValue: serverAuthService, sealed: true },
         ]);
+
+        services.set([
+            {
+                provide: CliServerManager_TOKEN,
+                useClass: CliServerManager,
+                deps: [CliProcessorsRegistry_TOKEN, ICliServerAuthService_TOKEN],
+            },
+        ]);
+        const serverManager = services.getRequired<CliServerManager>(CliServerManager_TOKEN);
 
         if (this.options?.servers && this.options.servers.length > 0) {
             await serverManager.connectAll(this.options.servers, {
@@ -226,15 +238,9 @@ export class CliEngine {
         ];
 
         // Collect plugin-registered providers (multi-service)
-        let pluginProviders: ICliCompletionProvider[] = [];
-        try {
-            pluginProviders =
-                services.get<ICliCompletionProvider[]>(
-                    ICliCompletionProvider_TOKEN,
-                ) ?? [];
-        } catch {
-            // No plugin providers registered — that's fine
-        }
+        const pluginProviders = services.getAll<ICliCompletionProvider>(
+            ICliCompletionProvider_TOKEN,
+        );
 
         this.executionContext.completionEngine.setProviders([
             ...pluginProviders,
@@ -368,7 +374,7 @@ export class CliEngine {
             throw new Error('Cannot snapshot before engine has started');
         }
 
-        const stateStoreManager = this.executionContext.services.get<ICliStateStoreManager>(
+        const stateStoreManager = this.executionContext.services.getRequired<ICliStateStoreManager>(
             CliStateStoreManager_TOKEN,
         );
 
@@ -402,7 +408,7 @@ export class CliEngine {
         await this.executionContext.commandHistory.setHistory(snap.commandHistory);
 
         // Restore state stores
-        const stateStoreManager = this.executionContext.services.get<ICliStateStoreManager>(
+        const stateStoreManager = this.executionContext.services.getRequired<ICliStateStoreManager>(
             CliStateStoreManager_TOKEN,
         );
         for (const entry of snap.stateStores) {
