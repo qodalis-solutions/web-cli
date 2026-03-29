@@ -109,6 +109,18 @@ export class CollapsableContentComponent {
                         left: rect.left + 'px',
                     };
                     break;
+                case 'left':
+                    this.servicesDropdownStyle = {
+                        top: rect.top + 'px',
+                        left: (rect.right + 4) + 'px',
+                    };
+                    break;
+                case 'right':
+                    this.servicesDropdownStyle = {
+                        top: rect.top + 'px',
+                        right: (window.innerWidth - rect.left + 4) + 'px',
+                    };
+                    break;
                 default:
                     this.servicesDropdownStyle = {
                         bottom: (window.innerHeight - rect.top + 4) + 'px',
@@ -135,6 +147,18 @@ export class CollapsableContentComponent {
                     this.serversDropdownStyle = {
                         top: (rect.bottom + 4) + 'px',
                         left: rect.left + 'px',
+                    };
+                    break;
+                case 'left':
+                    this.serversDropdownStyle = {
+                        top: rect.top + 'px',
+                        left: (rect.right + 4) + 'px',
+                    };
+                    break;
+                case 'right':
+                    this.serversDropdownStyle = {
+                        top: rect.top + 'px',
+                        right: (window.innerWidth - rect.left + 4) + 'px',
                     };
                     break;
                 default:
