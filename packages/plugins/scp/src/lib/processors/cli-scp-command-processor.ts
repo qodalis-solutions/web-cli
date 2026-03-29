@@ -114,7 +114,7 @@ export class CliScpCommandCommandProcessor implements ICliCommandProcessor {
         const useBrowserDownload = command.args?.['save'] === true;
 
         context.spinner?.show(`Downloading ${remotePath} from ${server.name}...`);
-        context.setStatusText(`scp: downloading from ${server.name}`);
+        context.notifier.info(`scp: downloading from ${server.name}`);
 
         try {
             let lastProgressUpdate = 0;
@@ -132,12 +132,12 @@ export class CliScpCommandCommandProcessor implements ICliCommandProcessor {
                         context.spinner?.show(
                             `Downloading ${remotePath}... ${pct}% (${formatBytes(received)}/${formatBytes(total)})`,
                         );
-                        context.setStatusText(`scp: download ${pct}%`);
+                        context.notifier.info(`scp: download ${pct}%`);
                     } else {
                         context.spinner?.show(
                             `Downloading ${remotePath}... ${formatBytes(received)}`,
                         );
-                        context.setStatusText(`scp: download ${formatBytes(received)}`);
+                        context.notifier.info(`scp: download ${formatBytes(received)}`);
                     }
                 },
             );
@@ -197,7 +197,7 @@ export class CliScpCommandCommandProcessor implements ICliCommandProcessor {
         }
 
         context.spinner?.show(`Reading local file "${localPath}"...`);
-        context.setStatusText(`scp: reading ${localPath}`);
+        context.notifier.info(`scp: reading ${localPath}`);
 
         try {
             const content = await fileService.readFile(localPath);
@@ -211,7 +211,7 @@ export class CliScpCommandCommandProcessor implements ICliCommandProcessor {
             context.spinner?.show(
                 `Uploading "${filename}" (${formatBytes(content.length)}) to ${server.name}:${remotePath}...`,
             );
-            context.setStatusText(`scp: uploading to ${server.name}`);
+            context.notifier.info(`scp: uploading to ${server.name}`);
 
             await transferService.upload(
                 serverUrl(server),

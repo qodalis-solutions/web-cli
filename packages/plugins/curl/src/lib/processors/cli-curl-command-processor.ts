@@ -207,10 +207,10 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
 
         try {
             const hostname = (() => { try { return new URL(url).hostname; } catch { return url; } })();
-            context.setStatusText(`${method} ${hostname}`);
+            context.notifier.info(`${method} ${hostname}`);
             const response = await context.http.fetch(requestUrl, fetchOptions);
             const elapsed = Math.round(performance.now() - startTime);
-            context.setStatusText(`${method} ${hostname} — ${response.status}`);
+            context.notifier.info(`${method} ${hostname} — ${response.status}`);
             const responseText = await response.text();
             const responseHeaders = extractResponseHeaders(response);
 

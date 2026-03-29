@@ -47,7 +47,7 @@ export class CliUploadCommandProcessor implements ICliCommandProcessor {
         const destPath = command.value?.trim() || undefined;
 
         context.spinner?.show('Waiting for file selection...');
-        context.setStatusText('Waiting for file selection');
+        context.notifier.info('Waiting for file selection');
 
         const picked = await fileService.uploadFromBrowser(accept);
 
@@ -64,7 +64,7 @@ export class CliUploadCommandProcessor implements ICliCommandProcessor {
         );
 
         context.spinner?.show(`Saving "${picked.name}" (${picked.content.length} bytes)...`);
-        context.setStatusText(`Saving ${picked.name}`);
+        context.notifier.info(`Saving ${picked.name}`);
 
         try {
             fs.writeFile(resolved, picked.content);
