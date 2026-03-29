@@ -9,7 +9,7 @@ import {
     onMounted,
     onBeforeUnmount,
 } from 'vue';
-import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, CliPanelHideAlignment, CliEngineSnapshot, CliPanelState, derivePanelThemeStyles, loadPanelPosition, savePanelPosition } from '@qodalis/cli-core';
+import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, CliPanelHideAlignment, CliEngineSnapshot, CliPanelState, derivePanelThemeStyles, loadPanelPosition, savePanelPosition, CliNotification } from '@qodalis/cli-core';
 import { CliEngine, CliEngineOptions } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliConfigKey } from './CliConfigProvider';
@@ -302,7 +302,7 @@ export const CliPanel = defineComponent({
         const statusServerState = ref<'connected' | 'disconnected' | 'none'>('none');
         const statusServerDetails = ref<Array<{ name: string; url: string; connected: boolean; apiVersion?: string; commandCount?: number }>>([]);
         const statusUptime = ref(0);
-        const statusText = ref<string | null>(null);
+        const notification = ref<CliNotification | null>(null);
         const servicesDropdownOpen = ref(false);
         const serversDropdownOpen = ref(false);
         const servicesDropdownTriggerRect = ref<DOMRect | null>(null);
@@ -334,8 +334,8 @@ export const CliPanel = defineComponent({
                 const result = (context as any).lastCommandResult;
                 statusLastCommand.value = result ? { name: result.command, success: result.success } : null;
 
-                const text = context.getStatusText?.();
-                statusText.value = text || null;
+                const notif = context.notifier?.current;
+                notification.value = notif || null;
             }, 300);
 
             globalPollTimer = setInterval(() => {
@@ -883,10 +883,10 @@ export const CliPanel = defineComponent({
                                     h('span', { class: 'cli-panel-status-label' }, formattedUptime.value),
                                 ])
                                 : null,
-                            // Custom status text
-                            statusText.value
-                                ? h('span', { class: 'cli-panel-status-item status-text' }, [
-                                    h('span', { class: 'cli-panel-status-label' }, statusText.value),
+                            // Custom notification
+                            notification.value
+                                ? h('span', { class: `cli-panel-status-item status-text level-${notification.value.level}` }, [
+                                    h('span', { class: 'cli-panel-status-label' }, notification.value.message),
                                 ])
                                 : null,
                         ].filter(Boolean))
