@@ -891,6 +891,67 @@ export const CliPanel = defineComponent({
                                 : null,
                         ].filter(Boolean))
                         : null,
+                    // Compact status indicators (left/right positions — CSS controls visibility)
+                    h('div', { class: 'cli-panel-status-indicators-compact' }, [
+                        // Execution state
+                        h('span', { class: 'cli-panel-status-compact-item', title: statusExecutionState.value }, [
+                            h('span', { class: ['cli-panel-status-dot', statusExecutionState.value === 'running' ? 'dot-running' : 'dot-idle'].join(' ') }),
+                        ]),
+                        // Background services
+                        statusServiceCount.value.total > 0
+                            ? h('span', {
+                                class: 'cli-panel-status-compact-item status-clickable',
+                                title: `${statusServiceCount.value.running}/${statusServiceCount.value.total} services`,
+                                onClick: (e: MouseEvent) => {
+                                    e.stopPropagation();
+                                    servicesDropdownTriggerRect.value = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                    servicesDropdownOpen.value = !servicesDropdownOpen.value;
+                                    serversDropdownOpen.value = false;
+                                },
+                            }, [
+                                h('span', { class: 'cli-panel-status-icon', innerHTML: '&#9881;' }),
+                            ])
+                            : null,
+                        // Last command
+                        statusLastCommand.value
+                            ? h('span', {
+                                class: 'cli-panel-status-compact-item',
+                                title: `${statusLastCommand.value.success ? '✓' : '✗'} ${statusLastCommand.value.name}`,
+                            }, [
+                                h('span', {
+                                    class: ['cli-panel-status-icon', statusLastCommand.value.success ? 'status-success' : 'status-error'].join(' '),
+                                    innerHTML: statusLastCommand.value.success ? '&#10003;' : '&#10005;',
+                                }),
+                            ])
+                            : null,
+                        // Server connection
+                        statusServerState.value !== 'none'
+                            ? h('span', {
+                                class: 'cli-panel-status-compact-item status-clickable',
+                                title: `${statusServerDetails.value.filter(s => s.connected).length}/${statusServerDetails.value.length} servers`,
+                                onClick: (e: MouseEvent) => {
+                                    e.stopPropagation();
+                                    serversDropdownTriggerRect.value = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                    serversDropdownOpen.value = !serversDropdownOpen.value;
+                                    servicesDropdownOpen.value = false;
+                                },
+                            }, [
+                                h('span', { class: ['cli-panel-status-dot', statusServerState.value === 'connected' ? 'dot-idle' : 'dot-error'].join(' ') }),
+                            ])
+                            : null,
+                        // Uptime
+                        statusUptime.value > 0
+                            ? h('span', { class: 'cli-panel-status-compact-item status-muted', title: formattedUptime.value }, [
+                                h('span', { class: 'cli-panel-status-icon', innerHTML: '&uarr;' }),
+                            ])
+                            : null,
+                        // Notification
+                        notification.value
+                            ? h('span', { class: 'cli-panel-status-compact-item', title: notification.value.message }, [
+                                h('span', { class: `cli-panel-status-compact-dot level-${notification.value.level}` }),
+                            ])
+                            : null,
+                    ].filter(Boolean)),
                     h('div', { class: 'cli-panel-action-buttons' }, [
                         h('div', {
                             class: 'cli-panel-btn-position-wrapper',
@@ -1373,9 +1434,17 @@ export const CliPanel = defineComponent({
                     style: (() => {
                         const rect = servicesDropdownTriggerRect.value;
                         if (!rect) return {};
-                        return resolvedPosition.value === 'top'
-                            ? { position: 'fixed', top: `${rect.bottom + 4}px`, left: `${rect.left}px`, zIndex: 1100 }
-                            : { position: 'fixed', bottom: `${window.innerHeight - rect.top + 4}px`, left: `${rect.left}px`, zIndex: 1100 };
+                        const base = { position: 'fixed', zIndex: 1100 };
+                        switch (resolvedPosition.value) {
+                            case 'top':
+                                return { ...base, top: `${rect.bottom + 4}px`, left: `${rect.left}px` };
+                            case 'left':
+                                return { ...base, top: `${rect.top}px`, left: `${rect.right + 4}px` };
+                            case 'right':
+                                return { ...base, top: `${rect.top}px`, right: `${window.innerWidth - rect.left + 4}px` };
+                            default:
+                                return { ...base, bottom: `${window.innerHeight - rect.top + 4}px`, left: `${rect.left}px` };
+                        }
                     })(),
                     onClick: (e: MouseEvent) => e.stopPropagation(),
                 }, [
@@ -1405,9 +1474,17 @@ export const CliPanel = defineComponent({
                     style: (() => {
                         const rect = serversDropdownTriggerRect.value;
                         if (!rect) return {};
-                        return resolvedPosition.value === 'top'
-                            ? { position: 'fixed', top: `${rect.bottom + 4}px`, left: `${rect.left}px`, zIndex: 1100 }
-                            : { position: 'fixed', bottom: `${window.innerHeight - rect.top + 4}px`, left: `${rect.left}px`, zIndex: 1100 };
+                        const base = { position: 'fixed', zIndex: 1100 };
+                        switch (resolvedPosition.value) {
+                            case 'top':
+                                return { ...base, top: `${rect.bottom + 4}px`, left: `${rect.left}px` };
+                            case 'left':
+                                return { ...base, top: `${rect.top}px`, left: `${rect.right + 4}px` };
+                            case 'right':
+                                return { ...base, top: `${rect.top}px`, right: `${window.innerWidth - rect.left + 4}px` };
+                            default:
+                                return { ...base, bottom: `${window.innerHeight - rect.top + 4}px`, left: `${rect.left}px` };
+                        }
                     })(),
                     onClick: (e: MouseEvent) => e.stopPropagation(),
                 }, [
