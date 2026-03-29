@@ -47,3 +47,5 @@ export * from './syntax-highlighting';
 export * from './cli-panel-ref';
 
 export * from './http-client';
+
+export * from './notifier';
