@@ -54,17 +54,17 @@ export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
     private moduleConfig!: CliUsersModuleConfig;
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.userSessionService = context.services.get<ICliUserSessionService>(
+        this.userSessionService = context.services.getRequired<ICliUserSessionService>(
             ICliUserSessionService_TOKEN,
         );
-        this.usersStore = context.services.get<ICliUsersStoreService>(
+        this.usersStore = context.services.getRequired<ICliUsersStoreService>(
             ICliUsersStoreService_TOKEN,
         );
-        this.authService = context.services.get<ICliAuthService>(
+        this.authService = context.services.getRequired<ICliAuthService>(
             ICliAuthService_TOKEN,
         );
         this.moduleConfig =
-            context.services.get<CliUsersModuleConfig>(
+            context.services.getRequired<CliUsersModuleConfig>(
                 CliUsersModuleConfig_TOKEN,
             ) || {};
     }

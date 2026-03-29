@@ -31,10 +31,10 @@ export class CliUploadCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const fs = context.services.get<IFileSystemService>(
+        const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
-        const fileService = context.services.get<ICliFileTransferService>(
+        const fileService = context.services.getRequired<ICliFileTransferService>(
             ICliFileTransferService_TOKEN,
         );
 

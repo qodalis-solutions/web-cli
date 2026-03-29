@@ -43,7 +43,7 @@ class ServerListProcessor implements ICliCommandChildProcessor {
         _command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const manager = context.services.get<CliServerManager>(
+        const manager = context.services.getRequired<CliServerManager>(
             CliServerManager_TOKEN,
         );
 
@@ -92,7 +92,7 @@ class ServerStatusProcessor implements ICliCommandChildProcessor {
             return;
         }
 
-        const manager = context.services.get<CliServerManager>(
+        const manager = context.services.getRequired<CliServerManager>(
             CliServerManager_TOKEN,
         );
         const connection = manager?.getConnection(serverName);
@@ -141,7 +141,7 @@ class ServerReconnectProcessor implements ICliCommandChildProcessor {
             return;
         }
 
-        const manager = context.services.get<CliServerManager>(
+        const manager = context.services.getRequired<CliServerManager>(
             CliServerManager_TOKEN,
         );
 
@@ -187,7 +187,7 @@ class ServerDefaultProcessor implements ICliCommandChildProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const manager = context.services.get<CliServerManager>(
+        const manager = context.services.getRequired<CliServerManager>(
             CliServerManager_TOKEN,
         );
 

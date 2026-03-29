@@ -35,10 +35,10 @@ export class CliPasswdCommandProcessor implements ICliCommandProcessor {
     private authService!: ICliAuthService;
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.usersStore = context.services.get<ICliUsersStoreService>(
+        this.usersStore = context.services.getRequired<ICliUsersStoreService>(
             ICliUsersStoreService_TOKEN,
         );
-        this.authService = context.services.get<ICliAuthService>(
+        this.authService = context.services.getRequired<ICliAuthService>(
             ICliAuthService_TOKEN,
         );
     }

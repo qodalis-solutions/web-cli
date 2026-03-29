@@ -20,7 +20,7 @@ export class CliKillCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         let registry: ICliProcessRegistry;
         try {
-            registry = context.services.get<ICliProcessRegistry>(
+            registry = context.services.getRequired<ICliProcessRegistry>(
                 CliProcessRegistry_TOKEN,
             );
         } catch {

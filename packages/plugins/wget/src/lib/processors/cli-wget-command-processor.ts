@@ -99,18 +99,14 @@ export class CliWgetCommandCommandProcessor implements ICliCommandProcessor {
 
         const fileTransfer = this._getFileTransferService(context);
 
-        const abortController = new AbortController();
-        const abortSub = context.onAbort.subscribe(() => abortController.abort());
-
         try {
             if (showProgress) {
                 context.spinner?.show(`Connecting to ${parsedUrl.hostname}...`);
             }
             context.setStatusText(`Connecting to ${parsedUrl.hostname}`);
 
-            const response = await fetch(url, {
+            const response = await context.http.fetch(url, {
                 headers,
-                signal: abortController.signal,
             });
 
             if (!response.ok) {
@@ -208,8 +204,6 @@ export class CliWgetCommandCommandProcessor implements ICliCommandProcessor {
                 context.writer.writeError(`Download failed: ${err.message}`);
             }
             context.process.exit(1);
-        } finally {
-            abortSub.unsubscribe();
         }
     }
 
@@ -219,7 +213,7 @@ export class CliWgetCommandCommandProcessor implements ICliCommandProcessor {
 
     private _getFileTransferService(context: ICliExecutionContext): ICliFileTransferService {
         try {
-            return context.services.get<ICliFileTransferService>(ICliFileTransferService_TOKEN);
+            return context.services.getRequired<ICliFileTransferService>(ICliFileTransferService_TOKEN);
         } catch {
             return new BrowserFileTransferService();
         }

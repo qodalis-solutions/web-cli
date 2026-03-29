@@ -29,7 +29,7 @@ export class CliLogoutCommandProcessor implements ICliCommandProcessor {
     private authService!: ICliAuthService;
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.authService = context.services.get<ICliAuthService>(
+        this.authService = context.services.getRequired<ICliAuthService>(
             ICliAuthService_TOKEN,
         );
     }

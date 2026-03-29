@@ -36,7 +36,7 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        const fs = context.services.get<IFileSystemService>(
+        const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
 

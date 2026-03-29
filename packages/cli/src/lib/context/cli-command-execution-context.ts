@@ -19,6 +19,7 @@ import {
     ICliTextAnimator,
     ICliBackgroundServiceRegistry,
     ICliTranslationService,
+    ICliHttpClient,
     CliFullScreenOptions,
 } from '@qodalis/cli-core';
 import { Terminal } from '@xterm/xterm';
@@ -53,6 +54,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     translator: ICliTranslationService;
     reader: ICliInputReader;
     readonly backgroundServices: ICliBackgroundServiceRegistry;
+    http: ICliHttpClient;
 
     setStatusText(text: string): void {
         this.context.setStatusText(text);
@@ -135,9 +137,10 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
         this.createInterval = (cb, ms) => context.createInterval(cb, ms);
         this.createTimeout = (cb, ms) => context.createTimeout(cb, ms);
         this.backgroundServices = context.backgroundServices;
+        this.http = context.http;
 
         this.state = context.services
-            .get<ICliStateStoreManager>(CliStateStoreManager_TOKEN)
+            .getRequired<ICliStateStoreManager>(CliStateStoreManager_TOKEN)
             .getProcessorStateStore(processor);
     }
 }

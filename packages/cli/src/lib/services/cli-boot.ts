@@ -12,6 +12,7 @@ import {
     satisfiesVersionRange,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION as CLI_VERSION, API_VERSION } from '../version';
+import { CliKeyValueStore_TOKEN } from '../tokens';
 import { CliExecutionContext } from '../context/cli-execution-context';
 import { CliCommandExecutionContext } from '../context/cli-command-execution-context';
 import { builtinProcessors } from '../processors';
@@ -145,8 +146,8 @@ export class CliBoot {
 
         // Module lifecycle: onSetup (first-run setup flow)
         if (module.onSetup) {
-            const kvStore = context.services.get<ICliKeyValueStore>(
-                'cli-key-value-store',
+            const kvStore = context.services.getRequired<ICliKeyValueStore>(
+                CliKeyValueStore_TOKEN,
             );
             const setupKey = `cli-module-setup:${module.name}`;
             const setupState = await kvStore.get<{

@@ -7,6 +7,7 @@ import { CliStateStore } from '../lib/state/cli-state-store';
 import { CliStateStoreManager } from '../lib/state/cli-state-store-manager';
 import { CliCommandProcessorRegistry } from '../lib/registry';
 import { ICliCommandProcessor } from '@qodalis/cli-core';
+import { CliKeyValueStore_TOKEN } from '../lib/tokens';
 
 // ---------------------------------------------------------------------------
 // Mock key-value store
@@ -34,11 +35,24 @@ class MockKeyValueStore implements ICliKeyValueStore {
 class MockServiceProvider implements ICliServiceProvider {
     private services = new Map<any, any>();
 
-    get<T>(token: any): T {
+    get<T>(token: any): T | undefined {
+        return this.services.get(token) as T | undefined;
+    }
+
+    getAll<T>(token: any): T[] {
+        const val = this.services.get(token);
+        return val !== undefined ? (Array.isArray(val) ? val : [val]) : [];
+    }
+
+    getRequired<T>(token: any): T {
         if (!this.services.has(token)) {
             throw new Error(`No provider for ${token}`);
         }
         return this.services.get(token) as T;
+    }
+
+    has(token: any): boolean {
+        return this.services.has(token);
     }
 
     set(definition: CliProvider | CliProvider[]): void {
@@ -62,7 +76,7 @@ describe('CliStateStore', () => {
     beforeEach(() => {
         kvStore = new MockKeyValueStore();
         services = new MockServiceProvider();
-        services.set({ provide: 'cli-key-value-store', useValue: kvStore });
+        services.set({ provide: CliKeyValueStore_TOKEN, useValue: kvStore });
         store = new CliStateStore(services, 'test-store', {
             count: 0,
             label: 'init',
@@ -194,7 +208,7 @@ describe('CliStateStoreManager', () => {
     beforeEach(() => {
         const kvStore = new MockKeyValueStore();
         services = new MockServiceProvider();
-        services.set({ provide: 'cli-key-value-store', useValue: kvStore });
+        services.set({ provide: CliKeyValueStore_TOKEN, useValue: kvStore });
         registry = new CliCommandProcessorRegistry();
         manager = new CliStateStoreManager(services, registry);
     });

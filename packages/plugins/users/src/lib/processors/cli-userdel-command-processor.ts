@@ -46,10 +46,10 @@ export class CliUserdelCommandProcessor implements ICliCommandProcessor {
     private sessionService!: ICliUserSessionService;
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.usersStore = context.services.get<ICliUsersStoreService>(
+        this.usersStore = context.services.getRequired<ICliUsersStoreService>(
             ICliUsersStoreService_TOKEN,
         );
-        this.sessionService = context.services.get<ICliUserSessionService>(
+        this.sessionService = context.services.getRequired<ICliUserSessionService>(
             ICliUserSessionService_TOKEN,
         );
     }

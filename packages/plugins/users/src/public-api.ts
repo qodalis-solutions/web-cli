@@ -21,6 +21,7 @@ import {
     ICliAuthService_TOKEN,
     ICliPermissionService_TOKEN,
 } from '@qodalis/cli-core';
+import { CliKeyValueStore_TOKEN } from '@qodalis/cli';
 
 import { CliWhoamiCommandProcessor } from './lib/processors/cli-whoami-command-processor';
 import { CliAddUserCommandProcessor } from './lib/processors/cli-add-user-command-processor';
@@ -80,11 +81,11 @@ export const usersModule: ICliUsersModule = {
     services: [
         {
             provide: ICliUsersStoreService_TOKEN,
-            useValue: new CliDefaultUsersStoreService(),
+            useClass: CliDefaultUsersStoreService,
         },
         {
             provide: ICliGroupsStoreService_TOKEN,
-            useValue: new CliDefaultGroupsStoreService(),
+            useClass: CliDefaultGroupsStoreService,
         },
     ],
 
@@ -107,24 +108,24 @@ export const usersModule: ICliUsersModule = {
 
     async onInit(context) {
         const moduleConfig = (this.config || {}) as CliUsersModuleConfig;
-        const kvStore = context.services.get<ICliKeyValueStore>(
-            'cli-key-value-store',
+        const kvStore = context.services.getRequired<ICliKeyValueStore>(
+            CliKeyValueStore_TOKEN,
         );
 
         // Register module config and permission service
         context.services.set([
             { provide: CliUsersModuleConfig_TOKEN, useValue: moduleConfig },
-            { provide: ICliPermissionService_TOKEN, useValue: new CliDefaultPermissionService() },
+            { provide: ICliPermissionService_TOKEN, useClass: CliDefaultPermissionService },
         ]);
 
         // Initialize users store
-        const usersStore = context.services.get<ICliUsersStoreService>(
+        const usersStore = context.services.getRequired<ICliUsersStoreService>(
             ICliUsersStoreService_TOKEN,
         );
         await (usersStore as CliDefaultUsersStoreService).initialize(kvStore);
 
         // Initialize groups store (depends on users store)
-        const groupsStore = context.services.get<ICliGroupsStoreService>(
+        const groupsStore = context.services.getRequired<ICliGroupsStoreService>(
             ICliGroupsStoreService_TOKEN,
         );
         await (groupsStore as CliDefaultGroupsStoreService).initialize(
@@ -194,7 +195,7 @@ export const usersModule: ICliUsersModule = {
 
                 // Sync filesystem with current user
                 try {
-                    const fs = context.services.get<any>(
+                    const fs = context.services.getRequired<any>(
                         'cli-file-system-service',
                     );
                     if (fs) {
@@ -220,13 +221,13 @@ export const usersModule: ICliUsersModule = {
     },
 
     async onSetup(context) {
-        const usersStore = context.services.get<ICliUsersStoreService>(
+        const usersStore = context.services.getRequired<ICliUsersStoreService>(
             ICliUsersStoreService_TOKEN,
         );
-        const authService = context.services.get<ICliAuthService>(
+        const authService = context.services.getRequired<ICliAuthService>(
             ICliAuthService_TOKEN,
         );
-        const sessionService = context.services.get<ICliUserSessionService>(
+        const sessionService = context.services.getRequired<ICliUserSessionService>(
             ICliUserSessionService_TOKEN,
         );
 
@@ -247,7 +248,7 @@ export const usersModule: ICliUsersModule = {
 
         // Set up filesystem for root
         try {
-            const fs = context.services.get<any>('cli-file-system-service');
+            const fs = context.services.getRequired<any>('cli-file-system-service');
             if (fs) {
                 fs.setHomePath('/');
                 fs.setCurrentDirectory('/');
@@ -346,7 +347,7 @@ export const usersModule: ICliUsersModule = {
         if (pendingUser) {
             delete this._pendingHomeSetup;
             try {
-                const fs = context.services.get<any>('cli-file-system-service');
+                const fs = context.services.getRequired<any>('cli-file-system-service');
                 if (fs && pendingUser.homeDir) {
                     if (!fs.exists(pendingUser.homeDir)) {
                         fs.createDirectory(pendingUser.homeDir, true);
@@ -367,13 +368,13 @@ export const usersModule: ICliUsersModule = {
         const moduleConfig = (this.config || {}) as CliUsersModuleConfig;
         if (!moduleConfig.requirePasswordOnBoot) return;
 
-        const sessionService = context.services.get<ICliUserSessionService>(
+        const sessionService = context.services.getRequired<ICliUserSessionService>(
             ICliUserSessionService_TOKEN,
         );
-        const usersStore = context.services.get<ICliUsersStoreService>(
+        const usersStore = context.services.getRequired<ICliUsersStoreService>(
             ICliUsersStoreService_TOKEN,
         );
-        const authService = context.services.get<ICliAuthService>(
+        const authService = context.services.getRequired<ICliAuthService>(
             ICliAuthService_TOKEN,
         );
 

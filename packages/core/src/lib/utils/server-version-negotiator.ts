@@ -1,3 +1,4 @@
+import { CliHeadersProvider, resolveHeaders } from '../models/server';
 import { API_VERSION } from '../version';
 
 /**
@@ -42,9 +43,13 @@ export class ServerVersionNegotiator {
      */
     static async discover(
         baseUrl: string,
+        headers?: CliHeadersProvider,
     ): Promise<{ apiVersion: number; basePath: string } | null> {
         try {
-            const response = await fetch(`${baseUrl}${VERSIONS_ENDPOINT}`);
+            const resolved = resolveHeaders(headers);
+            const response = await fetch(`${baseUrl}${VERSIONS_ENDPOINT}`, {
+                headers: Object.keys(resolved).length > 0 ? resolved : undefined,
+            });
             if (!response.ok) return null;
 
             const info: ServerVersionInfo = await response.json();

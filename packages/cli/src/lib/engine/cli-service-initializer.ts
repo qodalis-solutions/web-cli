@@ -20,9 +20,11 @@ import {
 import { CliKeyValueStore } from '../storage/cli-key-value-store';
 import {
     CliCommandHistory_TOKEN,
+    CliKeyValueStore_TOKEN,
     CliProcessorsRegistry_TOKEN,
     CliStateStoreManager_TOKEN,
     ICliPingServerService_TOKEN,
+    SyntaxHighlighterRegistry_TOKEN,
 } from '../tokens';
 import { CliDefaultPingServerService } from '../services/defaults/cli-default-ping-server.service';
 import {
@@ -72,7 +74,7 @@ export async function initializeServices(
     const commandHistory = new CliCommandHistory(store);
     await commandHistory.initialize();
 
-    services.set([{ provide: 'cli-key-value-store', useValue: store }]);
+    services.set([{ provide: CliKeyValueStore_TOKEN, useValue: store, sealed: true }]);
 
     const stateStoreManager = new CliStateStoreManager(services, registry);
     const processRegistry = new CliProcessRegistry();
@@ -81,12 +83,14 @@ export async function initializeServices(
         {
             provide: CliStateStoreManager_TOKEN,
             useValue: stateStoreManager,
+            sealed: true,
         },
-        { provide: CliProcessorsRegistry_TOKEN, useValue: registry },
-        { provide: CliCommandHistory_TOKEN, useValue: commandHistory },
+        { provide: CliProcessorsRegistry_TOKEN, useValue: registry, sealed: true },
+        { provide: CliCommandHistory_TOKEN, useValue: commandHistory, sealed: true },
         {
             provide: CliProcessRegistry_TOKEN,
             useValue: processRegistry,
+            sealed: true,
         },
     ]);
 
@@ -102,7 +106,8 @@ export async function initializeServices(
         services.set([
             {
                 provide: ICliPingServerService_TOKEN,
-                useValue: new CliDefaultPingServerService(),
+                useClass: CliDefaultPingServerService,
+                sealed: true,
             },
         ]);
     }
@@ -114,14 +119,15 @@ export async function initializeServices(
     syntaxRegistry.register(new MarkdownHighlighter());
     syntaxRegistry.register(new YamlHighlighter());
     services.set([
-        { provide: 'syntax-highlighter-registry', useValue: syntaxRegistry },
+        { provide: SyntaxHighlighterRegistry_TOKEN, useValue: syntaxRegistry, sealed: true },
     ]);
 
     if (!pendingTokens.has(ICliEnvironment_TOKEN)) {
         services.set([
             {
                 provide: ICliEnvironment_TOKEN,
-                useValue: new CliEnvironment(),
+                useClass: CliEnvironment,
+                sealed: true,
             },
         ]);
     }
@@ -130,12 +136,13 @@ export async function initializeServices(
         {
             provide: ICliDragDropService_TOKEN,
             useValue: dragDropService,
+            sealed: true,
         },
     ]);
 
     const translator = new CliTranslationService();
     services.set([
-        { provide: ICliTranslationService_TOKEN, useValue: translator },
+        { provide: ICliTranslationService_TOKEN, useValue: translator, sealed: true },
     ]);
 
     return {

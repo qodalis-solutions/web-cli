@@ -11,7 +11,7 @@ const module: ICliModule = {
     services: [
         {
             provide: IScpTransferService_TOKEN,
-            useValue: new ScpTransferService(),
+            useClass: ScpTransferService,
         },
     ],
 };

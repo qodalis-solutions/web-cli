@@ -27,8 +27,6 @@ import { CliFindCommandProcessor } from './lib/processors/cli-find-command-proce
 import { CliGrepCommandProcessor } from './lib/processors/cli-grep-command-processor';
 import { CliShCommandProcessor } from './lib/processors/cli-sh-command-processor';
 
-const fsService = new IndexedDbFileSystemService();
-
 const module: ICliModule = {
     apiVersion: API_VERSION,
     name: '@qodalis/cli-files',
@@ -55,16 +53,17 @@ const module: ICliModule = {
     services: [
         {
             provide: IFileSystemService_TOKEN,
-            useValue: fsService,
+            useClass: IndexedDbFileSystemService,
         },
         {
             provide: ICliCompletionProvider_TOKEN,
-            useValue: new FilePathCompletionProvider(fsService),
+            useClass: FilePathCompletionProvider,
+            deps: [IFileSystemService_TOKEN],
             multi: true,
         },
     ],
     async onInit(context) {
-        const fs = context.services.get<IFileSystemService>(
+        const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
         await fs.initialize();

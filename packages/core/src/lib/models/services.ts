@@ -22,7 +22,13 @@ export type CliFactoryProvider = MultiServices & {
     deps?: any[];
 };
 
-export type CliProvider = { provide: any } & (
+export type CliProvider = {
+    provide: any;
+    /** When true, this token is sealed after registration and cannot be overwritten. */
+    sealed?: boolean;
+    /** When true, a new instance is created on every `get()` call instead of returning a singleton. */
+    transient?: boolean;
+} & (
     | CliValueProvider
     | CliTypeProvider
     | CliFactoryProvider

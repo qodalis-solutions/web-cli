@@ -86,10 +86,10 @@ export class CliAddUserCommandProcessor implements ICliCommandProcessor {
     private authService!: ICliAuthService;
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.usersStore = context.services.get<ICliUsersStoreService>(
+        this.usersStore = context.services.getRequired<ICliUsersStoreService>(
             ICliUsersStoreService_TOKEN,
         );
-        this.authService = context.services.get<ICliAuthService>(
+        this.authService = context.services.getRequired<ICliAuthService>(
             ICliAuthService_TOKEN,
         );
     }
@@ -161,7 +161,7 @@ export class CliAddUserCommandProcessor implements ICliCommandProcessor {
         // Create home directory if the files module is installed
         if (user.homeDir) {
             try {
-                const fs = context.services.get<any>('cli-file-system-service');
+                const fs = context.services.getRequired<any>('cli-file-system-service');
                 if (fs && !fs.exists(user.homeDir)) {
                     fs.createDirectory(user.homeDir, true);
                     await fs.persist();

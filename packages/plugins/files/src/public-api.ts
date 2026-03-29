@@ -143,7 +143,7 @@ export const filesModule: ICliFilesModule = {
     },
 
     async onInit(context) {
-        const fs = context.services.get<IFileSystemService>(
+        const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
         await fs.initialize();
@@ -157,7 +157,7 @@ export const filesModule: ICliFilesModule = {
 
         let dragDrop: ICliDragDropService | undefined;
         try {
-            dragDrop = context.services.get<ICliDragDropService>(ICliDragDropService_TOKEN);
+            dragDrop = context.services.getRequired<ICliDragDropService>(ICliDragDropService_TOKEN);
         } catch {
             // service not registered (e.g. test environment) — skip
         }

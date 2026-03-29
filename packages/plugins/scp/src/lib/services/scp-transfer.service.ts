@@ -1,25 +1,26 @@
+import { CliHeadersProvider, resolveHeaders } from '@qodalis/cli-core';
 import { IScpFileEntry, IScpFileStat, IScpTransferService } from '../interfaces';
 
 export class ScpTransferService implements IScpTransferService {
-    async ls(serverUrl: string, path: string, headers?: Record<string, string>): Promise<IScpFileEntry[]> {
+    async ls(serverUrl: string, path: string, headers?: CliHeadersProvider): Promise<IScpFileEntry[]> {
         const res = await this._fetch(`${serverUrl}/api/qcli/fs/ls?path=${encodeURIComponent(path)}`, {
-            headers,
+            headers: resolveHeaders(headers),
         });
         const data = await res.json();
         return data.entries;
     }
 
-    async cat(serverUrl: string, path: string, headers?: Record<string, string>): Promise<string> {
+    async cat(serverUrl: string, path: string, headers?: CliHeadersProvider): Promise<string> {
         const res = await this._fetch(`${serverUrl}/api/qcli/fs/cat?path=${encodeURIComponent(path)}`, {
-            headers,
+            headers: resolveHeaders(headers),
         });
         const data = await res.json();
         return data.content;
     }
 
-    async stat(serverUrl: string, path: string, headers?: Record<string, string>): Promise<IScpFileStat> {
+    async stat(serverUrl: string, path: string, headers?: CliHeadersProvider): Promise<IScpFileStat> {
         const res = await this._fetch(`${serverUrl}/api/qcli/fs/stat?path=${encodeURIComponent(path)}`, {
-            headers,
+            headers: resolveHeaders(headers),
         });
         return await res.json();
     }
@@ -27,12 +28,12 @@ export class ScpTransferService implements IScpTransferService {
     async download(
         serverUrl: string,
         path: string,
-        headers?: Record<string, string>,
+        headers?: CliHeadersProvider,
         onProgress?: (received: number, total: number) => void,
         signal?: AbortSignal,
     ): Promise<{ content: string; size: number }> {
         const res = await this._fetch(`${serverUrl}/api/qcli/fs/download?path=${encodeURIComponent(path)}`, {
-            headers,
+            headers: resolveHeaders(headers),
             signal,
         });
 
@@ -73,7 +74,7 @@ export class ScpTransferService implements IScpTransferService {
         remotePath: string,
         content: string,
         filename: string,
-        headers?: Record<string, string>,
+        headers?: CliHeadersProvider,
     ): Promise<void> {
         const formData = new FormData();
         formData.append('path', remotePath);
@@ -82,22 +83,22 @@ export class ScpTransferService implements IScpTransferService {
         await this._fetch(`${serverUrl}/api/qcli/fs/upload`, {
             method: 'POST',
             body: formData,
-            headers,
+            headers: resolveHeaders(headers),
         });
     }
 
-    async mkdir(serverUrl: string, path: string, headers?: Record<string, string>): Promise<void> {
+    async mkdir(serverUrl: string, path: string, headers?: CliHeadersProvider): Promise<void> {
         await this._fetch(`${serverUrl}/api/qcli/fs/mkdir`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...headers },
+            headers: { 'Content-Type': 'application/json', ...resolveHeaders(headers) },
             body: JSON.stringify({ path }),
         });
     }
 
-    async rm(serverUrl: string, path: string, headers?: Record<string, string>): Promise<void> {
+    async rm(serverUrl: string, path: string, headers?: CliHeadersProvider): Promise<void> {
         await this._fetch(`${serverUrl}/api/qcli/fs/rm?path=${encodeURIComponent(path)}`, {
             method: 'DELETE',
-            headers,
+            headers: resolveHeaders(headers),
         });
     }
 

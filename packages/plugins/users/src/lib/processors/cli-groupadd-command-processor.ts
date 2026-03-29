@@ -41,7 +41,7 @@ export class CliGroupaddCommandProcessor implements ICliCommandProcessor {
     private groupsStore!: ICliGroupsStoreService;
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.groupsStore = context.services.get<ICliGroupsStoreService>(
+        this.groupsStore = context.services.getRequired<ICliGroupsStoreService>(
             ICliGroupsStoreService_TOKEN,
         );
     }

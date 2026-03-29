@@ -23,8 +23,10 @@ import {
     ICliTranslationService,
     ICliFilePickerProvider,
     CliFullScreenOptions,
+    ICliHttpClient,
 } from '@qodalis/cli-core';
 import { CliBackgroundServiceRegistry } from '../services/background';
+import { CliHttpClient } from '../services/cli-http-client';
 import { CliFullScreenManager } from './cli-fullscreen-manager';
 import { CliTimerManager } from './cli-timer-manager';
 import { CliTerminalWriter } from '../services/cli-terminal-writer';
@@ -92,6 +94,8 @@ export class CliExecutionContext
     public readonly translator: ICliTranslationService;
 
     public readonly backgroundServices: ICliBackgroundServiceRegistry;
+
+    public http: ICliHttpClient;
 
     public promptPathProvider?: () => string | null;
 
@@ -192,6 +196,8 @@ export class CliExecutionContext
 
         this.commandHistory = deps.commandHistory;
         this.lineRenderer = new CliTerminalLineRenderer(terminal, this.writer);
+
+        this.http = new CliHttpClient();
 
         this.backgroundServices = new CliBackgroundServiceRegistry(
             this.state,
@@ -486,13 +492,8 @@ export class CliExecutionContext
     // -- CommandLineModeHost interface --
 
     getPromptOptions(): PromptOptions {
-        let hideUserName = false;
-        try {
-            const config = this.services.get<any>('cli-users-module-config');
-            hideUserName = config?.hideUserName ?? false;
-        } catch {
-            // Users module not loaded — default to showing username
-        }
+        const usersConfig = this.services.get<any>('cli-users-module-config');
+        const hideUserName = usersConfig?.hideUserName ?? false;
 
         return {
             userName: this.userSession?.displayName,

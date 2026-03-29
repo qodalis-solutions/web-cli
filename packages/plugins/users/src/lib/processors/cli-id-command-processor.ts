@@ -31,7 +31,7 @@ export class CliIdCommandProcessor implements ICliCommandProcessor {
     private usersStore!: ICliUsersStoreService;
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.usersStore = context.services.get<ICliUsersStoreService>(
+        this.usersStore = context.services.getRequired<ICliUsersStoreService>(
             ICliUsersStoreService_TOKEN,
         );
     }

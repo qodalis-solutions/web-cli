@@ -2,6 +2,7 @@ import {
     ICliCompletionProvider,
     ICliCompletionContext,
     ICliServiceProvider,
+    resolveServerHeaders,
 } from '@qodalis/cli-core';
 import { CliJobsService } from '../services/cli-jobs-service';
 
@@ -66,20 +67,20 @@ export class CliJobNameCompletionProvider implements ICliCompletionProvider {
         const lowerPrefix = token.toLowerCase();
 
         try {
-            const manager = this.services.get<any>('cli-server-manager');
+            const manager = this.services.getRequired<any>('cli-server-manager');
             if (!manager?.connections) {
                 return [];
             }
 
             const names: string[] = [];
-            for (const [, connection] of manager.connections as Map<string, any>) {
+            for (const [name, connection] of manager.connections as Map<string, any>) {
                 if (!connection.connected) continue;
 
                 const config = connection.config;
                 const baseUrl = config.url.endsWith('/')
                     ? config.url.slice(0, -1)
                     : config.url;
-                const headers = config.headers ?? {};
+                const headers = resolveServerHeaders(this.services!, name, config.headers);
                 const service = new CliJobsService(baseUrl, headers);
 
                 try {

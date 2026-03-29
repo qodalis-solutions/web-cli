@@ -14,10 +14,8 @@ export async function tryExecuteScript(
 ): Promise<boolean> {
     const FS_TOKEN = 'cli-file-system-service';
 
-    let fs: any;
-    try {
-        fs = context.services.get(FS_TOKEN);
-    } catch {
+    const fs: any = context.services.get(FS_TOKEN);
+    if (!fs) {
         return false;
     }
 
@@ -128,10 +126,8 @@ export function expandEnvironmentVars(
     command: string,
     context: ICliExecutionContext,
 ): string {
-    let env: ICliEnvironment;
-    try {
-        env = context.services.get<ICliEnvironment>(ICliEnvironment_TOKEN);
-    } catch {
+    const env = context.services.get<ICliEnvironment>(ICliEnvironment_TOKEN);
+    if (!env) {
         return command;
     }
 

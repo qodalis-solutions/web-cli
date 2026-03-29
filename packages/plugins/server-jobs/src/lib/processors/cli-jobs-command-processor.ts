@@ -9,6 +9,8 @@ import {
     CliForegroundColor,
     ICliCommandChildProcessor,
     ICliCommandParameterDescriptor,
+    buildAuthenticatedWebSocketUrl,
+    resolveServerHeaders,
 } from '@qodalis/cli-core';
 import { CliJobsService } from '../services/cli-jobs-service';
 import { JobDto, JobExecutionDto, UpdateJobRequest } from '../models';
@@ -23,7 +25,7 @@ function getServices(
     args: Record<string, any>,
 ): { name: string; service: CliJobsService }[] {
     // The CliServerManager is registered under the 'cli-server-manager' token
-    const manager = context.services.get<any>('cli-server-manager');
+    const manager = context.services.getRequired<any>('cli-server-manager');
     if (!manager || !manager.connections) {
         return [];
     }
@@ -39,7 +41,7 @@ function getServices(
         const baseUrl = config.url.endsWith('/')
             ? config.url.slice(0, -1)
             : config.url;
-        const headers = config.headers ?? {};
+        const headers = resolveServerHeaders(context.services, name, config.headers);
         results.push({ name, service: new CliJobsService(baseUrl, headers) });
     }
 
@@ -921,7 +923,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         cmd: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const manager = context.services.get<any>('cli-server-manager');
+        const manager = context.services.getRequired<any>('cli-server-manager');
         if (!manager || !manager.connections) {
             context.writer.writeInfo('No connected servers.');
             return;
@@ -961,10 +963,12 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             const baseUrl = config.url.endsWith('/')
                 ? config.url.slice(0, -1)
                 : config.url;
-            const wsUrl =
+            const wsUrl = buildAuthenticatedWebSocketUrl(
                 baseUrl
                     .replace(/^https:/, 'wss:')
-                    .replace(/^http:/, 'ws:') + '/ws/v1/qcli/events';
+                    .replace(/^http:/, 'ws:') + '/ws/v1/qcli/events',
+                () => resolveServerHeaders(context.services, serverName, config.headers),
+            );
 
             try {
                 const ws = new WebSocket(wsUrl);

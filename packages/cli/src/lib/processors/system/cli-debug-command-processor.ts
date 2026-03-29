@@ -52,7 +52,7 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
             ) => {
                 const { writer } = context;
                 const registry =
-                    context.services.get<ICliCommandProcessorRegistry>(
+                    context.services.getRequired<ICliCommandProcessorRegistry>(
                         CliProcessorsRegistry_TOKEN,
                     );
 
@@ -112,12 +112,10 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
             ) => {
                 const { writer } = context;
 
-                let moduleRegistry: CliModuleRegistry;
-                try {
-                    moduleRegistry = context.services.get<CliModuleRegistry>(
-                        CliModuleRegistry_TOKEN,
-                    );
-                } catch {
+                const moduleRegistry = context.services.get<CliModuleRegistry>(
+                    CliModuleRegistry_TOKEN,
+                );
+                if (!moduleRegistry) {
                     writer.writeError('Module registry not available.');
                     return;
                 }
@@ -166,7 +164,7 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
                 context: ICliExecutionContext,
             ) => {
                 const { writer } = context;
-                const storeManager = context.services.get<CliStateStoreManager>(
+                const storeManager = context.services.getRequired<CliStateStoreManager>(
                     CliStateStoreManager_TOKEN,
                 );
 
@@ -263,12 +261,7 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
                     `  ${writer.wrapInColor('CLI Version:', CliForegroundColor.Cyan)} ${CLI_VERSION}`,
                 );
 
-                let framework = 'vanilla';
-                try {
-                    framework = context.services.get<string>('cli-framework');
-                } catch {
-                    // standalone usage
-                }
+                const framework = context.services.get<string>('cli-framework') ?? 'vanilla';
                 writer.writeln(
                     `  ${writer.wrapInColor('Framework:', CliForegroundColor.Cyan)} ${framework}`,
                 );
@@ -315,7 +308,7 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
                 context: ICliExecutionContext,
             ) => {
                 const { writer } = context;
-                const history = context.services.get<CliCommandHistory>(
+                const history = context.services.getRequired<CliCommandHistory>(
                     CliCommandHistory_TOKEN,
                 );
 
@@ -422,7 +415,7 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
                 );
 
                 const registry =
-                    context.services.get<ICliCommandProcessorRegistry>(
+                    context.services.getRequired<ICliCommandProcessorRegistry>(
                         CliProcessorsRegistry_TOKEN,
                     );
                 writer.writeln(
@@ -431,7 +424,7 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
 
                 try {
                     const moduleRegistry =
-                        context.services.get<CliModuleRegistry>(
+                        context.services.getRequired<CliModuleRegistry>(
                             CliModuleRegistry_TOKEN,
                         );
                     const modules = moduleRegistry.getAll();
@@ -449,7 +442,7 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
                     `  ${wasmActive ? CliIcon.CheckIcon : CliIcon.WarningIcon} WASM Accelerator: ${wasmActive ? 'loaded' : 'using JS fallback'}`,
                 );
 
-                const historyService = context.services.get<CliCommandHistory>(
+                const historyService = context.services.getRequired<CliCommandHistory>(
                     CliCommandHistory_TOKEN,
                 );
                 writer.writeln(
@@ -467,13 +460,13 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
             ) => {
                 const { writer } = context;
                 const registry =
-                    context.services.get<ICliCommandProcessorRegistry>(
+                    context.services.getRequired<ICliCommandProcessorRegistry>(
                         CliProcessorsRegistry_TOKEN,
                     );
-                const history = context.services.get<CliCommandHistory>(
+                const history = context.services.getRequired<CliCommandHistory>(
                     CliCommandHistory_TOKEN,
                 );
-                const storeManager = context.services.get<CliStateStoreManager>(
+                const storeManager = context.services.getRequired<CliStateStoreManager>(
                     CliStateStoreManager_TOKEN,
                 );
 
@@ -521,7 +514,7 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
 
                 try {
                     const moduleRegistry =
-                        context.services.get<CliModuleRegistry>(
+                        context.services.getRequired<CliModuleRegistry>(
                             CliModuleRegistry_TOKEN,
                         );
                     report['modules'] = moduleRegistry
@@ -544,7 +537,7 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
 
                 try {
                     const serverManager =
-                        context.services.get<CliServerManager>(
+                        context.services.getRequired<CliServerManager>(
                             CliServerManager_TOKEN,
                         );
                     if (serverManager && serverManager.connections.size > 0) {
@@ -574,14 +567,9 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
             ) => {
                 const { writer } = context;
 
-                let manager: CliServerManager | undefined;
-                try {
-                    manager = context.services.get<CliServerManager>(
-                        CliServerManager_TOKEN,
-                    );
-                } catch {
-                    // not available
-                }
+                const manager = context.services.get<CliServerManager>(
+                    CliServerManager_TOKEN,
+                );
 
                 if (!manager || manager.connections.size === 0) {
                     writer.writeInfo('No servers configured.');
@@ -634,81 +622,54 @@ export class CliDebugCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         const { writer } = context;
-        const registry = context.services.get<ICliCommandProcessorRegistry>(
+        const registry = context.services.getRequired<ICliCommandProcessorRegistry>(
             CliProcessorsRegistry_TOKEN,
         );
 
-        writer.writeln(
-            writer.wrapInColor(
-                `${CliIcon.Bug}  CLI Debug Info`,
-                CliForegroundColor.Yellow,
-            ),
+        const summaryFramework = context.services.get<string>('cli-framework') ?? 'vanilla';
+        const summaryModuleRegistry = context.services.get<CliModuleRegistry>(
+            CliModuleRegistry_TOKEN,
         );
-        writer.writeDivider({ char: '=' });
-
-        writer.writeln(
-            `  ${writer.wrapInColor('Core Version:', CliForegroundColor.Cyan)} ${CORE_VERSION}`,
+        const summaryServerManager = context.services.get<CliServerManager>(
+            CliServerManager_TOKEN,
         );
-        writer.writeln(
-            `  ${writer.wrapInColor('CLI Version:', CliForegroundColor.Cyan)} ${CLI_VERSION}`,
-        );
-
-        let framework = 'vanilla';
-        try {
-            framework = context.services.get<string>('cli-framework');
-        } catch {
-            // standalone
-        }
-        writer.writeln(
-            `  ${writer.wrapInColor('Framework:', CliForegroundColor.Cyan)} ${framework}`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('Terminal:', CliForegroundColor.Cyan)} ${context.terminal.cols}x${context.terminal.rows}`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('Processors:', CliForegroundColor.Cyan)} ${registry.processors.length}`,
-        );
-
-        try {
-            const moduleRegistry = context.services.get<CliModuleRegistry>(
-                CliModuleRegistry_TOKEN,
-            );
-            writer.writeln(
-                `  ${writer.wrapInColor('Modules:', CliForegroundColor.Cyan)} ${moduleRegistry.getAll().length}`,
-            );
-        } catch {
-            // skip
-        }
-
-        try {
-            const serverManager = context.services.get<CliServerManager>(
-                CliServerManager_TOKEN,
-            );
-            if (serverManager && serverManager.connections.size > 0) {
-                const connected = Array.from(
-                    serverManager.connections.values(),
-                ).filter((c) => c.connected).length;
-                writer.writeln(
-                    `  ${writer.wrapInColor('Servers:', CliForegroundColor.Cyan)} ${connected}/${serverManager.connections.size} connected`,
-                );
-            }
-        } catch {
-            // skip
-        }
-
-        const history = context.services.get<CliCommandHistory>(
+        const history = context.services.getRequired<CliCommandHistory>(
             CliCommandHistory_TOKEN,
         );
-        writer.writeln(
-            `  ${writer.wrapInColor('History:', CliForegroundColor.Cyan)} ${history.getHistory().length} commands`,
-        );
-
         const wasmStatus = isWasmAccelerated() ? 'active' : 'inactive (JS fallback)';
-        writer.writeln(
-            `  ${writer.wrapInColor('WASM Accelerator:', CliForegroundColor.Cyan)} ${wasmStatus}`,
+
+        const lines: string[] = [
+            `${writer.wrapInColor('Core Version:', CliForegroundColor.Cyan)}      ${CORE_VERSION}`,
+            `${writer.wrapInColor('CLI Version:', CliForegroundColor.Cyan)}       ${CLI_VERSION}`,
+            `${writer.wrapInColor('Framework:', CliForegroundColor.Cyan)}         ${summaryFramework}`,
+            `${writer.wrapInColor('Terminal:', CliForegroundColor.Cyan)}          ${context.terminal.cols}x${context.terminal.rows}`,
+            `${writer.wrapInColor('Processors:', CliForegroundColor.Cyan)}        ${registry.processors.length}`,
+        ];
+
+        if (summaryModuleRegistry) {
+            lines.push(
+                `${writer.wrapInColor('Modules:', CliForegroundColor.Cyan)}           ${summaryModuleRegistry.getAll().length}`,
+            );
+        }
+
+        if (summaryServerManager && summaryServerManager.connections.size > 0) {
+            const connected = Array.from(
+                summaryServerManager.connections.values(),
+            ).filter((c) => c.connected).length;
+            lines.push(
+                `${writer.wrapInColor('Servers:', CliForegroundColor.Cyan)}           ${connected}/${summaryServerManager.connections.size} connected`,
+            );
+        }
+
+        lines.push(
+            `${writer.wrapInColor('History:', CliForegroundColor.Cyan)}           ${history.getHistory().length} commands`,
+            `${writer.wrapInColor('WASM Accelerator:', CliForegroundColor.Cyan)}  ${wasmStatus}`,
         );
 
-        writer.writeDivider({ char: '=' });
+        writer.writeBox(lines, {
+            title: 'CLI Debug Info',
+            borderColor: CliForegroundColor.Yellow,
+        });
         writer.writeln();
         writer.writeln(`${CliIcon.Light} Subcommands:`);
         for (const sub of this.processors || []) {

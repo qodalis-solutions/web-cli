@@ -19,6 +19,7 @@ import { CliExecutionProcess } from '../context/cli-execution-process';
 import { CliArgsParser } from '../parsers/args-parser';
 import { ProcessExitedError } from '../errors';
 import { CliCommandExecutionContext } from '../context/cli-command-execution-context';
+import { CliHttpClient } from '../services/cli-http-client';
 import { CliAliasCommandProcessor } from '../processors';
 import { CapturingTerminalWriter } from '../services/capturing-terminal-writer';
 import { ICliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
@@ -224,8 +225,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         // Handle inline variable assignment: VAR=value (no command after it)
         const assignMatch = command.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
         if (assignMatch) {
-            try {
-                const env = context.services.get<ICliEnvironment>(ICliEnvironment_TOKEN);
+            const env = context.services.get<ICliEnvironment>(ICliEnvironment_TOKEN);
+            if (env) {
                 let val = assignMatch[2];
                 if (
                     (val.startsWith('"') && val.endsWith('"')) ||
@@ -237,19 +238,16 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 process.start();
                 process.end();
                 return;
-            } catch {
-                // Environment service not available — treat as command
             }
+            // Environment service not available — treat as command
         }
 
         process.start();
 
         let processEntry: { pid: number; abortController: AbortController } | undefined;
-        try {
-            const procRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
+        const procRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
+        if (procRegistry) {
             processEntry = procRegistry.register(command);
-        } catch {
-            // Registry not available — proceed without it
         }
 
         const parsed = this.commandParser.parse(command);
@@ -415,6 +413,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
         const commandAbortController = new AbortController();
         commandContext.signal = commandAbortController.signal;
+        commandContext.http = new CliHttpClient(commandAbortController.signal);
 
         const abortSub = context.onAbort.subscribe(() => {
             commandAbortController.abort();
@@ -508,10 +507,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         exitCode: number,
     ): void {
         if (!processEntry) return;
-        try {
-            const procRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
-            procRegistry.complete(processEntry.pid, exitCode);
-        } catch { /* ignore */ }
+        const procRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
+        procRegistry?.complete(processEntry.pid, exitCode);
     }
 
     private failProcess(
@@ -519,10 +516,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         context: ICliExecutionContext,
     ): void {
         if (!processEntry) return;
-        try {
-            const procRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
-            procRegistry.fail(processEntry.pid);
-        } catch { /* ignore */ }
+        const failRegistry = context.services.get<ICliProcessRegistry>(CliProcessRegistry_TOKEN);
+        failRegistry?.fail(processEntry.pid);
     }
 
     public async showHelp(

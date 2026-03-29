@@ -58,9 +58,18 @@ function createMockContext(
     fs: IndexedDbFileSystemService,
 ): ICliExecutionContext {
     const services: ICliServiceProvider = {
-        get<T>(token: any): T {
+        get<T>(token: any): T | undefined {
             if (token === IFileSystemService_TOKEN) return fs as any;
-            throw new Error(`Unknown service: ${token}`);
+            return undefined;
+        },
+        getAll<T>(_token: any): T[] { return []; },
+        getRequired<T>(token: any): T {
+            const result = this.get<T>(token);
+            if (result === undefined) throw new Error(`Unknown service: ${token}`);
+            return result;
+        },
+        has(_token: any): boolean {
+            return false;
         },
         set() {},
     };

@@ -13,29 +13,29 @@ describe('CliServiceContainer', () => {
     describe('useValue provider', () => {
         it('should register and retrieve a value', () => {
             container.set({ provide: 'greeting', useValue: 'hello' });
-            expect(container.get<string>('greeting')).toBe('hello');
+            expect(container.getRequired<string>('greeting')).toBe('hello');
         });
 
         it('should handle numeric values', () => {
             container.set({ provide: 'port', useValue: 8080 });
-            expect(container.get<number>('port')).toBe(8080);
+            expect(container.getRequired<number>('port')).toBe(8080);
         });
 
         it('should handle boolean values', () => {
             container.set({ provide: 'debug', useValue: false });
-            expect(container.get<boolean>('debug')).toBe(false);
+            expect(container.getRequired<boolean>('debug')).toBe(false);
         });
 
         it('should handle object values', () => {
             const config = { host: 'localhost', port: 3000 };
             container.set({ provide: 'config', useValue: config });
-            expect(container.get('config')).toBe(config);
+            expect(container.getRequired('config')).toBe(config);
         });
 
         it('should overwrite existing value', () => {
             container.set({ provide: 'val', useValue: 'first' });
             container.set({ provide: 'val', useValue: 'second' });
-            expect(container.get('val')).toBe('second');
+            expect(container.getRequired('val')).toBe('second');
         });
     });
 
@@ -52,7 +52,7 @@ describe('CliServiceContainer', () => {
                     return { id: 42 };
                 },
             });
-            const result = container.get<{ id: number }>('service');
+            const result = container.getRequired<{ id: number }>('service');
             expect(result.id).toBe(42);
             expect(callCount).toBe(1);
         });
@@ -62,8 +62,8 @@ describe('CliServiceContainer', () => {
                 provide: 'singleton',
                 useFactory: () => ({ created: Date.now() }),
             });
-            const a = container.get('singleton');
-            const b = container.get('singleton');
+            const a = container.getRequired('singleton');
+            const b = container.getRequired('singleton');
             expect(a).toBe(b);
         });
     });
@@ -80,7 +80,7 @@ describe('CliServiceContainer', () => {
                 deps: ['baseUrl'],
             });
 
-            const client = container.get<{ endpoint: string }>('client');
+            const client = container.getRequired<{ endpoint: string }>('client');
             expect(client.endpoint).toBe('https://api.example.com');
         });
 
@@ -93,7 +93,7 @@ describe('CliServiceContainer', () => {
                 deps: ['host', 'port'],
             });
 
-            expect(container.get('url')).toBe('localhost:3000');
+            expect(container.getRequired('url')).toBe('localhost:3000');
         });
 
         it('should throw when a dep token is not registered', () => {
@@ -116,7 +116,7 @@ describe('CliServiceContainer', () => {
                 value = 'constructed';
             }
             container.set({ provide: 'myService', useClass: MyService });
-            expect(container.get<MyService>('myService').value).toBe(
+            expect(container.getRequired<MyService>('myService').value).toBe(
                 'constructed',
             );
         });
@@ -126,9 +126,9 @@ describe('CliServiceContainer', () => {
                 count = 0;
             }
             container.set({ provide: 'counter', useClass: Counter });
-            const a = container.get<Counter>('counter');
+            const a = container.getRequired<Counter>('counter');
             a.count = 5;
-            const b = container.get<Counter>('counter');
+            const b = container.getRequired<Counter>('counter');
             expect(b.count).toBe(5);
         });
     });
@@ -152,7 +152,7 @@ describe('CliServiceContainer', () => {
                 deps: ['logger'],
             });
 
-            const app = container.get<AppService>('app');
+            const app = container.getRequired<AppService>('app');
             expect(app.logger).toBeDefined();
             expect(app.logger.name).toBe('logger');
         });
@@ -173,7 +173,7 @@ describe('CliServiceContainer', () => {
                 deps: ['valA', 'valB'],
             });
 
-            const instance = container.get<MultiDep>('multi');
+            const instance = container.getRequired<MultiDep>('multi');
             expect(instance.a).toBe('hello');
             expect(instance.b).toBe(42);
         });
@@ -183,7 +183,7 @@ describe('CliServiceContainer', () => {
                 value = 'ok';
             }
             container.set({ provide: 'simple', useClass: Simple });
-            expect(container.get<Simple>('simple').value).toBe('ok');
+            expect(container.getRequired<Simple>('simple').value).toBe('ok');
         });
     });
 
@@ -202,8 +202,15 @@ describe('CliServiceContainer', () => {
                 useValue: 'pluginB',
                 multi: true,
             });
-            const result = container.get<string[]>('plugins');
-            expect(result).toEqual(['pluginA', 'pluginB']);
+            const all = container.getAll<string>('plugins');
+            expect(all).toEqual(['pluginA', 'pluginB']);
+        });
+
+        it('should return last registered value via get() for multi tokens', () => {
+            container.set({ provide: 'hooks', useValue: 'first', multi: true });
+            container.set({ provide: 'hooks', useValue: 'second', multi: true });
+            expect(container.get<string>('hooks')).toBe('second');
+            expect(container.getRequired<string>('hooks')).toBe('second');
         });
 
         it('should keep multi separate from single providers', () => {
@@ -211,8 +218,30 @@ describe('CliServiceContainer', () => {
             container.set({ provide: 'tok-multi', useValue: 'a', multi: true });
             container.set({ provide: 'tok-multi', useValue: 'b', multi: true });
 
-            expect(container.get('tok')).toBe('single');
-            expect(container.get<string[]>('tok-multi')).toEqual(['a', 'b']);
+            expect(container.getRequired('tok')).toBe('single');
+            expect(container.getAll<string>('tok-multi')).toEqual(['a', 'b']);
+            expect(container.get('tok-multi')).toBe('b');
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // getAll()
+    // -----------------------------------------------------------------------
+    describe('getAll()', () => {
+        it('should return all values for multi tokens', () => {
+            container.set({ provide: 'items', useValue: 1, multi: true });
+            container.set({ provide: 'items', useValue: 2, multi: true });
+            container.set({ provide: 'items', useValue: 3, multi: true });
+            expect(container.getAll<number>('items')).toEqual([1, 2, 3]);
+        });
+
+        it('should wrap single-value token in array', () => {
+            container.set({ provide: 'single', useValue: 'val' });
+            expect(container.getAll<string>('single')).toEqual(['val']);
+        });
+
+        it('should return empty array for unknown token', () => {
+            expect(container.getAll('nonexistent')).toEqual([]);
         });
     });
 
@@ -225,24 +254,172 @@ describe('CliServiceContainer', () => {
                 { provide: 'a', useValue: 1 },
                 { provide: 'b', useValue: 2 },
             ]);
-            expect(container.get('a')).toBe(1);
-            expect(container.get('b')).toBe(2);
+            expect(container.getRequired('a')).toBe(1);
+            expect(container.getRequired('b')).toBe(2);
         });
     });
 
     // -----------------------------------------------------------------------
-    // Error handling
+    // get() returns undefined
     // -----------------------------------------------------------------------
-    describe('error handling', () => {
+    describe('get() optional', () => {
+        it('should return undefined for unknown token', () => {
+            expect(container.get('unknown')).toBeUndefined();
+        });
+
+        it('should return the value when token is registered', () => {
+            container.set({ provide: 'val', useValue: 42 });
+            expect(container.get<number>('val')).toBe(42);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // getRequired() throws
+    // -----------------------------------------------------------------------
+    describe('getRequired()', () => {
         it('should throw for unknown token', () => {
-            expect(() => container.get('unknown')).toThrowError(
+            expect(() => container.getRequired('unknown')).toThrowError(
                 /No provider found for token "unknown"/,
             );
         });
 
         it('should include class name for function tokens', () => {
             class MyToken {}
-            expect(() => container.get(MyToken)).toThrowError(/MyToken/);
+            expect(() => container.getRequired(MyToken)).toThrowError(/MyToken/);
+        });
+
+        it('should return the value when token is registered', () => {
+            container.set({ provide: 'x', useValue: 'hello' });
+            expect(container.getRequired<string>('x')).toBe('hello');
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // sealed services
+    // -----------------------------------------------------------------------
+    describe('sealed services', () => {
+        it('should prevent overwriting a sealed token', () => {
+            container.set({ provide: 'core', useValue: 'original' });
+            container.seal('core');
+
+            expect(() =>
+                container.set({ provide: 'core', useValue: 'override' }),
+            ).toThrowError(/Cannot override sealed service "core"/);
+            expect(container.getRequired('core')).toBe('original');
+        });
+
+        it('should allow registering a new token after sealing a different one', () => {
+            container.set({ provide: 'sealed', useValue: 1 });
+            container.seal('sealed');
+
+            container.set({ provide: 'other', useValue: 2 });
+            expect(container.getRequired('other')).toBe(2);
+        });
+
+        it('should allow multi providers on a sealed token', () => {
+            container.set({ provide: 'hooks', useValue: 'a', multi: true });
+            container.seal('hooks');
+
+            // multi providers should still accumulate
+            container.set({ provide: 'hooks', useValue: 'b', multi: true });
+            expect(container.getAll<string>('hooks')).toEqual(['a', 'b']);
+        });
+
+        it('should seal multiple tokens at once with sealAll', () => {
+            container.set({ provide: 'a', useValue: 1 });
+            container.set({ provide: 'b', useValue: 2 });
+            container.sealAll(['a', 'b']);
+
+            expect(() =>
+                container.set({ provide: 'a', useValue: 99 }),
+            ).toThrowError(/Cannot override sealed service "a"/);
+            expect(() =>
+                container.set({ provide: 'b', useValue: 99 }),
+            ).toThrowError(/Cannot override sealed service "b"/);
+        });
+
+        it('should report sealed status via isSealed', () => {
+            container.set({ provide: 'x', useValue: 1 });
+            expect(container.isSealed('x')).toBeFalse();
+
+            container.seal('x');
+            expect(container.isSealed('x')).toBeTrue();
+        });
+
+        it('should seal token via sealed flag on provider', () => {
+            container.set({ provide: 'auto', useValue: 'first', sealed: true });
+            expect(container.isSealed('auto')).toBeTrue();
+            expect(container.getRequired('auto')).toBe('first');
+
+            expect(() =>
+                container.set({ provide: 'auto', useValue: 'second' }),
+            ).toThrowError(/Cannot override sealed service "auto"/);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // transient services
+    // -----------------------------------------------------------------------
+    describe('transient services', () => {
+        it('should return a new instance on every get() for useClass', () => {
+            class Ephemeral {
+                id = Math.random();
+            }
+            container.set({ provide: 'eph', useClass: Ephemeral, transient: true });
+            const a = container.getRequired<Ephemeral>('eph');
+            const b = container.getRequired<Ephemeral>('eph');
+            expect(a).not.toBe(b);
+            expect(a.id).not.toBe(b.id);
+        });
+
+        it('should return a new value on every get() for useFactory', () => {
+            let counter = 0;
+            container.set({
+                provide: 'counter',
+                useFactory: () => ++counter,
+                transient: true,
+            });
+            expect(container.getRequired('counter')).toBe(1);
+            expect(container.getRequired('counter')).toBe(2);
+            expect(container.getRequired('counter')).toBe(3);
+        });
+
+        it('should resolve deps on every get() call', () => {
+            container.set({ provide: 'seed', useValue: 42 });
+            class WithDep {
+                constructor(public seed: number) {}
+            }
+            container.set({
+                provide: 'svc',
+                useClass: WithDep,
+                deps: ['seed'],
+                transient: true,
+            });
+            const a = container.getRequired<WithDep>('svc');
+            const b = container.getRequired<WithDep>('svc');
+            expect(a).not.toBe(b);
+            expect(a.seed).toBe(42);
+            expect(b.seed).toBe(42);
+        });
+
+        it('should report has() as true for transient tokens', () => {
+            container.set({ provide: 'tr', useClass: class X {}, transient: true });
+            expect(container.has('tr')).toBeTrue();
+        });
+
+        it('should show transient in getRegisteredTokens', () => {
+            container.set({ provide: 'tr', useClass: class X {}, transient: true });
+            const tokens = container.getRegisteredTokens();
+            expect(tokens).toContain('tr (transient)');
+        });
+
+        it('should allow overwriting a transient provider', () => {
+            let v = 0;
+            container.set({ provide: 't', useFactory: () => ++v, transient: true });
+            expect(container.getRequired('t')).toBe(1);
+
+            container.set({ provide: 't', useValue: 'static' });
+            expect(container.getRequired('t')).toBe('static');
         });
     });
 

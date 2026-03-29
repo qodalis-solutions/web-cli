@@ -180,7 +180,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const registry = context.services.get<ICliCommandProcessorRegistry>(
+        const registry = context.services.getRequired<ICliCommandProcessorRegistry>(
             CliProcessorsRegistry_TOKEN,
         );
         const pluginCategories = resolveConfigurationCategories(registry);
@@ -301,10 +301,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         if (stateKey === 'system') {
             const langOption = options.find(o => o.key === 'language');
             if (langOption) {
-                try {
-                    const translator = context.services.get<ICliTranslationService>(
-                        ICliTranslationService_TOKEN,
-                    );
+                const translator = context.services.get<ICliTranslationService>(
+                    ICliTranslationService_TOKEN,
+                );
+                if (translator) {
                     const locales = translator.getAvailableLocales();
                     if (locales.length > 0) {
                         langOption.options = locales.map(l => ({
@@ -312,8 +312,6 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                             value: l,
                         }));
                     }
-                } catch {
-                    // ignore
                 }
             }
         }
@@ -515,14 +513,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
         // Apply language
         if (settings['language']) {
-            try {
-                const translator = context.services.get<ICliTranslationService>(
-                    ICliTranslationService_TOKEN,
-                );
-                translator.setLocale(settings['language']);
-            } catch {
-                // Translation service not available yet during early boot
-            }
+            const translator = context.services.get<ICliTranslationService>(
+                ICliTranslationService_TOKEN,
+            );
+            translator?.setLocale(settings['language']);
         }
 
         // Terminal options
@@ -565,7 +559,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 context: ICliExecutionContext,
             ) => {
                 const registry =
-                    context.services.get<ICliCommandProcessorRegistry>(
+                    context.services.getRequired<ICliCommandProcessorRegistry>(
                         CliProcessorsRegistry_TOKEN,
                     );
                 const allOptions = this.getAllOptions(registry);
@@ -643,7 +637,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 const key = path.substring(dotIndex + 1);
 
                 const registry =
-                    context.services.get<ICliCommandProcessorRegistry>(
+                    context.services.getRequired<ICliCommandProcessorRegistry>(
                         CliProcessorsRegistry_TOKEN,
                     );
                 const allOptions = this.getAllOptions(registry);
@@ -709,7 +703,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 const key = path.substring(dotIndex + 1);
 
                 const registry =
-                    context.services.get<ICliCommandProcessorRegistry>(
+                    context.services.getRequired<ICliCommandProcessorRegistry>(
                         CliProcessorsRegistry_TOKEN,
                     );
                 const allOptions = this.getAllOptions(registry);
@@ -785,7 +779,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                         );
                     } else {
                         const registry =
-                            context.services.get<ICliCommandProcessorRegistry>(
+                            context.services.getRequired<ICliCommandProcessorRegistry>(
                                 CliProcessorsRegistry_TOKEN,
                             );
                         const categories =

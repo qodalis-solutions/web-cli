@@ -4,6 +4,7 @@ import {
     ICliKeyValueStore,
     ICliStateStore,
 } from '@qodalis/cli-core';
+import { CliKeyValueStore_TOKEN } from '../tokens';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
@@ -46,19 +47,22 @@ export class CliStateStore implements ICliStateStore {
     }
 
     async persist(): Promise<void> {
-        const keyValueStore = this.services.get<ICliKeyValueStore>(
-            'cli-key-value-store',
+        const keyValueStore = this.services.getRequired<ICliKeyValueStore>(
+            CliKeyValueStore_TOKEN,
         );
 
         await keyValueStore.set(this.storageKey, this.getState());
     }
 
     async initialize(): Promise<void> {
-        try {
-            const keyValueStore = this.services.get<ICliKeyValueStore>(
-                'cli-key-value-store',
-            );
+        const keyValueStore = this.services.get<ICliKeyValueStore>(
+            CliKeyValueStore_TOKEN,
+        );
+        if (!keyValueStore) {
+            return;
+        }
 
+        try {
             const state = await keyValueStore.get<CliState>(this.storageKey);
 
             if (state) {

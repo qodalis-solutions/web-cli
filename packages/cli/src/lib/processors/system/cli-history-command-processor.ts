@@ -46,7 +46,7 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
                 _: CliProcessCommand,
                 context: ICliExecutionContext,
             ) => {
-                const commandHistory = context.services.get<CliCommandHistory>(
+                const commandHistory = context.services.getRequired<CliCommandHistory>(
                     CliCommandHistory_TOKEN,
                 );
                 await commandHistory.clearHistory();
@@ -74,7 +74,7 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
                 cmd: CliProcessCommand,
                 context: ICliExecutionContext,
             ) => {
-                const commandHistory = context.services.get<CliCommandHistory>(
+                const commandHistory = context.services.getRequired<CliCommandHistory>(
                     CliCommandHistory_TOKEN,
                 );
                 const query = (cmd.value ?? '').trim();
@@ -143,7 +143,7 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         const { writer } = context;
-        const commandHistory = context.services.get<CliCommandHistory>(
+        const commandHistory = context.services.getRequired<CliCommandHistory>(
             CliCommandHistory_TOKEN,
         );
         const history = commandHistory.getHistory();

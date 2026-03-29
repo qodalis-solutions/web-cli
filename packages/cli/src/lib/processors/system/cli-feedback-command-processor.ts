@@ -66,12 +66,7 @@ function collectSystemInfo(context: ICliExecutionContext): string {
     lines.push(`- **CLI Version:** ${CLI_VERSION}`);
     lines.push(`- **Core Version:** ${CORE_VERSION}`);
 
-    let framework = 'vanilla';
-    try {
-        framework = context.services.get<string>('cli-framework');
-    } catch {
-        // standalone usage
-    }
+    const framework = context.services.get<string>('cli-framework') ?? 'vanilla';
     lines.push(`- **Framework:** ${framework}`);
     lines.push(`- **Terminal:** ${context.terminal.cols}x${context.terminal.rows}`);
 
@@ -165,13 +160,8 @@ async function runInteractiveFlow(
     );
     writer.writeln(`  CLI: ${CLI_VERSION}  Core: ${CORE_VERSION}`);
 
-    let framework = 'vanilla';
-    try {
-        framework = context.services.get<string>('cli-framework');
-    } catch {
-        // standalone
-    }
-    writer.writeln(`  Framework: ${framework}  Terminal: ${context.terminal.cols}x${context.terminal.rows}`);
+    const previewFramework = context.services.get<string>('cli-framework') ?? 'vanilla';
+    writer.writeln(`  Framework: ${previewFramework}  Terminal: ${context.terminal.cols}x${context.terminal.rows}`);
 
     if (typeof navigator !== 'undefined') {
         writer.writeln(`  Platform: ${navigator.platform}  Language: ${navigator.language}`);

@@ -74,8 +74,17 @@ class MockTerminal {
 }
 
 class MockServiceProvider implements ICliServiceProvider {
-    get<T>(_token: any): T {
+    get<T>(_token: any): T | undefined {
+        return undefined;
+    }
+    getAll<T>(_token: any): T[] {
+        return [];
+    }
+    getRequired<T>(_token: any): T {
         throw new Error('Service not found');
+    }
+    has(_token: any): boolean {
+        return false;
     }
     set(_def: CliProvider | CliProvider[]): void {}
 }

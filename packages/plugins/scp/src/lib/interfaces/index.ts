@@ -1,3 +1,5 @@
+import { CliHeadersProvider } from '@qodalis/cli-core';
+
 export const IScpTransferService_TOKEN = 'scp-transfer-service';
 
 export interface IScpFileEntry {
@@ -18,13 +20,13 @@ export interface IScpFileStat {
 }
 
 export interface IScpTransferService {
-    ls(serverUrl: string, path: string, headers?: Record<string, string>): Promise<IScpFileEntry[]>;
-    cat(serverUrl: string, path: string, headers?: Record<string, string>): Promise<string>;
-    stat(serverUrl: string, path: string, headers?: Record<string, string>): Promise<IScpFileStat>;
+    ls(serverUrl: string, path: string, headers?: CliHeadersProvider): Promise<IScpFileEntry[]>;
+    cat(serverUrl: string, path: string, headers?: CliHeadersProvider): Promise<string>;
+    stat(serverUrl: string, path: string, headers?: CliHeadersProvider): Promise<IScpFileStat>;
     download(
         serverUrl: string,
         path: string,
-        headers?: Record<string, string>,
+        headers?: CliHeadersProvider,
         onProgress?: (received: number, total: number) => void,
         signal?: AbortSignal,
     ): Promise<{ content: string; size: number }>;
@@ -33,8 +35,8 @@ export interface IScpTransferService {
         remotePath: string,
         content: string,
         filename: string,
-        headers?: Record<string, string>,
+        headers?: CliHeadersProvider,
     ): Promise<void>;
-    mkdir(serverUrl: string, path: string, headers?: Record<string, string>): Promise<void>;
-    rm(serverUrl: string, path: string, headers?: Record<string, string>): Promise<void>;
+    mkdir(serverUrl: string, path: string, headers?: CliHeadersProvider): Promise<void>;
+    rm(serverUrl: string, path: string, headers?: CliHeadersProvider): Promise<void>;
 }

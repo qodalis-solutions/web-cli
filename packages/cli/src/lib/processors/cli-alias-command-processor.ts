@@ -89,7 +89,7 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const registry = context.services.get<ICliCommandProcessorRegistry>(
+        const registry = context.services.getRequired<ICliCommandProcessorRegistry>(
             CliProcessorsRegistry_TOKEN,
         );
 

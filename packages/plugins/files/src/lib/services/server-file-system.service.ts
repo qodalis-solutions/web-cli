@@ -1,4 +1,4 @@
-import { ICliOwnership } from '@qodalis/cli-core';
+import { ICliOwnership, CliHeadersProvider, resolveHeaders } from '@qodalis/cli-core';
 import { IFileNode } from '../interfaces/i-file-node';
 import { IFileSystemService } from '../interfaces/i-file-system-service';
 
@@ -10,6 +10,8 @@ const DEFAULT_HOME = '/home/user';
 export interface ServerFileSystemOptions {
     /** Base URL of the CLI server, e.g. 'http://localhost:8047' */
     baseUrl: string;
+    /** Custom headers sent with every request (e.g. auth tokens) */
+    headers?: CliHeadersProvider;
 }
 
 /**
@@ -105,10 +107,12 @@ export class ServerFileSystemService implements IFileSystemService {
     private currentUid: string | null = null;
     private currentGroups: string[] = [];
     private readonly baseUrl: string;
+    private readonly headersProvider: CliHeadersProvider | undefined;
 
     constructor(options: ServerFileSystemOptions) {
         // Strip trailing slash for consistent URL building
         this.baseUrl = options.baseUrl.replace(/\/+$/, '');
+        this.headersProvider = options.headers;
     }
 
     // --- User context ---
@@ -601,7 +605,14 @@ export class ServerFileSystemService implements IFileSystemService {
         options?: RequestInit,
     ): Promise<T> {
         const url = `${this.baseUrl}/api/qcli/fs${endpoint}`;
-        const response = await fetch(url, options);
+        const mergedHeaders: Record<string, string> = {
+            ...resolveHeaders(this.headersProvider),
+            ...((options?.headers as Record<string, string>) ?? {}),
+        };
+        const response = await fetch(url, {
+            ...options,
+            headers: mergedHeaders,
+        });
         if (!response.ok) {
             const body = await response.text();
             throw new Error(
