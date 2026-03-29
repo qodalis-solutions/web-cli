@@ -873,8 +873,23 @@
 }
 
 .cli-panel-status-item.status-text {
-  color: var(--cli-panel-accent, #818cf8);
   max-width: 200px;
+}
+
+.cli-panel-status-item.status-text.level-info {
+  color: var(--cli-panel-accent, #818cf8);
+}
+
+.cli-panel-status-item.status-text.level-success {
+  color: var(--cli-status-idle, #3fb950);
+}
+
+.cli-panel-status-item.status-text.level-warn {
+  color: var(--cli-status-running, #f0883e);
+}
+
+.cli-panel-status-item.status-text.level-error {
+  color: var(--cli-status-error, #f85149);
 }
 
 .cli-panel-status-item.status-running {
