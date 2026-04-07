@@ -296,4 +296,266 @@ describe('CliDefaultAuthService', () => {
             expect(current?.user.name).toBe('admin');
         });
     });
+
+    // ---------- validatePassword ----------
+
+    describe('validatePassword', () => {
+        it('should return null when no policy is configured', async () => {
+            await authService.initialize(kvStore, usersStore, sessionService);
+            expect(authService.validatePassword('any')).toBeNull();
+        });
+
+        it('should enforce minLength', async () => {
+            await authService.initialize(kvStore, usersStore, sessionService, undefined, {
+                passwordPolicy: { minLength: 8 },
+            });
+            expect(authService.validatePassword('short')).toContain('at least 8');
+            expect(authService.validatePassword('longenough')).toBeNull();
+        });
+
+        it('should enforce requireUppercase', async () => {
+            await authService.initialize(kvStore, usersStore, sessionService, undefined, {
+                passwordPolicy: { requireUppercase: true },
+            });
+            expect(authService.validatePassword('alllower')).toContain('uppercase');
+            expect(authService.validatePassword('hasUpper')).toBeNull();
+        });
+
+        it('should enforce requireDigit', async () => {
+            await authService.initialize(kvStore, usersStore, sessionService, undefined, {
+                passwordPolicy: { requireDigit: true },
+            });
+            expect(authService.validatePassword('nodigits')).toContain('digit');
+            expect(authService.validatePassword('has1digit')).toBeNull();
+        });
+
+        it('should enforce requireSpecialChar', async () => {
+            await authService.initialize(kvStore, usersStore, sessionService, undefined, {
+                passwordPolicy: { requireSpecialChar: true },
+            });
+            expect(authService.validatePassword('nospecial1')).toContain('special');
+            expect(authService.validatePassword('has@special')).toBeNull();
+        });
+
+        it('should enforce all rules together', async () => {
+            await authService.initialize(kvStore, usersStore, sessionService, undefined, {
+                passwordPolicy: {
+                    minLength: 8,
+                    requireUppercase: true,
+                    requireDigit: true,
+                    requireSpecialChar: true,
+                },
+            });
+            // Fails on length first
+            expect(authService.validatePassword('Ab1!')).toContain('at least 8');
+            // Passes all
+            expect(authService.validatePassword('Abcdefg1!')).toBeNull();
+        });
+
+        it('setPassword should reject invalid password', async () => {
+            await authService.initialize(kvStore, usersStore, sessionService, undefined, {
+                passwordPolicy: { minLength: 10 },
+            });
+
+            const user = await usersStore.createUser({
+                name: 'alice',
+                email: 'alice@test.com',
+                groups: [],
+            });
+
+            await expectAsync(
+                authService.setPassword(user.id, 'short'),
+            ).toBeRejectedWithError(/at least 10/);
+        });
+    });
+
+    // ---------- brute force protection ----------
+
+    describe('brute force protection', () => {
+        beforeEach(async () => {
+            await authService.initialize(kvStore, usersStore, sessionService, undefined, {
+                bruteForceProtection: { maxAttempts: 3, lockoutSeconds: 2 },
+            });
+
+            const user = await usersStore.createUser({
+                name: 'victim',
+                email: 'victim@test.com',
+                groups: [],
+            });
+            await authService.setPassword(user.id, 'correct');
+        });
+
+        it('should allow login after fewer than maxAttempts failures', async () => {
+            // 2 failed attempts
+            for (let i = 0; i < 2; i++) {
+                await expectAsync(
+                    authService.login('victim', 'wrong'),
+                ).toBeRejected();
+            }
+
+            // Should still be able to log in
+            const session = await authService.login('victim', 'correct');
+            expect(session.user.name).toBe('victim');
+        });
+
+        it('should lock account after maxAttempts failures', async () => {
+            // 3 failed attempts → lockout
+            for (let i = 0; i < 3; i++) {
+                await expectAsync(
+                    authService.login('victim', 'wrong'),
+                ).toBeRejected();
+            }
+
+            // Even correct password should fail
+            await expectAsync(
+                authService.login('victim', 'correct'),
+            ).toBeRejectedWithError(/Account locked/);
+        });
+
+        it('should unlock after lockout period', async () => {
+            // 3 failed attempts → lockout
+            for (let i = 0; i < 3; i++) {
+                await expectAsync(
+                    authService.login('victim', 'wrong'),
+                ).toBeRejected();
+            }
+
+            // Wait for lockout to expire (2 seconds)
+            await new Promise((resolve) => setTimeout(resolve, 2100));
+
+            const session = await authService.login('victim', 'correct');
+            expect(session.user.name).toBe('victim');
+        });
+
+        it('should not apply brute force protection when not configured', async () => {
+            // Re-initialize without brute force config
+            const authService2 = new CliDefaultAuthService();
+            await authService2.initialize(kvStore, usersStore, sessionService);
+
+            // Many failed attempts should not lock
+            for (let i = 0; i < 10; i++) {
+                await expectAsync(
+                    authService2.login('victim', 'wrong'),
+                ).toBeRejectedWithError(/Authentication failure/);
+            }
+
+            const session = await authService2.login('victim', 'correct');
+            expect(session.user.name).toBe('victim');
+        });
+    });
+
+    // ---------- event emission ----------
+
+    describe('event emission', () => {
+        let eventService: { events: any[]; emit: (e: any) => void };
+
+        beforeEach(async () => {
+            eventService = {
+                events: [],
+                emit(e: any) { this.events.push(e); },
+                events$: new (await import('rxjs')).Subject(),
+            } as any;
+
+            await authService.initialize(
+                kvStore, usersStore, sessionService,
+                eventService as any,
+            );
+        });
+
+        it('should emit login event on successful login', async () => {
+            const user = await usersStore.createUser({
+                name: 'eve',
+                email: 'eve@test.com',
+                groups: [],
+            });
+            await authService.setPassword(user.id, 'pass');
+
+            await authService.login('eve', 'pass');
+
+            const loginEvents = eventService.events.filter(
+                (e) => e.type === 'login',
+            );
+            expect(loginEvents.length).toBe(1);
+            expect(loginEvents[0].user.name).toBe('eve');
+        });
+
+        it('should emit login_failed event on wrong password', async () => {
+            const user = await usersStore.createUser({
+                name: 'frank',
+                email: 'frank@test.com',
+                groups: [],
+            });
+            await authService.setPassword(user.id, 'pass');
+
+            await expectAsync(
+                authService.login('frank', 'wrong'),
+            ).toBeRejected();
+
+            const failedEvents = eventService.events.filter(
+                (e) => e.type === 'login_failed',
+            );
+            expect(failedEvents.length).toBe(1);
+        });
+
+        it('should emit logout event', async () => {
+            const user = await usersStore.createUser({
+                name: 'grace',
+                email: 'grace@test.com',
+                groups: ['admin'],
+            });
+            await authService.setPassword(user.id, 'pass');
+            await authService.login('grace', 'pass');
+
+            await authService.logout();
+
+            const logoutEvents = eventService.events.filter(
+                (e) => e.type === 'logout',
+            );
+            expect(logoutEvents.length).toBe(1);
+            expect(logoutEvents[0].user.name).toBe('grace');
+        });
+
+        it('should emit password_changed event', async () => {
+            const user = await usersStore.createUser({
+                name: 'heidi',
+                email: 'heidi@test.com',
+                groups: [],
+            });
+            await authService.setPassword(user.id, 'pass1');
+
+            const pwdEvents = eventService.events.filter(
+                (e) => e.type === 'password_changed',
+            );
+            expect(pwdEvents.length).toBe(1);
+            expect(pwdEvents[0].user.name).toBe('heidi');
+        });
+    });
+
+    // ---------- lastLoginAt ----------
+
+    describe('lastLoginAt tracking', () => {
+        beforeEach(async () => {
+            await authService.initialize(kvStore, usersStore, sessionService);
+        });
+
+        it('should update lastLoginAt on login', async () => {
+            const user = await usersStore.createUser({
+                name: 'ivan',
+                email: 'ivan@test.com',
+                groups: [],
+            });
+            await authService.setPassword(user.id, 'pass');
+
+            expect(user.lastLoginAt).toBeUndefined();
+
+            const before = Date.now();
+            await authService.login('ivan', 'pass');
+
+            const updated = await firstValueFrom(
+                usersStore.getUser('ivan'),
+            );
+            expect(updated!.lastLoginAt).toBeDefined();
+            expect(updated!.lastLoginAt).toBeGreaterThanOrEqual(before);
+        });
+    });
 });

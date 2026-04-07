@@ -45,4 +45,11 @@ export class CliDefaultUserSessionService implements ICliUserSessionService {
         }
         return stored;
     }
+
+    /** Check if the current session has expired based on lastActivity */
+    isExpired(timeoutMs: number): boolean {
+        const session = this.sessionSubject.getValue();
+        if (!session || timeoutMs <= 0) return false;
+        return session.lastActivity + timeoutMs < Date.now();
+    }
 }

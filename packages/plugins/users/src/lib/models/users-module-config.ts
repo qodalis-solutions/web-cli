@@ -22,4 +22,27 @@ export interface CliUsersModuleConfig {
      * @example (user) => `${user.name}@cli`
      */
     userDisplayFormatter?: (user: ICliUser) => string;
+
+    /** Password policy for new passwords and password changes */
+    passwordPolicy?: {
+        /** Minimum password length (default: 0, no minimum) */
+        minLength?: number;
+        /** Require at least one uppercase letter */
+        requireUppercase?: boolean;
+        /** Require at least one digit */
+        requireDigit?: boolean;
+        /** Require at least one special character (!@#$%^&*...) */
+        requireSpecialChar?: boolean;
+    };
+
+    /** When set, delegates user management to this CLI server (must match a CliServerConfig.name) */
+    server?: string;
+
+    /** Brute force protection for login attempts */
+    bruteForceProtection?: {
+        /** Maximum failed attempts before lockout (default: 5) */
+        maxAttempts?: number;
+        /** Lockout duration in seconds (default: 60) */
+        lockoutSeconds?: number;
+    };
 }

@@ -49,3 +49,7 @@ export * from './cli-panel-ref';
 export * from './http-client';
 
 export * from './notifier';
+
+export * from './user-events';
+
+export * from './audit';

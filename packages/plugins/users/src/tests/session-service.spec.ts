@@ -151,6 +151,50 @@ describe('CliDefaultUserSessionService', () => {
         });
     });
 
+    // ---------- isExpired ----------
+
+    describe('isExpired', () => {
+        beforeEach(async () => {
+            await service.initialize(kvStore);
+        });
+
+        it('should return false when no session is set', () => {
+            expect(service.isExpired(60000)).toBe(false);
+        });
+
+        it('should return false when timeoutMs is 0', async () => {
+            await service.setUserSession(createMockSession());
+            expect(service.isExpired(0)).toBe(false);
+        });
+
+        it('should return false when timeoutMs is negative', async () => {
+            await service.setUserSession(createMockSession());
+            expect(service.isExpired(-1)).toBe(false);
+        });
+
+        it('should return false for a fresh session', async () => {
+            await service.setUserSession(createMockSession());
+            expect(service.isExpired(60000)).toBe(false);
+        });
+
+        it('should return true when session has expired', async () => {
+            const session = createMockSession();
+            // Set lastActivity far in the past
+            session.lastActivity = Date.now() - 120000;
+            await service.setUserSession(session);
+
+            expect(service.isExpired(60000)).toBe(true);
+        });
+
+        it('should return false when session is within timeout window', async () => {
+            const session = createMockSession();
+            session.lastActivity = Date.now() - 30000; // 30s ago
+            await service.setUserSession(session);
+
+            expect(service.isExpired(60000)).toBe(false); // 60s timeout
+        });
+    });
+
     // ---------- persistSession ----------
 
     describe('persistSession', () => {

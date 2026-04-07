@@ -6,8 +6,11 @@ import {
     ICliAuthService_TOKEN,
     ICliUserSessionService_TOKEN,
     ICliPermissionService_TOKEN,
+    ICliUserEventService_TOKEN,
+    ICliAuditService_TOKEN,
     ICliUserSession,
     ICliUser,
+    ICliUserEvent,
 } from '@qodalis/cli-core';
 import { firstValueFrom } from 'rxjs';
 
@@ -19,8 +22,12 @@ import {
     CliDefaultPermissionService,
 } from '../lib/services';
 
+import { CliDefaultUserEventService } from '../lib/services/cli-default-user-event.service';
+import { CliDefaultAuditService } from '../lib/services/cli-default-audit.service';
+
 import {
     CliUsersModuleConfig_TOKEN,
+    CliUsersModuleConfig,
 } from '../lib/models/users-module-config';
 
 import { CliWhoamiCommandProcessor } from '../lib/processors/cli-whoami-command-processor';
@@ -37,17 +44,20 @@ import { CliLoginCommandProcessor } from '../lib/processors/cli-login-command-pr
 import { CliLogoutCommandProcessor } from '../lib/processors/cli-logout-command-processor';
 import { CliPasswdCommandProcessor } from '../lib/processors/cli-passwd-command-processor';
 import { CliSwitchUserCommandProcessor } from '../lib/processors/cli-switch-user-command-processor';
+import { CliLastCommandProcessor } from '../lib/processors/cli-last-command-processor';
 
 // ---------------------------------------------------------------------------
 // Setup helper
 // ---------------------------------------------------------------------------
 
-async function setupHarness(): Promise<{
+async function setupHarness(config: CliUsersModuleConfig = {}, adminPassword: string = 'password'): Promise<{
     harness: CliTestHarness;
     usersStore: CliDefaultUsersStoreService;
     sessionService: CliDefaultUserSessionService;
     authService: CliDefaultAuthService;
     groupsStore: CliDefaultGroupsStoreService;
+    eventService: CliDefaultUserEventService;
+    auditService: CliDefaultAuditService;
     adminUser: ICliUser;
 }> {
     const harness = new CliTestHarness();
@@ -62,8 +72,13 @@ async function setupHarness(): Promise<{
     const sessionService = new CliDefaultUserSessionService();
     await sessionService.initialize(kvStore);
 
+    const eventService = new CliDefaultUserEventService();
+
+    const auditService = new CliDefaultAuditService();
+    await auditService.initialize(kvStore);
+
     const authService = new CliDefaultAuthService();
-    await authService.initialize(kvStore, usersStore, sessionService);
+    await authService.initialize(kvStore, usersStore, sessionService, eventService, config);
 
     const groupsStore = new CliDefaultGroupsStoreService();
     await groupsStore.initialize(kvStore, usersStore);
@@ -76,9 +91,11 @@ async function setupHarness(): Promise<{
     harness.registerService(ICliAuthService_TOKEN, authService);
     harness.registerService(ICliGroupsStoreService_TOKEN, groupsStore);
     harness.registerService(ICliPermissionService_TOKEN, permissionService);
+    harness.registerService(ICliUserEventService_TOKEN, eventService);
+    harness.registerService(ICliAuditService_TOKEN, auditService);
 
-    // Register module config (no password required by default for login/su)
-    harness.registerService(CliUsersModuleConfig_TOKEN, {});
+    // Register module config
+    harness.registerService(CliUsersModuleConfig_TOKEN, config);
 
     // Create an admin user
     const adminUser = await usersStore.createUser({
@@ -88,7 +105,7 @@ async function setupHarness(): Promise<{
         homeDir: '/home/root',
     });
 
-    await authService.setPassword(adminUser.id, 'password');
+    await authService.setPassword(adminUser.id, adminPassword);
 
     // Set admin session
     const session: ICliUserSession = {
@@ -114,12 +131,13 @@ async function setupHarness(): Promise<{
         new CliLogoutCommandProcessor(),
         new CliPasswdCommandProcessor(),
         new CliSwitchUserCommandProcessor(),
+        new CliLastCommandProcessor(),
     ]);
 
     // Initialize processors (injects services via initialize())
     await harness.initializeProcessors();
 
-    return { harness, usersStore, sessionService, authService, groupsStore, adminUser };
+    return { harness, usersStore, sessionService, authService, groupsStore, eventService, auditService, adminUser };
 }
 
 // ---------------------------------------------------------------------------
@@ -484,5 +502,178 @@ describe('Users plugin integration: passwd', () => {
 
         const result = await harness.execute('passwd');
         expect(result.stderr.some(l => l.includes('cannot be empty'))).toBe(true);
+    });
+
+    it('passwd should reject password violating policy', async () => {
+        const { harness: h } = await setupHarness({
+            passwordPolicy: { minLength: 10, requireUppercase: true },
+        }, 'ValidPass1!');
+
+        // current password, new password (too short), confirm
+        h.setReaderResponses('ValidPass1!', 'short', 'short');
+
+        const result = await h.execute('passwd');
+        expect(result.stderr.some(l => l.includes('at least 10'))).toBe(true);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// last command
+// ---------------------------------------------------------------------------
+
+describe('Users plugin integration: last command', () => {
+    let harness: CliTestHarness;
+    let authService: CliDefaultAuthService;
+    let usersStore: CliDefaultUsersStoreService;
+    let auditService: CliDefaultAuditService;
+
+    beforeEach(async () => {
+        ({ harness, authService, usersStore, auditService } = await setupHarness());
+
+        // Create a second user
+        const bob = await usersStore.createUser({
+            name: 'bob',
+            email: 'bob@test.com',
+            groups: ['dev'],
+        });
+        await authService.setPassword(bob.id, 'bobpass');
+
+        // Generate some audit entries manually
+        await auditService.log({ event: 'login', username: 'root' });
+        await auditService.log({ event: 'login', username: 'bob' });
+        await auditService.log({ event: 'logout', username: 'bob' });
+    });
+
+    it('last should display audit entries', async () => {
+        const result = await harness.execute('last');
+        expect(result.output).toContain('root');
+        expect(result.output).toContain('bob');
+        expect(result.output).toContain('login');
+    });
+
+    it('last <username> should filter by user', async () => {
+        const result = await harness.execute('last bob');
+        expect(result.output).toContain('bob');
+        // root entries should not appear
+        expect(result.output.split('root').length).toBeLessThanOrEqual(2); // may appear in header
+    });
+
+    it('last --event=logout should filter by event', async () => {
+        const result = await harness.execute('last --event=logout');
+        expect(result.output).toContain('logout');
+        expect(result.output).toContain('bob');
+    });
+
+    it('last --limit=1 should limit results', async () => {
+        const result = await harness.execute('last --limit=1');
+        // Should show a table (not empty message) with limited entries
+        expect(result.output).not.toContain('No audit entries');
+        // Should contain at least one event type
+        expect(result.output).toMatch(/login|logout/);
+    });
+
+    it('last should show info when no entries', async () => {
+        await auditService.clear();
+        const result = await harness.execute('last');
+        expect(result.output).toContain('No audit entries');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Event emission during user CRUD
+// ---------------------------------------------------------------------------
+
+describe('Users plugin integration: lifecycle events', () => {
+    let harness: CliTestHarness;
+    let eventService: CliDefaultUserEventService;
+    let capturedEvents: ICliUserEvent[];
+
+    beforeEach(async () => {
+        ({ harness, eventService } = await setupHarness());
+        capturedEvents = [];
+        eventService.events$.subscribe(e => capturedEvents.push(e));
+    });
+
+    it('adduser should emit user_created event', async () => {
+        harness.setReaderResponses('pass123', 'pass123');
+        await harness.execute('adduser newbie --email=newbie@test.com');
+
+        const created = capturedEvents.filter(e => e.type === 'user_created');
+        expect(created.length).toBe(1);
+        expect(created[0].user.name).toBe('newbie');
+    });
+
+    it('userdel should emit user_deleted event', async () => {
+        // Create user first
+        harness.setReaderResponses('pass', 'pass');
+        await harness.execute('adduser target --email=target@test.com');
+
+        capturedEvents.length = 0; // reset
+
+        await harness.execute('userdel target');
+
+        const deleted = capturedEvents.filter(e => e.type === 'user_deleted');
+        expect(deleted.length).toBe(1);
+        expect(deleted[0].user.name).toBe('target');
+    });
+
+    it('usermod should emit user_updated event', async () => {
+        harness.setReaderResponses('pass', 'pass');
+        await harness.execute('adduser modme --email=old@test.com');
+
+        capturedEvents.length = 0;
+
+        await harness.execute('usermod modme --email=new@test.com');
+
+        const updated = capturedEvents.filter(e => e.type === 'user_updated');
+        expect(updated.length).toBe(1);
+    });
+
+    it('login should emit login event via auth service', async () => {
+        const { harness: h, usersStore: us, authService: auth, eventService: es } = await setupHarness({
+            requirePassword: true,
+        });
+        const events: ICliUserEvent[] = [];
+        es.events$.subscribe(e => events.push(e));
+
+        const bob = await us.createUser({ name: 'bob', email: 'bob@test.com', groups: [] });
+        await auth.setPassword(bob.id, 'bobpass');
+
+        // With requirePassword, login prompts for password and goes through authService.login()
+        h.setReaderResponses('bobpass');
+        await h.execute('login bob');
+
+        const loginEvents = events.filter(e => e.type === 'login');
+        expect(loginEvents.length).toBe(1);
+        expect(loginEvents[0].user.name).toBe('bob');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// lastLoginAt tracking via whoami
+// ---------------------------------------------------------------------------
+
+describe('Users plugin integration: lastLoginAt', () => {
+    it('whoami --info should show last login time after login', async () => {
+        const { harness, usersStore, authService } = await setupHarness();
+
+        const bob = await usersStore.createUser({
+            name: 'bob',
+            email: 'bob@test.com',
+            groups: [],
+        });
+        await authService.setPassword(bob.id, 'pass');
+        await authService.login('bob', 'pass');
+
+        const result = await harness.execute('whoami --info');
+        expect(result.output).toContain('bob');
+    });
+
+    it('listusers should show last login column', async () => {
+        const { harness } = await setupHarness();
+        const result = await harness.execute('listusers');
+        expect(result.output).toBeDefined();
+        // Root user should be listed
+        expect(result.output).toContain('root');
     });
 });

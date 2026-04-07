@@ -8,6 +8,8 @@ import {
     ICliCommandParameterDescriptor,
     ICliUsersStoreService,
     ICliUsersStoreService_TOKEN,
+    ICliUserEventService,
+    ICliUserEventService_TOKEN,
     DefaultLibraryAuthor,
     CliStateConfiguration,
     CliUpdateUser,
@@ -76,10 +78,14 @@ export class CliUsermodCommandProcessor implements ICliCommandProcessor {
     ];
 
     private usersStore!: ICliUsersStoreService;
+    private eventService?: ICliUserEventService;
 
     async initialize(context: ICliExecutionContext): Promise<void> {
         this.usersStore = context.services.getRequired<ICliUsersStoreService>(
             ICliUsersStoreService_TOKEN,
+        );
+        this.eventService = context.services.get<ICliUserEventService>(
+            ICliUserEventService_TOKEN,
         );
     }
 
@@ -147,7 +153,15 @@ export class CliUsermodCommandProcessor implements ICliCommandProcessor {
         }
 
         try {
-            await this.usersStore.updateUser(user.id, updates);
+            const updated = await this.usersStore.updateUser(user.id, updates);
+
+            this.eventService?.emit({
+                type: 'user_updated',
+                user: updated,
+                timestamp: Date.now(),
+                details: `Updated: ${Object.keys(updates).join(', ')}`,
+            });
+
             context.writer.writeSuccess(`usermod: user '${user.name}' updated`);
         } catch (e: any) {
             context.writer.writeError(

@@ -15,11 +15,20 @@ import {
     ICliAuthService,
     ICliUser,
     ICliUserSessionService,
+    ICliUserEventService,
+    ICliAuditService,
+    ICliExecutionContext,
+    ICliServerAuthTokenProvider,
     ICliUsersStoreService_TOKEN,
     ICliUserSessionService_TOKEN,
     ICliGroupsStoreService_TOKEN,
     ICliAuthService_TOKEN,
     ICliPermissionService_TOKEN,
+    ICliUserEventService_TOKEN,
+    ICliAuditService_TOKEN,
+} from '@qodalis/cli-core';
+import {
+    ICliServerAuthTokenProvider_TOKEN,
 } from '@qodalis/cli-core';
 import { CliKeyValueStore_TOKEN } from '@qodalis/cli';
 
@@ -37,12 +46,21 @@ import { CliGroupsCommandProcessor } from './lib/processors/cli-groups-command-p
 import { CliGroupaddCommandProcessor } from './lib/processors/cli-groupadd-command-processor';
 import { CliGroupdelCommandProcessor } from './lib/processors/cli-groupdel-command-processor';
 import { CliWhoCommandProcessor } from './lib/processors/cli-who-command-processor';
+import { CliLastCommandProcessor } from './lib/processors/cli-last-command-processor';
 
 import { CliDefaultUsersStoreService } from './lib/services/cli-default-users-store.service';
 import { CliDefaultUserSessionService } from './lib/services/cli-default-user-session.service';
 import { CliDefaultGroupsStoreService } from './lib/services/cli-default-groups-store.service';
 import { CliDefaultAuthService } from './lib/services/cli-default-auth.service';
 import { CliDefaultPermissionService } from './lib/services/cli-default-permission.service';
+import { CliDefaultUserEventService } from './lib/services/cli-default-user-event.service';
+import { CliDefaultAuditService } from './lib/services/cli-default-audit.service';
+import { CliServerUsersStoreService } from './lib/services/cli-server-users-store.service';
+import { CliServerUserSessionService } from './lib/services/cli-server-user-session.service';
+import { CliServerGroupsStoreService } from './lib/services/cli-server-groups-store.service';
+import { CliServerAuthService } from './lib/services/cli-server-auth.service';
+import { CliSessionsCommandProcessor } from './lib/processors/cli-sessions-command-processor';
+import { CliSessionKickCommandProcessor } from './lib/processors/cli-session-kick-command-processor';
 import {
     CliUsersModuleConfig,
     CliUsersModuleConfig_TOKEN,
@@ -54,6 +72,14 @@ import { LIBRARY_VERSION, API_VERSION } from './lib/version';
 interface ICliUsersModule extends ICliConfigurableModule<CliUsersModuleConfig> {
     /** Temporary storage for user created during onSetup, consumed by onAfterBoot */
     _pendingHomeSetup?: ICliUser;
+    /** Session timeout interval handle, cleaned up in onDestroy */
+    _sessionTimeoutInterval?: ReturnType<typeof setInterval>;
+    /** Initializes server-backed services when moduleConfig.server is set */
+    _initServerMode(
+        context: ICliExecutionContext,
+        moduleConfig: CliUsersModuleConfig,
+        kvStore: ICliKeyValueStore,
+    ): Promise<void>;
 }
 
 export const usersModule: ICliUsersModule = {
@@ -77,6 +103,7 @@ export const usersModule: ICliUsersModule = {
         new CliGroupaddCommandProcessor(),
         new CliGroupdelCommandProcessor(),
         new CliWhoCommandProcessor(),
+        new CliLastCommandProcessor(),
     ],
     services: [
         {
@@ -118,6 +145,33 @@ export const usersModule: ICliUsersModule = {
             { provide: ICliPermissionService_TOKEN, useClass: CliDefaultPermissionService },
         ]);
 
+        if (moduleConfig.server) {
+            await this._initServerMode(context, moduleConfig, kvStore);
+            return;
+        }
+
+        // Initialize user event service
+        const eventService = new CliDefaultUserEventService();
+        context.services.set([
+            { provide: ICliUserEventService_TOKEN, useValue: eventService },
+        ]);
+
+        // Initialize audit service and subscribe to events
+        const auditService = new CliDefaultAuditService();
+        await auditService.initialize(kvStore);
+        context.services.set([
+            { provide: ICliAuditService_TOKEN, useValue: auditService },
+        ]);
+
+        // Auto-log all user events to audit
+        eventService.events$.subscribe((event) => {
+            auditService.log({
+                event: event.type,
+                username: event.user.name,
+                details: event.details,
+            });
+        });
+
         // Initialize users store
         const usersStore = context.services.getRequired<ICliUsersStoreService>(
             ICliUsersStoreService_TOKEN,
@@ -140,9 +194,9 @@ export const usersModule: ICliUsersModule = {
             { provide: ICliUserSessionService_TOKEN, useValue: sessionService },
         ]);
 
-        // Initialize auth service (depends on users store and session service)
+        // Initialize auth service (depends on users store, session service, events, and config)
         const authService = new CliDefaultAuthService();
-        await authService.initialize(kvStore, usersStore, sessionService);
+        await authService.initialize(kvStore, usersStore, sessionService, eventService, moduleConfig);
         context.services.set([
             { provide: ICliAuthService_TOKEN, useValue: authService },
         ]);
@@ -166,7 +220,17 @@ export const usersModule: ICliUsersModule = {
             await sessionService.clearSession();
         } else {
             const restoredSession = await sessionService.restoreSession();
-            if (!restoredSession) {
+
+            // Check session timeout on restore
+            if (restoredSession && moduleConfig.sessionTimeout && moduleConfig.sessionTimeout > 0) {
+                if (sessionService.isExpired(moduleConfig.sessionTimeout)) {
+                    await sessionService.clearSession();
+                    context.writer?.writeWarning?.('Session expired. Please log in again.');
+                }
+            }
+
+            const currentSession = await firstValueFrom(sessionService.getUserSession());
+            if (!currentSession) {
                 const users = await firstValueFrom(usersStore.getUsers());
                 const adminUser = users.find(u => u.groups.includes('admin'));
                 if (adminUser) {
@@ -177,6 +241,35 @@ export const usersModule: ICliUsersModule = {
                     });
                 }
             }
+        }
+
+        // Session timeout enforcement interval
+        if (moduleConfig.sessionTimeout && moduleConfig.sessionTimeout > 0) {
+            this._sessionTimeoutInterval = setInterval(() => {
+                if (sessionService.isExpired(moduleConfig.sessionTimeout!)) {
+                    const session = context.userSession;
+                    if (session?.user) {
+                        eventService.emit({
+                            type: 'logout',
+                            user: session.user,
+                            timestamp: Date.now(),
+                            details: 'Session expired',
+                        });
+                    }
+                    sessionService.clearSession();
+                    // Fall back to admin
+                    firstValueFrom(usersStore.getUsers()).then((users) => {
+                        const admin = users.find(u => u.groups.includes('admin'));
+                        if (admin) {
+                            sessionService.setUserSession({
+                                user: admin,
+                                loginTime: Date.now(),
+                                lastActivity: Date.now(),
+                            });
+                        }
+                    });
+                }
+            }, 60_000); // Check every 60 seconds
         }
 
         // Resolve display name formatter (default: user.name)
@@ -221,6 +314,11 @@ export const usersModule: ICliUsersModule = {
     },
 
     async onSetup(context) {
+        const moduleConfig = (this.config || {}) as CliUsersModuleConfig;
+        if (moduleConfig.server) {
+            return true; // Skip setup wizard in server mode
+        }
+
         const usersStore = context.services.getRequired<ICliUsersStoreService>(
             ICliUsersStoreService_TOKEN,
         );
@@ -298,6 +396,15 @@ export const usersModule: ICliUsersModule = {
                 continue;
             }
 
+            // Validate password policy
+            if (authService.validatePassword) {
+                const policyError = authService.validatePassword(password);
+                if (policyError) {
+                    context.writer.writeError(policyError);
+                    continue;
+                }
+            }
+
             const confirmPassword = await context.reader.readPassword('Confirm password: ');
             if (confirmPassword === null) {
                 context.writer.writeError('Password confirmation is required.');
@@ -332,6 +439,17 @@ export const usersModule: ICliUsersModule = {
             user: newUser,
             loginTime: Date.now(),
             lastActivity: Date.now(),
+        });
+
+        // Emit user_created event
+        const eventService = context.services.get<ICliUserEventService>(
+            ICliUserEventService_TOKEN,
+        );
+        eventService?.emit({
+            type: 'user_created',
+            user: newUser,
+            timestamp: Date.now(),
+            details: 'Created during initial setup',
         });
 
         // Flag for onAfterBoot to create home dir (fs service not available yet)
@@ -417,5 +535,148 @@ export const usersModule: ICliUsersModule = {
             }
         }
         context.showPrompt();
+    },
+
+    async _initServerMode(context, moduleConfig, kvStore) {
+        const serverConfig = context.options?.servers?.find(
+            (s: any) => s.name === moduleConfig.server,
+        );
+        if (!serverConfig) {
+            throw new Error(
+                `@qodalis/cli-users: server "${moduleConfig.server}" not found in options.servers`,
+            );
+        }
+
+        const baseUrl = serverConfig.url.replace(/\/+$/, '') + '/api/v1/qcli';
+        const http = context.http;
+
+        // Token holder — shared between auth service and token provider
+        let currentToken: string | undefined;
+        const onTokenChange = (token: string | undefined) => {
+            currentToken = token;
+        };
+        const getHeaders = (): Record<string, string> =>
+            currentToken ? { Authorization: `Bearer ${currentToken}` } : {};
+
+        // Register auth token provider so other plugins/server requests
+        // automatically include the token for this server
+        const tokenProvider: ICliServerAuthTokenProvider = {
+            getHeaders(serverName: string): Record<string, string> {
+                if (serverName === moduleConfig.server && currentToken) {
+                    return { Authorization: `Bearer ${currentToken}` };
+                }
+                return {};
+            },
+        };
+        context.services.set({
+            provide: ICliServerAuthTokenProvider_TOKEN,
+            useValue: tokenProvider,
+            multi: true,
+        });
+
+        // Initialize user event service (shared between modes)
+        const eventService = new CliDefaultUserEventService();
+        context.services.set([
+            { provide: ICliUserEventService_TOKEN, useValue: eventService },
+        ]);
+
+        // Initialize audit service (shared between modes)
+        const auditService = new CliDefaultAuditService();
+        await auditService.initialize(kvStore);
+        context.services.set([
+            { provide: ICliAuditService_TOKEN, useValue: auditService },
+        ]);
+
+        // Auto-log all user events to audit
+        eventService.events$.subscribe((event) => {
+            auditService.log({
+                event: event.type,
+                username: event.user.name,
+                details: event.details,
+            });
+        });
+
+        // Create server-backed session service
+        const sessionService = new CliServerUserSessionService(baseUrl, http, kvStore);
+        context.services.set([
+            { provide: ICliUserSessionService_TOKEN, useValue: sessionService },
+        ]);
+
+        // Create server-backed auth service
+        const authService = new CliServerAuthService(
+            baseUrl, http, kvStore, sessionService, onTokenChange,
+        );
+        await authService.initialize();
+        context.services.set([
+            { provide: ICliAuthService_TOKEN, useValue: authService },
+        ]);
+
+        // Create server-backed users store
+        const usersStore = new CliServerUsersStoreService(baseUrl, http, getHeaders);
+        context.services.set([
+            { provide: ICliUsersStoreService_TOKEN, useValue: usersStore },
+        ]);
+
+        // Create server-backed groups store
+        const groupsStore = new CliServerGroupsStoreService(baseUrl, http, getHeaders);
+        context.services.set([
+            { provide: ICliGroupsStoreService_TOKEN, useValue: groupsStore },
+        ]);
+
+        // Add server-mode processors
+        this.processors = [
+            ...(this.processors || []),
+            new CliSessionsCommandProcessor(baseUrl, getHeaders),
+            new CliSessionKickCommandProcessor(baseUrl, getHeaders),
+        ];
+
+        // Try to restore an existing session from stored token
+        const restoredSession = await sessionService.restoreSession();
+
+        // Resolve display name formatter (default: user.name)
+        const formatDisplayName =
+            moduleConfig.userDisplayFormatter ??
+            ((user: ICliUser) => user.name);
+
+        // Subscribe session changes to execution context
+        let previousUserId: string | null = null;
+        sessionService.getUserSession().subscribe((session) => {
+            if (session) {
+                context.userSession = {
+                    ...session,
+                    displayName: formatDisplayName(session.user),
+                };
+
+                // Sync filesystem with current user
+                try {
+                    const fs = context.services.getRequired<any>(
+                        'cli-file-system-service',
+                    );
+                    if (fs) {
+                        if (session.user.homeDir) {
+                            if (!fs.exists(session.user.homeDir)) {
+                                fs.createDirectory(session.user.homeDir, true);
+                            }
+                            fs.setHomePath(session.user.homeDir);
+                            if (previousUserId !== session.user.id) {
+                                fs.setCurrentDirectory(session.user.homeDir);
+                            }
+                        }
+                        fs.setCurrentUser(session.user.id, session.user.groups);
+                    }
+                } catch {
+                    // Files module not installed — skip
+                }
+                previousUserId = session.user.id;
+            }
+        });
+    },
+
+    async onDestroy() {
+        // Clean up session timeout interval
+        if (this._sessionTimeoutInterval) {
+            clearInterval(this._sessionTimeoutInterval);
+            delete this._sessionTimeoutInterval;
+        }
     },
 };

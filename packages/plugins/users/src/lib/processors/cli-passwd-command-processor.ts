@@ -110,8 +110,21 @@ export class CliPasswdCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        await this.authService.setPassword(targetUser.id, newPassword);
-        context.writer.writeSuccess('passwd: password updated successfully');
+        // Validate password policy
+        if (this.authService.validatePassword) {
+            const policyError = this.authService.validatePassword(newPassword);
+            if (policyError) {
+                context.writer.writeError(`passwd: ${policyError}`);
+                return;
+            }
+        }
+
+        try {
+            await this.authService.setPassword(targetUser.id, newPassword);
+            context.writer.writeSuccess('passwd: password updated successfully');
+        } catch (e: any) {
+            context.writer.writeError(e.message || 'passwd: failed to set password');
+        }
     }
 
     writeDescription(context: ICliExecutionContext): void {

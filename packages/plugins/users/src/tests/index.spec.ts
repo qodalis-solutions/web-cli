@@ -25,8 +25,8 @@ describe('CliUsersModule', () => {
         );
     });
 
-    it('should have 14 processors', () => {
-        expect(usersModule.processors?.length).toBe(14);
+    it('should have 15 processors', () => {
+        expect(usersModule.processors?.length).toBe(15);
     });
 
     it('should have a configure method', () => {

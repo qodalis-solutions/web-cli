@@ -89,4 +89,7 @@ export interface ICliAuthService {
 
     /** Hashes a password with a salt using Web Crypto SHA-256 */
     hashPassword(password: string, salt: string): Promise<string>;
+
+    /** Validate password against policy. Returns error message or null if valid. */
+    validatePassword?(password: string): string | null;
 }

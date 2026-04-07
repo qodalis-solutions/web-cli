@@ -57,3 +57,13 @@ export const ICliFilePickerProvider_TOKEN = 'cli-file-picker-provider';
  * Token for the HTTP client service.
  */
 export const ICliHttpClient_TOKEN = 'cli-http-client';
+
+/**
+ * Token for the user event service (lifecycle events).
+ */
+export const ICliUserEventService_TOKEN = 'cli-user-event-service';
+
+/**
+ * Token for the audit service (persistent event logging).
+ */
+export const ICliAuditService_TOKEN = 'cli-audit-service';

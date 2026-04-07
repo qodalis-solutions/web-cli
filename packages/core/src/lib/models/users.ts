@@ -18,6 +18,10 @@ export interface ICliUser {
     updatedAt: number;
     /** Whether the account is locked */
     disabled?: boolean;
+    /** Extensible metadata (department, phone, preferences, etc.) */
+    data?: Record<string, any>;
+    /** Timestamp of last successful login */
+    lastLoginAt?: number;
 }
 
 /**

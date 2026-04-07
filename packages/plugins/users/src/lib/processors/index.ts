@@ -12,3 +12,6 @@ export { CliGroupsCommandProcessor } from './cli-groups-command-processor';
 export { CliGroupaddCommandProcessor } from './cli-groupadd-command-processor';
 export { CliGroupdelCommandProcessor } from './cli-groupdel-command-processor';
 export { CliWhoCommandProcessor } from './cli-who-command-processor';
+export { CliLastCommandProcessor } from './cli-last-command-processor';
+export { CliSessionsCommandProcessor } from './cli-sessions-command-processor';
+export { CliSessionKickCommandProcessor } from './cli-session-kick-command-processor';

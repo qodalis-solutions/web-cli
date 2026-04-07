@@ -10,6 +10,8 @@ import {
     ICliUserSessionService,
     ICliUsersStoreService_TOKEN,
     ICliUserSessionService_TOKEN,
+    ICliUserEventService,
+    ICliUserEventService_TOKEN,
     DefaultLibraryAuthor,
     CliStateConfiguration,
 } from '@qodalis/cli-core';
@@ -44,6 +46,7 @@ export class CliUserdelCommandProcessor implements ICliCommandProcessor {
 
     private usersStore!: ICliUsersStoreService;
     private sessionService!: ICliUserSessionService;
+    private eventService?: ICliUserEventService;
 
     async initialize(context: ICliExecutionContext): Promise<void> {
         this.usersStore = context.services.getRequired<ICliUsersStoreService>(
@@ -51,6 +54,9 @@ export class CliUserdelCommandProcessor implements ICliCommandProcessor {
         );
         this.sessionService = context.services.getRequired<ICliUserSessionService>(
             ICliUserSessionService_TOKEN,
+        );
+        this.eventService = context.services.get<ICliUserEventService>(
+            ICliUserEventService_TOKEN,
         );
     }
 
@@ -91,6 +97,13 @@ export class CliUserdelCommandProcessor implements ICliCommandProcessor {
         }
 
         await this.usersStore.deleteUser(user.id);
+
+        this.eventService?.emit({
+            type: 'user_deleted',
+            user,
+            timestamp: Date.now(),
+        });
+
         context.writer.writeSuccess(`userdel: user '${user.name}' deleted`);
     }
 

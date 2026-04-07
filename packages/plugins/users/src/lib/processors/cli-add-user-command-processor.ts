@@ -9,6 +9,8 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     ICliUsersStoreService,
+    ICliUserEventService,
+    ICliUserEventService_TOKEN,
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import {
@@ -84,6 +86,7 @@ export class CliAddUserCommandProcessor implements ICliCommandProcessor {
 
     private usersStore!: ICliUsersStoreService;
     private authService!: ICliAuthService;
+    private eventService?: ICliUserEventService;
 
     async initialize(context: ICliExecutionContext): Promise<void> {
         this.usersStore = context.services.getRequired<ICliUsersStoreService>(
@@ -91,6 +94,9 @@ export class CliAddUserCommandProcessor implements ICliCommandProcessor {
         );
         this.authService = context.services.getRequired<ICliAuthService>(
             ICliAuthService_TOKEN,
+        );
+        this.eventService = context.services.get<ICliUserEventService>(
+            ICliUserEventService_TOKEN,
         );
     }
 
@@ -170,6 +176,12 @@ export class CliAddUserCommandProcessor implements ICliCommandProcessor {
                 // Files module not installed — skip
             }
         }
+
+        this.eventService?.emit({
+            type: 'user_created',
+            user,
+            timestamp: Date.now(),
+        });
 
         context.writer.writeInfo('User created successfully');
     }

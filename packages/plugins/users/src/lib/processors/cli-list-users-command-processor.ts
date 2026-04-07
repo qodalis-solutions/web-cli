@@ -84,6 +84,9 @@ export class CliListUsersCommandProcessor implements ICliCommandProcessor {
             email: u.email,
             groups: u.groups.join(', ') || '(none)',
             disabled: u.disabled ? 'yes' : 'no',
+            'last login': u.lastLoginAt
+                ? new Date(u.lastLoginAt).toLocaleString()
+                : 'never',
         }));
 
         writer.writeln('Users:');
