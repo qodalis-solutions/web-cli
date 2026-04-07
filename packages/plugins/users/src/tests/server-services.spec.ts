@@ -1,10 +1,12 @@
-import { ICliHttpClient, ICliKeyValueStore, ICliUserSessionService } from '@qodalis/cli-core';
+import { ICliHttpClient, ICliKeyValueStore, ICliUserSessionService, ICliExecutionContext, CliProcessCommand } from '@qodalis/cli-core';
 import { firstValueFrom } from 'rxjs';
 
 import { CliServerUsersStoreService } from '../lib/services/cli-server-users-store.service';
 import { CliServerGroupsStoreService } from '../lib/services/cli-server-groups-store.service';
 import { CliServerUserSessionService } from '../lib/services/cli-server-user-session.service';
 import { CliServerAuthService } from '../lib/services/cli-server-auth.service';
+import { CliSessionsCommandProcessor } from '../lib/processors/cli-sessions-command-processor';
+import { CliSessionKickCommandProcessor } from '../lib/processors/cli-session-kick-command-processor';
 
 // ── Mocks ───────────────────────────────────────────────────────────
 
@@ -450,5 +452,244 @@ describe('CliServerAuthService', () => {
         const service = createAuthService(http);
 
         expect(service.validatePassword('any')).toBeNull();
+    });
+
+    it('should handle login HTTP failure', async () => {
+        const http = createMockHttp();
+        (http.post as jasmine.Spy).and.returnValue(
+            Promise.reject(new Error('500 Internal Server Error')),
+        );
+        const service = createAuthService(http);
+
+        await expectAsync(service.login('alice', 'pass')).toBeRejectedWithError(
+            '500 Internal Server Error',
+        );
+    });
+
+    it('should handle logout server error silently', async () => {
+        const http = createMockHttp();
+        (http.post as jasmine.Spy).and.returnValue(
+            Promise.reject(new Error('Network error')),
+        );
+        const service = createAuthService(http);
+
+        // Should not throw — the catch block absorbs the error
+        await expectAsync(service.logout()).toBeResolved();
+        expect(mockSessionService.clearSession).toHaveBeenCalled();
+        expect(tokenChanges[tokenChanges.length - 1]).toBeUndefined();
+    });
+
+    it('should initialize with no stored token without calling onTokenChange', async () => {
+        // kvStore is empty — no token stored
+        const http = createMockHttp();
+        const service = createAuthService(http);
+
+        await service.initialize();
+        // onTokenChange should NOT have been called (no token to restore)
+        expect(tokenChanges.length).toBe(0);
+    });
+});
+
+// ── CliServerGroupsStoreService — error paths ─────────────────────
+
+describe('CliServerGroupsStoreService (error paths)', () => {
+    it('should return undefined when getGroup HTTP call rejects', async () => {
+        const http = createMockHttp();
+        (http.get as jasmine.Spy).and.returnValue(
+            Promise.reject(new Error('404 Not Found')),
+        );
+        const service = new CliServerGroupsStoreService(BASE_URL, http, () => ({}));
+
+        const group = await firstValueFrom(service.getGroup('nonexistent'));
+        expect(group).toBeUndefined();
+    });
+});
+
+// ── Mock execution context helper ──────────────────────────────────
+
+function createMockContext(httpClient: ICliHttpClient): {
+    context: ICliExecutionContext;
+    written: { info: string[]; error: string[]; success: string[]; tables: any[][] };
+} {
+    const written = {
+        info: [] as string[],
+        error: [] as string[],
+        success: [] as string[],
+        tables: [] as any[][],
+    };
+
+    const writer: any = {
+        writeInfo: jasmine.createSpy('writeInfo').and.callFake((msg: string) => written.info.push(msg)),
+        writeError: jasmine.createSpy('writeError').and.callFake((msg: string) => written.error.push(msg)),
+        writeSuccess: jasmine.createSpy('writeSuccess').and.callFake((msg: string) => written.success.push(msg)),
+        writeObjectsAsTable: jasmine.createSpy('writeObjectsAsTable').and.callFake((rows: any[]) => written.tables.push(rows)),
+        writeln: jasmine.createSpy('writeln'),
+        wrapInColor: jasmine.createSpy('wrapInColor').and.callFake((text: string) => text),
+    };
+
+    const context = {
+        writer,
+        http: httpClient,
+    } as unknown as ICliExecutionContext;
+
+    return { context, written };
+}
+
+// ── CliSessionsCommandProcessor ────────────────────────────────────
+
+describe('CliSessionsCommandProcessor', () => {
+    const getHeaders = () => ({ Authorization: 'Bearer tok' });
+
+    it('should display sessions as a table when sessions exist', async () => {
+        const sessions = [
+            {
+                id: 'abcdefgh-1234',
+                user: { name: 'alice' },
+                loginTime: 1700000000000,
+                lastActivity: 1700000060000,
+            },
+            {
+                id: 'ijklmnop-5678',
+                userId: 'bob-id',
+                loginTime: 1700000000000,
+                lastActivity: 1700000120000,
+            },
+        ];
+        const http = createMockHttp({
+            [`GET ${BASE_URL}/sessions`]: sessions,
+        });
+        const processor = new CliSessionsCommandProcessor(BASE_URL, getHeaders);
+        const { context, written } = createMockContext(http);
+        const command: CliProcessCommand = { command: 'sessions', rawCommand: 'sessions' } as any;
+
+        await processor.processCommand(command, context);
+
+        expect(written.tables.length).toBe(1);
+        expect(written.tables[0].length).toBe(2);
+        expect(written.tables[0][0]['USER']).toBe('alice');
+        expect(written.tables[0][1]['USER']).toBe('bob-id');
+        expect(written.tables[0][0]['ID']).toBe('abcdefgh');
+    });
+
+    it('should display info message when no sessions', async () => {
+        const http = createMockHttp({
+            [`GET ${BASE_URL}/sessions`]: [],
+        });
+        const processor = new CliSessionsCommandProcessor(BASE_URL, getHeaders);
+        const { context, written } = createMockContext(http);
+        const command: CliProcessCommand = { command: 'sessions', rawCommand: 'sessions' } as any;
+
+        await processor.processCommand(command, context);
+
+        expect(written.info.length).toBe(1);
+        expect(written.info[0]).toBe('No active sessions');
+        expect(written.tables.length).toBe(0);
+    });
+
+    it('should display error on HTTP failure', async () => {
+        const http = createMockHttp();
+        (http.get as jasmine.Spy).and.returnValue(
+            Promise.reject(new Error('Connection refused')),
+        );
+        const processor = new CliSessionsCommandProcessor(BASE_URL, getHeaders);
+        const { context, written } = createMockContext(http);
+        const command: CliProcessCommand = { command: 'sessions', rawCommand: 'sessions' } as any;
+
+        await processor.processCommand(command, context);
+
+        expect(written.error.length).toBe(1);
+        expect(written.error[0]).toBe('Connection refused');
+    });
+
+    it('should have correct metadata', () => {
+        const processor = new CliSessionsCommandProcessor(BASE_URL, getHeaders);
+        expect(processor.command).toBe('sessions');
+        expect(processor.metadata?.sealed).toBe(true);
+        expect(processor.metadata?.module).toBe('users');
+    });
+});
+
+// ── CliSessionKickCommandProcessor ─────────────────────────────────
+
+describe('CliSessionKickCommandProcessor', () => {
+    const getHeaders = () => ({ Authorization: 'Bearer tok' });
+
+    it('should kick a session successfully', async () => {
+        const http = createMockHttp({
+            [`DELETE ${BASE_URL}/sessions/sess-123`]: undefined,
+        });
+        const processor = new CliSessionKickCommandProcessor(BASE_URL, getHeaders);
+        const { context, written } = createMockContext(http);
+        const command: CliProcessCommand = {
+            command: 'session-kick',
+            value: 'sess-123',
+            rawCommand: 'session-kick sess-123',
+        } as any;
+
+        await processor.processCommand(command, context);
+
+        expect(written.success.length).toBe(1);
+        expect(written.success[0]).toBe('Session sess-123 terminated');
+        expect(http.delete).toHaveBeenCalled();
+    });
+
+    it('should display error when no session ID is provided', async () => {
+        const http = createMockHttp();
+        const processor = new CliSessionKickCommandProcessor(BASE_URL, getHeaders);
+        const { context, written } = createMockContext(http);
+        const command: CliProcessCommand = {
+            command: 'session-kick',
+            value: '',
+            rawCommand: 'session-kick',
+        } as any;
+
+        await processor.processCommand(command, context);
+
+        expect(written.error.length).toBe(1);
+        expect(written.error[0]).toBe('Usage: session-kick <session-id>');
+        expect(http.delete).not.toHaveBeenCalled();
+    });
+
+    it('should display error when value is undefined', async () => {
+        const http = createMockHttp();
+        const processor = new CliSessionKickCommandProcessor(BASE_URL, getHeaders);
+        const { context, written } = createMockContext(http);
+        const command: CliProcessCommand = {
+            command: 'session-kick',
+            value: undefined,
+            rawCommand: 'session-kick',
+        } as any;
+
+        await processor.processCommand(command, context);
+
+        expect(written.error.length).toBe(1);
+        expect(written.error[0]).toBe('Usage: session-kick <session-id>');
+    });
+
+    it('should display error on HTTP failure during kick', async () => {
+        const http = createMockHttp();
+        (http.delete as jasmine.Spy).and.returnValue(
+            Promise.reject(new Error('Forbidden')),
+        );
+        const processor = new CliSessionKickCommandProcessor(BASE_URL, getHeaders);
+        const { context, written } = createMockContext(http);
+        const command: CliProcessCommand = {
+            command: 'session-kick',
+            value: 'sess-999',
+            rawCommand: 'session-kick sess-999',
+        } as any;
+
+        await processor.processCommand(command, context);
+
+        expect(written.error.length).toBe(1);
+        expect(written.error[0]).toBe('Forbidden');
+    });
+
+    it('should have correct metadata', () => {
+        const processor = new CliSessionKickCommandProcessor(BASE_URL, getHeaders);
+        expect(processor.command).toBe('session-kick');
+        expect(processor.valueRequired).toBe(true);
+        expect(processor.metadata?.sealed).toBe(true);
+        expect(processor.metadata?.module).toBe('users');
     });
 });

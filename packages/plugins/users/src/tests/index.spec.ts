@@ -4,6 +4,8 @@ import {
     ICliUsersStoreService_TOKEN,
     ICliGroupsStoreService_TOKEN,
 } from '@qodalis/cli-core';
+import { CliSessionsCommandProcessor } from '../lib/processors/cli-sessions-command-processor';
+import { CliSessionKickCommandProcessor } from '../lib/processors/cli-session-kick-command-processor';
 
 describe('CliUsersModule', () => {
     it('should be defined', () => {
@@ -58,6 +60,7 @@ describe('CliUsersModule', () => {
         'groupadd',
         'groupdel',
         'w',
+        'last',
     ];
 
     expectedCommands.forEach((cmd) => {
@@ -139,5 +142,32 @@ describe('CliUsersModule', () => {
             (s: any) => s.provide === ICliGroupsStoreService_TOKEN,
         );
         expect(groupsStoreSvc).toBeDefined();
+    });
+
+    // ---------- Server-mode dynamic processors ----------
+
+    it('sessions and session-kick processors are not in the static processor list', () => {
+        const sessionsCmdFound = usersModule.processors!.find(
+            (p) => p.command === 'sessions',
+        );
+        const sessionKickCmdFound = usersModule.processors!.find(
+            (p) => p.command === 'session-kick',
+        );
+        // These are added dynamically by _initServerMode, not in the static list
+        expect(sessionsCmdFound).toBeUndefined();
+        expect(sessionKickCmdFound).toBeUndefined();
+    });
+
+    it('CliSessionsCommandProcessor should be importable and have correct command', () => {
+        const processor = new CliSessionsCommandProcessor('http://test', () => ({}));
+        expect(processor.command).toBe('sessions');
+        expect(processor.metadata?.module).toBe('users');
+    });
+
+    it('CliSessionKickCommandProcessor should be importable and have correct command', () => {
+        const processor = new CliSessionKickCommandProcessor('http://test', () => ({}));
+        expect(processor.command).toBe('session-kick');
+        expect(processor.valueRequired).toBe(true);
+        expect(processor.metadata?.module).toBe('users');
     });
 });
