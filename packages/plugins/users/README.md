@@ -168,6 +168,34 @@ const events = context.services.get<ICliUserEventService>(ICliUserEventService_T
 events?.events$.subscribe((e) => console.log(e.type, e.user.name, e.details));
 ```
 
+# Access control (command guards)
+
+The module contributes two [global command guards](https://qodalis-solutions.github.io/web-cli/docs/core-concepts/command-guards).
+They enforce access metadata declared on **any** processor, from any module:
+
+| Metadata | Guard | Effect |
+|---|---|---|
+| `requireAuth: true` | `users:require-auth` | Blocks the command with `<command>: login required` when nobody is signed in |
+| `requiredGroups: ['ops', ...]` | `users:required-groups` | Requires sign-in and membership in at least one listed group, otherwise `<command>: permission denied (requires group: ops)` |
+
+```typescript
+const deployProcessor: ICliCommandProcessor = {
+    command: 'deploy',
+    description: 'Deploy the app',
+    metadata: { requireAuth: true, requiredGroups: ['ops'] },
+    async processCommand(command, context) { /* ... */ },
+};
+```
+
+The built-in admin commands (`adduser`, `userdel`, `usermod`, `groupadd`, `groupdel`, `sessions`,
+`session-kick`) declare `requiredGroups: ['admin']`. Commands that act on the signed-in user (`id`,
+`groups`, `passwd`, `logout`, `last`, `listusers`) declare `requireAuth: true`.
+
+The users module is optional. Without it these flags are informational and every command runs.
+The guards are exported (`usersGuards`, `requireAuthGuard`, `requiredGroupsGuard`) so a custom
+module can reuse them. Client-side guards are not a security boundary: in server mode the server
+still authorizes every request.
+
 # Extensibility
 
 You can swap any built-in service by overriding the module's services array:

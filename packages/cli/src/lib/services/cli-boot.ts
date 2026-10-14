@@ -5,6 +5,7 @@ import {
     ICliCommandProcessorRegistry,
     ICliKeyValueStore,
     ICliModule,
+    ICliCommandGuard_TOKEN,
     ICliServiceProvider,
     CliModuleRegistry,
     initializeBrowserEnvironment,
@@ -123,6 +124,18 @@ export class CliBoot {
         // Register services into the shared container
         if (module.services && module.services.length > 0) {
             this.services.set(module.services);
+        }
+
+        // Register module guards as multi-providers so the executor runs them
+        // before every command
+        if (module.guards && module.guards.length > 0) {
+            this.services.set(
+                module.guards.map((guard) => ({
+                    provide: ICliCommandGuard_TOKEN,
+                    useValue: guard,
+                    multi: true,
+                })),
+            );
         }
 
         // Auto-register module translations (before onInit so modules can override)

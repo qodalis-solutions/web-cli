@@ -32,6 +32,7 @@ export class CliAddUserCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         module: 'users',
         icon: CliIcon.User,
+        requiredGroups: ['admin'],
     };
 
     stateConfiguration?: CliStateConfiguration | undefined = {

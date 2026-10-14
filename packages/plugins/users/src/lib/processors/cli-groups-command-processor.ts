@@ -22,6 +22,7 @@ export class CliGroupsCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         module: 'users',
         icon: CliIcon.User,
+        requireAuth: true,
     };
     stateConfiguration: CliStateConfiguration = {
         initialState: {},

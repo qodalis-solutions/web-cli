@@ -93,6 +93,7 @@
   "sidebar.background-services": "Background Services",
   "sidebar.state-management": "State Management",
   "sidebar.notifications": "Notifications",
+  "sidebar.command-guards": "Command Guards",
   "sidebar.tabs-and-panes": "Schede e Pannelli",
   "sidebar.plugins": "Plugin",
   "sidebar.create-a-plugin": "Crea un Plugin",

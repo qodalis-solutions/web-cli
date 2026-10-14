@@ -62,6 +62,7 @@ import { CliServerGroupsStoreService } from './lib/services/cli-server-groups-st
 import { CliServerAuthService } from './lib/services/cli-server-auth.service';
 import { CliServerAuditService } from './lib/services/cli-server-audit.service';
 import { withUnauthorizedHandler, isUnauthorizedError } from './lib/utils/server-http';
+import { usersGuards } from './lib/guards/users-guards';
 import { CliSessionsCommandProcessor } from './lib/processors/cli-sessions-command-processor';
 import { CliSessionKickCommandProcessor } from './lib/processors/cli-session-kick-command-processor';
 import {
@@ -110,6 +111,9 @@ export const usersModule: ICliUsersModule = {
         new CliWhoCommandProcessor(),
         new CliLastCommandProcessor(),
     ],
+    // Enforce `metadata.requireAuth` / `metadata.requiredGroups` on every
+    // command (from any module) before it runs
+    guards: usersGuards,
     services: [
         {
             provide: ICliUsersStoreService_TOKEN,
@@ -774,3 +778,5 @@ export const usersModule: ICliUsersModule = {
         }
     },
 };
+
+export { usersGuards, requireAuthGuard, requiredGroupsGuard } from './lib/guards/users-guards';

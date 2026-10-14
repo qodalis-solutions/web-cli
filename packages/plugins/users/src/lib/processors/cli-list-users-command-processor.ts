@@ -26,6 +26,7 @@ export class CliListUsersCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         module: 'users',
         icon: CliIcon.User,
+        requireAuth: true,
     };
 
     stateConfiguration?: CliStateConfiguration | undefined = {

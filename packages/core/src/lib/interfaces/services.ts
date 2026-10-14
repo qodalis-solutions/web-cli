@@ -1,6 +1,7 @@
 import type { CliLogLevel, CliProvider } from '../models';
 import type { ICliCommandProcessor } from './command-processor';
 import type { ICliExecutionContext } from './execution-context';
+import type { ICliCommandGuard } from './command-guards';
 
 /**
  * Represents a service that pings the server
@@ -58,6 +59,13 @@ export interface ICliModule {
 
     /** Services registered into the shared service container */
     services?: CliProvider[];
+
+    /**
+     * Global command guards contributed by this module. They are registered
+     * when the module boots and run before every command (across all modules),
+     * e.g. authentication or permission checks. See {@link ICliCommandGuard}.
+     */
+    guards?: ICliCommandGuard[];
 
     /** Module configuration, set via configure() */
     config?: Record<string, any>;

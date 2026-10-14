@@ -42,6 +42,7 @@ The most comprehensive set — covers the full `CliEngine` API without any frame
 | 19 | [custom-users-permissions.ts](vanilla/19-custom-users-permissions.ts) | Custom auth, RBAC permissions, service overrides | [Plugins: Users](https://qodalis-solutions.github.io/web-cli/docs/plugins/users) |
 | 20 | [user-group-management.ts](vanilla/20-user-group-management.ts) | Programmatic user/group CRUD, session lifecycle, custom session data | [Plugins: Users](https://qodalis-solutions.github.io/web-cli/docs/plugins/users) |
 | 21 | [server-session-management.ts](vanilla/21-server-session-management.ts) | Users module in server mode: bearer token, `sessions`/`session-kick`, server audit, auto-logout on kick/401 | [Plugins: Users](https://qodalis-solutions.github.io/web-cli/docs/plugins/users) |
+| 22 | [command-guards.ts](vanilla/22-command-guards.ts) | Global command guards from modules, resolving services from the context, confirmation guard, `requireAuth`/`requiredGroups` with and without the users module | [Command Guards](https://qodalis-solutions.github.io/web-cli/docs/core-concepts/command-guards) |
 
 ## Angular Examples
 

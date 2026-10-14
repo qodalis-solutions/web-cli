@@ -22,6 +22,7 @@ export class CliSessionKickCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         module: 'users',
         icon: CliIcon.User,
+        requiredGroups: ['admin'],
     };
 
     constructor(

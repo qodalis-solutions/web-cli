@@ -24,6 +24,7 @@ export class CliGroupdelCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         module: 'users',
         icon: CliIcon.User,
+        requiredGroups: ['admin'],
     };
     stateConfiguration: CliStateConfiguration = {
         initialState: {},

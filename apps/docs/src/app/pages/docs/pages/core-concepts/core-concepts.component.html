@@ -1718,3 +1718,163 @@ context.notifier.change$.subscribe(notification =&gt; &#123;
 &#125;);</code></pre>
     </div>
 </div>
+
+<!-- Command Guards -->
+<div *ngIf="currentTopic === 'command-guards'">
+    <h1>Command Guards</h1>
+    <p>
+        A command guard is a global check that runs before <strong>every</strong> command, across all processors
+        and modules, and can block it. Use guards for cross-cutting policies such as authentication, permission
+        checks, feature flags, maintenance windows or rate limiting, instead of repeating the check in each processor.
+    </p>
+    <p>
+        Guards are opt-in. With no guard registered every command runs as before. Guards differ from
+        <a routerLink="/docs/core-concepts/command-processors">processor hooks</a>: hooks belong to a single processor,
+        while guards are registered once and apply to every command.
+    </p>
+
+    <h2>The ICliCommandGuard Interface</h2>
+    <div class="code-block">
+        <pre><code>interface ICliCommandGuard &#123;
+    /** Unique name, shown in diagnostics when the guard throws */
+    name: string;
+
+    /** Execution order; lower runs first. Defaults to 0 */
+    priority?: number;
+
+    /** Optional filter: return false to skip this guard for the command */
+    appliesTo?(
+        processor: ICliCommandProcessor,
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): boolean | Promise&lt;boolean&gt;;
+
+    /** Decide whether the command may run */
+    canActivate(
+        command: CliProcessCommand,
+        processor: ICliCommandProcessor,
+        context: ICliExecutionContext,
+    ): CliCommandGuardResult | Promise&lt;CliCommandGuardResult&gt;;
+&#125;
+
+const ICliCommandGuard_TOKEN = 'cli-command-guard';</code></pre>
+    </div>
+
+    <h2>Return Values</h2>
+    <table>
+        <thead>
+            <tr><th>canActivate returns</th><th>Effect</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>true</code> or nothing</td><td>The command is allowed; the next guard runs</td></tr>
+            <tr><td><code>false</code></td><td>Blocked with <code>&lt;command&gt;: permission denied</code></td></tr>
+            <tr><td>a non-empty string</td><td>Blocked; the string is printed as the error</td></tr>
+            <tr><td><code>&#123; allowed, message &#125;</code></td><td>Explicit form; <code>message</code> is printed when <code>allowed</code> is false</td></tr>
+            <tr><td>throws / rejects</td><td>Blocked with <code>&lt;command&gt;: blocked by guard '&lt;name&gt;' (&lt;error&gt;)</code> (fails closed)</td></tr>
+        </tbody>
+    </table>
+    <p>A blocked command prints the message as an error and exits with code <code>-1</code>.</p>
+
+    <h2>Execution Order</h2>
+    <ol>
+        <li>The input is parsed and the processor (or sub-processor) is resolved.</li>
+        <li>Global parameters such as <code>--help</code> are handled. Help is never guarded.</li>
+        <li>The positional value is extracted into <code>command.value</code>.</li>
+        <li><strong>Guards run</strong>, sorted by ascending <code>priority</code>. For each guard, <code>appliesTo</code> is
+            evaluated first (if defined), then <code>canActivate</code>. The first guard that blocks stops the chain.</li>
+        <li>Required values and parameters are validated, processor hooks run, then <code>processCommand</code>.</li>
+    </ol>
+
+    <h2>Accessing the Context</h2>
+    <p>
+        Both <code>appliesTo</code> and <code>canActivate</code> receive the execution context of the command about to run.
+        A guard can use it to decide <em>what</em> should be guarded and <em>whether</em> it may run:
+    </p>
+    <ul>
+        <li><code>context.services.get(token)</code> / <code>getRequired(token)</code> resolve any registered service, for example a policy, permission or feature-flag service from another module.</li>
+        <li><code>context.userSession</code> gives the signed-in user and their groups, when a users module is loaded.</li>
+        <li><code>processor.metadata</code> carries declarative flags such as <code>requireAuth</code> and <code>requiredGroups</code>.</li>
+        <li><code>command.value</code> and <code>command.args</code> hold the parsed input.</li>
+        <li><code>context.reader</code> can prompt the user, e.g. for a confirmation guard.</li>
+    </ul>
+    <p>Return a message to report a denial rather than writing to the terminal yourself, so output stays consistent.</p>
+
+    <h2>Registering Guards from a Module</h2>
+    <p>
+        Add guards to a module's <code>guards</code> array. When the module boots, each guard is registered as a
+        multi-provider under <code>ICliCommandGuard_TOKEN</code>. Several modules can contribute guards and all of them run.
+    </p>
+    <div class="code-block">
+        <pre><code>import &#123; ICliCommandGuard, ICliModule &#125; from '&#64;qodalis/cli-core';
+
+const maintenanceGuard: ICliCommandGuard = &#123;
+    name: 'maintenance',
+    priority: -50,
+    appliesTo: (processor) =&gt; processor.metadata?.module === 'billing',
+    canActivate: (_command, processor, context) =&gt; &#123;
+        const status = context.services.get&lt;MaintenanceStatus&gt;(MaintenanceStatus_TOKEN);
+        return status?.active
+            ? `$&#123;processor.command&#125;: billing is in maintenance until $&#123;status.until&#125;`
+            : true;
+    &#125;,
+&#125;;
+
+export const billingModule: ICliModule = &#123;
+    apiVersion: 2,
+    name: 'billing',
+    processors: [new InvoiceProcessor()],
+    services: [&#123; provide: MaintenanceStatus_TOKEN, useValue: &#123; active: false &#125; &#125;],
+    guards: [maintenanceGuard],
+&#125;;</code></pre>
+    </div>
+    <p>Guards can also be registered at runtime, for example from a module's <code>onInit</code>:</p>
+    <div class="code-block">
+        <pre><code>context.services.set(&#123; provide: ICliCommandGuard_TOKEN, useValue: myGuard, multi: true &#125;);</code></pre>
+    </div>
+
+    <h2>Example: Policy Resolved from a Service</h2>
+    <p>The guard below asks a service which commands are behind a feature flag, and whether the current user may use them.</p>
+    <div class="code-block">
+        <pre><code>const featureFlagGuard: ICliCommandGuard = &#123;
+    name: 'feature-flags',
+    appliesTo: (processor, _command, context) =&gt;
+        context.services.get&lt;FeatureFlags&gt;(FeatureFlags_TOKEN)?.isFlagged(processor.command) ?? false,
+    canActivate: async (_command, processor, context) =&gt; &#123;
+        const flags = context.services.getRequired&lt;FeatureFlags&gt;(FeatureFlags_TOKEN);
+        const enabled = await flags.isEnabled(processor.command, context.userSession?.user);
+        return enabled ? true : `$&#123;processor.command&#125;: not available for your account`;
+    &#125;,
+&#125;;</code></pre>
+    </div>
+
+    <h2>Authentication and Permissions</h2>
+    <p>
+        Processors can declare access requirements in their metadata. The core treats these flags as
+        informational; a module that registers guards enforces them.
+    </p>
+    <div class="code-block">
+        <pre><code>const deployProcessor: ICliCommandProcessor = &#123;
+    command: 'deploy',
+    description: 'Deploy the app',
+    metadata: &#123;
+        requireAuth: true,          // must be signed in
+        requiredGroups: ['ops'],    // and a member of at least one of these groups
+    &#125;,
+    async processCommand(command, context) &#123; /* ... */ &#125;,
+&#125;;</code></pre>
+    </div>
+    <table>
+        <thead>
+            <tr><th>Setup</th><th>Behaviour of <code>requireAuth</code> / <code>requiredGroups</code></th></tr>
+        </thead>
+        <tbody>
+            <tr><td>No users module</td><td>Ignored; every command runs</td></tr>
+            <tr><td><code>&#64;qodalis/cli-users</code> (local or server mode)</td><td>Enforced by the <code>users:require-auth</code> and <code>users:required-groups</code> guards, for processors from any module</td></tr>
+            <tr><td>Your own auth module</td><td>Enforced by whatever guards your module contributes</td></tr>
+        </tbody>
+    </table>
+    <p>
+        Client-side guards improve the experience but are not a security boundary. When commands call a server,
+        the server must still authorize each request.
+    </p>
+</div>

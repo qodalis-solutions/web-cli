@@ -508,6 +508,41 @@ describe('CliBoot', () => {
 
             expect(registeredServices.length).toBe(1);
         });
+
+        it('should register module guards as multi-providers', async () => {
+            const registered: any[] = [];
+            services.set = (defs: any) => registered.push(...(Array.isArray(defs) ? defs : [defs]));
+            const guardA = { name: 'a', canActivate: () => true };
+            const guardB = { name: 'b', canActivate: () => true };
+
+            const module: ICliModule = {
+                name: 'guard-module',
+                apiVersion: 2,
+                version: '1.0.0',
+                description: 'test',
+                guards: [guardA, guardB],
+                processors: [],
+            };
+
+            await (boot as any).bootModule(module, context);
+
+            expect(registered).toEqual([
+                { provide: 'cli-command-guard', useValue: guardA, multi: true },
+                { provide: 'cli-command-guard', useValue: guardB, multi: true },
+            ]);
+        });
+
+        it('should not register anything for a module without guards', async () => {
+            const registered: any[] = [];
+            services.set = (defs: any) => registered.push(defs);
+
+            await (boot as any).bootModule(
+                { name: 'plain', apiVersion: 2, version: '1.0.0', description: 'test', processors: [] },
+                context,
+            );
+
+            expect(registered).toEqual([]);
+        });
     });
 
     describe('getModuleRegistry', () => {

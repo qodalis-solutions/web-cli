@@ -25,6 +25,7 @@ export * from './command-processor';
 export * from './progress-bars';
 
 export * from './command-hooks';
+export * from './command-guards';
 
 export * from './users';
 

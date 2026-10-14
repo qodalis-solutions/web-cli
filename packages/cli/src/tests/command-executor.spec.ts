@@ -10,6 +10,8 @@ import {
     CliBackgroundColor,
     CliProvider,
     ICliProcessorHook,
+    ICliCommandGuard,
+    ICliCommandGuard_TOKEN,
     ICliCommandParameterDescriptor,
 } from '@qodalis/cli-core';
 import { CliCommandExecutor } from '../lib/executor';
@@ -501,6 +503,118 @@ describe('CliCommandExecutor', () => {
             await executor.executeCommand('producer | consumer', context);
 
             expect(receivedData).toBe('explicit data');
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // Global command guards
+    // -----------------------------------------------------------------------
+    describe('Global guards', () => {
+        function registerGuards(...guards: ICliCommandGuard[]) {
+            (context.services as any).services.set(ICliCommandGuard_TOKEN, guards);
+        }
+
+        it('runs the command when every guard allows it', async () => {
+            const spy = jasmine.createSpy('processCommand').and.resolveTo();
+            registry.registerProcessor(createTestProcessor('cmd', spy));
+            registerGuards(
+                { name: 'a', canActivate: () => true },
+                { name: 'b', canActivate: () => undefined },
+                { name: 'c', canActivate: () => ({ allowed: true }) },
+            );
+
+            await executor.executeCommand('cmd', context);
+
+            expect(spy).toHaveBeenCalledTimes(1);
+        });
+
+        it('blocks with the guard message and never calls the processor or its hooks', async () => {
+            const spy = jasmine.createSpy('processCommand').and.resolveTo();
+            const hook = jasmine.createSpy('hook').and.resolveTo();
+            registry.registerProcessor(
+                createTestProcessor('cmd', spy, { hooks: [{ when: 'before', execute: hook }] }),
+            );
+            registerGuards({ name: 'deny', canActivate: () => 'cmd: login required' });
+
+            await executor.executeCommand('cmd', context);
+
+            expect(spy).not.toHaveBeenCalled();
+            expect(hook).not.toHaveBeenCalled();
+            expect(writer.written).toContain('[error] cmd: login required');
+        });
+
+        it('uses a default message when a guard returns false', async () => {
+            registry.registerProcessor(createTestProcessor('cmd', async () => {}));
+            registerGuards({ name: 'deny', canActivate: () => false });
+
+            await executor.executeCommand('cmd', context);
+
+            expect(writer.written).toContain('[error] cmd: permission denied');
+        });
+
+        it('supports the { allowed: false, message } form and async guards', async () => {
+            registry.registerProcessor(createTestProcessor('cmd', async () => {}));
+            registerGuards({
+                name: 'async-deny',
+                canActivate: async () => ({ allowed: false, message: 'nope' }),
+            });
+
+            await executor.executeCommand('cmd', context);
+
+            expect(writer.written).toContain('[error] nope');
+        });
+
+        it('runs guards in priority order and stops at the first denial', async () => {
+            const order: string[] = [];
+            registry.registerProcessor(createTestProcessor('cmd', async () => {}));
+            registerGuards(
+                { name: 'late', priority: 10, canActivate: () => { order.push('late'); return true; } },
+                { name: 'deny', priority: 0, canActivate: () => { order.push('deny'); return 'blocked'; } },
+                { name: 'early', priority: -5, canActivate: () => { order.push('early'); return true; } },
+            );
+
+            await executor.executeCommand('cmd', context);
+
+            expect(order).toEqual(['early', 'deny']);
+        });
+
+        it('skips guards whose appliesTo returns false', async () => {
+            const spy = jasmine.createSpy('processCommand').and.resolveTo();
+            registry.registerProcessor(createTestProcessor('open', spy));
+            registerGuards({
+                name: 'admin-only',
+                appliesTo: (processor) => processor.metadata?.['requiredGroups'] !== undefined,
+                canActivate: () => 'denied',
+            });
+
+            await executor.executeCommand('open', context);
+
+            expect(spy).toHaveBeenCalledTimes(1);
+        });
+
+        it('passes the parsed command, processor and context to the guard', async () => {
+            const processor = createTestProcessor('greet', async () => {}, { acceptsRawInput: true });
+            registry.registerProcessor(processor);
+            const canActivate = jasmine.createSpy('canActivate').and.returnValue(true);
+            registerGuards({ name: 'spy', canActivate });
+
+            await executor.executeCommand('greet world', context);
+
+            const [cmd, proc, ctx] = canActivate.calls.mostRecent().args;
+            expect(cmd.value).toBe('world');
+            expect(proc).toBe(processor);
+            expect(ctx).toBe(context);
+        });
+
+        it('fails closed when a guard throws', async () => {
+            const spy = jasmine.createSpy('processCommand').and.resolveTo();
+            registry.registerProcessor(createTestProcessor('cmd', spy));
+            registerGuards({ name: 'broken', canActivate: () => { throw new Error('db down'); } });
+
+            await executor.executeCommand('cmd', context);
+
+            expect(spy).not.toHaveBeenCalled();
+            expect(writer.written).toContain("[error] cmd: blocked by guard 'broken' (db down)");
         });
     });
 
