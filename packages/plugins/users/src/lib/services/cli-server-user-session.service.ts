@@ -8,6 +8,16 @@ import { BehaviorSubject, Observable } from 'rxjs';
 
 const SERVER_TOKEN_KEY = 'cli-server-auth-token';
 
+/**
+ * Shape of the `GET /sessions/current` response.
+ */
+interface CliServerSessionResponse {
+    id?: string;
+    user: ICliUserSession['user'];
+    loginTime: number;
+    lastActivity?: number;
+}
+
 export class CliServerUserSessionService implements ICliUserSessionService {
     private session$ = new BehaviorSubject<ICliUserSession | undefined>(undefined);
 
@@ -19,6 +29,11 @@ export class CliServerUserSessionService implements ICliUserSessionService {
 
     getUserSession(): Observable<ICliUserSession | undefined> {
         return this.session$.asObservable();
+    }
+
+    /** Server-assigned id of the current session, when known */
+    getSessionId(): string | undefined {
+        return this.session$.getValue()?.data?.['sessionId'];
     }
 
     async setUserSession(session: ICliUserSession): Promise<void> {
@@ -35,7 +50,7 @@ export class CliServerUserSessionService implements ICliUserSessionService {
         if (!token) return undefined;
 
         try {
-            const session = await this.http.get<any>(
+            const session = await this.http.get<CliServerSessionResponse>(
                 `${this.baseUrl}/sessions/current`,
                 { headers: { Authorization: `Bearer ${token}` } },
             );
@@ -43,6 +58,7 @@ export class CliServerUserSessionService implements ICliUserSessionService {
                 user: session.user,
                 loginTime: session.loginTime,
                 lastActivity: session.lastActivity ?? Date.now(),
+                data: session.id ? { sessionId: session.id } : undefined,
             };
             this.session$.next(userSession);
             return userSession;

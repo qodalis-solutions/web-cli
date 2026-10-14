@@ -31,6 +31,9 @@ The `@qodalis/cli-users` package is a CLI extension that provides Linux-style us
 | `groupdel` | `delgroup` | Delete a group (admin) |
 | `w` | `who` | Show session info |
 | `listusers` | `users` | List all users |
+| `last` | — | Show login/logout history from the audit log |
+| `sessions` | — | List active sessions on the server (server mode, admin) |
+| `session-kick` | — | Force-logout a session by id (server mode, admin) |
 
 # Installation
 
@@ -92,7 +95,77 @@ usersModule.configure({
         { name: 'admin', email: 'admin@company.com', groups: ['admin'] },
     ],
     defaultPassword: 'changeme',
+    requirePassword: true,
+    // Auto-logout after 30 minutes without activity (ms)
+    sessionTimeout: 30 * 60 * 1000,
+    passwordPolicy: {
+        minLength: 8,
+        requireUppercase: true,
+        requireDigit: true,
+        requireSpecialChar: false,
+    },
+    bruteForceProtection: {
+        maxAttempts: 5,   // failed logins before lockout (default: 5)
+        lockoutSeconds: 60,
+    },
 });
+```
+
+| Option | Description |
+|--------|-------------|
+| `seedUsers` | Users created on first boot (client mode) |
+| `defaultPassword` | Password assigned to seeded users |
+| `requirePassword` | Ask for a password on `login` / `su` |
+| `sessionTimeout` | Idle timeout in ms; expired sessions are cleared and a `logout` event is emitted |
+| `passwordPolicy` | Rules enforced by `passwd`, `adduser` and the setup wizard |
+| `bruteForceProtection` | In-memory lockout after repeated failed logins |
+| `userDisplayFormatter` | Customize the name shown in the prompt |
+| `server` | Delegate everything to a CLI server — see **Server mode** |
+
+# Server mode
+
+Set `server` to the `name` of a `CliServerConfig` entry and the module stops using
+the browser store. Users, authentication, sessions, groups and the audit log are
+served by a Qodalis CLI server with the users plugin installed
+([Node.js](https://github.com/qodalis-solutions/cli-server-node),
+[.NET](https://github.com/qodalis-solutions/cli-server-dotnet),
+[Python](https://github.com/qodalis-solutions/cli-server-python)).
+
+```typescript
+const engine = new CliEngine({
+    options: {
+        servers: [{ name: 'node', url: 'http://localhost:8047' }],
+    },
+});
+
+engine.registerModule(
+    usersModule.configure({ server: 'node', requirePassword: true }),
+);
+```
+
+What changes in server mode:
+
+- `login` calls `POST /api/v1/qcli/auth/login`; the returned bearer token is stored
+  locally and attached to every request to that server through
+  `ICliServerAuthTokenProvider`, so proxied server commands run as the signed-in user.
+- The session is restored on reload from `GET /api/v1/qcli/sessions/current`.
+- No seed user or setup wizard — the server seeds its own admin (`root` / `root` on the demo servers).
+- `last` reads the server audit log (`GET /api/v1/qcli/audit`).
+- Two extra admin commands: `sessions` (list active sessions) and `session-kick <id>`.
+- If the server answers `401` (token expired or revoked) or broadcasts a
+  `session-kicked` event for this session, the module clears the local session,
+  emits a `logout` event with the reason and prints a warning.
+
+# Events and audit
+
+`ICliUserEventService` (`cli-user-event-service`) emits `login`, `logout`, `login_failed`,
+`user_created`, `user_deleted`, `user_updated` and `password_changed` events in both modes.
+`ICliAuditService` (`cli-audit-service`) records them — in IndexedDB (client mode, last 500 entries)
+or on the server (server mode).
+
+```typescript
+const events = context.services.get<ICliUserEventService>(ICliUserEventService_TOKEN);
+events?.events$.subscribe((e) => console.log(e.type, e.user.name, e.details));
 ```
 
 # Extensibility

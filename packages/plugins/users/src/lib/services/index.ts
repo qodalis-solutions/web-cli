@@ -9,3 +9,4 @@ export { CliServerUsersStoreService } from './cli-server-users-store.service';
 export { CliServerUserSessionService } from './cli-server-user-session.service';
 export { CliServerGroupsStoreService } from './cli-server-groups-store.service';
 export { CliServerAuthService } from './cli-server-auth.service';
+export { CliServerAuditService } from './cli-server-audit.service';

@@ -693,3 +693,137 @@ describe('CliSessionKickCommandProcessor', () => {
         expect(processor.metadata?.module).toBe('users');
     });
 });
+
+// ── Session id tracking and user events (server mode) ──────────────
+
+describe('CliServerUserSessionService (session id)', () => {
+    it('exposes the server session id after restore', async () => {
+        const kvStore = new MockKeyValueStore();
+        await kvStore.set('cli-server-auth-token', 'tok');
+        const http = createMockHttp({
+            [`GET ${BASE_URL}/sessions/current`]: {
+                id: 'sess-42',
+                user: { id: 'u1', name: 'alice', email: 'a@b.com', groups: [], createdAt: 0, updatedAt: 0 },
+                loginTime: 1000,
+                lastActivity: 2000,
+            },
+        });
+        const service = new CliServerUserSessionService(BASE_URL, http, kvStore);
+
+        const restored = await service.restoreSession();
+
+        expect(restored?.data?.['sessionId']).toBe('sess-42');
+        expect(service.getSessionId()).toBe('sess-42');
+    });
+
+    it('returns undefined session id when no session is active', () => {
+        const service = new CliServerUserSessionService(BASE_URL, createMockHttp(), new MockKeyValueStore());
+        expect(service.getSessionId()).toBeUndefined();
+    });
+});
+
+describe('CliServerAuthService (session id + events)', () => {
+    let kvStore: MockKeyValueStore;
+    let sessionService: CliServerUserSessionService;
+    let events: any[];
+    const eventService = {
+        events$: undefined as any,
+        emit: (e: any) => events.push(e),
+    };
+    const user = { id: 'u1', name: 'alice', email: 'a@b.com', groups: [], createdAt: 0, updatedAt: 0 };
+
+    beforeEach(() => {
+        kvStore = new MockKeyValueStore();
+        events = [];
+    });
+
+    function createAuth(http: ICliHttpClient): CliServerAuthService {
+        sessionService = new CliServerUserSessionService(BASE_URL, http, kvStore);
+        return new CliServerAuthService(BASE_URL, http, kvStore, sessionService, () => {}, eventService as any);
+    }
+
+    it('stores the server session id and emits a login event', async () => {
+        const http = createMockHttp({
+            [`POST ${BASE_URL}/auth/login`]: {
+                token: 't1',
+                session: { id: 'sess-1', user, loginTime: 1000 },
+            },
+        });
+        const auth = createAuth(http);
+
+        const session = await auth.login('alice', 'pw');
+
+        expect(session.data?.['sessionId']).toBe('sess-1');
+        expect(sessionService.getSessionId()).toBe('sess-1');
+        expect(events.length).toBe(1);
+        expect(events[0].type).toBe('login');
+        expect(events[0].user.name).toBe('alice');
+    });
+
+    it('emits login_failed and rethrows when the server rejects credentials', async () => {
+        const http = createMockHttp();
+        (http.post as jasmine.Spy).and.rejectWith(new Error('Invalid credentials'));
+        const auth = createAuth(http);
+
+        await expectAsync(auth.login('alice', 'bad')).toBeRejectedWithError('Invalid credentials');
+
+        expect(events.length).toBe(1);
+        expect(events[0].type).toBe('login_failed');
+        expect(events[0].user.name).toBe('alice');
+        expect(events[0].details).toBe('Invalid credentials');
+    });
+
+    it('emits a logout event for the user that was signed in', async () => {
+        const http = createMockHttp({
+            [`POST ${BASE_URL}/auth/login`]: { token: 't1', session: { id: 's', user, loginTime: 1 } },
+            [`POST ${BASE_URL}/auth/logout`]: undefined,
+        });
+        const auth = createAuth(http);
+        await auth.login('alice', 'pw');
+        events = [];
+
+        await auth.logout();
+
+        expect(events.length).toBe(1);
+        expect(events[0].type).toBe('logout');
+        expect(events[0].user.id).toBe('u1');
+        expect(sessionService.getSessionId()).toBeUndefined();
+    });
+
+    it('emits password_changed only when changing the current user password', async () => {
+        const http = createMockHttp({
+            [`POST ${BASE_URL}/auth/login`]: { token: 't1', session: { id: 's', user, loginTime: 1 } },
+            [`PUT ${BASE_URL}/users/u1/password`]: undefined,
+            [`PUT ${BASE_URL}/users/other/password`]: undefined,
+        });
+        const auth = createAuth(http);
+        await auth.login('alice', 'pw');
+        events = [];
+
+        await auth.setPassword('other', 'x');
+        expect(events.length).toBe(0);
+
+        await auth.setPassword('u1', 'y');
+        expect(events.length).toBe(1);
+        expect(events[0].type).toBe('password_changed');
+    });
+});
+
+describe('CliServerAuthService.forgetToken', () => {
+    it('clears the token locally without contacting the server', async () => {
+        const kvStore = new MockKeyValueStore();
+        await kvStore.set('cli-server-auth-token', 'tok');
+        const http = createMockHttp();
+        const tokens: (string | undefined)[] = [];
+        const sessionService = new CliServerUserSessionService(BASE_URL, http, kvStore);
+        const auth = new CliServerAuthService(BASE_URL, http, kvStore, sessionService, (t) => tokens.push(t));
+        await auth.initialize();
+        expect(tokens).toEqual(['tok']);
+
+        await auth.forgetToken();
+
+        expect(tokens).toEqual(['tok', undefined]);
+        expect(await kvStore.get('cli-server-auth-token')).toBeUndefined();
+        expect(http.post).not.toHaveBeenCalled();
+    });
+});

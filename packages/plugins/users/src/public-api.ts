@@ -59,6 +59,8 @@ import { CliServerUsersStoreService } from './lib/services/cli-server-users-stor
 import { CliServerUserSessionService } from './lib/services/cli-server-user-session.service';
 import { CliServerGroupsStoreService } from './lib/services/cli-server-groups-store.service';
 import { CliServerAuthService } from './lib/services/cli-server-auth.service';
+import { CliServerAuditService } from './lib/services/cli-server-audit.service';
+import { withUnauthorizedHandler } from './lib/utils/server-http';
 import { CliSessionsCommandProcessor } from './lib/processors/cli-sessions-command-processor';
 import { CliSessionKickCommandProcessor } from './lib/processors/cli-session-kick-command-processor';
 import {
@@ -74,6 +76,8 @@ interface ICliUsersModule extends ICliConfigurableModule<CliUsersModuleConfig> {
     _pendingHomeSetup?: ICliUser;
     /** Session timeout interval handle, cleaned up in onDestroy */
     _sessionTimeoutInterval?: ReturnType<typeof setInterval>;
+    /** Unsubscribes from server-push session events (server mode), cleaned up in onDestroy */
+    _serverEventsUnsubscribe?: () => void;
     /** Initializes server-backed services when moduleConfig.server is set */
     _initServerMode(
         context: ICliExecutionContext,
@@ -538,17 +542,17 @@ export const usersModule: ICliUsersModule = {
     },
 
     async _initServerMode(context, moduleConfig, kvStore) {
+        const serverName = moduleConfig.server!;
         const serverConfig = context.options?.servers?.find(
-            (s: any) => s.name === moduleConfig.server,
+            (s: any) => s.name === serverName,
         );
         if (!serverConfig) {
             throw new Error(
-                `@qodalis/cli-users: server "${moduleConfig.server}" not found in options.servers`,
+                `@qodalis/cli-users: server "${serverName}" not found in options.servers`,
             );
         }
 
         const baseUrl = serverConfig.url.replace(/\/+$/, '') + '/api/v1/qcli';
-        const http = context.http;
 
         // Token holder — shared between auth service and token provider
         let currentToken: string | undefined;
@@ -561,8 +565,8 @@ export const usersModule: ICliUsersModule = {
         // Register auth token provider so other plugins/server requests
         // automatically include the token for this server
         const tokenProvider: ICliServerAuthTokenProvider = {
-            getHeaders(serverName: string): Record<string, string> {
-                if (serverName === moduleConfig.server && currentToken) {
+            getHeaders(name: string): Record<string, string> {
+                if (name === serverName && currentToken) {
                     return { Authorization: `Bearer ${currentToken}` };
                 }
                 return {};
@@ -580,20 +584,16 @@ export const usersModule: ICliUsersModule = {
             { provide: ICliUserEventService_TOKEN, useValue: eventService },
         ]);
 
-        // Initialize audit service (shared between modes)
-        const auditService = new CliDefaultAuditService();
-        await auditService.initialize(kvStore);
-        context.services.set([
-            { provide: ICliAuditService_TOKEN, useValue: auditService },
-        ]);
+        // Drops the local session when the server reports the token as
+        // expired/revoked (401) or when an admin kicks this session.
+        // Bound after the session service exists; see below.
+        let terminateSession: (reason: string) => Promise<void> = async () => {};
 
-        // Auto-log all user events to audit
-        eventService.events$.subscribe((event) => {
-            auditService.log({
-                event: event.type,
-                username: event.user.name,
-                details: event.details,
-            });
+        // Any 401 from the server (except credential checks) means the
+        // stored token is no longer valid.
+        const http = withUnauthorizedHandler(context.http, {
+            onUnauthorized: () => terminateSession('Session expired or revoked by the server'),
+            ignore: (url) => url.endsWith('/auth/login') || url.endsWith('/auth/verify'),
         });
 
         // Create server-backed session service
@@ -604,11 +604,17 @@ export const usersModule: ICliUsersModule = {
 
         // Create server-backed auth service
         const authService = new CliServerAuthService(
-            baseUrl, http, kvStore, sessionService, onTokenChange,
+            baseUrl, http, kvStore, sessionService, onTokenChange, eventService,
         );
         await authService.initialize();
         context.services.set([
             { provide: ICliAuthService_TOKEN, useValue: authService },
+        ]);
+
+        // Audit log lives on the server in this mode
+        const auditService = new CliServerAuditService(baseUrl, http, getHeaders);
+        context.services.set([
+            { provide: ICliAuditService_TOKEN, useValue: auditService },
         ]);
 
         // Create server-backed users store
@@ -630,8 +636,40 @@ export const usersModule: ICliUsersModule = {
             new CliSessionKickCommandProcessor(baseUrl, getHeaders),
         ];
 
+        terminateSession = async (reason: string) => {
+            if (!currentToken) {
+                return; // nothing to drop
+            }
+            const session = await firstValueFrom(sessionService.getUserSession());
+            await authService.forgetToken();
+            await sessionService.clearSession();
+            if (session?.user) {
+                eventService.emit({
+                    type: 'logout',
+                    user: session.user,
+                    timestamp: Date.now(),
+                    details: reason,
+                });
+            }
+            context.writer?.writeWarning?.(`${reason}. Please log in again.`);
+        };
+
+        // Auto-logout when an admin kicks this session (server broadcasts
+        // `session-kicked` over the events WebSocket, relayed by the
+        // server connection as a background service event).
+        this._serverEventsUnsubscribe = context.backgroundServices?.on(
+            (event) => {
+                const payload = (event.data as { data?: { sessionId?: string } } | undefined)?.data;
+                const kickedId = payload?.sessionId;
+                if (kickedId && kickedId === sessionService.getSessionId()) {
+                    void terminateSession('Session terminated by an administrator');
+                }
+            },
+            { source: `server-events:${serverName}`, type: 'session-kicked' },
+        );
+
         // Try to restore an existing session from stored token
-        const restoredSession = await sessionService.restoreSession();
+        await sessionService.restoreSession();
 
         // Resolve display name formatter (default: user.name)
         const formatDisplayName =
@@ -641,34 +679,38 @@ export const usersModule: ICliUsersModule = {
         // Subscribe session changes to execution context
         let previousUserId: string | null = null;
         sessionService.getUserSession().subscribe((session) => {
-            if (session) {
-                context.userSession = {
-                    ...session,
-                    displayName: formatDisplayName(session.user),
-                };
-
-                // Sync filesystem with current user
-                try {
-                    const fs = context.services.getRequired<any>(
-                        'cli-file-system-service',
-                    );
-                    if (fs) {
-                        if (session.user.homeDir) {
-                            if (!fs.exists(session.user.homeDir)) {
-                                fs.createDirectory(session.user.homeDir, true);
-                            }
-                            fs.setHomePath(session.user.homeDir);
-                            if (previousUserId !== session.user.id) {
-                                fs.setCurrentDirectory(session.user.homeDir);
-                            }
-                        }
-                        fs.setCurrentUser(session.user.id, session.user.groups);
-                    }
-                } catch {
-                    // Files module not installed — skip
-                }
-                previousUserId = session.user.id;
+            if (!session) {
+                context.userSession = undefined;
+                previousUserId = null;
+                return;
             }
+
+            context.userSession = {
+                ...session,
+                displayName: formatDisplayName(session.user),
+            };
+
+            // Sync filesystem with current user
+            try {
+                const fs = context.services.getRequired<any>(
+                    'cli-file-system-service',
+                );
+                if (fs) {
+                    if (session.user.homeDir) {
+                        if (!fs.exists(session.user.homeDir)) {
+                            fs.createDirectory(session.user.homeDir, true);
+                        }
+                        fs.setHomePath(session.user.homeDir);
+                        if (previousUserId !== session.user.id) {
+                            fs.setCurrentDirectory(session.user.homeDir);
+                        }
+                    }
+                    fs.setCurrentUser(session.user.id, session.user.groups);
+                }
+            } catch {
+                // Files module not installed — skip
+            }
+            previousUserId = session.user.id;
         });
     },
 
@@ -677,6 +719,11 @@ export const usersModule: ICliUsersModule = {
         if (this._sessionTimeoutInterval) {
             clearInterval(this._sessionTimeoutInterval);
             delete this._sessionTimeoutInterval;
+        }
+        // Stop listening for server session events
+        if (this._serverEventsUnsubscribe) {
+            this._serverEventsUnsubscribe();
+            delete this._serverEventsUnsubscribe;
         }
     },
 };

@@ -1,4 +1,4 @@
-import { ICliHttpClient, CliHttpRequestOptions } from '@qodalis/cli-core';
+import { ICliHttpClient, CliHttpRequestOptions, CliHttpError } from '@qodalis/cli-core';
 
 /**
  * Default HTTP client implementation.
@@ -112,17 +112,24 @@ export class CliHttpClient implements ICliHttpClient {
 
             if (!response.ok) {
                 let errorMessage = `${response.status} ${response.statusText}`;
+                let errorBody: unknown;
                 try {
-                    const errorBody = await response.json();
-                    if (errorBody.error) {
-                        errorMessage = errorBody.error;
-                    } else if (errorBody.message) {
-                        errorMessage = errorBody.message;
+                    errorBody = await response.json();
+                    const parsed = errorBody as { error?: string; message?: string };
+                    if (parsed.error) {
+                        errorMessage = parsed.error;
+                    } else if (parsed.message) {
+                        errorMessage = parsed.message;
                     }
                 } catch {
                     // use default error message
                 }
-                throw new Error(errorMessage);
+                throw new CliHttpError(
+                    errorMessage,
+                    response.status,
+                    response.statusText,
+                    errorBody,
+                );
             }
 
             const text = await response.text();

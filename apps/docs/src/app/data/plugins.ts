@@ -293,6 +293,8 @@ export const PLUGINS: PluginData[] = [
             { command: 'passwd john', description: 'Change a user\'s password' },
             { command: 'id john', description: 'Show user ID and groups' },
             { command: 'who', description: 'List logged-in users' },
+            { command: 'last', description: 'Show login/logout history' },
+            { command: 'sessions', description: 'List active server sessions (server mode)' },
         ],
     },
     {
