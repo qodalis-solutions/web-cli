@@ -379,3 +379,15 @@ A caller can never grant or exercise more than they hold. Let `P(x)` be effectiv
 
 - When the users plugin is installed, the admin dashboard authenticates through it: dashboard login calls the users auth service and requires the `admin:access` permission (admin `*` has it); its own static credentials are only used when the users plugin is absent.
 - Python admin rate limiter trusts `X-Forwarded-For` only with `trustProxy`; .NET admin middleware matches `/auth/login` exactly; python admin uses byte-wise `hmac.compare_digest`.
+
+### B11. Resolved details (all three servers + local backend)
+
+Decisions taken while implementing Appendix B, kept consistent across node, python and .NET:
+
+- **WebSocket Origin**: a *present* Origin that is not allowed is rejected (403 at upgrade, or close 4403). A *missing* Origin is accepted: browsers always send one, so its absence means a non-browser client, which still needs a ticket on a protected server.
+- **CSRF (B9)** applies to cookie/adapter auth. Bearer-token requests cannot be forged cross-site; login stays exempt.
+- **Escalation (B3)**: the default `users` group assigned on create is not checked; explicitly requested groups are. Changing a group's permissions checks the whole new list. Escalation 403 is evaluated before the last-admin 409.
+- **Public routes** under a protected server: version discovery, capabilities, health, `POST /sessions` and the admin dashboard login (`POST /auth/login`, which then requires `admin:access`). Everything else under `/api/*` and `/ws/*` requires a session.
+- **Defaults**: CORS is off until `allowedOrigins` is configured (patterns like `http://127.0.0.1:*` allowed); the PTY shell is off until enabled explicitly; existing stores keep their `users` group as-is (`commands:execute` is only seeded with a new group).
+- **Body limit**: oversized bodies are refused (python/.NET 400, node 413).
+- **Known follow-up**: the admin dashboard UI package still opens its live sockets with `?token=`; on a protected server it must switch to `POST /sessions/ws-ticket`.
