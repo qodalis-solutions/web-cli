@@ -48,8 +48,106 @@
             </tr>
             <tr>
                 <td><code>extendsProcessor</code></td>
-                <td><code>string</code></td>
+                <td><code>boolean</code></td>
                 <td>{{ 'docs.core-concepts.command-processors.field-extends' | translate }}</td>
+            </tr>
+            <tr>
+                <td><code>aliases</code></td>
+                <td><code>string[]</code></td>
+                <td>Alternative names for the command (e.g., <code>['h', '?']</code> for <code>help</code>)</td>
+            </tr>
+            <tr>
+                <td><code>author</code></td>
+                <td><code>ICliCommandAuthor</code></td>
+                <td>Author info — <code>&#123; name: string, email: string &#125;</code></td>
+            </tr>
+            <tr>
+                <td><code>version</code></td>
+                <td><code>string</code></td>
+                <td>Semver version string (default: <code>'1.0.0'</code>)</td>
+            </tr>
+            <tr>
+                <td><code>acceptsRawInput</code></td>
+                <td><code>boolean</code></td>
+                <td>When true, text after the command name is captured as <code>command.value</code> instead of being parsed as sub-commands</td>
+            </tr>
+            <tr>
+                <td><code>valueRequired</code></td>
+                <td><code>boolean</code></td>
+                <td>Requires positional value, piped data, or named arguments. Also enables raw input capture.</td>
+            </tr>
+            <tr>
+                <td><code>metadata</code></td>
+                <td><code>CliProcessorMetadata</code></td>
+                <td>Additional metadata: <code>sealed</code>, <code>hidden</code>, <code>icon</code>, <code>requireServer</code>, <code>requiredCoreVersion</code>, <code>requiredCliVersion</code></td>
+            </tr>
+            <tr>
+                <td><code>hooks</code></td>
+                <td><code>ICliProcessorHook[]</code></td>
+                <td>Before/after execution hooks</td>
+            </tr>
+            <tr>
+                <td><code>stateConfiguration</code></td>
+                <td><code>CliStateConfiguration</code></td>
+                <td>Persistent state — <code>&#123; initialState, storeName? &#125;</code>. See <a routerLink="/docs/core-concepts/state-management">State Management</a>.</td>
+            </tr>
+            <tr>
+                <td><code>configurationOptions</code></td>
+                <td><code>ICliConfigurationOption[]</code></td>
+                <td>Settings exposed via the <code>configure</code> command. Each option has <code>key</code>, <code>label</code>, <code>type</code>, <code>defaultValue</code>.</td>
+            </tr>
+            <tr>
+                <td><code>originalProcessor</code></td>
+                <td><code>ICliCommandProcessor?</code></td>
+                <td>Set automatically when <code>extendsProcessor</code> is true — reference to the wrapped processor.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Lifecycle Methods</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Method</th>
+                <th>When Called</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>initialize(context)</code></td>
+                <td>During module boot</td>
+                <td>One-time setup — load state, set up subscriptions</td>
+            </tr>
+            <tr>
+                <td><code>validateBeforeExecution(command, context)</code></td>
+                <td>Before <code>processCommand</code></td>
+                <td>Return <code>&#123; valid: false, message &#125;</code> to prevent execution</td>
+            </tr>
+            <tr>
+                <td><code>processCommand(command, context)</code></td>
+                <td>On command execution</td>
+                <td>Main command handler (required)</td>
+            </tr>
+            <tr>
+                <td><code>writeDescription(context)</code></td>
+                <td>When <code>help &lt;command&gt;</code> is run</td>
+                <td>Custom help text (overrides auto-generated help)</td>
+            </tr>
+            <tr>
+                <td><code>onData(data, context)</code></td>
+                <td>Full-screen mode — on each keypress</td>
+                <td>Handle raw terminal input (escape sequences, control chars, text)</td>
+            </tr>
+            <tr>
+                <td><code>onResize(cols, rows, context)</code></td>
+                <td>Full-screen mode — on terminal resize</td>
+                <td>Adapt rendering to new dimensions</td>
+            </tr>
+            <tr>
+                <td><code>onDispose(context)</code></td>
+                <td>Full-screen exit or CLI destroy</td>
+                <td>Clean up resources (managed timers are auto-cleared)</td>
             </tr>
         </tbody>
     </table>
@@ -195,6 +293,96 @@
                 <td><code>services</code></td>
                 <td><code>ICliServiceProvider</code></td>
                 <td>{{ 'docs.core-concepts.execution-context.services-desc' | translate }}</td>
+            </tr>
+            <tr>
+                <td><code>reader</code></td>
+                <td><code>ICliInputReader</code></td>
+                <td>Interactive input prompts — <code>readLine</code>, <code>readPassword</code>, <code>readConfirm</code>, <code>readSelect</code>, <code>readMultiSelect</code>, <code>readNumber</code>, <code>readDate</code>, <code>readFile</code>. See <a routerLink="/docs/core-concepts/input-reader">Input Reader</a>.</td>
+            </tr>
+            <tr>
+                <td><code>executor</code></td>
+                <td><code>ICliCommandExecutorService</code></td>
+                <td>Programmatic command execution. Call <code>executor.showHelp()</code> or use <code>submitCommand()</code> to run commands.</td>
+            </tr>
+            <tr>
+                <td><code>backgroundServices</code></td>
+                <td><code>ICliBackgroundServiceRegistry</code></td>
+                <td>Register and manage background daemons and jobs. See <a routerLink="/docs/core-concepts/background-services">Background Services</a>.</td>
+            </tr>
+            <tr>
+                <td><code>terminal</code></td>
+                <td><code>Terminal</code></td>
+                <td>Raw xterm.js <code>Terminal</code> instance for direct terminal access (<code>cols</code>, <code>rows</code>, etc.).</td>
+            </tr>
+            <tr>
+                <td><code>userSession</code></td>
+                <td><code>ICliUserSession?</code></td>
+                <td>Current logged-in user information (requires the users module).</td>
+            </tr>
+            <tr>
+                <td><code>textAnimator</code></td>
+                <td><code>ICliTextAnimator?</code></td>
+                <td>Animated text effects (typing, bouncing, etc.).</td>
+            </tr>
+            <tr>
+                <td><code>onAbort</code></td>
+                <td><code>Subject&lt;void&gt;</code></td>
+                <td>RxJS Subject that emits when the command is cancelled (Ctrl+C).</td>
+            </tr>
+            <tr>
+                <td><code>signal</code></td>
+                <td><code>AbortSignal?</code></td>
+                <td>Standard <code>AbortSignal</code> that fires on Ctrl+C. Pass to fetch/timers for cooperative cancellation.</td>
+            </tr>
+            <tr>
+                <td><code>process</code></td>
+                <td><code>ICliExecutionProcess</code></td>
+                <td>Execution process handle — call <code>process.output()</code> to set the command's output value for piping.</td>
+            </tr>
+            <tr>
+                <td><code>logger</code></td>
+                <td><code>ICliLogger</code></td>
+                <td>Structured logging — <code>logger.debug()</code>, <code>logger.info()</code>, <code>logger.warn()</code>, <code>logger.error()</code>.</td>
+            </tr>
+            <tr>
+                <td><code>translator</code></td>
+                <td><code>ICliTranslationService</code></td>
+                <td>i18n string resolution — <code>translator.t(key, defaultValue, params?)</code>. See Language Packs.</td>
+            </tr>
+            <tr>
+                <td><code>submitCommand(cmd)</code></td>
+                <td><code>(string) =&gt; Promise&lt;void&gt;</code></td>
+                <td>Execute a command programmatically — adds to history and shows a prompt afterwards.</td>
+            </tr>
+            <tr>
+                <td><code>enterFullScreenMode(processor, options?)</code></td>
+                <td><code>Function</code></td>
+                <td>Switch to alternate screen buffer for TUI apps. Set <code>&#123; showCursor: true &#125;</code> for REPL-style interfaces.</td>
+            </tr>
+            <tr>
+                <td><code>exitFullScreenMode()</code></td>
+                <td><code>Function</code></td>
+                <td>Restore normal terminal mode, re-display the prompt.</td>
+            </tr>
+            <tr>
+                <td><code>createInterval(fn, ms)</code></td>
+                <td><code>ICliManagedInterval</code></td>
+                <td>Managed interval — auto-cleared when full-screen exits or CLI is destroyed. Has <code>clear()</code> and <code>setDelay(ms)</code>.</td>
+            </tr>
+            <tr>
+                <td><code>createTimeout(fn, ms)</code></td>
+                <td><code>ICliManagedTimer</code></td>
+                <td>Managed timeout — auto-cleared on cleanup. Has <code>clear()</code>.</td>
+            </tr>
+            <tr>
+                <td><code>showPrompt(options?)</code></td>
+                <td><code>Function</code></td>
+                <td>Print the prompt. Options: <code>reset</code>, <code>newLine</code>, <code>keepCurrentLine</code>.</td>
+            </tr>
+            <tr>
+                <td><code>promptPathProvider</code></td>
+                <td><code>() =&gt; string | null</code></td>
+                <td>Set this to customize the path shown in the prompt (e.g., current working directory).</td>
             </tr>
         </tbody>
     </table>
@@ -857,5 +1045,676 @@ if (result === null) &#123;
         <div class="try-it-body">
             <cli [options]="tryItOptions" [modules]="tryItModules" height="260px" />
         </div>
+    </div>
+</div>
+
+<!-- Writer API -->
+<div *ngIf="currentTopic === 'writer-api'">
+    <h1>Writer API</h1>
+    <p>
+        The <code>ICliTerminalWriter</code> interface provides 16 methods for rich terminal output.
+        Access it via <code>context.writer</code> in any command processor.
+    </p>
+
+    <h2>Basic Output</h2>
+    <table>
+        <thead>
+            <tr><th>Method</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>write(text)</code></td><td>Write text without a trailing newline</td></tr>
+            <tr><td><code>writeln(text?)</code></td><td>Write text followed by a newline (empty line if no argument)</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Styled Messages</h2>
+    <p>Each method writes a message with a colored prefix icon.</p>
+    <table>
+        <thead>
+            <tr><th>Method</th><th>Style</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>writeSuccess(message)</code></td><td>Green ✓</td><td>Success messages</td></tr>
+            <tr><td><code>writeInfo(message)</code></td><td>Blue ℹ</td><td>Informational messages</td></tr>
+            <tr><td><code>writeWarning(message)</code></td><td>Yellow ⚠</td><td>Warning messages</td></tr>
+            <tr><td><code>writeError(message)</code></td><td>Red ✗</td><td>Error messages</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Color Wrapping</h2>
+    <p>Wrap text in ANSI color codes. Returns the wrapped string (does not write to terminal).</p>
+    <table>
+        <thead>
+            <tr><th>Method</th><th>Parameters</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>wrapInColor(text, color)</code></td>
+                <td><code>text: string, color: CliForegroundColor</code></td>
+                <td>Wrap text in a foreground color (Red, Green, Yellow, Blue, Magenta, Cyan, White, Black)</td>
+            </tr>
+            <tr>
+                <td><code>wrapInBackgroundColor(text, color)</code></td>
+                <td><code>text: string, color: CliBackgroundColor</code></td>
+                <td>Wrap text in a background color</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="code-block">
+        <pre><code>const colored = writer.wrapInColor('Hello', CliForegroundColor.Cyan);
+writer.writeln(colored);</code></pre>
+    </div>
+
+    <h2>Data Display</h2>
+    <table>
+        <thead>
+            <tr><th>Method</th><th>Parameters</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>writeJson(json)</code></td>
+                <td><code>json: any</code></td>
+                <td>Pretty-print a JSON object with syntax highlighting</td>
+            </tr>
+            <tr>
+                <td><code>writeTable(headers, rows, options?)</code></td>
+                <td><code>headers: string[], rows: string[][], options?: &#123; fullWidth?: boolean &#125;</code></td>
+                <td>Render a formatted table. Set <code>fullWidth: true</code> to expand columns to terminal width.</td>
+            </tr>
+            <tr>
+                <td><code>writeObjectsAsTable(objects)</code></td>
+                <td><code>objects: any[]</code></td>
+                <td>Auto-infer columns from object keys and render as a table</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="code-block">
+        <pre><code>// Table with headers and rows
+writer.writeTable(
+    ['Name', 'Role', 'Status'],
+    [
+        ['Alice', 'Admin', 'Active'],
+        ['Bob', 'User', 'Inactive'],
+    ],
+    &#123; fullWidth: true &#125;,
+);
+
+// Auto-table from object array
+writer.writeObjectsAsTable([
+    &#123; id: 1, name: 'Alice', role: 'admin' &#125;,
+    &#123; id: 2, name: 'Bob', role: 'user' &#125;,
+]);</code></pre>
+    </div>
+
+    <h2>Layout & Formatting</h2>
+    <table>
+        <thead>
+            <tr><th>Method</th><th>Parameters</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>writeDivider(options?)</code></td>
+                <td><code>&#123; color?: CliForegroundColor, length?: number, char?: string &#125;</code></td>
+                <td>Horizontal rule. Default: <code>─</code> repeated to terminal width.</td>
+            </tr>
+            <tr>
+                <td><code>writeList(items, options?)</code></td>
+                <td><code>items: string[], &#123; ordered?: boolean, prefix?: string, color?: CliForegroundColor &#125;</code></td>
+                <td>Bulleted, numbered, or custom-prefix list</td>
+            </tr>
+            <tr>
+                <td><code>writeKeyValue(entries, options?)</code></td>
+                <td><code>entries: Record&lt;string, string&gt; | [string, string][], &#123; separator?: string, keyColor?: CliForegroundColor &#125;</code></td>
+                <td>Aligned key-value pairs. Default separator: <code> : </code></td>
+            </tr>
+            <tr>
+                <td><code>writeColumns(items, options?)</code></td>
+                <td><code>items: string[], &#123; columns?: number, padding?: number &#125;</code></td>
+                <td>Multi-column layout</td>
+            </tr>
+            <tr>
+                <td><code>writeLink(text, url)</code></td>
+                <td><code>text: string, url: string</code></td>
+                <td>Clickable hyperlink (OSC 8). Falls back to <code>text (url)</code> in unsupported terminals.</td>
+            </tr>
+            <tr>
+                <td><code>writeBox(content, options?)</code></td>
+                <td><code>content: string | string[], &#123; title?: string, borderColor?: CliForegroundColor, padding?: number &#125;</code></td>
+                <td>Bordered box for callouts and notices</td>
+            </tr>
+            <tr>
+                <td><code>writeIndented(text, level?)</code></td>
+                <td><code>text: string, level?: number</code></td>
+                <td>Indented text (2 spaces per level, default level: 1)</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="code-block">
+        <pre><code>// Key-value pairs
+writer.writeKeyValue(&#123;
+    'Name': 'Qodalis CLI',
+    'Version': '2.0.0',
+    'License': 'MIT',
+&#125;);
+
+// Bordered box
+writer.writeBox(['Multi-line content', 'inside a box'], &#123;
+    title: 'Notice',
+    borderColor: CliForegroundColor.Yellow,
+    padding: 1,
+&#125;);
+
+// Columns
+writer.writeColumns(
+    ['help', 'clear', 'theme', 'version', 'history', 'alias'],
+    &#123; columns: 3, padding: 4 &#125;,
+);</code></pre>
+    </div>
+
+    <h2>File Output</h2>
+    <table>
+        <thead>
+            <tr><th>Method</th><th>Parameters</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>writeToFile(fileName, content)</code></td>
+                <td><code>fileName: string, content: string</code></td>
+                <td>Triggers a browser file download with the given content</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="code-block">
+        <pre><code>writer.writeToFile('report.json', JSON.stringify(data, null, 2));</code></pre>
+    </div>
+
+    <h2>Try It</h2>
+    <p>Open the terminal below and use the built-in <code>help</code> command to see output formatting in action.</p>
+    <div class="try-it-terminal">
+        <div class="try-it-chrome">
+            <span class="chrome-dot red"></span>
+            <span class="chrome-dot yellow"></span>
+            <span class="chrome-dot green"></span>
+            <span class="chrome-title">writer api playground</span>
+        </div>
+        <div class="try-it-body">
+            <cli [options]="tryItOptions" [modules]="tryItModules" height="280px" />
+        </div>
+    </div>
+</div>
+
+<!-- HTTP Client -->
+<div *ngIf="currentTopic === 'http-client'">
+    <h1>HTTP Client</h1>
+    <p>
+        The <code>ICliHttpClient</code> interface provides typed HTTP methods with automatic abort signal integration.
+        When the user presses Ctrl+C, in-flight requests are automatically cancelled.
+        Access it via <code>context.http</code>.
+    </p>
+
+    <h2>Methods</h2>
+    <table>
+        <thead>
+            <tr><th>Method</th><th>Signature</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>get</code></td>
+                <td><code>get&lt;T&gt;(url, options?): Promise&lt;T&gt;</code></td>
+                <td>GET request, returns parsed JSON</td>
+            </tr>
+            <tr>
+                <td><code>post</code></td>
+                <td><code>post&lt;T&gt;(url, body?, options?): Promise&lt;T&gt;</code></td>
+                <td>POST request, auto-serializes body as JSON</td>
+            </tr>
+            <tr>
+                <td><code>put</code></td>
+                <td><code>put&lt;T&gt;(url, body?, options?): Promise&lt;T&gt;</code></td>
+                <td>PUT request, auto-serializes body as JSON</td>
+            </tr>
+            <tr>
+                <td><code>patch</code></td>
+                <td><code>patch&lt;T&gt;(url, body?, options?): Promise&lt;T&gt;</code></td>
+                <td>PATCH request, auto-serializes body as JSON</td>
+            </tr>
+            <tr>
+                <td><code>delete</code></td>
+                <td><code>delete&lt;T&gt;(url, options?): Promise&lt;T&gt;</code></td>
+                <td>DELETE request, returns parsed JSON</td>
+            </tr>
+            <tr>
+                <td><code>head</code></td>
+                <td><code>head(url, options?): Promise&lt;Response&gt;</code></td>
+                <td>HEAD request, returns raw Response</td>
+            </tr>
+            <tr>
+                <td><code>options</code></td>
+                <td><code>options&lt;T&gt;(url, options?): Promise&lt;T&gt;</code></td>
+                <td>OPTIONS request</td>
+            </tr>
+            <tr>
+                <td><code>fetch</code></td>
+                <td><code>fetch(url, init?): Promise&lt;Response&gt;</code></td>
+                <td>Raw fetch for streaming, headers, or status inspection</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Request Options</h2>
+    <p>All convenience methods accept <code>CliHttpRequestOptions</code>:</p>
+    <table>
+        <thead>
+            <tr><th>Option</th><th>Type</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>timeout</code></td>
+                <td><code>number</code></td>
+                <td>Request timeout in milliseconds. Automatically aborts the request after this duration.</td>
+            </tr>
+            <tr>
+                <td><code>headers</code></td>
+                <td><code>HeadersInit</code></td>
+                <td>Custom request headers</td>
+            </tr>
+            <tr>
+                <td><code>signal</code></td>
+                <td><code>AbortSignal</code></td>
+                <td>Additional abort signal (merged with the command's signal)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Examples</h2>
+    <div class="code-block">
+        <pre><code>// Typed GET request
+const users = await context.http.get&lt;User[]&gt;('https://api.example.com/users');
+
+// POST with auto-serialized JSON body
+const result = await context.http.post&lt;Todo&gt;(
+    'https://api.example.com/todos',
+    &#123; title: 'New task', completed: false &#125;,
+);
+
+// Request with timeout
+const data = await context.http.get('https://api.example.com/slow', &#123;
+    timeout: 5000, // abort after 5 seconds
+&#125;);
+
+// Raw fetch for streaming
+const response = await context.http.fetch('https://example.com/large-file');
+const reader = response.body?.getReader();
+
+// Error handling with abort detection
+try &#123;
+    const data = await context.http.get(url);
+    context.writer.writeJson(data);
+&#125; catch (error: any) &#123;
+    if (error.name === 'AbortError') &#123;
+        context.writer.writeWarning('Request cancelled.');
+    &#125; else &#123;
+        context.writer.writeError(error.message);
+    &#125;
+&#125;</code></pre>
+    </div>
+
+    <h2>Auto-Abort Behavior</h2>
+    <p>
+        The HTTP client automatically merges the command's <code>AbortSignal</code>.
+        When the user presses <strong>Ctrl+C</strong>, all pending requests from the current command
+        are cancelled immediately. The <code>fetch</code> call rejects with an <code>AbortError</code>.
+    </p>
+    <p>
+        If you provide a <code>timeout</code>, a separate <code>AbortSignal</code> is created
+        and merged with the command signal — whichever fires first wins.
+    </p>
+</div>
+
+<!-- Background Services -->
+<div *ngIf="currentTopic === 'background-services'">
+    <h1>Background Services</h1>
+    <p>
+        Background services run independently of the command lifecycle. They are scoped to the CLI session
+        and destroyed when the engine shuts down. Access the registry via <code>context.backgroundServices</code>.
+    </p>
+
+    <h2>Service Types</h2>
+    <table>
+        <thead>
+            <tr><th>Type</th><th>Lifecycle</th><th>Use Case</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>'daemon'</code></td>
+                <td>Long-running — <code>onStart</code> blocks until stopped</td>
+                <td>Polling, WebSocket connections, event loops</td>
+            </tr>
+            <tr>
+                <td><code>'job'</code></td>
+                <td>Run-to-completion — <code>onStart</code> resolves when done</td>
+                <td>Data import, one-time setup, batch processing</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>ICliBackgroundService Interface</h2>
+    <table>
+        <thead>
+            <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>name</code></td><td><code>string</code></td><td>Unique service identifier</td></tr>
+            <tr><td><code>description</code></td><td><code>string?</code></td><td>Human-readable description</td></tr>
+            <tr><td><code>type</code></td><td><code>'daemon' | 'job'</code></td><td>Service lifecycle type</td></tr>
+            <tr><td><code>workerCompatible</code></td><td><code>boolean?</code></td><td>Whether the service can run in a Web Worker</td></tr>
+            <tr><td><code>workerFactory</code></td><td><code>() =&gt; Worker</code></td><td>Factory that creates the Worker instance (when <code>workerCompatible</code>)</td></tr>
+            <tr><td><code>onStart(ctx)</code></td><td><code>(ICliServiceContext) =&gt; Promise&lt;void&gt;</code></td><td>Called when the service starts</td></tr>
+            <tr><td><code>onStop(ctx)</code></td><td><code>(ICliServiceContext) =&gt; Promise&lt;void&gt;</code></td><td>Called for graceful shutdown</td></tr>
+            <tr><td><code>onError(error, ctx)</code></td><td><code>(Error, ICliServiceContext) =&gt; void</code></td><td>Called on unrecoverable error</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Service Context</h2>
+    <p>Each service receives its own <code>ICliServiceContext</code> with an independent abort signal:</p>
+    <table>
+        <thead>
+            <tr><th>Property</th><th>Type</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>signal</code></td><td><code>AbortSignal</code></td><td>Scoped to this service — fires when <code>stop()</code> is called</td></tr>
+            <tr><td><code>emit(event)</code></td><td><code>(ICliServiceEvent) =&gt; void</code></td><td>Emit an event for listeners</td></tr>
+            <tr><td><code>log(message, level?)</code></td><td><code>(string, 'info' | 'warn' | 'error') =&gt; void</code></td><td>Log to the service's private buffer</td></tr>
+            <tr><td><code>createInterval(fn, ms)</code></td><td><code>ICliManagedInterval</code></td><td>Managed interval — auto-cleared on stop</td></tr>
+            <tr><td><code>createTimeout(fn, ms)</code></td><td><code>ICliManagedTimer</code></td><td>Managed timeout — auto-cleared on stop</td></tr>
+            <tr><td><code>state</code></td><td><code>ICliStateStore</code></td><td>Shared state store</td></tr>
+            <tr><td><code>services</code></td><td><code>ICliServiceProvider</code></td><td>Shared service container</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Registry API</h2>
+    <table>
+        <thead>
+            <tr><th>Method</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>register(service)</code></td><td>Register a service definition</td></tr>
+            <tr><td><code>start(name)</code></td><td>Start a registered service</td></tr>
+            <tr><td><code>stop(name)</code></td><td>Stop a running service</td></tr>
+            <tr><td><code>restart(name)</code></td><td>Stop and re-start a service</td></tr>
+            <tr><td><code>startJob(name, task, options?)</code></td><td>Run a one-shot job inline (no prior registration needed)</td></tr>
+            <tr><td><code>getStatus(name)</code></td><td>Get status snapshot (<code>ICliBackgroundServiceInfo</code>)</td></tr>
+            <tr><td><code>list()</code></td><td>List all registered services</td></tr>
+            <tr><td><code>getLogs(name, limit?)</code></td><td>Read log entries for a service</td></tr>
+            <tr><td><code>on(handler, filter?)</code></td><td>Subscribe to service events. Returns unsubscribe function.</td></tr>
+            <tr><td><code>destroyAll()</code></td><td>Stop all services and clean up</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Example: Daemon Service</h2>
+    <div class="code-block">
+        <pre><code>context.backgroundServices.register(&#123;
+    name: 'heartbeat',
+    description: 'Logs a heartbeat every 10 seconds',
+    type: 'daemon',
+    async onStart(ctx) &#123;
+        ctx.log('Heartbeat started');
+        ctx.createInterval(() =&gt; &#123;
+            ctx.log('Heartbeat: ' + new Date().toLocaleTimeString());
+            ctx.emit(&#123; source: 'heartbeat', type: 'tick' &#125;);
+        &#125;, 10000);
+    &#125;,
+    async onStop(ctx) &#123;
+        ctx.log('Heartbeat stopped');
+    &#125;,
+&#125;);
+
+await context.backgroundServices.start('heartbeat');</code></pre>
+    </div>
+
+    <h2>Example: One-Shot Job</h2>
+    <div class="code-block">
+        <pre><code>await context.backgroundServices.startJob('init-data', async (ctx) =&gt; &#123;
+    ctx.log('Loading data...');
+    await fetchData();
+    ctx.log('Done!');
+&#125;);</code></pre>
+    </div>
+
+    <h2>Example: Web Worker Service</h2>
+    <div class="code-block">
+        <pre><code>context.backgroundServices.register(&#123;
+    name: 'ticker',
+    type: 'daemon',
+    workerCompatible: true,
+    workerFactory: () =&gt;
+        new Worker(new URL('./workers/ticker.worker.ts', import.meta.url), &#123;
+            type: 'module',
+        &#125;),
+    // Main-thread fallback
+    async onStart(ctx) &#123;
+        ctx.createInterval(() =&gt; ctx.log('Tick'), 5000);
+    &#125;,
+&#125;);</code></pre>
+    </div>
+
+    <h2>Built-in Commands</h2>
+    <p>The CLI provides built-in commands to manage services at runtime:</p>
+    <table>
+        <thead>
+            <tr><th>Command</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>services</code></td><td>List all services with status</td></tr>
+            <tr><td><code>services start &lt;name&gt;</code></td><td>Start a service</td></tr>
+            <tr><td><code>services stop &lt;name&gt;</code></td><td>Stop a service</td></tr>
+            <tr><td><code>services logs &lt;name&gt;</code></td><td>View service log buffer</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- State Management -->
+<div *ngIf="currentTopic === 'state-management'">
+    <h1>State Management</h1>
+    <p>
+        The <code>ICliStateStore</code> provides reactive, persistent state scoped to each command processor.
+        State is automatically persisted to <code>localStorage</code> and restored on boot.
+        Access it via <code>context.state</code>.
+    </p>
+
+    <h2>Declaring State</h2>
+    <p>Define initial state on your command processor using <code>stateConfiguration</code>:</p>
+    <div class="code-block">
+        <pre><code>const myProcessor: ICliCommandProcessor = &#123;
+    command: 'counter',
+    description: 'Persistent counter',
+    stateConfiguration: &#123;
+        initialState: &#123; count: 0, lastAction: 'none' &#125;,
+        storeName: 'my-counter', // optional custom key (defaults to command name)
+    &#125;,
+    // ...
+&#125;;</code></pre>
+    </div>
+
+    <h2>State Store API</h2>
+    <table>
+        <thead>
+            <tr><th>Method</th><th>Signature</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>getState()</code></td>
+                <td><code>getState&lt;T&gt;(): T</code></td>
+                <td>Get a shallow copy of the current state. Mutating the returned object has no effect.</td>
+            </tr>
+            <tr>
+                <td><code>updateState(partial)</code></td>
+                <td><code>updateState(Partial&lt;CliState&gt;): void</code></td>
+                <td>Shallow-merge new values. Only provided keys are updated. Triggers subscribers and persists.</td>
+            </tr>
+            <tr>
+                <td><code>select(selector)</code></td>
+                <td><code>select&lt;K&gt;((state) =&gt; K): Observable&lt;K&gt;</code></td>
+                <td>Reactive slice — emits only when the selected value changes</td>
+            </tr>
+            <tr>
+                <td><code>subscribe(callback)</code></td>
+                <td><code>subscribe((state) =&gt; void): Subscription</code></td>
+                <td>Listen to all state changes</td>
+            </tr>
+            <tr>
+                <td><code>reset()</code></td>
+                <td><code>reset(): void</code></td>
+                <td>Restore state to <code>initialState</code></td>
+            </tr>
+            <tr>
+                <td><code>persist()</code></td>
+                <td><code>persist(): Promise&lt;void&gt;</code></td>
+                <td>Manually flush state to storage</td>
+            </tr>
+            <tr>
+                <td><code>initialize()</code></td>
+                <td><code>initialize(): Promise&lt;void&gt;</code></td>
+                <td>Load state from storage (called automatically on boot)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Example: Counter with Persistent State</h2>
+    <div class="code-block">
+        <pre><code>async processCommand(command, context) &#123;
+    const state = context.state.getState&lt;&#123; count: number &#125;&gt;();
+
+    // Read
+    context.writer.writeInfo('Current count: ' + state.count);
+
+    // Update (shallow merge)
+    context.state.updateState(&#123; count: state.count + 1 &#125;);
+
+    // Reset
+    // context.state.reset();
+&#125;</code></pre>
+    </div>
+
+    <h2>Reactive Subscriptions</h2>
+    <div class="code-block">
+        <pre><code>// Watch a specific slice of state
+context.state.select(state =&gt; state.count).subscribe(count =&gt; &#123;
+    console.log('Count changed:', count);
+&#125;);
+
+// Watch all state changes
+context.state.subscribe(state =&gt; &#123;
+    console.log('State updated:', state);
+&#125;);</code></pre>
+    </div>
+
+    <h2>Configuration Options</h2>
+    <p>
+        Use <code>configurationOptions</code> on your processor to expose settings via the built-in
+        <code>configure</code> command. Users can view and change settings interactively.
+    </p>
+    <div class="code-block">
+        <pre><code>const myProcessor: ICliCommandProcessor = &#123;
+    command: 'weather',
+    configurationOptions: [
+        &#123;
+            key: 'unit',
+            label: 'Temperature Unit',
+            description: 'Celsius or Fahrenheit',
+            type: 'select',
+            defaultValue: 'celsius',
+            options: [
+                &#123; label: 'Celsius', value: 'celsius' &#125;,
+                &#123; label: 'Fahrenheit', value: 'fahrenheit' &#125;,
+            ],
+        &#125;,
+    ],
+    // ...
+&#125;;</code></pre>
+    </div>
+    <p>Users can then run:</p>
+    <table>
+        <thead>
+            <tr><th>Command</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>configure</code></td><td>Interactive configuration menu</td></tr>
+            <tr><td><code>configure get weather.unit</code></td><td>Get a specific setting</td></tr>
+            <tr><td><code>configure set weather.unit fahrenheit</code></td><td>Set a specific setting</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Notifications -->
+<div *ngIf="currentTopic === 'notifications'">
+    <h1>Notifications</h1>
+    <p>
+        The <code>ICliNotifier</code> service displays status messages in the panel header bar.
+        Notifications are automatically cleared when the command finishes.
+        Access it via <code>context.notifier</code>.
+    </p>
+
+    <h2>Methods</h2>
+    <table>
+        <thead>
+            <tr><th>Method</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>info(message)</code></td><td>Display an informational notification (blue)</td></tr>
+            <tr><td><code>success(message)</code></td><td>Display a success notification (green)</td></tr>
+            <tr><td><code>warn(message)</code></td><td>Display a warning notification (yellow)</td></tr>
+            <tr><td><code>error(message)</code></td><td>Display an error notification (red)</td></tr>
+            <tr><td><code>clear()</code></td><td>Clear the current notification</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Properties</h2>
+    <table>
+        <thead>
+            <tr><th>Property</th><th>Type</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>current</code></td>
+                <td><code>CliNotification | undefined</code></td>
+                <td>The currently displayed notification (if any)</td>
+            </tr>
+            <tr>
+                <td><code>change$</code></td>
+                <td><code>Observable&lt;CliNotification | undefined&gt;</code></td>
+                <td>Observable that emits on notification changes — useful for custom UI integration</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Example</h2>
+    <div class="code-block">
+        <pre><code>async processCommand(command, context) &#123;
+    // Show progress
+    context.notifier.info('Downloading 0%...');
+
+    for (let i = 0; i &lt;= 100; i += 10) &#123;
+        await new Promise(r =&gt; setTimeout(r, 200));
+        context.notifier.info('Downloading ' + i + '%...');
+    &#125;
+
+    // Show completion
+    context.notifier.success('Download complete!');
+
+    // Notification auto-clears when processCommand resolves.
+    // To clear manually:
+    // context.notifier.clear();
+&#125;</code></pre>
+    </div>
+
+    <h2>Observing Changes</h2>
+    <div class="code-block">
+        <pre><code>// React to notification changes (e.g., for custom UI)
+context.notifier.change$.subscribe(notification =&gt; &#123;
+    if (notification) &#123;
+        console.log(`[$&#123;notification.severity&#125;] $&#123;notification.message&#125;`);
+    &#125;
+&#125;);</code></pre>
     </div>
 </div>

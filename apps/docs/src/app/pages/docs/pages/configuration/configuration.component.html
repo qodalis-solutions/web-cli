@@ -39,8 +39,168 @@
             <td><code>null</code></td>
             <td>{{ 'docs.configuration.server-url-desc' | translate }}</td>
         </tr>
+        <tr>
+            <td><code>terminalOptions</code></td>
+            <td><code>ITerminalOptions</code></td>
+            <td><code>&#123;&#125;</code></td>
+            <td>xterm.js terminal options — <code>fontSize</code>, <code>fontFamily</code>, <code>cursorBlink</code>, <code>scrollback</code>, <code>theme</code>, <code>convertEol</code>, etc. See <a href="https://xtermjs.org/docs/api/terminal/interfaces/iterminalinitonlyoptions/" target="_blank">xterm.js docs</a>.</td>
+        </tr>
+        <tr>
+            <td><code>servers</code></td>
+            <td><code>CliServerConfig[]</code></td>
+            <td><code>[]</code></td>
+            <td>Remote CLI servers to connect to. Each server's commands are auto-discovered and registered as proxy processors. See Server Integration docs.</td>
+        </tr>
+        <tr>
+            <td><code>packageSources</code></td>
+            <td><code>&#123; primary?: string, sources?: CliPackageSource[] &#125;</code></td>
+            <td>Built-in (unpkg, jsdelivr)</td>
+            <td>Custom package sources for the <code>pkg</code> command. Set <code>primary</code> to change the default source. Add entries to <code>sources</code> with <code>name</code>, <code>url</code>, and <code>kind</code> (<code>'registry'</code> or <code>'file'</code>).</td>
+        </tr>
+        <tr>
+            <td><code>allowEval</code></td>
+            <td><code>boolean</code></td>
+            <td><code>false</code></td>
+            <td>Enable the <code>js</code> / <code>calc</code> command. Disabled by default for security — it runs arbitrary JavaScript in the host page context.</td>
+        </tr>
     </tbody>
 </table>
+
+<!-- CliServerConfig -->
+<h2>Server Configuration</h2>
+<p>Each entry in the <code>servers</code> array uses the <code>CliServerConfig</code> type:</p>
+<table>
+    <thead>
+        <tr>
+            <th>Option</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>name</code></td>
+            <td><code>string</code></td>
+            <td>(required)</td>
+            <td>Unique identifier. Server commands are prefixed with this name.</td>
+        </tr>
+        <tr>
+            <td><code>url</code></td>
+            <td><code>string</code></td>
+            <td>(required)</td>
+            <td>Base URL, e.g. <code>"http://localhost:8047"</code></td>
+        </tr>
+        <tr>
+            <td><code>enabled</code></td>
+            <td><code>boolean</code></td>
+            <td><code>true</code></td>
+            <td>Set to <code>false</code> to skip this server on startup</td>
+        </tr>
+        <tr>
+            <td><code>headers</code></td>
+            <td><code>Record&lt;string, string&gt; | () =&gt; Record&lt;string, string&gt;</code></td>
+            <td><code>&#123;&#125;</code></td>
+            <td>Static or dynamic headers. Use a function for rotating tokens (e.g. JWTs).</td>
+        </tr>
+        <tr>
+            <td><code>timeout</code></td>
+            <td><code>number</code></td>
+            <td><code>30000</code></td>
+            <td>Request timeout in milliseconds</td>
+        </tr>
+    </tbody>
+</table>
+<div class="code-block">
+    <pre><code>servers: [
+    &#123; name: 'node', url: 'http://localhost:8047' &#125;,
+    &#123;
+        name: 'api',
+        url: 'https://api.example.com',
+        headers: () =&gt; (&#123; Authorization: 'Bearer ' + getToken() &#125;),
+        timeout: 10000,
+    &#125;,
+]</code></pre>
+</div>
+
+<!-- CliPanelConfig -->
+<h2>Panel Configuration</h2>
+<p>
+    When using the <code>&lt;cli-panel&gt;</code> component, pass panel-specific options via the
+    <code>options</code> prop. The <code>CliPanelOptions</code> type extends <code>CliOptions</code> with
+    <code>CliPanelConfig</code> properties:
+</p>
+<table>
+    <thead>
+        <tr>
+            <th>Option</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>isCollapsed</code></td>
+            <td><code>boolean</code></td>
+            <td><code>true</code></td>
+            <td>Whether the panel starts collapsed</td>
+        </tr>
+        <tr>
+            <td><code>isHidden</code></td>
+            <td><code>boolean</code></td>
+            <td><code>false</code></td>
+            <td>Whether the panel starts hidden (showing only the small tab)</td>
+        </tr>
+        <tr>
+            <td><code>position</code></td>
+            <td><code>'bottom' | 'top' | 'left' | 'right'</code></td>
+            <td><code>'bottom'</code></td>
+            <td>Panel position relative to the viewport</td>
+        </tr>
+        <tr>
+            <td><code>closable</code></td>
+            <td><code>boolean</code></td>
+            <td><code>true</code></td>
+            <td>Whether the close button is shown</td>
+        </tr>
+        <tr>
+            <td><code>resizable</code></td>
+            <td><code>boolean</code></td>
+            <td><code>true</code></td>
+            <td>Whether the panel can be resized by dragging</td>
+        </tr>
+        <tr>
+            <td><code>hideable</code></td>
+            <td><code>boolean</code></td>
+            <td><code>true</code></td>
+            <td>Whether the hide button is shown</td>
+        </tr>
+        <tr>
+            <td><code>hideAlignment</code></td>
+            <td><code>'start' | 'center' | 'end'</code></td>
+            <td><code>'center'</code></td>
+            <td>Alignment of the hidden-mode tab along the viewport edge</td>
+        </tr>
+        <tr>
+            <td><code>syncTheme</code></td>
+            <td><code>boolean</code></td>
+            <td><code>false</code></td>
+            <td>Auto-sync panel chrome colors with the active terminal theme</td>
+        </tr>
+    </tbody>
+</table>
+<div class="code-block">
+    <pre><code>const panelOptions: CliPanelOptions = &#123;
+    position: 'right',
+    isCollapsed: false,
+    isHidden: false,
+    closable: true,
+    resizable: true,
+    syncTheme: true,
+    hideAlignment: 'end',
+&#125;;</code></pre>
+</div>
 
 <!-- Angular Configuration -->
 <h2>{{ 'docs.configuration.framework-config' | translate }}</h2>
