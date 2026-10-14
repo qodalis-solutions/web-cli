@@ -841,6 +841,11 @@ describe('CliCommandExecutor', () => {
             expect(
                 writer.written.some((w) => w.includes('Value required')),
             ).toBeTrue();
+            // The message is the whole report: no raw process-exit error after it
+            expect(
+                writer.written.some((w) => /ProcessExitedError|Process exited with code/.test(w)),
+            ).toBeFalse();
+            expect(context.process.exitCode).toBe(-1);
         });
 
         it('should satisfy valueRequired when named args are provided', async () => {

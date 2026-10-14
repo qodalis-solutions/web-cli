@@ -375,6 +375,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         const blockedBy = await this.runGuards(commandToProcess, processor, context);
         if (blockedBy) {
             context.writer.writeError(blockedBy);
+            this.failProcess(processEntry, context);
             context.process.exit(-1, { silent: true });
             return;
         }
@@ -388,7 +389,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 `Value required: ${context.writer.wrapInColor(`${commandName} <value>`, CliForegroundColor.Cyan)}`,
             );
 
-            context.process.exit(-1);
+            this.failProcess(processEntry, context);
+            context.process.exit(-1, { silent: true });
 
             return;
         }
@@ -412,7 +414,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                         'An error occurred while validating the command.',
                 );
 
-                context.process.exit(-1);
+                this.failProcess(processEntry, context);
+                context.process.exit(-1, { silent: true });
 
                 return;
             }
