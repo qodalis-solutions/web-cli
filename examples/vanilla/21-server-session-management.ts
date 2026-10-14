@@ -38,7 +38,7 @@ import { usersModule } from '@qodalis/cli-users';
 // `server` must match the `name` of an entry in `options.servers`.
 // The module then:
 //   - skips the local seed user and the setup wizard (server owns the data)
-//   - stores the bearer token returned by POST /api/v1/qcli/auth/login
+//   - stores the bearer token returned by POST /api/v1/qcli/sessions (login)
 //   - restores the session on reload via GET /api/v1/qcli/sessions/current
 //   - registers `sessions` and `session-kick` for admins
 const serverUsersModule = usersModule.configure({
@@ -72,7 +72,7 @@ const greeterModule: ICliModule = {
 const options: CliOptions = {
     servers: [
         // Any Qodalis CLI server with the users plugin installed.
-        // Default admin credentials on the demo servers: root / root
+        // Demo server admin credentials: root / admin (node, python), root / root (.NET)
         { name: 'node', url: 'http://localhost:8047' },
     ],
 };
@@ -91,5 +91,5 @@ engine.start().then(() => {
     //   sessions              — list active sessions (admin)
     //   session-kick <id>     — force-logout a session; that client logs out itself
     //   last                  — server-side login/logout history
-    //   logout                — POST /api/v1/qcli/auth/logout and clears the token
+    //   logout                — DELETE /api/v1/qcli/sessions/current and clears the token
 });

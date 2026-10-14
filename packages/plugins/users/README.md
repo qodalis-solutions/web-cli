@@ -145,11 +145,11 @@ engine.registerModule(
 
 What changes in server mode:
 
-- `login` calls `POST /api/v1/qcli/auth/login`; the returned bearer token is stored
+- `login` calls `POST /api/v1/qcli/sessions`; the returned bearer token is stored
   locally and attached to every request to that server through
   `ICliServerAuthTokenProvider`, so proxied server commands run as the signed-in user.
 - The session is restored on reload from `GET /api/v1/qcli/sessions/current`.
-- No seed user or setup wizard — the server seeds its own admin (`root` / `root` on the demo servers).
+- No seed user or setup wizard — the server seeds its own admin (on the demo servers: `root` / `admin` for node and python, `root` / `root` for .NET).
 - `last` reads the server audit log (`GET /api/v1/qcli/audit`).
 - Two extra admin commands: `sessions` (list active sessions) and `session-kick <id>`.
 - If the server answers `401` (token expired or revoked) or broadcasts a

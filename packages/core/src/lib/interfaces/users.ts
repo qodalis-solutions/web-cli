@@ -81,8 +81,13 @@ export interface ICliAuthService {
     /** Ends the current session */
     logout(): Promise<void>;
 
-    /** Sets or updates a user's password */
-    setPassword(userId: string, password: string): Promise<void>;
+    /**
+     * Sets or updates a user's password.
+     * @param currentPassword The user's current password, when changing one's own
+     * password. Server-backed implementations forward it so the server can
+     * re-check it; local implementations may ignore it.
+     */
+    setPassword(userId: string, password: string, currentPassword?: string): Promise<void>;
 
     /** Verifies a password against stored credentials */
     verifyPassword(userId: string, password: string): Promise<boolean>;

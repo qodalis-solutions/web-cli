@@ -77,10 +77,11 @@ export class CliPasswdCommandProcessor implements ICliCommandProcessor {
 
         // If changing own password, verify current password first
         const isOwnPassword = targetUser.id === session.user.id;
+        let currentPassword: string | undefined;
         if (isOwnPassword) {
-            const currentPassword =
-                await context.reader.readPassword('Current password: ');
-            if (currentPassword === null) return;
+            currentPassword =
+                (await context.reader.readPassword('Current password: ')) ?? undefined;
+            if (currentPassword === undefined) return;
 
             const valid = await this.authService.verifyPassword(
                 targetUser.id,
@@ -120,7 +121,7 @@ export class CliPasswdCommandProcessor implements ICliCommandProcessor {
         }
 
         try {
-            await this.authService.setPassword(targetUser.id, newPassword);
+            await this.authService.setPassword(targetUser.id, newPassword, currentPassword);
             context.writer.writeSuccess('passwd: password updated successfully');
         } catch (e: any) {
             context.writer.writeError(e.message || 'passwd: failed to set password');

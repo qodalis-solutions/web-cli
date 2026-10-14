@@ -68,11 +68,26 @@ describe('withUnauthorizedHandler', () => {
         const onUnauthorized = jasmine.createSpy('onUnauthorized');
         const http = withUnauthorizedHandler(failingHttp(error), {
             onUnauthorized,
-            ignore: (url) => url.endsWith('/auth/login'),
+            ignore: (url, method) => method === 'POST' && url === 'http://s/api/v1/qcli/sessions',
         });
 
-        await expectAsync(http.post('http://s/api/v1/qcli/auth/login', {})).toBeRejectedWith(error);
+        await expectAsync(http.post('http://s/api/v1/qcli/sessions', {})).toBeRejectedWith(error);
         expect(onUnauthorized).not.toHaveBeenCalled();
+    });
+
+    it('passes the HTTP method to ignore() so same-URL requests can differ', async () => {
+        const error = new CliHttpError('expired', 401);
+        const onUnauthorized = jasmine.createSpy('onUnauthorized');
+        const ignore = jasmine.createSpy('ignore').and.callFake(
+            (url: string, method: string) => method === 'POST' && url === 'http://s/api/v1/qcli/sessions',
+        );
+        const http = withUnauthorizedHandler(failingHttp(error), { onUnauthorized, ignore });
+
+        // GET /sessions with an expired token is a real session expiry
+        await expectAsync(http.get('http://s/api/v1/qcli/sessions')).toBeRejected();
+
+        expect(ignore).toHaveBeenCalledWith('http://s/api/v1/qcli/sessions', 'GET');
+        expect(onUnauthorized).toHaveBeenCalledTimes(1);
     });
 
     it('passes successful responses through untouched', async () => {

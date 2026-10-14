@@ -43,7 +43,7 @@ export class CliSessionsCommandProcessor implements ICliCommandProcessor {
             }
 
             const rows = sessions.map((s) => ({
-                ID: (s.id || '').substring(0, 8),
+                ID: s.id || '-',
                 USER: s.user?.name || s.userId || '-',
                 'LOGIN TIME': new Date(s.loginTime).toLocaleString(),
                 'LAST ACTIVITY': new Date(s.lastActivity).toLocaleString(),

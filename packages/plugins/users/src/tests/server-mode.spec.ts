@@ -206,7 +206,7 @@ describe('usersModule server mode', () => {
 
     it('does not treat a failed login as an expired session', async () => {
         await initLoggedIn();
-        h.responses[`POST ${BASE_URL}/auth/login`] = new CliHttpError('Invalid credentials', 401);
+        h.responses[`POST ${BASE_URL}/sessions`] = new CliHttpError('Invalid credentials', 401);
         const auth = h.context.services.getRequired('cli-auth-service');
 
         await expectAsync(auth.login('bob', 'wrong')).toBeRejected();
@@ -235,5 +235,121 @@ describe('usersModule server mode', () => {
 
         expect(h.unsubscribe).toHaveBeenCalledTimes(1);
         expect(h.module._serverEventsUnsubscribe).toBeUndefined();
+    });
+});
+
+describe('usersModule server mode command guard', () => {
+    let h: Harness;
+
+    beforeEach(() => {
+        h = createHarness();
+    });
+
+    async function initLoggedIn(): Promise<void> {
+        await h.kv.set('cli-server-auth-token', 'tok-1');
+        h.responses[`GET ${BASE_URL}/sessions/current`] = { id: 's1', user: USER, loginTime: 1, lastActivity: 2 };
+        await h.module._initServerMode(h.context, { server: 'node' }, h.kv);
+    }
+
+    function commandCtx() {
+        const errors: string[] = [];
+        return { errors, ctx: { writer: { writeError: (m: string) => errors.push(m) } } as any };
+    }
+
+    it('wraps processors without mutating the shared module instances', async () => {
+        await initLoggedIn();
+        const wrapped = h.module.processors.find((p: any) => p.command === 'whoami');
+        const shared = usersModule.processors!.find((p) => p.command === 'whoami')!;
+
+        expect(wrapped).not.toBe(shared);
+        expect(Object.getPrototypeOf(wrapped)).toBe(shared);
+        expect(Object.prototype.hasOwnProperty.call(shared, 'processCommand')).toBeFalse();
+    });
+
+    it('runs the original command with the wrapper as `this`', async () => {
+        await initLoggedIn();
+        const original = usersModule.processors!.find((p) => p.command === 'whoami')!;
+        let seenThis: unknown;
+        const spy = spyOn(original, 'processCommand').and.callFake(async function (this: unknown) {
+            seenThis = this;
+        });
+        const wrapped = h.module.processors.find((p: any) => p.command === 'whoami');
+
+        await wrapped.processCommand({ command: 'whoami' } as any, commandCtx().ctx);
+
+        expect(spy).toHaveBeenCalled();
+        expect(seenThis).toBe(wrapped);
+    });
+
+    it('reports a server error as one clean line', async () => {
+        await initLoggedIn();
+        const original = usersModule.processors!.find((p) => p.command === 'listusers')!;
+        spyOn(original, 'processCommand').and.rejectWith(new CliHttpError('boom', 500));
+        const wrapped = h.module.processors.find((p: any) => p.command === 'listusers');
+        const { errors, ctx } = commandCtx();
+
+        await expectAsync(wrapped.processCommand({ command: 'listusers' } as any, ctx)).toBeResolved();
+
+        expect(errors).toEqual(['listusers: boom']);
+    });
+
+    it('ends the session on a 401 that bypassed the HTTP interceptor', async () => {
+        await initLoggedIn();
+        const original = usersModule.processors!.find((p) => p.command === 'listusers')!;
+        spyOn(original, 'processCommand').and.rejectWith(new CliHttpError('expired', 401));
+        const wrapped = h.module.processors.find((p: any) => p.command === 'listusers');
+        const { errors, ctx } = commandCtx();
+
+        await wrapped.processCommand({ command: 'listusers' } as any, ctx);
+
+        expect(errors).toEqual([]);
+        expect(h.context.userSession).toBeUndefined();
+        expect(h.warnings.length).toBe(1);
+        expect(h.warnings[0]).toContain('expired or revoked');
+    });
+
+    it('does not repeat the error when the session was just ended mid-command', async () => {
+        await initLoggedIn();
+        h.responses[`GET ${BASE_URL}/users`] = new CliHttpError('expired', 401);
+        const usersStore = h.context.services.getRequired('cli-users-store-service');
+        const original = usersModule.processors!.find((p) => p.command === 'listusers')!;
+        spyOn(original, 'processCommand').and.callFake(async () => {
+            await firstValueFrom(usersStore.getUsers()); // interceptor ends the session, then rethrows
+        });
+        const wrapped = h.module.processors.find((p: any) => p.command === 'listusers');
+        const { errors, ctx } = commandCtx();
+
+        await wrapped.processCommand({ command: 'listusers' } as any, ctx);
+
+        expect(errors).toEqual([]);
+        expect(h.warnings.length).toBe(1);
+    });
+
+    it('says "not logged in" for a 401 when already signed out', async () => {
+        await h.module._initServerMode(h.context, { server: 'node' }, h.kv); // no stored token
+        const original = usersModule.processors!.find((p) => p.command === 'listusers')!;
+        spyOn(original, 'processCommand').and.rejectWith(new CliHttpError('Unauthorized', 401));
+        const wrapped = h.module.processors.find((p: any) => p.command === 'listusers');
+        const { errors, ctx } = commandCtx();
+
+        await wrapped.processCommand({ command: 'listusers' } as any, ctx);
+
+        expect(errors).toEqual(['listusers: not logged in']);
+    });
+
+    it('redraws the prompt when a kick arrives while idle', async () => {
+        await initLoggedIn();
+        const showPrompt = jasmine.createSpy('showPrompt');
+        h.context.showPrompt = showPrompt;
+
+        h.emitServerEvent({
+            source: 'server-events:node',
+            type: 'session-kicked',
+            data: { type: 'session-kicked', data: { sessionId: 's1', userId: 'u1' } },
+        });
+        await flush();
+
+        expect(h.warnings[0]).toContain('administrator');
+        expect(showPrompt).toHaveBeenCalledTimes(1);
     });
 });

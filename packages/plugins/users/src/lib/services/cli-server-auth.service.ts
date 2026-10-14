@@ -13,7 +13,7 @@ import {
 const SERVER_TOKEN_KEY = 'cli-server-auth-token';
 
 /**
- * Shape of the `POST /auth/login` response.
+ * Shape of the `POST /sessions` (login) response.
  */
 interface CliServerLoginResponse {
     token: string;
@@ -62,7 +62,7 @@ export class CliServerAuthService implements ICliAuthService {
         let result: CliServerLoginResponse;
         try {
             result = await this.http.post<CliServerLoginResponse>(
-                `${this.baseUrl}/auth/login`,
+                `${this.baseUrl}/sessions`,
                 { username, password },
                 { headers: { 'Content-Type': 'application/json' } },
             );
@@ -94,7 +94,7 @@ export class CliServerAuthService implements ICliAuthService {
     async logout(): Promise<void> {
         const current = await this.currentUser();
         try {
-            await this.http.post(`${this.baseUrl}/auth/logout`, undefined, {
+            await this.http.delete(`${this.baseUrl}/sessions/current`, {
                 headers: this.getHeaders(),
             });
         } catch {
@@ -112,8 +112,8 @@ export class CliServerAuthService implements ICliAuthService {
     async verifyPassword(userId: string, password: string): Promise<boolean> {
         try {
             const result = await this.http.post<{ valid: boolean }>(
-                `${this.baseUrl}/auth/verify`,
-                { userId, password },
+                `${this.baseUrl}/users/${encodeURIComponent(userId)}/verify-password`,
+                { password },
                 { headers: { ...this.getHeaders(), 'Content-Type': 'application/json' } },
             );
             return result.valid;
@@ -122,10 +122,12 @@ export class CliServerAuthService implements ICliAuthService {
         }
     }
 
-    async setPassword(userId: string, password: string): Promise<void> {
+    async setPassword(userId: string, password: string, currentPassword?: string): Promise<void> {
         await this.http.put(
             `${this.baseUrl}/users/${encodeURIComponent(userId)}/password`,
-            { newPassword: password },
+            currentPassword !== undefined
+                ? { newPassword: password, currentPassword }
+                : { newPassword: password },
             { headers: { ...this.getHeaders(), 'Content-Type': 'application/json' } },
         );
         const current = await this.currentUser();

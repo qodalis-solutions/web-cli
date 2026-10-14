@@ -16,6 +16,7 @@ import {
     ICliUser,
     ICliUserSessionService,
     ICliUserEventService,
+    ICliCommandProcessor,
     ICliAuditService,
     ICliExecutionContext,
     ICliServerAuthTokenProvider,
@@ -60,7 +61,7 @@ import { CliServerUserSessionService } from './lib/services/cli-server-user-sess
 import { CliServerGroupsStoreService } from './lib/services/cli-server-groups-store.service';
 import { CliServerAuthService } from './lib/services/cli-server-auth.service';
 import { CliServerAuditService } from './lib/services/cli-server-audit.service';
-import { withUnauthorizedHandler } from './lib/utils/server-http';
+import { withUnauthorizedHandler, isUnauthorizedError } from './lib/utils/server-http';
 import { CliSessionsCommandProcessor } from './lib/processors/cli-sessions-command-processor';
 import { CliSessionKickCommandProcessor } from './lib/processors/cli-session-kick-command-processor';
 import {
@@ -587,13 +588,20 @@ export const usersModule: ICliUsersModule = {
         // Drops the local session when the server reports the token as
         // expired/revoked (401) or when an admin kicks this session.
         // Bound after the session service exists; see below.
-        let terminateSession: (reason: string) => Promise<void> = async () => {};
+        let terminateSession: (
+            reason: string,
+            options?: { outsideCommand?: boolean },
+        ) => Promise<void> = async () => {};
+        // Set when the session was just ended mid-command, so the command's own
+        // 401 is not reported a second time.
+        let sessionJustTerminated = false;
 
-        // Any 401 from the server (except credential checks) means the
-        // stored token is no longer valid.
+        // Any 401 from the server means the stored token is no longer valid —
+        // except on login (POST /sessions), where 401 means bad credentials.
+        const loginUrl = `${baseUrl}/sessions`;
         const http = withUnauthorizedHandler(context.http, {
             onUnauthorized: () => terminateSession('Session expired or revoked by the server'),
-            ignore: (url) => url.endsWith('/auth/login') || url.endsWith('/auth/verify'),
+            ignore: (url, method) => method === 'POST' && url === loginUrl,
         });
 
         // Create server-backed session service
@@ -636,10 +644,11 @@ export const usersModule: ICliUsersModule = {
             new CliSessionKickCommandProcessor(baseUrl, getHeaders),
         ];
 
-        terminateSession = async (reason: string) => {
+        terminateSession = async (reason, options = {}) => {
             if (!currentToken) {
                 return; // nothing to drop
             }
+            sessionJustTerminated = true;
             const session = await firstValueFrom(sessionService.getUserSession());
             await authService.forgetToken();
             await sessionService.clearSession();
@@ -651,8 +660,46 @@ export const usersModule: ICliUsersModule = {
                     details: reason,
                 });
             }
-            context.writer?.writeWarning?.(`${reason}. Please log in again.`);
+            if (options.outsideCommand) {
+                // Pushed while the user sits at the prompt: start on a fresh
+                // line and redraw the (now signed-out) prompt afterwards.
+                context.writer?.writeln?.();
+                context.writer?.writeWarning?.(`${reason}. Please log in again.`);
+                context.showPrompt?.();
+            } else {
+                context.writer?.writeWarning?.(`${reason}. Please log in again.`);
+            }
         };
+
+        // Server errors in users commands are reported as one clean line
+        // instead of surfacing as an uncaught exception from the executor.
+        // A 401 ends the session (once) rather than printing a raw error.
+        // Wrapped as new objects that delegate to the originals, so the shared
+        // processor instances in the module's static list are never mutated.
+        this.processors = (this.processors ?? []).map((processor) => {
+            const guarded: ICliCommandProcessor = Object.create(processor);
+            guarded.processCommand = async (command, ctx) => {
+                sessionJustTerminated = false;
+                try {
+                    // `this` must be the wrapper: initialize() ran on it, so
+                    // processor state (injected services) lives there.
+                    await processor.processCommand.call(guarded, command, ctx);
+                } catch (error: any) {
+                    if (isUnauthorizedError(error)) {
+                        if (currentToken) {
+                            await terminateSession('Session expired or revoked by the server');
+                        } else if (!sessionJustTerminated) {
+                            ctx.writer.writeError(`${processor.command}: not logged in`);
+                        }
+                        return;
+                    }
+                    ctx.writer.writeError(
+                        `${processor.command}: ${error?.message ?? 'request to the server failed'}`,
+                    );
+                }
+            };
+            return guarded;
+        });
 
         // Auto-logout when an admin kicks this session (server broadcasts
         // `session-kicked` over the events WebSocket, relayed by the
@@ -662,7 +709,7 @@ export const usersModule: ICliUsersModule = {
                 const payload = (event.data as { data?: { sessionId?: string } } | undefined)?.data;
                 const kickedId = payload?.sessionId;
                 if (kickedId && kickedId === sessionService.getSessionId()) {
-                    void terminateSession('Session terminated by an administrator');
+                    void terminateSession('Session terminated by an administrator', { outsideCommand: true });
                 }
             },
             { source: `server-events:${serverName}`, type: 'session-kicked' },

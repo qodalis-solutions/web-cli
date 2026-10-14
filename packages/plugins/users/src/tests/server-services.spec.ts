@@ -370,7 +370,7 @@ describe('CliServerAuthService', () => {
             },
         };
         const http = createMockHttp({
-            [`POST ${BASE_URL}/auth/login`]: loginResponse,
+            [`POST ${BASE_URL}/sessions`]: loginResponse,
         });
         const service = createAuthService(http);
 
@@ -384,7 +384,7 @@ describe('CliServerAuthService', () => {
 
     it('should logout and clear token', async () => {
         const http = createMockHttp({
-            [`POST ${BASE_URL}/auth/logout`]: {},
+            [`DELETE ${BASE_URL}/sessions/current`]: {},
         });
         const service = createAuthService(http);
 
@@ -400,14 +400,32 @@ describe('CliServerAuthService', () => {
         expect(tokenChanges[tokenChanges.length - 1]).toBeUndefined();
     });
 
-    it('should verify password via POST /auth/verify', async () => {
+    it('should verify password via POST /users/:id/verify-password', async () => {
         const http = createMockHttp({
-            [`POST ${BASE_URL}/auth/verify`]: { valid: true },
+            [`POST ${BASE_URL}/users/u1/verify-password`]: { valid: true },
         });
         const service = createAuthService(http);
 
         const result = await service.verifyPassword('u1', 'correct');
         expect(result).toBeTrue();
+        expect((http.post as jasmine.Spy).calls.mostRecent().args[1]).toEqual({ password: 'correct' });
+    });
+
+    it('should logout via DELETE /sessions/current', async () => {
+        const http = createMockHttp({
+            [`DELETE ${BASE_URL}/sessions/current`]: undefined,
+        });
+        const service = createAuthService(http);
+        await kvStore.set('cli-server-auth-token', 'jwt-123');
+        await service.initialize();
+
+        await service.logout();
+
+        expect(http.delete).toHaveBeenCalledWith(
+            `${BASE_URL}/sessions/current`,
+            { headers: { Authorization: 'Bearer jwt-123' } },
+        );
+        expect(http.post).not.toHaveBeenCalled();
     });
 
     it('should return false when verify fails', async () => {
@@ -426,7 +444,21 @@ describe('CliServerAuthService', () => {
         const service = createAuthService(http);
 
         await expectAsync(service.setPassword('u1', 'newpass')).toBeResolved();
-        expect(http.put).toHaveBeenCalled();
+        expect((http.put as jasmine.Spy).calls.mostRecent().args[1]).toEqual({ newPassword: 'newpass' });
+    });
+
+    it('should forward currentPassword when changing own password', async () => {
+        const http = createMockHttp({
+            [`PUT ${BASE_URL}/users/u1/password`]: {},
+        });
+        const service = createAuthService(http);
+
+        await service.setPassword('u1', 'newpass', 'oldpass');
+
+        expect((http.put as jasmine.Spy).calls.mostRecent().args[1]).toEqual({
+            newPassword: 'newpass',
+            currentPassword: 'oldpass',
+        });
     });
 
     it('should initialize and restore token from kvStore', async () => {
@@ -568,7 +600,7 @@ describe('CliSessionsCommandProcessor', () => {
         expect(written.tables[0].length).toBe(2);
         expect(written.tables[0][0]['USER']).toBe('alice');
         expect(written.tables[0][1]['USER']).toBe('bob-id');
-        expect(written.tables[0][0]['ID']).toBe('abcdefgh');
+        expect(written.tables[0][0]['ID']).toBe('abcdefgh-1234'); // full id, so it can be passed to session-kick
     });
 
     it('should display info message when no sessions', async () => {
@@ -744,7 +776,7 @@ describe('CliServerAuthService (session id + events)', () => {
 
     it('stores the server session id and emits a login event', async () => {
         const http = createMockHttp({
-            [`POST ${BASE_URL}/auth/login`]: {
+            [`POST ${BASE_URL}/sessions`]: {
                 token: 't1',
                 session: { id: 'sess-1', user, loginTime: 1000 },
             },
@@ -775,8 +807,8 @@ describe('CliServerAuthService (session id + events)', () => {
 
     it('emits a logout event for the user that was signed in', async () => {
         const http = createMockHttp({
-            [`POST ${BASE_URL}/auth/login`]: { token: 't1', session: { id: 's', user, loginTime: 1 } },
-            [`POST ${BASE_URL}/auth/logout`]: undefined,
+            [`POST ${BASE_URL}/sessions`]: { token: 't1', session: { id: 's', user, loginTime: 1 } },
+            [`DELETE ${BASE_URL}/sessions/current`]: undefined,
         });
         const auth = createAuth(http);
         await auth.login('alice', 'pw');
@@ -792,7 +824,7 @@ describe('CliServerAuthService (session id + events)', () => {
 
     it('emits password_changed only when changing the current user password', async () => {
         const http = createMockHttp({
-            [`POST ${BASE_URL}/auth/login`]: { token: 't1', session: { id: 's', user, loginTime: 1 } },
+            [`POST ${BASE_URL}/sessions`]: { token: 't1', session: { id: 's', user, loginTime: 1 } },
             [`PUT ${BASE_URL}/users/u1/password`]: undefined,
             [`PUT ${BASE_URL}/users/other/password`]: undefined,
         });

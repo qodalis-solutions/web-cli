@@ -10,11 +10,11 @@ export interface CliUnauthorizedHandlerOptions {
      */
     onUnauthorized: (error: CliHttpError) => void | Promise<void>;
     /**
-     * Returns `true` when a request to this URL should NOT trigger the
-     * handler (for example the login endpoint, where 401 just means
-     * "wrong credentials" rather than "session expired").
+     * Returns `true` when this request should NOT trigger the handler
+     * (for example the login request, where 401 just means "wrong
+     * credentials" rather than "session expired").
      */
-    ignore?: (url: string) => boolean;
+    ignore?: (url: string, method: string) => boolean;
 }
 
 /**
@@ -41,11 +41,11 @@ export function withUnauthorizedHandler(
     http: ICliHttpClient,
     options: CliUnauthorizedHandlerOptions,
 ): ICliHttpClient {
-    const guard = async <T>(url: string, run: () => Promise<T>): Promise<T> => {
+    const guard = async <T>(method: string, url: string, run: () => Promise<T>): Promise<T> => {
         try {
             return await run();
         } catch (error) {
-            if (isUnauthorizedError(error) && !options.ignore?.(url)) {
+            if (isUnauthorizedError(error) && !options.ignore?.(url, method)) {
                 await options.onUnauthorized(error as CliHttpError);
             }
             throw error;
@@ -55,11 +55,11 @@ export function withUnauthorizedHandler(
     return {
         fetch: (url, init) => http.fetch(url, init),
         head: (url, opts) => http.head(url, opts),
-        get: (url, opts) => guard(url, () => http.get(url, opts)),
-        post: (url, body, opts) => guard(url, () => http.post(url, body, opts)),
-        put: (url, body, opts) => guard(url, () => http.put(url, body, opts)),
-        patch: (url, body, opts) => guard(url, () => http.patch(url, body, opts)),
-        delete: (url, opts) => guard(url, () => http.delete(url, opts)),
-        options: (url, opts) => guard(url, () => http.options(url, opts)),
+        get: (url, opts) => guard('GET', url, () => http.get(url, opts)),
+        post: (url, body, opts) => guard('POST', url, () => http.post(url, body, opts)),
+        put: (url, body, opts) => guard('PUT', url, () => http.put(url, body, opts)),
+        patch: (url, body, opts) => guard('PATCH', url, () => http.patch(url, body, opts)),
+        delete: (url, opts) => guard('DELETE', url, () => http.delete(url, opts)),
+        options: (url, opts) => guard('OPTIONS', url, () => http.options(url, opts)),
     };
 }
