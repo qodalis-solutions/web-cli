@@ -26,6 +26,8 @@ export interface ICliUsersBackend {
     listSessions(token: string): Promise<ICliSessionInfo[]>;
     /** DELETE /sessions/{id} */
     revokeSession(token: string, sessionId: string, reason?: string): Promise<void>;
+    /** POST /sessions/ws-ticket: single-use ticket for WebSocket upgrades (server backends) */
+    createWebSocketTicket?(token: string): Promise<{ ticket: string; expiresIn: number }>;
 
     // ── users ────────────────────────────────────────────────────────
     listUsers(token: string, options?: { query?: string; skip?: number; take?: number }): Promise<ICliUser[]>;

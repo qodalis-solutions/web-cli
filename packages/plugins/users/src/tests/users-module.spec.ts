@@ -219,6 +219,7 @@ describe('usersModule lifecycle', () => {
             const respond = async (method: string, url: string, _b?: any, o?: any) => {
                 calls.push(`${method} ${url.replace('http://srv/api/v1/qcli', '')} ${o?.headers?.Authorization ?? ''}`.trim());
                 if (method === 'POST' && url.endsWith('/sessions')) return { token: 'TOKEN', session };
+                if (method === 'POST' && url.endsWith('/sessions/ws-ticket')) return { ticket: 'T1', expiresIn: 30 };
                 if (!state.valid) throw new CliHttpError('unauthorized', 401, 'Unauthorized', { error: 'not authenticated' });
                 if (url.endsWith('/sessions/current') && method === 'GET') return session;
                 if (url.endsWith('/users')) return [user];
@@ -252,6 +253,23 @@ describe('usersModule lifecycle', () => {
             const f2 = fakeContext(kv, { http: srv.http });
             track(await boot({ server: 'node' }, f2));
             expect(f2.ctx.userSession.user.name).toBe('root');
+        });
+
+        it('websockets use a single-use ticket and the server reconnects on sign-in', async () => {
+            const srv = server();
+            const f = fakeContext(new MemoryKv(), { http: srv.http });
+            const reconnects: string[] = [];
+            f.ctx.services.set({ provide: 'cli-server-manager', useValue: { reconnect: async (n: string) => (reconnects.push(n), { success: true, commandCount: 1 }) } });
+            const m = track(await boot({ server: 'node' }, f));
+            const provider = (f.ctx.services.getAll(ICliServerAuthTokenProvider_TOKEN) as ICliServerAuthTokenProvider[])[0];
+            expect(await provider.getWebSocketParams!('node')).toEqual({}); // signed out: no ticket
+            await m._runtime.auth.login('root', 'admin');
+            expect(await provider.getWebSocketParams!('node')).toEqual({ ticket: 'T1' });
+            expect(await provider.getWebSocketParams!('python')).toBeUndefined();
+            expect(srv.calls).toContain('POST /sessions/ws-ticket Bearer TOKEN');
+            expect(reconnects).toEqual(['node']);
+            await m._runtime.auth.logout();
+            expect(reconnects).toEqual(['node', 'node']);
         });
 
         it('signs out once when the server rejects the token', async () => {

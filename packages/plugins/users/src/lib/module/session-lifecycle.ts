@@ -1,4 +1,6 @@
 import {
+    ICliServerManager,
+    ICliServerManager_TOKEN,
     CliProcessCommand,
     ICliCommandProcessor,
     ICliExecutionContext,
@@ -143,4 +145,23 @@ function stripPrefix(message: string | undefined, command: string): string | und
     if (!message) return message;
     const prefix = `${command}: `;
     return message.startsWith(prefix) ? message.slice(prefix.length) : message;
+}
+
+/**
+ * Server mode: when the user signs in or out, reconnect the server so its
+ * commands and event socket follow the session (a protected server only
+ * exposes its commands to authenticated users).
+ */
+export function reconnectServerOnSessionChange(context: ICliExecutionContext, runtime: CliUsersRuntime): void {
+    if (!runtime.serverName) return;
+    let lastToken = runtime.session.getToken();
+    runtime.subscriptions.push(
+        runtime.session.getUserSession().subscribe(() => {
+            const token = runtime.session.getToken();
+            if (token === lastToken) return;
+            lastToken = token;
+            const manager = context.services.get<ICliServerManager>(ICliServerManager_TOKEN);
+            manager?.reconnect(runtime.serverName!).catch(() => undefined);
+        }),
+    );
 }

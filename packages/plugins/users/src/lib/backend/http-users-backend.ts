@@ -53,6 +53,10 @@ export class CliHttpUsersBackend implements ICliUsersBackend {
         await this.call('DELETE', `/sessions/${enc(sessionId)}`, token);
     }
 
+    createWebSocketTicket(token: string): Promise<{ ticket: string; expiresIn: number }> {
+        return this.call('POST', '/sessions/ws-ticket', token, {});
+    }
+
     // ── users ────────────────────────────────────────────────────────
 
     listUsers(token: string, options: { query?: string; skip?: number; take?: number } = {}): Promise<ICliUser[]> {

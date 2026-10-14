@@ -103,6 +103,19 @@ export async function createUsersRuntime(
         const tokenProvider: ICliServerAuthTokenProvider = {
             getHeaders: (name: string): Record<string, string> =>
                 name === serverName && currentToken ? { Authorization: `Bearer ${currentToken}` } : {},
+            // WebSockets authenticate with a single-use ticket, never the bearer token in the URL
+            getWebSocketParams: async (name: string): Promise<Record<string, string> | undefined> => {
+                if (name !== serverName) return undefined;
+                const rt = runtimeRef.current;
+                const token = rt?.session.getToken();
+                if (!token || !rt?.backend.createWebSocketTicket) return {};
+                try {
+                    const { ticket } = await rt.backend.createWebSocketTicket(token);
+                    return { ticket };
+                } catch {
+                    return {}; // e.g. older server without tickets: connect unauthenticated
+                }
+            },
         };
         context.services.set({ provide: ICliServerAuthTokenProvider_TOKEN, useValue: tokenProvider, multi: true });
 

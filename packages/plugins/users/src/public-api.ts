@@ -54,6 +54,7 @@ import {
     bindSessionToContext,
     bindTermination,
     listenForKicks,
+    reconnectServerOnSessionChange,
     startExpiryWatch,
     wrapProcessors,
 } from './lib/module/session-lifecycle';
@@ -204,6 +205,7 @@ export const usersModule: ICliUsersModule = {
         await restoreOrAutoLogin(context, runtime);
         startExpiryWatch(runtime);
         listenForKicks(context, runtime);
+        reconnectServerOnSessionChange(context, runtime);
     },
 
     async onSetup(context) {
