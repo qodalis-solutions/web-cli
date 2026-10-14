@@ -61,8 +61,17 @@ export interface ICliGroupsStoreService {
     /** Gets a group by id or name */
     getGroup(id: string): Observable<ICliGroup | undefined>;
 
-    /** Creates a new group */
-    createGroup(name: string, description?: string): Promise<ICliGroup>;
+    /** Creates a new group (role), optionally with permissions */
+    createGroup(name: string, description?: string, permissions?: string[]): Promise<ICliGroup>;
+
+    /** Updates a group's description and/or permissions (by id or name) */
+    updateGroup(id: string, updates: { description?: string; permissions?: string[] }): Promise<ICliGroup>;
+
+    /** Adds a user (id or name) to a group (id or name) */
+    addMember(groupId: string, userId: string): Promise<void>;
+
+    /** Removes a user (id or name) from a group (id or name) */
+    removeMember(groupId: string, userId: string): Promise<void>;
 
     /** Deletes a group by id */
     deleteGroup(id: string): Promise<void>;
@@ -75,11 +84,21 @@ export interface ICliGroupsStoreService {
  * Represents a service that handles authentication in the CLI
  */
 export interface ICliAuthService {
-    /** Authenticates a user and returns a session */
-    login(username: string, password: string): Promise<ICliUserSession>;
+    /**
+     * Authenticates a user and returns a session. `password` may be omitted
+     * only when the implementation allows passwordless sign-in.
+     */
+    login(username: string, password?: string): Promise<ICliUserSession>;
 
-    /** Ends the current session */
+    /** Ends the current session (the CLI is left signed out) */
     logout(): Promise<void>;
+
+    /**
+     * Switch to another user (`su`). Requires the target's password unless
+     * the caller may skip it (implementation-defined, e.g. `users:update`).
+     * Goes through the same lockout, events and audit as `login`.
+     */
+    switchUser?(username: string, password?: string): Promise<ICliUserSession>;
 
     /**
      * Sets or updates a user's password.

@@ -26,6 +26,8 @@ export * from './progress-bars';
 
 export * from './command-hooks';
 export * from './command-guards';
+export * from './authorization';
+export * from './sessions';
 
 export * from './users';
 

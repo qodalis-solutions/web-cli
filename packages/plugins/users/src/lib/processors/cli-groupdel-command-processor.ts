@@ -1,90 +1,18 @@
-import {
-    ICliCommandProcessor,
-    ICliExecutionContext,
-    CliProcessCommand,
-    CliProcessorMetadata,
-    CliIcon,
-    CliForegroundColor,
-    ICliCommandParameterDescriptor,
-    ICliGroupsStoreService,
-    ICliGroupsStoreService_TOKEN,
-    DefaultLibraryAuthor,
-    CliStateConfiguration,
-} from '@qodalis/cli-core';
-import { requireAdmin } from '../utils/permissions';
+import { CliProcessCommand, ICliExecutionContext } from '@qodalis/cli-core';
+import { CliUsersCommand, usersServices, words, USERS_METADATA } from './base';
+import { CliProcessorMetadata } from '@qodalis/cli-core';
 
-export class CliGroupdelCommandProcessor implements ICliCommandProcessor {
-    command = 'groupdel';
-    aliases = ['delgroup'];
-    description = 'Delete a group';
-    author = DefaultLibraryAuthor;
-    acceptsRawInput = true;
-    valueRequired = true;
-    metadata: CliProcessorMetadata = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-        requiredGroups: ['admin'],
-    };
-    stateConfiguration: CliStateConfiguration = {
-        initialState: {},
-        storeName: 'users',
-    };
-    parameters: ICliCommandParameterDescriptor[] = [
-        {
-            name: 'force',
-            aliases: ['f'],
-            description: 'Skip confirmation prompt',
-            type: 'boolean',
-            required: false,
-        },
-    ];
+export class CliGroupdelCommandProcessor extends CliUsersCommand {
+    override command = 'groupdel';
+    override description = 'Delete a group (members are removed from it)';
+    override acceptsRawInput = true;
+    override valueRequired = true;
+    override metadata: CliProcessorMetadata = { ...USERS_METADATA, requiredPermissions: ['groups:delete'] };
+    protected override usage: Array<[string, string]> = [['groupdel <name>', 'Delete a group; built-in groups cannot be deleted']];
 
-    private groupsStore!: ICliGroupsStoreService;
-
-    async initialize(context: ICliExecutionContext): Promise<void> {
-        this.groupsStore = context.services.getRequired<ICliGroupsStoreService>(
-            ICliGroupsStoreService_TOKEN,
-        );
-    }
-
-    async processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        if (!requireAdmin(context)) return;
-
-        const name = command.value as string;
-
-        if (!command.args['force'] && !command.args['f']) {
-            const confirmed = await context.reader.readConfirm(
-                `Delete group '${name}'?`,
-            );
-            if (!confirmed) {
-                context.writer.writeln('Cancelled.');
-                return;
-            }
-        }
-
-        try {
-            await this.groupsStore.deleteGroup(name);
-            context.writer.writeSuccess(`groupdel: group '${name}' deleted`);
-        } catch (e: any) {
-            context.writer.writeError(
-                e.message || 'groupdel: failed to delete group',
-            );
-        }
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Delete a group');
-        writer.writeln();
-        writer.writeln(
-            `  ${writer.wrapInColor('groupdel <name>', CliForegroundColor.Cyan)}`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('groupdel <name> --force', CliForegroundColor.Cyan)}    Skip confirmation`,
-        );
+    override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const [name] = words(command);
+        await usersServices(context).groups.deleteGroup(name);
+        context.writer.writeSuccess(`Group '${name}' deleted`);
     }
 }

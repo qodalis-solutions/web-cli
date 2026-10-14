@@ -66,6 +66,8 @@ export class CliServicesCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         icon: '\u2699',
         module: 'system',
+        // Enforced only when an auth module is loaded
+        requiredPermissions: ['system:services'],
     };
 
     constructor() {

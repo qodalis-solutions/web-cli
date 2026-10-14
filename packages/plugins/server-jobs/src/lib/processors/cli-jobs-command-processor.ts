@@ -9,7 +9,7 @@ import {
     CliForegroundColor,
     ICliCommandChildProcessor,
     ICliCommandParameterDescriptor,
-    buildAuthenticatedWebSocketUrl,
+    resolveServerWebSocketUrl,
     resolveServerHeaders,
 } from '@qodalis/cli-core';
 import { CliJobsService } from '../services/cli-jobs-service';
@@ -963,11 +963,11 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             const baseUrl = config.url.endsWith('/')
                 ? config.url.slice(0, -1)
                 : config.url;
-            const wsUrl = buildAuthenticatedWebSocketUrl(
-                baseUrl
-                    .replace(/^https:/, 'wss:')
-                    .replace(/^http:/, 'ws:') + '/ws/v1/qcli/events',
-                () => resolveServerHeaders(context.services, serverName, config.headers),
+            const wsUrl = await resolveServerWebSocketUrl(
+                context.services,
+                serverName,
+                baseUrl.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:') + '/ws/v1/qcli/events',
+                config.headers,
             );
 
             try {

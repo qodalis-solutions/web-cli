@@ -1,126 +1,47 @@
-import {
-    ICliCommandProcessor,
-    ICliExecutionContext,
-    CliProcessCommand,
-    CliProcessorMetadata,
-    CliIcon,
-    CliForegroundColor,
-    ICliAuthService,
-    ICliAuthService_TOKEN,
-    ICliUsersStoreService,
-    ICliUsersStoreService_TOKEN,
-    ICliUserSessionService,
-    ICliUserSessionService_TOKEN,
-    DefaultLibraryAuthor,
-    CliStateConfiguration,
-} from '@qodalis/cli-core';
-import { firstValueFrom } from 'rxjs';
-import {
-    CliUsersModuleConfig,
-    CliUsersModuleConfig_TOKEN,
-} from '../models/users-module-config';
+import { CliProcessCommand, ICliExecutionContext } from '@qodalis/cli-core';
+import { CliUsersCommand, usersServices, words } from './base';
+import { promptRequiredPasswordChange } from '../module/password-change';
 
-export class CliLoginCommandProcessor implements ICliCommandProcessor {
-    command = 'login';
-    description = 'Log in as a user';
-    author = DefaultLibraryAuthor;
-    acceptsRawInput = true;
-    valueRequired = false;
-    metadata: CliProcessorMetadata = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-    };
-    stateConfiguration: CliStateConfiguration = {
-        initialState: {},
-        storeName: 'users',
-    };
+export class CliLoginCommandProcessor extends CliUsersCommand {
+    override command = 'login';
+    override description = 'Sign in';
+    override acceptsRawInput = true;
+    protected override usage: Array<[string, string]> = [
+        ['login', 'Prompt for username and password'],
+        ['login <user>', 'Sign in as <user> (by name or email)'],
+    ];
 
-    private authService!: ICliAuthService;
-    private usersStore!: ICliUsersStoreService;
-    private sessionService!: ICliUserSessionService;
-    private moduleConfig!: CliUsersModuleConfig;
-
-    async initialize(context: ICliExecutionContext): Promise<void> {
-        this.authService = context.services.getRequired<ICliAuthService>(
-            ICliAuthService_TOKEN,
-        );
-        this.usersStore = context.services.getRequired<ICliUsersStoreService>(
-            ICliUsersStoreService_TOKEN,
-        );
-        this.sessionService = context.services.getRequired<ICliUserSessionService>(
-            ICliUserSessionService_TOKEN,
-        );
-        this.moduleConfig =
-            context.services.getRequired<CliUsersModuleConfig>(
-                CliUsersModuleConfig_TOKEN,
-            ) || {};
-    }
-
-    async processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        let username = command.value as string;
-
-        if (!username) {
-            const input = await context.reader.readLine('Username: ');
-            if (input === null) return;
-            username = input;
-        }
-
-        if (!username) {
-            context.writer.writeError('login: username required');
+    override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const { auth } = usersServices(context);
+        if (auth.hostManaged) {
+            // The host application owns sign-in: pick up its current session
+            const session = await auth.login('');
+            context.writer.writeSuccess(`Logged in as ${session.user.name}`);
             return;
         }
-
-        if (this.moduleConfig.requirePassword) {
-            const password = await context.reader.readPassword('Password: ');
-            if (password === null) return;
-
-            try {
-                const session = await this.authService.login(
-                    username,
-                    password,
-                );
-                context.writer.writeSuccess(
-                    `Logged in as ${session.user.name}`,
-                );
-            } catch (e: any) {
-                context.writer.writeError(
-                    e.message || 'login: Authentication failure',
-                );
-            }
-        } else {
-            const user = await firstValueFrom(
-                this.usersStore.getUser(username),
-            );
-            if (!user) {
-                context.writer.writeError(`login: Unknown user: ${username}`);
+        let [username] = words(command);
+        if (!username) {
+            const entered = await context.reader.readLine('Username: ');
+            if (!entered?.trim()) {
+                context.writer.writeError('login: username required');
+                context.process.exit(-1, { silent: true });
                 return;
             }
-            if (user.disabled) {
-                context.writer.writeError('login: Account is disabled');
-                return;
-            }
-            await this.sessionService.setUserSession({
-                user,
-                loginTime: Date.now(),
-                lastActivity: Date.now(),
-            });
-            context.writer.writeSuccess(`Logged in as ${user.name}`);
+            username = entered.trim();
         }
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Log in with username and password');
-        writer.writeln();
-        writer.writeln(
-            `  ${writer.wrapInColor('login', CliForegroundColor.Cyan)}                 Prompts for username and password`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('login <username>', CliForegroundColor.Cyan)}       Prompts for password only`,
-        );
+        let password: string | undefined;
+        if (!auth.passwordless) {
+            const entered = await context.reader.readPassword('Password: ');
+            if (entered === null) {
+                context.writer.writeError('Aborted');
+                return;
+            }
+            password = entered;
+        }
+        const session = await auth.login(username, password);
+        context.writer.writeSuccess(`Logged in as ${session.user.name}`);
+        if (session.user.mustChangePassword) {
+            await promptRequiredPasswordChange(context, auth, session.user.id, password);
+        }
     }
 }

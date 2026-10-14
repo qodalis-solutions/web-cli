@@ -1,101 +1,32 @@
-import {
-    ICliCommandProcessor,
-    ICliExecutionContext,
-    CliProcessCommand,
-    CliProcessorMetadata,
-    CliIcon,
-    CliForegroundColor,
-    ICliCommandParameterDescriptor,
-    ICliAuditService,
-    ICliAuditService_TOKEN,
-    DefaultLibraryAuthor,
-    CliStateConfiguration,
-} from '@qodalis/cli-core';
+import { CliProcessCommand, ICliExecutionContext } from '@qodalis/cli-core';
+import { CliUsersCommand, formatTime, usersServices, words, USERS_METADATA } from './base';
+import { CliProcessorMetadata } from '@qodalis/cli-core';
 
-export class CliLastCommandProcessor implements ICliCommandProcessor {
-    command = 'last';
-    description = 'Show login/logout history';
-    author = DefaultLibraryAuthor;
-    acceptsRawInput = true;
-    valueRequired = false;
-    metadata: CliProcessorMetadata = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-        requireAuth: true,
-    };
-    stateConfiguration: CliStateConfiguration = {
-        initialState: {},
-        storeName: 'users',
-    };
-
-    parameters: ICliCommandParameterDescriptor[] = [
-        {
-            name: 'limit',
-            description: 'Number of entries to show (default: 20)',
-            required: false,
-            type: 'number',
-        },
-        {
-            name: 'event',
-            description: 'Filter by event type (login, logout, login_failed, password_changed, user_created, user_deleted)',
-            required: false,
-            type: 'string',
-        },
+export class CliLastCommandProcessor extends CliUsersCommand {
+    override command = 'last';
+    override description = 'Show recent sign-ins';
+    override acceptsRawInput = true;
+    override metadata: CliProcessorMetadata = { ...USERS_METADATA, requiredPermissions: ['audit:read'] };
+    override parameters = [
+        { name: 'limit', aliases: ['n'], description: 'Number of entries (default 20)', type: 'number' as const, required: false },
+    ];
+    protected override usage: Array<[string, string]> = [
+        ['last [user] [-n 20]', 'Recent logins, logouts and failures'],
     ];
 
-    private auditService!: ICliAuditService;
-
-    async initialize(context: ICliExecutionContext): Promise<void> {
-        this.auditService = context.services.getRequired<ICliAuditService>(
-            ICliAuditService_TOKEN,
-        );
-    }
-
-    async processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        const limit = Number(command.args['limit']) || 20;
-        const event = command.args['event'] as string | undefined;
-        const username = command.value as string | undefined;
-
-        const entries = await this.auditService.getEntries({
-            limit,
-            event,
-            username,
-        });
-
-        if (entries.length === 0) {
-            context.writer.writeInfo('No audit entries found');
+    override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const [user] = words(command);
+        const limit = Number(command.args['limit'] ?? command.args['n'] ?? 20);
+        const entries = (await usersServices(context).audit.getEntries({ username: user }))
+            .filter((e) => ['login', 'logout', 'login_failed'].includes(e.event))
+            .slice(0, limit);
+        if (!entries.length) {
+            context.writer.writeInfo('No login history');
             return;
         }
-
-        const rows = entries.map((e) => ({
-            USER: e.username,
-            EVENT: e.event,
-            TIME: new Date(e.timestamp).toLocaleString(),
-            DETAILS: e.details || '',
-        }));
-
-        context.writer.writeObjectsAsTable(rows);
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Show login/logout history and audit events');
-        writer.writeln();
-        writer.writeln(
-            `  ${writer.wrapInColor('last', CliForegroundColor.Cyan)}                     Show recent events`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('last <username>', CliForegroundColor.Cyan)}          Filter by user`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('last --event=login', CliForegroundColor.Cyan)}       Filter by event type`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('last --limit=50', CliForegroundColor.Cyan)}          Show more entries`,
+        context.writer.writeTable(
+            ['USER', 'EVENT', 'TIME', 'DETAILS'],
+            entries.map((e) => [e.username, e.event, formatTime(e.timestamp), e.details ?? '']),
         );
     }
 }

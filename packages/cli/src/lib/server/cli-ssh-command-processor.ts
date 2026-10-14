@@ -4,7 +4,6 @@ import {
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliExecutionContext,
-    buildAuthenticatedWebSocketUrl,
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
 import { CliServerManager, CliServerManager_TOKEN } from './cli-server-manager';
@@ -226,7 +225,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
 
         const cols = context.terminal.cols;
         const rows = context.terminal.rows;
-        const wsUrl = this.buildShellUrl(connection, cols, rows);
+        const wsUrl = await this.buildShellUrl(connection, cols, rows);
 
         context.spinner?.show(`Connecting to ${serverName}...`);
 
@@ -336,7 +335,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         const cols = context.terminal.cols;
         const rows = context.terminal.rows;
-        const wsUrl = this.buildShellUrl(connection, cols, rows, cmd);
+        const wsUrl = await this.buildShellUrl(connection, cols, rows, cmd);
 
         context.spinner?.show(`Running on ${serverName}...`);
 
@@ -412,22 +411,12 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         cols: number,
         rows: number,
         cmd?: string,
-    ): string {
-        const baseUrl = connection.config.url.endsWith('/')
-            ? connection.config.url.slice(0, -1)
-            : connection.config.url;
-        const wsBase = baseUrl
-            .replace(/^https:/, 'wss:')
-            .replace(/^http:/, 'ws:');
-
-        let url = `${wsBase}/ws/v1/qcli/shell?cols=${cols}&rows=${rows}`;
+    ): Promise<string> {
+        let path = `/ws/v1/qcli/shell?cols=${cols}&rows=${rows}`;
         if (cmd) {
-            url += `&cmd=${encodeURIComponent(cmd)}`;
+            path += `&cmd=${encodeURIComponent(cmd)}`;
         }
-        return buildAuthenticatedWebSocketUrl(
-            url,
-            () => connection.resolveAuthHeaders(),
-        );
+        return connection.buildWebSocketUrl(path);
     }
 
     private cleanup(): void {

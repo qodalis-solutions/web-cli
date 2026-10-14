@@ -1,6 +1,6 @@
-import { ICliOwnership } from '@qodalis/cli-core';
+import { CliAccessAction, CliAccessDeniedError, ICliOwnership } from '@qodalis/cli-core';
 import { IFileNode } from '../interfaces/i-file-node';
-import { IFileSystemService } from '../interfaces/i-file-system-service';
+import { CliFileAccessPolicy, IFileSystemService } from '../interfaces/i-file-system-service';
 
 const DB_NAME = 'qodalis-cli-filesystem';
 const STORE_NAME = 'filesystem';
@@ -8,6 +8,11 @@ const ROOT_KEY = 'root';
 const CWD_KEY = 'cwd';
 const HOME_KEY = 'home';
 const DEFAULT_HOME = '/';
+
+/** Owner of system directories and of legacy nodes created without an owner */
+export const SYSTEM_OWNERSHIP: ICliOwnership = { uid: 'root', gid: 'admin' };
+/** Owner of files created while nobody is signed in */
+export const ANONYMOUS_OWNERSHIP: ICliOwnership = { uid: 'nobody', gid: 'nogroup' };
 
 function createSeedFileSystem(): IFileNode {
     const now = Date.now();
@@ -56,6 +61,75 @@ export class IndexedDbFileSystemService implements IFileSystemService {
     private homePath: string = DEFAULT_HOME;
     private currentUid: string | null = null;
     private currentGroups: string[] = [];
+    private accessPolicy?: CliFileAccessPolicy;
+    private systemDepth = 0;
+
+    // --- Access control ---
+
+    setAccessPolicy(policy?: CliFileAccessPolicy): void {
+        this.accessPolicy = policy;
+    }
+
+    runAsSystem<T>(fn: () => T): T {
+        this.systemDepth++;
+        try {
+            return fn();
+        } finally {
+            this.systemDepth--;
+        }
+    }
+
+    canTraverse(path: string): boolean {
+        try {
+            this.assertTraverse(this.resolvePath(path), 'stat', path);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    private get enforcing(): boolean {
+        return !!this.accessPolicy && this.systemDepth === 0;
+    }
+
+    private deny(op: string, path: string, reason = 'Permission denied'): never {
+        throw new CliAccessDeniedError(`${op}: ${path}: ${reason}`);
+    }
+
+    /** `x` on every existing directory on the way to `resolved` (excluding the target). */
+    private assertTraverse(resolved: string, op: string, display: string): void {
+        if (!this.enforcing) return;
+        const parts = resolved.split('/').filter(Boolean);
+        let current: IFileNode | undefined = this.root;
+        for (let i = 0; i < parts.length; i++) {
+            if (!current || current.type !== 'directory') return;
+            if (!this.accessPolicy!.canAccess(current, 'execute')) this.deny(op, display);
+            current = current.children?.find((c) => c.name === parts[i]);
+        }
+    }
+
+    private assertAccess(node: IFileNode, action: CliAccessAction, op: string, display: string): void {
+        if (this.enforcing && !this.accessPolicy!.canAccess(node, action)) this.deny(op, display);
+    }
+
+    /** Recursive delete: every directory inside must allow removing its entries (`w` + `x`, readable). */
+    private assertRemovableTree(dir: IFileNode, dirPath: string, display: string): void {
+        if (!this.enforcing) return;
+        this.assertAccess(dir, 'read', 'rm', display);
+        this.assertAccess(dir, 'execute', 'rm', display);
+        if ((dir.children?.length ?? 0) > 0) this.assertAccess(dir, 'write', 'rm', display);
+        for (const child of dir.children ?? []) {
+            if (child.type === 'directory') this.assertRemovableTree(child, `${dirPath}/${child.name}`, display);
+        }
+    }
+
+    /** Creating/removing entries needs `w` and `x` on the containing directory. */
+    private assertModifyDir(dir: IFileNode, dirPath: string, op: string, display: string): void {
+        if (!this.enforcing) return;
+        this.assertTraverse(dirPath, op, display);
+        this.assertAccess(dir, 'execute', op, display);
+        this.assertAccess(dir, 'write', op, display);
+    }
 
     // --- User context ---
 
@@ -65,7 +139,10 @@ export class IndexedDbFileSystemService implements IFileSystemService {
     }
 
     private getDefaultOwnership(): ICliOwnership | undefined {
-        if (!this.currentUid) return undefined;
+        if (!this.currentUid) {
+            // With access control active, nothing is created ownerless
+            return this.accessPolicy ? { ...ANONYMOUS_OWNERSHIP } : undefined;
+        }
         return {
             uid: this.currentUid,
             gid: this.currentGroups[0] || 'users',
@@ -87,6 +164,8 @@ export class IndexedDbFileSystemService implements IFileSystemService {
         if (node.type !== 'directory') {
             throw new Error(`cd: ${path}: Not a directory`);
         }
+        this.assertTraverse(resolved, 'cd', path);
+        this.assertAccess(node, 'execute', 'cd', path);
         this.cwd = resolved;
     }
 
@@ -157,6 +236,8 @@ export class IndexedDbFileSystemService implements IFileSystemService {
         if (node.type !== 'directory') {
             throw new Error(`ls: ${path}: Not a directory`);
         }
+        this.assertTraverse(this.resolvePath(path), 'ls', path);
+        this.assertAccess(node, 'read', 'ls', path);
         return node.children || [];
     }
 
@@ -168,6 +249,8 @@ export class IndexedDbFileSystemService implements IFileSystemService {
         if (node.type === 'directory') {
             throw new Error(`cat: ${path}: Is a directory`);
         }
+        this.assertTraverse(this.resolvePath(path), 'cat', path);
+        this.assertAccess(node, 'read', 'cat', path);
         return node.content ?? '';
     }
 
@@ -198,6 +281,10 @@ export class IndexedDbFileSystemService implements IFileSystemService {
                 }
                 let child = current.children.find((c) => c.name === part);
                 if (!child) {
+                    if (this.enforcing) {
+                        this.assertAccess(current, 'execute', 'mkdir', path);
+                        this.assertAccess(current, 'write', 'mkdir', path);
+                    }
                     const now = Date.now();
                     child = {
                         name: part,
@@ -213,6 +300,8 @@ export class IndexedDbFileSystemService implements IFileSystemService {
                     current.modifiedAt = now;
                 } else if (child.type !== 'directory') {
                     throw new Error(`mkdir: ${part}: Not a directory`);
+                } else {
+                    this.assertAccess(child, 'execute', 'mkdir', path);
                 }
                 current = child;
             }
@@ -232,6 +321,7 @@ export class IndexedDbFileSystemService implements IFileSystemService {
             if (parent.children?.find((c) => c.name === dirName)) {
                 throw new Error(`mkdir: ${path}: File exists`);
             }
+            this.assertModifyDir(parent, parentPath, 'mkdir', path);
 
             const now = Date.now();
             if (!parent.children) {
@@ -274,6 +364,13 @@ export class IndexedDbFileSystemService implements IFileSystemService {
         const now = Date.now();
 
         if (existing) {
+            this.assertTraverse(resolved, 'touch', path);
+            this.assertAccess(existing, 'write', 'touch', path);
+        } else {
+            this.assertModifyDir(parent, parentPath, 'touch', path);
+        }
+
+        if (existing) {
             existing.modifiedAt = now;
         } else {
             if (!parent.children) {
@@ -301,6 +398,8 @@ export class IndexedDbFileSystemService implements IFileSystemService {
             if (node.type === 'directory') {
                 throw new Error(`write: ${path}: Is a directory`);
             }
+            this.assertTraverse(resolved, 'write', path);
+            this.assertAccess(node, 'write', 'write', path);
             const now = Date.now();
             node.content = append ? (node.content ?? '') + content : content;
             node.size = new Blob([node.content]).size;
@@ -334,6 +433,8 @@ export class IndexedDbFileSystemService implements IFileSystemService {
         if (target.type === 'directory' && !recursive) {
             throw new Error(`rm: ${path}: Is a directory`);
         }
+        this.assertModifyDir(parent, parentPath, 'rm', path);
+        if (target.type === 'directory') this.assertRemovableTree(target, resolved, path);
 
         parent.children.splice(index, 1);
         parent.modifiedAt = Date.now();
@@ -351,12 +452,15 @@ export class IndexedDbFileSystemService implements IFileSystemService {
                 `cp: -r not specified; omitting directory '${src}'`,
             );
         }
+        this.assertTraverse(srcResolved, 'cp', src);
+        this.assertAccess(srcNode, 'read', 'cp', src);
 
         const destResolved = this.resolvePath(dest);
         const destNode = this.getNode(destResolved);
 
         if (destNode && destNode.type === 'directory') {
-            const clone = this.cloneNode(srcNode);
+            this.assertModifyDir(destNode, destResolved, 'cp', dest);
+            const clone = this.ownedByCurrentUser(this.cloneNode(srcNode));
             if (!destNode.children) {
                 destNode.children = [];
             }
@@ -377,8 +481,9 @@ export class IndexedDbFileSystemService implements IFileSystemService {
             if (!parent || parent.type !== 'directory') {
                 throw new Error(`cp: ${parentPath}: No such file or directory`);
             }
+            this.assertModifyDir(parent, parentPath, 'cp', dest);
 
-            const clone = this.cloneNode(srcNode);
+            const clone = this.ownedByCurrentUser(this.cloneNode(srcNode));
             clone.name = newName;
             if (!parent.children) {
                 parent.children = [];
@@ -415,12 +520,14 @@ export class IndexedDbFileSystemService implements IFileSystemService {
         if (!srcParent || !srcParent.children) {
             throw new Error(`mv: ${src}: No such file or directory`);
         }
+        this.assertModifyDir(srcParent, srcParentPath, 'mv', src);
 
         const srcIndex = srcParent.children.findIndex(
             (c) => c.name === srcNode.name,
         );
 
         if (destNode && destNode.type === 'directory') {
+            this.assertModifyDir(destNode, destResolved, 'mv', dest);
             if (!destNode.children) {
                 destNode.children = [];
             }
@@ -444,6 +551,7 @@ export class IndexedDbFileSystemService implements IFileSystemService {
                     `mv: ${destParentPath}: No such file or directory`,
                 );
             }
+            this.assertModifyDir(destParent, destParentPath, 'mv', dest);
 
             srcParent.children.splice(srcIndex, 1);
             srcNode.name = newName;
@@ -471,6 +579,9 @@ export class IndexedDbFileSystemService implements IFileSystemService {
         if (!node) {
             throw new Error(`chmod: ${path}: No such file or directory`);
         }
+        if (this.enforcing && !this.accessPolicy!.canChangeOwnership(node)) {
+            this.deny('chmod', path, 'Operation not permitted');
+        }
         node.permissions = permissions;
     }
 
@@ -479,6 +590,9 @@ export class IndexedDbFileSystemService implements IFileSystemService {
         const node = this.getNode(resolved);
         if (!node) {
             throw new Error(`chown: ${path}: No such file or directory`);
+        }
+        if (this.enforcing && !this.accessPolicy!.canChangeOwnership(node, ownership)) {
+            this.deny('chown', path, 'Operation not permitted');
         }
         node.ownership = ownership;
     }
@@ -529,6 +643,19 @@ export class IndexedDbFileSystemService implements IFileSystemService {
     }
 
     // --- Private helpers ---
+
+    /** A copy belongs to whoever made it (like `cp` without `-p`) */
+    private ownedByCurrentUser(node: IFileNode): IFileNode {
+        const owner = this.getDefaultOwnership();
+        if (owner) {
+            const apply = (n: IFileNode) => {
+                n.ownership = { ...owner };
+                n.children?.forEach(apply);
+            };
+            apply(node);
+        }
+        return node;
+    }
 
     private cloneNode(node: IFileNode): IFileNode {
         const now = Date.now();

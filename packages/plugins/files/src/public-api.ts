@@ -10,6 +10,7 @@ import { API_VERSION } from './lib/version';
 import { IFileSystemService_TOKEN } from './lib/interfaces';
 import { IndexedDbFileSystemService, VirtualFsFileTransferService } from './lib/services';
 import { IFileSystemService } from './lib/interfaces';
+import { CliFilesPermissions, createFileAccessPolicy, followUserSession } from './lib/services/files-access';
 import { FilePathCompletionProvider } from './lib/completion/file-path-completion-provider';
 import { CliLsCommandProcessor } from './lib/processors/cli-ls-command-processor';
 import { CliCdCommandProcessor } from './lib/processors/cli-cd-command-processor';
@@ -63,6 +64,8 @@ export interface CliFilesModuleConfig {
 interface ICliFilesModule extends ICliConfigurableModule<CliFilesModuleConfig> {
     /** Subscription for drag-and-drop file uploads, cleaned up in onDestroy */
     _dragDropSubscription?: Subscription;
+    /** Subscription following the signed-in user, cleaned up in onDestroy */
+    _sessionSubscription?: Subscription;
 }
 
 const fsService = new IndexedDbFileSystemService();
@@ -108,6 +111,10 @@ export const filesModule: ICliFilesModule = {
         new CliXargsCommandProcessor(),
         new CliShCommandProcessor(),
         new CliUploadCommandProcessor(),
+    ],
+    permissions: [
+        { name: CliFilesPermissions.Admin, description: 'Bypass file permission checks' },
+        { name: CliFilesPermissions.Chown, description: 'chmod/chown files owned by others' },
     ],
     services: [
         {
@@ -189,9 +196,21 @@ export const filesModule: ICliFilesModule = {
         }
     },
 
+    async onAfterBoot(context) {
+        // Integrate with whatever auth module is loaded (e.g. @qodalis/cli-users):
+        // rwx checks via the generic authorization layer, ownership and home dirs
+        // from the user session. Without an auth module both are no-ops.
+        const fs = context.services.getRequired<IFileSystemService>(IFileSystemService_TOKEN);
+        fs.setAccessPolicy?.(createFileAccessPolicy(context));
+        this._sessionSubscription?.unsubscribe();
+        this._sessionSubscription = followUserSession(context, fs);
+    },
+
     async onDestroy(_context: ICliExecutionContext): Promise<void> {
         const sub: Subscription | undefined = this._dragDropSubscription;
         sub?.unsubscribe();
         this._dragDropSubscription = undefined;
+        this._sessionSubscription?.unsubscribe();
+        this._sessionSubscription = undefined;
     },
 };

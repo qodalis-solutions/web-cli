@@ -1,176 +1,77 @@
 /**
- * Example 16 — Users & Permissions (Vanilla JS)
+ * Example 16 — Users, Roles & Permissions (Vanilla JS, local mode)
  *
- * Demonstrates the @qodalis/cli-users plugin for user management,
- * authentication, sessions, and UNIX-like rwx permission checking.
+ * The users module adds authentication, groups (roles) with permissions,
+ * sessions and an audit log. In local mode everything lives in the browser
+ * (IndexedDB) — useful standalone, offline, or for demos. Server mode
+ * (example 21) uses the same commands against a real system.
  *
- * Features:
- *   - usersModule with seed users and password configuration
- *   - User session (context.userSession)
- *   - Built-in commands: login, logout, whoami, users, passwd
- *   - Permission checking via ICliPermissionService
+ * Shows:
+ *   - seeding users, password policy, idle session timeout
+ *   - processors protected with `requiredPermissions` (any module can do this)
+ *   - declaring the permissions a module uses (`permissions`) so they show in `perms --list`
+ *   - checking permissions in code with `cliAuthorize` (works without the users module too)
+ *
+ * Try:
+ *   whoami --info                           root has '*' through the admin group
+ *   groupadd release --permissions=deploy:run
+ *   adduser alice --email=alice@example.com --groups=release
+ *   su alice                                (password prompt)
+ *   deploy                                  allowed (deploy:run)
+ *   rollback                                denied (needs deploy:rollback)
+ *   su root ; groupmod release --grant=deploy:rollback ; su alice ; rollback
+ *   perms --list ; audit
  *
  * Docs: https://qodalis-solutions.github.io/web-cli/docs/plugins/users
  */
 
 import '@xterm/xterm/css/xterm.css';
 import { CliEngine } from '@qodalis/cli';
-import type {
-    ICliCommandProcessor,
-    ICliExecutionContext,
-    ICliModule,
-    ICliPermissionService,
-} from '@qodalis/cli-core';
-import { ICliPermissionService_TOKEN } from '@qodalis/cli-core';
+import { cliAuthorize, ICliCommandProcessor, ICliModule } from '@qodalis/cli-core';
 import { usersModule } from '@qodalis/cli-users';
 
-// ── Configure the users module ────────────────────────────────
-
-// The users module is configurable — set password policy,
-// session behavior, and seed initial users.
-const configuredUsersModule = usersModule.configure({
-    // Require password for login
-    requirePassword: true,
-
-    // Default password for all seeded users (default: 'root')
-    defaultPassword: 'changeme',
-
-    // Seed users created on first boot
-    seedUsers: [
-        {
-            name: 'admin',
-            email: 'admin@example.com',
-            groups: ['admin'],
-        },
-        {
-            name: 'viewer',
-            email: 'viewer@example.com',
-            groups: ['viewers'],
-        },
-    ],
-
-    // Customize how usernames appear in the prompt
-    userDisplayFormatter: (user) => user.name,
-});
-
-// ── Custom command that checks permissions ────────────────────
-
-const secretsProcessor: ICliCommandProcessor = {
-    command: 'secrets',
-    description: 'View application secrets (admin only)',
-
-    async processCommand(_command, context: ICliExecutionContext) {
-        const session = context.userSession;
-
-        // Check if user is logged in
-        if (!session?.user) {
-            context.writer.writeError('You must be logged in. Run: login');
-            return;
-        }
-
-        // Check group membership (groups is string[])
-        const isAdmin = session.user.groups?.includes('admin');
-
-        if (!isAdmin) {
-            context.writer.writeError(
-                `Access denied. User "${session.user.name}" is not in the admin group.`,
-            );
-            return;
-        }
-
-        context.writer.writeSuccess('Secrets (admin access granted):');
-        context.writer.writeKeyValue({
-            'API Key': 'sk-live-abc123def456',
-            'DB Password': 'super-secret-password',
-            'JWT Secret': 'my-jwt-signing-key',
-        });
-    },
-};
-
-// ── Command using ICliPermissionService for rwx checks ────────
-
-const filePermDemo: ICliCommandProcessor = {
-    command: 'check-perms',
-    description: 'Demonstrate UNIX-like permission checking',
-
-    parameters: [
-        {
-            name: 'octal',
-            description: 'Permission octal (e.g., "755")',
-            required: false,
-            type: 'string',
-            defaultValue: '755',
-        },
-    ],
-
-    async processCommand(command, context: ICliExecutionContext) {
-        const permService = context.services.get<ICliPermissionService>(
-            ICliPermissionService_TOKEN,
-        );
-
-        if (!permService) {
-            context.writer.writeWarning(
-                'Permission service not available. Ensure @qodalis/cli-users is loaded.',
-            );
-            return;
-        }
-
-        const octal = command.args['octal'] || '755';
-        const permString = permService.parseOctal(octal);
-
-        context.writer.writeln(`Octal ${octal} → "${permString}"`);
-        context.writer.writeln(`Back to octal: ${permService.toOctal(permString)}`);
-        context.writer.writeln('');
-
-        // Simulate checking permissions for the current user
-        const session = context.userSession;
-        if (session?.user) {
-            const ownership = {
-                userId: 'owner-id',
-                groupId: 'admin',
-            };
-
-            const canRead = permService.check(session.user, 'read', ownership, permString);
-            const canWrite = permService.check(session.user, 'write', ownership, permString);
-            const canExec = permService.check(session.user, 'execute', ownership, permString);
-
-            context.writer.writeln(`Permissions for user "${session.user.name}":`);
-            context.writer.writeKeyValue({
-                Read: canRead ? '✓ allowed' : '✗ denied',
-                Write: canWrite ? '✓ allowed' : '✗ denied',
-                Execute: canExec ? '✓ allowed' : '✗ denied',
-            });
-        } else {
-            context.writer.writeInfo('Log in to check user-specific permissions.');
+const deploy: ICliCommandProcessor = {
+    command: 'deploy',
+    description: 'Deploy the app (requires deploy:run)',
+    metadata: { requiredPermissions: ['deploy:run'] },
+    async processCommand(_command, context) {
+        context.writer.writeSuccess(`Deployed by ${context.userSession?.user.name}`);
+        // Finer-grained checks in code: true when allowed, or when no auth module is loaded
+        if (cliAuthorize(context, 'deploy:rollback')) {
+            context.writer.writeInfo('You may also roll back.');
         }
     },
 };
 
-// ── Module & Bootstrap ────────────────────────────────────────
+const rollback: ICliCommandProcessor = {
+    command: 'rollback',
+    description: 'Roll back (requires deploy:rollback)',
+    metadata: { requiredPermissions: ['deploy:rollback'] },
+    async processCommand(_command, context) {
+        context.writer.writeSuccess('Rolled back');
+    },
+};
 
-const permissionsModule: ICliModule = {
+const deployModule: ICliModule = {
     apiVersion: 2,
-    name: 'permissions-demo',
-    description: 'User and permission demos',
-    processors: [secretsProcessor, filePermDemo],
+    name: 'deploy',
+    processors: [deploy, rollback],
+    permissions: [
+        { name: 'deploy:run', description: 'Run deployments' },
+        { name: 'deploy:rollback', description: 'Roll back deployments' },
+    ],
 };
 
-const container = document.getElementById('terminal')!;
-const engine = new CliEngine(container);
-
-// Register both the users module AND our demo module
-engine.registerModules([configuredUsersModule, permissionsModule]);
-
-engine.start().then(() => {
-    engine.focus();
-    // After start, these built-in commands are available:
-    //   login               — interactive login prompt
-    //   logout              — end current session
-    //   whoami              — show current user
-    //   users list          — list all users
-    //   users add           — create a user
-    //   passwd              — change password
-    //   groups list         — list all groups
-});
-
+const engine = new CliEngine(document.getElementById('terminal')!);
+engine.registerModules([
+    usersModule.configure({
+        requirePassword: true,
+        seedUsers: [{ name: 'root', email: 'root@localhost', groups: ['admin'] }],
+        defaultPassword: 'root',
+        passwordPolicy: { minLength: 6 },
+        sessionTimeout: 30 * 60_000, // idle timeout
+    }),
+    deployModule,
+]);
+engine.start().then(() => engine.focus());
 window.addEventListener('beforeunload', () => engine.destroy());

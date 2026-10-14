@@ -1,69 +1,29 @@
-import {
-    ICliCommandProcessor,
-    ICliExecutionContext,
-    CliProcessCommand,
-    CliProcessorMetadata,
-    CliIcon,
-    CliForegroundColor,
-    DefaultLibraryAuthor,
-    CliStateConfiguration,
-} from '@qodalis/cli-core';
+import { CliProcessCommand, cliHasPermission, ICliExecutionContext } from '@qodalis/cli-core';
+import { CliUsersCommand, formatTime, usersServices, USERS_METADATA } from './base';
+import { CliProcessorMetadata } from '@qodalis/cli-core';
 
-export class CliWhoCommandProcessor implements ICliCommandProcessor {
-    command = 'w';
-    aliases = ['who'];
-    description = 'Show who is logged in and session info';
-    author = DefaultLibraryAuthor;
-    metadata: CliProcessorMetadata = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-    };
-    stateConfiguration: CliStateConfiguration = {
-        initialState: {},
-        storeName: 'users',
-    };
+export class CliWhoCommandProcessor extends CliUsersCommand {
+    override command = 'w';
+    override aliases = ['who'];
+    override description = 'Show who is signed in';
+    override metadata: CliProcessorMetadata = { ...USERS_METADATA, requireAuth: true };
+    protected override usage: Array<[string, string]> = [
+        ['w', 'Signed-in sessions (all with sessions:read, otherwise yours)'],
+    ];
 
-    async processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        const session = context.userSession;
-
-        if (!session) {
-            context.writer.writeln('No active session.');
+    override async processCommand(_command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const me = context.userSession!;
+        if (!cliHasPermission(me.permissions, 'sessions:read')) {
+            context.writer.writeTable(
+                ['USER', 'LOGIN', 'IDLE SINCE'],
+                [[me.user.name, formatTime(me.loginTime), formatTime(me.lastActivity)]],
+            );
             return;
         }
-
-        const loginTime = new Date(session.loginTime).toLocaleString();
-        const lastActivity = new Date(session.lastActivity).toLocaleString();
-        const idle = this.formatDuration(Date.now() - session.lastActivity);
-
-        context.writer.writeObjectsAsTable([
-            {
-                USER: session.user.name,
-                TTY: 'web',
-                'LOGIN@': loginTime,
-                IDLE: idle,
-            },
-        ]);
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Show who is logged in and session info');
-        writer.writeln();
-        writer.writeln(
-            `  ${writer.wrapInColor('w', CliForegroundColor.Cyan)}     Show current session`,
+        const sessions = await usersServices(context).sessions.list();
+        context.writer.writeTable(
+            ['USER', 'LOGIN', 'IDLE SINCE', ''],
+            sessions.map((s) => [s.userName, formatTime(s.createdAt), formatTime(s.lastActivity), s.current ? '(you)' : '']),
         );
-    }
-
-    private formatDuration(ms: number): string {
-        const seconds = Math.floor(ms / 1000);
-        if (seconds < 60) return `${seconds}s`;
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return `${minutes}m`;
-        const hours = Math.floor(minutes / 60);
-        return `${hours}h${minutes % 60}m`;
     }
 }

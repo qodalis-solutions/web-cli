@@ -1,3 +1,4 @@
+import { readableChildren } from '../utils/readable-children';
 import {
     CliForegroundColor,
     CliProcessCommand,
@@ -253,8 +254,9 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
         node: IFileNode,
         result: string[],
     ): void {
-        if (!node.children) return;
-        for (const child of node.children) {
+        const children = readableChildren(fs, basePath);
+        if (!children) return;
+        for (const child of children) {
             const childPath =
                 basePath === '/'
                     ? `/${child.name}`

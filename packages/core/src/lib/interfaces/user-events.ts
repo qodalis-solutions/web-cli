@@ -11,9 +11,21 @@ export interface ICliUserEvent {
         | 'user_created'
         | 'user_deleted'
         | 'user_updated'
-        | 'password_changed';
-    /** The user involved in the event */
+        | 'password_changed'
+        | 'user_switched'
+        | 'user_disabled'
+        | 'user_enabled'
+        | 'group_created'
+        | 'group_updated'
+        | 'group_deleted'
+        | 'group_member_added'
+        | 'group_member_removed'
+        | 'session_revoked'
+        | 'audit_cleared';
+    /** The user involved in the event (for group events: the acting user) */
     user: ICliUser;
+    /** The acting user's name, when different from `user` (e.g. an admin) */
+    actor?: string;
     /** When the event occurred */
     timestamp: number;
     /** Optional additional details */

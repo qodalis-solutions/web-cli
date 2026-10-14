@@ -9,7 +9,7 @@ import {
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliExecutionContext,
-    buildAuthenticatedWebSocketUrl,
+    resolveServerWebSocketUrl,
     resolveServerHeaders,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
@@ -182,9 +182,11 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
             patternRegex = new RegExp(command.args['pattern'], 'g');
         }
 
-        const ws = new WebSocket(buildAuthenticatedWebSocketUrl(
+        const ws = new WebSocket(await resolveServerWebSocketUrl(
+            context.services,
+            serverName ?? 'custom',
             fullUrl,
-            () => resolveServerHeaders(context.services, serverName ?? 'custom', serverHeaders),
+            serverHeaders,
         ));
         const logs: string[] = [];
         context.notifier.info('Connecting to log stream');

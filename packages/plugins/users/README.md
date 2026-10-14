@@ -1,218 +1,183 @@
-# Cli extension
+# @qodalis/cli-users
 
-The `@qodalis/cli-users` package is a CLI extension that provides Linux-style user and group management with authentication for the Qodalis CLI. It includes a full user lifecycle, group management, session persistence via IndexedDB, and a permission model based on admin group membership.
+Users, groups (roles), permissions, sessions and audit for the Qodalis CLI.
 
-# Features
+The module turns the CLI into an **authenticated, interactive front end for a system**:
+people sign in, the system decides what they may do, and every command, guard and
+extension follows those rules. It is optional: without it the CLI works unchanged.
 
-    Full user lifecycle: adduser, userdel, usermod, listusers.
-    Group management: groupadd, groupdel, groups.
-    Authentication: login, logout, passwd with Web Crypto SHA-256 password hashing.
-    Session management: persistent sessions via IndexedDB, su for user switching.
-    Identity commands: whoami, id, w/who.
-    Permission model: admin group for privileged operations.
-    Configurable: seed users, default passwords, session timeout via configure().
-    Extensible: swap any service (auth, users store, groups store, session) via DI tokens.
+## How it fits a system
 
-# Commands
+| Mode | Where users live | Authority | Typical use |
+|---|---|---|---|
+| **Server** (`server: 'node'`) | A Qodalis CLI server users plugin (node, python, .NET), backed by in-memory stores or your own stores / auth adapter | The server | Production: the CLI is a console for your backend |
+| **Embedded** (`server` + `hostAuth`) | Your application; the CLI reuses its token | The server | CLI inside an app whose users are already signed in |
+| **Custom backend** (`backend`) | Your own API, through `ICliUsersBackend` | Your API | Integrate a system without a CLI server |
+| **Local** (default) | The browser (IndexedDB) | The browser | Standalone, offline, demos |
 
-| Command | Aliases | Description |
-|---------|---------|-------------|
-| `whoami` | `me` | Show current user |
-| `id` | — | Show user identity and groups |
-| `adduser` | `useradd` | Create a new user (admin) |
-| `userdel` | `deluser` | Delete a user (admin) |
-| `usermod` | — | Modify a user account (admin) |
-| `passwd` | — | Change user password |
-| `su` | `switch-user` | Switch user session |
-| `login` | — | Log in with credentials |
-| `logout` | `exit-session` | End current session |
-| `groups` | — | Show group memberships |
-| `groupadd` | `addgroup` | Create a group (admin) |
-| `groupdel` | `delgroup` | Delete a group (admin) |
-| `w` | `who` | Show session info |
-| `listusers` | `users` | List all users |
-| `last` | — | Show login/logout history from the audit log |
-| `sessions` | — | List active sessions on the server (server mode, admin) |
-| `session-kick` | — | Force-logout a session by id (server mode, admin) |
+All modes expose the **same commands, services and behaviour**. They share one contract
+(`ICliUsersBackend`, mirrored by the servers' HTTP API), so a feature works everywhere.
 
-# Installation
+## Installation
 
 ```bash
 packages add @qodalis/cli-users
 ```
 
-This command downloads and registers the extension for use within the CLI environment.
+## Quick start
 
-# Usage
+```typescript
+import { usersModule } from '@qodalis/cli-users';
+
+// Server mode: `node` must match an entry in options.servers
+engine.registerModules([usersModule.configure({ server: 'node' })]);
+
+// Local mode
+engine.registerModules([usersModule.configure({ requirePassword: true })]);
+```
+
+## Roles and permissions
+
+Groups are roles. Each group grants a list of permissions; a user's effective
+permissions are the union of their groups' permissions.
+
+- Permission strings are `resource:action`, with `*` wildcards: `users:*`, `*`.
+- Built-in groups: `admin` (`*`, cannot be changed or deleted) and `users` (default for new accounts).
+- Built-in permissions: `users:read|create|update|delete`, `groups:read|create|update|delete`,
+  `sessions:read|revoke`, `audit:read|clear`.
+- Any module can declare its own (`ICliModule.permissions`) and protect commands with them.
 
 ```bash
-whoami
-# root
-
-whoami --info
-# Displays detailed user info including email and groups
-
-adduser john --email=john@example.com
-# Created user john
-
-passwd
-# Change password for current user
-
-su john
-# Switch to user john
-
-login
-# Log in with username and password
-
-logout
-# End current session
-
-groups
-# Show groups for current user
-
-groupadd devs --description="Development team"
-# Created group devs
-
-usermod john --add-groups=devs
-# Added john to group devs
-
-id john
-# uid=john gid=devs groups=devs
-
-w
-# Show current session info
+groupadd release --permissions=deploy:run
+groupmod release --grant=deploy:rollback
+groupmod release --add-member=alice
+perms alice          # effective permissions and the groups granting them
+perms --list         # every permission declared by loaded modules
 ```
 
-# Configuration
-
-Use `configure()` to customize the module before loading:
+### Protecting your commands
 
 ```typescript
-import { usersModule } from '@qodalis/cli-users';
-
-usersModule.configure({
-    seedUsers: [
-        { name: 'admin', email: 'admin@company.com', groups: ['admin'] },
-    ],
-    defaultPassword: 'changeme',
-    requirePassword: true,
-    // Auto-logout after 30 minutes without activity (ms)
-    sessionTimeout: 30 * 60 * 1000,
-    passwordPolicy: {
-        minLength: 8,
-        requireUppercase: true,
-        requireDigit: true,
-        requireSpecialChar: false,
-    },
-    bruteForceProtection: {
-        maxAttempts: 5,   // failed logins before lockout (default: 5)
-        lockoutSeconds: 60,
-    },
-});
-```
-
-| Option | Description |
-|--------|-------------|
-| `seedUsers` | Users created on first boot (client mode) |
-| `defaultPassword` | Password assigned to seeded users |
-| `requirePassword` | Ask for a password on `login` / `su` |
-| `sessionTimeout` | Idle timeout in ms; expired sessions are cleared and a `logout` event is emitted |
-| `passwordPolicy` | Rules enforced by `passwd`, `adduser` and the setup wizard |
-| `bruteForceProtection` | In-memory lockout after repeated failed logins |
-| `userDisplayFormatter` | Customize the name shown in the prompt |
-| `server` | Delegate everything to a CLI server — see **Server mode** |
-
-# Server mode
-
-Set `server` to the `name` of a `CliServerConfig` entry and the module stops using
-the browser store. Users, authentication, sessions, groups and the audit log are
-served by a Qodalis CLI server with the users plugin installed
-([Node.js](https://github.com/qodalis-solutions/cli-server-node),
-[.NET](https://github.com/qodalis-solutions/cli-server-dotnet),
-[Python](https://github.com/qodalis-solutions/cli-server-python)).
-
-```typescript
-const engine = new CliEngine({
-    options: {
-        servers: [{ name: 'node', url: 'http://localhost:8047' }],
-    },
-});
-
-engine.registerModule(
-    usersModule.configure({ server: 'node', requirePassword: true }),
-);
-```
-
-What changes in server mode:
-
-- `login` calls `POST /api/v1/qcli/sessions`; the returned bearer token is stored
-  locally and attached to every request to that server through
-  `ICliServerAuthTokenProvider`, so proxied server commands run as the signed-in user.
-- The session is restored on reload from `GET /api/v1/qcli/sessions/current`.
-- No seed user or setup wizard — the server seeds its own admin (on the demo servers: `root` / `admin` for node and python, `root` / `root` for .NET).
-- `last` reads the server audit log (`GET /api/v1/qcli/audit`).
-- Two extra admin commands: `sessions` (list active sessions) and `session-kick <id>`.
-- If the server answers `401` (token expired or revoked) or broadcasts a
-  `session-kicked` event for this session, the module clears the local session,
-  emits a `logout` event with the reason and prints a warning.
-
-# Events and audit
-
-`ICliUserEventService` (`cli-user-event-service`) emits `login`, `logout`, `login_failed`,
-`user_created`, `user_deleted`, `user_updated` and `password_changed` events in both modes.
-`ICliAuditService` (`cli-audit-service`) records them — in IndexedDB (client mode, last 500 entries)
-or on the server (server mode).
-
-```typescript
-const events = context.services.get<ICliUserEventService>(ICliUserEventService_TOKEN);
-events?.events$.subscribe((e) => console.log(e.type, e.user.name, e.details));
-```
-
-# Access control (command guards)
-
-The module contributes two [global command guards](https://qodalis-solutions.github.io/web-cli/docs/core-concepts/command-guards).
-They enforce access metadata declared on **any** processor, from any module:
-
-| Metadata | Guard | Effect |
-|---|---|---|
-| `requireAuth: true` | `users:require-auth` | Blocks the command with `<command>: login required` when nobody is signed in |
-| `requiredGroups: ['ops', ...]` | `users:required-groups` | Requires sign-in and membership in at least one listed group, otherwise `<command>: permission denied (requires group: ops)` |
-
-```typescript
-const deployProcessor: ICliCommandProcessor = {
+const deploy: ICliCommandProcessor = {
     command: 'deploy',
-    description: 'Deploy the app',
-    metadata: { requireAuth: true, requiredGroups: ['ops'] },
+    metadata: {
+        requireAuth: true,                   // signed in
+        requiredGroups: ['ops', 'release'],  // member of any
+        requiredPermissions: ['deploy:run'], // holds all
+    },
     async processCommand(command, context) { /* ... */ },
 };
-```
 
-The built-in admin commands (`adduser`, `userdel`, `usermod`, `groupadd`, `groupdel`, `sessions`,
-`session-kick`) declare `requiredGroups: ['admin']`. Commands that act on the signed-in user (`id`,
-`groups`, `passwd`, `logout`, `last`, `listusers`) declare `requireAuth: true`.
-
-The users module is optional. Without it these flags are informational and every command runs.
-The guards are exported (`usersGuards`, `requireAuthGuard`, `requiredGroupsGuard`) so a custom
-module can reuse them. Client-side guards are not a security boundary: in server mode the server
-still authorizes every request.
-
-# Extensibility
-
-You can swap any built-in service by overriding the module's services array:
-
-```typescript
-import { usersModule } from '@qodalis/cli-users';
-
-// Server-backed authentication
-const customModule = {
-    ...usersModule,
-    services: [
-        ...usersModule.services,
-        { provide: 'cli-auth-service', useValue: new MyServerAuthService() },
-    ],
+export const deployModule: ICliModule = {
+    apiVersion: 2,
+    name: 'deploy',
+    processors: [deploy],
+    permissions: [{ name: 'deploy:run', description: 'Run deployments' }],
 };
 ```
 
-# Default behavior
+The checks are enforced by core guards that activate when an authorization service is
+registered (this module registers one). In code, use the generic helpers from
+`@qodalis/cli-core`; they allow everything when no auth module is loaded:
 
-By default the module seeds a `root` user (root@localhost, admin group, password: `root`) and an `admin` group. On first boot it auto-logs in as root. Sessions persist across page reloads via IndexedDB.
+```typescript
+import { cliAuthorize, cliCanAccess } from '@qodalis/cli-core';
+
+if (!cliAuthorize(context, 'deploy:rollback')) { /* hide the option */ }
+```
+
+The files module uses the same layer for rwx checks on the virtual file system
+(`files:admin` bypasses, `files:chown` allows chmod/chown on others' files).
+
+## Commands
+
+| Command | Access | Description |
+|---|---|---|
+| `whoami [--info]` | — | Signed-in user; `--info` adds groups and permissions |
+| `id [user]` | login | Identity, groups, permissions |
+| `groups [user] [--all]` | login | Membership; `--all` lists groups with permissions |
+| `perms [user] [--list]` | login | Effective permissions / declared permissions |
+| `login [user]` | — | Sign in (name or email) |
+| `logout` | login | Sign out (the CLI stays signed out) |
+| `su <user>` | — | Switch user (same lockout and audit as login) |
+| `passwd [user]` | login | Own password (asks for the current one) or reset (`users:update`) |
+| `adduser <name> --email=..` | `users:create` | Create a user (`--groups`, `--home`, `--disabled`, `--no-password`) |
+| `usermod <user> ..` | `users:update` | `--name`, `--email`, `--groups`, `--add-groups`, `--remove-groups`, `--home`, `--disable`, `--enable` |
+| `userdel <user>` | `users:delete` | Delete a user, their password and sessions |
+| `listusers [--query --skip --take]` | `users:read` | List users |
+| `groupadd <name> [--permissions]` | `groups:create` | Create a group (role) |
+| `groupmod <group> ..` | `groups:update` | `--grant`, `--revoke`, `--set`, `--description`, `--add-member`, `--remove-member` |
+| `groupdel <name>` | `groups:delete` | Delete a group (members are removed from it) |
+| `w` | login | Who is signed in |
+| `sessions` | `sessions:read` | Active sessions |
+| `session-kick <id>` | login | End a session (own, or any with `sessions:revoke`) |
+| `last [user]` | `audit:read` | Sign-in history |
+| `audit [--user --event -n]`, `audit clear` | `audit:read` / `audit:clear` | Security audit log |
+
+## Rules (identical in every mode)
+
+- Names and emails are unique (case-insensitive); groups must exist.
+- You cannot delete or disable yourself; the last enabled administrator cannot be
+  deleted, disabled or removed from `admin`; built-in groups cannot be deleted.
+- Deleting a group removes it from its members; deleting a user removes their
+  password and sessions; disabling a user ends their sessions; a password change ends
+  the user's other sessions.
+- Changes to a user's groups apply to their live sessions immediately.
+- Lockout after 5 failed sign-ins (5 minutes), by name or email.
+- Passwords: PBKDF2-HMAC-SHA256 (100k iterations), constant-time comparison.
+- Every security-relevant action is audited with the acting user.
+
+## Configuration
+
+```typescript
+usersModule.configure({
+    // where users live (pick one; default: local)
+    server: 'node',
+    backend: myBackend,
+    hostAuth: { getToken, loginHint, logout },
+
+    persistToken: true,            // keep the session across reloads (false = memory only)
+    requirePassword: true,         // local: false allows passwordless login/su
+    requirePasswordOnBoot: false,  // ask for credentials at startup
+    sessionTimeout: 30 * 60_000,   // local idle timeout (servers have their own)
+    passwordPolicy: { minLength: 8, requireDigit: true },
+    bruteForceProtection: { maxAttempts: 5, lockoutSeconds: 300 }, // local
+    seedUsers: [{ name: 'ops', email: 'ops@example.com', groups: ['admin'] }], // local
+    defaultPassword: 'change-me',  // local seed password
+    hideUserName: false,
+    userDisplayFormatter: (user) => user.name,
+});
+```
+
+## Services for extensions
+
+| Token | Interface |
+|---|---|
+| `ICliUsersStoreService_TOKEN` | users |
+| `ICliGroupsStoreService_TOKEN` | groups / roles and membership |
+| `ICliAuthService_TOKEN` | login, logout, switch user, passwords |
+| `ICliUserSessionService_TOKEN` | current session (observable) |
+| `ICliSessionsService_TOKEN` | list / revoke sessions |
+| `ICliAuditService_TOKEN` | audit trail |
+| `ICliUserEventService_TOKEN` | `login`, `logout`, `user_*`, `group_*`, `session_revoked`, ... |
+| `ICliAuthorizationService_TOKEN` | principal, `can`, `canAccess` (generic, core) |
+
+Calls run as the signed-in user; the backend enforces permissions and rejects with
+`CliUsersError` (`status` 400/401/403/404/409/429/501).
+
+## Security notes
+
+- In server, embedded and custom-backend modes the backend is the security boundary;
+  client-side guards only improve the experience.
+- Local mode stores everything in the browser: it models access between CLI users but
+  cannot protect data from whoever controls the browser.
+- Use `persistToken: false` on shared machines.
+- Change default passwords (`root` / `root` locally and on servers) before exposing a system.
+
+## Examples
+
+- `examples/vanilla/16-users-and-permissions.ts` — roles, permissions, protected commands
+- `examples/vanilla/19-custom-users-permissions.ts` — integrate your own system (custom backend)
+- `examples/vanilla/20-user-group-management.ts` — use the services from your own commands
+- `examples/vanilla/21-server-session-management.ts` — server mode and embedded `hostAuth`
+- `examples/vanilla/22-command-guards.ts` — global guards

@@ -26,30 +26,40 @@ import type { CliOptions, ICliModule, ICliUserEventService } from '@qodalis/cli-
 import { ICliUserEventService_TOKEN } from '@qodalis/cli-core';
 import { usersModule } from '@qodalis/cli-users';
 
-// ── 1. Client-only mode (default) ─────────────────────────────
+// ── 1. Server mode: the CLI is the front end of a system ─────
 //
-// Without `server`, users live in the browser (IndexedDB) and the
-// module seeds a local `root` admin on first boot. Works offline.
-//
-//   engine.registerModule(usersModule);
-
-// ── 2. Server-backed mode ─────────────────────────────────────
-//
-// `server` must match the `name` of an entry in `options.servers`.
-// The module then:
-//   - skips the local seed user and the setup wizard (server owns the data)
-//   - stores the bearer token returned by POST /api/v1/qcli/sessions (login)
+// `server` must match the `name` of an entry in `options.servers`. The server
+// users plugin is the authority (permissions, sessions, audit); the CLI:
+//   - signs in with POST /api/v1/qcli/sessions and keeps the bearer token
+//     (set `persistToken: false` to keep it in memory only)
 //   - restores the session on reload via GET /api/v1/qcli/sessions/current
-//   - registers `sessions` and `session-kick` for admins
+//   - sends the token with every request to that server (exec, files, ...)
+//   - signs out automatically on 401 or when an admin kicks the session
 const serverUsersModule = usersModule.configure({
     server: 'node',
     requirePassword: true,
+});
+
+// ── 2. Embedded in an app whose users are already signed in ──
+//
+// With `hostAuth`, the CLI reuses the host application's token: no second
+// login. `login` / `logout` defer to the host.
+export const embeddedUsersModule = usersModule.configure({
+    server: 'node',
+    hostAuth: {
+        getToken: () => sessionStorage.getItem('app-access-token') ?? undefined,
+        loginHint: 'Sign in to the application first',
+        logout: () => {
+            window.location.href = '/logout';
+        },
+    },
 });
 
 // ── 3. React to user events from another plugin ───────────────
 //
 // The event bus works the same in both modes.
 const greeterModule: ICliModule = {
+    apiVersion: 2,
     name: 'greeter',
     processors: [],
     async onAfterBoot(context) {
@@ -87,8 +97,9 @@ engine.start().then(() => {
     // Try in the terminal:
     //   login root            — prompts for password, stores the token
     //   whoami                — user info from the server session
-    //   adduser bob           — POST /api/v1/qcli/users (admin)
-    //   sessions              — list active sessions (admin)
+    //   adduser bob --email=bob@x.io   — POST /api/v1/qcli/users (users:create)
+    //   groupadd ops --permissions=sessions:*  — a role, enforced by the server
+    //   sessions              — list active sessions (sessions:read)
     //   session-kick <id>     — force-logout a session; that client logs out itself
     //   last                  — server-side login/logout history
     //   logout                — DELETE /api/v1/qcli/sessions/current and clears the token

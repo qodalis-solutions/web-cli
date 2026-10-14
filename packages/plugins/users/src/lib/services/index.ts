@@ -1,12 +1,11 @@
-export { CliDefaultUsersStoreService } from './cli-default-users-store.service';
-export { CliDefaultUserSessionService } from './cli-default-user-session.service';
-export { CliDefaultGroupsStoreService } from './cli-default-groups-store.service';
-export { CliDefaultAuthService } from './cli-default-auth.service';
-export { CliDefaultPermissionService } from './cli-default-permission.service';
+export { CliUserSessionService } from './cli-user-session.service';
+export {
+    CliUsersAuthService,
+    CliUsersStoreService,
+    CliGroupsStoreService,
+    CliSessionsService,
+    CliUsersAuditService,
+    CliUsersAuthorizationService,
+} from './cli-users-services';
 export { CliDefaultUserEventService } from './cli-default-user-event.service';
-export { CliDefaultAuditService } from './cli-default-audit.service';
-export { CliServerUsersStoreService } from './cli-server-users-store.service';
-export { CliServerUserSessionService } from './cli-server-user-session.service';
-export { CliServerGroupsStoreService } from './cli-server-groups-store.service';
-export { CliServerAuthService } from './cli-server-auth.service';
-export { CliServerAuditService } from './cli-server-audit.service';
+export { CliDefaultPermissionService } from './cli-default-permission.service';

@@ -1,68 +1,29 @@
-import {
-    ICliCommandProcessor,
-    ICliCommandAuthor,
-    ICliExecutionContext,
-    CliProcessCommand,
-    CliProcessorMetadata,
-    CliIcon,
-    DefaultLibraryAuthor,
-    CliForegroundColor,
-} from '@qodalis/cli-core';
+import { CliProcessCommand, ICliExecutionContext } from '@qodalis/cli-core';
+import { CliUsersCommand, formatTime, usersServices, USERS_METADATA } from './base';
+import { CliProcessorMetadata } from '@qodalis/cli-core';
 
-export class CliSessionsCommandProcessor implements ICliCommandProcessor {
-    command = 'sessions';
+export class CliSessionsCommandProcessor extends CliUsersCommand {
+    override command = 'sessions';
+    override description = 'List active sessions';
+    override metadata: CliProcessorMetadata = { ...USERS_METADATA, requiredPermissions: ['sessions:read'] };
+    protected override usage: Array<[string, string]> = [['sessions', 'List active sessions (use the ID with session-kick)']];
 
-    description = 'List active user sessions (server mode)';
-
-    author?: ICliCommandAuthor = DefaultLibraryAuthor;
-
-    metadata?: CliProcessorMetadata = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-        requiredGroups: ['admin'],
-    };
-
-    constructor(
-        private readonly baseUrl: string,
-        private readonly getHeaders: () => Record<string, string>,
-    ) {}
-
-    async processCommand(
-        _command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        try {
-            const sessions = await context.http.get<any[]>(
-                `${this.baseUrl}/sessions`,
-                { headers: this.getHeaders() },
-            );
-
-            if (sessions.length === 0) {
-                context.writer.writeInfo('No active sessions');
-                return;
-            }
-
-            const rows = sessions.map((s) => ({
-                ID: s.id || '-',
-                USER: s.user?.name || s.userId || '-',
-                'LOGIN TIME': new Date(s.loginTime).toLocaleString(),
-                'LAST ACTIVITY': new Date(s.lastActivity).toLocaleString(),
-            }));
-
-            context.writer.writeObjectsAsTable(rows);
-        } catch (e: any) {
-            context.writer.writeError(e.message || 'Failed to list sessions');
+    override async processCommand(_command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const sessions = await usersServices(context).sessions.list();
+        if (!sessions.length) {
+            context.writer.writeInfo('No active sessions');
+            return;
         }
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('List all active user sessions on the server.');
-        writer.writeln();
-        writer.writeln('Usage:');
-        writer.writeln(
-            `  ${writer.wrapInColor('sessions', CliForegroundColor.Cyan)}    List all active sessions`,
+        context.writer.writeTable(
+            ['ID', 'USER', 'LOGIN TIME', 'LAST ACTIVITY', 'EXPIRES', ''],
+            sessions.map((s) => [
+                s.id,
+                s.userName,
+                formatTime(s.createdAt),
+                formatTime(s.lastActivity),
+                formatTime(s.expiresAt),
+                s.current ? '(current)' : '',
+            ]),
         );
     }
 }

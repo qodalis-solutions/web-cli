@@ -1849,32 +1849,62 @@ export const billingModule: ICliModule = &#123;
 
     <h2>Authentication and Permissions</h2>
     <p>
-        Processors can declare access requirements in their metadata. The core treats these flags as
-        informational; a module that registers guards enforces them.
+        Processors declare access requirements in their metadata. Three guards built into the engine
+        (<code>access:require-auth</code>, <code>access:required-groups</code>, <code>access:required-permissions</code>)
+        enforce them as soon as an auth module registers an <code>ICliAuthorizationService</code>; until then the
+        flags are informational.
     </p>
     <div class="code-block">
         <pre><code>const deployProcessor: ICliCommandProcessor = &#123;
     command: 'deploy',
     description: 'Deploy the app',
     metadata: &#123;
-        requireAuth: true,          // must be signed in
-        requiredGroups: ['ops'],    // and a member of at least one of these groups
+        requireAuth: true,                    // must be signed in
+        requiredGroups: ['ops', 'release'],   // member of at least one
+        requiredPermissions: ['deploy:run'],  // holds all of these
     &#125;,
     async processCommand(command, context) &#123; /* ... */ &#125;,
+&#125;;
+
+export const deployModule: ICliModule = &#123;
+    apiVersion: 2,
+    name: 'deploy',
+    processors: [deployProcessor],
+    // Declared permissions appear in `perms --list` and can be granted to groups
+    permissions: [&#123; name: 'deploy:run', description: 'Run deployments' &#125;],
 &#125;;</code></pre>
     </div>
     <table>
         <thead>
-            <tr><th>Setup</th><th>Behaviour of <code>requireAuth</code> / <code>requiredGroups</code></th></tr>
+            <tr><th>Setup</th><th>Behaviour of the access metadata</th></tr>
         </thead>
         <tbody>
-            <tr><td>No users module</td><td>Ignored; every command runs</td></tr>
-            <tr><td><code>&#64;qodalis/cli-users</code> (local or server mode)</td><td>Enforced by the <code>users:require-auth</code> and <code>users:required-groups</code> guards, for processors from any module</td></tr>
-            <tr><td>Your own auth module</td><td>Enforced by whatever guards your module contributes</td></tr>
+            <tr><td>No auth module</td><td>Ignored; every command runs</td></tr>
+            <tr><td><code>&#64;qodalis/cli-users</code> (local, server, embedded or custom backend)</td><td>Enforced, using the signed-in user's groups (roles) and effective permissions</td></tr>
+            <tr><td>Your own auth module</td><td>Enforced once it registers an <code>ICliAuthorizationService</code></td></tr>
         </tbody>
     </table>
+
+    <h2>Checking Permissions in Code</h2>
     <p>
-        Client-side guards improve the experience but are not a security boundary. When commands call a server,
+        The generic helpers in <code>&#64;qodalis/cli-core</code> work with any auth module and allow everything when none is loaded:
+    </p>
+    <div class="code-block">
+        <pre><code>import &#123; cliAuthorize, cliCanAccess, CliAccessDeniedError &#125; from '&#64;qodalis/cli-core';
+
+if (!cliAuthorize(context, 'deploy:rollback')) &#123;
+    throw new CliAccessDeniedError('deploy: rollback not permitted');  // printed as a plain error
+&#125;
+
+// rwx check on a resource you own (files, records, ...)
+const allowed = cliCanAccess(context, &#123; ownership: &#123; uid: 'alice', gid: 'dev' &#125;, permissions: 'rw-r-----' &#125;, 'write');</code></pre>
+    </div>
+    <p>
+        Permissions are <code>resource:action</code> strings with <code>*</code> wildcards (<code>deploy:*</code>, <code>*</code>).
+        The files module uses <code>cliCanAccess</code> for rwx checks on the virtual file system.
+    </p>
+    <p>
+        Client-side checks improve the experience but are not a security boundary. When commands call a server,
         the server must still authorize each request.
     </p>
 </div>

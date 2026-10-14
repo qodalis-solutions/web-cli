@@ -1,48 +1,20 @@
-import { ICliCommandGuard, ICliCommandProcessor } from '@qodalis/cli-core';
-
-function requiredGroups(processor: ICliCommandProcessor): string[] {
-    const groups = processor.metadata?.requiredGroups;
-    return Array.isArray(groups) ? groups : [];
-}
-
-function requiresAuth(processor: ICliCommandProcessor): boolean {
-    return processor.metadata?.requireAuth === true || requiredGroups(processor).length > 0;
-}
+import {
+    cliAccessMetadataGuards,
+    cliRequireAuthGuard,
+    cliRequiredGroupsGuard,
+    cliRequiredPermissionsGuard,
+    ICliCommandGuard,
+} from '@qodalis/cli-core';
 
 /**
- * Blocks commands whose processor declares `metadata.requireAuth`
- * (or `metadata.requiredGroups`) when nobody is signed in.
- * Applies to commands from any module, not only the users module.
+ * The access-metadata guards (`requireAuth`, `requiredGroups`,
+ * `requiredPermissions`) live in `@qodalis/cli-core` and are registered by the
+ * CLI engine. They become active as soon as an authorization service is
+ * registered, which the users module does in both modes.
+ *
+ * These aliases are kept for backwards compatibility.
  */
-export const requireAuthGuard: ICliCommandGuard = {
-    name: 'users:require-auth',
-    priority: -100,
-    appliesTo: (processor) => requiresAuth(processor),
-    canActivate: (_command, processor, context) =>
-        context.userSession?.user ? true : `${processor.command}: login required`,
-};
-
-/**
- * Blocks commands whose processor declares `metadata.requiredGroups` when the
- * signed-in user is in none of those groups.
- * Applies to commands from any module, not only the users module.
- */
-export const requiredGroupsGuard: ICliCommandGuard = {
-    name: 'users:required-groups',
-    priority: -90,
-    appliesTo: (processor) => requiredGroups(processor).length > 0,
-    canActivate: (_command, processor, context) => {
-        const user = context.userSession?.user;
-        if (!user) {
-            return `${processor.command}: login required`;
-        }
-        const required = requiredGroups(processor);
-        const userGroups = user.groups ?? [];
-        return required.some((g) => userGroups.includes(g))
-            ? true
-            : `${processor.command}: permission denied (requires group: ${required.join(' or ')})`;
-    },
-};
-
-/** Guards contributed by the users module */
-export const usersGuards: ICliCommandGuard[] = [requireAuthGuard, requiredGroupsGuard];
+export const requireAuthGuard: ICliCommandGuard = cliRequireAuthGuard;
+export const requiredGroupsGuard: ICliCommandGuard = cliRequiredGroupsGuard;
+export const requiredPermissionsGuard: ICliCommandGuard = cliRequiredPermissionsGuard;
+export const usersGuards: ICliCommandGuard[] = cliAccessMetadataGuards;

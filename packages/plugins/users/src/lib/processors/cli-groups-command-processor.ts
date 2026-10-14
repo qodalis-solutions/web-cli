@@ -1,81 +1,48 @@
-import {
-    ICliCommandProcessor,
-    ICliExecutionContext,
-    CliProcessCommand,
-    CliProcessorMetadata,
-    CliIcon,
-    CliForegroundColor,
-    ICliUsersStoreService,
-    ICliUsersStoreService_TOKEN,
-    DefaultLibraryAuthor,
-    CliStateConfiguration,
-} from '@qodalis/cli-core';
+import { CliProcessCommand, ICliExecutionContext } from '@qodalis/cli-core';
 import { firstValueFrom } from 'rxjs';
+import { CliUsersCommand, usersServices, words, USERS_METADATA } from './base';
+import { CliProcessorMetadata } from '@qodalis/cli-core';
 
-export class CliGroupsCommandProcessor implements ICliCommandProcessor {
-    command = 'groups';
-    description = 'Show group memberships for a user';
-    author = DefaultLibraryAuthor;
-    acceptsRawInput = true;
-    valueRequired = false;
-    metadata: CliProcessorMetadata = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-        requireAuth: true,
-    };
-    stateConfiguration: CliStateConfiguration = {
-        initialState: {},
-        storeName: 'users',
-    };
+export class CliGroupsCommandProcessor extends CliUsersCommand {
+    override command = 'groups';
+    override description = 'Show group (role) membership, or list all groups';
+    override acceptsRawInput = true;
+    override metadata: CliProcessorMetadata = { ...USERS_METADATA, requireAuth: true };
+    override parameters = [
+        { name: 'all', aliases: ['a'], description: 'List every group with its permissions', type: 'boolean' as const, required: false },
+    ];
+    protected override usage: Array<[string, string]> = [
+        ['groups', 'Groups of the signed-in user'],
+        ['groups <user>', 'Groups of another user'],
+        ['groups --all', 'All groups with permissions and member counts'],
+    ];
 
-    private usersStore!: ICliUsersStoreService;
-
-    async initialize(context: ICliExecutionContext): Promise<void> {
-        this.usersStore = context.services.getRequired<ICliUsersStoreService>(
-            ICliUsersStoreService_TOKEN,
-        );
-    }
-
-    async processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        let user = context.userSession?.user;
-
-        const targetName = command.value as string;
-        if (targetName) {
-            const found = await firstValueFrom(
-                this.usersStore.getUser(targetName),
+    override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const { users, groups } = usersServices(context);
+        if (command.args['all'] || command.args['a']) {
+            const all = await firstValueFrom(groups.getGroups());
+            const everyone = await firstValueFrom(users.getUsers()).catch(() => undefined);
+            context.writer.writeTable(
+                ['GROUP', 'PERMISSIONS', 'MEMBERS', 'DESCRIPTION'],
+                all.map((g) => [
+                    g.name + (g.builtIn ? ' *' : ''),
+                    (g.permissions ?? []).join(', ') || '-',
+                    everyone
+                        ? String(everyone.filter((u) => u.groups.some((n) => n.toLowerCase() === g.name.toLowerCase())).length)
+                        : '?',
+                    g.description ?? '',
+                ]),
             );
-            if (!found) {
-                context.writer.writeError(
-                    `groups: '${targetName}': no such user`,
-                );
-                return;
-            }
-            user = found;
-        }
-
-        if (!user) {
-            context.writer.writeError('groups: no user session');
+            context.writer.writeln('* built-in');
             return;
         }
-
-        const groups =
-            user.groups.length > 0 ? user.groups.join(' ') : '(none)';
-        context.writer.writeln(`${user.name} : ${groups}`);
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Show group memberships for a user');
-        writer.writeln();
-        writer.writeln(
-            `  ${writer.wrapInColor('groups', CliForegroundColor.Cyan)}                Show current user groups`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('groups <username>', CliForegroundColor.Cyan)}      Show specific user groups`,
-        );
+        const [target] = words(command);
+        const user = target ? await firstValueFrom(users.getUser(target)) : context.userSession!.user;
+        if (!user) {
+            context.writer.writeError(`groups: '${target}': no such user`);
+            context.process.exit(-1, { silent: true });
+            return;
+        }
+        context.writer.writeln(user.groups.join(' ') || '(none)');
     }
 }

@@ -13,7 +13,8 @@ import { speedTestModule } from '@qodalis/cli-speed-test';
 import { browserStorageModule } from '@qodalis/cli-browser-storage';
 import { stringModule } from '@qodalis/cli-string';
 import { todoModule } from '@qodalis/cli-todo';
-import { usersModule } from '@qodalis/cli-users';
+import { accessDemoModule, demoUsersModules, setDemoUsersDefault } from './users-mode';
+
 import { langEsModule } from '@qodalis/cli-lang-es';
 import { langFrModule } from '@qodalis/cli-lang-fr';
 import { langDeModule } from '@qodalis/cli-lang-de';
@@ -114,6 +115,10 @@ const backgroundServicesDemo: ICliModule = {
     },
 };
 
+// Original Angular demo wiring: users module in server mode against cli-server-node
+// (root / admin). Override with ?users=none|local|server&server=dotnet|python.
+setDemoUsersDefault({ mode: 'server', server: 'node' });
+
 // Demonstrates registering CLI modules via Angular DI (NgModule providers).
 // These modules are injected into CliComponent via CliModule_TOKEN automatically.
 // Works with .configure() too — usersModule.configure() returns an ICliModule.
@@ -129,17 +134,10 @@ const backgroundServicesDemo: ICliModule = {
         resolveCliModuleProvider(browserStorageModule),
         resolveCliModuleProvider(stringModule),
         resolveCliModuleProvider(todoModule),
-        resolveCliModuleProvider(
-            usersModule.configure({
-                // Server mode: delegates all user/auth/session/group/audit
-                // operations to the CLI server named 'node' in
-                // AppComponent.options.servers (http://localhost:8047).
-                // Start the server with: cd cli-server-node && npm run dev
-                // Default admin credentials (per cli-server-node demo): root / admin
-                server: 'node',
-                requirePassword: true,
-            }),
-        ),
+        // Users/auth wiring is chosen from the URL (?users=none|local|server&server=node),
+        // see ./users-mode.ts. Every variant must keep the rest of the CLI working.
+        ...demoUsersModules().map((m) => resolveCliModuleProvider(m)),
+        resolveCliModuleProvider(accessDemoModule),
         resolveCliModuleProvider(langEsModule),
         resolveCliModuleProvider(langFrModule),
         resolveCliModuleProvider(langDeModule),

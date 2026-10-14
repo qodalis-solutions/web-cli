@@ -1,7 +1,19 @@
-import { ICliOwnership } from '@qodalis/cli-core';
+import { CliAccessAction, ICliOwnership } from '@qodalis/cli-core';
 import { IFileNode } from './i-file-node';
 
 export const IFileSystemService_TOKEN = 'cli-file-system-service';
+
+/**
+ * Decides whether the current principal may act on a node. Set by the files
+ * module from the generic authorization layer (`cliCanAccess`); when no policy
+ * is set (no auth module loaded) every operation is allowed.
+ */
+export interface CliFileAccessPolicy {
+    /** rwx check on a file or directory */
+    canAccess(node: IFileNode, action: CliAccessAction): boolean;
+    /** May the principal chmod/chown this node (owner, or `files:chown` / `files:admin`) */
+    canChangeOwnership(node: IFileNode, newOwnership?: ICliOwnership): boolean;
+}
 
 /**
  * Abstraction for virtual filesystem operations.
@@ -37,6 +49,13 @@ export interface IFileSystemService {
     // Permissions
     chmod(path: string, permissions: string): void;
     chown(path: string, ownership: ICliOwnership): void;
+
+    // Access control (optional; implementations without it are unrestricted)
+    setAccessPolicy?(policy?: CliFileAccessPolicy): void;
+    /** False when the current principal may not reach `path` (needs `x` on every parent) */
+    canTraverse?(path: string): boolean;
+    /** Run `fn` without access checks (system tasks such as creating home directories) */
+    runAsSystem?<T>(fn: () => T): T;
 
     // Persistence
     initialize(): Promise<void>;

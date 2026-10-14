@@ -18,6 +18,8 @@ export interface ICliUser {
     updatedAt: number;
     /** Whether the account is locked */
     disabled?: boolean;
+    /** The user must set a new password before doing anything else */
+    mustChangePassword?: boolean;
     /** Extensible metadata (department, phone, preferences, etc.) */
     data?: Record<string, any>;
     /** Timestamp of last successful login */
@@ -50,6 +52,16 @@ export interface ICliGroup {
     description?: string;
     /** Group creation timestamp */
     createdAt: number;
+    /**
+     * Permissions granted to every member of the group. Groups act as roles.
+     * Permission strings are `resource:action` (e.g. `users:create`), with
+     * `*` wildcards (`users:*`, `*`). See {@link cliPermissionMatches}.
+     */
+    permissions?: string[];
+    /** Built-in groups (`admin`, `users`) cannot be deleted */
+    builtIn?: boolean;
+    /** Last modification timestamp */
+    updatedAt?: number;
 }
 
 /**
@@ -64,6 +76,11 @@ export interface ICliUserSession {
     loginTime: number;
     /** Timestamp of last activity */
     lastActivity: number;
+    /**
+     * Effective permissions of the user (union of their groups' permissions),
+     * resolved by the users module at login and refreshed when groups change.
+     */
+    permissions?: string[];
     /** Extensible data (tokens, metadata, etc.) */
     data?: Record<string, any>;
 }

@@ -10,6 +10,7 @@ import {
     ICliServerAuthService,
     ServerVersionNegotiator,
     buildAuthenticatedWebSocketUrl,
+    appendQueryParams,
     resolveHeaders,
 } from '@qodalis/cli-core';
 
@@ -70,6 +71,19 @@ export class CliServerConnection {
             return this._authService.getHeaders(this._config.name, this._config.headers);
         }
         return resolveHeaders(this._config.headers) as Record<string, string>;
+    }
+
+    /**
+     * WebSocket URL for this server with auth: single-use upgrade params from
+     * auth providers when available, otherwise headers copied into the URL.
+     */
+    async buildWebSocketUrl(path: string): Promise<string> {
+        const url = this.toWebSocketUrl(this.normalizeUrl(this._config.url)) + path;
+        const params = await this._authService?.getWebSocketParams?.(this._config.name);
+        if (params) {
+            return appendQueryParams(url, params);
+        }
+        return buildAuthenticatedWebSocketUrl(url, () => this.resolveAuthHeaders());
     }
 
     async connect(): Promise<void> {
@@ -311,12 +325,8 @@ export class CliServerConnection {
                 description: `Event stream for server '${this._config.name}'`,
                 type: 'daemon',
                 onStart: async (ctx) => {
-                    const baseUrl = this.normalizeUrl(this._config.url);
-                    const wsUrl = buildAuthenticatedWebSocketUrl(
-                        this.toWebSocketUrl(baseUrl) + '/ws/v1/qcli/events',
-                        () => this.resolveAuthHeaders(),
-                    );
-                    ctx.log(`Connecting to ${wsUrl}`);
+                    const wsUrl = await this.buildWebSocketUrl('/ws/v1/qcli/events');
+                    ctx.log(`Connecting to ${wsUrl.split('?')[0]}`);
 
                     this._eventSocket = new WebSocket(wsUrl);
 
@@ -369,12 +379,12 @@ export class CliServerConnection {
     }
 
     private connectEventSocketDirect(): void {
+        void this.connectEventSocketDirectAsync();
+    }
+
+    private async connectEventSocketDirectAsync(): Promise<void> {
         try {
-            const baseUrl = this.normalizeUrl(this._config.url);
-            const wsUrl = buildAuthenticatedWebSocketUrl(
-                this.toWebSocketUrl(baseUrl) + '/ws/v1/qcli/events',
-                () => this.resolveAuthHeaders(),
-            );
+            const wsUrl = await this.buildWebSocketUrl('/ws/v1/qcli/events');
             this._eventSocket = new WebSocket(wsUrl);
 
             this._eventSocket.onopen = () => {

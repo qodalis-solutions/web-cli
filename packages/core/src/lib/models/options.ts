@@ -151,18 +151,25 @@ export type CliProcessorMetadata = Record<string, any> & {
     requiredCliVersion?: string;
 
     /**
-     * If true, the command requires a signed-in user. Enforced by a command
-     * guard (the `@qodalis/cli-users` module registers one); without such a
-     * guard the flag is informational.
+     * If true, the command requires a signed-in user. Enforced by a
+     * core guard that activates when an auth module registers an
+     * `ICliAuthorizationService` (e.g. `@qodalis/cli-users`); without one the
+     * flag is informational.
      */
     requireAuth?: boolean;
 
     /**
      * The signed-in user must belong to at least one of these groups
-     * (e.g. `['admin']`). Implies `requireAuth`. Enforced by a command guard
-     * (the `@qodalis/cli-users` module registers one).
+     * (e.g. `['admin']`). Implies `requireAuth`. Enforced like `requireAuth`.
      */
     requiredGroups?: string[];
+
+    /**
+     * The signed-in user must hold **all** of these permissions
+     * (e.g. `['users:create']`), granted through their groups (roles).
+     * Implies `requireAuth`. Enforced like `requireAuth`.
+     */
+    requiredPermissions?: string[];
 
     /**
      * If true, the processor is hidden from the help command listing.

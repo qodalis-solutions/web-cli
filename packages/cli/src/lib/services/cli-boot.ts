@@ -6,6 +6,8 @@ import {
     ICliKeyValueStore,
     ICliModule,
     ICliCommandGuard_TOKEN,
+    ICliPermissionRegistry,
+    ICliPermissionRegistry_TOKEN,
     ICliServiceProvider,
     CliModuleRegistry,
     initializeBrowserEnvironment,
@@ -138,6 +140,13 @@ export class CliBoot {
             );
         }
 
+        // Register the permissions the module declares
+        if (module.permissions && module.permissions.length > 0) {
+            this.services
+                .get<ICliPermissionRegistry>(ICliPermissionRegistry_TOKEN)
+                ?.register(module.permissions, module.name);
+        }
+
         // Auto-register module translations (before onInit so modules can override)
         if (module.translations) {
             for (const [locale, translations] of Object.entries(module.translations)) {
@@ -213,6 +222,11 @@ export class CliBoot {
             version: CORE_VERSION,
             description: 'Core CLI services and utilities',
             processors: [...builtinProcessors],
+            permissions: [
+                { name: 'system:packages', description: 'Install, update and remove packages (pkg)' },
+                { name: 'system:services', description: 'Start and stop background services' },
+                { name: 'system:eval', description: 'Evaluate JavaScript (eval, also requires allowEval)' },
+            ],
         };
     }
 

@@ -96,10 +96,11 @@ export type CliCommandGuardResult =
  *
  * ## Without a guard-providing module
  *
- * Guards are opt-in. When no guard is registered every command runs as before,
- * and metadata such as `requireAuth` / `requiredGroups` is informational only.
- * The users module (`@qodalis/cli-users`) is one provider: it contributes guards
- * that enforce those two metadata flags for processors from any module.
+ * Guards are opt-in. When no guard is registered every command runs as before.
+ * The engine registers three built-in guards that enforce the processor access
+ * metadata (`requireAuth`, `requiredGroups`, `requiredPermissions`); they stay
+ * inactive until an auth module (e.g. `@qodalis/cli-users`) registers an
+ * `ICliAuthorizationService`, so without one that metadata is informational.
  */
 export interface ICliCommandGuard {
     /** Unique name, shown in diagnostics when the guard throws. */

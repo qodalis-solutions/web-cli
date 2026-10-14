@@ -1,65 +1,16 @@
-import {
-    ICliCommandProcessor,
-    ICliExecutionContext,
-    CliProcessCommand,
-    CliProcessorMetadata,
-    CliIcon,
-    CliForegroundColor,
-    ICliAuthService,
-    ICliAuthService_TOKEN,
-    DefaultLibraryAuthor,
-    CliStateConfiguration,
-} from '@qodalis/cli-core';
+import { CliProcessCommand, ICliExecutionContext } from '@qodalis/cli-core';
+import { CliUsersCommand, usersServices, USERS_METADATA } from './base';
+import { CliProcessorMetadata } from '@qodalis/cli-core';
 
-export class CliLogoutCommandProcessor implements ICliCommandProcessor {
-    command = 'logout';
-    aliases = ['exit-session'];
-    description = 'End the current user session';
-    author = DefaultLibraryAuthor;
-    metadata: CliProcessorMetadata = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-        requireAuth: true,
-    };
-    stateConfiguration: CliStateConfiguration = {
-        initialState: {},
-        storeName: 'users',
-    };
+export class CliLogoutCommandProcessor extends CliUsersCommand {
+    override command = 'logout';
+    override description = 'Sign out';
+    override metadata: CliProcessorMetadata = { ...USERS_METADATA, requireAuth: true };
+    protected override usage: Array<[string, string]> = [['logout', 'End the current session']];
 
-    private authService!: ICliAuthService;
-
-    async initialize(context: ICliExecutionContext): Promise<void> {
-        this.authService = context.services.getRequired<ICliAuthService>(
-            ICliAuthService_TOKEN,
-        );
-    }
-
-    async processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        const currentUser = context.userSession?.user?.name;
-
-        if (!currentUser || currentUser === 'root') {
-            context.writer.writeError(
-                'logout: cannot logout from root session',
-            );
-            return;
-        }
-
-        await this.authService.logout();
-        context.writer.writeln(
-            `Logged out ${currentUser}. Session restored to root.`,
-        );
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('End the current user session');
-        writer.writeln();
-        writer.writeln(
-            `  ${writer.wrapInColor('logout', CliForegroundColor.Cyan)}`,
-        );
+    override async processCommand(_command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const name = context.userSession!.user.name;
+        await usersServices(context).auth.logout();
+        context.writer.writeInfo(`Logged out ${name}. Use 'login' to sign in again.`);
     }
 }

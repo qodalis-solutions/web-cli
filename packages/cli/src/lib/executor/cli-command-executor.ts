@@ -13,6 +13,7 @@ import {
     ICliProcessRegistry,
     ICliCommandGuard,
     ICliCommandGuard_TOKEN,
+    isCliAccessDeniedError,
     CliCommandGuardResult,
 } from '@qodalis/cli-core';
 import { CliProcessRegistry_TOKEN } from '../services/cli-process-registry';
@@ -289,7 +290,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             const aliasProcessor = this.registry.findProcessor('alias', []) as
                 | CliAliasCommandProcessor
                 | undefined;
-            const aliases = aliasProcessor?.userAliases ?? {};
+            // Per-user aliases when an auth module is loaded
+            const aliases = aliasProcessor?.aliasesFor?.(context) ?? aliasProcessor?.userAliases ?? {};
 
             if (aliases[mainCommand]) {
                 this.completeProcess(processEntry, context, 0);
@@ -373,7 +375,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         const blockedBy = await this.runGuards(commandToProcess, processor, context);
         if (blockedBy) {
             context.writer.writeError(blockedBy);
-            context.process.exit(-1);
+            context.process.exit(-1, { silent: true });
             return;
         }
 
@@ -501,6 +503,11 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                         'Process exited successfully with code 0',
                     );
                 }
+            } else if (isCliAccessDeniedError(e)) {
+                // Authorization failures are expected outcomes: print the message only
+                this.failProcess(processEntry, context);
+                context.writer.writeError(e.message);
+                context.process.exit(-1);
             } else {
                 this.failProcess(processEntry, context);
                 context.writer.writeError(`Error executing command: ${e}`);

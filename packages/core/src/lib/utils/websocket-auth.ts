@@ -1,4 +1,6 @@
-import { CliHeadersProvider, resolveHeaders } from '../models/server';
+import { CliHeadersProvider, resolveHeaders, resolveServerHeaders } from '../models/server';
+import type { ICliServerAuthService, ICliServiceProvider } from '../interfaces/services';
+import { ICliServerAuthService_TOKEN } from '../interfaces/services';
 
 /**
  * Builds a WebSocket URL that includes authentication credentials from headers
@@ -40,4 +42,32 @@ export function buildAuthenticatedWebSocketUrl(
         .join('&');
 
     return `${wsUrl}${separator}${params}`;
+}
+
+/**
+ * Build the WebSocket URL for a configured server. Prefers upgrade params
+ * from auth providers (e.g. a single-use ticket from the users module); only
+ * when no provider handles the server are headers copied into the URL
+ * (legacy behaviour, see {@link buildAuthenticatedWebSocketUrl}).
+ */
+export async function resolveServerWebSocketUrl(
+    services: ICliServiceProvider | undefined,
+    serverName: string,
+    wsUrl: string,
+    configHeaders?: CliHeadersProvider,
+): Promise<string> {
+    const authService = services?.get<ICliServerAuthService>(ICliServerAuthService_TOKEN);
+    const params = await authService?.getWebSocketParams?.(serverName);
+    if (params) {
+        return appendQueryParams(wsUrl, params);
+    }
+    return buildAuthenticatedWebSocketUrl(wsUrl, () => resolveServerHeaders(services, serverName, configHeaders));
+}
+
+/** Append query params to a URL that may already have some. */
+export function appendQueryParams(url: string, params: Record<string, string>): string {
+    const entries = Object.entries(params);
+    if (!entries.length) return url;
+    const query = entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+    return `${url}${url.includes('?') ? '&' : '?'}${query}`;
 }

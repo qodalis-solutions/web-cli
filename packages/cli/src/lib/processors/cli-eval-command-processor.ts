@@ -19,6 +19,8 @@ export class CliEvalCommandProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata | undefined = {
         icon: '🧮',
         module: 'misc',
+        // Enforced only when an auth module is loaded (eval also needs allowEval)
+        requiredPermissions: ['system:eval'],
     };
 
     async processCommand(

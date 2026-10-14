@@ -1,143 +1,41 @@
-import {
-    ICliCommandProcessor,
-    ICliExecutionContext,
-    CliProcessCommand,
-    CliProcessorMetadata,
-    CliIcon,
-    CliForegroundColor,
-    ICliCommandParameterDescriptor,
-    ICliUsersStoreService,
-    ICliAuthService,
-    ICliUsersStoreService_TOKEN,
-    ICliAuthService_TOKEN,
-    DefaultLibraryAuthor,
-    CliStateConfiguration,
-} from '@qodalis/cli-core';
+import { CliProcessCommand, cliHasPermission, ICliExecutionContext } from '@qodalis/cli-core';
 import { firstValueFrom } from 'rxjs';
+import { CliUsersCommand, readNewPassword, usersServices, words, USERS_METADATA } from './base';
+import { CliProcessorMetadata } from '@qodalis/cli-core';
 
-export class CliPasswdCommandProcessor implements ICliCommandProcessor {
-    command = 'passwd';
-    description = 'Change user password';
-    author = DefaultLibraryAuthor;
-    acceptsRawInput = true;
-    valueRequired = false;
-    metadata: CliProcessorMetadata = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-        requireAuth: true,
-    };
-    stateConfiguration: CliStateConfiguration = {
-        initialState: {},
-        storeName: 'users',
-    };
+export class CliPasswdCommandProcessor extends CliUsersCommand {
+    override command = 'passwd';
+    override description = 'Change a password';
+    override acceptsRawInput = true;
+    override metadata: CliProcessorMetadata = { ...USERS_METADATA, requireAuth: true };
+    protected override usage: Array<[string, string]> = [
+        ['passwd', 'Change your own password (asks for the current one)'],
+        ['passwd <user>', "Reset another user's password (requires users:update)"],
+    ];
 
-    private usersStore!: ICliUsersStoreService;
-    private authService!: ICliAuthService;
-
-    async initialize(context: ICliExecutionContext): Promise<void> {
-        this.usersStore = context.services.getRequired<ICliUsersStoreService>(
-            ICliUsersStoreService_TOKEN,
-        );
-        this.authService = context.services.getRequired<ICliAuthService>(
-            ICliAuthService_TOKEN,
-        );
-    }
-
-    async processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        const session = context.userSession;
-        if (!session) {
-            context.writer.writeError('passwd: no user session');
+    override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const { users, auth } = usersServices(context);
+        const me = context.userSession!;
+        const [target] = words(command);
+        const user = target ? await firstValueFrom(users.getUser(target)) : me.user;
+        if (!user) {
+            context.writer.writeError(`passwd: user '${target}' does not exist`);
+            context.process.exit(-1, { silent: true });
             return;
         }
-
-        // Determine target user
-        let targetUser = session.user;
-        const targetName = command.value as string;
-
-        if (targetName) {
-            // Changing another user's password requires admin
-            if (!session.user.groups.includes('admin')) {
-                context.writer.writeError('passwd: permission denied');
-                return;
-            }
-            const found = await firstValueFrom(
-                this.usersStore.getUser(targetName),
-            );
-            if (!found) {
-                context.writer.writeError(
-                    `passwd: user '${targetName}' does not exist`,
-                );
-                return;
-            }
-            targetUser = found;
-        }
-
-        // If changing own password, verify current password first
-        const isOwnPassword = targetUser.id === session.user.id;
+        const isSelf = user.id === me.user.id;
         let currentPassword: string | undefined;
-        if (isOwnPassword) {
-            currentPassword =
-                (await context.reader.readPassword('Current password: ')) ?? undefined;
-            if (currentPassword === undefined) return;
-
-            const valid = await this.authService.verifyPassword(
-                targetUser.id,
-                currentPassword,
-            );
-            if (!valid) {
-                context.writer.writeError('passwd: Authentication failure');
+        if (isSelf && (me.user.mustChangePassword || !cliHasPermission(me.permissions, 'users:update'))) {
+            const entered = await context.reader.readPassword('Current password: ');
+            if (entered === null) {
+                context.writer.writeError('Aborted');
                 return;
             }
+            currentPassword = entered;
         }
-
-        const newPassword = await context.reader.readPassword('New password: ');
-        if (newPassword === null) return;
-
-        if (!newPassword) {
-            context.writer.writeError('passwd: password cannot be empty');
-            return;
-        }
-
-        const confirmPassword = await context.reader.readPassword(
-            'Retype new password: ',
-        );
-        if (confirmPassword === null) return;
-
-        if (newPassword !== confirmPassword) {
-            context.writer.writeError('passwd: passwords do not match');
-            return;
-        }
-
-        // Validate password policy
-        if (this.authService.validatePassword) {
-            const policyError = this.authService.validatePassword(newPassword);
-            if (policyError) {
-                context.writer.writeError(`passwd: ${policyError}`);
-                return;
-            }
-        }
-
-        try {
-            await this.authService.setPassword(targetUser.id, newPassword, currentPassword);
-            context.writer.writeSuccess('passwd: password updated successfully');
-        } catch (e: any) {
-            context.writer.writeError(e.message || 'passwd: failed to set password');
-        }
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Change a user password');
-        writer.writeln();
-        writer.writeln(
-            `  ${writer.wrapInColor('passwd', CliForegroundColor.Cyan)}                Change own password`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('passwd <username>', CliForegroundColor.Cyan)}      Change another user\'s password (admin only)`,
-        );
+        const password = await readNewPassword(context, auth);
+        if (password === null) return;
+        await auth.setPassword(user.id, password, currentPassword);
+        context.writer.writeSuccess(`passwd: password updated for ${user.name}`);
     }
 }
