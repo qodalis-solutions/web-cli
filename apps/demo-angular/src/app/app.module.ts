@@ -131,14 +131,12 @@ const backgroundServicesDemo: ICliModule = {
         resolveCliModuleProvider(todoModule),
         resolveCliModuleProvider(
             usersModule.configure({
-                seedUsers: [
-                    {
-                        name: 'root1',
-                        email: 'root1@root.com',
-                        groups: ['admin'],
-                    },
-                ],
-                defaultPassword: 'root',
+                // Server mode: delegates all user/auth/session/group/audit
+                // operations to the CLI server named 'node' in
+                // AppComponent.options.servers (http://localhost:8047).
+                // Start the server with: cd cli-server-node && npm run dev
+                // Default admin credentials (per cli-server-node demo): root / admin
+                server: 'node',
                 requirePassword: true,
             }),
         ),
