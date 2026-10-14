@@ -22,7 +22,7 @@ describe('CliLocalUsersBackend (users contract, local)', () => {
             const users = groups.find((g) => g.name === 'users')!;
             expect(admin.permissions).toEqual(['*']);
             expect(admin.builtIn).toBeTrue();
-            expect(users.permissions).toEqual([]);
+            expect(users.permissions).toEqual(['commands:execute']);
             expect(users.builtIn).toBeTrue();
         });
 
@@ -297,7 +297,7 @@ describe('CliLocalUsersBackend (users contract, local)', () => {
         async function delegated(perms: string[]) {
             const ctx = await localBackend();
             await ctx.backend.createGroup(ctx.root, { name: 'delegates', permissions: perms });
-            await ctx.backend.createUser(ctx.root, { name: 'del', email: 'del@x.io', password: 'pw', groups: ['delegates'] });
+            await ctx.backend.createUser(ctx.root, { name: 'del', email: 'del@x.io', password: 'pw', groups: ['users', 'delegates'] });
             const del = (await ctx.backend.login('del', 'pw')).token;
             return { ...ctx, del };
         }

@@ -42,7 +42,7 @@ Groups are roles. Each group grants a list of permissions; a user's effective
 permissions are the union of their groups' permissions.
 
 - Permission strings are `resource:action`, with `*` wildcards: `users:*`, `*`.
-- Built-in groups: `admin` (`*`, cannot be changed or deleted) and `users` (default for new accounts).
+- Built-in groups: `admin` (`*`, cannot be changed or deleted) and `users` (default for new accounts, grants `commands:execute` so members can run server commands).
 - Built-in permissions: `users:read|create|update|delete`, `groups:read|create|update|delete`,
   `sessions:read|revoke`, `audit:read|clear`.
 - Any module can declare its own (`ICliModule.permissions`) and protect commands with them.

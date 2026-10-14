@@ -72,6 +72,7 @@ const denyAllAuthorization: ICliAuthorizationService = {
 
 /** Permissions used by the users module (granted through groups). */
 export const usersPermissionDefinitions: CliPermissionDefinition[] = [
+    { name: 'commands:execute', description: 'Run server commands (granted to the users group by default)' },
     { name: 'users:read', description: 'List and view users' },
     { name: 'users:create', description: 'Create users' },
     { name: 'users:update', description: 'Change users, reset passwords, enable/disable' },

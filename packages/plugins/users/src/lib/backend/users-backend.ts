@@ -122,5 +122,5 @@ export function isCliUsersError(e: unknown): e is CliUsersError {
 /** Built-in groups (roles) present in both modes. */
 export const BUILTIN_GROUPS: ReadonlyArray<{ name: string; description: string; permissions: string[] }> = [
     { name: 'admin', description: 'Administrators (all permissions)', permissions: ['*'] },
-    { name: 'users', description: 'Default group for new accounts', permissions: [] },
+    { name: 'users', description: 'Default group for new accounts', permissions: ['commands:execute'] },
 ];

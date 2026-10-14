@@ -276,7 +276,8 @@ export class CliLocalUsersBackend implements ICliUsersBackend {
     async createUser(token: string, input: CliBackendCreateUser): Promise<ICliUser> {
         const actor = this.authenticate(token);
         this.requirePermission(actor.user, 'users:create');
-        this.requireCanAssignGroups(actor.user, input.groups?.length ? input.groups : ['users']);
+        // The default `users` group is not an escalation; explicitly requested groups are checked
+        if (input.groups?.length) this.requireCanAssignGroups(actor.user, input.groups);
         return this.createUserInternal(input, actor.user);
     }
 
