@@ -63,7 +63,7 @@ permissions are the union of their groups' permissions.
 - Permission strings are `resource:action`, with `*` wildcards: `users:*`, `*`.
 - Built-in groups: `admin` (`*`, cannot be changed or deleted) and `users` (default for new accounts, grants `commands:execute` so members can run server commands).
 - Built-in permissions: `users:read|create|update|delete`, `groups:read|create|update|delete`,
-  `sessions:read|revoke`, `audit:read|clear`; core also declares `system:packages|services|eval`
+  `sessions:read|revoke`, `tokens:read|revoke`, `audit:read|clear`; core also declares `system:packages|services|eval`
   and `shell:execute` (`ssh` remote shells; not granted to `users` by default:
   `groupadd ops --permissions=shell:execute`).
 - Any module can declare its own (`ICliModule.permissions`) and protect commands with them.
@@ -136,8 +136,43 @@ their files to `root`, so a later account with the same name never inherits them
 | `w` | login | Who is signed in |
 | `sessions` | `sessions:read` | Active sessions |
 | `session-kick <id>` | login | End a session (own, or any with `sessions:revoke`) |
+| `token create <name> [--expires=<days>\|never] [--permissions=a,b]` | login (server mode) | Create an API token, shown once |
+| `token list [--all]` | login (server mode) | Own tokens; `--all` every user's (`tokens:read`) |
+| `token revoke <id>` | login (server mode) | Revoke a token (own, or any with `tokens:revoke`) |
 | `last [user]` | `audit:read` | Sign-in history |
 | `audit [--user --event -n]`, `audit clear` | `audit:read` / `audit:clear` | Security audit log |
+
+## API tokens
+
+In server mode, `token` creates long-lived, revocable bearer tokens: the credential for
+MCP clients (Claude Code), CI jobs and scripts. A token acts
+as the user who created it, with that user's live permissions; `--permissions` narrows
+it further (you can only include permissions you hold).
+
+```bash
+token create claude --expires=90                          # shown once
+token create ci --expires=30 --permissions=commands:execute
+token list            # NAME, ID, EXPIRES, LAST USED, SCOPE
+token list --all      # every user's tokens (tokens:read), adds USER
+token revoke <id>     # own token, or any with tokens:revoke
+```
+
+`token create` prints the token once, with a ready-to-paste
+`claude mcp add --transport http qcli <server>/api/qcli/mcp --header "Authorization: Bearer <token>"`.
+Clients send it as `Authorization: Bearer qcli_pat_…`, wherever a session token is accepted.
+
+- Expiry: 1-365 days (default 90). `--expires=never` works only when the server enables
+  non-expiring tokens.
+- Tokens are created from a signed-in session only: a request authenticated with an
+  API token cannot create more tokens or change passwords.
+- Disabling a user makes their tokens fail; deleting a user deletes them.
+- Local mode has no tokens: the commands print where they are available. Custom
+  backends opt in by implementing `listApiTokens`, `createApiToken` and `revokeApiToken`
+  of `ICliUsersBackend`.
+
+The MCP endpoint itself is a feature of the CLI servers (enabling it, the tools it exposes,
+connecting Claude Code): see
+[MCP endpoint](https://cli.qodalis.com/docs/server-integration#mcp-endpoint).
 
 ## Rules (identical in every mode)
 

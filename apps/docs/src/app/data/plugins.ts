@@ -303,6 +303,8 @@ export const PLUGINS: PluginData[] = [
             { command: 'adduser', description: 'Create a user step by step (name, email, full name, groups, home, password)' },
             { command: 'adduser alice --email=alice@example.com --groups=release', description: 'Create a user in one line' },
             { command: 'sessions', description: 'Active sessions (session-kick <id> to end one)' },
+            { command: 'token create claude --expires=30', description: 'API token for MCP clients and scripts (server mode, shown once)' },
+            { command: 'token list --all', description: "API tokens (--all: every user's, requires tokens:read)" },
             { command: 'audit --event=user_deleted', description: 'Security audit log' },
         ],
     },
