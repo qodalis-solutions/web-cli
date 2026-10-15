@@ -246,7 +246,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                 context.writer.writeError(
                     `Failed to connect to '${serverName}': ${e.message}`,
                 );
-                context.process.exit(1);
+                context.process.exit(1, { silent: true });
                 resolveOnce();
                 return;
             }
@@ -282,7 +282,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                         context.writer.writeInfo(
                             `Shell exited with code ${msg.code}.`,
                         );
-                        context.process.exit(msg.code);
+                        context.process.exit(msg.code, { silent: true });
                         this.cleanup();
                         resolveOnce();
                         break;
@@ -293,7 +293,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                         context.writer.writeError(
                             `Server error: ${msg.message}`,
                         );
-                        context.process.exit(1);
+                        context.process.exit(1, { silent: true });
                         this.cleanup();
                         resolveOnce();
                         break;
@@ -307,7 +307,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                     context.writer.writeWarning(
                         `Connection to '${serverName}' closed.`,
                     );
-                    context.process.exit(1);
+                    context.process.exit(1, { silent: true });
                 }
                 this.cleanup();
                 resolveOnce();
@@ -319,7 +319,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                     context.writer.writeError(
                         `WebSocket error connecting to '${serverName}'.`,
                     );
-                    context.process.exit(1);
+                    context.process.exit(1, { silent: true });
                 }
                 this.cleanup();
                 resolveOnce();
@@ -347,7 +347,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                 context.writer.writeError(
                     `Failed to connect to '${serverName}': ${e.message}`,
                 );
-                context.process.exit(1);
+                context.process.exit(1, { silent: true });
                 resolve();
                 return;
             }
@@ -370,7 +370,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
 
                     case 'exit':
                         if (msg.code !== 0) {
-                            context.process.exit(msg.code);
+                            context.process.exit(msg.code, { silent: true });
                         }
                         this.cleanup();
                         resolve();
@@ -381,7 +381,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                         context.writer.writeError(
                             `Server error: ${msg.message}`,
                         );
-                        context.process.exit(1);
+                        context.process.exit(1, { silent: true });
                         this.cleanup();
                         resolve();
                         break;
@@ -399,7 +399,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                 context.writer.writeError(
                     `WebSocket error connecting to '${serverName}'.`,
                 );
-                context.process.exit(1);
+                context.process.exit(1, { silent: true });
                 this.cleanup();
                 resolve();
             };
