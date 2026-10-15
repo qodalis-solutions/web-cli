@@ -79,6 +79,87 @@
     </tbody>
 </table>
 
+<h2 id="shell-security">Remote shell security</h2>
+<p>
+    The <code>ssh</code> command opens a PTY shell on the server (<code>/ws/v1/qcli/shell</code>). That is OS-level
+    access, so the shell is <strong>off by default</strong> and, once enabled, it is <strong>locked</strong> until you
+    choose how callers are authorized. It works with and without the users module.
+</p>
+<table>
+    <thead>
+        <tr><th>Mode</th><th>When</th><th>Who may open a shell</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>users</code></td>
+            <td>The server's users plugin is mounted</td>
+            <td>Signed-in users with the <code>shell:execute</code> permission (single-use WebSocket ticket)</td>
+        </tr>
+        <tr>
+            <td><code>token</code></td>
+            <td>No users plugin, a shell token is configured</td>
+            <td>Clients sending <code>Authorization: Bearer &lt;token&gt;</code> (configure it in the client's server <code>headers</code>)</td>
+        </tr>
+        <tr>
+            <td><code>custom</code></td>
+            <td>No users plugin, an <code>authorize</code> callback is configured</td>
+            <td>Whatever your callback allows (headers, query, remote address)</td>
+        </tr>
+        <tr>
+            <td><code>anonymous</code></td>
+            <td>Only with an explicit <code>allowAnonymous</code></td>
+            <td>Anyone who can reach the server (logs a startup warning; development only)</td>
+        </tr>
+        <tr>
+            <td><code>locked</code></td>
+            <td>Enabled, nothing of the above</td>
+            <td>Nobody (startup error explains the options)</td>
+        </tr>
+    </tbody>
+</table>
+<p>Server options (names per server):</p>
+<pre><code class="language-typescript">// Node
+createCliServer(&#123; enableShell: true, shell: &#123; token: process.env.QCLI_SHELL_TOKEN, maxSessionsPerUser: 3,
+    idleTimeoutMs: 15 * 60_000, env: &#123; allow: ['TZ'] &#125; &#125; &#125;);</code></pre>
+<pre><code class="language-python"># Python
+CliServerOptions(enable_shell=True, shell=CliShellOptions(token=os.environ["QCLI_SHELL_TOKEN"], idle_timeout=900))</code></pre>
+<pre><code class="language-csharp">// .NET
+cli.EnableShell(o =&gt; &#123; o.Token = builder.Configuration["Shell:Token"]; o.IdleTimeout = TimeSpan.FromMinutes(15); &#125;);</code></pre>
+<p>Client side, token mode only needs the header on the server entry:</p>
+<pre><code class="language-typescript">servers: [&#123; name: 'ops', url: 'https://ops.example.com', headers: &#123; Authorization: 'Bearer ' + shellToken &#125; &#125;]</code></pre>
+<p>In every mode:</p>
+<ul>
+    <li><strong>Session-bound</strong> (users mode): logout, expiry, an administrator revoking the session, disabling the user or removing <code>shell:execute</code> closes open shells immediately.</li>
+    <li><strong>Limits</strong>: sessions per user (default 3) and in total (20), idle timeout (15 min), optional maximum duration.</li>
+    <li><strong>Minimal environment</strong>: the shell no longer inherits the server's environment (secrets); only <code>PATH</code>, <code>HOME</code>, <code>USER</code>, <code>LANG</code>, <code>TERM</code>, <code>SHELL</code> and the variables you allow.</li>
+    <li><strong>Audit</strong>: <code>shell_opened</code> / <code>shell_closed</code> entries (users mode) with user, mode and duration, never the command text.</li>
+    <li><strong>Client</strong>: with an auth module loaded, <code>ssh</code> itself requires <code>shell:execute</code>; rejections are shown as
+        "login required", "permission denied", "shell timed out", "too many shell sessions" instead of a generic socket error.</li>
+</ul>
+
+<h2 id="default-server">Choosing a server from your own commands</h2>
+<p>
+    Commands that talk to a server without the user naming one (for example <code>server logs</code>,
+    <code>data-explorer</code>, <code>scp</code>) should not simply take the first configured server: it may be down,
+    or protected by the users plugin while the user has not signed in to it. Use
+    <code>cliDefaultServer(context)</code> from <code>&#64;qodalis/cli-core</code>. It returns the default server
+    (<code>server default &lt;name&gt;</code>) when connected, otherwise the first connected server, and falls back to the
+    first configured server so the user still gets a clear error from it.
+</p>
+<div class="code-block">
+    <pre><code>import &#123; cliDefaultServer, resolveServerHeaders &#125; from '&#64;qodalis/cli-core';
+
+const server = cliDefaultServer(context);
+if (!server) &#123; context.writer.writeError('No server configured'); return; &#125;
+const headers = resolveServerHeaders(context.services, server.name, server.headers);
+const res = await fetch(`$&#123;server.url&#125;/api/v1/qcli/...`, &#123; headers &#125;);</code></pre>
+</div>
+<p>
+    The same choice is available as <code>ICliServerManager.preferredServer()</code> (service
+    <code>ICliServerManager_TOKEN</code>). Always pass requests through <code>resolveServerHeaders</code> so they carry
+    the signed-in user's token on protected servers.
+</p>
+
 <h2>{{ 'docs.server-integration.jobs-api' | translate }}</h2>
 <p>{{ 'docs.server-integration.jobs-api-desc' | translate }}</p>
 <table>

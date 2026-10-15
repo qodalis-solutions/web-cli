@@ -1,3 +1,4 @@
 export * from './indexed-db-file-system.service';
 export * from './server-file-system.service';
 export * from './virtual-fs-file-transfer.service';
+export * from './files-access';

@@ -57,6 +57,12 @@ export interface CliEngineOptions extends CliOptions {
     terminalOptions?: Partial<ITerminalOptions & ITerminalInitOnlyOptions>;
     /** Optional snapshot to restore on start() */
     snapshot?: CliEngineSnapshot;
+    /**
+     * Explicit URL of `qodalis_cli_wasm_bg.wasm` (optional accelerator). When
+     * omitted it is looked up next to the page (`document.baseURI`), then at
+     * `/assets/wasm/` and `/wasm/`; the CLI works without it.
+     */
+    wasmUrl?: string;
 }
 
 export class CliEngine {
@@ -135,7 +141,7 @@ export class CliEngine {
      */
     async start(): Promise<void> {
         // 0. Eagerly load WASM accelerator (fire-and-forget — JS fallback if unavailable)
-        initWasmAccelerator().catch(() => {});
+        initWasmAccelerator(this.options?.wasmUrl).catch(() => {});
 
         // 1. Wait for container to have layout, then initialize xterm.js
         await waitForLayout(this.container);

@@ -16,6 +16,7 @@ import { wgetModule } from '@qodalis/cli-wget';
 import { sudokuModule } from '@qodalis/cli-sudoku';
 import { CliInputDemoCommandProcessor } from './processors/cli-input-demo-command-processor';
 import { CliPanelOptions } from '@qodalis/angular-cli';
+import { mountUsersModeSwitcher } from './users-mode';
 
 @Component({
     standalone: false,
@@ -24,6 +25,10 @@ import { CliPanelOptions } from '@qodalis/angular-cli';
     styleUrls: [],
 })
 export class AppComponent {
+    constructor() {
+        mountUsersModeSwitcher();
+    }
+
     // Demonstrates registering CLI modules via [modules] input prop.
     // guid, regex, text-to-image, speed-test, browser-storage, string,
     // todo, and users modules are registered via Angular DI in AppModule instead.

@@ -9,7 +9,8 @@ import {
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliExecutionContext,
-    buildAuthenticatedWebSocketUrl,
+    resolveServerWebSocketUrl,
+    cliDefaultServer,
     resolveServerHeaders,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
@@ -136,11 +137,11 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
 
         if (serverArg) {
             if (serverArg.startsWith('http://') || serverArg.startsWith('https://')) {
+                // An ad-hoc URL gets no credentials: it is not a configured server
                 serverUrl = serverArg;
-                serverName = 'custom';
             } else {
                 const match = context.options?.servers?.find(
-                    (s) => s.name === serverArg,
+                    (s) => s.name.toLowerCase() === serverArg.toLowerCase(),
                 );
                 if (match) {
                     serverUrl = match.url;
@@ -156,7 +157,7 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
                 }
             }
         } else {
-            const defaultServer = context.options?.servers?.[0];
+            const defaultServer = cliDefaultServer(context);
             serverUrl = defaultServer?.url;
             serverName = defaultServer?.name;
             serverHeaders = defaultServer?.headers;
@@ -182,10 +183,11 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
             patternRegex = new RegExp(command.args['pattern'], 'g');
         }
 
-        const ws = new WebSocket(buildAuthenticatedWebSocketUrl(
-            fullUrl,
-            () => resolveServerHeaders(context.services, serverName ?? 'custom', serverHeaders),
-        ));
+        const ws = new WebSocket(
+            serverName
+                ? await resolveServerWebSocketUrl(context.services, serverName, fullUrl, serverHeaders)
+                : fullUrl,
+        );
         const logs: string[] = [];
         context.notifier.info('Connecting to log stream');
 

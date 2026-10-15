@@ -9,6 +9,11 @@ import {
 export interface PromptOptions {
     userName?: string;
     hideUserName?: boolean;
+    /**
+     * Shown (dimmed) instead of the user name when an auth module is loaded
+     * but nobody is signed in, e.g. `anonymous:/$`. Empty/undefined: nothing.
+     */
+    anonymousName?: string;
     contextProcessor?: string;
     pathProvider?: () => string | null;
 }
@@ -28,9 +33,13 @@ export class CliTerminalLineRenderer {
      */
     getPromptString(options: PromptOptions): string {
         const name = options.userName ?? '';
-        let promptStart = options.hideUserName || !name
+        let promptStart = options.hideUserName
             ? ''
-            : `\x1b[32m${name}\x1b[0m:`;
+            : name
+              ? `\x1b[32m${name}\x1b[0m:`
+              : options.anonymousName
+                ? `\x1b[90m${options.anonymousName}\x1b[0m:`
+                : '';
 
         if (options.contextProcessor) {
             promptStart = `${options.contextProcessor}`;

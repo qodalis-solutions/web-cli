@@ -5,6 +5,9 @@ import {
     ICliCommandProcessorRegistry,
     ICliKeyValueStore,
     ICliModule,
+    ICliCommandGuard_TOKEN,
+    ICliPermissionRegistry,
+    ICliPermissionRegistry_TOKEN,
     ICliServiceProvider,
     CliModuleRegistry,
     initializeBrowserEnvironment,
@@ -125,6 +128,25 @@ export class CliBoot {
             this.services.set(module.services);
         }
 
+        // Register module guards as multi-providers so the executor runs them
+        // before every command
+        if (module.guards && module.guards.length > 0) {
+            this.services.set(
+                module.guards.map((guard) => ({
+                    provide: ICliCommandGuard_TOKEN,
+                    useValue: guard,
+                    multi: true,
+                })),
+            );
+        }
+
+        // Register the permissions the module declares
+        if (module.permissions && module.permissions.length > 0) {
+            this.services
+                .get<ICliPermissionRegistry>(ICliPermissionRegistry_TOKEN)
+                ?.register(module.permissions, module.name);
+        }
+
         // Auto-register module translations (before onInit so modules can override)
         if (module.translations) {
             for (const [locale, translations] of Object.entries(module.translations)) {
@@ -183,6 +205,7 @@ export class CliBoot {
                 this.registry.registerProcessor(processor);
             }
             await this.initializeProcessorsInternal(context, filtered);
+            this.adoptMergedSubProcessors(filtered);
         }
 
         this.bootedModules.add(module.name);
@@ -193,6 +216,28 @@ export class CliBoot {
         }
     }
 
+    /**
+     * Sub-processors of an `extendsProcessor` processor are merged into the
+     * processor it extends, so they belong to that one: re-parent them so they
+     * inherit its access rules (`requiredPermissions` etc.) and help/root
+     * lookups resolve to the registered processor.
+     */
+    private adoptMergedSubProcessors(processors: ICliCommandProcessor[]): void {
+        for (const processor of processors) {
+            if (!processor.extendsProcessor) continue;
+            const name = processor.command.toLowerCase();
+            const host = this.registry.processors.find(
+                (p) => p.command.toLowerCase() === name,
+            );
+            if (!host || host === processor) continue;
+            for (const sub of processor.processors ?? []) {
+                if (host.processors?.includes(sub)) {
+                    (sub as ICliCommandChildProcessor).parent = host;
+                }
+            }
+        }
+    }
+
     private buildCoreModule(): ICliModule {
         return {
             apiVersion: API_VERSION,
@@ -200,6 +245,12 @@ export class CliBoot {
             version: CORE_VERSION,
             description: 'Core CLI services and utilities',
             processors: [...builtinProcessors],
+            permissions: [
+                { name: 'system:packages', description: 'Install, update and remove packages (pkg)' },
+                { name: 'system:services', description: 'Start and stop background services' },
+                { name: 'system:eval', description: 'Evaluate JavaScript (eval, also requires allowEval)' },
+                { name: 'shell:execute', description: 'Open a remote shell on a server (ssh)' },
+            ],
         };
     }
 

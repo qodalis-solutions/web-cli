@@ -10,6 +10,7 @@ import {
     ICliServerAuthService,
     ServerVersionNegotiator,
     buildAuthenticatedWebSocketUrl,
+    appendQueryParams,
     resolveHeaders,
 } from '@qodalis/cli-core';
 
@@ -22,6 +23,8 @@ export class CliServerConnection {
     private _basePath: string = '';
     private _wsReconnectAttempts = 0;
     private _wsReconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    /** True once this connection registered its `server-events:<name>` background service */
+    private _eventServiceRegistered = false;
     private static readonly WS_MAX_RECONNECT_ATTEMPTS = 5;
     private static readonly WS_MAX_RECONNECT_DELAY_MS = 30000;
 
@@ -70,6 +73,19 @@ export class CliServerConnection {
             return this._authService.getHeaders(this._config.name, this._config.headers);
         }
         return resolveHeaders(this._config.headers) as Record<string, string>;
+    }
+
+    /**
+     * WebSocket URL for this server with auth: single-use upgrade params from
+     * auth providers when available, otherwise headers copied into the URL.
+     */
+    async buildWebSocketUrl(path: string): Promise<string> {
+        const url = this.toWebSocketUrl(this.normalizeUrl(this._config.url)) + path;
+        const params = await this._authService?.getWebSocketParams?.(this._config.name);
+        if (params) {
+            return appendQueryParams(url, params);
+        }
+        return buildAuthenticatedWebSocketUrl(url, () => this.resolveAuthHeaders());
     }
 
     async connect(): Promise<void> {
@@ -305,19 +321,33 @@ export class CliServerConnection {
 
         const serviceName = `server-events:${this._config.name}`;
 
+        // Reconnects (re-login, dropped socket) reuse the service this connection
+        // registered: restart it (onStop closes the old socket, onStart opens a new one)
+        if (this._eventServiceRegistered && this._backgroundServices.getStatus(serviceName)) {
+            const status = this._backgroundServices.getStatus(serviceName)!.status;
+            const restart = status === 'running'
+                ? this._backgroundServices.restart(serviceName)
+                : this._backgroundServices.start(serviceName);
+            restart.catch((e) => {
+                this._logger?.debug(`Background event service failed for "${this._config.name}", falling back to direct: ${e}`);
+                this.connectEventSocketDirect();
+            });
+            return;
+        }
+
         try {
             this._backgroundServices.register({
                 name: serviceName,
                 description: `Event stream for server '${this._config.name}'`,
                 type: 'daemon',
                 onStart: async (ctx) => {
-                    const baseUrl = this.normalizeUrl(this._config.url);
-                    const wsUrl = buildAuthenticatedWebSocketUrl(
-                        this.toWebSocketUrl(baseUrl) + '/ws/v1/qcli/events',
-                        () => this.resolveAuthHeaders(),
-                    );
-                    ctx.log(`Connecting to ${wsUrl}`);
+                    const wsUrl = await this.buildWebSocketUrl('/ws/v1/qcli/events');
+                    // Disconnected while the URL (ticket) was being resolved
+                    if (!this._connected) return;
+                    ctx.log(`Connecting to ${wsUrl.split('?')[0]}`);
 
+                    // Never leave a previous socket open (reconnect while connected)
+                    this.closeEventSocketDirect();
                     this._eventSocket = new WebSocket(wsUrl);
 
                     this._eventSocket.onopen = () => {
@@ -342,7 +372,11 @@ export class CliServerConnection {
                         } catch { /* ignore malformed */ }
                     };
 
-                    this._eventSocket.onclose = () => {
+                    this._eventSocket.onclose = (event: CloseEvent) => {
+                        if (this.isSessionEndedClose(event)) {
+                            ctx.log('Event socket closed: session ended', 'info');
+                            return;
+                        }
                         if (this._connected) {
                             ctx.log('WebSocket closed unexpectedly, scheduling reconnect', 'warn');
                             this.scheduleWsReconnect();
@@ -357,6 +391,7 @@ export class CliServerConnection {
                     this.closeEventSocketDirect();
                 },
             });
+            this._eventServiceRegistered = true;
 
             this._backgroundServices.start(serviceName).catch((e) => {
                 this._logger?.debug(`Background event service failed for "${this._config.name}", falling back to direct: ${e}`);
@@ -369,12 +404,16 @@ export class CliServerConnection {
     }
 
     private connectEventSocketDirect(): void {
+        void this.connectEventSocketDirectAsync();
+    }
+
+    private async connectEventSocketDirectAsync(): Promise<void> {
         try {
-            const baseUrl = this.normalizeUrl(this._config.url);
-            const wsUrl = buildAuthenticatedWebSocketUrl(
-                this.toWebSocketUrl(baseUrl) + '/ws/v1/qcli/events',
-                () => this.resolveAuthHeaders(),
-            );
+            const wsUrl = await this.buildWebSocketUrl('/ws/v1/qcli/events');
+            // Disconnected while the URL (ticket) was being resolved
+            if (!this._connected) return;
+            // Never leave a previous socket open (reconnect while connected)
+            this.closeEventSocketDirect();
             this._eventSocket = new WebSocket(wsUrl);
 
             this._eventSocket.onopen = () => {
@@ -396,7 +435,8 @@ export class CliServerConnection {
                 }
             };
 
-            this._eventSocket.onclose = () => {
+            this._eventSocket.onclose = (event: CloseEvent) => {
+                if (this.isSessionEndedClose(event)) return;
                 if (this._connected) {
                     this.scheduleWsReconnect();
                 }
@@ -408,6 +448,17 @@ export class CliServerConnection {
         } catch (e) {
             this._logger?.debug(`WebSocket not available for "${this._config.name}": ${e}`);
         }
+    }
+
+    /**
+     * The server closes the event socket with 4401 when the session behind it
+     * ended (logout, revoke, expiry). Retrying with the same credentials cannot
+     * succeed; the auth layer reconnects the server when the session changes.
+     */
+    private isSessionEndedClose(event: CloseEvent | undefined): boolean {
+        if (event?.code !== 4401) return false;
+        this.closeEventSocketDirect();
+        return true;
     }
 
     private handleServerDisconnect(): void {

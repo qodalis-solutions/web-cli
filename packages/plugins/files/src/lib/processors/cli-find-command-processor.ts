@@ -1,3 +1,4 @@
+import { readableChildren } from '../utils/readable-children';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
@@ -74,6 +75,7 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
             const nameRegex = namePattern ? this.globToRegex(namePattern) : null;
 
             const results: string[] = [];
+            this.fs = fs;
             this.walk(
                 node,
                 resolvedBase,
@@ -104,6 +106,9 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
         return new RegExp(`^${regexStr}$`, 'i');
     }
 
+    /** File system of the running command (listing goes through access checks) */
+    private fs?: IFileSystemService;
+
     private walk(
         node: IFileNode,
         currentPath: string,
@@ -113,9 +118,10 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
         typeFilter: string | null,
         results: string[],
     ): void {
-        if (!node.children) return;
+        const children = this.fs ? readableChildren(this.fs, currentPath) : node.children;
+        if (!children) return;
 
-        for (const child of node.children) {
+        for (const child of children) {
             const childPath =
                 currentPath === '/'
                     ? `/${child.name}`

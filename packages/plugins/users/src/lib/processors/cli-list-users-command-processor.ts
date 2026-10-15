@@ -1,107 +1,40 @@
-import {
-    CliForegroundColor,
-    CliIcon,
-    CliProcessCommand,
-    CliProcessorMetadata,
-    CliStateConfiguration,
-    ICliCommandParameterDescriptor,
-    ICliCommandProcessor,
-    ICliExecutionContext,
-    ICliUsersStoreService,
-} from '@qodalis/cli-core';
-import { DefaultLibraryAuthor } from '@qodalis/cli-core';
-import { ICliUsersStoreService_TOKEN } from '@qodalis/cli-core';
+import { CliProcessCommand, ICliExecutionContext } from '@qodalis/cli-core';
 import { firstValueFrom } from 'rxjs';
+import { CliUsersCommand, formatTime, usersServices, USERS_METADATA } from './base';
+import { CliProcessorMetadata } from '@qodalis/cli-core';
 
-export class CliListUsersCommandProcessor implements ICliCommandProcessor {
-    command = 'listusers';
-
-    aliases = ['users'];
-
-    description?: string | undefined = 'List all users';
-
-    author = DefaultLibraryAuthor;
-
-    metadata?: CliProcessorMetadata | undefined = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-    };
-
-    stateConfiguration?: CliStateConfiguration | undefined = {
-        initialState: {},
-        storeName: 'users',
-    };
-
-    parameters?: ICliCommandParameterDescriptor[] | undefined = [
-        {
-            name: 'query',
-            description: 'The query to filter the users',
-            type: 'string',
-            required: false,
-        },
-        {
-            name: 'skip',
-            description: 'The number of users to skip',
-            type: 'number',
-            required: false,
-        },
-        {
-            name: 'take',
-            description: 'The maximum number of users to return',
-            type: 'number',
-            required: false,
-        },
+export class CliListUsersCommandProcessor extends CliUsersCommand {
+    override command = 'listusers';
+    override aliases = ['users'];
+    override description = 'List users';
+    override metadata: CliProcessorMetadata = { ...USERS_METADATA, requiredPermissions: ['users:read'] };
+    override parameters = [
+        { name: 'query', aliases: ['q'], description: 'Filter by name or email', type: 'string' as const, required: false },
+        { name: 'skip', description: 'Skip N users', type: 'number' as const, required: false },
+        { name: 'take', description: 'Show at most N users', type: 'number' as const, required: false },
+    ];
+    protected override usage: Array<[string, string]> = [
+        ['listusers', 'All users'],
+        ['listusers --query=jo --skip=0 --take=10', 'Filter and page'],
     ];
 
-    private usersStore!: ICliUsersStoreService;
-
-    async initialize(context: ICliExecutionContext): Promise<void> {
-        this.usersStore = context.services.getRequired<ICliUsersStoreService>(
-            ICliUsersStoreService_TOKEN,
-        );
-    }
-
-    async processCommand(
-        command: CliProcessCommand,
-        { writer }: ICliExecutionContext,
-    ): Promise<void> {
-        const users = await firstValueFrom(
-            this.usersStore.getUsers({
-                query: command.args['query'],
-                skip: command.args['skip'],
-                take: command.args['take'],
+    override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const { users } = usersServices(context);
+        const a = command.args;
+        const list = await firstValueFrom(
+            users.getUsers({
+                query: a['query'] ?? a['q'],
+                skip: a['skip'] !== undefined ? Number(a['skip']) : undefined,
+                take: a['take'] !== undefined ? Number(a['take']) : undefined,
             }),
         );
-
-        if (users.length === 0) {
-            writer.writeln('No users found');
+        if (!list.length) {
+            context.writer.writeInfo('No users found');
             return;
         }
-
-        const displayUsers = users.map((u) => ({
-            name: u.name,
-            email: u.email,
-            groups: u.groups.join(', ') || '(none)',
-            disabled: u.disabled ? 'yes' : 'no',
-        }));
-
-        writer.writeln('Users:');
-        writer.writeObjectsAsTable(displayUsers);
-    }
-
-    writeDescription({ writer }: ICliExecutionContext): void {
-        writer.writeln('List all users in the system');
-        writer.writeln();
-        writer.writeln('Usage:');
-        writer.writeln(
-            `  ${writer.wrapInColor('listusers', CliForegroundColor.Cyan)}                              List all users`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('listusers --query=<search>', CliForegroundColor.Cyan)}              Filter users by name/email`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('listusers --skip=5 --take=10', CliForegroundColor.Cyan)}            Paginate results`,
+        context.writer.writeTable(
+            ['NAME', 'EMAIL', 'GROUPS', 'STATUS', 'LAST LOGIN'],
+            list.map((u) => [u.name, u.email, u.groups.join(',') || '-', u.disabled ? 'disabled' : 'active', formatTime(u.lastLoginAt)]),
         );
     }
 }
