@@ -19,3 +19,4 @@ export { CliLastCommandProcessor } from './cli-last-command-processor';
 export { CliAuditCommandProcessor } from './cli-audit-command-processor';
 export { CliSessionsCommandProcessor } from './cli-sessions-command-processor';
 export { CliSessionKickCommandProcessor } from './cli-session-kick-command-processor';
+export { CliTokenCommandProcessor } from './cli-token-command-processor';

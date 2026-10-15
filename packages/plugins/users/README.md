@@ -36,6 +36,25 @@ engine.registerModules([usersModule.configure({ server: 'node' })]);
 engine.registerModules([usersModule.configure({ requirePassword: true })]);
 ```
 
+## First sign-in and default accounts
+
+| Mode | Initial account |
+|---|---|
+| **Local** (default) | None. On first boot (no accounts in the browser) the terminal asks you to create your administrator: name, email, password, home directory. There is no `root` / `root`. |
+| **Local** with `seedUsers` | The seeded accounts, with `defaultPassword` (`root` when not set; a warning is logged for weak passwords). |
+| **Server** | `root` (`root@localhost`, group `admin`). Without `defaultAdminPassword` the server generates a random password, prints it **once** in its log and requires a change at first sign-in. |
+
+Browser data saved by versions before `2.0.0-beta.14` may still contain the old `root` / `root`
+account; clear the site data (or run `userdel`) to start fresh.
+
+```typescript
+// Demo accounts in local mode (sign in with `login alice`)
+usersModule.configure({
+    seedUsers: [{ name: 'alice', email: 'alice@example.com', groups: ['admin'] }],
+    defaultPassword: 'change-me-please',
+});
+```
+
 ## Roles and permissions
 
 Groups are roles. Each group grants a list of permissions; a user's effective
@@ -44,7 +63,7 @@ permissions are the union of their groups' permissions.
 - Permission strings are `resource:action`, with `*` wildcards: `users:*`, `*`.
 - Built-in groups: `admin` (`*`, cannot be changed or deleted) and `users` (default for new accounts, grants `commands:execute` so members can run server commands).
 - Built-in permissions: `users:read|create|update|delete`, `groups:read|create|update|delete`,
-  `sessions:read|revoke`, `audit:read|clear`; core also declares `system:packages|services|eval`
+  `sessions:read|revoke`, `tokens:read|revoke`, `audit:read|clear`; core also declares `system:packages|services|eval`
   and `shell:execute` (`ssh` remote shells; not granted to `users` by default:
   `groupadd ops --permissions=shell:execute`).
 - Any module can declare its own (`ICliModule.permissions`) and protect commands with them.
@@ -106,8 +125,9 @@ their files to `root`, so a later account with the same name never inherits them
 | `logout` | login | Sign out (the CLI stays signed out) |
 | `su <user>` | — | Switch user (same lockout and audit as login) |
 | `passwd [user]` | login | Own password (asks for the current one) or reset (`users:update`) |
-| `adduser <name> --email=..` | `users:create` | Create a user (`--groups`, `--home`, `--disabled`, `--no-password`) |
-| `usermod <user> ..` | `users:update` | `--name`, `--email`, `--groups`, `--add-groups`, `--remove-groups`, `--home`, `--disable`, `--enable` |
+| `adduser [name]` | `users:create` | Create a user step by step: name, email, full name, groups, home, enabled, password. Invalid answers are asked again (3 tries) |
+| `adduser <name> --email=..` | `users:create` | Non-interactive (only asks for the password): `--full-name`, `--groups`, `--home`, `--disabled`, `--no-password` |
+| `usermod <user> ..` | `users:update` | `--name`, `--email`, `--full-name`, `--groups`, `--add-groups`, `--remove-groups`, `--home`, `--disable`, `--enable` |
 | `userdel <user>` | `users:delete` | Delete a user, their password and sessions |
 | `listusers [--query --skip --take]` | `users:read` | List users |
 | `groupadd <name> [--permissions]` | `groups:create` | Create a group (role) |
@@ -116,8 +136,43 @@ their files to `root`, so a later account with the same name never inherits them
 | `w` | login | Who is signed in |
 | `sessions` | `sessions:read` | Active sessions |
 | `session-kick <id>` | login | End a session (own, or any with `sessions:revoke`) |
+| `token create <name> [--expires=<days>\|never] [--permissions=a,b]` | login (server mode) | Create an API token, shown once |
+| `token list [--all]` | login (server mode) | Own tokens; `--all` every user's (`tokens:read`) |
+| `token revoke <id>` | login (server mode) | Revoke a token (own, or any with `tokens:revoke`) |
 | `last [user]` | `audit:read` | Sign-in history |
 | `audit [--user --event -n]`, `audit clear` | `audit:read` / `audit:clear` | Security audit log |
+
+## API tokens
+
+In server mode, `token` creates long-lived, revocable bearer tokens: the credential for
+MCP clients (Claude Code), CI jobs and scripts. A token acts
+as the user who created it, with that user's live permissions; `--permissions` narrows
+it further (you can only include permissions you hold).
+
+```bash
+token create claude --expires=90                          # shown once
+token create ci --expires=30 --permissions=commands:execute
+token list            # NAME, ID, EXPIRES, LAST USED, SCOPE
+token list --all      # every user's tokens (tokens:read), adds USER
+token revoke <id>     # own token, or any with tokens:revoke
+```
+
+`token create` prints the token once, with a ready-to-paste
+`claude mcp add --transport http qcli <server>/api/qcli/mcp --header "Authorization: Bearer <token>"`.
+Clients send it as `Authorization: Bearer qcli_pat_…`, wherever a session token is accepted.
+
+- Expiry: 1-365 days (default 90). `--expires=never` works only when the server enables
+  non-expiring tokens.
+- Tokens are created from a signed-in session only: a request authenticated with an
+  API token cannot create more tokens or change passwords.
+- Disabling a user makes their tokens fail; deleting a user deletes them.
+- Local mode has no tokens: the commands print where they are available. Custom
+  backends opt in by implementing `listApiTokens`, `createApiToken` and `revokeApiToken`
+  of `ICliUsersBackend`.
+
+The MCP endpoint itself is a feature of the CLI servers (enabling it, the tools it exposes,
+connecting Claude Code): see
+[MCP endpoint](https://cli.qodalis.com/docs/server-integration#mcp-endpoint).
 
 ## Rules (identical in every mode)
 
@@ -184,7 +239,7 @@ Calls run as the signed-in user; the backend enforces permissions and rejects wi
 - Local mode stores everything in the browser: it models access between CLI users but
   cannot protect data from whoever controls the browser.
 - Use `persistToken: false` on shared machines.
-- Change default passwords (`root` / `root` locally and on servers) before exposing a system.
+- Never expose a system with a known password: leave the server's `defaultAdminPassword` unset (a random one is generated) or set a strong one, and don't ship `seedUsers` with a weak `defaultPassword`.
 
 ## Examples
 

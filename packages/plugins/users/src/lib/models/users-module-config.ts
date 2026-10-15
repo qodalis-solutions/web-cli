@@ -13,7 +13,7 @@ export interface CliUsersModuleConfig {
     anonymousName?: string;
     /** Default password for seeded users (default: 'root') */
     defaultPassword?: string;
-    /** Users to seed on first boot (in addition to root) */
+    /** Users to seed on first boot (local mode). Without them, first boot asks you to create the administrator. */
     seedUsers?: Array<Omit<ICliUser, 'id' | 'createdAt' | 'updatedAt'>>;
     /**
      * Require a password for `login` and `su` (default: true). Setting it to

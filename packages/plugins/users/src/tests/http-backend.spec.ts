@@ -49,6 +49,10 @@ describe('CliHttpUsersBackend', () => {
         await b.removeGroupMember('T', 'dev', 'a');
         await b.listAudit('T', { limit: 5, event: 'login' });
         await b.clearAudit('T');
+        await b.listApiTokens('T');
+        await b.listApiTokens('T', { all: true });
+        await b.createApiToken('T', { name: 'ci', expiresInDays: null, permissions: ['a:b'] });
+        await b.revokeApiToken('T', 'tok/1');
 
         expect(http.calls.map((c) => `${c.method} ${c.url.replace(base, '')}`)).toEqual([
             'POST /sessions',
@@ -72,7 +76,12 @@ describe('CliHttpUsersBackend', () => {
             'DELETE /groups/dev/members/a',
             'GET /audit?limit=5&event=login',
             'DELETE /audit',
+            'GET /tokens',
+            'GET /tokens?all=true',
+            'POST /tokens',
+            'DELETE /tokens/tok%2F1',
         ]);
+        expect(http.calls[23].body).toEqual({ name: 'ci', expiresInDays: null, permissions: ['a:b'] });
         expect(http.calls[0].headers.Authorization).toBeUndefined();
         expect(http.calls[1].headers.Authorization).toBe('Bearer T');
         expect(http.calls[9].body).toEqual({ email: 'b@x.io' });

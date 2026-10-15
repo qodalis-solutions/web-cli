@@ -3,7 +3,13 @@ import { CliUsersError } from './users-backend';
 
 /** Input rules shared with the servers (security contract B7). */
 export const NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._@-]{0,63}$/;
-export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+$/; // local@domain (root@localhost is valid)
+/**
+ * Email addresses: a dot-atom local part (max 64) and a domain of DNS labels
+ * ending in a letters-only TLD, or `localhost` (seeded `root@localhost`).
+ * Max 254 characters overall. Same rule on all three servers.
+ */
+export const EMAIL_PATTERN =
+    /^(?=.{1,254}$)(?=[^@]{1,64}@)[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:localhost|(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63})$/;
 export const PERMISSION_PATTERN = /^(\*|[a-z0-9_.-]+(:([a-z0-9_.-]+|\*))*)$/i;
 const CONTROL_CHARS = /[\u0000-\u001f\u007f-\u009f]/;
 

@@ -350,6 +350,7 @@
   "docs.plugin-detail.installation": "安装",
   "docs.plugin-detail.runtime-install": "运行时（无需重新构建）",
   "docs.plugin-detail.commands": "命令",
+  "docs.plugin-detail.notes": "须知",
   "docs.plugin-detail.examples": "示例",
   "docs.plugin-detail.usage": "用法",
   "docs.plugin-detail.try-it": "试一试",
