@@ -8,6 +8,7 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     resolveServerHeaders,
+    cliDefaultServer,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 import {
@@ -432,7 +433,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             return match;
         }
 
-        return servers[0];
+        return cliDefaultServer(context) ?? servers[0];
     }
 
     private async fetchSources(

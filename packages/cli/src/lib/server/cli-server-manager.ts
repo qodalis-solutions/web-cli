@@ -30,6 +30,16 @@ export class CliServerManager implements DefaultServerProvider {
         return this._defaultServer;
     }
 
+    preferredServer(): string | null {
+        if (this._defaultServer && this.connections.get(this._defaultServer)?.connected) {
+            return this._defaultServer;
+        }
+        for (const [name, connection] of this.connections) {
+            if (connection.connected) return name;
+        }
+        return null;
+    }
+
     setDefaultServer(name: string | null): void {
         if (name !== null && !this.connections.has(name)) {
             throw new Error(`Unknown server: ${name}`);

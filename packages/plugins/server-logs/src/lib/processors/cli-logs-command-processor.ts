@@ -10,6 +10,7 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     resolveServerWebSocketUrl,
+    cliDefaultServer,
     resolveServerHeaders,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
@@ -156,7 +157,7 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
                 }
             }
         } else {
-            const defaultServer = context.options?.servers?.[0];
+            const defaultServer = cliDefaultServer(context);
             serverUrl = defaultServer?.url;
             serverName = defaultServer?.name;
             serverHeaders = defaultServer?.headers;

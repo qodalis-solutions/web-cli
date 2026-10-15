@@ -331,6 +331,13 @@ export interface ICliServerAuthTokenProvider {
 export interface ICliServerManager {
     /** Reconnect a server: re-fetch its commands and reopen its event socket. */
     reconnect(name: string): Promise<{ success: boolean; commandCount: number }>;
+    /**
+     * The server a command should target when the user names none: the
+     * default server (`server default`) when connected, otherwise the first
+     * connected server. `null` when no server is connected (for example every
+     * server requires a login the user has not done yet).
+     */
+    preferredServer?(): string | null;
 }
 
 /** Token for {@link ICliServerManager} */
