@@ -456,7 +456,8 @@ export function describeShellClose(event: { code?: number; reason?: string }, se
     const reason = (event.reason ?? '').toLowerCase();
     switch (event.code) {
         case 4401:
-            if (reason === 'session ended') return `ssh: your session on '${serverName}' ended. Please log in again.`;
+            // Sent for logout/expiry/kick and for losing shell:execute while connected
+            if (reason === 'session ended') return `ssh: shell closed by '${serverName}' (session ended or shell access revoked)`;
             if (reason === 'shell access is not configured') {
                 return `ssh: shell access is not configured on '${serverName}'`;
             }

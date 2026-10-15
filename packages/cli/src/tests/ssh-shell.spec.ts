@@ -159,7 +159,7 @@ describe('ssh (shell over WebSocket)', () => {
         FakeSocket.last.onclose({ code: 4401, reason: 'session ended' });
         await run;
         expect(context.exitFullScreenMode).toHaveBeenCalled();
-        expect(written).toContain("ssh: your session on 'node' ended. Please log in again.");
+        expect(written).toContain("ssh: shell closed by 'node' (session ended or shell access revoked)");
     });
 
     it('one-shot: a plain connection failure still reports a WebSocket error', async () => {
