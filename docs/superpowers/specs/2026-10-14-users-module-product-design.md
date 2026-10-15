@@ -391,3 +391,66 @@ Decisions taken while implementing Appendix B, kept consistent across node, pyth
 - **Defaults**: CORS is off until `allowedOrigins` is configured (patterns like `http://127.0.0.1:*` allowed); the PTY shell is off until enabled explicitly; existing stores keep their `users` group as-is (`commands:execute` is only seeded with a new group).
 - **Body limit**: oversized bodies are refused (python/.NET 400, node 413).
 - **Known follow-up**: the admin dashboard UI package still opens its live sockets with `?token=`; on a protected server it must switch to `POST /sessions/ws-ticket`.
+
+## Appendix C — Remote shell security (all three servers + client)
+
+The PTY shell (`/ws/v1/qcli/shell`, `/ws/qcli/shell`) gives OS-level access. It must be secure by
+default, optional, and work with and without the users plugin.
+
+### C1. Enabling and access modes
+
+- The shell stays **off** unless enabled explicitly (`enableShell` / `enable_shell` / `cli.EnableShell()`).
+- When enabled, access is decided by exactly one mode:
+  1. **users** — the users plugin is mounted: ticket-authenticated session with `shell:execute` (unchanged).
+  2. **token** — no users plugin, `shell: { token: '<secret>' }`: the client must send `Authorization: Bearer <secret>`
+     (header, or the legacy `_header_Authorization` query parameter that browser clients use via the server's
+     configured `headers`). Constant-time comparison. Token never logged.
+  3. **authorize** — no users plugin, `shell: { authorize: (request) => boolean | Promise<boolean> }`: host-defined
+     check (request headers, query, remote address). Exceptions = deny.
+  4. **anonymous** — only with explicit `shell: { allowAnonymous: true }`; logs a startup WARNING
+     ("shell is enabled without authentication").
+- Precedence: users plugin mounted ⇒ mode 1 (token/authorize may additionally be required if configured, i.e. both
+  must pass). Otherwise token, then authorize, then allowAnonymous.
+- **Enabled with no mode available ⇒ locked**: every connection refused (close 4401) and a startup ERROR log
+  explaining the options. Never silently open.
+- `/capabilities` keeps `shell: true|false` and adds `shellAuth: 'users'|'token'|'custom'|'anonymous'|'locked'`
+  (only when enabled).
+
+### C2. Session binding (users mode)
+
+- An open shell belongs to the session that opened it. Logout, idle/absolute expiry, admin revoke (kick),
+  user disabled/deleted, or losing `shell:execute` (checked at least every 60 s and on the session events)
+  ⇒ the shell is closed with code **4401** (`session ended`) and the process tree killed.
+
+### C3. Limits and environment
+
+- `maxSessionsPerUser` (default **3**; anonymous/token/custom modes: per remote address) ⇒ close **4429**
+  `too many shell sessions`.
+- `idleTimeout` (default **15 min** without stdin) and optional `maxDuration` (default none) ⇒ close **4408**
+  `shell timed out`, process killed.
+- `cwd` (default: unchanged behaviour), `shell` (default: detected), and `env`:
+  the child environment is **not** the full server environment any more: only `PATH`, `HOME`, `USER`, `LANG`,
+  `TERM`, `COLUMNS`, `LINES`, `SHELL` plus `env.allow` names and `env.set` values. (Server secrets such as DB
+  passwords must not leak into the shell.)
+- Total concurrent shells cap `maxSessions` (default **20**) ⇒ 4429.
+
+### C4. Audit and logging
+
+- users mode: audit entries `shell_opened` / `shell_closed` with `userId`, `actorId`, `metadata: { mode:
+  'interactive'|'command', sessionId, durationMs?, exitCode?, reason? }`. **Never** the command text or stdin.
+- Other modes: one info log line per open/close with the remote address and mode (no command text).
+
+### C5. Rejections the browser can read
+
+- Auth/authorization failures on the shell socket: **accept, then close** with a code and short reason
+  (browsers cannot read HTTP status of a failed upgrade):
+  `4401` login required / session ended, `4403` forbidden (missing `shell:execute`, bad token, authorize false),
+  `4404` shell disabled, `4429` limit reached, `4408` timeout. Origin rejection may stay HTTP 403.
+
+### C6. Client (web-cli)
+
+- New core permission `shell:execute` (declared by the server-connection feature). `ssh` declares
+  `requiredPermissions: ['shell:execute']`: enforced by the access guards only when an auth module is loaded;
+  without one, `ssh` stays available and the server decides.
+- `ssh` maps close codes to messages: 4401 "login required" / "session ended", 4403 "permission denied", 4404
+  "shell is disabled on <server>", 4408 "shell timed out", 4429 "too many shell sessions".
