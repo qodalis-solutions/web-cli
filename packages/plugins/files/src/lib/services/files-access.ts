@@ -82,6 +82,7 @@ export function followUserSession(context: ICliExecutionContext, fs: IFileSystem
             if (previousUser !== null || !canEnter(fs, fs.getCurrentDirectory())) {
                 try {
                     fs.setCurrentDirectory('/');
+                    void fs.persist(); // the next boot's first prompt starts at /
                 } catch {
                     // keep the current directory
                 }
