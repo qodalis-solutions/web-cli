@@ -83,10 +83,15 @@ export class CliUserSessionService implements ICliUserSessionService {
 
     /** Re-read the session from the backend (after user/group changes). Clears it on 401. */
     async refresh(): Promise<ICliUserSession | undefined> {
-        if (!this.token) return undefined;
+        const token = this.token;
+        if (!token) return undefined;
         try {
-            return this.apply(await this.backend.currentSession(this.token));
+            const session = await this.backend.currentSession(token);
+            // Signed out or switched user meanwhile: the answer is about an old session
+            if (this.token !== token) return this.current;
+            return this.apply(session);
         } catch (e) {
+            if (this.token !== token) return this.current;
             if (isCliUsersError(e) && e.status === 401) {
                 const user = this.current?.user;
                 await this.clearSession();

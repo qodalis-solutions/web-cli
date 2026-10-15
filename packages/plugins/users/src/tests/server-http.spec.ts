@@ -86,7 +86,7 @@ describe('withUnauthorizedHandler', () => {
         // GET /sessions with an expired token is a real session expiry
         await expectAsync(http.get('http://s/api/v1/qcli/sessions')).toBeRejected();
 
-        expect(ignore).toHaveBeenCalledWith('http://s/api/v1/qcli/sessions', 'GET');
+        expect(ignore).toHaveBeenCalledWith('http://s/api/v1/qcli/sessions', 'GET', undefined);
         expect(onUnauthorized).toHaveBeenCalledTimes(1);
     });
 

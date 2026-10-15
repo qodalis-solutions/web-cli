@@ -138,4 +138,11 @@ describe('users commands (local mode)', () => {
         r = await run('passwd a', 'reset-pass', 'reset-pass');
         expect(r.out).toContain('password updated for a');
     });
+
+    it('adduser accepts every email the backend accepts (root@localhost style)', async () => {
+        const { run } = await setup();
+        const r = await run('adduser ops --email=ops@localhost', 'password1', 'password1');
+        expect(r.err).toBe('');
+        expect(r.out).toContain("User 'ops' created");
+    });
 });

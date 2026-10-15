@@ -11,6 +11,8 @@ import { CliServiceContainer } from '@qodalis/cli';
 import { usersModule } from '../public-api';
 import { CliUsersModuleConfig } from '../lib/models/users-module-config';
 import { MemoryKv } from './helpers';
+import { CliUserSessionService } from '../lib/services/cli-user-session.service';
+import { CliUsersError } from '../lib/backend/users-backend';
 
 interface FakeContext {
     ctx: any;
@@ -309,6 +311,36 @@ describe('usersModule lifecycle', () => {
             expect(f.warnings).toEqual(['Session expired or revoked by the server. Please log in again.']);
         });
 
+        it('a new login is kept when ending the previous, already invalid session fails with 401', async () => {
+            // e.g. the server restarted (in-memory sessions) while alice was signed in
+            const valid = new Set<string>();
+            const userOf = (name: string) => ({ id: name, name, email: `${name}@x.io`, groups: ['users'], disabled: false, createdAt: 1, updatedAt: 1 });
+            const http: any = {
+                post: async (url: string, body: any) => {
+                    const token = `T-${body.username}`;
+                    valid.add(token);
+                    return { token, session: { id: `S-${body.username}`, user: userOf(body.username), permissions: [], loginTime: 1, lastActivity: 1 } };
+                },
+                get: async () => ({}),
+                put: async () => ({}),
+                delete: async (_url: string, o?: any) => {
+                    const token = String(o?.headers?.Authorization ?? '').replace('Bearer ', '');
+                    if (!valid.has(token)) throw new CliHttpError('unauthorized', 401, 'Unauthorized', { error: 'not authenticated' });
+                    valid.delete(token);
+                    return {};
+                },
+            };
+            const f = fakeContext(new MemoryKv(), { http });
+            const m = track(await boot({ server: 'node' }, f));
+            await m._runtime.auth.login('alice', 'pw');
+            valid.clear(); // server restart
+            await m._runtime.auth.login('bob', 'pw');
+            await new Promise((r) => setTimeout(r));
+            expect(f.ctx.userSession?.user.name).toBe('bob');
+            expect(m._runtime.session.getToken()).toBe('T-bob');
+            expect(f.warnings).toEqual([]);
+        });
+
         it('signs out when an administrator kicks this session', async () => {
             const srv = server();
             const f = fakeContext(new MemoryKv(), { http: srv.http });
@@ -403,5 +435,57 @@ describe('usersModule host-managed auth', () => {
         } finally {
             await m.onDestroy();
         }
+    });
+});
+
+describe('CliUserSessionService', () => {
+    function deferred<T>() {
+        let resolve!: (v: T) => void;
+        let reject!: (e: unknown) => void;
+        const promise = new Promise<T>((res, rej) => ((resolve = res), (reject = rej)));
+        return { promise, resolve, reject };
+    }
+    const sessionOf = (name: string) => ({
+        id: `S-${name}`,
+        user: { id: name, name, email: `${name}@x.io`, groups: ['users'], disabled: false, createdAt: 1, updatedAt: 1 },
+        permissions: [] as string[],
+        loginTime: 1,
+        lastActivity: 1,
+    });
+
+    function setup() {
+        const pending: Array<ReturnType<typeof deferred<any>>> = [];
+        const backend: any = {
+            kind: 'server',
+            currentSession: () => {
+                const d = deferred<any>();
+                pending.push(d);
+                return d.promise;
+            },
+        };
+        const session = new CliUserSessionService(backend, new MemoryKv(), 'token-key');
+        return { session, pending };
+    }
+
+    it('ignores a refresh answer for a token that was replaced meanwhile', async () => {
+        const { session, pending } = setup();
+        await session.start({ token: 'A', session: sessionOf('alice') });
+        const refreshing = session.refresh();
+        await session.start({ token: 'B', session: sessionOf('bob') }); // su bob
+        pending[0].resolve(sessionOf('alice'));
+        await refreshing;
+        expect(session.current?.user.name).toBe('bob');
+        expect(session.getToken()).toBe('B');
+    });
+
+    it('a 401 for a replaced token does not end the new session', async () => {
+        const { session, pending } = setup();
+        await session.start({ token: 'A', session: sessionOf('alice') });
+        const refreshing = session.refresh();
+        await session.start({ token: 'B', session: sessionOf('bob') });
+        pending[0].reject(new CliUsersError(401, 'session expired'));
+        await refreshing;
+        expect(session.current?.user.name).toBe('bob');
+        expect(session.getToken()).toBe('B');
     });
 });

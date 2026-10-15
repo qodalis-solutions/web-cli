@@ -119,11 +119,17 @@ export async function createUsersRuntime(
         };
         context.services.set({ provide: ICliServerAuthTokenProvider_TOKEN, useValue: tokenProvider, multi: true });
 
-        // Any 401 (except a failed login) means the stored token is no longer valid
+        // Any 401 (except a failed login) means the stored token is no longer valid.
+        // Only a request made with the current token says so: ending the previous
+        // session after a new login (or a late answer for an old token) must not
+        // sign the new session out.
         const loginUrl = `${baseUrl}/sessions`;
         const http = withUnauthorizedHandler(context.http, {
             onUnauthorized: () => runtimeRef.current?.terminate('Session expired or revoked by the server'),
-            ignore: (url, method) => method === 'POST' && url === loginUrl,
+            ignore: (url, method, requestOptions) =>
+                (method === 'POST' && url === loginUrl) ||
+                !currentToken ||
+                authorizationHeader(requestOptions?.headers) !== `Bearer ${currentToken}`,
         });
         backend = new CliHttpUsersBackend(baseUrl, http);
         tokenKey = SERVER_TOKEN_KEY;
@@ -211,4 +217,14 @@ export async function createUsersRuntime(
 /** Display name for the prompt */
 export function displayNameFor(config: CliUsersModuleConfig, user: ICliUser): string {
     return config.userDisplayFormatter ? config.userDisplayFormatter(user) : user.name;
+}
+
+/** `Authorization` header of a request, whatever form the headers were given in */
+function authorizationHeader(headers: HeadersInit | undefined): string | undefined {
+    if (!headers) return undefined;
+    if (typeof Headers !== 'undefined' && headers instanceof Headers) return headers.get('Authorization') ?? undefined;
+    if (Array.isArray(headers)) return headers.find(([k]) => k.toLowerCase() === 'authorization')?.[1];
+    const record = headers as Record<string, string>;
+    const key = Object.keys(record).find((k) => k.toLowerCase() === 'authorization');
+    return key ? record[key] : undefined;
 }

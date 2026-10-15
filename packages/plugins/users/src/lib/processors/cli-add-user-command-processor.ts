@@ -1,8 +1,7 @@
 import { CliProcessCommand, ICliExecutionContext } from '@qodalis/cli-core';
 import { CliUsersCommand, listArg, readNewPassword, usersServices, words, USERS_METADATA } from './base';
 import { CliProcessorMetadata } from '@qodalis/cli-core';
-
-const EMAIL = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+import { EMAIL_PATTERN } from '../backend/validation';
 
 export class CliAddUserCommandProcessor extends CliUsersCommand {
     override command = 'adduser';
@@ -14,7 +13,7 @@ export class CliAddUserCommandProcessor extends CliUsersCommand {
     override parameters = [
         {
             name: 'email', description: 'Email address', type: 'string' as const, required: true,
-            validator: (value: string) => (EMAIL.test(value) ? { valid: true } : { valid: false, message: 'Invalid email format' }),
+            validator: (value: string) => (EMAIL_PATTERN.test(value) ? { valid: true } : { valid: false, message: 'Invalid email format' }),
         },
         { name: 'groups', description: 'Groups (roles), comma separated (default: users)', type: 'string' as const, required: false },
         { name: 'home', description: 'Home directory', type: 'string' as const, required: false },
