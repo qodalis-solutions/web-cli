@@ -400,6 +400,20 @@ describe('CliLocalUsersBackend (users contract, local)', () => {
             expect(results).not.toContain(200);
         });
 
+        it('a description-only group update does not require covering the group permissions', async () => {
+            const ctx = await localBackend();
+            await ctx.backend.createGroup(ctx.root, { name: 'ops', permissions: ['users:*'] });
+            await ctx.backend.createGroup(ctx.root, { name: 'editors', permissions: ['groups:update'] });
+            await ctx.backend.createUser(ctx.root, { name: 'ed', email: 'ed@x.io', password: 'pw', groups: ['users', 'editors'] });
+            const ed = (await ctx.backend.login('ed', 'pw')).token;
+            const updated = await ctx.backend.updateGroup(ed, 'ops', { description: 'operations' });
+            expect(updated.description).toBe('operations');
+            expect(updated.permissions).toEqual(['users:*']);
+            // granting is still limited to what the caller holds (spec B3)
+            await expectStatus(ctx.backend.updateGroup(ed, 'ops', { permissions: ['users:*'] }), 403, /cannot grant/);
+            await ctx.backend.updateGroup(ed, 'ops', { permissions: ['groups:update'] });
+        });
+
         it('extensions cannot write built-in audit events; custom ones record the caller', async () => {
             const { backend, root } = await localBackend();
             for (const event of ['login', 'LOGOUT', 'login_failed', 'su', 'user_created', 'group_deleted', 'session_revoked', 'password_changed', 'audit_cleared']) {

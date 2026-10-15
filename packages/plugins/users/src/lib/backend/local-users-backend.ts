@@ -530,8 +530,7 @@ export class CliLocalUsersBackend implements ICliUsersBackend {
         const actor = this.authenticate(token);
         this.requirePermission(actor.user, 'groups:update');
         const group = this.requireGroup(name);
-        // Changing a group affects all its members: the caller must cover what it grants today
-        this.requireCanGrant(actor.user, group.permissions ?? []);
+        // B3 (same as the servers): only granted permissions must be covered by the caller
         if (updates.permissions !== undefined) {
             if (eq(group.name, 'admin')) throw new CliUsersError(409, 'the admin group permissions cannot be changed');
             const permissions = assertPermissions(updates.permissions)!;
@@ -832,6 +831,7 @@ export class CliLocalUsersBackend implements ICliUsersBackend {
         }
         return valid;
     }
+
     /** Run password checks for one lockout key one after another. */
     private serialized<T>(key: string, fn: () => Promise<T>): Promise<T> {
         const previous = this.attemptQueue.get(key) ?? Promise.resolve();
@@ -843,7 +843,6 @@ export class CliLocalUsersBackend implements ICliUsersBackend {
         });
         return run;
     }
-
 
     private assertNotLocked(key: string): void {
         const attempt = this.attempts[key];
