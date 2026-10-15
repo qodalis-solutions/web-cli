@@ -42,6 +42,9 @@ jobs:
       - name: Build docs application
         run: pnpm exec nx build docs --configuration production
 
+      - name: Generate static route pages, 404 page and sitemap (SEO)
+        run: node apps/docs/scripts/generate-static-routes.mjs dist/docs
+
       - name: Generate TypeDoc documentation
         run: pnpm exec typedoc --out typedoc-output
 
@@ -50,7 +53,6 @@ jobs:
           mkdir -p deploy/api
           cp -r dist/docs/* deploy/
           cp -r typedoc-output/* deploy/api/
-          cp deploy/index.html deploy/404.html
           cp assets/github/CNAME deploy/CNAME
           touch deploy/.nojekyll
           find deploy -name '.gitignore' -delete
