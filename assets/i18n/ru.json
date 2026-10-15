@@ -350,6 +350,7 @@
   "docs.plugin-detail.installation": "Установка",
   "docs.plugin-detail.runtime-install": "Во время выполнения (без пересборки)",
   "docs.plugin-detail.commands": "Команды",
+  "docs.plugin-detail.notes": "Полезно знать",
   "docs.plugin-detail.examples": "Примеры",
   "docs.plugin-detail.usage": "Использование",
   "docs.plugin-detail.try-it": "Попробуйте",

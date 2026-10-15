@@ -350,6 +350,7 @@
   "docs.plugin-detail.installation": "설치",
   "docs.plugin-detail.runtime-install": "런타임 (리빌드 불필요)",
   "docs.plugin-detail.commands": "명령",
+  "docs.plugin-detail.notes": "알아 두기",
   "docs.plugin-detail.examples": "예제",
   "docs.plugin-detail.usage": "사용법",
   "docs.plugin-detail.try-it": "체험하기",

@@ -350,6 +350,7 @@
   "docs.plugin-detail.installation": "Installation",
   "docs.plugin-detail.runtime-install": "Laufzeit (kein Neubau)",
   "docs.plugin-detail.commands": "Befehle",
+  "docs.plugin-detail.notes": "Gut zu wissen",
   "docs.plugin-detail.examples": "Beispiele",
   "docs.plugin-detail.usage": "Verwendung",
   "docs.plugin-detail.try-it": "Ausprobieren",
