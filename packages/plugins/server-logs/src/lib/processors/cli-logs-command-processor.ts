@@ -137,11 +137,11 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
 
         if (serverArg) {
             if (serverArg.startsWith('http://') || serverArg.startsWith('https://')) {
+                // An ad-hoc URL gets no credentials: it is not a configured server
                 serverUrl = serverArg;
-                serverName = 'custom';
             } else {
                 const match = context.options?.servers?.find(
-                    (s) => s.name === serverArg,
+                    (s) => s.name.toLowerCase() === serverArg.toLowerCase(),
                 );
                 if (match) {
                     serverUrl = match.url;
@@ -183,12 +183,11 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
             patternRegex = new RegExp(command.args['pattern'], 'g');
         }
 
-        const ws = new WebSocket(await resolveServerWebSocketUrl(
-            context.services,
-            serverName ?? 'custom',
-            fullUrl,
-            serverHeaders,
-        ));
+        const ws = new WebSocket(
+            serverName
+                ? await resolveServerWebSocketUrl(context.services, serverName, fullUrl, serverHeaders)
+                : fullUrl,
+        );
         const logs: string[] = [];
         context.notifier.info('Connecting to log stream');
 
