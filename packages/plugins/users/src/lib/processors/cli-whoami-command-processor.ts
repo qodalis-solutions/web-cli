@@ -1,110 +1,38 @@
-import {
-    CliForegroundColor,
-    CliIcon,
-    CliProcessCommand,
-    CliProcessorMetadata,
-    CliStateConfiguration,
-    ICliCommandAuthor,
-    ICliCommandParameterDescriptor,
-    ICliCommandProcessor,
-    ICliExecutionContext,
-    ICliUserSessionService,
-} from '@qodalis/cli-core';
-import { DefaultLibraryAuthor } from '@qodalis/cli-core';
-import { ICliUserSessionService_TOKEN } from '@qodalis/cli-core';
-import { firstValueFrom } from 'rxjs';
+import { CliProcessCommand, ICliExecutionContext } from '@qodalis/cli-core';
+import { CliUsersCommand, formatTime } from './base';
 
-export class CliWhoamiCommandProcessor implements ICliCommandProcessor {
-    command = 'whoami';
-
-    aliases = ['me'];
-
-    description?: string | undefined = 'Display current user information';
-
-    author?: ICliCommandAuthor | undefined = DefaultLibraryAuthor;
-
-    metadata?: CliProcessorMetadata | undefined = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-    };
-
-    stateConfiguration?: CliStateConfiguration | undefined = {
-        initialState: {},
-        storeName: 'users',
-    };
-
-    parameters?: ICliCommandParameterDescriptor[] | undefined = [
-        {
-            name: 'info',
-            description: 'Display detailed user information',
-            type: 'boolean',
-            required: false,
-            aliases: ['i'],
-        },
+export class CliWhoamiCommandProcessor extends CliUsersCommand {
+    override command = 'whoami';
+    override aliases = ['me'];
+    override description = 'Display the signed-in user';
+    override parameters = [
+        { name: 'info', aliases: ['i'], description: 'Show details, groups and permissions', type: 'boolean' as const, required: false },
+    ];
+    protected override usage: Array<[string, string]> = [
+        ['whoami', 'Show the signed-in user'],
+        ['whoami --info', 'Show details, groups (roles) and effective permissions'],
     ];
 
-    private userSessionService!: ICliUserSessionService;
-
-    async initialize(context: ICliExecutionContext): Promise<void> {
-        this.userSessionService = context.services.getRequired<ICliUserSessionService>(
-            ICliUserSessionService_TOKEN,
-        );
-    }
-
-    async processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
+    override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
         const session = context.userSession;
-
         if (!session) {
-            context.writer.writeln('No user session found');
+            context.writer.writeln('Not logged in');
             return;
         }
-
-        if (command.args['info'] || command.args['i']) {
-            const fullSession = await firstValueFrom(
-                this.userSessionService.getUserSession(),
-            );
-
-            if (!fullSession) {
-                context.writer.writeln('No user session found');
-                return;
-            }
-
-            const user = fullSession.user;
-
-            context.writer.writeln('User information:');
-            context.writer.writeln(`  Name:      ${user.name}`);
-            context.writer.writeln(`  Email:     ${user.email}`);
-            context.writer.writeln(
-                `  Groups:    ${user.groups.join(', ') || '(none)'}`,
-            );
-            context.writer.writeln(
-                `  Home:      ${user.homeDir || '(not set)'}`,
-            );
-            context.writer.writeln(
-                `  Created:   ${new Date(user.createdAt).toLocaleString()}`,
-            );
-            context.writer.writeln(
-                `  Login:     ${new Date(fullSession.loginTime).toLocaleString()}`,
-            );
-        } else {
-            context.writer.writeln(`${session.user.name} (${session.user.email})`);
+        const user = session.user;
+        if (!(command.args['info'] || command.args['i'])) {
+            context.writer.writeln(`${user.name} (${user.email})`);
+            return;
         }
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Display the current logged-in user information');
-        writer.writeln();
-        writer.writeln('Usage:');
-        writer.writeln(
-            `  ${writer.wrapInColor('whoami', CliForegroundColor.Cyan)}                 Show current user email`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('whoami --info', CliForegroundColor.Cyan)}           Show detailed user information`,
-        );
+        context.writer.writeKeyValue({
+            Name: user.name,
+            Email: user.email,
+            Groups: user.groups.join(', ') || '(none)',
+            Permissions: (session.permissions ?? []).join(', ') || '(none)',
+            Home: user.homeDir || '(not set)',
+            Created: formatTime(user.createdAt),
+            'Signed in': formatTime(session.loginTime),
+            'Last login': formatTime(user.lastLoginAt),
+        });
     }
 }

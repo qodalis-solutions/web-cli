@@ -68,3 +68,6 @@ package-lock.json
 
 # tsup bundled config artifacts
 tsup.config.bundled_*.mjs
+
+.claude/worktrees
+.claude/settings.local.json

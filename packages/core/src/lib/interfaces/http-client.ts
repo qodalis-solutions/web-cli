@@ -80,3 +80,37 @@ export interface ICliHttpClient {
      */
     options<T = any>(url: string, options?: CliHttpRequestOptions): Promise<T>;
 }
+
+/**
+ * Error thrown by `ICliHttpClient` JSON helpers (`get`, `post`, `put`,
+ * `patch`, `delete`, `options`) when the server responds with a non-2xx status.
+ *
+ * Exposes the HTTP status so callers can react to specific responses
+ * (for example, clearing a stored session token on `401`).
+ *
+ * @example
+ * ```ts
+ * try {
+ *     await context.http.get(url);
+ * } catch (e) {
+ *     if (e instanceof CliHttpError && e.status === 401) {
+ *         // token expired or revoked
+ *     }
+ * }
+ * ```
+ */
+export class CliHttpError extends Error {
+    constructor(
+        message: string,
+        /** HTTP status code of the failed response */
+        public readonly status: number,
+        /** HTTP status text of the failed response */
+        public readonly statusText: string = '',
+        /** Parsed JSON error body, when the server returned one */
+        public readonly body?: unknown,
+    ) {
+        super(message);
+        this.name = 'CliHttpError';
+        Object.setPrototypeOf(this, CliHttpError.prototype);
+    }
+}

@@ -41,4 +41,21 @@ export class CliServerAuthService implements ICliServerAuthService {
 
         return merged;
     }
+
+    async getWebSocketParams(serverName: string): Promise<Record<string, string> | undefined> {
+        const providers = this.services.getAll<ICliServerAuthTokenProvider>(
+            ICliServerAuthTokenProvider_TOKEN,
+        );
+        let handled = false;
+        const merged: Record<string, string> = {};
+        for (const provider of providers) {
+            if (!provider.getWebSocketParams) continue;
+            const params = await provider.getWebSocketParams(serverName);
+            if (params) {
+                handled = true;
+                Object.assign(merged, params);
+            }
+        }
+        return handled ? merged : undefined;
+    }
 }

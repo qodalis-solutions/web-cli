@@ -1,3 +1,4 @@
+import { readableChildren } from '../utils/readable-children';
 import {
     CliForegroundColor,
     CliProcessCommand,
@@ -68,7 +69,8 @@ export class CliTreeCommandProcessor implements ICliCommandProcessor {
             );
 
             const counts = { dirs: 0, files: 0 };
-            this.printTree(node, '', true, 0, maxDepth, context, counts);
+            this.fs = fs;
+            this.printTree(node, '', true, 0, maxDepth, context, counts, resolvedPath);
 
             context.writer.writeln();
             context.writer.writeln(
@@ -79,6 +81,9 @@ export class CliTreeCommandProcessor implements ICliCommandProcessor {
         }
     }
 
+    /** File system of the running command (listing goes through access checks) */
+    private fs?: IFileSystemService;
+
     private printTree(
         node: IFileNode,
         prefix: string,
@@ -87,12 +92,17 @@ export class CliTreeCommandProcessor implements ICliCommandProcessor {
         maxDepth: number,
         context: ICliExecutionContext,
         counts: { dirs: number; files: number },
+        path = '/',
     ): void {
-        if (!node.children || depth >= maxDepth) {
+        if (depth >= maxDepth) {
+            return;
+        }
+        const visible = this.fs ? readableChildren(this.fs, path) : node.children;
+        if (!visible) {
             return;
         }
 
-        const children = [...node.children].sort((a, b) => {
+        const children = [...visible].sort((a, b) => {
             if (a.type !== b.type) {
                 return a.type === 'directory' ? -1 : 1;
             }
@@ -125,6 +135,7 @@ export class CliTreeCommandProcessor implements ICliCommandProcessor {
                     maxDepth,
                     context,
                     counts,
+                    path === '/' ? `/${child.name}` : `${path}/${child.name}`,
                 );
             } else {
                 counts.files++;

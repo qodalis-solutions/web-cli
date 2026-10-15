@@ -1,80 +1,35 @@
-import {
-    ICliCommandProcessor,
-    ICliExecutionContext,
-    CliProcessCommand,
-    CliProcessorMetadata,
-    CliIcon,
-    CliForegroundColor,
-    ICliUsersStoreService,
-    ICliUsersStoreService_TOKEN,
-    DefaultLibraryAuthor,
-    CliStateConfiguration,
-} from '@qodalis/cli-core';
+import { CliProcessCommand, ICliExecutionContext } from '@qodalis/cli-core';
 import { firstValueFrom } from 'rxjs';
+import { CliUsersCommand, usersServices, words, USERS_METADATA } from './base';
+import { CliProcessorMetadata } from '@qodalis/cli-core';
 
-export class CliIdCommandProcessor implements ICliCommandProcessor {
-    command = 'id';
-    description = 'Display user identity information';
-    author = DefaultLibraryAuthor;
-    acceptsRawInput = true;
-    valueRequired = false;
-    metadata: CliProcessorMetadata = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-    };
-    stateConfiguration: CliStateConfiguration = {
-        initialState: {},
-        storeName: 'users',
-    };
+export class CliIdCommandProcessor extends CliUsersCommand {
+    override command = 'id';
+    override description = 'Print user identity, groups and permissions';
+    override acceptsRawInput = true;
+    override metadata: CliProcessorMetadata = { ...USERS_METADATA, requireAuth: true };
+    protected override usage: Array<[string, string]> = [
+        ['id', 'Identity of the signed-in user'],
+        ['id <user>', 'Identity of another user (requires users:read)'],
+    ];
 
-    private usersStore!: ICliUsersStoreService;
-
-    async initialize(context: ICliExecutionContext): Promise<void> {
-        this.usersStore = context.services.getRequired<ICliUsersStoreService>(
-            ICliUsersStoreService_TOKEN,
-        );
-    }
-
-    async processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        let user = context.userSession?.user;
-
-        const targetName = command.value as string;
-        if (targetName) {
-            const found = await firstValueFrom(
-                this.usersStore.getUser(targetName),
-            );
+    override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const { users } = usersServices(context);
+        const [target] = words(command);
+        let user = context.userSession!.user;
+        let permissions = context.userSession!.permissions ?? [];
+        if (target) {
+            const found = await firstValueFrom(users.getUser(target));
             if (!found) {
-                context.writer.writeError(`id: '${targetName}': no such user`);
+                context.writer.writeError(`id: '${target}': no such user`);
+                context.process.exit(-1, { silent: true });
                 return;
             }
             user = found;
+            permissions = (await users.getPermissions?.(found.id))?.permissions ?? [];
         }
-
-        if (!user) {
-            context.writer.writeError('id: no user session');
-            return;
-        }
-
-        const groups =
-            user.groups.length > 0 ? user.groups.join(',') : '(none)';
         context.writer.writeln(
-            `uid=${user.id} name=${user.name} groups=${groups}`,
-        );
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Display user identity information');
-        writer.writeln();
-        writer.writeln(
-            `  ${writer.wrapInColor('id', CliForegroundColor.Cyan)}                    Show current user`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('id <username>', CliForegroundColor.Cyan)}          Show specific user`,
+            `uid=${user.name} gid=${user.groups[0] ?? '-'} groups=${user.groups.join(',') || '-'} permissions=${permissions.join(',') || '-'}`,
         );
     }
 }

@@ -1,3 +1,5 @@
+import { cliAccessMetadataGuards, ICliCommandGuard_TOKEN, ICliPermissionRegistry_TOKEN } from '@qodalis/cli-core';
+import { CliPermissionRegistry } from '../services/cli-permission-registry';
 import {
     CliProvider,
     ICliDragDropService_TOKEN,
@@ -136,6 +138,24 @@ export async function initializeServices(
         {
             provide: ICliDragDropService_TOKEN,
             useValue: dragDropService,
+            sealed: true,
+        },
+    ]);
+
+    // Access-metadata guards (requireAuth / requiredGroups / requiredPermissions).
+    // Inactive until an auth module registers an ICliAuthorizationService.
+    services.set(
+        cliAccessMetadataGuards.map((guard) => ({
+            provide: ICliCommandGuard_TOKEN,
+            useValue: guard,
+            multi: true,
+        })),
+    );
+
+    services.set([
+        {
+            provide: ICliPermissionRegistry_TOKEN,
+            useValue: new CliPermissionRegistry(),
             sealed: true,
         },
     ]);

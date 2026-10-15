@@ -207,3 +207,6 @@ export const utils = {
     resolveConfigurationCategories,
     CLI_CONFIGURE_STORE_NAME,
 };
+export * from './permissions';
+export * from './access-guards';
+export * from './server-target';

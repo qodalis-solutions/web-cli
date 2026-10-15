@@ -1,79 +1,30 @@
-import {
-    ICliCommandProcessor,
-    ICliExecutionContext,
-    CliProcessCommand,
-    CliProcessorMetadata,
-    CliIcon,
-    CliForegroundColor,
-    ICliCommandParameterDescriptor,
-    ICliGroupsStoreService,
-    ICliGroupsStoreService_TOKEN,
-    DefaultLibraryAuthor,
-    CliStateConfiguration,
-} from '@qodalis/cli-core';
-import { requireAdmin } from '../utils/permissions';
+import { CliProcessCommand, ICliExecutionContext } from '@qodalis/cli-core';
+import { CliUsersCommand, listArg, usersServices, words, USERS_METADATA } from './base';
+import { CliProcessorMetadata } from '@qodalis/cli-core';
 
-export class CliGroupaddCommandProcessor implements ICliCommandProcessor {
-    command = 'groupadd';
-    aliases = ['addgroup'];
-    description = 'Create a new group';
-    author = DefaultLibraryAuthor;
-    acceptsRawInput = true;
-    valueRequired = true;
-    metadata: CliProcessorMetadata = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-    };
-    stateConfiguration: CliStateConfiguration = {
-        initialState: {},
-        storeName: 'users',
-    };
-    parameters: ICliCommandParameterDescriptor[] = [
-        {
-            name: 'description',
-            description: 'Group description',
-            type: 'string',
-            required: false,
-        },
+export class CliGroupaddCommandProcessor extends CliUsersCommand {
+    override command = 'groupadd';
+    override description = 'Create a group (role)';
+    override acceptsRawInput = true;
+    override valueRequired = true;
+    override metadata: CliProcessorMetadata = { ...USERS_METADATA, requiredPermissions: ['groups:create'] };
+    override parameters = [
+        { name: 'description', aliases: ['d'], description: 'Description', type: 'string' as const, required: false },
+        { name: 'permissions', aliases: ['p'], description: 'Permissions, comma separated (e.g. users:read,files:*)', type: 'string' as const, required: false },
+    ];
+    protected override usage: Array<[string, string]> = [
+        ['groupadd <name>', 'Create a group'],
+        ['groupadd ops --permissions=sessions:*,audit:read', 'Create a role with permissions'],
     ];
 
-    private groupsStore!: ICliGroupsStoreService;
-
-    async initialize(context: ICliExecutionContext): Promise<void> {
-        this.groupsStore = context.services.getRequired<ICliGroupsStoreService>(
-            ICliGroupsStoreService_TOKEN,
-        );
-    }
-
-    async processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        if (!requireAdmin(context)) return;
-
-        const name = command.value as string;
-        const description = command.args['description'] as string | undefined;
-
-        try {
-            await this.groupsStore.createGroup(name, description);
-            context.writer.writeSuccess(`groupadd: group '${name}' created`);
-        } catch (e: any) {
-            context.writer.writeError(
-                e.message || 'groupadd: failed to create group',
-            );
-        }
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Create a new group');
-        writer.writeln();
-        writer.writeln(
-            `  ${writer.wrapInColor('groupadd <name>', CliForegroundColor.Cyan)}`,
-        );
-        writer.writeln(
-            `  ${writer.wrapInColor('groupadd <name> --description="Team devs"', CliForegroundColor.Cyan)}`,
+    override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const { groups } = usersServices(context);
+        const [name] = words(command);
+        const description = command.args['description'] ?? command.args['d'];
+        const permissions = listArg(command.args['permissions'] ?? command.args['p']);
+        const group = await groups.createGroup(name, description, permissions);
+        context.writer.writeSuccess(
+            `Group '${group.name}' created${group.permissions?.length ? ` (permissions: ${group.permissions.join(', ')})` : ''}`,
         );
     }
 }

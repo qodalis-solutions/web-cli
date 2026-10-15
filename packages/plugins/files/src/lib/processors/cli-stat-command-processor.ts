@@ -34,6 +34,10 @@ export class CliStatCommandProcessor implements ICliCommandProcessor {
 
         for (const path of paths) {
             const resolved = fs.resolvePath(path);
+            if (fs.canTraverse && !fs.canTraverse(resolved)) {
+                context.writer.writeError(`stat: cannot stat '${path}': Permission denied`);
+                continue;
+            }
             const node = fs.getNode(resolved);
 
             if (!node) {

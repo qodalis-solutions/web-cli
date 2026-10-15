@@ -1,6 +1,7 @@
 import {
     CliServerConfig,
     ICliBackgroundServiceRegistry,
+    ICliCommandProcessor,
     ICliCommandProcessorRegistry,
     ICliLogger,
     ICliServerAuthService,
@@ -19,6 +20,8 @@ export class CliServerManager implements DefaultServerProvider {
     private _logger?: { warn(msg: string): void; info(msg: string): void };
     private _cliLogger?: ICliLogger;
     private _defaultServer: string | null = null;
+    /** Bare-name aliases this manager registered (only these are ever removed) */
+    private readonly _bareAliases = new Set<ICliCommandProcessor>();
     private _backgroundServices?: ICliBackgroundServiceRegistry;
 
     constructor(
@@ -28,6 +31,16 @@ export class CliServerManager implements DefaultServerProvider {
 
     get defaultServer(): string | null {
         return this._defaultServer;
+    }
+
+    preferredServer(): string | null {
+        if (this._defaultServer && this.connections.get(this._defaultServer)?.connected) {
+            return this._defaultServer;
+        }
+        for (const [name, connection] of this.connections) {
+            if (connection.connected) return name;
+        }
+        return null;
     }
 
     setDefaultServer(name: string | null): void {
@@ -114,6 +127,7 @@ export class CliServerManager implements DefaultServerProvider {
 
         if (connection.connected) {
             this.registerProxyProcessors(connection, name);
+            this.unregisterBareAliases();
             this.registerBareAliases();
             return { success: true, commandCount: connection.commands.length };
         }
@@ -154,15 +168,16 @@ export class CliServerManager implements DefaultServerProvider {
     }
 
     private unregisterBareAliases(): void {
-        for (const p of [...this.registry.processors]) {
-            if (
-                p.metadata?.module === 'server:multi' ||
-                (p.metadata?.requireServer &&
-                    !p.command.includes(':'))
-            ) {
+        // Only the aliases created here: local processors that merely declare
+        // `requireServer` (e.g. data-explorer) must survive reconnects
+        // `unregisterProcessor` removes by command name: skip aliases that a
+        // local processor has since replaced, or that one would be removed
+        for (const p of this._bareAliases) {
+            if (this.registry.processors.includes(p)) {
                 this.registry.unregisterProcessor(p);
             }
         }
+        this._bareAliases.clear();
     }
 
     private registerProxyProcessors(
@@ -195,7 +210,7 @@ export class CliServerManager implements DefaultServerProvider {
             const existingProcessor = this.registry.findProcessor(command, []);
 
             // Only register bare alias if no local processor owns this command
-            if (existingProcessor && !existingProcessor.metadata?.requireServer)
+            if (existingProcessor && !this._bareAliases.has(existingProcessor))
                 continue;
 
             if (servers.length === 1) {
@@ -221,6 +236,7 @@ export class CliServerManager implements DefaultServerProvider {
                 alias.aliases = [namespacedCommand];
 
                 this.registry.registerProcessor(alias);
+                this._bareAliases.add(alias);
             } else {
                 // Command exists on multiple servers — register a multi-proxy
                 const entries = servers.map((serverName) => {
@@ -232,6 +248,7 @@ export class CliServerManager implements DefaultServerProvider {
                 });
                 const multi = new CliServerMultiProxyProcessor(entries, this);
                 this.registry.registerProcessor(multi);
+                this._bareAliases.add(multi);
             }
         }
     }

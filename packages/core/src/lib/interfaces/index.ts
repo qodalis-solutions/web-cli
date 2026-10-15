@@ -25,6 +25,9 @@ export * from './command-processor';
 export * from './progress-bars';
 
 export * from './command-hooks';
+export * from './command-guards';
+export * from './authorization';
+export * from './sessions';
 
 export * from './users';
 
@@ -49,3 +52,7 @@ export * from './cli-panel-ref';
 export * from './http-client';
 
 export * from './notifier';
+
+export * from './user-events';
+
+export * from './audit';

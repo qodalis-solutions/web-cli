@@ -5,6 +5,7 @@ import {
     ICliExecutionContext,
     ICliFileTransferService,
     ICliFileTransferService_TOKEN,
+    resolveServerHeaders,
 } from '@qodalis/cli-core';
 import { IScpTransferService, IScpTransferService_TOKEN } from '../interfaces';
 import { resolveServer, serverUrl, formatBytes } from './scp-utils';
@@ -152,7 +153,7 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
                 remotePath,
                 content,
                 filename,
-                server.headers,
+                resolveServerHeaders(context.services, server.name, server.headers),
             );
             context.spinner?.hide();
 

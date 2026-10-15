@@ -169,3 +169,38 @@ describe('ICliWasmAccelerator (JsFallback)', () => {
         });
     });
 });
+
+describe('wasmCandidates', () => {
+    const load = () => import('../lib/wasm/wasm-loader');
+
+    it('looks next to the page first for apps under a sub-path', async () => {
+        const { wasmCandidates } = await load();
+        const paths = wasmCandidates(undefined, 'http://host/qcli/admin/');
+        expect(paths[0]).toBe('http://host/qcli/admin/assets/wasm/qodalis_cli_wasm_bg.wasm');
+        expect(paths).toContain('http://host/assets/wasm/qodalis_cli_wasm_bg.wasm');
+    });
+
+    it('puts an explicit URL first and removes duplicates', async () => {
+        const { wasmCandidates } = await load();
+        const paths = wasmCandidates('/cdn/cli.wasm', 'http://host/');
+        expect(paths[0]).toBe('http://host/cdn/cli.wasm');
+        expect(paths.filter((p) => p === 'http://host/assets/wasm/qodalis_cli_wasm_bg.wasm').length).toBe(1);
+    });
+
+    it('keeps the origin of a <base> on another host (CDN)', async () => {
+        const { wasmCandidates } = await load();
+        const paths = wasmCandidates(undefined, 'https://cdn.example.com/cli/1.0/');
+        expect(paths[0]).toBe('https://cdn.example.com/cli/1.0/assets/wasm/qodalis_cli_wasm_bg.wasm');
+        expect(paths.every((p) => p.startsWith('https://cdn.example.com/'))).toBeTrue();
+    });
+
+    it('an absolute explicit URL is used as given', async () => {
+        const { wasmCandidates } = await load();
+        expect(wasmCandidates('https://other.example.com/x.wasm', 'http://host/')[0]).toBe('https://other.example.com/x.wasm');
+    });
+
+    it('without a base the default paths are used', async () => {
+        const { wasmCandidates } = await load();
+        expect(wasmCandidates(undefined, '')).toContain('/assets/wasm/qodalis_cli_wasm_bg.wasm');
+    });
+});

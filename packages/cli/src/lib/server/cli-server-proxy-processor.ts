@@ -140,6 +140,7 @@ export class CliServerProxyProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata;
     parameters?: ICliCommandParameterDescriptor[];
     processors?: ICliCommandProcessor[];
+    acceptsRawInput?: boolean;
     /** Full command path from root to this processor (e.g. ["aws", "lambda", "list"]) */
     private readonly commandPath: string[];
 
@@ -173,6 +174,9 @@ export class CliServerProxyProcessor implements ICliCommandProcessor {
             (sub) =>
                 new CliServerProxyProcessor(connection, sub, serverName, true, this.commandPath),
         );
+        // The server receives the value (`node:hello world`); commands with
+        // sub-commands resolve the next word as a sub-command instead
+        this.acceptsRawInput = !this.processors?.length;
     }
 
     async processCommand(

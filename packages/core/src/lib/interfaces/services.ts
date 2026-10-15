@@ -1,6 +1,8 @@
 import type { CliLogLevel, CliProvider } from '../models';
 import type { ICliCommandProcessor } from './command-processor';
 import type { ICliExecutionContext } from './execution-context';
+import type { CliPermissionDefinition } from './authorization';
+import type { ICliCommandGuard } from './command-guards';
 
 /**
  * Represents a service that pings the server
@@ -58,6 +60,19 @@ export interface ICliModule {
 
     /** Services registered into the shared service container */
     services?: CliProvider[];
+
+    /**
+     * Global command guards contributed by this module. They are registered
+     * when the module boots and run before every command (across all modules),
+     * e.g. authentication or permission checks. See {@link ICliCommandGuard}.
+     */
+    guards?: ICliCommandGuard[];
+
+    /**
+     * Permissions this module uses (`resource:action`), registered in the
+     * {@link ICliPermissionRegistry} at boot so they can be listed and granted.
+     */
+    permissions?: CliPermissionDefinition[];
 
     /** Module configuration, set via configure() */
     config?: Record<string, any>;
@@ -298,7 +313,35 @@ export interface ICliServerAuthTokenProvider {
      * @returns Headers to merge into the request, or an empty object
      */
     getHeaders(serverName: string): Record<string, string>;
+
+    /**
+     * Optional: query parameters for WebSocket upgrades to this server (e.g. a
+     * short-lived single-use ticket). Called right before each connection.
+     * Return `undefined` when this provider does not handle the server.
+     * When any provider returns params, headers are NOT copied into the URL
+     * (so bearer tokens never appear in WebSocket URLs).
+     */
+    getWebSocketParams?(serverName: string): Promise<Record<string, string> | undefined>;
 }
+
+/**
+ * Minimal view of the CLI server manager (token `ICliServerManager_TOKEN`),
+ * e.g. for auth modules that must refresh a server after sign-in.
+ */
+export interface ICliServerManager {
+    /** Reconnect a server: re-fetch its commands and reopen its event socket. */
+    reconnect(name: string): Promise<{ success: boolean; commandCount: number }>;
+    /**
+     * The server a command should target when the user names none: the
+     * default server (`server default`) when connected, otherwise the first
+     * connected server. `null` when no server is connected (for example every
+     * server requires a login the user has not done yet).
+     */
+    preferredServer?(): string | null;
+}
+
+/** Token for {@link ICliServerManager} */
+export const ICliServerManager_TOKEN = 'cli-server-manager';
 
 /**
  * Internal service that resolves auth headers for a server by merging:
@@ -317,4 +360,10 @@ export interface ICliServerAuthService {
      * @returns Merged headers ready for use in fetch/WebSocket calls
      */
     getHeaders(serverName: string, configHeaders?: import('../models/server').CliHeadersProvider): Record<string, string>;
+
+    /**
+     * WebSocket upgrade query params from the registered token providers, or
+     * `undefined` when no provider handles this server.
+     */
+    getWebSocketParams?(serverName: string): Promise<Record<string, string> | undefined>;
 }
