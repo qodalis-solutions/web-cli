@@ -384,6 +384,22 @@ describe('CliLocalUsersBackend (users contract, local)', () => {
     });
 
     describe('fixes', () => {
+        it('concurrent logins cannot try more passwords than the lockout allows', async () => {
+            const { backend } = await localBackend({ maxLoginAttempts: 5 });
+            await backend.createUserInternal({ name: 'alice', email: 'alice@x.io', password: 'right-pw' });
+            const check = spyOn(backend as any, 'checkPassword').and.callThrough();
+            const guesses = Array.from({ length: 10 }, (_, i) => (i === 7 ? 'right-pw' : `wrong-${i}`));
+            const results = await Promise.all(
+                guesses.map((pw, i) =>
+                    backend.login(i % 2 ? 'alice' : 'ALICE@x.io', pw).then(() => 200, (e: any) => e.status),
+                ),
+            );
+            expect(check.calls.count()).toBe(5);
+            expect(results.filter((s) => s === 401).length).toBe(5);
+            expect(results.filter((s) => s === 429).length).toBe(5);
+            expect(results).not.toContain(200);
+        });
+
         it('extensions cannot write built-in audit events; custom ones record the caller', async () => {
             const { backend, root } = await localBackend();
             for (const event of ['login', 'LOGOUT', 'login_failed', 'su', 'user_created', 'group_deleted', 'session_revoked', 'password_changed', 'audit_cleared']) {

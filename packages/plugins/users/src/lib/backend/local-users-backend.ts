@@ -102,6 +102,8 @@ export class CliLocalUsersBackend implements ICliUsersBackend {
     private sessions: LocalSession[] = [];
     private audit: ICliAuditEntry[] = [];
     private attempts: Record<string, LoginAttempt> = {};
+    /** Pending password checks per lockout key (see `serialized`) */
+    private readonly attemptQueue = new Map<string, Promise<void>>();
 
     constructor(
         private readonly kv: ICliKeyValueStore,
@@ -164,6 +166,19 @@ export class CliLocalUsersBackend implements ICliUsersBackend {
     ): Promise<CliBackendLogin> {
         const name = (username ?? '').trim();
         if (!name) throw new CliUsersError(400, 'username is required');
+        const found = this.findUser(name);
+        // One attempt at a time per account (by name or email), so concurrent
+        // calls cannot try more passwords than the lockout allows
+        return this.serialized(found ? `id:${found.id}` : `name:${name.toLowerCase()}`, () =>
+            this.loginAttempt(name, password, options),
+        );
+    }
+
+    private async loginAttempt(
+        name: string,
+        password: string | undefined,
+        options: { trusted?: boolean },
+    ): Promise<CliBackendLogin> {
         const user = this.findUser(name);
         const lockKey = user ? `id:${user.id}` : `name:${name.toLowerCase()}`;
 
@@ -411,12 +426,14 @@ export class CliLocalUsersBackend implements ICliUsersBackend {
             if (hasCredentials && !cliHasPermission(this.effectivePermissions(actor.user), 'users:update')) {
                 if (currentPassword === undefined) throw new CliUsersError(400, 'current password is required');
                 const lockKey = `id:${user.id}`;
-                this.assertNotLocked(lockKey);
-                if (!(await this.checkPassword(user.id, currentPassword))) {
-                    this.recordFailure(lockKey);
-                    await this.log('login_failed', user.name, 'current password mismatch', actor.user);
-                    throw new CliUsersError(403, 'current password is incorrect');
-                }
+                await this.serialized(lockKey, async () => {
+                    this.assertNotLocked(lockKey);
+                    if (!(await this.checkPassword(user.id, currentPassword))) {
+                        this.recordFailure(lockKey);
+                        await this.log('login_failed', user.name, 'current password mismatch', actor.user);
+                        throw new CliUsersError(403, 'current password is incorrect');
+                    }
+                });
             }
         } else {
             this.requirePermission(actor.user, 'users:update');
@@ -446,13 +463,15 @@ export class CliLocalUsersBackend implements ICliUsersBackend {
         const user = this.requireUser(idOrName);
         if (user.id !== actor.user.id) this.requirePermission(actor.user, 'users:update');
         const lockKey = `id:${user.id}`;
-        this.assertNotLocked(lockKey);
-        const valid = await this.checkPassword(user.id, password);
-        if (!valid) {
-            this.recordFailure(lockKey);
-            await this.log('login_failed', user.name, 'password verification failed', actor.user.name);
-        }
-        return valid;
+        return this.serialized(lockKey, async () => {
+            this.assertNotLocked(lockKey);
+            const valid = await this.checkPassword(user.id, password);
+            if (!valid) {
+                this.recordFailure(lockKey);
+                await this.log('login_failed', user.name, 'password verification failed', actor.user.name);
+            }
+            return valid;
+        });
     }
 
     // ── groups ───────────────────────────────────────────────────────
@@ -813,6 +832,18 @@ export class CliLocalUsersBackend implements ICliUsersBackend {
         }
         return valid;
     }
+    /** Run password checks for one lockout key one after another. */
+    private serialized<T>(key: string, fn: () => Promise<T>): Promise<T> {
+        const previous = this.attemptQueue.get(key) ?? Promise.resolve();
+        const run = previous.then(fn, fn);
+        const settled = run.then(() => undefined, () => undefined);
+        this.attemptQueue.set(key, settled);
+        void settled.then(() => {
+            if (this.attemptQueue.get(key) === settled) this.attemptQueue.delete(key);
+        });
+        return run;
+    }
+
 
     private assertNotLocked(key: string): void {
         const attempt = this.attempts[key];
