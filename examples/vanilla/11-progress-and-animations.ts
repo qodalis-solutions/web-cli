@@ -30,19 +30,19 @@ const spinnerDemo: ICliCommandProcessor = {
         const { spinner, writer } = context;
 
         // Show the spinner with initial text
-        spinner.show('Connecting to server...');
+        spinner?.show('Connecting to server...');
 
         await delay(1500);
 
         // Update the text while it's spinning
-        spinner.setText('Fetching data...');
+        spinner?.setText('Fetching data...');
         await delay(1500);
 
-        spinner.setText('Processing results...');
+        spinner?.setText('Processing results...');
         await delay(1000);
 
         // Hide when done
-        spinner.hide();
+        spinner?.hide();
 
         writer.writeSuccess('All done!');
     },
@@ -101,19 +101,19 @@ const animatorDemo: ICliCommandProcessor = {
         const { textAnimator, writer } = context;
 
         // Basic typing animation (stays on screen)
-        await textAnimator.showText('Hello, welcome to the CLI!', {
+        await textAnimator?.showText('Hello, welcome to the CLI!', {
             speed: 50, // ms per character
         });
         writer.writeln(''); // newline after animation
 
         // Typing animation that erases itself after typing
-        await textAnimator.showText('This message will disappear...', {
+        await textAnimator?.showText('This message will disappear...', {
             speed: 40,
             removeAfterTyping: true,
         });
 
         // Slower dramatic effect
-        await textAnimator.showText('✨ The future is now.', {
+        await textAnimator?.showText('✨ The future is now.', {
             speed: 100,
         });
         writer.writeln('');
@@ -130,9 +130,9 @@ const deployDemo: ICliCommandProcessor = {
         const { spinner, progressBar, textAnimator, writer } = context;
 
         // Phase 1: Spinner for indeterminate work
-        spinner.show('Building project...');
+        spinner?.show('Building project...');
         await delay(2000);
-        spinner.hide();
+        spinner?.hide();
         writer.writeSuccess('Build complete');
 
         // Phase 2: Progress bar for measurable work
@@ -149,7 +149,7 @@ const deployDemo: ICliCommandProcessor = {
 
         // Phase 3: Text animation for the final message
         writer.writeln('');
-        await textAnimator.showText('🚀 Deployed to production successfully!', {
+        await textAnimator?.showText('🚀 Deployed to production successfully!', {
             speed: 30,
         });
         writer.writeln('');

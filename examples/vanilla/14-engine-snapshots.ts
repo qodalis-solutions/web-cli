@@ -15,8 +15,8 @@
 
 import '@xterm/xterm/css/xterm.css';
 import { CliEngine } from '@qodalis/cli';
+import type { CliEngineOptions } from '@qodalis/cli';
 import type {
-    CliEngineOptions,
     CliEngineSnapshot,
     ICliCommandProcessor,
     ICliExecutionContext,
