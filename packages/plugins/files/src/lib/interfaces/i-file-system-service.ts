@@ -56,6 +56,12 @@ export interface IFileSystemService {
     canTraverse?(path: string): boolean;
     /** Run `fn` without access checks (system tasks such as creating home directories) */
     runAsSystem?<T>(fn: () => T): T;
+    /**
+     * System task (no access checks): give every node owned by `fromUid`
+     * (case-insensitive) to `toUid`, e.g. after a user was renamed or deleted.
+     * Returns the number of nodes changed.
+     */
+    reassignOwner?(fromUid: string, toUid: string): number;
 
     // Persistence
     initialize(): Promise<void>;

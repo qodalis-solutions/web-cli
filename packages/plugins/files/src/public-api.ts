@@ -10,7 +10,7 @@ import { API_VERSION } from './lib/version';
 import { IFileSystemService_TOKEN } from './lib/interfaces';
 import { IndexedDbFileSystemService, VirtualFsFileTransferService } from './lib/services';
 import { IFileSystemService } from './lib/interfaces';
-import { CliFilesPermissions, createFileAccessPolicy, followUserSession } from './lib/services/files-access';
+import { CliFilesPermissions, createFileAccessPolicy, followUserAccounts, followUserSession } from './lib/services/files-access';
 import { FilePathCompletionProvider } from './lib/completion/file-path-completion-provider';
 import { CliLsCommandProcessor } from './lib/processors/cli-ls-command-processor';
 import { CliCdCommandProcessor } from './lib/processors/cli-cd-command-processor';
@@ -66,6 +66,8 @@ interface ICliFilesModule extends ICliConfigurableModule<CliFilesModuleConfig> {
     _dragDropSubscription?: Subscription;
     /** Subscription following the signed-in user, cleaned up in onDestroy */
     _sessionSubscription?: Subscription;
+    /** Subscription following account renames/deletions, cleaned up in onDestroy */
+    _accountsSubscription?: Subscription;
 }
 
 const fsService = new IndexedDbFileSystemService();
@@ -204,6 +206,9 @@ export const filesModule: ICliFilesModule = {
         fs.setAccessPolicy?.(createFileAccessPolicy(context));
         this._sessionSubscription?.unsubscribe();
         this._sessionSubscription = followUserSession(context, fs);
+        // File ownership follows user renames and deletions
+        this._accountsSubscription?.unsubscribe();
+        this._accountsSubscription = followUserAccounts(context, fs);
     },
 
     async onDestroy(_context: ICliExecutionContext): Promise<void> {
@@ -212,5 +217,7 @@ export const filesModule: ICliFilesModule = {
         this._dragDropSubscription = undefined;
         this._sessionSubscription?.unsubscribe();
         this._sessionSubscription = undefined;
+        this._accountsSubscription?.unsubscribe();
+        this._accountsSubscription = undefined;
     },
 };

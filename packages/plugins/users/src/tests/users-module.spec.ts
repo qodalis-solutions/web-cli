@@ -245,6 +245,22 @@ describe('usersModule lifecycle', () => {
             expect(entry.details).toBe('v2');
             expect((await audit.getEntries({ event: 'login' })).length).toBe(1); // the real one
         });
+
+        it('a rename reports the previous name in the user_updated event', async () => {
+            const f = fakeContext(new MemoryKv());
+            const m = track(await boot(LOCAL, f));
+            await m._runtime.auth.login('root1', 'root');
+            await m._runtime.users.createUser({ name: 'alice', email: 'alice@x.io', password: 'password1' });
+            const events: any[] = [];
+            const sub = m._runtime.events.events$.subscribe((e: any) => events.push(e));
+            await m._runtime.users.updateUser('alice', { name: 'alicia' });
+            await m._runtime.users.updateUser('alicia', { email: 'a2@x.io' });
+            sub.unsubscribe();
+            const updates = events.filter((e) => e.type === 'user_updated');
+            expect(updates[0].user.name).toBe('alicia');
+            expect(updates[0].previousName).toBe('alice');
+            expect(updates[1].previousName).toBeUndefined();
+        });
     });
 
     describe('server mode', () => {

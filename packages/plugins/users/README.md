@@ -90,6 +90,9 @@ if (!cliAuthorize(context, 'deploy:rollback')) { /* hide the option */ }
 
 The files module uses the same layer for rwx checks on the virtual file system
 (`files:admin` bypasses, `files:chown` allows chmod/chown on others' files).
+Files are owned by login name: when both modules are loaded, renaming a user
+(`usermod --name`) moves their files to the new name and deleting a user gives
+their files to `root`, so a later account with the same name never inherits them.
 
 ## Commands
 

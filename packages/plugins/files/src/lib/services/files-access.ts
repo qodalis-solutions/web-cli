@@ -4,6 +4,9 @@ import {
     ICliAuthorizationService_TOKEN,
     ICliExecutionContext,
     ICliOwnership,
+    ICliUserEvent,
+    ICliUserEventService,
+    ICliUserEventService_TOKEN,
     ICliUserSession,
     ICliUserSessionService,
     ICliUserSessionService_TOKEN,
@@ -126,4 +129,31 @@ function canEnter(fs: IFileSystemService, path: string): boolean {
     } catch {
         return false;
     }
+}
+
+/**
+ * Keep file ownership (stored by login name) in step with the accounts of
+ * any auth module that emits {@link ICliUserEventService} events: a rename
+ * moves the user's files to the new name, a deletion gives them to `root`, so
+ * a later account with the same name never inherits them. Runs as a system
+ * task (no rwx checks for the acting user). No-op without such a module.
+ */
+export function followUserAccounts(context: ICliExecutionContext, fs: IFileSystemService): Subscription | undefined {
+    let events: ICliUserEventService | undefined;
+    try {
+        events = context.services.get<ICliUserEventService>(ICliUserEventService_TOKEN);
+    } catch {
+        events = undefined;
+    }
+    if (!events || !fs.reassignOwner) return undefined;
+
+    return events.events$.subscribe((event: ICliUserEvent) => {
+        let changed = 0;
+        if (event.type === 'user_updated' && event.previousName && event.previousName !== event.user?.name) {
+            changed = fs.reassignOwner!(event.previousName, event.user.name);
+        } else if (event.type === 'user_deleted' && event.user?.name) {
+            changed = fs.reassignOwner!(event.user.name, SYSTEM_OWNERSHIP.uid);
+        }
+        if (changed > 0) void fs.persist().catch(() => undefined);
+    });
 }

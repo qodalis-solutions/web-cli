@@ -54,9 +54,10 @@ abstract class CliUsersServiceBase {
         return this.session.current?.user.name;
     }
 
-    protected emit(type: ICliUserEvent['type'], user: ICliUser, details?: string): void {
+    protected emit(type: ICliUserEvent['type'], user: ICliUser, details?: string, extra?: Partial<ICliUserEvent>): void {
         const actor = this.actorName;
         this.events?.emit({
+            ...extra,
             type,
             user,
             timestamp: Date.now(),
@@ -232,7 +233,9 @@ export class CliUsersStoreService extends CliUsersServiceBase implements ICliUse
         const updated = await this.backend.updateUser(this.token, id, rest);
         if (before && !before.disabled && updated.disabled) this.emit('user_disabled', updated);
         if (before?.disabled && !updated.disabled) this.emit('user_enabled', updated);
-        this.emit('user_updated', updated, Object.keys(rest).join(','));
+        // Renames carry the old name (e.g. so file ownership can follow the user)
+        const renamed = before && before.name !== updated.name ? { previousName: before.name } : undefined;
+        this.emit('user_updated', updated, Object.keys(rest).join(','), renamed);
         await this.refreshIfCurrent(updated.id);
         return updated;
     }
@@ -351,18 +354,18 @@ export class CliUsersAuditService extends CliUsersServiceBase implements ICliAud
         super(backend, session, events);
     }
 
-    async log(entry: Omit<ICliAuditEntry, 'timestamp'>): Promise<void> {
-        // Server mode: the server writes its own audit trail; extension entries are local only
-        await this.appendLocal?.(event, user.name, entry.details);
     /**
      * Record a custom (extension) event. Built-in event names are reserved
      * (400); the entry is attributed to the signed-in user, whatever
      * `username` / `actor` the caller passes.
      */
-    }
+    async log(entry: Omit<ICliAuditEntry, 'timestamp'>): Promise<void> {
         const event = assertCustomAuditEvent(entry?.event);
         const user = this.session.current?.user;
         if (!user) throw new CliUsersError(401, 'not logged in');
+        // Server mode: the server writes its own audit trail; extension entries are local only
+        await this.appendLocal?.(event, user.name, entry.details);
+    }
 
     getEntries(options?: { limit?: number; event?: string; username?: string }): Promise<ICliAuditEntry[]> {
         return this.backend.listAudit(this.token, options);

@@ -30,6 +30,8 @@ export interface ICliUserEvent {
     timestamp: number;
     /** Optional additional details */
     details?: string;
+    /** `user_updated`: the user's name before a rename (set only when the name changed) */
+    previousName?: string;
 }
 
 /** Service that emits user lifecycle events for plugins to subscribe to */

@@ -4,11 +4,13 @@ import {
     ICliAuthorizationService,
     ICliAuthorizationService_TOKEN,
     ICliPrincipal,
+    ICliUserEvent,
+    ICliUserEventService_TOKEN,
     ICliUserSessionService_TOKEN,
 } from '@qodalis/cli-core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { IndexedDbFileSystemService } from '../lib/services/indexed-db-file-system.service';
-import { createFileAccessPolicy, followUserSession } from '../lib/services/files-access';
+import { createFileAccessPolicy, followUserAccounts, followUserSession } from '../lib/services/files-access';
 
 function contextFor(getPrincipal: () => ICliPrincipal | undefined, withAuth = true): any {
     const auth: ICliAuthorizationService = {
@@ -207,5 +209,79 @@ describe('followUserSession', () => {
         const sub = followUserSession(ctx, fs)!;
         expect(fs.getCurrentDirectory()).toBe('/');
         sub.unsubscribe();
+    });
+});
+
+describe('followUserAccounts (ownership follows renames and deletions)', () => {
+    const userNamed = (name: string): any => ({ id: `id-${name}`, name, email: `${name}@x.io`, groups: ['users'], createdAt: 1, updatedAt: 1 });
+
+    function setup() {
+        const fs = new IndexedDbFileSystemService();
+        // The acting user (an administrator of users only) has no rights on alice's files
+        const actor: ICliPrincipal = { id: 'o', name: 'ops', groups: ['ops'], permissions: ['users:*'] };
+        const auth = contextFor(() => actor);
+        fs.setAccessPolicy(createFileAccessPolicy(auth));
+        fs.runAsSystem(() => {
+            fs.createDirectory('/home/alice/docs', true);
+            fs.chown('/home/alice', { uid: 'alice', gid: 'users' });
+            fs.chmod('/home/alice', 'rwx------');
+            fs.chown('/home/alice/docs', { uid: 'alice', gid: 'users' });
+            fs.createFile('/home/alice/docs/a.txt', 'secret');
+            fs.chown('/home/alice/docs/a.txt', { uid: 'Alice', gid: 'users' });
+            fs.createFile('/tmp/bob.txt', 'b');
+            fs.chown('/tmp/bob.txt', { uid: 'bob', gid: 'users' });
+        });
+        spyOn(fs, 'persist').and.resolveTo();
+        const events$ = new Subject<ICliUserEvent>();
+        const ctx: any = {
+            services: {
+                get: (token: string) =>
+                    token === ICliUserEventService_TOKEN ? { events$, emit: (e: ICliUserEvent) => events$.next(e) } : auth.services.get(token),
+            },
+        };
+        const sub = followUserAccounts(ctx, fs)!;
+        const owner = (path: string) => fs.runAsSystem(() => fs.getNode(path)!.ownership!.uid);
+        return { fs, events$, sub, owner };
+    }
+
+    it('a rename moves every file of the old name to the new name', () => {
+        const { fs, events$, sub, owner } = setup();
+        events$.next({ type: 'user_updated', user: userNamed('alicia'), previousName: 'alice', timestamp: 1 });
+        expect(owner('/home/alice')).toBe('alicia');
+        expect(owner('/home/alice/docs')).toBe('alicia');
+        expect(owner('/home/alice/docs/a.txt')).toBe('alicia');
+        expect(owner('/tmp/bob.txt')).toBe('bob');
+        expect(fs.persist).toHaveBeenCalled();
+        sub.unsubscribe();
+    });
+
+    it('a new account with the old name does not inherit the files', () => {
+        const { events$, sub, owner } = setup();
+        events$.next({ type: 'user_updated', user: userNamed('alicia'), previousName: 'alice', timestamp: 1 });
+        events$.next({ type: 'user_created', user: userNamed('alice'), timestamp: 2 });
+        expect(owner('/home/alice/docs/a.txt')).toBe('alicia');
+        sub.unsubscribe();
+    });
+
+    it('deleting a user gives their files to root', () => {
+        const { events$, sub, owner } = setup();
+        events$.next({ type: 'user_deleted', user: userNamed('alice'), timestamp: 1 });
+        expect(owner('/home/alice')).toBe('root');
+        expect(owner('/home/alice/docs/a.txt')).toBe('root');
+        expect(owner('/tmp/bob.txt')).toBe('bob');
+        sub.unsubscribe();
+    });
+
+    it('ignores updates that are not renames', () => {
+        const { fs, events$, sub, owner } = setup();
+        events$.next({ type: 'user_updated', user: userNamed('alice'), timestamp: 1 });
+        expect(owner('/home/alice')).toBe('alice');
+        expect(fs.persist).not.toHaveBeenCalled();
+        sub.unsubscribe();
+    });
+
+    it('is a no-op without a users module', () => {
+        const fs = new IndexedDbFileSystemService();
+        expect(followUserAccounts(contextFor(() => undefined, false), fs)).toBeUndefined();
     });
 });

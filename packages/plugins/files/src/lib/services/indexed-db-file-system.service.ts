@@ -79,6 +79,21 @@ export class IndexedDbFileSystemService implements IFileSystemService {
         }
     }
 
+    reassignOwner(fromUid: string, toUid: string): number {
+        const from = fromUid.toLowerCase();
+        if (!from || !toUid) return 0;
+        let changed = 0;
+        const visit = (node: IFileNode) => {
+            if (node.ownership && node.ownership.uid.toLowerCase() === from) {
+                node.ownership = { ...node.ownership, uid: toUid };
+                changed++;
+            }
+            node.children?.forEach(visit);
+        };
+        visit(this.root);
+        return changed;
+    }
+
     canTraverse(path: string): boolean {
         try {
             this.assertTraverse(this.resolvePath(path), 'stat', path);
