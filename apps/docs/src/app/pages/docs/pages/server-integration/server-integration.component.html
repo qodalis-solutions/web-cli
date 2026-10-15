@@ -162,8 +162,8 @@ const res = await fetch(`$&#123;server.url&#125;/api/v1/qcli/...`, &#123; header
 
 <h2 id="mcp-endpoint">MCP endpoint</h2>
 <p>
-    Every server (.NET, Node, Python) can expose <strong>the whole system</strong> to AI clients (Claude Code, Claude
-    Desktop, Cursor, &hellip;) through the
+    Every server (.NET, Node, Python) can expose <strong>the whole system</strong> to AI clients such as
+    Claude Code through the
     <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol</a>: CLI commands,
     the filesystem API, the data explorer, jobs, and tools contributed by plugins. It is a feature of the core server,
     <strong>off by default</strong>, and works with or without the users plugin. Each tool runs with the same permissions
@@ -274,7 +274,7 @@ cli.EnableMcp(o =&gt; &#123; o.Exclude = ["fs_delete"]; &#125;);</code></pre>
         same origin (DNS-rebinding protection).</li>
 </ul>
 
-<h3 id="mcp-client">Using the MCP endpoint from an MCP client</h3>
+<h3 id="mcp-client">Using the MCP endpoint from Claude Code</h3>
 <p>Default ports: .NET <code>8046</code>, Node <code>8047</code>, Python <code>8048</code>. The examples use Node.</p>
 <ol>
     <li>
@@ -287,34 +287,32 @@ cli.EnableMcp(o =&gt; &#123; o.Exclude = ["fs_delete"]; &#125;);</code></pre>
     </li>
     <li>
         <strong>Get a token.</strong> With the users plugin, sign in to a CLI connected to the server
-        (<code>usersModule.configure(&#123; server &#125;)</code>) as the user the client should act as, and create an API token.
+        (<code>usersModule.configure(&#123; server &#125;)</code>) as the user Claude Code should act as, and create an API token.
         It (<code>qcli_pat_&hellip;</code>) is shown once, together with the Claude Code command:
         <div class="code-block"><pre><code>token create claude --expires=90</code></pre></div>
         Without the users plugin, use the server's static <code>token</code> option instead.
     </li>
     <li>
-        <strong>Connect Claude Code</strong>:
-        <div class="code-block"><pre><code>claude mcp add --transport http qcli http://localhost:8047/api/qcli/mcp --header "Authorization: Bearer &lt;token&gt;"</code></pre></div>
+        <strong>Connect Claude Code</strong>, either way:
+        <ul>
+            <li>
+                <strong>Direct HTTP</strong> (nothing to install):
+                <div class="code-block"><pre><code>claude mcp add --transport http qcli http://localhost:8047/api/qcli/mcp --header "Authorization: Bearer &lt;token&gt;"</code></pre></div>
+            </li>
+            <li>
+                <strong>The <a href="https://github.com/qodalis-solutions/mcp-cli" target="_blank" rel="noopener"><code>&#64;qodalis/mcp-cli</code></a> package</strong>,
+                a local stdio MCP server that proxies to the endpoint. It is configured with environment variables, can sign in with a
+                user name and password instead of a token (and signs in again when the session expires), and adds a read-only mode and
+                client-side tool filters:
+                <div class="code-block"><pre><code>claude mcp add qcli -e QCLI_URL=http://localhost:8047 -e QCLI_TOKEN=&lt;token&gt; -- npx -y &#64;qodalis/mcp-cli</code></pre></div>
+            </li>
+        </ul>
+        Add <code>--scope user</code> to make the server available in every project, or <code>--scope project</code> to share it
+        through the project's <code>.mcp.json</code> (keep the token out of it: use an environment variable reference such as
+        <code>$&#123;QCLI_TOKEN&#125;</code>).
     </li>
     <li>
-        <strong>Claude Desktop / Cursor</strong> (<code>claude_desktop_config.json</code>, <code>.cursor/mcp.json</code>):
-        <div class="code-block"><pre><code class="language-json">&#123;
-    "mcpServers": &#123;
-        "qcli": &#123;
-            "type": "http",
-            "url": "http://localhost:8047/api/qcli/mcp",
-            "headers": &#123; "Authorization": "Bearer &lt;token&gt;" &#125;
-        &#125;
-    &#125;
-&#125;</code></pre></div>
-    </li>
-    <li>
-        <strong>MCP Inspector</strong>: run <code>npx &#64;modelcontextprotocol/inspector</code>, choose the
-        <em>Streamable HTTP</em> transport, URL <code>http://localhost:8047/api/qcli/mcp</code>, add the header
-        <code>Authorization: Bearer &lt;token&gt;</code>, then <em>Connect</em> and <em>List Tools</em>.
-    </li>
-    <li>
-        <strong>Raw request</strong>:
+        <strong>Check the endpoint</strong> with curl:
         <div class="code-block"><pre><code>curl -s http://localhost:8047/api/qcli/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
@@ -322,16 +320,19 @@ cli.EnableMcp(o =&gt; &#123; o.Exclude = ["fs_delete"]; &#125;);</code></pre>
   -d '&#123;"jsonrpc":"2.0","id":1,"method":"tools/list"&#125;'</code></pre></div>
     </li>
 </ol>
-<p>Troubleshooting:</p>
+<p>
+    Troubleshooting: <code>claude mcp list</code> shows whether Claude Code can connect to <code>qcli</code>; inside a session,
+    <code>/mcp</code> shows its status and tools (and lets you reconnect).
+</p>
 <table>
     <thead>
         <tr><th>Symptom</th><th>Cause</th></tr>
     </thead>
     <tbody>
-        <tr><td><code>401</code></td><td>Token missing, mistyped, expired or revoked (<code>token list</code>), or its user is disabled</td></tr>
+        <tr><td><code>401</code> / failed to connect</td><td>Token missing, mistyped, expired or revoked (<code>token list</code>), or its user is disabled</td></tr>
         <tr><td><code>403</code></td><td>The request's <code>Origin</code> is not allowed (add it to the server's allowed origins), or the caller lacks <code>commands:execute</code></td></tr>
         <tr><td>A tool is missing</td><td>The feature is not enabled on the server, the caller (or the token's <code>--permissions</code> scope) lacks the tool's permissions, or the <code>tools</code> / <code>exclude</code> lists hide it</td></tr>
-        <tr><td><code>405</code></td><td><code>GET</code> / <code>DELETE</code> used: the endpoint only accepts <code>POST</code></td></tr>
+        <tr><td><code>404</code> / <code>405</code></td><td>MCP is not enabled on the server, or the URL is wrong (the endpoint only accepts <code>POST</code>)</td></tr>
     </tbody>
 </table>
 

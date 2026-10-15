@@ -15,7 +15,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Docs
 
-- Server integration: new **MCP endpoint** section, the main MCP documentation: enabling it on each server, the tools it exposes (`server_info`, command tools, `fs_*`, `data_*`, `jobs_*`, plugin-contributed tools) and their permissions, authentication with or without the users plugin, and a step-by-step guide for external clients (Claude Code, Claude Desktop / Cursor config, MCP Inspector, curl, troubleshooting). The main README links to it; the users plugin README now only covers API tokens.
+- Server integration: new **MCP endpoint** section, the main MCP documentation: enabling it on each server, the tools it exposes (`server_info`, command tools, `fs_*`, `data_*`, `jobs_*`, plugin-contributed tools) and their permissions, authentication with or without the users plugin, and a step-by-step guide for Claude Code (direct HTTP with a token, or the `@qodalis/mcp-cli` stdio proxy; curl check; troubleshooting with `claude mcp list` and `/mcp`). The main README links to it; the users plugin README now only covers API tokens.
 - Opening another docs page starts at the top; Back/Forward return to the previous scroll position.
 
 ## v2.0.0-beta.14

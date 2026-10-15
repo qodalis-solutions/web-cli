@@ -145,7 +145,7 @@ their files to `root`, so a later account with the same name never inherits them
 ## API tokens
 
 In server mode, `token` creates long-lived, revocable bearer tokens: the credential for
-MCP clients (Claude Code, Claude Desktop, Cursor, …), CI jobs and scripts. A token acts
+MCP clients (Claude Code), CI jobs and scripts. A token acts
 as the user who created it, with that user's live permissions; `--permissions` narrows
 it further (you can only include permissions you hold).
 
@@ -171,7 +171,7 @@ Clients send it as `Authorization: Bearer qcli_pat_…`, wherever a session toke
   of `ICliUsersBackend`.
 
 The MCP endpoint itself is a feature of the CLI servers (enabling it, the tools it exposes,
-connecting Claude Code, Claude Desktop, Cursor or the MCP Inspector): see
+connecting Claude Code): see
 [MCP endpoint](https://cli.qodalis.com/docs/server-integration#mcp-endpoint).
 
 ## Rules (identical in every mode)

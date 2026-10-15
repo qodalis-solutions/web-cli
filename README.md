@@ -323,10 +323,13 @@ The frontend includes built-in resilience features:
 
 ### MCP
 
-Each server can expose the whole system to AI clients (Claude Code, Claude Desktop, Cursor, …) over the [Model Context Protocol](https://modelcontextprotocol.io) at `POST /api/qcli/mcp` (opt-in): CLI commands, the filesystem API, the data explorer, jobs and plugin-contributed tools, each with the caller's permissions. It works with or without the users plugin, whose `token create` command issues the API tokens MCP clients sign in with:
+Each server can expose the whole system to AI clients such as Claude Code over the [Model Context Protocol](https://modelcontextprotocol.io) at `POST /api/qcli/mcp` (opt-in): CLI commands, the filesystem API, the data explorer, jobs and plugin-contributed tools, each with the caller's permissions. It works with or without the users plugin, whose `token create` command issues the API tokens MCP clients sign in with:
 
 ```bash
+# direct HTTP
 claude mcp add --transport http qcli http://localhost:8047/api/qcli/mcp --header "Authorization: Bearer <token>"
+# or the local stdio proxy @qodalis/mcp-cli (token or user/password, read-only mode, tool filters)
+claude mcp add qcli -e QCLI_URL=http://localhost:8047 -e QCLI_TOKEN=<token> -- npx -y @qodalis/mcp-cli
 ```
 
 See [MCP endpoint](https://cli.qodalis.com/docs/server-integration#mcp-endpoint) for enabling it, the tools and permissions, and client setup.
