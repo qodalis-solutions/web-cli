@@ -154,7 +154,9 @@ function stripPrefix(message: string | undefined, command: string): string | und
  */
 export function reconnectServerOnSessionChange(context: ICliExecutionContext, runtime: CliUsersRuntime): void {
     if (!runtime.serverName) return;
-    let lastToken = runtime.session.getToken();
+    // Start from "no token": a session restored at boot also reconnects, because the
+    // server's first connection may have run before the token was available (401)
+    let lastToken: string | undefined;
     runtime.subscriptions.push(
         runtime.session.getUserSession().subscribe(() => {
             const token = runtime.session.getToken();

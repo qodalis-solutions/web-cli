@@ -3,6 +3,7 @@ import {
     ICliCommandProcessor,
     ICliCommandChildProcessor,
     ICliExecutionContext,
+    resolveServerHeaders,
 } from '@qodalis/cli-core';
 import { IScpTransferService, IScpTransferService_TOKEN } from '../interfaces';
 import { resolveServer, serverUrl, formatBytes, parseServerAndPath } from './scp-utils';
@@ -58,7 +59,7 @@ export class CliScpLsProcessor implements ICliCommandChildProcessor {
             const entries = await transferService.ls(
                 serverUrl(server),
                 path,
-                server.headers,
+                resolveServerHeaders(context.services, server.name, server.headers),
             );
             context.spinner?.hide();
 

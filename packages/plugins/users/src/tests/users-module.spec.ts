@@ -272,6 +272,31 @@ describe('usersModule lifecycle', () => {
             expect(reconnects).toEqual(['node', 'node']);
         });
 
+        it('reconnects the server for a session restored at boot (page reload)', async () => {
+            const srv = server();
+            const kv = new MemoryKv();
+            const f = fakeContext(kv, { http: srv.http });
+            const m = track(await boot({ server: 'node' }, f));
+            await m._runtime.auth.login('root', 'admin');
+
+            // reload: the server's first connection ran before the token was restored
+            const f2 = fakeContext(kv, { http: srv.http });
+            const reconnects: string[] = [];
+            f2.ctx.services.set({ provide: 'cli-server-manager', useValue: { reconnect: async (n: string) => (reconnects.push(n), { success: true, commandCount: 1 }) } });
+            track(await boot({ server: 'node' }, f2));
+            expect(f2.ctx.userSession.user.name).toBe('root');
+            expect(reconnects).toEqual(['node']);
+        });
+
+        it('does not reconnect at boot without a session', async () => {
+            const srv = server();
+            const f = fakeContext(new MemoryKv(), { http: srv.http });
+            const reconnects: string[] = [];
+            f.ctx.services.set({ provide: 'cli-server-manager', useValue: { reconnect: async (n: string) => (reconnects.push(n), { success: true, commandCount: 1 }) } });
+            track(await boot({ server: 'node' }, f));
+            expect(reconnects).toEqual([]);
+        });
+
         it('signs out once when the server rejects the token', async () => {
             const srv = server();
             const f = fakeContext(new MemoryKv(), { http: srv.http });
