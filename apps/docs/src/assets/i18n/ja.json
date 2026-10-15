@@ -132,6 +132,8 @@
   "docs.built-in-commands.th-aliases": "エイリアス",
   "docs.built-in-commands.try-it": "試してみる",
   "docs.built-in-commands.try-it-desc": "このライブターミナルで上記のコマンドを試してみてください。例：json format '{\"a\":1}'、hash sha256 hello、theme list。",
+  "docs.built-in-commands.env-title": "環境変数",
+  "docs.built-in-commands.env-desc": "export（または NAME=value）で変数を設定し、任意のコマンドで $NAME や ${NAME} として使えます。シングルクォート内は展開されません。USER、HOME、PWD はサインイン中のユーザーと現在のディレクトリに追従し、~ は $HOME に、$? は直前の終了ステータスに展開されます。変数はユーザーごとに保存され、次回の訪問時に復元されます。",
 
   "docs.configuration.title": "設定",
   "docs.configuration.intro": "Qodalis CLI はコンポーネントプロパティによるビルド時の設定、または組み込みの config コマンドによるランタイム設定が可能です。",
@@ -158,7 +160,7 @@
   "docs.configuration.list-config": "すべての設定値を一覧表示",
   "docs.configuration.get-config": "特定の値を取得",
   "docs.configuration.set-config": "値を設定",
-  "docs.configuration.delete-config": "値を削除",
+  "docs.configuration.delete-config": "カテゴリを既定値に戻す",
 
   "docs.core-concepts.command-processors.title": "コマンドプロセッサ",
   "docs.core-concepts.command-processors.intro": "Qodalis CLI のすべてのコマンドはコマンドプロセッサによって動作します。プロセッサは ICliCommandProcessor インターフェースを実装し、コマンド名、説明、パラメータ、およびコマンド実行時に実行されるロジックを定義します。",

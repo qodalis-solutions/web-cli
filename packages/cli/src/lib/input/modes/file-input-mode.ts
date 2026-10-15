@@ -48,13 +48,13 @@ export class FileInputMode extends InputModeBase<CliFileResult[]> {
 
             if (!results || this.isResolved) {
                 this.host.terminal.write('\x1b[2K\r');
-                this.host.writeToTerminal(`\x1b[36m?\x1b[0m ${this.promptText}: \x1b[2m(cancelled)\x1b[0m\r\n`);
+                this.host.writeToTerminal(`\x1b[36m?\x1b[0m ${this.label(this.promptText)}: \x1b[2m(cancelled)\x1b[0m\r\n`);
                 if (!this.isResolved) this.abort();
                 return;
             }
 
             this.host.terminal.write('\x1b[2K\r');
-            this.host.writeToTerminal(`\x1b[36m?\x1b[0m ${this.promptText}:\r\n`);
+            this.host.writeToTerminal(`\x1b[36m?\x1b[0m ${this.label(this.promptText)}:\r\n`);
             let totalSize = 0;
             for (const file of results) {
                 const sizeStr = this.formatSize(file.size);
@@ -69,7 +69,7 @@ export class FileInputMode extends InputModeBase<CliFileResult[]> {
             this.waiting = false;
             if (this.isResolved) return;
             this.host.terminal.write('\x1b[2K\r');
-            this.host.writeToTerminal(`\x1b[36m?\x1b[0m ${this.promptText}: \x1b[31m(error)\x1b[0m\r\n`);
+            this.host.writeToTerminal(`\x1b[36m?\x1b[0m ${this.label(this.promptText)}: \x1b[31m(error)\x1b[0m\r\n`);
             this.abort();
         }
     }

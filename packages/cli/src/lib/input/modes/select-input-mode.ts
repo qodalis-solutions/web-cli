@@ -91,7 +91,7 @@ export class SelectInputMode extends InputModeBase<string> {
         const selectedOpt = this.options.find(o => o.value === value);
         const label = selectedOpt ? selectedOpt.label : value;
         this.host.terminal.write('\x1b[2K\r');
-        this.host.terminal.write(`\x1b[32m\u2714\x1b[0m ${this.promptText} \x1b[36m${label}\x1b[0m`);
+        this.host.terminal.write(`\x1b[32m\u2714\x1b[0m ${this.label(this.promptText)}: \x1b[36m${label}\x1b[0m`);
         this.host.terminal.write('\x1b[?25h'); // Show cursor
         super.resolveAndPop(value);
     }
@@ -102,7 +102,7 @@ export class SelectInputMode extends InputModeBase<string> {
     protected override abort(): void {
         this.clearRenderedLines();
         this.host.terminal.write('\x1b[2K\r');
-        this.host.terminal.write(`\x1b[33m\u2718\x1b[0m ${this.promptText} \x1b[2mcancelled\x1b[0m`);
+        this.host.terminal.write(`\x1b[33m\u2718\x1b[0m ${this.label(this.promptText)}: \x1b[2mcancelled\x1b[0m`);
         this.host.terminal.write('\x1b[?25h'); // Show cursor
         super.abort();
     }
@@ -305,15 +305,15 @@ export class SelectInputMode extends InputModeBase<string> {
         if (this.selectOptions?.searchable) {
             if (this.filter.length > 0) {
                 this.host.terminal.write(
-                    this.fitLine(`\x1b[36m?\x1b[0m ${this.promptText}: ${this.filter}`),
+                    this.fitLine(`\x1b[36m?\x1b[0m ${this.label(this.promptText)}: ${this.filter}`),
                 );
             } else {
                 this.host.terminal.write(
-                    this.fitLine(`\x1b[36m?\x1b[0m ${this.promptText}: \x1b[2mType to filter...\x1b[0m`),
+                    this.fitLine(`\x1b[36m?\x1b[0m ${this.label(this.promptText)}: \x1b[2mType to filter...\x1b[0m`),
                 );
             }
         } else {
-            this.host.terminal.write(this.fitLine(`\x1b[36m?\x1b[0m ${this.promptText}:`));
+            this.host.terminal.write(this.fitLine(`\x1b[36m?\x1b[0m ${this.label(this.promptText)}:`));
         }
     }
 

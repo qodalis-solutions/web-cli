@@ -19,6 +19,7 @@ import { CliServerAuthService } from '../services/cli-server-auth.service';
 import { CliCommandExecutor } from '../executor/cli-command-executor';
 import { CliCommandProcessorRegistry } from '../registry/cli-command-processor-registry';
 import { CliExecutionContext } from '../context/cli-execution-context';
+import { CliEnvironment, ICliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
 import {
     ICliStateStoreManager,
 } from '../state/cli-state-store-manager';
@@ -190,6 +191,17 @@ export class CliEngine {
         );
 
         this.executionContext.initializeTerminalListeners();
+
+        // USER, HOME and PWD follow the signed-in user and the current directory
+        const environment = services.get<ICliEnvironment>(ICliEnvironment_TOKEN);
+        if (environment instanceof CliEnvironment) {
+            const ctx = this.executionContext;
+            environment.bind('USER', () => ctx.userSession?.user.name);
+            environment.bind('HOME', () => ctx.userSession?.user.homeDir);
+            environment.bind('PWD', () => ctx.promptPathProvider?.());
+            // Each user keeps their own exported variables
+            environment.setProfileResolver(() => ctx.userSession?.user.name);
+        }
 
         // 4.5. Register background services registry in the service container
         // and wire it to the process registry so bg services get PIDs

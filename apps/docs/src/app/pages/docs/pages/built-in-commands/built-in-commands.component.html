@@ -21,6 +21,17 @@
     </table>
 </div>
 
+<h2>{{ 'docs.built-in-commands.env-title' | translate }}</h2>
+<p>{{ 'docs.built-in-commands.env-desc' | translate }}</p>
+<div class="code-block">
+    <span class="code-label">Terminal</span>
+    <pre><code>export EDITOR=nano GREETING="hello world"
+echo $GREETING from $USER in ~
+printenv EDITOR
+unset GREETING
+env</code></pre>
+</div>
+
 <h2>{{ 'docs.built-in-commands.try-it' | translate }}</h2>
 <p>{{ 'docs.built-in-commands.try-it-desc' | translate }}</p>
 <div class="try-it-terminal">

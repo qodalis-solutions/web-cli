@@ -95,6 +95,11 @@ export abstract class InputModeBase<T> implements IInputMode {
      * Cut a line to the terminal width. Lines redrawn in place must stay on one row:
      * a wrapped line takes two rows and breaks the cursor-up arithmetic of the redraw.
      */
+    /** A prompt label without a trailing colon, for modes that append their own ": ". */
+    protected label(promptText: string): string {
+        return promptText.replace(/:\s*$/, '');
+    }
+
     protected fitLine(text: string): string {
         return truncateToWidth(text, Math.max(1, this.host.getTerminalCols() - 1));
     }
