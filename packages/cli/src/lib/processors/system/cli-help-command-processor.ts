@@ -60,6 +60,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 },
             );
 
+            const narrow = isNarrow(context);
             sortedModules.forEach(([module, processors]) => {
                 const displayName = this.formatModuleName(module);
                 writer.writeln(
@@ -69,7 +70,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 processors.forEach((processor) => {
                     const icon = processor?.metadata?.icon || CliIcon.Extension;
                     const name = writer.wrapInColor(
-                        processor.command.padEnd(20),
+                        narrow ? processor.command : processor.command.padEnd(20),
                         CliForegroundColor.Cyan,
                     );
                     const aliasText = processor.aliases?.length
@@ -80,6 +81,11 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                         processor.command,
                         context,
                     );
+                    if (narrow) {
+                        writer.writeln(`  ${icon} ${name}${aliasText}`);
+                        writer.writeln(`      ${desc}`);
+                        return;
+                    }
                     writer.writeln(`    ${icon}  ${name} ${desc}${aliasText}`);
                 });
 
@@ -216,9 +222,10 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 `  ${BOLD}${writer.wrapInColor(t.t('cli.help.subcommands', 'Subcommands'), CliForegroundColor.Yellow)}${RESET}`,
             );
 
+            const narrow = isNarrow(context);
             processor.processors.forEach((sub) => {
                 const subName = writer.wrapInColor(
-                    sub.command.padEnd(16),
+                    narrow ? sub.command : sub.command.padEnd(16),
                     CliForegroundColor.Cyan,
                 );
                 const subAliases = sub.aliases?.length
@@ -229,6 +236,11 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                     `${processor.command}.${sub.command}`,
                     context,
                 );
+                if (narrow) {
+                    writer.writeln(`    ${subName}${subAliases}`);
+                    writer.writeln(`      ${subDesc}`);
+                    return;
+                }
                 writer.writeln(
                     `    ${subName} ${subDesc}${subAliases}`,
                 );
@@ -246,7 +258,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             commandParams.forEach((param) => {
-                this.writeParameter(param, writer, t);
+                this.writeParameter(param, writer, t, isNarrow(context));
             });
         }
 
@@ -257,7 +269,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             globalParams.forEach((param) => {
-                this.writeParameter(param, writer, t);
+                this.writeParameter(param, writer, t, isNarrow(context));
             });
         }
 
@@ -291,6 +303,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         param: { name: string; aliases?: string[]; type: string; description: string; required: boolean; defaultValue?: any },
         writer: ICliExecutionContext['writer'],
         translator: ICliExecutionContext['translator'],
+        narrow = false,
     ) {
         const aliases = param.aliases?.length
             ? `, ${param.aliases.map((a) => `-${a}`).join(', ')}`
@@ -307,8 +320,18 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             param.defaultValue !== undefined && !param.required
                 ? `${DIM} [${param.defaultValue}]${RESET}`
                 : '';
+        if (narrow) {
+            writer.writeln(`    ${nameStr} ${typeStr}${required}${defaultVal}`);
+            writer.writeln(`      ${param.description}`);
+            return;
+        }
         writer.writeln(
             `    ${nameStr} ${typeStr}  ${param.description}${required}${defaultVal}`,
         );
     }
+}
+
+/** Narrow terminals (phones) put descriptions on their own line instead of wrapping mid-word. */
+function isNarrow(context: ICliExecutionContext): boolean {
+    return (context.terminal?.cols ?? 80) < 60;
 }

@@ -132,6 +132,8 @@
   "docs.built-in-commands.th-aliases": "Псевдонимы",
   "docs.built-in-commands.try-it": "Попробуйте",
   "docs.built-in-commands.try-it-desc": "Попробуйте любую из команд выше в этом живом терминале. Например: json format '{\"a\":1}', hash sha256 hello или theme list.",
+  "docs.built-in-commands.env-title": "Переменные окружения",
+  "docs.built-in-commands.env-desc": "Задавайте переменные через export (или ИМЯ=значение) и используйте их как $ИМЯ или ${ИМЯ} в любой команде; внутри одинарных кавычек ничего не подставляется. USER, HOME и PWD следуют за вошедшим пользователем и текущим каталогом, ~ раскрывается в $HOME, а $? — в код завершения последней команды. Переменные сохраняются для каждого пользователя и восстанавливаются при следующем визите.",
 
   "docs.configuration.title": "Конфигурация",
   "docs.configuration.intro": "Qodalis CLI можно настроить во время сборки через свойства компонента или во время выполнения с помощью встроенных команд конфигурации.",
@@ -158,7 +160,7 @@
   "docs.configuration.list-config": "Показать все значения конфигурации",
   "docs.configuration.get-config": "Получить конкретное значение",
   "docs.configuration.set-config": "Установить значение",
-  "docs.configuration.delete-config": "Удалить значение",
+  "docs.configuration.delete-config": "Сбросить категорию к значениям по умолчанию",
 
   "docs.core-concepts.command-processors.title": "Процессоры Команд",
   "docs.core-concepts.command-processors.intro": "Каждая команда в Qodalis CLI обеспечивается процессором команд. Процессор реализует интерфейс ICliCommandProcessor и определяет имя команды, описание, параметры и логику, выполняемую при вызове команды.",

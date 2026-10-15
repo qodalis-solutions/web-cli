@@ -22,11 +22,12 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 }
 
 /** Render a colored block (██) using 24-bit ANSI true color for the given hex value. */
-function colorSwatch(hex: string | undefined): string {
-    if (!hex) return '  ';
+function colorSwatch(hex: string | undefined, width = 2): string {
+    const cell = ' '.repeat(width);
+    if (!hex) return cell;
     const rgb = hexToRgb(hex);
-    if (!rgb) return '  ';
-    return `\x1b[48;2;${rgb.r};${rgb.g};${rgb.b}m  \x1b[0m`;
+    if (!rgb) return cell;
+    return `\x1b[48;2;${rgb.r};${rgb.g};${rgb.b}m${cell}\x1b[0m`;
 }
 
 /** Render text with a 24-bit ANSI foreground color. */
@@ -117,12 +118,25 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                             ),
                         );
                         context.writer.writeln();
+                        // Narrow terminals (phones): description on its own line instead of wrapping mid-word
+                        const narrow = (context.terminal?.cols ?? 80) < 60;
                         for (const [name, info] of entries) {
                             const active =
                                 name === currentName ? ' (active)' : '';
                             const swatches = PALETTE_KEYS.map((k) =>
                                 colorSwatch(info.theme[k] as string),
                             ).join('');
+                            if (narrow) {
+                                // The 8 normal colors, one cell each, keep the line short
+                                const compact = PALETTE_KEYS.slice(0, 8)
+                                    .map((k) => colorSwatch(info.theme[k] as string, 1))
+                                    .join('');
+                                context.writer.writeln(
+                                    `  ${compact} ${context.writer.wrapInColor(name, CliForegroundColor.Cyan)}${active}`,
+                                );
+                                context.writer.writeln(`    ${info.description}`);
+                                continue;
+                            }
                             const nameLabel = context.writer.wrapInColor(
                                 name.padEnd(22),
                                 CliForegroundColor.Cyan,

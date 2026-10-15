@@ -132,6 +132,8 @@
   "docs.built-in-commands.th-aliases": "Aliasuri",
   "docs.built-in-commands.try-it": "Încearcă",
   "docs.built-in-commands.try-it-desc": "Încearcă oricare dintre comenzile de mai sus în acest terminal live. De exemplu: json format '{\"a\":1}', hash sha256 hello, sau theme list.",
+  "docs.built-in-commands.env-title": "Variabile de mediu",
+  "docs.built-in-commands.env-desc": "Setează variabile cu export (sau NUME=valoare) și folosește-le ca $NUME sau ${NUME} în orice comandă; nimic nu se expandează între ghilimele simple. USER, HOME și PWD urmează utilizatorul autentificat și directorul curent, ~ devine $HOME, iar $? ultimul cod de ieșire. Variabilele se salvează pentru fiecare utilizator și sunt restaurate la următoarea vizită.",
 
   "docs.configuration.title": "Configurare",
   "docs.configuration.intro": "Qodalis CLI poate fi configurat la compilare prin proprietățile componentei sau la runtime folosind comenzi de configurare integrate.",
@@ -158,7 +160,7 @@
   "docs.configuration.list-config": "Listează toate valorile de configurare",
   "docs.configuration.get-config": "Obține o valoare specifică",
   "docs.configuration.set-config": "Setează o valoare",
-  "docs.configuration.delete-config": "Șterge o valoare",
+  "docs.configuration.delete-config": "Resetează o categorie la valorile implicite",
 
   "docs.core-concepts.command-processors.title": "Procesoare de Comenzi",
   "docs.core-concepts.command-processors.intro": "Fiecare comandă din Qodalis CLI este alimentată de un procesor de comenzi. Un procesor implementează interfața ICliCommandProcessor și definește numele comenzii, descrierea, parametrii și logica care se execută când comanda este apelată.",

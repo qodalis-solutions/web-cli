@@ -16,6 +16,7 @@ import {
 } from '@qodalis/cli-core';
 
 import { CliProcessorsRegistry_TOKEN } from '../../tokens';
+import { defaultFontSize } from '../../engine/cli-terminal-setup';
 import { ConfigureState } from './types';
 
 /** Built-in system configuration options. */
@@ -95,7 +96,7 @@ const SYSTEM_OPTIONS: ICliConfigurationOption[] = [
         label: 'Font Size',
         description: 'Terminal font size in pixels',
         type: 'number',
-        defaultValue: 20,
+        defaultValue: defaultFontSize(),
         validator: (value: number) => {
             if (value < 8 || value > 40) {
                 return { valid: false, message: 'Font size must be between 8 and 40' };
@@ -191,7 +192,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         const state = context.state.getState<ConfigureState>();
 
         if (state?.system) {
-            this.applySystemSettings(state.system, context);
+            this.applySystemSettings(state.system, context, true);
         }
     }
 
@@ -499,9 +500,14 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         return result;
     }
 
+    /**
+     * @param onBoot at startup, terminal options still at their default are skipped so the
+     *               host's `terminalOptions` (e.g. its own fontSize) are not overridden.
+     */
     private applySystemSettings(
         settings: Record<string, any>,
         context: ICliExecutionContext,
+        onBoot = false,
     ): void {
         // Apply log level
         if (settings['logLevel']) {
@@ -521,23 +527,31 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
         // Terminal options
         if (context.terminal?.options) {
-            if (settings['cursorBlink'] !== undefined) {
-                context.terminal.options.cursorBlink = settings['cursorBlink'];
+            const terminal = onBoot
+                ? Object.fromEntries(
+                      Object.entries(settings).filter(([key, value]) => {
+                          const option = SYSTEM_OPTIONS.find((o) => o.key === key);
+                          return !option || value !== option.defaultValue;
+                      }),
+                  )
+                : settings;
+            if (terminal['cursorBlink'] !== undefined) {
+                context.terminal.options.cursorBlink = terminal['cursorBlink'];
             }
-            if (settings['cursorStyle']) {
-                context.terminal.options.cursorStyle = settings['cursorStyle'];
+            if (terminal['cursorStyle']) {
+                context.terminal.options.cursorStyle = terminal['cursorStyle'];
             }
-            if (settings['scrollback'] !== undefined) {
-                context.terminal.options.scrollback = settings['scrollback'];
+            if (terminal['scrollback'] !== undefined) {
+                context.terminal.options.scrollback = terminal['scrollback'];
             }
-            if (settings['fontSize'] !== undefined) {
-                context.terminal.options.fontSize = settings['fontSize'];
+            if (terminal['fontSize'] !== undefined) {
+                context.terminal.options.fontSize = terminal['fontSize'];
             }
-            if (settings['fontFamily']) {
-                context.terminal.options.fontFamily = settings['fontFamily'];
+            if (terminal['fontFamily']) {
+                context.terminal.options.fontFamily = terminal['fontFamily'];
             }
-            if (settings['smoothScrollDuration'] !== undefined) {
-                context.terminal.options.smoothScrollDuration = settings['smoothScrollDuration'];
+            if (terminal['smoothScrollDuration'] !== undefined) {
+                context.terminal.options.smoothScrollDuration = terminal['smoothScrollDuration'];
             }
         }
 

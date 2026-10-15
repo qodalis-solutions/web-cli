@@ -10,6 +10,9 @@ import {
     visibleLength,
 } from '@qodalis/cli-core';
 
+/** Narrowest a shrunk table column may get before tables switch to one block per row. */
+const MIN_READABLE_COLUMN = 8;
+
 export class CliTerminalWriter implements ICliTerminalWriter {
     constructor(public readonly terminal: Terminal) {}
 
@@ -204,6 +207,24 @@ export class CliTerminalWriter implements ICliTerminalWriter {
         this.writeln(`${indent}${text}`);
     }
 
+    /** One block per row, header names as keys; used when a table cannot fit the terminal. */
+    private writeRecords(headers: string[], rows: string[][]): void {
+        const keyWidth = Math.max(...headers.map((h) => visibleLength(h)));
+        rows.forEach((row, index) => {
+            if (index > 0) this.write('\r\n');
+            headers.forEach((header, i) => {
+                const value = row[i] ?? '';
+                if (!header.trim()) {
+                    // Unlabelled columns (e.g. a "(current)" marker) are notes, not fields
+                    if (value.trim()) this.write(`${value}\r\n`);
+                    return;
+                }
+                const key = header + ' '.repeat(keyWidth - visibleLength(header));
+                this.write(`${this.wrapInColor(key, CliForegroundColor.Yellow)} : ${value}\r\n`);
+            });
+        });
+    }
+
     public writeTable(headers: string[], rows: string[][], options?: CliTableOptions): void {
         const cols = this.terminal.cols;
 
@@ -252,6 +273,16 @@ export class CliTerminalWriter implements ICliTerminalWriter {
                 colWidths[idx]++;
                 used++;
             }
+        }
+
+        // Too narrow for a readable table (e.g. a phone): every cell would be cut to a few
+        // letters or rows would wrap, so write one "KEY : value" block per row instead
+        const tooNarrow =
+            colWidths.reduce((s, w) => s + w, 0) > Math.max(available, 0) ||
+            colWidths.some((w, i) => w < Math.min(naturalWidths[i], MIN_READABLE_COLUMN));
+        if (tooNarrow) {
+            this.writeRecords(headers, rows);
+            return;
         }
 
         // Truncate text to fit column width, preserving ANSI codes

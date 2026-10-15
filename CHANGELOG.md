@@ -3,6 +3,29 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.0.0-beta.17
+
+### CLI engine (`@qodalis/cli`, `@qodalis/cli-core`)
+
+- **Readable on phones.** The default terminal font is 14px on viewports up to 640px wide (20px elsewhere), so a 390px screen gets about 37 columns instead of 26. A host's own `terminalOptions.fontSize` is no longer overridden at startup by the `font-size` and `configure` defaults: both apply a size only after the user picks one, and `font-size reset` returns to the host's size.
+- **Tables fall back to one block per row** (`KEY : value`) when the columns would be cut to a few letters or wrap (`listusers`, `audit`, `sessions`, `ps`, …); unlabelled columns such as `(current)` print as notes.
+- `help`, `help <command>` and `theme list` put descriptions on their own line in narrow terminals instead of wrapping mid-word; `theme list` uses compact swatches there.
+- **Environment variables work across the system**: `USER`, `HOME` and `PWD` follow the signed-in user and the current directory (they were fixed to `user`, `/home/user` and `/`); variables set with `export` or `NAME=value` and removals with `unset` are saved per user and restored on the next visit, and `su`/`login` switch to that user's variables; `export A=1 B="two words"` sets several at once and `unset A B` removes several; `~` and `~/…` expand to `$HOME` and `$?` to the last exit status.
+- A yes/no prompt answered with Enter shows the default it took (`(Y/n): y`).
+- Picker summaries read `✔ Groups: admin, users` (the colon was missing), and prompts that already end with `:` no longer show `::`.
+- The collapsed panel tab is icon-only on phones so it covers less of the page.
+
+### Users (`@qodalis/cli-users`)
+
+- `adduser`: when no group is picked, it says the user joins the default group `users` (the summary used to say `none`).
+
+### Docs site
+
+- No page scrolls sideways on phones: wide tables and code blocks scroll inside themselves.
+- The header fits on one line on phones, the sidebar button no longer covers the page title, and the live terminals have inner padding.
+- The command lists and examples used commands that do not exist (`config set/get/list/delete`, `pkg list`, `theme set/get`); they now show `configure …`, `pkg ls`, `theme apply` and `theme current`.
+- New "Environment variables" section on the Built-in Commands page.
+
 ## v2.0.0-beta.16
 
 ### CLI engine (`@qodalis/cli`, `@qodalis/cli-core`)

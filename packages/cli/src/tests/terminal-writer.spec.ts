@@ -3,6 +3,7 @@ import { CliForegroundColor } from '@qodalis/cli-core';
 
 class MockTerminal {
     written: string[] = [];
+    columns = 80;
 
     write(data: string): void {
         this.written.push(data);
@@ -13,7 +14,7 @@ class MockTerminal {
     }
 
     get cols(): number {
-        return 80;
+        return this.columns;
     }
 }
 
@@ -124,6 +125,33 @@ describe('CliTerminalWriter', () => {
 
             // 7 items / 3 columns = 3 rows (3+3+1)
             expect(terminal.written.length).toBe(3);
+        });
+    });
+
+    describe('writeTable', () => {
+        const headers = ['NAME', 'FULL NAME', 'EMAIL', 'GROUPS', 'STATUS'];
+        const rows = [['root', 'Root Admin', 'root@localhost', 'admin, users', 'active']];
+        const text = () => terminal.written.join('');
+
+        it('should write a table when it fits', () => {
+            writer.writeTable(headers, rows);
+
+            expect(text()).toContain('root | Root Admin');
+            expect(text()).not.toContain('…');
+        });
+
+        it('should write one block per row when columns would be cut to a few letters', () => {
+            terminal.columns = 37;
+            writer.writeTable(headers, [...rows, ['bob', '', 'bob@example.com', 'users', 'active']]);
+
+            const out = text();
+            expect(out).not.toContain('…');
+            expect(out).not.toContain(' | ');
+            expect(out).toContain('root@localhost');
+            expect(out).toContain('admin, users');
+            // One "KEY : value" line per column for each row, rows separated by a blank line
+            expect(out.split('\r\n').filter((l) => l.includes(' : ')).length).toBe(10);
+            expect(out).toContain('\r\n\r\n');
         });
     });
 });
