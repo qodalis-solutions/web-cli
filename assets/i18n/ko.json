@@ -132,6 +132,8 @@
   "docs.built-in-commands.th-aliases": "별칭",
   "docs.built-in-commands.try-it": "체험하기",
   "docs.built-in-commands.try-it-desc": "이 라이브 터미널에서 위의 명령을 체험해 보세요. 예: json format '{\"a\":1}', hash sha256 hello, 또는 theme list.",
+  "docs.built-in-commands.env-title": "환경 변수",
+  "docs.built-in-commands.env-desc": "export(또는 NAME=value)로 변수를 설정하고 모든 명령에서 $NAME 또는 ${NAME}으로 사용하세요. 작은따옴표 안에서는 확장되지 않습니다. USER, HOME, PWD는 로그인한 사용자와 현재 디렉터리를 따르고, ~는 $HOME으로, $?는 마지막 종료 상태로 확장됩니다. 변수는 사용자별로 저장되어 다음 방문 시 복원됩니다.",
 
   "docs.configuration.title": "설정",
   "docs.configuration.intro": "Qodalis CLI는 컴포넌트 프로퍼티를 통한 빌드 타임 설정 또는 기본 제공 config 명령을 통한 런타임 설정이 가능합니다.",
@@ -158,7 +160,7 @@
   "docs.configuration.list-config": "모든 설정 값 나열",
   "docs.configuration.get-config": "특정 값 가져오기",
   "docs.configuration.set-config": "값 설정",
-  "docs.configuration.delete-config": "값 삭제",
+  "docs.configuration.delete-config": "카테고리를 기본값으로 재설정",
 
   "docs.core-concepts.command-processors.title": "명령 프로세서",
   "docs.core-concepts.command-processors.intro": "Qodalis CLI의 모든 명령은 명령 프로세서에 의해 구동됩니다. 프로세서는 ICliCommandProcessor 인터페이스를 구현하고 명령 이름, 설명, 매개변수, 명령 실행 시 실행되는 로직을 정의합니다.",

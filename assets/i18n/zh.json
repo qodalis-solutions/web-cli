@@ -132,6 +132,8 @@
   "docs.built-in-commands.th-aliases": "别名",
   "docs.built-in-commands.try-it": "试一试",
   "docs.built-in-commands.try-it-desc": "在此实时终端中尝试上述任何命令。例如：json format '{\"a\":1}'、hash sha256 hello 或 theme list。",
+  "docs.built-in-commands.env-title": "环境变量",
+  "docs.built-in-commands.env-desc": "使用 export（或 NAME=value）设置变量，并在任意命令中以 $NAME 或 ${NAME} 使用；单引号内不会展开。USER、HOME 和 PWD 跟随当前登录用户和当前目录，~ 展开为 $HOME，$? 展开为上一个退出状态。变量按用户保存，并在下次访问时恢复。",
 
   "docs.configuration.title": "配置",
   "docs.configuration.intro": "Qodalis CLI 可以在构建时通过组件属性配置，也可以在运行时使用内置配置命令进行配置。",
@@ -158,7 +160,7 @@
   "docs.configuration.list-config": "列出所有配置值",
   "docs.configuration.get-config": "获取特定值",
   "docs.configuration.set-config": "设置值",
-  "docs.configuration.delete-config": "删除值",
+  "docs.configuration.delete-config": "将类别重置为默认值",
 
   "docs.core-concepts.command-processors.title": "命令处理器",
   "docs.core-concepts.command-processors.intro": "Qodalis CLI 中的每个命令都由命令处理器驱动。处理器实现 ICliCommandProcessor 接口，定义命令名称、描述、参数以及命令执行时运行的逻辑。",

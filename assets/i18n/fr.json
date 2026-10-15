@@ -132,6 +132,8 @@
   "docs.built-in-commands.th-aliases": "Alias",
   "docs.built-in-commands.try-it": "Essayez",
   "docs.built-in-commands.try-it-desc": "Essayez n'importe quelle commande ci-dessus dans ce terminal en direct. Par exemple : json format '{\"a\":1}', hash sha256 hello, ou theme list.",
+  "docs.built-in-commands.env-title": "Variables d'environnement",
+  "docs.built-in-commands.env-desc": "Définissez des variables avec export (ou NOM=valeur) et utilisez-les comme $NOM ou ${NOM} dans n'importe quelle commande ; rien n'est remplacé entre apostrophes. USER, HOME et PWD suivent l'utilisateur connecté et le répertoire courant, ~ devient $HOME et $? le dernier code de sortie. Les variables sont enregistrées par utilisateur et restaurées à la visite suivante.",
 
   "docs.configuration.title": "Configuration",
   "docs.configuration.intro": "Qodalis CLI peut être configuré à la compilation via les propriétés du composant ou à l'exécution en utilisant les commandes de configuration intégrées.",
@@ -158,7 +160,7 @@
   "docs.configuration.list-config": "Lister toutes les valeurs de configuration",
   "docs.configuration.get-config": "Obtenir une valeur spécifique",
   "docs.configuration.set-config": "Définir une valeur",
-  "docs.configuration.delete-config": "Supprimer une valeur",
+  "docs.configuration.delete-config": "Réinitialiser une catégorie",
 
   "docs.core-concepts.command-processors.title": "Processeurs de Commandes",
   "docs.core-concepts.command-processors.intro": "Chaque commande dans Qodalis CLI est gérée par un processeur de commandes. Un processeur implémente l'interface ICliCommandProcessor et définit le nom de la commande, la description, les paramètres et la logique qui s'exécute lorsque la commande est invoquée.",

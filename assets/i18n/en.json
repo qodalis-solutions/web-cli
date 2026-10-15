@@ -139,6 +139,8 @@
   "docs.built-in-commands.th-aliases": "Aliases",
   "docs.built-in-commands.try-it": "Try It",
   "docs.built-in-commands.try-it-desc": "Try any of the commands above in this live terminal. For example: json format '{\"a\":1}', hash sha256 hello, or theme list.",
+  "docs.built-in-commands.env-title": "Environment variables",
+  "docs.built-in-commands.env-desc": "Set variables with export (or NAME=value) and use them as $NAME or ${NAME} in any command; nothing is expanded inside single quotes. USER, HOME and PWD follow the signed-in user and the current directory, ~ expands to $HOME and $? to the last exit status. Variables are saved per user and restored on the next visit.",
 
   "docs.configuration.title": "Configuration",
   "docs.configuration.intro": "Qodalis CLI can be configured at build time through component properties or at runtime using built-in config commands.",
@@ -167,7 +169,7 @@
   "docs.configuration.list-config": "List all configuration values",
   "docs.configuration.get-config": "Get a specific value",
   "docs.configuration.set-config": "Set a value",
-  "docs.configuration.delete-config": "Delete a value",
+  "docs.configuration.delete-config": "Reset a category to defaults",
 
   "docs.core-concepts.command-processors.title": "Command Processors",
   "docs.core-concepts.command-processors.intro": "Every command in Qodalis CLI is powered by a command processor. A processor implements the ICliCommandProcessor interface and defines the command name, description, parameters, and the logic that runs when the command is executed.",
