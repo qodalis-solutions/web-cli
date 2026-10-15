@@ -15,6 +15,8 @@ export interface PluginData {
     moduleExport: string;
     moduleImport: string;
     examples?: PluginExample[];
+    /** Short facts shown under "Good to know" (first sign-in, defaults, caveats) */
+    notes?: string[];
     /** Module exports to include alongside this plugin in the Try It terminal */
     tryItDeps?: string[];
 }
@@ -286,13 +288,20 @@ export const PLUGINS: PluginData[] = [
         category: 'utility',
         moduleExport: 'usersModule',
         moduleImport: '@qodalis/cli-users',
+        notes: [
+            'Local mode (the default, used by this page) has no built-in account: on first boot the terminal asks you to create your administrator (name, email, password). There is no root / root.',
+            'Browser data from versions before 2.0.0-beta.14 may still hold the old root / root account; clear the site data to start fresh.',
+            'Servers create root with a random password printed once in the server log (changed at first sign-in), unless defaultAdminPassword is configured.',
+            'For demos, seed known accounts: usersModule.configure({ seedUsers: [...], defaultPassword: \'...\' }).',
+        ],
         examples: [
             { command: 'login root', description: 'Sign in (name or email)' },
             { command: 'whoami --info', description: 'Current user, groups (roles) and permissions' },
             { command: 'groupadd release --permissions=deploy:run', description: 'Create a role with permissions' },
             { command: 'groupmod release --add-member=alice --grant=deploy:rollback', description: 'Change a role' },
             { command: 'perms alice', description: 'Effective permissions and where they come from' },
-            { command: 'adduser alice --email=alice@example.com --groups=release', description: 'Create a user' },
+            { command: 'adduser', description: 'Create a user step by step (name, email, full name, groups, home, password)' },
+            { command: 'adduser alice --email=alice@example.com --groups=release', description: 'Create a user in one line' },
             { command: 'sessions', description: 'Active sessions (session-kick <id> to end one)' },
             { command: 'audit --event=user_deleted', description: 'Security audit log' },
         ],

@@ -32,9 +32,18 @@ export class CliListUsersCommandProcessor extends CliUsersCommand {
             context.writer.writeInfo('No users found');
             return;
         }
+        // The FULL NAME column only appears when some user has one.
+        const withFullName = list.some((u) => u.data?.['fullName']);
         context.writer.writeTable(
-            ['NAME', 'EMAIL', 'GROUPS', 'STATUS', 'LAST LOGIN'],
-            list.map((u) => [u.name, u.email, u.groups.join(',') || '-', u.disabled ? 'disabled' : 'active', formatTime(u.lastLoginAt)]),
+            ['NAME', ...(withFullName ? ['FULL NAME'] : []), 'EMAIL', 'GROUPS', 'STATUS', 'LAST LOGIN'],
+            list.map((u) => [
+                u.name,
+                ...(withFullName ? [String(u.data?.['fullName'] ?? '-')] : []),
+                u.email,
+                u.groups.join(',') || '-',
+                u.disabled ? 'disabled' : 'active',
+                formatTime(u.lastLoginAt),
+            ]),
         );
     }
 }

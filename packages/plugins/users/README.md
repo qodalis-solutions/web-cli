@@ -36,6 +36,25 @@ engine.registerModules([usersModule.configure({ server: 'node' })]);
 engine.registerModules([usersModule.configure({ requirePassword: true })]);
 ```
 
+## First sign-in and default accounts
+
+| Mode | Initial account |
+|---|---|
+| **Local** (default) | None. On first boot (no accounts in the browser) the terminal asks you to create your administrator: name, email, password, home directory. There is no `root` / `root`. |
+| **Local** with `seedUsers` | The seeded accounts, with `defaultPassword` (`root` when not set; a warning is logged for weak passwords). |
+| **Server** | `root` (`root@localhost`, group `admin`). Without `defaultAdminPassword` the server generates a random password, prints it **once** in its log and requires a change at first sign-in. |
+
+Browser data saved by versions before `2.0.0-beta.14` may still contain the old `root` / `root`
+account; clear the site data (or run `userdel`) to start fresh.
+
+```typescript
+// Demo accounts in local mode (sign in with `login alice`)
+usersModule.configure({
+    seedUsers: [{ name: 'alice', email: 'alice@example.com', groups: ['admin'] }],
+    defaultPassword: 'change-me-please',
+});
+```
+
 ## Roles and permissions
 
 Groups are roles. Each group grants a list of permissions; a user's effective
@@ -106,8 +125,9 @@ their files to `root`, so a later account with the same name never inherits them
 | `logout` | login | Sign out (the CLI stays signed out) |
 | `su <user>` | — | Switch user (same lockout and audit as login) |
 | `passwd [user]` | login | Own password (asks for the current one) or reset (`users:update`) |
-| `adduser <name> --email=..` | `users:create` | Create a user (`--groups`, `--home`, `--disabled`, `--no-password`) |
-| `usermod <user> ..` | `users:update` | `--name`, `--email`, `--groups`, `--add-groups`, `--remove-groups`, `--home`, `--disable`, `--enable` |
+| `adduser [name]` | `users:create` | Create a user step by step: name, email, full name, groups, home, enabled, password. Invalid answers are asked again (3 tries) |
+| `adduser <name> --email=..` | `users:create` | Non-interactive (only asks for the password): `--full-name`, `--groups`, `--home`, `--disabled`, `--no-password` |
+| `usermod <user> ..` | `users:update` | `--name`, `--email`, `--full-name`, `--groups`, `--add-groups`, `--remove-groups`, `--home`, `--disable`, `--enable` |
 | `userdel <user>` | `users:delete` | Delete a user, their password and sessions |
 | `listusers [--query --skip --take]` | `users:read` | List users |
 | `groupadd <name> [--permissions]` | `groups:create` | Create a group (role) |
@@ -184,7 +204,7 @@ Calls run as the signed-in user; the backend enforces permissions and rejects wi
 - Local mode stores everything in the browser: it models access between CLI users but
   cannot protect data from whoever controls the browser.
 - Use `persistToken: false` on shared machines.
-- Change default passwords (`root` / `root` locally and on servers) before exposing a system.
+- Never expose a system with a known password: leave the server's `defaultAdminPassword` unset (a random one is generated) or set a strong one, and don't ship `seedUsers` with a weak `defaultPassword`.
 
 ## Examples
 

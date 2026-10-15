@@ -365,6 +365,7 @@
   "docs.plugin-detail.installation": "Installation",
   "docs.plugin-detail.runtime-install": "Runtime (no rebuild)",
   "docs.plugin-detail.commands": "Commands",
+  "docs.plugin-detail.notes": "Good to know",
   "docs.plugin-detail.examples": "Examples",
   "docs.plugin-detail.usage": "Usage",
   "docs.plugin-detail.try-it": "Try It",

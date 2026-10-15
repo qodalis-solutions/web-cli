@@ -350,6 +350,7 @@
   "docs.plugin-detail.installation": "Installation",
   "docs.plugin-detail.runtime-install": "Exécution (sans recompilation)",
   "docs.plugin-detail.commands": "Commandes",
+  "docs.plugin-detail.notes": "Bon à savoir",
   "docs.plugin-detail.examples": "Exemples",
   "docs.plugin-detail.usage": "Utilisation",
   "docs.plugin-detail.try-it": "Essayez",
