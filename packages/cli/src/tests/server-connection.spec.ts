@@ -58,6 +58,25 @@ describe('CliServerConnection event socket', () => {
         expect(open().length).toBe(0);
     });
 
+    it('a 4401 close (session ended) does not schedule reconnect attempts', async () => {
+        jasmine.clock().install();
+        try {
+            const connection = new CliServerConnection({ name: 'node', url: 'http://srv' });
+            await connection.connect();
+            await flush();
+            expect(FakeSocket.all.length).toBe(1);
+            FakeSocket.all[0].readyState = FakeSocket.CLOSED;
+            FakeSocket.all[0].onclose({ code: 4401, reason: 'session ended' });
+            jasmine.clock().tick(120_000);
+            await flush();
+            expect(FakeSocket.all.length).toBe(1);
+            expect(connection.connected).toBeTrue();
+            connection.disconnect();
+        } finally {
+            jasmine.clock().uninstall();
+        }
+    });
+
     describe('with background services', () => {
         function setup() {
             const registry = new CliBackgroundServiceRegistry({} as any, {} as any);

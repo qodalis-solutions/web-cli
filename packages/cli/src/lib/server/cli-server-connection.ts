@@ -372,7 +372,11 @@ export class CliServerConnection {
                         } catch { /* ignore malformed */ }
                     };
 
-                    this._eventSocket.onclose = () => {
+                    this._eventSocket.onclose = (event: CloseEvent) => {
+                        if (this.isSessionEndedClose(event)) {
+                            ctx.log('Event socket closed: session ended', 'info');
+                            return;
+                        }
                         if (this._connected) {
                             ctx.log('WebSocket closed unexpectedly, scheduling reconnect', 'warn');
                             this.scheduleWsReconnect();
@@ -431,7 +435,8 @@ export class CliServerConnection {
                 }
             };
 
-            this._eventSocket.onclose = () => {
+            this._eventSocket.onclose = (event: CloseEvent) => {
+                if (this.isSessionEndedClose(event)) return;
                 if (this._connected) {
                     this.scheduleWsReconnect();
                 }
@@ -443,6 +448,17 @@ export class CliServerConnection {
         } catch (e) {
             this._logger?.debug(`WebSocket not available for "${this._config.name}": ${e}`);
         }
+    }
+
+    /**
+     * The server closes the event socket with 4401 when the session behind it
+     * ended (logout, revoke, expiry). Retrying with the same credentials cannot
+     * succeed; the auth layer reconnects the server when the session changes.
+     */
+    private isSessionEndedClose(event: CloseEvent | undefined): boolean {
+        if (event?.code !== 4401) return false;
+        this.closeEventSocketDirect();
+        return true;
     }
 
     private handleServerDisconnect(): void {
