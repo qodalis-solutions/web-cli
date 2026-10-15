@@ -17,6 +17,7 @@
     "serve:vue-demo": "cd apps/demo-vue && npx vite --port 4302",
     "serve:electron-demo": "cd apps/demo-electron && pnpm run dev:electron",
     "serve:docs": "nx serve docs",
+    "docs:static-routes": "node apps/docs/scripts/generate-static-routes.mjs dist/docs",
     "test": "nx run-many -t test -- --watch=false",
     "lint": "nx run-many -t lint",
     "format": "prettier --write \"packages/**/*.{ts,html,css,scss}\" \"apps/**/*.{ts,html,css,scss}\"",
