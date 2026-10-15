@@ -166,4 +166,27 @@ describe('followUserSession', () => {
         expect(fs.getCurrentDirectory()).toBe('/');
         sub.unsubscribe();
     });
+
+    it('a signed-out start inside an inaccessible home moves to /', () => {
+        const fs = new IndexedDbFileSystemService();
+        fs.runAsSystem(() => {
+            fs.createDirectory('/home/alice', true);
+            fs.chown('/home/alice', { uid: 'alice', gid: 'users' });
+            fs.chmod('/home/alice', 'rwxr-x---');
+        });
+        fs.setCurrentDirectory('/home/alice'); // restored cwd from the last session
+        fs.setAccessPolicy(createFileAccessPolicy(contextFor(() => undefined)));
+        const session$ = new BehaviorSubject<any>(undefined);
+        const ctx: any = {
+            services: {
+                get: (token: string) =>
+                    token === ICliUserSessionService_TOKEN
+                        ? { getUserSession: () => session$.asObservable() }
+                        : contextFor(() => undefined).services.get(token),
+            },
+        };
+        const sub = followUserSession(ctx, fs)!;
+        expect(fs.getCurrentDirectory()).toBe('/');
+        sub.unsubscribe();
+    });
 });

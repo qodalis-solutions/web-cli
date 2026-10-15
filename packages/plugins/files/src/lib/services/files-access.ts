@@ -79,8 +79,7 @@ export function followUserSession(context: ICliExecutionContext, fs: IFileSystem
         if (!session?.user) {
             fs.setCurrentUser('', []);
             // Signed out (or restored signed out): don't stay in someone's home
-            const cwd = fs.getCurrentDirectory();
-            if (previousUser !== null || (fs.canTraverse && !fs.canTraverse(cwd))) {
+            if (previousUser !== null || !canEnter(fs, fs.getCurrentDirectory())) {
                 try {
                     fs.setCurrentDirectory('/');
                 } catch {
@@ -116,4 +115,14 @@ export function followUserSession(context: ICliExecutionContext, fs: IFileSystem
         }
         previousUser = user.id;
     });
+}
+
+/** Same check as `cd`: traverse the parents and execute the directory itself */
+function canEnter(fs: IFileSystemService, path: string): boolean {
+    try {
+        fs.setCurrentDirectory(path);
+        return true;
+    } catch {
+        return false;
+    }
 }
