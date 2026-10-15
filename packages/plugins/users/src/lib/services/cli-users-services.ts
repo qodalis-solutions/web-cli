@@ -23,6 +23,7 @@ import {
 import { from, Observable } from 'rxjs';
 import { CliUsersError, ICliUsersBackend } from '../backend/users-backend';
 import { hashPassword } from '../backend/password-hashing';
+import { assertCustomAuditEvent } from '../backend/validation';
 import { CliUserSessionService } from './cli-user-session.service';
 
 /** Placeholder user for events about an unknown account (e.g. failed login). */
@@ -334,8 +335,10 @@ export class CliSessionsService extends CliUsersServiceBase implements ICliSessi
 // ── audit ────────────────────────────────────────────────────────────
 
 /**
- * Audit trail. Entries are written by the backend (locally or on the server)
- * for every security-relevant action, so they cannot be forged from commands.
+ * Audit trail. Built-in entries (login, logout, user_*, group_*, ...) are
+ * written by the backend (locally or on the server) for every
+ * security-relevant action; {@link log} rejects those event names, so they
+ * cannot be forged from commands or extensions.
  */
 export class CliUsersAuditService extends CliUsersServiceBase implements ICliAuditService {
     constructor(
@@ -343,15 +346,23 @@ export class CliUsersAuditService extends CliUsersServiceBase implements ICliAud
         session: CliUserSessionService,
         events: ICliUserEventService | undefined,
         /** Optional sink for entries logged by extensions (local mode only) */
-        private readonly appendLocal?: (entry: Omit<ICliAuditEntry, 'timestamp'>) => Promise<void>,
+        private readonly appendLocal?: (event: string, username: string, details?: string) => Promise<void>,
     ) {
         super(backend, session, events);
     }
 
     async log(entry: Omit<ICliAuditEntry, 'timestamp'>): Promise<void> {
         // Server mode: the server writes its own audit trail; extension entries are local only
-        await this.appendLocal?.(entry);
+        await this.appendLocal?.(event, user.name, entry.details);
+    /**
+     * Record a custom (extension) event. Built-in event names are reserved
+     * (400); the entry is attributed to the signed-in user, whatever
+     * `username` / `actor` the caller passes.
+     */
     }
+        const event = assertCustomAuditEvent(entry?.event);
+        const user = this.session.current?.user;
+        if (!user) throw new CliUsersError(401, 'not logged in');
 
     getEntries(options?: { limit?: number; event?: string; username?: string }): Promise<ICliAuditEntry[]> {
         return this.backend.listAudit(this.token, options);

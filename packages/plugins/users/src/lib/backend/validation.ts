@@ -57,3 +57,26 @@ export function sanitizeForAudit(value: string, max = 64): string {
 export function covers(held: readonly string[], required: readonly string[]): boolean {
     return required.every((p) => cliHasPermission(held, p));
 }
+
+/** Audit events only the users module writes (local backend and servers). */
+const RESERVED_AUDIT_EVENTS = new Set(['login', 'logout', 'su']);
+const RESERVED_AUDIT_PREFIXES = ['login_', 'logout_', 'user_', 'group_', 'session_', 'password_', 'audit_'];
+const AUDIT_EVENT_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/;
+
+/** True for built-in audit event names (case-insensitive), which extensions cannot write. */
+export function isReservedAuditEvent(event: string): boolean {
+    const name = String(event ?? '').trim().toLowerCase();
+    return RESERVED_AUDIT_EVENTS.has(name) || RESERVED_AUDIT_PREFIXES.some((p) => name.startsWith(p));
+}
+
+/** Validate an extension's audit event name: well-formed and not a built-in one. */
+export function assertCustomAuditEvent(event: string): string {
+    const name = String(event ?? '').trim();
+    if (!AUDIT_EVENT_PATTERN.test(name)) {
+        throw new CliUsersError(400, `invalid audit event: ${sanitizeForAudit(name)}`);
+    }
+    if (isReservedAuditEvent(name)) {
+        throw new CliUsersError(400, `audit event '${name}' is reserved for the users module`);
+    }
+    return name;
+}

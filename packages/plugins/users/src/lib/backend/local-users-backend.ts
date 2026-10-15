@@ -24,6 +24,7 @@ import {
     assertEmail,
     assertName,
     assertPermissions,
+    assertCustomAuditEvent,
     assertText,
     covers,
     sanitizeForAudit,
@@ -638,9 +639,13 @@ export class CliLocalUsersBackend implements ICliUsersBackend {
         return { token: session.token, session: this.toBackendSession(session, user) };
     }
 
-    /** Append an entry logged by an extension through `ICliAuditService.log`. */
-    async appendAudit(entry: Omit<ICliAuditEntry, 'timestamp'>): Promise<void> {
-        await this.log(entry.event, entry.username, entry.details, entry.actor);
+    /**
+     * Append an entry logged by an extension through `ICliAuditService.log`.
+     * Built-in event names are reserved (only the backend writes those);
+     * `username` is the acting user, resolved by the caller from the session.
+     */
+    async appendAudit(event: string, username: string, details?: string): Promise<void> {
+        await this.log(assertCustomAuditEvent(event), username, details);
     }
 
     /** First enabled member of the admin group (passwordless boot). */

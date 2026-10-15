@@ -128,6 +128,12 @@ The files module uses the same layer for rwx checks on the virtual file system
 - Lockout after 5 failed sign-ins (5 minutes), by name or email.
 - Passwords: PBKDF2-HMAC-SHA256 (100k iterations), constant-time comparison.
 - Every security-relevant action is audited with the acting user.
+- The audit log cannot be forged: built-in event names (`login`, `logout`, `su`,
+  `login_*`, `user_*`, `group_*`, `session_*`, `password_*`, `audit_*`) are written only
+  by the backend. `ICliAuditService.log` rejects them (`CliUsersError` 400) and records
+  custom events (e.g. `deploy`) under the signed-in user, ignoring any `username` /
+  `actor` the caller passes (401 when signed out; stored locally only, servers keep
+  their own trail).
 
 ## Configuration
 

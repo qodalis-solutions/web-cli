@@ -175,7 +175,7 @@ export async function createUsersRuntime(
         backend,
         session,
         events,
-        local ? (entry) => local!.appendAudit(entry) : undefined,
+        local ? (event, username, details) => local!.appendAudit(event, username, details) : undefined,
     );
     const authorization = new CliUsersAuthorizationService(session);
 

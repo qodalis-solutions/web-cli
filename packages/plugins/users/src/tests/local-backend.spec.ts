@@ -382,4 +382,17 @@ describe('CliLocalUsersBackend (users contract, local)', () => {
             await expectStatus(backend.currentSession(token), 401);
         });
     });
+
+    describe('fixes', () => {
+        it('extensions cannot write built-in audit events; custom ones record the caller', async () => {
+            const { backend, root } = await localBackend();
+            for (const event of ['login', 'LOGOUT', 'login_failed', 'su', 'user_created', 'group_deleted', 'session_revoked', 'password_changed', 'audit_cleared']) {
+                await expectStatus(backend.appendAudit(event, 'root'), 400, /reserved/);
+            }
+            await backend.appendAudit('deploy', 'root', 'v1.2');
+            const entry = (await backend.listAudit(root, { event: 'deploy' }))[0];
+            expect(entry.username).toBe('root');
+            expect(entry.details).toBe('v1.2');
+        });
+    });
 });

@@ -210,6 +210,25 @@ describe('usersModule lifecycle', () => {
             expect(errors).toEqual(['groupdel: cannot delete built-in group: admin']);
             expect(usersModule.processors!.find((p) => p.command === 'groupdel')).not.toBe(groupdel);
         });
+
+        it('extensions cannot forge built-in audit entries; custom entries record the signed-in user', async () => {
+            const f = fakeContext(new MemoryKv());
+            const m = track(await boot(LOCAL, f));
+            await m._runtime.auth.login('root1', 'root');
+            const audit = m._runtime.audit;
+            await expectAsync(audit.log({ event: 'login', username: 'root1' })).toBeRejectedWith(
+                jasmine.objectContaining({ status: 400 }),
+            );
+            await expectAsync(audit.log({ event: 'user_deleted', username: 'x' })).toBeRejectedWith(
+                jasmine.objectContaining({ status: 400 }),
+            );
+            await audit.log({ event: 'deploy', username: 'someone-else', actor: 'ghost', details: 'v2' });
+            const [entry] = await audit.getEntries({ event: 'deploy' });
+            expect(entry.username).toBe('root1');
+            expect(entry.actor).toBeUndefined();
+            expect(entry.details).toBe('v2');
+            expect((await audit.getEntries({ event: 'login' })).length).toBe(1); // the real one
+        });
     });
 
     describe('server mode', () => {
