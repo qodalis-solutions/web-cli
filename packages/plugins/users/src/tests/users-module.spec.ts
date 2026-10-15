@@ -137,11 +137,21 @@ describe('usersModule lifecycle', () => {
         });
 
         it('runs the first-run wizard when there are no accounts', async () => {
-            const f = fakeContext(new MemoryKv(), { answers: ['alice', 'alice@x.io', 'short', 'alice', 'alice@x.io', 'secret123', 'secret123', ''] });
+            // Each invalid answer is asked again on its own: name, email, password, then the confirmation.
+            const f = fakeContext(new MemoryKv(), {
+                answers: ['', 'alice', 'Alice L', 'alice@x.io', 'Alice Liddell', 'short', 'secret123', 'other123', 'secret123', 'secret123', ''],
+            });
             const m = track(await boot({ passwordHashIterations: 1000 }, f));
             expect(f.ctx.userSession).toBeUndefined();
             await m.onSetup(f.ctx);
-            expect(f.errors).toContain('Password must be at least 8 characters');
+            expect(f.errors).toEqual([
+                'Username is required.',
+                'Invalid email format.',
+                'Password must be at least 8 characters',
+                'Passwords do not match.',
+            ]);
+            expect(f.ctx.userSession.user.email).toBe('alice@x.io');
+            expect(f.ctx.userSession.user.data?.['fullName']).toBe('Alice Liddell');
             expect(f.ctx.userSession.user.name).toBe('alice');
             expect(f.ctx.userSession.user.groups).toEqual(['admin']);
             expect(f.ctx.userSession.user.homeDir).toBe('/home/alice');

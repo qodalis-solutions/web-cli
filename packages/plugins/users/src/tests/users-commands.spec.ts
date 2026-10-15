@@ -1,5 +1,6 @@
 import { CliTestHarness } from '@qodalis/cli';
-import { ICliPermissionRegistry, ICliPermissionRegistry_TOKEN } from '@qodalis/cli-core';
+import { ICliPermissionRegistry, ICliPermissionRegistry_TOKEN, ICliUser, ICliUsersStoreService, ICliUsersStoreService_TOKEN } from '@qodalis/cli-core';
+import { firstValueFrom } from 'rxjs';
 import { usersModule, usersPermissionDefinitions } from '../public-api';
 import { createUsersRuntime, CliUsersRuntime } from '../lib/module/users-runtime';
 import { bindSessionToContext, bindTermination, wrapProcessors } from '../lib/module/session-lifecycle';
@@ -24,6 +25,10 @@ async function setup(): Promise<{ h: CliTestHarness; rt: CliUsersRuntime; run: (
         return { out: r.stdout.join('\n'), err: r.stderr.map((l: string) => l.replace(/^\[error\] /, '')).join('\n'), code: r.exitCode };
     };
     return { h, rt, run };
+}
+
+function userNamed(h: CliTestHarness, name: string): Promise<ICliUser | undefined> {
+    return firstValueFrom(h.services.get<ICliUsersStoreService>(ICliUsersStoreService_TOKEN)!.getUser(name));
 }
 
 describe('users commands (local mode)', () => {
@@ -139,19 +144,41 @@ describe('users commands (local mode)', () => {
         expect(r.out).toContain('password updated for a');
     });
 
-    it('adduser asks for the name and email when they are omitted', async () => {
-        const { run } = await setup();
-        const r = await run('adduser', 'carol', 'carol@x.io', 'password1', 'password1');
+    it('adduser without --email walks through every field', async () => {
+        const { run, h } = await setup();
+        await run('groupadd dev');
+        // name, email, full name, groups, home (Enter keeps the default), enabled?, password x2
+        const r = await run('adduser', 'carol', 'carol@x.io', 'Carol King', ['users', 'dev'], '', true, 'password1', 'password1');
         expect(r.err).toBe('');
-        expect(r.out).toContain("User 'carol' created");
-        expect((await run('listusers')).out).toContain('carol@x.io');
+        expect(r.out).toContain("User 'carol' created (groups: users, dev)");
+        const carol = await userNamed(h, 'carol');
+        expect(carol?.homeDir).toBe('/home/carol');
+        expect(carol?.data?.['fullName']).toBe('Carol King');
+        expect(carol?.disabled).toBeFalsy();
+        const list = (await run('listusers')).out;
+        expect(list).toContain('FULL NAME');
+        expect(list).toContain('Carol King');
     });
 
-    it('adduser re-asks for an invalid email before the password', async () => {
-        const { run } = await setup();
-        const r = await run('adduser dave', 'not-an-email', 'dave@x.io', 'password1', 'password1');
+    it('adduser re-asks for an invalid email before anything else', async () => {
+        const { run, h } = await setup();
+        const r = await run('adduser dave', 'not-an-email', 'dave@x.io', '', ['users'], '/srv/dave', false, 'password1', 'password1');
         expect(r.err).toBe('Invalid email format');
         expect(r.out).toContain("User 'dave' created");
+        const dave = await userNamed(h, 'dave');
+        expect(dave?.homeDir).toBe('/srv/dave');
+        expect(dave?.disabled).toBeTrue();
+        expect(dave?.data?.['fullName']).toBeUndefined();
+    });
+
+    it('usermod sets and clears the full name', async () => {
+        const { run, h } = await setup();
+        await run('adduser gina --email=g@x.io --full-name="Gina Lee"', 'password1', 'password1');
+        expect((await userNamed(h, 'gina'))?.data?.['fullName']).toBe('Gina Lee');
+        await run('usermod gina --full-name="Gina Park"');
+        expect((await userNamed(h, 'gina'))?.data?.['fullName']).toBe('Gina Park');
+        await run('usermod gina --full-name=""');
+        expect((await userNamed(h, 'gina'))?.data?.['fullName']).toBeUndefined();
     });
 
     it('adduser re-asks for a password that breaks the policy or does not match', async () => {

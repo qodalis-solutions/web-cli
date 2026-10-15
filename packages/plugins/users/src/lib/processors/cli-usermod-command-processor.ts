@@ -12,6 +12,7 @@ export class CliUsermodCommandProcessor extends CliUsersCommand {
     override parameters = [
         { name: 'name', description: 'Rename the user', type: 'string' as const, required: false },
         { name: 'email', description: 'New email', type: 'string' as const, required: false },
+        { name: 'full-name', description: 'New full name (empty string clears it)', type: 'string' as const, required: false },
         { name: 'groups', description: 'Replace groups (comma separated)', type: 'string' as const, required: false },
         { name: 'add-groups', aliases: ['a'], description: 'Add to groups', type: 'string' as const, required: false },
         { name: 'remove-groups', aliases: ['r'], description: 'Remove from groups', type: 'string' as const, required: false },
@@ -22,6 +23,7 @@ export class CliUsermodCommandProcessor extends CliUsersCommand {
     protected override usage: Array<[string, string]> = [
         ['usermod <user> --name=<new>', 'Rename'],
         ['usermod <user> --email=<email>', 'Change email'],
+        ['usermod <user> --full-name="Jane Doe"', 'Change full name'],
         ['usermod <user> --groups=a,b', 'Replace groups'],
         ['usermod <user> --add-groups=a | --remove-groups=a', 'Add / remove groups'],
         ['usermod <user> --home=<dir>', 'Change home directory'],
@@ -42,6 +44,11 @@ export class CliUsermodCommandProcessor extends CliUsersCommand {
         if (a['name']) updates.name = String(a['name']);
         if (a['email']) updates.email = String(a['email']);
         if (a['home']) updates.homeDir = String(a['home']);
+        if (a['full-name'] !== undefined) {
+            const { fullName: _old, ...rest } = user.data ?? {};
+            const fullName = a['full-name'] === true ? '' : String(a['full-name']).trim();
+            updates.data = fullName ? { ...rest, fullName } : rest;
+        }
         if (a['disable']) updates.disabled = true;
         if (a['enable']) updates.disabled = false;
 

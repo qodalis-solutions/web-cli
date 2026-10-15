@@ -3,10 +3,17 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## v2.0.0-beta.15
 
-- **`adduser` is interactive**: it asks for the user name and email when they are omitted, and asks for the email before the password. Invalid emails and passwords that break the policy or don't match are asked for again (3 attempts, like `passwd`) instead of ending the command. `passwd` gets the same password retries.
-- **Docs**: opening another page starts at the top; Back/Forward return to the previous scroll position.
+### `@qodalis/cli-users`
+
+- **`adduser` walks through every field**: run without `--email` (or with no arguments at all), it asks for the name, email, full name, groups (a multi-select of the existing groups, `users` preselected), home directory (default `/home/<name>`), whether the account is enabled, and the password. The email is checked before the password is asked for. `adduser <name> --email=..` is unchanged and only asks for the password, so scripts keep working.
+- Invalid answers (name, email, passwords that break the policy or don't match) are asked again, up to 3 times like `passwd`, instead of ending the command. `passwd` gets the same password retries.
+- **Full name**: `adduser --full-name` / `usermod --full-name` store it in the user's `data.fullName`; `listusers` shows a FULL NAME column when any user has one.
+
+### Docs
+
+- Opening another docs page starts at the top; Back/Forward return to the previous scroll position.
 
 ## v2.0.0-beta.14
 
