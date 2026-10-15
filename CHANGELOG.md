@@ -3,6 +3,12 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Docs site
+
+- **Search engines see every docs page.** GitHub Pages answered deep links (`/docs/...`) from `404.html` with HTTP 404, so crawlers treated the pages as missing. The deploy now runs `apps/docs/scripts/generate-static-routes.mjs`, which writes a real page per route (HTTP 200) with its own title, description, canonical URL and Open Graph tags, a `noindex` 404 page for unknown URLs, and a `sitemap.xml` generated from the navigation and plugin list (replacing the hand-maintained one).
+
 ## v2.0.0-beta.15
 
 ### `@qodalis/cli-users`
