@@ -19,7 +19,9 @@ class FakeSocket {
     send(data: string) {
         this.sent.push(data);
     }
+    closed = false;
     close() {
+        this.closed = true;
         this.readyState = 3;
     }
     push(msg: object) {
@@ -32,7 +34,7 @@ describe('ssh (shell over WebSocket)', () => {
     beforeEach(() => ((globalThis as any).WebSocket = FakeSocket));
     afterEach(() => ((globalThis as any).WebSocket = RealWebSocket));
 
-    function setup() {
+    function setup(signal?: AbortSignal) {
         const written: string[] = [];
         const connection = {
             connected: true,
@@ -51,6 +53,7 @@ describe('ssh (shell over WebSocket)', () => {
             spinner: { show() {}, hide() {} },
             enterFullScreenMode: jasmine.createSpy('enterFullScreenMode'),
             exitFullScreenMode: jasmine.createSpy('exitFullScreenMode'),
+            signal,
         };
         context.process = new CliExecutionProcess(context);
         context.process.start();
@@ -120,6 +123,18 @@ describe('ssh (shell over WebSocket)', () => {
         expect(context.process.exitCode).toBe(2);
     });
 
+    it('ignores malformed server messages instead of throwing', async () => {
+        const { context, written } = setup();
+        const run = new CliSshCommandProcessor().processCommand({ command: 'ssh', value: 'node echo hi' } as any, context);
+        await flush();
+        expect(() => FakeSocket.last.onmessage({ data: 'not json' })).not.toThrow();
+        expect(() => FakeSocket.last.onmessage({ data: 'null' })).not.toThrow();
+        FakeSocket.last.push({ type: 'stdout', data: 'hi' });
+        FakeSocket.last.push({ type: 'exit', code: 0 });
+        await run;
+        expect(written).toContain('hi');
+    });
+
     it('one-shot: passes the remote command verbatim, including flag-like tokens', async () => {
         const { context } = setup();
         // the executor strips "-c" from value; rawCommand keeps it
@@ -180,5 +195,74 @@ describe('ssh (shell over WebSocket)', () => {
         expect(describeShellClose({ code: 4408 }, 's')).toContain('timed out');
         expect(describeShellClose({ code: 4429 }, 's')).toContain('too many');
         expect(describeShellClose({ code: 1000 }, 's')).toBeNull();
+    });
+    it('one-shot: Ctrl+C closes the socket and ends the command', async () => {
+        const abort = new AbortController();
+        const { context } = setup(abort.signal);
+        let done = false;
+        const run = new CliSshCommandProcessor()
+            .processCommand({ command: 'ssh', value: 'node tail -f log', rawCommand: 'ssh node tail -f log' } as any, context)
+            .then(() => (done = true));
+        await flush();
+        const socket = FakeSocket.last;
+        socket.push({ type: 'ready', os: 'linux', shell: 'sh' });
+        abort.abort();
+        await flush();
+        expect(done).toBeTrue();
+        expect(socket.closed).toBeTrue();
+        expect(socket.onmessage).toBeNull();
+        expect(context.process.exitCode).toBe(130);
+        await run;
+    });
+
+    it('interactive: Ctrl+C while connecting closes the socket and ends the command', async () => {
+        const abort = new AbortController();
+        const { context } = setup(abort.signal);
+        let done = false;
+        const run = new CliSshCommandProcessor()
+            .processCommand({ command: 'ssh', value: 'node' } as any, context)
+            .then(() => (done = true));
+        await flush();
+        const socket = FakeSocket.last;
+        abort.abort();
+        await flush();
+        expect(done).toBeTrue();
+        expect(socket.closed).toBeTrue();
+        expect(context.enterFullScreenMode).not.toHaveBeenCalled();
+        // a late message must not enter full-screen
+        expect(socket.onmessage).toBeNull();
+        await run;
+    });
+
+    it('interactive: an abort while in full-screen leaves full-screen', async () => {
+        const abort = new AbortController();
+        const { context } = setup(abort.signal);
+        const run = new CliSshCommandProcessor().processCommand({ command: 'ssh', value: 'node' } as any, context);
+        await flush();
+        FakeSocket.last.push({ type: 'ready', os: 'linux', shell: 'sh' });
+        abort.abort();
+        await run;
+        expect(context.exitFullScreenMode).toHaveBeenCalled();
+        expect(FakeSocket.last.closed).toBeTrue();
+    });
+
+    it('stops listening for aborts once the command has finished', async () => {
+        const abort = new AbortController();
+        const remove = spyOn(abort.signal, 'removeEventListener').and.callThrough();
+        const { context } = setup(abort.signal);
+        const run = new CliSshCommandProcessor().processCommand({ command: 'ssh', value: 'node ls', rawCommand: 'ssh node ls' } as any, context);
+        await flush();
+        FakeSocket.last.push({ type: 'exit', code: 0 });
+        await run;
+        expect(remove).toHaveBeenCalledWith('abort', jasmine.any(Function));
+    });
+
+    it('an already aborted command never opens a socket', async () => {
+        const abort = new AbortController();
+        abort.abort();
+        const { context } = setup(abort.signal);
+        (FakeSocket as any).last = undefined;
+        await new CliSshCommandProcessor().processCommand({ command: 'ssh', value: 'node' } as any, context);
+        expect(FakeSocket.last).toBeUndefined();
     });
 });

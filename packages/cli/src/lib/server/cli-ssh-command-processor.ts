@@ -240,12 +240,29 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         let fullScreen = false;
 
         return new Promise<void>((resolve) => {
+            const signal = context.signal;
             const resolveOnce = () => {
+                signal?.removeEventListener('abort', onAbort);
                 if (!this.resolved) {
                     this.resolved = true;
                     resolve();
                 }
             };
+
+            // Ctrl+C / kill: close the socket and give the terminal back
+            const onAbort = () => {
+                context.spinner?.hide();
+                this.cleanup();
+                if (fullScreen) context.exitFullScreenMode();
+                context.process.exit(130, { silent: true });
+                resolveOnce();
+            };
+
+            if (signal?.aborted) {
+                onAbort();
+                return;
+            }
+            signal?.addEventListener('abort', onAbort, { once: true });
 
             try {
                 this.socket = new WebSocket(wsUrl);
@@ -264,7 +281,8 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             };
 
             this.socket.onmessage = (event) => {
-                const msg = JSON.parse(event.data) as ServerShellMessage;
+                const msg = parseShellMessage(event.data);
+                if (!msg) return;
 
                 switch (msg.type) {
                     case 'ready':
@@ -344,7 +362,27 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
 
         context.spinner?.show(`Running on ${serverName}...`);
 
-        return new Promise<void>((resolve) => {
+        return new Promise<void>((resolvePromise) => {
+            const signal = context.signal;
+            const resolve = () => {
+                signal?.removeEventListener('abort', onAbort);
+                resolvePromise();
+            };
+
+            // Ctrl+C / kill: stop the remote command and end this one
+            const onAbort = () => {
+                context.spinner?.hide();
+                this.cleanup();
+                context.process.exit(130, { silent: true });
+                resolve();
+            };
+
+            if (signal?.aborted) {
+                onAbort();
+                return;
+            }
+            signal?.addEventListener('abort', onAbort, { once: true });
+
             try {
                 this.socket = new WebSocket(wsUrl);
             } catch (e: any) {
@@ -358,7 +396,8 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             }
 
             this.socket.onmessage = (event) => {
-                const msg = JSON.parse(event.data) as ServerShellMessage;
+                const msg = parseShellMessage(event.data);
+                if (!msg) return;
 
                 switch (msg.type) {
                     case 'ready':
@@ -452,6 +491,16 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
  * (servers accept, then close, so the browser can read why; reason texts are
  * the canonical ones from the server contract). `null` for a normal close.
  */
+/** A server shell message, or null when the payload is not one (ignored) */
+function parseShellMessage(data: unknown): ServerShellMessage | null {
+    try {
+        const msg = typeof data === 'string' ? JSON.parse(data) : null;
+        return msg && typeof msg === 'object' && typeof msg.type === 'string' ? msg : null;
+    } catch {
+        return null;
+    }
+}
+
 export function describeShellClose(event: { code?: number; reason?: string }, serverName: string): string | null {
     const reason = (event.reason ?? '').toLowerCase();
     switch (event.code) {
