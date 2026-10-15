@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - develop
+  push:
+    branches:
+      - develop
 
 jobs:
   build:
@@ -38,7 +41,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build affected projects
-        run: pnpm exec nx affected -t build --base=origin/${{ github.base_ref }}
+        run: pnpm exec nx affected -t build --base=${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
 
       - name: Run tests
-        run: pnpm exec nx affected -t test --base=origin/${{ github.base_ref }} -- --browsers=ChromeHeadless --no-watch
+        run: pnpm exec nx affected -t test --base=${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }} -- --browsers=ChromeHeadless --no-watch
