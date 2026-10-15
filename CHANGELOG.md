@@ -3,7 +3,7 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## v2.0.0-beta.14 (unreleased)
 
 ### Users, permissions and security (`@qodalis/cli-users`)
 
@@ -19,6 +19,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Requires `shell:execute` when the users module is loaded; shell tokens and custom authorizers are supported on servers without it.
 - Readable messages for every shell close reason (login required, permission denied, disabled, timed out, too many sessions, session ended).
 - One-shot commands keep flag-like arguments (`ssh node sh -c 'ls -la'`); no more `ProcessExitedError` from WebSocket callbacks.
+
+### Fixes from the security review
+
+- Permissions: a `*` that is not the last segment matches one segment (`*:read` no longer grants everything).
+- Sub-commands merged from an extending module inherit the host command's access rules.
+- Server commands accept a value (`node:hello world`); a 4401 `session ended` close stops event-socket retries.
+- `ssh`: Ctrl+C/abort ends the command; per-call state; malformed messages ignored.
+- Users: a new login is no longer signed out by a 401 for the old token; stale refreshes ignored; concurrent local logins are serialized (lockout cannot be bypassed); built-in audit events cannot be written by extensions; `requirePasswordOnBoot` ends the previous session.
+- Files: `cp -r` checks read access on everything copied; ownership follows user renames and deleted users' files go to `root`.
+- `server logs --server=<url>` sends no credentials to ad-hoc URLs.
 
 ### Servers and engine
 

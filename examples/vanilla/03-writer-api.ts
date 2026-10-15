@@ -121,7 +121,7 @@ const writerDemoProcessor: ICliCommandProcessor = {
         writer.writeln('=== Key-Value Pairs ===');
         writer.writeKeyValue({
             'Name': 'Qodalis CLI',
-            'Version': '2.0.0-beta.13',
+            'Version': '2.0.0-beta.14',
             'License': 'MIT',
             'Author': 'Qodalis Solutions',
         });
