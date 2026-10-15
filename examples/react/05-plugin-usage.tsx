@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { ICliModule, ICliBackgroundService, API_VERSION } from '@qodalis/cli-core';
+import { ICliModule, ICliBackgroundService, API_VERSION, CliLogLevel } from '@qodalis/cli-core';
 import { Cli, CliConfigProvider } from '@qodalis/react-cli';
 
 // ---------------------------------------------------------------------------
@@ -35,8 +35,8 @@ const configuredUsersModule = usersModule.configure({
     defaultPassword: 'admin',
     sessionTimeout: 30 * 60 * 1000, // 30 minutes
     seedUsers: [
-        { name: 'alice', groups: ['developers'] },
-        { name: 'bob', groups: ['developers', 'admins'] },
+        { name: 'alice', email: 'alice@example.com', groups: ['developers'] },
+        { name: 'bob', email: 'bob@example.com', groups: ['developers', 'admins'] },
     ],
     userDisplayFormatter: (user) => `${user.name}@myapp`,
 });
@@ -179,7 +179,7 @@ export function FullPluginDemo() {
             modules={allModules}
             services={customServices}
             options={{
-                logLevel: 'info',
+                logLevel: CliLogLevel.INFO,
                 terminalOptions: {
                     fontSize: 14,
                     cursorBlink: true,

@@ -128,14 +128,14 @@ const counterProcessor: ICliCommandProcessor = {
         await context.state.initialize();
 
         // Reactive subscription: watch a specific state slice
-        context.state.select((state: CounterState) => state.count).subscribe(
+        context.state.select((state) => (state as CounterState).count).subscribe(
             (count) => {
                 context.logger.debug(`Counter changed to: ${count}`);
             },
         );
 
         // Or subscribe to all state changes
-        context.state.subscribe((state: CounterState) => {
+        context.state.subscribe((state) => {
             context.logger.debug(`State updated: ${JSON.stringify(state)}`);
         });
     },

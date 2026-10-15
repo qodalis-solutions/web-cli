@@ -10,6 +10,7 @@
     "dist",
     "apps",
     "tools",
+    "examples",
     "packages/react-cli",
     "packages/vue-cli",
     "packages/angular-cli",
