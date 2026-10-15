@@ -3,6 +3,33 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Users, permissions and security (`@qodalis/cli-users`)
+
+- **Complete users module** in local (IndexedDB), server (`server: '<name>'`), embedded (`hostAuth`) and custom-backend (`backend`) modes, with identical commands and rules: users, groups as roles, `resource:action` permissions with wildcards, sessions, lockout and an audit log. See `packages/plugins/users/README.md`.
+- **Command guards** in core: `requireAuth`, `requiredGroups` and `requiredPermissions` on processor metadata, global guards contributable from modules, and `cliAuthorize` / `cliCanAccess` helpers that allow everything when no auth module is loaded.
+- Built-in `users` group grants `commands:execute` (matching the servers); core declares `system:*` and `shell:execute`.
+- Server mode: WebSocket tickets instead of tokens in URLs, 401 handling, `session-kick`, server-side audit and events; servers reconnect on sign-in / sign-out and when a session is restored at reload.
+- Signed-out prompt shows a dimmed `anonymous` label (`anonymousName`, `''` to hide).
+- Files: the working directory leaves the user's home on sign-out and is re-checked like `cd` on restore.
+
+### Remote shell (`ssh`)
+
+- Requires `shell:execute` when the users module is loaded; shell tokens and custom authorizers are supported on servers without it.
+- Readable messages for every shell close reason (login required, permission denied, disabled, timed out, too many sessions, session ended).
+- One-shot commands keep flag-like arguments (`ssh node sh -c 'ls -la'`); no more `ProcessExitedError` from WebSocket callbacks.
+
+### Servers and engine
+
+- `cliDefaultServer(context)` and `ICliServerManager.preferredServer()`: commands without `--server` target a connected server (`server logs`, `data-explorer`, `scp`).
+- `scp` and `data-explorer` send the signed-in user's token.
+- Reconnects no longer unregister local commands that declare `requireServer`.
+- `wasmUrl` engine option; the WebAssembly accelerator is first looked up next to the page.
+- Validation failures (missing values, invalid arguments) end silently instead of printing `ProcessExitedError`.
+- `context.notifier` replaces `setStatusText` / `clearStatusText`; panel status bars show notifications by level, with compact indicators for vertical panels.
+- HTTP client service and constructor injection (`deps`) in the service container.
+
 ## [v2.0.1](https://github.com/qodalis-solutions/web-cli/compare/v1.0.39...v2.0.1) (2026-02-28)
 
 ### Breaking Changes

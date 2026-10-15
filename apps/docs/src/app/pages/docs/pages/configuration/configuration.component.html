@@ -63,6 +63,12 @@
             <td><code>false</code></td>
             <td>Enable the <code>js</code> / <code>calc</code> command. Disabled by default for security — it runs arbitrary JavaScript in the host page context.</td>
         </tr>
+        <tr>
+            <td><code>wasmUrl</code></td>
+            <td><code>string</code></td>
+            <td>(auto)</td>
+            <td>Where to load the optional WebAssembly accelerator (<code>qodalis_cli_wasm_bg.wasm</code>) from. When omitted it is looked up next to the page (<code>document.baseURI</code>), then at <code>/assets/wasm/</code> and <code>/wasm/</code>. Set it when the app is served under a sub-path. The CLI falls back to JavaScript when the file is missing.</td>
+        </tr>
     </tbody>
 </table>
 

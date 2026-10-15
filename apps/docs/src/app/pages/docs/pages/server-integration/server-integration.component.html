@@ -137,6 +137,29 @@ cli.EnableShell(o =&gt; &#123; o.Token = builder.Configuration["Shell:Token"]; o
         "login required", "permission denied", "shell timed out", "too many shell sessions" instead of a generic socket error.</li>
 </ul>
 
+<h2 id="default-server">Choosing a server from your own commands</h2>
+<p>
+    Commands that talk to a server without the user naming one (for example <code>server logs</code>,
+    <code>data-explorer</code>, <code>scp</code>) should not simply take the first configured server: it may be down,
+    or protected by the users plugin while the user has not signed in to it. Use
+    <code>cliDefaultServer(context)</code> from <code>@qodalis/cli-core</code>. It returns the default server
+    (<code>server default &lt;name&gt;</code>) when connected, otherwise the first connected server, and falls back to the
+    first configured server so the user still gets a clear error from it.
+</p>
+<div class="code-block">
+    <pre><code>import &#123; cliDefaultServer, resolveServerHeaders &#125; from '@qodalis/cli-core';
+
+const server = cliDefaultServer(context);
+if (!server) &#123; context.writer.writeError('No server configured'); return; &#125;
+const headers = resolveServerHeaders(context.services, server.name, server.headers);
+const res = await fetch(`$&#123;server.url&#125;/api/v1/qcli/...`, &#123; headers &#125;);</code></pre>
+</div>
+<p>
+    The same choice is available as <code>ICliServerManager.preferredServer()</code> (service
+    <code>ICliServerManager_TOKEN</code>). Always pass requests through <code>resolveServerHeaders</code> so they carry
+    the signed-in user's token on protected servers.
+</p>
+
 <h2>{{ 'docs.server-integration.jobs-api' | translate }}</h2>
 <p>{{ 'docs.server-integration.jobs-api-desc' | translate }}</p>
 <table>
