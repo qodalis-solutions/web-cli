@@ -21,19 +21,29 @@ const WASM_SEARCH_PATHS = [
  * Candidate URLs in lookup order: the explicit URL, then next to the page
  * (`document.baseURI`, so apps served under a sub-path such as `/admin/` find
  * it on the first try instead of probing the site root), then the defaults.
+ * Every candidate is resolved against the base into a full URL, so a `<base>`
+ * on another origin (e.g. a CDN) is honoured.
  */
 export function wasmCandidates(wasmUrl?: string, baseUri?: string): string[] {
-    const base = baseUri ?? (typeof document !== 'undefined' ? document.baseURI : undefined);
-    const candidates: string[] = [];
-    if (wasmUrl) candidates.push(wasmUrl);
-    if (base) {
-        try {
-            candidates.push(new URL('assets/wasm/qodalis_cli_wasm_bg.wasm', base).pathname);
-        } catch {
-            // invalid base: use the defaults
-        }
+    const baseUrl = baseUri ?? (typeof document !== 'undefined' ? document.baseURI : undefined);
+    let base: URL | undefined;
+    try {
+        base = baseUrl ? new URL(baseUrl) : undefined;
+    } catch {
+        base = undefined; // invalid base: use the URLs as given
     }
-    candidates.push(...WASM_SEARCH_PATHS);
+    const resolve = (url: string): string => {
+        if (!base) return url;
+        try {
+            return new URL(url, base).href;
+        } catch {
+            return url;
+        }
+    };
+    const candidates: string[] = [];
+    if (wasmUrl) candidates.push(resolve(wasmUrl));
+    if (base) candidates.push(resolve('assets/wasm/qodalis_cli_wasm_bg.wasm'));
+    candidates.push(...WASM_SEARCH_PATHS.map(resolve));
     return [...new Set(candidates)];
 }
 
