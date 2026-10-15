@@ -97,6 +97,8 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
 
         this.serverUrl = server.url.replace(/\/+$/, '');
         this.serverConfig = server;
+        // Needed by getServerHeaders() for the first request (auth providers)
+        this.context = context;
 
         // Fetch sources
         const sources = await this.fetchSources(context);
@@ -104,6 +106,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             context.writer.writeError(
                 'No data sources available on the server.',
             );
+            this.context = null;
             return;
         }
 
@@ -121,7 +124,10 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                     description: s.description,
                 })),
             );
-            if (!choice) return;
+            if (!choice) {
+                this.context = null;
+                return;
+            }
             selectedSource = sources.find((s) => s.name === choice)!;
         }
 
