@@ -15,7 +15,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Docs
 
-- Server integration: new **MCP endpoint** section (enabling it on each server, connecting Claude Code with an API token, permissions).
+- Server integration: new **MCP endpoint** section with a step-by-step guide for external clients (enabling MCP on each server, creating a token, Claude Code, Claude Desktop / Cursor config, MCP Inspector, curl, troubleshooting) and permissions.
 - Opening another docs page starts at the top; Back/Forward return to the previous scroll position.
 
 ## v2.0.0-beta.14

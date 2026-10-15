@@ -150,15 +150,10 @@ user who created it, with that user's live permissions; `--permissions` narrows 
 further (you can only include permissions you hold).
 
 ```bash
-token create claude --expires=30 --permissions=commands:execute
-# Token 'claude' created (id 3hN…, expires …)
-#   qcli_pat_…
-# Copy the token now: it will not be shown again.
-# claude mcp add --transport http qcli https://cli.example.com/api/qcli/mcp --header "Authorization: Bearer qcli_pat_…"
-
+token create claude --expires=90 --permissions=commands:execute
 token list            # NAME, ID, EXPIRES, LAST USED, SCOPE
 token list --all      # every user's tokens (tokens:read), adds USER
-token revoke 3hN…     # own token, or any with tokens:revoke
+token revoke <id>     # own token, or any with tokens:revoke
 ```
 
 - Expiry: 1-365 days (default 90). `--expires=never` works only when the server enables
@@ -166,12 +161,74 @@ token revoke 3hN…     # own token, or any with tokens:revoke
 - Tokens are created from a signed-in session only: a request authenticated with an
   API token cannot create more tokens or change passwords.
 - Disabling a user makes their tokens fail; deleting a user deletes them.
-- The server's MCP endpoint (`POST /api/qcli/mcp`, opt-in) exposes the server's commands
-  as MCP tools filtered by the caller's permissions (`commands:execute` plus each
-  command's own requirements). See the server integration docs.
 - Local mode has no tokens: the commands print where they are available. Custom
   backends opt in by implementing `listApiTokens`, `createApiToken` and `revokeApiToken`
   of `ICliUsersBackend`.
+
+### Using the server's MCP endpoint from outside
+
+The servers expose their CLI commands as MCP tools at `POST <server>/api/qcli/mcp`
+(Streamable HTTP, stateless, JSON responses). Tools are filtered by the caller's
+permissions. Default ports: .NET `8046`, Node `8047`, Python `8048`.
+
+**1. Enable MCP on the server** (off by default). See each server's README section
+"Using the MCP endpoint from an MCP client":
+
+- .NET: `cli.EnableMcp()` — [cli-server-dotnet](https://github.com/qodalis-solutions/cli-server-dotnet#using-the-mcp-endpoint-from-an-mcp-client)
+- Node: `createCliServer({ mcp: true })` — [cli-server-node](https://github.com/qodalis-solutions/cli-server-node#using-the-mcp-endpoint-from-an-mcp-client)
+- Python: `CliServerOptions(mcp=True)` — [cli-server-python](https://github.com/qodalis-solutions/cli-server-python#using-the-mcp-endpoint-from-an-mcp-client)
+
+**2. Create a token** in a CLI connected to the server (`usersModule.configure({ server })`),
+signed in as the user the client should act as:
+
+```bash
+token create claude --expires=90
+```
+
+The token (`qcli_pat_…`) is shown once, together with the Claude Code command below.
+
+**3. Connect Claude Code:**
+
+```bash
+claude mcp add --transport http qcli http://localhost:8047/api/qcli/mcp --header "Authorization: Bearer <token>"
+```
+
+**4. Claude Desktop / Cursor** (`claude_desktop_config.json`, `.cursor/mcp.json`):
+
+```json
+{
+    "mcpServers": {
+        "qcli": {
+            "type": "http",
+            "url": "http://localhost:8047/api/qcli/mcp",
+            "headers": { "Authorization": "Bearer <token>" }
+        }
+    }
+}
+```
+
+**5. MCP Inspector** (interactive testing): run `npx @modelcontextprotocol/inspector`,
+choose transport *Streamable HTTP*, URL `http://localhost:8047/api/qcli/mcp`, add the
+header `Authorization: Bearer <token>`, then *Connect* and *List Tools*.
+
+**6. Raw request** (curl):
+
+```bash
+curl -s http://localhost:8047/api/qcli/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "Authorization: Bearer $QCLI_TOKEN" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+**Troubleshooting**
+
+| Symptom | Cause |
+|---|---|
+| `401` | Token missing, mistyped, expired or revoked (`token list`), or its user is disabled |
+| `403` | The request's `Origin` is not allowed (add it to the server's allowed origins), or the user lacks `commands:execute` |
+| A tool is missing | The user (or the token's `--permissions` scope) lacks the command's permissions, or the server's `tools` / `exclude` lists hide it |
+| `405` | `GET`/`DELETE` used: the endpoint only accepts `POST` |
 
 ## Rules (identical in every mode)
 

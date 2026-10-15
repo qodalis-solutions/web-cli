@@ -186,14 +186,65 @@ cli.EnableMcp(o =&gt; &#123; o.Tools = ["weather_*"]; &#125;);</code></pre>
 <p>Options: <code>tools</code> (allow-list, trailing <code>*</code> allowed), <code>exclude</code> (deny-list applied after
     <code>tools</code>), <code>token</code> (static bearer token, only without the users plugin) and
     <code>instructions</code> (returned to the client by <code>initialize</code>).</p>
-<p>
-    With the users plugin, sign in to the CLI connected to the server and create an API token for the client
-    (shown once, with a ready-to-paste command):
-</p>
-<div class="code-block">
-    <pre><code>token create claude --expires=30
-claude mcp add --transport http qcli https://cli.example.com/api/qcli/mcp --header "Authorization: Bearer qcli_pat_..."</code></pre>
-</div>
+<h3 id="mcp-client">Using the MCP endpoint from an MCP client</h3>
+<p>Default ports: .NET <code>8046</code>, Node <code>8047</code>, Python <code>8048</code>. The examples use Node.</p>
+<ol>
+    <li>
+        <strong>Enable MCP on the server</strong> (details in each server's README, "Using the MCP endpoint from an MCP client"):
+        <ul>
+            <li>.NET: <code>cli.EnableMcp()</code> &mdash; <a href="https://github.com/qodalis-solutions/cli-server-dotnet#using-the-mcp-endpoint-from-an-mcp-client" target="_blank" rel="noopener">cli-server-dotnet</a></li>
+            <li>Node: <code>createCliServer(&#123; mcp: true &#125;)</code> &mdash; <a href="https://github.com/qodalis-solutions/cli-server-node#using-the-mcp-endpoint-from-an-mcp-client" target="_blank" rel="noopener">cli-server-node</a></li>
+            <li>Python: <code>CliServerOptions(mcp=True)</code> &mdash; <a href="https://github.com/qodalis-solutions/cli-server-python#using-the-mcp-endpoint-from-an-mcp-client" target="_blank" rel="noopener">cli-server-python</a></li>
+        </ul>
+    </li>
+    <li>
+        <strong>Create a token</strong> in a CLI connected to the server (<code>usersModule.configure(&#123; server &#125;)</code>),
+        signed in as the user the client should act as. The token (<code>qcli_pat_&hellip;</code>) is shown once, with the
+        Claude Code command:
+        <div class="code-block"><pre><code>token create claude --expires=90</code></pre></div>
+    </li>
+    <li>
+        <strong>Connect Claude Code</strong>:
+        <div class="code-block"><pre><code>claude mcp add --transport http qcli http://localhost:8047/api/qcli/mcp --header "Authorization: Bearer &lt;token&gt;"</code></pre></div>
+    </li>
+    <li>
+        <strong>Claude Desktop / Cursor</strong> (<code>claude_desktop_config.json</code>, <code>.cursor/mcp.json</code>):
+        <div class="code-block"><pre><code class="language-json">&#123;
+    "mcpServers": &#123;
+        "qcli": &#123;
+            "type": "http",
+            "url": "http://localhost:8047/api/qcli/mcp",
+            "headers": &#123; "Authorization": "Bearer &lt;token&gt;" &#125;
+        &#125;
+    &#125;
+&#125;</code></pre></div>
+    </li>
+    <li>
+        <strong>MCP Inspector</strong>: run <code>npx &#64;modelcontextprotocol/inspector</code>, choose the
+        <em>Streamable HTTP</em> transport, URL <code>http://localhost:8047/api/qcli/mcp</code>, add the header
+        <code>Authorization: Bearer &lt;token&gt;</code>, then <em>Connect</em> and <em>List Tools</em>.
+    </li>
+    <li>
+        <strong>Raw request</strong>:
+        <div class="code-block"><pre><code>curl -s http://localhost:8047/api/qcli/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "Authorization: Bearer $QCLI_TOKEN" \
+  -d '&#123;"jsonrpc":"2.0","id":1,"method":"tools/list"&#125;'</code></pre></div>
+    </li>
+</ol>
+<p>Troubleshooting:</p>
+<table>
+    <thead>
+        <tr><th>Symptom</th><th>Cause</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>401</code></td><td>Token missing, mistyped, expired or revoked (<code>token list</code>), or its user is disabled</td></tr>
+        <tr><td><code>403</code></td><td>The request's <code>Origin</code> is not allowed (add it to the server's allowed origins), or the user lacks <code>commands:execute</code></td></tr>
+        <tr><td>A tool is missing</td><td>The user (or the token's <code>--permissions</code> scope) lacks the command's permissions, or the server's <code>tools</code> / <code>exclude</code> lists hide it</td></tr>
+        <tr><td><code>405</code></td><td><code>GET</code> / <code>DELETE</code> used: the endpoint only accepts <code>POST</code></td></tr>
+    </tbody>
+</table>
 <p>Permissions and security:</p>
 <ul>
     <li><strong>Users plugin</strong>: the request is authenticated like any other (session or API token) and needs
