@@ -135,6 +135,25 @@ describe('files access policy', () => {
         fs.remove('/tmp/shared/private', true);
     });
 
+    it('cp -r cannot copy out of subdirectories the user cannot read', () => {
+        fs.runAsSystem(() => {
+            fs.createDirectory('/tmp/shared/private', true);
+            fs.chown('/tmp/shared', { uid: 'alice', gid: 'dev' });
+            fs.chmod('/tmp/shared', 'rwxr-xr-x');
+            fs.chown('/tmp/shared/private', { uid: 'alice', gid: 'dev' });
+            fs.chmod('/tmp/shared/private', 'rwx------');
+            fs.createFile('/tmp/shared/private/diary.txt', 'secret');
+            fs.chown('/tmp/shared/private/diary.txt', { uid: 'alice', gid: 'dev' });
+            fs.chmod('/tmp/shared/private/diary.txt', 'rw-------');
+        });
+        as(eve);
+        expect(() => fs.copy('/tmp/shared', '/tmp/stolen', true)).toThrowError(/Permission denied/);
+        expect(fs.exists('/tmp/stolen')).toBeFalse();
+        as(alice);
+        fs.copy('/tmp/shared', '/tmp/mine', true);
+        expect(fs.readFile('/tmp/mine/private/diary.txt')).toBe('secret');
+    });
+
     it('copies belong to the copier', () => {
         as(bob);
         fs.copy('/home/alice/notes.txt', '/tmp/copy.txt');

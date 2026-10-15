@@ -123,6 +123,17 @@ export class IndexedDbFileSystemService implements IFileSystemService {
         }
     }
 
+    /** Copying reads everything it copies: `r` on every file, `r` + `x` on every directory. */
+    private assertReadableTree(node: IFileNode, display: string): void {
+        if (!this.enforcing) return;
+        this.assertAccess(node, 'read', 'cp', display);
+        if (node.type !== 'directory') return;
+        this.assertAccess(node, 'execute', 'cp', display);
+        for (const child of node.children ?? []) {
+            this.assertReadableTree(child, `${display.replace(/\/+$/, '')}/${child.name}`);
+        }
+    }
+
     /** Creating/removing entries needs `w` and `x` on the containing directory. */
     private assertModifyDir(dir: IFileNode, dirPath: string, op: string, display: string): void {
         if (!this.enforcing) return;
@@ -453,7 +464,7 @@ export class IndexedDbFileSystemService implements IFileSystemService {
             );
         }
         this.assertTraverse(srcResolved, 'cp', src);
-        this.assertAccess(srcNode, 'read', 'cp', src);
+        this.assertReadableTree(srcNode, src);
 
         const destResolved = this.resolvePath(dest);
         const destNode = this.getNode(destResolved);
