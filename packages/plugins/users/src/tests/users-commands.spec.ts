@@ -181,6 +181,20 @@ describe('users commands (local mode)', () => {
         expect((await userNamed(h, 'gina'))?.data?.['fullName']).toBeUndefined();
     });
 
+    it('adduser reports a taken name or email before asking anything else', async () => {
+        const { run } = await setup();
+        // Given on the command line: fails at once, no password prompt
+        let r = await run('adduser root', 'password1', 'password1');
+        expect(r.err).toBe('user already exists: root');
+        // Interactive: the taken name and email are asked again
+        r = await run('adduser', 'root', 'mia', 'root@localhost', 'mia@x.io', '', ['users'], '', true, 'password1', 'password1');
+        expect(r.err).toBe('user already exists: root\na user with email already exists: root@localhost');
+        expect(r.out).toContain("User 'mia' created");
+        // --email that is taken: fails before the password
+        r = await run('adduser zed --email=mia@x.io', 'password1', 'password1');
+        expect(r.err).toBe('a user with email already exists: mia@x.io');
+    });
+
     it('adduser re-asks for a password that breaks the policy or does not match', async () => {
         const { run } = await setup();
         const r = await run('adduser erin --email=e@x.io', 'abc', 'password1', 'password2', 'password1', 'password1');

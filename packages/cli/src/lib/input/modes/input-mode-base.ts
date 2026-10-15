@@ -1,3 +1,4 @@
+import { truncateToWidth } from '@qodalis/cli-core';
 import { IInputMode, InputModeHost } from '../input-mode';
 
 /**
@@ -91,12 +92,25 @@ export abstract class InputModeBase<T> implements IInputMode {
     }
 
     /**
+     * Cut a line to the terminal width. Lines redrawn in place must stay on one row:
+     * a wrapped line takes two rows and breaks the cursor-up arithmetic of the redraw.
+     */
+    protected fitLine(text: string): string {
+        return truncateToWidth(text, Math.max(1, this.host.getTerminalCols() - 1));
+    }
+
+    /** Start a new row and write `text` cut to the terminal width. */
+    protected writeRow(text: string): void {
+        this.host.terminal.write('\r\n' + this.fitLine(text));
+    }
+
+    /**
      * Render a dimmed help bar below the current line.
      */
     writeHelp(text: string): void {
         this.extraLines++;
         this.host.terminal.write(
-            `\r\n    \x1b[2m${text}\x1b[0m\x1b[${this.extraLines}A`,
+            `\r\n${this.fitLine(`    \x1b[2m${text}\x1b[0m`)}\x1b[${this.extraLines}A`,
         );
     }
 
@@ -106,7 +120,7 @@ export abstract class InputModeBase<T> implements IInputMode {
     protected writeError(message: string): void {
         this.extraLines++;
         this.host.terminal.write(
-            `\r\n  \x1b[31m\u2718 ${message}\x1b[0m\x1b[${this.extraLines}A`,
+            `\r\n${this.fitLine(`  \x1b[31m\u2718 ${message}\x1b[0m`)}\x1b[${this.extraLines}A`,
         );
     }
 
