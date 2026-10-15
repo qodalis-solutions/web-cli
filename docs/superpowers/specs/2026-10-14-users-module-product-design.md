@@ -345,7 +345,7 @@ A caller can never grant or exercise more than they hold. Let `P(x)` be effectiv
 
 - Lockout bookkeeping must be atomic: reserve the attempt before PBKDF2 verification (increment first, reset on success) so concurrent requests cannot exceed the limit.
 - Unknown usernames are tracked and locked exactly like known ones (same 429), and run a dummy PBKDF2 so timing does not reveal existence.
-- Per-IP limiter on `POST /sessions`, `verify-password` and self password change: 20 attempts / minute / IP → 429. Trust `X-Forwarded-For` only when `trustProxy` is configured.
+- Per-IP limiter on `POST /sessions`, `verify-password` and self password change: 20 attempts / minute / IP → 429. Trust `X-Forwarded-For` only when `trustProxy` is configured: `true` = 1 trusted hop, a number n = n hops (.NET: `TrustProxy` + `TrustedProxyHops`). All header lines form one list; the client IP is the entry at `count - n` (with one proxy, the rightmost entry, which the proxy appended; leftmost entries are client-controlled), the leftmost when there are fewer entries, and the socket address when the header is absent or the selected entry is empty. A hop count below 1 with trust on counts as 1.
 - Self password change (`currentPassword`) goes through lockout + audit (`login_failed` on mismatch) in every server.
 - Admin password reset clears the target's lockout.
 - PBKDF2 runs off the request thread / event loop (python `run_in_executor`; node async `crypto.pbkdf2`; .NET already threaded) with a concurrency cap (e.g. 4).
