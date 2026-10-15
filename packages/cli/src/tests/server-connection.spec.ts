@@ -1,4 +1,5 @@
 import { CliServerConnection } from '../lib/server/cli-server-connection';
+import { CliBackgroundServiceRegistry } from '../lib/services/background/cli-background-service-registry';
 
 /** Minimal WebSocket stand-in */
 class FakeSocket {
@@ -55,6 +56,52 @@ describe('CliServerConnection event socket', () => {
         expect(FakeSocket.all[0].onclose).toBeNull();
         connection.disconnect();
         expect(open().length).toBe(0);
+    });
+
+    describe('with background services', () => {
+        function setup() {
+            const registry = new CliBackgroundServiceRegistry({} as any, {} as any);
+            const events: any[] = [];
+            registry.on((e) => events.push(e), { source: 'server-events:node', type: 'session-kicked' });
+            const connection = new CliServerConnection({ name: 'node', url: 'http://srv' }, registry);
+            return { registry, events, connection };
+        }
+
+        it('a reconnect reuses the event service instead of falling back to a direct socket', async () => {
+            const { registry, events, connection } = setup();
+            await connection.connect();
+            await flush();
+            await connection.connect(); // e.g. the users module reconnects after a sign-in
+            await flush();
+            expect(open().length).toBe(1);
+            expect(registry.list().filter((s) => s.name === 'server-events:node').length).toBe(1);
+            expect(registry.getStatus('server-events:node')!.status).toBe('running');
+            const latest = FakeSocket.all[FakeSocket.all.length - 1];
+            latest.onmessage({ data: JSON.stringify({ type: 'session-kicked', data: { sessionId: 'S1' } }) });
+            expect(events.map((e) => e.type)).toEqual(['session-kicked']);
+            connection.disconnect();
+            await flush();
+            expect(open().length).toBe(0);
+        });
+
+        it('a dropped socket reconnects through the same event service', async () => {
+            jasmine.clock().install();
+            try {
+                const { events, connection } = setup();
+                await connection.connect();
+                await flush();
+                FakeSocket.all[0].readyState = FakeSocket.CLOSED;
+                FakeSocket.all[0].onclose();
+                jasmine.clock().tick(1000);
+                await flush();
+                expect(FakeSocket.all.length).toBe(2);
+                FakeSocket.all[1].onmessage({ data: JSON.stringify({ type: 'session-kicked' }) });
+                expect(events.map((e) => e.type)).toEqual(['session-kicked']);
+                connection.disconnect();
+            } finally {
+                jasmine.clock().uninstall();
+            }
+        });
     });
 
     it('does not open a socket when disconnected while the ticket was being fetched', async () => {

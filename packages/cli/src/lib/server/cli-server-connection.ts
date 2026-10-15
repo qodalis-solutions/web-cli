@@ -23,6 +23,8 @@ export class CliServerConnection {
     private _basePath: string = '';
     private _wsReconnectAttempts = 0;
     private _wsReconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    /** True once this connection registered its `server-events:<name>` background service */
+    private _eventServiceRegistered = false;
     private static readonly WS_MAX_RECONNECT_ATTEMPTS = 5;
     private static readonly WS_MAX_RECONNECT_DELAY_MS = 30000;
 
@@ -319,6 +321,20 @@ export class CliServerConnection {
 
         const serviceName = `server-events:${this._config.name}`;
 
+        // Reconnects (re-login, dropped socket) reuse the service this connection
+        // registered: restart it (onStop closes the old socket, onStart opens a new one)
+        if (this._eventServiceRegistered && this._backgroundServices.getStatus(serviceName)) {
+            const status = this._backgroundServices.getStatus(serviceName)!.status;
+            const restart = status === 'running'
+                ? this._backgroundServices.restart(serviceName)
+                : this._backgroundServices.start(serviceName);
+            restart.catch((e) => {
+                this._logger?.debug(`Background event service failed for "${this._config.name}", falling back to direct: ${e}`);
+                this.connectEventSocketDirect();
+            });
+            return;
+        }
+
         try {
             this._backgroundServices.register({
                 name: serviceName,
@@ -371,6 +387,7 @@ export class CliServerConnection {
                     this.closeEventSocketDirect();
                 },
             });
+            this._eventServiceRegistered = true;
 
             this._backgroundServices.start(serviceName).catch((e) => {
                 this._logger?.debug(`Background event service failed for "${this._config.name}", falling back to direct: ${e}`);
