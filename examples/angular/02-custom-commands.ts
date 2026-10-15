@@ -17,6 +17,7 @@ import {
     ICliExecutionContext,
     CliProcessCommand,
     ICliModule,
+    API_VERSION,
 } from '@qodalis/cli-core';
 import { CliEngineOptions } from '@qodalis/cli';
 
@@ -64,6 +65,7 @@ const greetProcessor: ICliCommandProcessor = {
 // ---------------------------------------------------------------------------
 
 const greetModule: ICliModule = {
+    apiVersion: API_VERSION,
     name: 'greet-module',
     description: 'Custom greeting commands',
     version: '1.0.0',

@@ -31,7 +31,7 @@ const clipboardDemo: ICliCommandProcessor = {
             valueRequired: true,
 
             async processCommand(command, context: ICliExecutionContext) {
-                const text = command.value;
+                const text = command.value ?? '';
                 await context.clipboard.write(text);
                 context.writer.writeSuccess(`Copied to clipboard: "${text}"`);
             },
@@ -110,7 +110,7 @@ const dropDemo: ICliCommandProcessor = {
         });
 
         // Clean up subscription when command is aborted (Ctrl+C)
-        context.onAbort(() => {
+        context.onAbort.subscribe(() => {
             subscription.unsubscribe();
             context.writer.writeln('');
             context.writer.writeInfo('Stopped watching for drops.');
@@ -118,7 +118,7 @@ const dropDemo: ICliCommandProcessor = {
 
         // Keep the command alive until aborted
         await new Promise<void>((resolve) => {
-            context.onAbort(resolve);
+            context.onAbort.subscribe(() => resolve());
         });
     },
 };
@@ -152,7 +152,7 @@ const importDemo: ICliCommandProcessor = {
             try {
                 const parsed = JSON.parse(data);
                 context.writer.writeSuccess('Parsed JSON from clipboard:');
-                context.writer.writeJSON(parsed);
+                context.writer.writeJson(parsed);
             } catch {
                 context.writer.writeln('Clipboard text (not JSON):');
                 context.writer.writeln(data);
@@ -175,7 +175,7 @@ const importDemo: ICliCommandProcessor = {
                     sub.unsubscribe();
                     resolve(f);
                 });
-                context.onAbort(() => {
+                context.onAbort.subscribe(() => {
                     sub.unsubscribe();
                     resolve([]);
                 });

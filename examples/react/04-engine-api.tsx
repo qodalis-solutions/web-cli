@@ -19,6 +19,7 @@ import {
     useCliEngine,
     CliEngine,
 } from '@qodalis/react-cli';
+import { CliLogLevel } from '@qodalis/cli-core';
 
 // ---------------------------------------------------------------------------
 // 1. useCliEngine - low-level hook
@@ -29,7 +30,7 @@ export function LowLevelEngineDemo() {
     const containerRef = useRef<HTMLDivElement>(null);
     const engine = useCliEngine(containerRef, {
         options: {
-            logLevel: 'info',
+            logLevel: CliLogLevel.INFO,
             terminalOptions: {
                 fontSize: 14,
                 cursorBlink: true,
