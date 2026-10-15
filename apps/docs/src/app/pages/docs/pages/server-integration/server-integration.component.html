@@ -142,12 +142,12 @@ cli.EnableShell(o =&gt; &#123; o.Token = builder.Configuration["Shell:Token"]; o
     Commands that talk to a server without the user naming one (for example <code>server logs</code>,
     <code>data-explorer</code>, <code>scp</code>) should not simply take the first configured server: it may be down,
     or protected by the users plugin while the user has not signed in to it. Use
-    <code>cliDefaultServer(context)</code> from <code>@qodalis/cli-core</code>. It returns the default server
+    <code>cliDefaultServer(context)</code> from <code>&#64;qodalis/cli-core</code>. It returns the default server
     (<code>server default &lt;name&gt;</code>) when connected, otherwise the first connected server, and falls back to the
     first configured server so the user still gets a clear error from it.
 </p>
 <div class="code-block">
-    <pre><code>import &#123; cliDefaultServer, resolveServerHeaders &#125; from '@qodalis/cli-core';
+    <pre><code>import &#123; cliDefaultServer, resolveServerHeaders &#125; from '&#64;qodalis/cli-core';
 
 const server = cliDefaultServer(context);
 if (!server) &#123; context.writer.writeError('No server configured'); return; &#125;
