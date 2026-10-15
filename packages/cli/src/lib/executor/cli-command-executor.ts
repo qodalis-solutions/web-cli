@@ -11,6 +11,10 @@ import {
     CliForegroundColor,
     ICliCommandProcessorRegistry,
     ICliProcessRegistry,
+    ICliCommandGuard,
+    ICliCommandGuard_TOKEN,
+    isCliAccessDeniedError,
+    CliCommandGuardResult,
 } from '@qodalis/cli-core';
 import { CliProcessRegistry_TOKEN } from '../services/cli-process-registry';
 import { CommandParser, CommandPart } from '../parsers';
@@ -286,7 +290,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             const aliasProcessor = this.registry.findProcessor('alias', []) as
                 | CliAliasCommandProcessor
                 | undefined;
-            const aliases = aliasProcessor?.userAliases ?? {};
+            // Per-user aliases when an auth module is loaded
+            const aliases = aliasProcessor?.aliasesFor?.(context) ?? aliasProcessor?.userAliases ?? {};
 
             if (aliases[mainCommand]) {
                 this.completeProcess(processEntry, context, 0);
@@ -365,6 +370,16 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
         commandToProcess.value = value;
 
+        // Global guards (auth, permissions, ...): registered once, run before
+        // validation, hooks and the command itself.
+        const blockedBy = await this.runGuards(commandToProcess, processor, context);
+        if (blockedBy) {
+            context.writer.writeError(blockedBy);
+            this.failProcess(processEntry, context);
+            context.process.exit(-1, { silent: true });
+            return;
+        }
+
         const hasPositionalInput = !!value || !!data;
         const hasNamedArgs = Object.keys(args).length > 0;
 
@@ -374,7 +389,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 `Value required: ${context.writer.wrapInColor(`${commandName} <value>`, CliForegroundColor.Cyan)}`,
             );
 
-            context.process.exit(-1);
+            this.failProcess(processEntry, context);
+            context.process.exit(-1, { silent: true });
 
             return;
         }
@@ -398,7 +414,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                         'An error occurred while validating the command.',
                 );
 
-                context.process.exit(-1);
+                this.failProcess(processEntry, context);
+                context.process.exit(-1, { silent: true });
 
                 return;
             }
@@ -489,6 +506,11 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                         'Process exited successfully with code 0',
                     );
                 }
+            } else if (isCliAccessDeniedError(e)) {
+                // Authorization failures are expected outcomes: print the message only
+                this.failProcess(processEntry, context);
+                context.writer.writeError(e.message);
+                context.process.exit(-1);
             } else {
                 this.failProcess(processEntry, context);
                 context.writer.writeError(`Error executing command: ${e}`);
@@ -619,6 +641,62 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
      * parameter.  In that case the global handler must be skipped so the
      * processor can handle the flag itself.
      */
+    /**
+     * Runs all registered {@link ICliCommandGuard}s that apply to this command,
+     * in priority order. Returns the block message of the first guard that
+     * denies the command, or `undefined` when every guard allows it.
+     * A guard that throws is treated as a denial (fail closed).
+     */
+    private async runGuards(
+        command: CliProcessCommand,
+        processor: ICliCommandProcessor,
+        context: ICliExecutionContext,
+    ): Promise<string | undefined> {
+        let guards: ICliCommandGuard[];
+        try {
+            guards = context.services.getAll<ICliCommandGuard>(ICliCommandGuard_TOKEN);
+        } catch {
+            return undefined; // no guards registered
+        }
+        if (!guards.length) {
+            return undefined;
+        }
+
+        const ordered = [...guards].sort(
+            (a, b) => (a.priority ?? 0) - (b.priority ?? 0),
+        );
+
+        for (const guard of ordered) {
+            let result: CliCommandGuardResult;
+            try {
+                if (guard.appliesTo && !(await guard.appliesTo(processor, command, context))) {
+                    continue;
+                }
+                result = await guard.canActivate(command, processor, context);
+            } catch (e: any) {
+                return `${processor.command}: blocked by guard '${guard.name}' (${e?.message ?? e})`;
+            }
+
+            const denial = this.guardDenial(result, processor.command);
+            if (denial) {
+                return denial;
+            }
+        }
+
+        return undefined;
+    }
+
+    private guardDenial(result: CliCommandGuardResult, commandName: string): string | undefined {
+        const denied = `${commandName}: permission denied`;
+        if (result === undefined || result === true) return undefined;
+        if (result === false) return denied;
+        if (typeof result === 'string') return result || denied;
+        if (typeof result === 'object' && result !== null) {
+            return result.allowed ? undefined : (result.message || denied);
+        }
+        return undefined;
+    }
+
     private processorOwnsParameter(
         processor: ICliCommandProcessor,
         globalParam: ICliCommandParameterDescriptor,

@@ -1,3 +1,5 @@
+import { cliAccessMetadataGuards, ICliCommandGuard_TOKEN, ICliPermissionRegistry_TOKEN } from '@qodalis/cli-core';
+import { CliPermissionRegistry } from '../services/cli-permission-registry';
 import { Subject } from 'rxjs';
 import {
     CliBackgroundColor,
@@ -85,6 +87,7 @@ export class CliTestHarness {
 
     /** Reader responses — set via setReaderResponses() for interactive commands */
     private readerResponses: any[] = [];
+    private userSessionProvider?: () => ICliUserSession | undefined;
 
     constructor() {
         this.registry = new CliCommandProcessorRegistry();
@@ -124,6 +127,28 @@ export class CliTestHarness {
             provide: ICliEnvironment_TOKEN,
             useValue: new CliEnvironment(),
         });
+
+        // Same access infrastructure as the engine: permission registry and the
+        // access-metadata guards (inactive until an authorization service exists)
+        this.services.set({
+            provide: ICliPermissionRegistry_TOKEN,
+            useValue: new CliPermissionRegistry(),
+        });
+        this.services.set(
+            cliAccessMetadataGuards.map((guard) => ({
+                provide: ICliCommandGuard_TOKEN,
+                useValue: guard,
+                multi: true,
+            })),
+        );
+    }
+
+    /**
+     * Resolve `context.userSession` on every command from this function
+     * (e.g. a session service), instead of the value set via setUserSession().
+     */
+    setUserSessionProvider(provider: () => ICliUserSession | undefined): void {
+        this.userSessionProvider = provider;
     }
 
     /**
@@ -221,7 +246,7 @@ export class CliTestHarness {
             options: undefined,
             logger: createNoopLogger(),
             process,
-            userSession: this.userSession,
+            userSession: this.userSessionProvider ? this.userSessionProvider() : this.userSession,
             state: this.stateStoreManager.getStateStore('shared'),
             backgroundServices: createNoopBackgroundServices(),
             http: new CliHttpClient(),

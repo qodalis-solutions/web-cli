@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import { Cli, CliPanel, CliConfigProvider, type CliPanelOptions } from '@qodalis/vue-cli';
 import '@qodalis/cli/assets/cli-panel.css';
 import { guidModule } from '@qodalis/cli-guid';
@@ -13,7 +14,7 @@ import { passwordGeneratorModule } from '@qodalis/cli-password-generator';
 import { qrModule } from '@qodalis/cli-qr';
 import { yesnoModule } from '@qodalis/cli-yesno';
 import { serverLogsModule } from '@qodalis/cli-server-logs';
-import { usersModule } from '@qodalis/cli-users';
+import { accessDemoModule, demoUsersModules, mountUsersModeSwitcher } from './users-mode';
 import { filesModule } from '@qodalis/cli-files';
 import { snakeModule } from '@qodalis/cli-snake';
 import { tetrisModule } from '@qodalis/cli-tetris';
@@ -125,13 +126,9 @@ const modules: ICliModule[] = [
     jobsModule,
     encodeModule,
     dataExplorerModule,
-    usersModule.configure({
-        seedUsers: [
-            { name: 'root1', email: 'root1@root.com', groups: ['admin'] },
-        ],
-        defaultPassword: 'root',
-        requirePassword: true,
-    }),
+    // Users/auth wiring chosen from the URL: ?users=none|local|server&server=node
+    ...demoUsersModules(),
+    accessDemoModule,
     {
         apiVersion: 2,
         name: 'input-demo',
@@ -164,6 +161,8 @@ const options: CliOptions = {
         { name: 'python', url: 'http://localhost:8048' },
     ],
 };
+
+onMounted(() => mountUsersModeSwitcher());
 
 const panelOptions: CliPanelOptions = {
   position: "right",

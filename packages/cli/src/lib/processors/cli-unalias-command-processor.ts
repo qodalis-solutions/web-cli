@@ -1,3 +1,4 @@
+import { aliasesFor, aliasOwner, CliAliasState, withAliases } from './alias-scope';
 import {
     CliForegroundColor,
     CliProcessCommand,
@@ -54,7 +55,9 @@ export class CliUnAliasCommandProcessor implements ICliCommandProcessor {
 
         const aliasToRemove = command.value!;
 
-        const { aliases } = context.state.getState();
+        const state = context.state.getState() as CliAliasState;
+        const owner = aliasOwner(context);
+        const aliases = aliasesFor(state, owner);
 
         if (!aliases[aliasToRemove]) {
             writer.writeError(`Alias ${aliasToRemove} not found`);
@@ -70,9 +73,7 @@ export class CliUnAliasCommandProcessor implements ICliCommandProcessor {
                 updated[alias] = aliases[alias];
             });
 
-        context.state.updateState({
-            aliases: updated,
-        });
+        context.state.updateState(withAliases(state, owner, updated));
 
         await context.state.persist();
     }

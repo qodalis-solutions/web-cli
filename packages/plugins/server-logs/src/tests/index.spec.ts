@@ -215,4 +215,56 @@ describe('CliLogsCommandProcessor', () => {
             });
         });
     });
+
+    describe('server selection', () => {
+        let urls: string[];
+        let originalWebSocket: typeof WebSocket;
+        let errors: string[];
+
+        class FakeWebSocket {
+            onopen: any; onmessage: any; onerror: any; onclose: any;
+            constructor(url: string) { urls.push(url); }
+            close() {}
+        }
+
+        const context = (): any => ({
+            options: { servers: [{ name: 'Node', url: 'http://node.test' }] },
+            services: {
+                // An auth service that would hand out a ticket for any server name
+                get: (token: string) => token === 'cli-server-auth-service'
+                    ? { getHeaders: () => ({}), getWebSocketParams: async () => ({ ticket: 'secret' }) }
+                    : undefined,
+            },
+            writer: { writeError: (m: string) => errors.push(m), writeSuccess() {}, writeln() {}, writeInfo() {} },
+            notifier: { info() {} },
+            signal: new AbortController().signal,
+            process: { exit() {} },
+        });
+
+        const run = async (args: Record<string, string>) => {
+            void processor.processors![0].processCommand({ command: 'server', args, chainCommands: [], rawCommand: '' } as any, context());
+            await new Promise((r) => setTimeout(r, 0));
+        };
+
+        beforeEach(() => {
+            urls = [];
+            errors = [];
+            originalWebSocket = (window as any).WebSocket;
+            (window as any).WebSocket = FakeWebSocket;
+        });
+
+        afterEach(() => {
+            (window as any).WebSocket = originalWebSocket;
+        });
+
+        it('does not send credentials to an ad-hoc URL', async () => {
+            await run({ server: 'http://elsewhere.test' });
+            expect(urls).toEqual(['ws://elsewhere.test/ws/v1/qcli/logs']);
+        });
+
+        it('matches configured server names case-insensitively', async () => {
+            await run({ server: 'node' });
+            expect(urls).toEqual(['ws://node.test/ws/v1/qcli/logs?ticket=secret']);
+        });
+    });
 });

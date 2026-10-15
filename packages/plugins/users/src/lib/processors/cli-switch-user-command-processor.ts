@@ -1,154 +1,32 @@
-import {
-    ICliExecutionContext,
-    CliProcessCommand,
-    ICliCommandProcessor,
-    ICliCommandParameterDescriptor,
-    ICliUsersStoreService,
-    ICliUserSessionService,
-    ICliAuthService,
-    CliProcessorMetadata,
-    CliIcon,
-    CliForegroundColor,
-    CliStateConfiguration,
-    ICliAuthService_TOKEN,
-    ICliUserSessionService_TOKEN,
-    ICliUsersStoreService_TOKEN,
-    DefaultLibraryAuthor,
-} from '@qodalis/cli-core';
+import { CliProcessCommand, ICliExecutionContext } from '@qodalis/cli-core';
+import { CliUsersCommand, usersServices, words } from './base';
+import { promptRequiredPasswordChange } from '../module/password-change';
 
-import { firstValueFrom } from 'rxjs';
-import {
-    CliUsersModuleConfig,
-    CliUsersModuleConfig_TOKEN,
-} from '../models/users-module-config';
+export class CliSwitchUserCommandProcessor extends CliUsersCommand {
+    override command = 'su';
+    override description = 'Switch to another user';
+    override acceptsRawInput = true;
+    override valueRequired = true;
+    protected override usage: Array<[string, string]> = [['su <user>', 'Switch user (asks for the target password unless passwordless)']];
 
-export class CliSwitchUserCommandProcessor implements ICliCommandProcessor {
-    command = 'su';
-
-    aliases = ['switch-user'];
-
-    description?: string | undefined = 'Switch user';
-
-    acceptsRawInput?: boolean | undefined = true;
-
-    parameters?: ICliCommandParameterDescriptor[] | undefined = [];
-
-    author = DefaultLibraryAuthor;
-
-    metadata?: CliProcessorMetadata | undefined = {
-        sealed: true,
-        module: 'users',
-        icon: CliIcon.User,
-    };
-
-    stateConfiguration?: CliStateConfiguration | undefined = {
-        initialState: {},
-        storeName: 'users',
-    };
-
-    valueRequired = true;
-
-    private userSessionService!: ICliUserSessionService;
-    private usersStore!: ICliUsersStoreService;
-    private authService!: ICliAuthService;
-    private moduleConfig!: CliUsersModuleConfig;
-
-    async initialize(context: ICliExecutionContext): Promise<void> {
-        this.userSessionService = context.services.getRequired<ICliUserSessionService>(
-            ICliUserSessionService_TOKEN,
-        );
-        this.usersStore = context.services.getRequired<ICliUsersStoreService>(
-            ICliUsersStoreService_TOKEN,
-        );
-        this.authService = context.services.getRequired<ICliAuthService>(
-            ICliAuthService_TOKEN,
-        );
-        this.moduleConfig =
-            context.services.getRequired<CliUsersModuleConfig>(
-                CliUsersModuleConfig_TOKEN,
-            ) || {};
-    }
-
-    async processCommand(
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): Promise<void> {
-        const fromUser = context.userSession?.user;
-        const toUser = command.value;
-
-        if (!fromUser) {
-            context.writer.writeError('Missing user to switch from');
-            return;
-        }
-
-        if (!toUser) {
-            context.writer.writeError('Missing user to switch to');
-            return;
-        }
-
-        const user = await firstValueFrom(this.usersStore.getUser(toUser));
-
-        if (!user) {
-            context.writer.writeError(`su: Unknown id: ${toUser}`);
-            return;
-        }
-
-        if (user.id === fromUser.id) {
-            context.writer.writeError('Already on the user');
-            return;
-        }
-
-        if (user.disabled) {
-            context.writer.writeError('su: Account is disabled');
-            return;
-        }
-
-        // Prompt for password when requirePassword is enabled
-        if (this.moduleConfig.requirePassword) {
-            const password = await context.reader.readPassword('Password: ');
-
-            if (password === null) {
+    override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const { auth } = usersServices(context);
+        const [username] = words(command);
+        let password: string | undefined;
+        if (!auth.passwordless) {
+            const entered = await context.reader.readPassword('Password: ');
+            if (entered === null) {
                 context.writer.writeError('Aborted');
                 return;
             }
-
-            const valid = await this.authService.verifyPassword(
-                user.id,
-                password,
-            );
-
-            if (!valid) {
-                context.writer.writeError('su: Authentication failure');
-                return;
-            }
+            password = entered;
         }
-
-        await this.userSessionService.setUserSession({
-            user,
-            loginTime: Date.now(),
-            lastActivity: Date.now(),
-        });
-
-        context.writer.writeSuccess(
-            `Switched to ${context.writer.wrapInColor(user.name, CliForegroundColor.Cyan)}`,
-        );
-    }
-
-    writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln('Switch to a different user session');
-        writer.writeln();
-        writer.writeln('Usage:');
-        writer.writeln(
-            `  ${writer.wrapInColor('su <user name or email>', CliForegroundColor.Cyan)}`,
-        );
-        writer.writeln();
-        writer.writeln('Examples:');
-        writer.writeln(
-            `  su admin@example.com             ${writer.wrapInColor('# Switch to admin', CliForegroundColor.Green)}`,
-        );
-        writer.writeln(
-            `  su root                          ${writer.wrapInColor('# Switch to root by name', CliForegroundColor.Green)}`,
-        );
+        const session = auth.switchUser
+            ? await auth.switchUser(username, password)
+            : await auth.login(username, password);
+        context.writer.writeSuccess(`Switched to ${session.user.name}`);
+        if (session.user.mustChangePassword) {
+            await promptRequiredPasswordChange(context, auth, session.user.id, password);
+        }
     }
 }

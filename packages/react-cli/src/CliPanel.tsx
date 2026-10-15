@@ -886,7 +886,9 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                                     )}
                                 </div>
                             )}
-                            {/* Compact status indicators (left/right positions — CSS controls visibility) */}
+                            {/* Compact status indicators (left/right positions — CSS controls visibility).
+                                Only these own the dropdown anchor refs there: in top/bottom the hidden
+                                copies would win the ref and the dropdowns would open at 0,0 */}
                             <div className="cli-panel-status-indicators-compact">
                                 {/* Execution state */}
                                 <span className="cli-panel-status-compact-item" title={statusExecutionState}>
@@ -896,7 +898,7 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                                 {/* Background services */}
                                 {statusServiceCount.total > 0 && (
                                     <span
-                                        ref={servicesDropdownRef}
+                                        ref={position === 'left' || position === 'right' ? servicesDropdownRef : undefined}
                                         className="cli-panel-status-compact-item status-clickable"
                                         title={`${statusServiceCount.running}/${statusServiceCount.total} services`}
                                         onClick={e => { e.stopPropagation(); setServicesDropdownOpen(prev => !prev); setServersDropdownOpen(false); }}
@@ -917,7 +919,7 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                                 {/* Server connection */}
                                 {statusServerState !== 'none' && (
                                     <span
-                                        ref={serversDropdownRef}
+                                        ref={position === 'left' || position === 'right' ? serversDropdownRef : undefined}
                                         className="cli-panel-status-compact-item status-clickable"
                                         title={`${statusServerDetails.filter(s => s.connected).length}/${statusServerDetails.length} servers`}
                                         onClick={e => { e.stopPropagation(); setServersDropdownOpen(prev => !prev); setServicesDropdownOpen(false); }}

@@ -3,12 +3,27 @@ packages:
   - packages/plugins/*
   - apps/*
 
-ignoredBuiltDependencies:
-  - nx
+shamefullyHoist: true
+strictPeerDependencies: false
+autoInstallPeers: true
 
-onlyBuiltDependencies:
-  - '@parcel/watcher'
-  - esbuild
-  - electron
-  - less
-  - nice-napi
+allowBuilds:
+  '@parcel/watcher': true
+  electron: true
+  esbuild: true
+  less: true
+  nice-napi: true
+  lmdb: false
+  msgpackr-extract: false
+  nx: false
+
+overrides:
+  'tar': '>=7.0.0'
+  'minimatch@>=10.0.0': '>=10.2.3'
+  'flatted': '>=3.4.0'
+  'immutable': '>=5.1.5'
+  'serialize-javascript': '>=7.0.5'
+  '@babel/runtime': '>=7.26.10'
+  'node-forge': '>=1.4.0'
+  'picomatch@>=4.0.0': '>=4.0.4'
+  'path-to-regexp@<1.0.0': '>=0.1.13'

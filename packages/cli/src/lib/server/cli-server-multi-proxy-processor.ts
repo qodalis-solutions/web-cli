@@ -31,6 +31,7 @@ export class CliServerMultiProxyProcessor implements ICliCommandProcessor {
     metadata?: CliProcessorMetadata;
     parameters?: ICliCommandParameterDescriptor[];
     processors?: ICliCommandProcessor[];
+    acceptsRawInput?: boolean;
     /** Full command path from root to this processor */
     private readonly commandPath: string[];
 
@@ -73,6 +74,8 @@ export class CliServerMultiProxyProcessor implements ICliCommandProcessor {
                 .filter((e): e is MultiProxyEntry => e !== null);
             return new CliServerMultiProxyProcessor(subEntries, this.provider, this.commandPath);
         });
+        // Leaf commands pass their value to the server (see CliServerProxyProcessor)
+        this.acceptsRawInput = !this.processors?.length;
     }
 
     async processCommand(

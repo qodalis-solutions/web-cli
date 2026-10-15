@@ -17,6 +17,36 @@ const WASM_SEARCH_PATHS = [
     '/wasm/qodalis_cli_wasm_bg.wasm',
 ];
 
+/**
+ * Candidate URLs in lookup order: the explicit URL, then next to the page
+ * (`document.baseURI`, so apps served under a sub-path such as `/admin/` find
+ * it on the first try instead of probing the site root), then the defaults.
+ * Every candidate is resolved against the base into a full URL, so a `<base>`
+ * on another origin (e.g. a CDN) is honoured.
+ */
+export function wasmCandidates(wasmUrl?: string, baseUri?: string): string[] {
+    const baseUrl = baseUri ?? (typeof document !== 'undefined' ? document.baseURI : undefined);
+    let base: URL | undefined;
+    try {
+        base = baseUrl ? new URL(baseUrl) : undefined;
+    } catch {
+        base = undefined; // invalid base: use the URLs as given
+    }
+    const resolve = (url: string): string => {
+        if (!base) return url;
+        try {
+            return new URL(url, base).href;
+        } catch {
+            return url;
+        }
+    };
+    const candidates: string[] = [];
+    if (wasmUrl) candidates.push(resolve(wasmUrl));
+    if (base) candidates.push(resolve('assets/wasm/qodalis_cli_wasm_bg.wasm'));
+    candidates.push(...WASM_SEARCH_PATHS.map(resolve));
+    return [...new Set(candidates)];
+}
+
 // ── wasm-bindgen glue (inlined from wasm-pack output) ──────────────
 
 let wasm: any;
@@ -299,7 +329,7 @@ export async function initWasmAccelerator(wasmUrl?: string): Promise<ICliWasmAcc
     }
 
     try {
-        const paths = wasmUrl ? [wasmUrl, ...WASM_SEARCH_PATHS] : WASM_SEARCH_PATHS;
+        const paths = wasmCandidates(wasmUrl);
         const bytes = await fetchWasmBinary(paths);
         await instantiateWasm(bytes);
         accelerator = createWasmAccelerator();

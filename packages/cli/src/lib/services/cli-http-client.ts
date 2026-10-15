@@ -1,4 +1,4 @@
-import { ICliHttpClient, CliHttpRequestOptions } from '@qodalis/cli-core';
+import { ICliHttpClient, CliHttpRequestOptions, CliHttpError } from '@qodalis/cli-core';
 
 /**
  * Default HTTP client implementation.
@@ -72,9 +72,9 @@ export class CliHttpClient implements ICliHttpClient {
     ): Promise<T> {
         const { timeout, ...fetchOptions } = options ?? {};
 
-        const headers: Record<string, string> = {
-            ...((fetchOptions.headers as Record<string, string>) ?? {}),
-        };
+        // Headers instances and [name, value] lists are valid too (spreading
+        // them would drop every header); lookups are case-insensitive
+        const headers = new Headers(fetchOptions.headers);
 
         let resolvedBody: BodyInit | undefined;
         if (body !== undefined && body !== null) {
@@ -82,8 +82,8 @@ export class CliHttpClient implements ICliHttpClient {
                 resolvedBody = body;
             } else {
                 resolvedBody = JSON.stringify(body);
-                if (!headers['Content-Type']) {
-                    headers['Content-Type'] = 'application/json';
+                if (!headers.has('Content-Type')) {
+                    headers.set('Content-Type', 'application/json');
                 }
             }
         }
@@ -112,17 +112,24 @@ export class CliHttpClient implements ICliHttpClient {
 
             if (!response.ok) {
                 let errorMessage = `${response.status} ${response.statusText}`;
+                let errorBody: unknown;
                 try {
-                    const errorBody = await response.json();
-                    if (errorBody.error) {
-                        errorMessage = errorBody.error;
-                    } else if (errorBody.message) {
-                        errorMessage = errorBody.message;
+                    errorBody = await response.json();
+                    const parsed = errorBody as { error?: string; message?: string };
+                    if (parsed.error) {
+                        errorMessage = parsed.error;
+                    } else if (parsed.message) {
+                        errorMessage = parsed.message;
                     }
                 } catch {
                     // use default error message
                 }
-                throw new Error(errorMessage);
+                throw new CliHttpError(
+                    errorMessage,
+                    response.status,
+                    response.statusText,
+                    errorBody,
+                );
             }
 
             const text = await response.text();

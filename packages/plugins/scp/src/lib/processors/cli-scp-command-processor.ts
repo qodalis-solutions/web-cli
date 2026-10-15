@@ -6,6 +6,7 @@ import {
     ICliExecutionContext,
     ICliFileTransferService,
     ICliFileTransferService_TOKEN,
+    resolveServerHeaders,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 import { IScpTransferService, IScpTransferService_TOKEN } from '../interfaces';
@@ -121,7 +122,7 @@ export class CliScpCommandCommandProcessor implements ICliCommandProcessor {
             const { content, size } = await transferService.download(
                 serverUrl(server),
                 remotePath,
-                server.headers,
+                resolveServerHeaders(context.services, server.name, server.headers),
                 (received, total) => {
                     const now = Date.now();
                     if (now - lastProgressUpdate < 200) return;
@@ -218,7 +219,7 @@ export class CliScpCommandCommandProcessor implements ICliCommandProcessor {
                 remotePath,
                 content,
                 filename,
-                server.headers,
+                resolveServerHeaders(context.services, server.name, server.headers),
             );
             context.spinner?.hide();
 

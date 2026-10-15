@@ -1,3 +1,4 @@
+import { readableChildren } from '../utils/readable-children';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
@@ -56,6 +57,10 @@ export class CliDuCommandProcessor implements ICliCommandProcessor {
 
         for (const path of paths) {
             const resolved = fs.resolvePath(path);
+            if (fs.canTraverse && !fs.canTraverse(resolved)) {
+                context.writer.writeError(`du: cannot access '${path}': Permission denied`);
+                continue;
+            }
             const node = fs.getNode(resolved);
 
             if (!node) {
@@ -71,6 +76,7 @@ export class CliDuCommandProcessor implements ICliCommandProcessor {
                 );
             } else {
                 const entries: { size: number; path: string }[] = [];
+                this.fs = fs;
                 this.collectSizes(node, resolved, 0, maxDepth, summaryOnly, entries);
 
                 for (const entry of entries) {
@@ -99,6 +105,9 @@ export class CliDuCommandProcessor implements ICliCommandProcessor {
         return { humanReadable, summaryOnly, maxDepth, paths };
     }
 
+    /** File system of the running command (listing goes through access checks) */
+    private fs?: IFileSystemService;
+
     private collectSizes(
         node: IFileNode,
         path: string,
@@ -112,8 +121,9 @@ export class CliDuCommandProcessor implements ICliCommandProcessor {
         }
 
         let total = 0;
-        if (node.children) {
-            for (const child of node.children) {
+        const children = this.fs ? readableChildren(this.fs, path) : node.children;
+        if (children) {
+            for (const child of children) {
                 const childPath = path === '/' ? `/${child.name}` : `${path}/${child.name}`;
                 total += this.collectSizes(
                     child,

@@ -42,6 +42,8 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
         sealed: true,
         icon: '📦',
         module: 'system',
+        // Enforced only when an auth module is loaded
+        requiredPermissions: ['system:packages'],
     };
 
     stateConfiguration?: CliStateConfiguration | undefined = {

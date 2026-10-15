@@ -1,3 +1,4 @@
+import { aliasesFor, aliasOwner, CliAliasState, withAliases } from './alias-scope';
 import {
     CliForegroundColor,
     CliProcessCommand,
@@ -33,7 +34,15 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
         storeName: 'aliases',
     };
 
+    /** Shared aliases (used when no auth module is loaded) */
     public userAliases: Record<string, string> = {};
+
+    private aliasState: CliAliasState = {};
+
+    /** Aliases visible to the current principal */
+    aliasesFor(context: Pick<ICliExecutionContext, 'services'>): Record<string, string> {
+        return aliasesFor(this.aliasState, aliasOwner(context));
+    }
 
     private stateSubscription?: Subscription;
 
@@ -44,15 +53,16 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
                 description: 'List all aliases',
                 processCommand: async (_, context) => {
                     const { writer } = context;
+                    const visible = this.aliasesFor(context);
 
                     writer.writeln('Aliases:');
-                    Object.entries(this.userAliases).forEach(
+                    Object.entries(visible).forEach(
                         ([alias, command]) => {
                             writer.writeInfo(`  ${alias} -> ${command}`);
                         },
                     );
 
-                    if (Object.keys(this.userAliases).length === 0) {
+                    if (Object.keys(visible).length === 0) {
                         writer.writeInfo('  No aliases defined');
                     }
                 },
@@ -114,12 +124,13 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
             context.writer.writeInfo(`${alias} -> ${command.args[alias]}`);
         }
 
-        context.state.updateState({
-            aliases: {
-                ...this.userAliases,
+        const owner = aliasOwner(context);
+        context.state.updateState(
+            withAliases(this.aliasState, owner, {
+                ...aliasesFor(this.aliasState, owner),
                 ...command.args,
-            },
-        });
+            }),
+        );
 
         await context.state.persist();
     }
@@ -127,9 +138,10 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
     async initialize(context: ICliExecutionContext): Promise<void> {
         this.stateSubscription?.unsubscribe();
         this.stateSubscription = context.state
-            .select((x) => x['aliases'])
-            .subscribe((aliases) => {
-                this.userAliases = aliases ?? {};
+            .select((x) => x)
+            .subscribe((state) => {
+                this.aliasState = (state ?? {}) as CliAliasState;
+                this.userAliases = this.aliasState.aliases ?? {};
             });
     }
 }
