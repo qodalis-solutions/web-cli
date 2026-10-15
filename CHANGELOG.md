@@ -9,10 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - **`adduser` walks through every field**: run without `--email` (or with no arguments at all), it asks for the name, email, full name, groups (a multi-select of the existing groups, `users` preselected), home directory (default `/home/<name>`), whether the account is enabled, and the password. The email is checked before the password is asked for. `adduser <name> --email=..` is unchanged and only asks for the password, so scripts keep working.
 - Invalid answers (name, email, passwords that break the policy or don't match) are asked again, up to 3 times like `passwd`, instead of ending the command. `passwd` gets the same password retries.
+- **API tokens** (server mode): `token create <name> [--expires=<days>|never] [--permissions=a,b]` creates a long-lived, revocable bearer token for MCP clients, CI and scripts. It is printed once, with a ready-to-paste `claude mcp add --transport http qcli <server>/api/qcli/mcp --header "Authorization: Bearer <token>"` example. `token list [--all]` shows NAME, ID, EXPIRES, LAST USED and SCOPE (plus USER with `--all`); `token revoke <id>` revokes one. In local mode the commands explain that tokens need a server.
+- `ICliUsersBackend` gains optional `listApiTokens`, `createApiToken` and `revokeApiToken` (implemented by the HTTP backend against the servers' `/api/v1/qcli/tokens`), and the module declares the `tokens:read` and `tokens:revoke` permissions.
 - **Full name**: `adduser --full-name` / `usermod --full-name` store it in the user's `data.fullName`; `listusers` shows a FULL NAME column when any user has one.
 
 ### Docs
 
+- Server integration: new **MCP endpoint** section (enabling it on each server, connecting Claude Code with an API token, permissions).
 - Opening another docs page starts at the top; Back/Forward return to the previous scroll position.
 
 ## v2.0.0-beta.14

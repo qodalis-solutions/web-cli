@@ -6,7 +6,10 @@ import {
     ICliUser,
 } from '@qodalis/cli-core';
 import {
+    CliApiToken,
     CliBackendCreateUser,
+    CliCreateApiToken,
+    CliCreatedApiToken,
     CliBackendLogin,
     CliBackendSession,
     CliBackendUpdateUser,
@@ -171,6 +174,20 @@ export class CliHttpUsersBackend implements ICliUsersBackend {
 
     async clearAudit(token: string): Promise<void> {
         await this.call('DELETE', '/audit', token);
+    }
+
+    // ── API tokens ───────────────────────────────────────────────────
+
+    listApiTokens(token: string, options?: { all?: boolean }): Promise<CliApiToken[]> {
+        return this.call('GET', `/tokens${options?.all ? '?all=true' : ''}`, token);
+    }
+
+    createApiToken(token: string, request: CliCreateApiToken): Promise<CliCreatedApiToken> {
+        return this.call('POST', '/tokens', token, request);
+    }
+
+    async revokeApiToken(token: string, tokenId: string): Promise<void> {
+        await this.call('DELETE', `/tokens/${enc(tokenId)}`, token);
     }
 
     // ── transport ────────────────────────────────────────────────────

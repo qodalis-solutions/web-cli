@@ -160,6 +160,55 @@ const res = await fetch(`$&#123;server.url&#125;/api/v1/qcli/...`, &#123; header
     the signed-in user's token on protected servers.
 </p>
 
+<h2 id="mcp-endpoint">MCP endpoint</h2>
+<p>
+    Every server can expose its CLI commands to AI clients (Claude Code, Claude Desktop, Cursor, &hellip;) as
+    <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol</a> tools, with the
+    same permissions as a CLI user. The endpoint is <code>POST /api/qcli/mcp</code> (MCP "Streamable HTTP", stateless,
+    JSON responses) and is <strong>off by default</strong>.
+</p>
+<ul>
+    <li><strong>Tools</strong> are built from the command registry on every request: <code>weather</code>,
+        <code>weather_current</code>, &hellip; Each command parameter becomes a property of the tool's input schema,
+        plus <code>value</code> for commands that take a positional value. The remote shell is never a tool.</li>
+    <li><strong>Calls</strong> run through the same executor as <code>/execute</code>; the outputs come back as text
+        (and as <code>structuredContent</code> when a command returns a single JSON object). A non-zero exit code sets
+        <code>isError</code>.</li>
+</ul>
+<p>Enable it (names per server):</p>
+<pre><code class="language-typescript">// Node
+createCliServer(&#123; mcp: true &#125;);
+createCliServer(&#123; mcp: &#123; tools: ['weather_*'], exclude: ['weather_admin'], instructions: 'Weather tools' &#125; &#125;);</code></pre>
+<pre><code class="language-python"># Python
+CliServerOptions(mcp=True)</code></pre>
+<pre><code class="language-csharp">// .NET
+cli.EnableMcp(o =&gt; &#123; o.Tools = ["weather_*"]; &#125;);</code></pre>
+<p>Options: <code>tools</code> (allow-list, trailing <code>*</code> allowed), <code>exclude</code> (deny-list applied after
+    <code>tools</code>), <code>token</code> (static bearer token, only without the users plugin) and
+    <code>instructions</code> (returned to the client by <code>initialize</code>).</p>
+<p>
+    With the users plugin, sign in to the CLI connected to the server and create an API token for the client
+    (shown once, with a ready-to-paste command):
+</p>
+<div class="code-block">
+    <pre><code>token create claude --expires=30
+claude mcp add --transport http qcli https://cli.example.com/api/qcli/mcp --header "Authorization: Bearer qcli_pat_..."</code></pre>
+</div>
+<p>Permissions and security:</p>
+<ul>
+    <li><strong>Users plugin</strong>: the request is authenticated like any other (session or API token) and needs
+        <code>commands:execute</code>. <code>tools/list</code> only shows the commands the caller may run (every
+        <code>requiredPermissions</code> along the command path); a token created with <code>--permissions</code> sees
+        only what that scope (and the user's current permissions) allows.</li>
+    <li><strong>No users plugin</strong>: set <code>token</code> to require <code>Authorization: Bearer &lt;token&gt;</code>;
+        without it the endpoint is as open as <code>/execute</code>.</li>
+    <li><strong>Browsers</strong>: requests carrying an <code>Origin</code> header must come from an allowed origin or
+        the same origin (DNS-rebinding protection).</li>
+    <li><strong>API tokens</strong> are long-lived but revocable (<code>token list</code>, <code>token revoke &lt;id&gt;</code>);
+        revoking one or disabling its user takes effect on the next request. A token cannot create other tokens or change
+        passwords.</li>
+</ul>
+
 <h2>{{ 'docs.server-integration.jobs-api' | translate }}</h2>
 <p>{{ 'docs.server-integration.jobs-api-desc' | translate }}</p>
 <table>

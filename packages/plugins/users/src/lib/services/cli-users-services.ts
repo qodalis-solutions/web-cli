@@ -21,7 +21,13 @@ import {
     ICliUsersStoreService,
 } from '@qodalis/cli-core';
 import { from, Observable } from 'rxjs';
-import { CliUsersError, ICliUsersBackend } from '../backend/users-backend';
+import {
+    CliApiToken,
+    CliCreateApiToken,
+    CliCreatedApiToken,
+    CliUsersError,
+    ICliUsersBackend,
+} from '../backend/users-backend';
 import { hashPassword } from '../backend/password-hashing';
 import { assertCustomAuditEvent } from '../backend/validation';
 import { CliUserSessionService } from './cli-user-session.service';
@@ -332,6 +338,56 @@ export class CliSessionsService extends CliUsersServiceBase implements ICliSessi
                 await this.revoke(s.id, options.reason);
             }
         }
+    }
+}
+
+// ── API tokens ───────────────────────────────────────────────────────
+
+/** Service token of {@link CliApiTokensService}. */
+export const CliApiTokensService_TOKEN = 'cli-users-api-tokens';
+
+/** Message shown when the backend has no API tokens (local mode). */
+export const API_TOKENS_LOCAL_MESSAGE =
+    'API tokens are available when the CLI is connected to a server (usersModule.configure({ server }))';
+
+/**
+ * Long-lived API tokens (MCP clients, CI, scripts). Server backends only:
+ * on a backend without the optional token methods every call fails with 501.
+ */
+export class CliApiTokensService extends CliUsersServiceBase {
+    constructor(
+        backend: ICliUsersBackend,
+        session: CliUserSessionService,
+        events: ICliUserEventService | undefined,
+        /** Public base URL of the server (for the `claude mcp add` example) */
+        readonly serverUrl?: string,
+    ) {
+        super(backend, session, events);
+    }
+
+    /** Whether the backend supports API tokens */
+    get supported(): boolean {
+        return !!(this.backend.listApiTokens && this.backend.createApiToken && this.backend.revokeApiToken);
+    }
+
+    list(options?: { all?: boolean }): Promise<CliApiToken[]> {
+        return this.require('listApiTokens')(this.token, options);
+    }
+
+    create(request: CliCreateApiToken): Promise<CliCreatedApiToken> {
+        return this.require('createApiToken')(this.token, request);
+    }
+
+    revoke(tokenId: string): Promise<void> {
+        return this.require('revokeApiToken')(this.token, tokenId);
+    }
+
+    private require<K extends 'listApiTokens' | 'createApiToken' | 'revokeApiToken'>(
+        method: K,
+    ): NonNullable<ICliUsersBackend[K]> {
+        const fn = this.backend[method];
+        if (!fn) throw new CliUsersError(501, API_TOKENS_LOCAL_MESSAGE);
+        return fn.bind(this.backend) as NonNullable<ICliUsersBackend[K]>;
     }
 }
 
