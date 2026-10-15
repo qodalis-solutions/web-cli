@@ -483,9 +483,15 @@ export class CliExecutionContext
         const usersConfig = this.services.get<any>('cli-users-module-config');
         const hideUserName = usersConfig?.hideUserName ?? false;
 
+        // Signed out while an auth module is loaded: say so in the prompt
+        const anonymousName = usersConfig && !this.userSession
+            ? (usersConfig.anonymousName ?? 'anonymous') || undefined
+            : undefined;
+
         return {
             userName: this.userSession?.displayName,
             hideUserName,
+            anonymousName,
             contextProcessor: this.contextProcessor?.command,
             pathProvider: this.promptPathProvider,
         };

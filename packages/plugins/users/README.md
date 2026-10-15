@@ -145,6 +145,7 @@ usersModule.configure({
     seedUsers: [{ name: 'ops', email: 'ops@example.com', groups: ['admin'] }], // local
     defaultPassword: 'change-me',  // local seed password
     hideUserName: false,
+    anonymousName: 'anonymous', // prompt label while signed out (dimmed); '' to hide
     userDisplayFormatter: (user) => user.name,
 });
 ```

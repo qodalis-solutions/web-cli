@@ -6,6 +6,11 @@ export const CliUsersModuleConfig_TOKEN = 'cli-users-module-config';
 export interface CliUsersModuleConfig {
     /** Hide the username from the terminal prompt (default: false) */
     hideUserName?: boolean;
+    /**
+     * Prompt label while nobody is signed in, shown dimmed: `anonymous:/$`
+     * (default: 'anonymous'). Set to '' to show no label.
+     */
+    anonymousName?: string;
     /** Default password for seeded users (default: 'root') */
     defaultPassword?: string;
     /** Users to seed on first boot (in addition to root) */
