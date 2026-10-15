@@ -181,7 +181,7 @@ createCliServer(&#123; mcp: &#123; tools: ['weather_*', 'fs_*'], exclude: ['fs_d
 <pre><code class="language-python"># Python
 CliServerOptions(mcp=True)</code></pre>
 <pre><code class="language-csharp">// .NET
-cli.EnableMcp(o =&gt; &#123; o.Exclude = ["fs_delete"]; &#125;);</code></pre>
+cli.AddMcp(o =&gt; &#123; o.Exclude = ["fs_delete"]; &#125;);</code></pre>
 <table>
     <thead>
         <tr><th>Option</th><th>Meaning</th></tr>
@@ -280,7 +280,7 @@ cli.EnableMcp(o =&gt; &#123; o.Exclude = ["fs_delete"]; &#125;);</code></pre>
     <li>
         <strong>Enable MCP on the server</strong> (details in each server's README, "Using the MCP endpoint from an MCP client"):
         <ul>
-            <li>.NET: <code>cli.EnableMcp()</code> &mdash; <a href="https://github.com/qodalis-solutions/cli-server-dotnet#using-the-mcp-endpoint-from-an-mcp-client" target="_blank" rel="noopener">cli-server-dotnet</a></li>
+            <li>.NET: <code>cli.AddMcp()</code> &mdash; <a href="https://github.com/qodalis-solutions/cli-server-dotnet#using-the-mcp-endpoint-from-an-mcp-client" target="_blank" rel="noopener">cli-server-dotnet</a></li>
             <li>Node: <code>createCliServer(&#123; mcp: true &#125;)</code> &mdash; <a href="https://github.com/qodalis-solutions/cli-server-node#using-the-mcp-endpoint-from-an-mcp-client" target="_blank" rel="noopener">cli-server-node</a></li>
             <li>Python: <code>CliServerOptions(mcp=True)</code> &mdash; <a href="https://github.com/qodalis-solutions/cli-server-python#using-the-mcp-endpoint-from-an-mcp-client" target="_blank" rel="noopener">cli-server-python</a></li>
         </ul>
