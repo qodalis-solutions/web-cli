@@ -454,3 +454,18 @@ default, optional, and work with and without the users plugin.
   without one, `ssh` stays available and the server decides.
 - `ssh` maps close codes to messages: 4401 "login required" / "session ended", 4403 "permission denied", 4404
   "shell is disabled on <server>", 4408 "shell timed out", 4429 "too many shell sessions".
+
+### C7. Canonical details (identical on node, python and .NET)
+
+- **Close code + reason text** (shell socket):
+  - `4401 "login required"` — no ticket / no or non-Bearer token
+  - `4401 "session ended"` — logout, expiry, kick, user disabled/deleted, `shell:execute` removed, password change now required
+  - `4401 "shell access is not configured"` — enabled but locked
+  - `4403 "forbidden"` — wrong token, `authorize` false/throws, missing `shell:execute` (users middleware rejections may say "forbidden"/"unauthorized" with the same codes)
+  - `4404 "shell disabled"`, `4408 "shell timed out"` (idle or max duration), `4429 "too many shell sessions"`
+  - server shutdown: `1001`
+- **Audit `metadata.reason`** (`shell_closed`): `exited` | `closed` (client) | `session ended` | `permission removed` | `shell timed out` | `server shutdown` | `error`. `exitCode` only for `exited`. `metadata.mode`: `interactive` | `command`.
+- **Mode precedence & combination**: users plugin mounted (even with `protectServer: false`) ⇒ users mode, plus token/authorize if configured. Otherwise every configured check among token/authorize must pass; `shellAuth` reports the first (`token` before `custom`); `allowAnonymous` is ignored once token/authorize is set.
+- **Re-check**: default every 30 s (max 60 s) and immediately on session/user/group change events. Re-checks do not extend the session; stdin since the last check touches the session (at most once per 30 s).
+- **Limits** key: users mode `userId`; other modes the socket remote address (`X-Forwarded-For` only when the server's trust-proxy option is on).
+- **Token compare**: SHA-256 of both, constant-time compare.
