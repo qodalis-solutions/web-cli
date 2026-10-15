@@ -20,13 +20,14 @@ describe('CliDefaultPermissionService', () => {
         };
     }
 
-    const ownership = { uid: 'u1', gid: 'dev' };
+    // Owners are login names (as the files module stores them)
+    const ownership = { uid: 'alice', gid: 'dev' };
 
     // ---------- check ----------
 
     describe('check', () => {
         it('should always allow admin users', () => {
-            const admin = makeUser({ id: 'root', groups: ['admin'] });
+            const admin = makeUser({ id: 'root', name: 'root', groups: ['admin'] });
             expect(service.check(admin, 'read', ownership, '---------')).toBe(true);
             expect(service.check(admin, 'write', ownership, '---------')).toBe(true);
             expect(service.check(admin, 'execute', ownership, '---------')).toBe(true);
@@ -42,7 +43,7 @@ describe('CliDefaultPermissionService', () => {
         });
 
         it('should check group bits when user shares group', () => {
-            const groupMember = makeUser({ id: 'u2', groups: ['dev'] });
+            const groupMember = makeUser({ id: 'u2', name: 'bob', groups: ['dev'] });
             expect(service.check(groupMember, 'read', ownership, '---r-----')).toBe(true);
             expect(service.check(groupMember, 'write', ownership, '----w----')).toBe(true);
             expect(service.check(groupMember, 'execute', ownership, '-----x---')).toBe(true);
@@ -50,16 +51,45 @@ describe('CliDefaultPermissionService', () => {
         });
 
         it('should check other bits when user is neither owner nor in group', () => {
-            const other = makeUser({ id: 'u3', groups: ['marketing'] });
+            const other = makeUser({ id: 'u3', name: 'carol', groups: ['marketing'] });
             expect(service.check(other, 'read', ownership, '------r--')).toBe(true);
             expect(service.check(other, 'write', ownership, '-------w-')).toBe(true);
             expect(service.check(other, 'execute', ownership, '--------x')).toBe(true);
             expect(service.check(other, 'read', ownership, '---------')).toBe(false);
         });
 
+        it('matches the owner by name (case-insensitive), never by id', () => {
+            const owner = makeUser({ id: 'x1', name: 'Alice', groups: [] });
+            expect(service.check(owner, 'read', ownership, 'r--------')).toBe(true);
+            // a user whose id happens to equal the owner's name is not the owner
+            const impostor = makeUser({ id: 'alice', name: 'mallory', groups: [] });
+            expect(service.check(impostor, 'read', ownership, 'r--------')).toBe(false);
+        });
+
+        it('matches groups and the admin group case-insensitively', () => {
+            const member = makeUser({ id: 'u2', name: 'bob', groups: ['DEV'] });
+            expect(service.check(member, 'read', ownership, '---r-----')).toBe(true);
+            const admin = makeUser({ id: 'r', name: 'boss', groups: ['Admin'] });
+            expect(service.check(admin, 'write', ownership, '---------')).toBe(true);
+        });
+
+        it('treats the signed-in principal holding * as admin', () => {
+            const principal = { id: 'p', name: 'ops', groups: ['operators'], permissions: ['*'] };
+            const withAuth = new CliDefaultPermissionService({
+                getPrincipal: () => principal,
+                can: () => true,
+                canAccess: () => true,
+            });
+            const ops = makeUser({ id: 'p', name: 'ops', groups: ['operators'] });
+            expect(withAuth.check(ops, 'write', ownership, '---------')).toBe(true);
+            // only for the principal itself, not for other users checked by it
+            const other = makeUser({ id: 'q', name: 'eve', groups: ['operators'] });
+            expect(withAuth.check(other, 'write', ownership, '---------')).toBe(false);
+        });
+
         it('should work with standard permission strings', () => {
             const owner = makeUser({ id: 'u1', groups: [] });
-            const other = makeUser({ id: 'u3', groups: ['marketing'] });
+            const other = makeUser({ id: 'u3', name: 'carol', groups: ['marketing'] });
 
             // rw-r--r-- (644)
             expect(service.check(owner, 'read', ownership, 'rw-r--r--')).toBe(true);

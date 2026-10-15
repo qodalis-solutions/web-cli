@@ -189,7 +189,7 @@ export async function createUsersRuntime(
         { provide: ICliSessionsService_TOKEN, useValue: sessions },
         { provide: ICliAuditService_TOKEN, useValue: audit },
         { provide: ICliAuthorizationService_TOKEN, useValue: authorization },
-        { provide: ICliPermissionService_TOKEN, useClass: CliDefaultPermissionService },
+        { provide: ICliPermissionService_TOKEN, useValue: new CliDefaultPermissionService(authorization) },
     ]);
 
     const runtime: CliUsersRuntime = {
