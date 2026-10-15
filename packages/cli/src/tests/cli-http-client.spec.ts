@@ -55,4 +55,24 @@ describe('CliHttpClient', () => {
             '500 Server Error',
         );
     });
+    it('keeps headers passed as a Headers instance or tuple list', async () => {
+        fetchSpy.and.callFake(async () => jsonResponse(200, {}));
+        const client = new CliHttpClient();
+
+        await client.get('http://x/a', { headers: new Headers({ Authorization: 'Bearer A' }) });
+        await client.post('http://x/b', { v: 1 }, { headers: [['Authorization', 'Bearer B']] });
+
+        const h1 = new Headers(fetchSpy.calls.argsFor(0)[1].headers);
+        const h2 = new Headers(fetchSpy.calls.argsFor(1)[1].headers);
+        expect(h1.get('authorization')).toBe('Bearer A');
+        expect(h2.get('authorization')).toBe('Bearer B');
+        expect(h2.get('content-type')).toBe('application/json');
+    });
+
+    it('does not add a second content type when the caller set one in lower case', async () => {
+        fetchSpy.and.callFake(async () => jsonResponse(200, {}));
+        await new CliHttpClient().post('http://x/b', { v: 1 }, { headers: { 'content-type': 'application/vnd.api+json' } });
+        const h = new Headers(fetchSpy.calls.argsFor(0)[1].headers);
+        expect(h.get('content-type')).toBe('application/vnd.api+json');
+    });
 });

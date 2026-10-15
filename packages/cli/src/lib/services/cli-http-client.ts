@@ -72,9 +72,9 @@ export class CliHttpClient implements ICliHttpClient {
     ): Promise<T> {
         const { timeout, ...fetchOptions } = options ?? {};
 
-        const headers: Record<string, string> = {
-            ...((fetchOptions.headers as Record<string, string>) ?? {}),
-        };
+        // Headers instances and [name, value] lists are valid too (spreading
+        // them would drop every header); lookups are case-insensitive
+        const headers = new Headers(fetchOptions.headers);
 
         let resolvedBody: BodyInit | undefined;
         if (body !== undefined && body !== null) {
@@ -82,8 +82,8 @@ export class CliHttpClient implements ICliHttpClient {
                 resolvedBody = body;
             } else {
                 resolvedBody = JSON.stringify(body);
-                if (!headers['Content-Type']) {
-                    headers['Content-Type'] = 'application/json';
+                if (!headers.has('Content-Type')) {
+                    headers.set('Content-Type', 'application/json');
                 }
             }
         }
