@@ -120,6 +120,15 @@ export class CliUserSessionService implements ICliUserSessionService {
         // The backend owns the session; only the token is stored locally.
     }
 
+    /**
+     * The token a previous page load stored (never the host's token), without
+     * adopting it. Used to end that session when a fresh sign-in is required.
+     */
+    async storedToken(): Promise<string | undefined> {
+        if (this.options.tokenSource) return undefined;
+        return (await this.kv.get<string>(this.tokenKey)) ?? undefined;
+    }
+
     async restoreSession(): Promise<ICliUserSession | undefined> {
         const token = this.options.tokenSource
             ? await this.options.tokenSource()

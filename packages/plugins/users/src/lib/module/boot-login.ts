@@ -11,6 +11,10 @@ export async function restoreOrAutoLogin(context: ICliExecutionContext, runtime:
     const { config, session, local, kv } = runtime;
 
     if (config.requirePasswordOnBoot) {
+        // End the previous session on the backend too (it would stay valid until
+        // it expires); best effort: the backend may be unreachable or the token stale
+        const previous = await session.storedToken();
+        if (previous) await runtime.backend.logout(previous).catch(() => undefined);
         await session.clearSession();
         return;
     }

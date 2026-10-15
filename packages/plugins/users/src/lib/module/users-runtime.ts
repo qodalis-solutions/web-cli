@@ -123,11 +123,15 @@ export async function createUsersRuntime(
         // Only a request made with the current token says so: ending the previous
         // session after a new login (or a late answer for an old token) must not
         // sign the new session out.
+        // Logging out with a token the server already dropped is still a logout:
+        // `logout()` ends the session once, without a "session expired" warning.
         const loginUrl = `${baseUrl}/sessions`;
+        const logoutUrl = `${baseUrl}/sessions/current`;
         const http = withUnauthorizedHandler(context.http, {
             onUnauthorized: () => runtimeRef.current?.terminate('Session expired or revoked by the server'),
             ignore: (url, method, requestOptions) =>
                 (method === 'POST' && url === loginUrl) ||
+                (method === 'DELETE' && url === logoutUrl) ||
                 !currentToken ||
                 authorizationHeader(requestOptions?.headers) !== `Bearer ${currentToken}`,
         });

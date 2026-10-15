@@ -211,6 +211,22 @@ describe('usersModule lifecycle', () => {
             expect(usersModule.processors!.find((p) => p.command === 'groupdel')).not.toBe(groupdel);
         });
 
+        it('requirePasswordOnBoot ends the previous session on the backend before asking', async () => {
+            const kv = new MemoryKv();
+            const f1 = fakeContext(kv);
+            const m1 = track(await boot(LOCAL, f1));
+            await m1._runtime.auth.login('root1', 'root');
+            const oldToken = m1._runtime.session.getToken();
+            expect(oldToken).toBeDefined();
+
+            const f2 = fakeContext(kv);
+            const m2 = track(await boot({ ...LOCAL, requirePasswordOnBoot: true }, f2));
+            expect(f2.ctx.userSession).toBeUndefined();
+            await expectAsync(m2._runtime.backend.currentSession(oldToken)).toBeRejectedWith(
+                jasmine.objectContaining({ status: 401 }),
+            );
+        });
+
         it('extensions cannot forge built-in audit entries; custom entries record the signed-in user', async () => {
             const f = fakeContext(new MemoryKv());
             const m = track(await boot(LOCAL, f));
@@ -358,6 +374,22 @@ describe('usersModule lifecycle', () => {
             expect(f.ctx.userSession?.user.name).toBe('bob');
             expect(m._runtime.session.getToken()).toBe('T-bob');
             expect(f.warnings).toEqual([]);
+        });
+
+        it('logout with an already expired token signs out once, without a warning', async () => {
+            const srv = server();
+            const f = fakeContext(new MemoryKv(), { http: srv.http });
+            const m = track(await boot({ server: 'node' }, f));
+            await m._runtime.auth.login('root', 'admin');
+            const events: string[] = [];
+            const sub = m._runtime.events.events$.subscribe((e: any) => events.push(e.type));
+            srv.state.valid = false;
+            await m._runtime.auth.logout();
+            await new Promise((r) => setTimeout(r));
+            sub.unsubscribe();
+            expect(f.ctx.userSession).toBeUndefined();
+            expect(f.warnings).toEqual([]);
+            expect(events).toEqual(['logout']);
         });
 
         it('signs out when an administrator kicks this session', async () => {
