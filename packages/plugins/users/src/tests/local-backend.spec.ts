@@ -1,3 +1,4 @@
+import { EMAIL_PATTERN } from '../lib/backend/validation';
 import { CliUsersError } from '../lib/backend/users-backend';
 import { hashPassword } from '../lib/backend/password-hashing';
 import { localBackend, MemoryKv } from './helpers';
@@ -425,4 +426,14 @@ describe('CliLocalUsersBackend (users contract, local)', () => {
             expect(entry.details).toBe('v1.2');
         });
     });
+});
+
+describe('EMAIL_PATTERN (shared with the servers)', () => {
+    const valid = ['a@x.io', 'root@localhost', 'first.last+tag@sub.example.co.uk', "o'neil@x.com", 'x@xn--80ak6aa92e.com', 'ALICE@EXAMPLE.COM'];
+    const invalid = [
+        'Nicolae L', 'nicolae', 'a@b', 'a@b.c', 'a..b@x.io', '.a@x.io', 'a.@x.io', 'a@-x.io', 'a@x-.io', 'a@x_y.io',
+        'a b@x.io', 'a@x.io.', 'a@@x.io', 'a@x.123', '@x.io', 'a@.x.io', `${'a'.repeat(65)}@x.io`, 'a@x..io', '',
+    ];
+    for (const email of valid) it(`accepts ${email}`, () => expect(EMAIL_PATTERN.test(email)).toBeTrue());
+    for (const email of invalid) it(`rejects "${email.slice(0, 20)}"`, () => expect(EMAIL_PATTERN.test(email)).toBeFalse());
 });

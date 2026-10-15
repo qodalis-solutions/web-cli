@@ -350,6 +350,7 @@
   "docs.plugin-detail.installation": "インストール",
   "docs.plugin-detail.runtime-install": "ランタイム（リビルド不要）",
   "docs.plugin-detail.commands": "コマンド",
+  "docs.plugin-detail.notes": "知っておくと便利",
   "docs.plugin-detail.examples": "例",
   "docs.plugin-detail.usage": "使い方",
   "docs.plugin-detail.try-it": "試してみる",

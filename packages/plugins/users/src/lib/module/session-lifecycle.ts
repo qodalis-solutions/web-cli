@@ -107,9 +107,15 @@ export function wrapProcessors(
     processors: ICliCommandProcessor[],
     runtime: CliUsersRuntime,
     termination: { consume(): boolean },
+    parentPath = '',
 ): ICliCommandProcessor[] {
     return processors.map((processor) => {
         const wrapped: ICliCommandProcessor = Object.create(processor);
+        const path = parentPath ? `${parentPath} ${processor.command}` : processor.command;
+        // Sub-commands (e.g. `token create`) report failures the same way
+        if (processor.processors?.length) {
+            wrapped.processors = wrapProcessors(processor.processors, runtime, termination, path);
+        }
         wrapped.processCommand = async (command: CliProcessCommand, ctx: ICliExecutionContext) => {
             termination.consume();
             try {
@@ -133,7 +139,7 @@ export function wrapProcessors(
                         }
                     }
                 }
-                ctx.writer.writeError(`${processor.command}: ${stripPrefix(error?.message, processor.command) ?? 'failed'}`);
+                ctx.writer.writeError(`${path}: ${stripPrefix(error?.message, path) ?? 'failed'}`);
                 ctx.process?.exit?.(-1, { silent: true } as any);
             }
         };

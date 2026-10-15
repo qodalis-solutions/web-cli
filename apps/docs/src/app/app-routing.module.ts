@@ -15,7 +15,13 @@ const routes: Routes = [
 ];
 
 @NgModule({
-    imports: [RouterModule.forRoot(routes)],
+    imports: [
+        RouterModule.forRoot(routes, {
+            // New pages open at the top; Back/Forward restore the previous position.
+            scrollPositionRestoration: 'enabled',
+            anchorScrolling: 'enabled',
+        }),
+    ],
     exports: [RouterModule],
 })
 export class AppRoutingModule {}

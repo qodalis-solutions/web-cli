@@ -22,6 +22,13 @@
         <code class="command-badge" *ngFor="let cmd of plugin.command.split(', ')">{{ cmd }}</code>
     </div>
 
+    <div *ngIf="plugin.notes?.length">
+        <h2>{{ 'docs.plugin-detail.notes' | translate }}</h2>
+        <ul class="plugin-notes">
+            <li *ngFor="let note of plugin.notes">{{ note }}</li>
+        </ul>
+    </div>
+
     <div *ngIf="plugin.examples && plugin.examples.length > 0">
         <h2>{{ 'docs.plugin-detail.examples' | translate }}</h2>
         <div class="examples-list">

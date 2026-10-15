@@ -108,25 +108,51 @@ export function formatTime(ts?: number): string {
 }
 
 /** Ask for a new password twice; null when aborted or mismatched (error printed). */
+/** How many times interactive prompts re-ask after an invalid answer (like `passwd`). */
+export const MAX_PROMPT_ATTEMPTS = 3;
+
+/**
+ * Asks for a value until `check` accepts it (returns null) or the attempts run out.
+ * Returns null when the user aborts or every attempt was invalid.
+ */
+export async function readValidated(
+    context: ICliExecutionContext,
+    prompt: string,
+    check: (value: string) => string | null,
+): Promise<string | null> {
+    for (let attempt = 1; attempt <= MAX_PROMPT_ATTEMPTS; attempt++) {
+        const value = await context.reader.readLine(prompt);
+        if (value === null) {
+            context.writer.writeError('Aborted');
+            return null;
+        }
+        const error = check(value.trim());
+        if (!error) return value.trim();
+        context.writer.writeError(error);
+    }
+    return null;
+}
+
 export async function readNewPassword(context: ICliExecutionContext, auth: ICliAuthService): Promise<string | null> {
-    const password = await context.reader.readPassword('New password: ');
-    if (password === null) {
-        context.writer.writeError('Aborted');
-        return null;
-    }
-    const policyError = auth.validatePassword?.(password);
-    if (policyError) {
-        context.writer.writeError(policyError);
-        return null;
-    }
-    const confirm = await context.reader.readPassword('Retype new password: ');
-    if (confirm === null) {
-        context.writer.writeError('Aborted');
-        return null;
-    }
-    if (confirm !== password) {
+    for (let attempt = 1; attempt <= MAX_PROMPT_ATTEMPTS; attempt++) {
+        const password = await context.reader.readPassword('New password: ');
+        if (password === null) {
+            context.writer.writeError('Aborted');
+            return null;
+        }
+        const policyError = auth.validatePassword?.(password);
+        if (policyError) {
+            context.writer.writeError(policyError);
+            continue;
+        }
+        const confirm = await context.reader.readPassword('Retype new password: ');
+        if (confirm === null) {
+            context.writer.writeError('Aborted');
+            return null;
+        }
+        if (confirm === password) return password;
         context.writer.writeError('Sorry, passwords do not match.');
-        return null;
     }
-    return password;
+    context.writer.writeError('Password unchanged: too many failed attempts.');
+    return null;
 }

@@ -22,6 +22,8 @@ import { CliLocalUsersBackend } from '../backend/local-users-backend';
 import { CliHttpUsersBackend } from '../backend/http-users-backend';
 import { CliUserSessionService } from '../services/cli-user-session.service';
 import {
+    CliApiTokensService,
+    CliApiTokensService_TOKEN,
     CliGroupsStoreService,
     CliSessionsService,
     CliUsersAuditService,
@@ -52,6 +54,8 @@ export interface CliUsersRuntime {
     users: CliUsersStoreService;
     groups: CliGroupsStoreService;
     sessions: CliSessionsService;
+    /** API tokens (server backends; fails with 501 locally) */
+    tokens: CliApiTokensService;
     audit: CliUsersAuditService;
     events: CliDefaultUserEventService;
     authorization: CliUsersAuthorizationService;
@@ -85,6 +89,7 @@ export async function createUsersRuntime(
     let tokenKey: string;
     let onTokenChange: ((token: string | undefined) => void) | undefined;
     let serverName: string | undefined;
+    let serverUrl: string | undefined;
 
     if (config.backend) {
         backend = config.backend;
@@ -95,7 +100,8 @@ export async function createUsersRuntime(
         if (!serverConfig) {
             throw new Error(`@qodalis/cli-users: server "${serverName}" not found in options.servers`);
         }
-        const baseUrl = serverConfig.url.replace(/\/+$/, '') + '/api/v1/qcli';
+        serverUrl = serverConfig.url.replace(/\/+$/, '');
+        const baseUrl = serverUrl + '/api/v1/qcli';
 
         // Share the bearer token with every other request to this server
         let currentToken: string | undefined;
@@ -175,6 +181,7 @@ export async function createUsersRuntime(
     const users = new CliUsersStoreService(backend, session, events);
     const groups = new CliGroupsStoreService(backend, session, events);
     const sessions = new CliSessionsService(backend, session, events);
+    const tokens = new CliApiTokensService(backend, session, events, absoluteUrl(serverUrl ?? backendServerUrl(backend)));
     const audit = new CliUsersAuditService(
         backend,
         session,
@@ -191,6 +198,7 @@ export async function createUsersRuntime(
         { provide: ICliUsersStoreService_TOKEN, useValue: users },
         { provide: ICliGroupsStoreService_TOKEN, useValue: groups },
         { provide: ICliSessionsService_TOKEN, useValue: sessions },
+        { provide: CliApiTokensService_TOKEN, useValue: tokens },
         { provide: ICliAuditService_TOKEN, useValue: audit },
         { provide: ICliAuthorizationService_TOKEN, useValue: authorization },
         { provide: ICliPermissionService_TOKEN, useValue: new CliDefaultPermissionService(authorization) },
@@ -206,6 +214,7 @@ export async function createUsersRuntime(
         users,
         groups,
         sessions,
+        tokens,
         audit,
         events,
         authorization,
@@ -221,6 +230,22 @@ export async function createUsersRuntime(
 /** Display name for the prompt */
 export function displayNameFor(config: CliUsersModuleConfig, user: ICliUser): string {
     return config.userDisplayFormatter ? config.userDisplayFormatter(user) : user.name;
+}
+
+/** Server URL of a custom backend exposing `baseUrl` (e.g. `http://host/api/v1/qcli`) */
+function backendServerUrl(backend: ICliUsersBackend): string | undefined {
+    const baseUrl = (backend as { baseUrl?: unknown }).baseUrl;
+    if (typeof baseUrl !== 'string') return undefined;
+    return baseUrl.replace(/\/+$/, '').replace(/\/api\/v1\/qcli$/, '');
+}
+
+/** Resolve a relative server URL (same-origin deployments) against the page origin */
+function absoluteUrl(url: string | undefined): string | undefined {
+    if (url === undefined) return undefined;
+    if (/^https?:\/\//i.test(url)) return url;
+    const origin = typeof location !== 'undefined' ? location?.origin : undefined;
+    if (!origin || origin === 'null') return url || undefined;
+    return `${origin}${url.startsWith('/') ? '' : '/'}${url}`.replace(/\/+$/, '');
 }
 
 /** `Authorization` header of a request, whatever form the headers were given in */

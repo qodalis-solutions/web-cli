@@ -56,6 +56,14 @@ export interface ICliUsersBackend {
     addGroupMember(token: string, group: string, user: string): Promise<void>;
     removeGroupMember(token: string, group: string, user: string): Promise<void>;
 
+    // ── API tokens (server backends) ─────────────────────────────────
+    /** GET /tokens (`all`: every user's tokens, requires tokens:read) */
+    listApiTokens?(token: string, options?: { all?: boolean }): Promise<CliApiToken[]>;
+    /** POST /tokens (session only). The token is returned once and never stored. */
+    createApiToken?(token: string, request: CliCreateApiToken): Promise<CliCreatedApiToken>;
+    /** DELETE /tokens/{id} (own token, or any with tokens:revoke) */
+    revokeApiToken?(token: string, tokenId: string): Promise<void>;
+
     // ── audit ────────────────────────────────────────────────────────
     listAudit(token: string, options?: { limit?: number; event?: string; username?: string }): Promise<ICliAuditEntry[]>;
     clearAudit(token: string): Promise<void>;
@@ -82,6 +90,35 @@ export interface CliBackendUserPermissions {
     userId: string;
     groups: string[];
     permissions: string[];
+}
+
+/** An API token as the server shows it (never contains the token itself). */
+export interface CliApiToken {
+    id: string;
+    name: string;
+    userId: string;
+    userName: string;
+    createdAt: number;
+    /** null: never expires */
+    expiresAt: number | null;
+    /** null: never used */
+    lastUsedAt: number | null;
+    /** Scope; omitted/null when the token carries the user's full permissions */
+    permissions?: string[] | null;
+}
+
+export interface CliCreateApiToken {
+    name: string;
+    /** 1-365 (server default 90); null = never expires (if the server allows it) */
+    expiresInDays?: number | null;
+    /** Optional scope, each entry covered by the caller's permissions */
+    permissions?: string[];
+}
+
+export interface CliCreatedApiToken {
+    /** The bearer token (`qcli_pat_…`), shown once */
+    token: string;
+    apiToken: CliApiToken;
 }
 
 export interface CliBackendCreateUser {

@@ -3,7 +3,22 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## v2.0.0-beta.14 (unreleased)
+## v2.0.0-beta.15
+
+### `@qodalis/cli-users`
+
+- **`adduser` walks through every field**: run without `--email` (or with no arguments at all), it asks for the name, email, full name, groups (a multi-select of the existing groups, `users` preselected), home directory (default `/home/<name>`), whether the account is enabled, and the password. The email is checked before the password is asked for. `adduser <name> --email=..` is unchanged and only asks for the password, so scripts keep working.
+- Invalid answers (name, email, passwords that break the policy or don't match) are asked again, up to 3 times like `passwd`, instead of ending the command. `passwd` gets the same password retries.
+- **API tokens** (server mode): `token create <name> [--expires=<days>|never] [--permissions=a,b]` creates a long-lived, revocable bearer token for MCP clients, CI and scripts. It is printed once, with a ready-to-paste `claude mcp add --transport http qcli <server>/api/qcli/mcp --header "Authorization: Bearer <token>"` example. `token list [--all]` shows NAME, ID, EXPIRES, LAST USED and SCOPE (plus USER with `--all`); `token revoke <id>` revokes one. In local mode the commands explain that tokens need a server.
+- `ICliUsersBackend` gains optional `listApiTokens`, `createApiToken` and `revokeApiToken` (implemented by the HTTP backend against the servers' `/api/v1/qcli/tokens`), and the module declares the `tokens:read` and `tokens:revoke` permissions.
+- **Full name**: `adduser --full-name` / `usermod --full-name` store it in the user's `data.fullName`; `listusers` shows a FULL NAME column when any user has one.
+
+### Docs
+
+- Server integration: new **MCP endpoint** section, the main MCP documentation: enabling it on each server, the tools it exposes (`server_info`, command tools, `fs_*`, `data_*`, `jobs_*`, plugin-contributed tools) and their permissions, authentication with or without the users plugin, and a step-by-step guide for Claude Code (direct HTTP with a token, or the `@qodalis/mcp-cli` stdio proxy; curl check; troubleshooting with `claude mcp list` and `/mcp`). The main README links to it; the users plugin README now only covers API tokens.
+- Opening another docs page starts at the top; Back/Forward return to the previous scroll position.
+
+## v2.0.0-beta.14
 
 ### Users, permissions and security (`@qodalis/cli-users`)
 
