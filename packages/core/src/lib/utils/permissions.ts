@@ -53,6 +53,12 @@ export function cliMergePermissions(...lists: (readonly string[] | undefined)[])
  * Built-in permissions used by the users module. Other modules define their
  * own (e.g. `deploy:run`); any string in `resource:action` form works.
  */
+/** Permissions for remote CLI server features. */
+export const CliServerPermissions = {
+    /** Open a remote shell on a server (`ssh`) */
+    ShellExecute: 'shell:execute',
+} as const;
+
 export const CliUsersPermissions = {
     UsersRead: 'users:read',
     UsersCreate: 'users:create',

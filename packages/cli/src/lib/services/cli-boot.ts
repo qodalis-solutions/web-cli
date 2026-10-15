@@ -226,6 +226,7 @@ export class CliBoot {
                 { name: 'system:packages', description: 'Install, update and remove packages (pkg)' },
                 { name: 'system:services', description: 'Start and stop background services' },
                 { name: 'system:eval', description: 'Evaluate JavaScript (eval, also requires allowEval)' },
+                { name: 'shell:execute', description: 'Open a remote shell on a server (ssh)' },
             ],
         };
     }

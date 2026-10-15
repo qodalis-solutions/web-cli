@@ -1,6 +1,7 @@
 import {
     CliProcessCommand,
     CliProcessorMetadata,
+    CliServerPermissions,
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliExecutionContext,
@@ -27,6 +28,8 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
     metadata: CliProcessorMetadata = {
         module: '@qodalis/cli-server',
         icon: '\u{1F5A5}',
+        // Enforced only when an auth module is loaded; the server checks it too
+        requiredPermissions: [CliServerPermissions.ShellExecute],
     };
     parameters?: ICliCommandParameterDescriptor[] = [
         {
@@ -234,6 +237,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         context.spinner?.show(`Connecting to ${serverName}...`);
 
         this.resolved = false;
+        let fullScreen = false;
 
         return new Promise<void>((resolve) => {
             const resolveOnce = () => {
@@ -269,6 +273,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                             `Connected to ${serverName} (${msg.os}, ${msg.shell})`,
                         );
                         context.enterFullScreenMode(this);
+                        fullScreen = true;
                         // Reset terminal for shell: clear screen, cursor home, show cursor
                         context.terminal.write('\x1b[2J\x1b[H\x1b[?25h');
                         break;
@@ -282,7 +287,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                         break;
 
                     case 'exit':
-                        context.exitFullScreenMode();
+                        if (fullScreen) context.exitFullScreenMode();
                         context.writer.writeInfo(
                             `Shell exited with code ${msg.code}.`,
                         );
@@ -293,7 +298,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
 
                     case 'error':
                         context.spinner?.hide();
-                        context.exitFullScreenMode();
+                        if (fullScreen) context.exitFullScreenMode();
                         context.writer.writeError(
                             `Server error: ${msg.message}`,
                         );
@@ -304,13 +309,17 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                 }
             };
 
-            this.socket.onclose = () => {
+            // The close event carries the reason (auth, limits, timeout); an
+            // error event is always followed by a close, so report there
+            let errored = false;
+            this.socket.onclose = (event?: CloseEvent) => {
                 context.spinner?.hide();
                 if (this.context && !this.resolved) {
-                    context.exitFullScreenMode();
-                    context.writer.writeWarning(
-                        `Connection to '${serverName}' closed.`,
-                    );
+                    if (fullScreen) context.exitFullScreenMode();
+                    const reason = describeShellClose(event ?? {}, serverName);
+                    if (reason) context.writer.writeError(reason);
+                    else if (errored) context.writer.writeError(`WebSocket error connecting to '${serverName}'.`);
+                    else context.writer.writeWarning(`Connection to '${serverName}' closed.`);
                     context.process.exit(1, { silent: true });
                 }
                 this.cleanup();
@@ -318,15 +327,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             };
 
             this.socket.onerror = () => {
-                context.spinner?.hide();
-                if (!this.resolved) {
-                    context.writer.writeError(
-                        `WebSocket error connecting to '${serverName}'.`,
-                    );
-                    context.process.exit(1, { silent: true });
-                }
-                this.cleanup();
-                resolveOnce();
+                errored = true;
             };
         });
     }
@@ -392,20 +393,20 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                 }
             };
 
-            this.socket.onclose = () => {
+            let errored = false;
+            this.socket.onclose = (event?: CloseEvent) => {
                 context.spinner?.hide();
+                const reason = describeShellClose(event ?? {}, serverName);
+                if (reason || errored) {
+                    context.writer.writeError(reason ?? `WebSocket error connecting to '${serverName}'.`);
+                    context.process.exit(1, { silent: true });
+                }
                 this.cleanup();
                 resolve();
             };
 
             this.socket.onerror = () => {
-                context.spinner?.hide();
-                context.writer.writeError(
-                    `WebSocket error connecting to '${serverName}'.`,
-                );
-                context.process.exit(1, { silent: true });
-                this.cleanup();
-                resolve();
+                errored = true;
             };
         });
     }
@@ -443,5 +444,28 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             this.socket = null;
         }
         this.context = null;
+    }
+}
+
+/**
+ * Message for a shell socket closed by the server with an application code
+ * (servers accept, then close, so the browser can read why). `null` for a
+ * normal close.
+ */
+export function describeShellClose(event: { code?: number; reason?: string }, serverName: string): string | null {
+    const detail = event.reason ? ` (${event.reason})` : '';
+    switch (event.code) {
+        case 4401:
+            return `ssh: login required or session ended on '${serverName}'${detail}`;
+        case 4403:
+            return `ssh: permission denied on '${serverName}'${detail || ' (requires shell:execute)'}`;
+        case 4404:
+            return `ssh: the shell is disabled on '${serverName}'`;
+        case 4408:
+            return `ssh: shell timed out on '${serverName}'${detail}`;
+        case 4429:
+            return `ssh: too many shell sessions on '${serverName}'${detail}`;
+        default:
+            return null;
     }
 }

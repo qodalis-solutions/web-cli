@@ -1,5 +1,5 @@
 import { CliServerManager_TOKEN } from '../lib/server/cli-server-manager';
-import { CliSshCommandProcessor } from '../lib/server/cli-ssh-command-processor';
+import { CliSshCommandProcessor, describeShellClose } from '../lib/server/cli-ssh-command-processor';
 import { CliExecutionProcess } from '../lib/context/cli-execution-process';
 
 /** Minimal WebSocket stand-in driven by the test */
@@ -132,5 +132,51 @@ describe('ssh (shell over WebSocket)', () => {
         FakeSocket.last.push({ type: 'exit', code: 4 });
         await run;
         expect(context.process.exitCode).toBe(4);
+    });
+
+    it('requires shell:execute (enforced only when an auth module is loaded)', () => {
+        expect(new CliSshCommandProcessor().metadata.requiredPermissions).toEqual(['shell:execute']);
+    });
+
+    it('reports why the server closed the shell', async () => {
+        const { context, written } = setup();
+        const run = new CliSshCommandProcessor().processCommand({ command: 'ssh', value: 'node' } as any, context);
+        await flush();
+        FakeSocket.last.onerror?.({});
+        FakeSocket.last.onclose({ code: 4403, reason: 'requires shell:execute' });
+        await run;
+        expect(written).toContain("ssh: permission denied on 'node' (requires shell:execute)");
+        expect(written.some((w) => w.includes('WebSocket error'))).toBeFalse();
+        expect(context.process.exitCode).toBe(1);
+        expect(context.exitFullScreenMode).not.toHaveBeenCalled(); // never entered
+    });
+
+    it('a session ending mid-shell leaves full-screen with a clear message', async () => {
+        const { context, written } = setup();
+        const run = new CliSshCommandProcessor().processCommand({ command: 'ssh', value: 'node' } as any, context);
+        await flush();
+        FakeSocket.last.push({ type: 'ready', os: 'linux', shell: 'sh' });
+        FakeSocket.last.onclose({ code: 4401, reason: 'session ended' });
+        await run;
+        expect(context.exitFullScreenMode).toHaveBeenCalled();
+        expect(written).toContain("ssh: login required or session ended on 'node' (session ended)");
+    });
+
+    it('one-shot: a plain connection failure still reports a WebSocket error', async () => {
+        const { context, written } = setup();
+        const run = new CliSshCommandProcessor().processCommand({ command: 'ssh', value: 'node ls', rawCommand: 'ssh node ls' } as any, context);
+        await flush();
+        FakeSocket.last.onerror?.({});
+        FakeSocket.last.onclose({ code: 1006 });
+        await run;
+        expect(written).toContain("WebSocket error connecting to 'node'.");
+        expect(context.process.exitCode).toBe(1);
+    });
+
+    it('maps every documented close code', () => {
+        expect(describeShellClose({ code: 4404 }, 's')).toContain('disabled');
+        expect(describeShellClose({ code: 4408 }, 's')).toContain('timed out');
+        expect(describeShellClose({ code: 4429 }, 's')).toContain('too many');
+        expect(describeShellClose({ code: 1000 }, 's')).toBeNull();
     });
 });
