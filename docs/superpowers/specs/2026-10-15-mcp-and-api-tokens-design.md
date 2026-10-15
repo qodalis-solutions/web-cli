@@ -6,8 +6,11 @@ behaviour, status codes and JSON shapes below are normative.
 
 ## Goals
 
-- **MCP endpoint**: AI clients (Claude Code, Claude Desktop, Cursor, …) call the server's
-  CLI commands as MCP tools, with the same permissions as a CLI user.
+- **MCP endpoint**: a server-wide feature of the core server (not of the users plugin).
+  AI clients (Claude Code, Claude Desktop, Cursor, …) use **the whole system** through it:
+  CLI commands, the filesystem API, the data explorer, jobs, and tools contributed by any
+  plugin — each with the same permissions as a CLI user. Works with or without the users
+  plugin (which only supplies identities and API tokens).
 - **API tokens**: long-lived, revocable bearer tokens for MCP clients, CI and scripts
   (sessions expire and need a password sign-in).
 
@@ -130,18 +133,55 @@ mcp: boolean | {
 
 ### Tools
 
-Built from the command registry on every request (so registration changes and the
-caller's permissions are always current):
+Tools come from **tool providers**, collected on every request (so registrations,
+enabled features and the caller's permissions are always current). A provider returns
+tool definitions:
+
+```
+McpTool {
+  name: string                 // [a-z0-9_-], max 64
+  description: string
+  inputSchema: JSON Schema     // type object, additionalProperties false
+  requiredPermissions: string[]// checked for list AND call (only with an auth provider)
+  annotations?: { readOnlyHint?, destructiveHint?, idempotentHint? }  // MCP tool annotations
+  call(args, context) -> { text, structured?, isError }
+}
+```
+
+Public extension point: plugins (and host apps) register providers
+(Node `server.mcp.addProvider(p)` / builder method, Python `result.mcp.add_provider(p)`,
+.NET `services.AddMcpToolProvider<T>()` — idiomatic per language, document it).
+
+Built-in providers (each only when its feature is enabled on the server):
+
+| Provider | Tools | Permissions | Annotations |
+|---|---|---|---|
+| server | `server_info` → version, capabilities, enabled features, registered command names | — (any caller who reached the endpoint) | readOnly |
+| commands | one tool per command (rules below) | `commands:execute` + `requiredPermissions` along the chain | — |
+| filesystem (`/api/qcli/fs` enabled) | `fs_list {path}`, `fs_stat {path}`, `fs_read {path, maxBytes?=262144}` (UTF-8 text; binary → isError "binary file, N bytes") | `files:read` | readOnly |
+| | `fs_write {path, content}` (create/overwrite text file), `fs_mkdir {path}` | `files:write` | — |
+| | `fs_delete {path, recursive?=false}` | `files:write` | destructive |
+| data explorer (enabled) | `data_sources`, `data_schema {source}` | `data:query` | readOnly |
+| | `data_query {source, query, parameters?}` (same executor/limits as `POST /data-explorer/execute`) | `data:query` | — |
+| jobs (plugin installed) | `jobs_list`, `jobs_get {id}`, `jobs_history {id, limit?=20}` | `jobs:read` | readOnly |
+| | `jobs_trigger`, `jobs_pause`, `jobs_resume`, `jobs_stop`, `jobs_cancel` `{id}` | `jobs:manage` | — (`jobs_cancel`/`jobs_stop` destructive) |
+
+Rules shared by all providers:
+- Feature tools reuse the **same services and safety checks** as the HTTP routes (filesystem
+  path whitelist/validator, data-explorer limits, job scheduler) — never a second code path
+  around them. Errors from those services become `isError: true` results with the message.
+- Name collisions: built-in feature tools win over command tools; between plugins the first
+  registered wins; log a warning.
+- `tools` / `exclude` option lists apply to every tool regardless of provider.
+- The interactive shell is never a tool.
+
+Command tools:
 
 - Walk each root processor and its sub-processors. A node becomes a tool when it has no
   sub-processors, **or** declares parameters, **or** takes a value (`valueRequired` /
   `acceptsRawInput` or the language equivalent).
 - Name: the command path joined with `_` (`weather`, `weather_current`), lower-cased,
-  characters outside `[a-z0-9_-]` replaced by `-`, max 64 chars. On a collision the
-  first one wins (log a warning).
-- Visible only if: allowed by `tools`/`exclude`, and the caller holds `commands:execute`
-  plus every `requiredPermissions` along the chain (when an auth provider is active).
-  The interactive shell is never a tool.
+  characters outside `[a-z0-9_-]` replaced by `-`, max 64 chars.
 - `description`: the processor description (fallback: `Run '<command path>'`).
 - `inputSchema`:
   `{ type: "object", properties, required, additionalProperties: false }` —
@@ -152,9 +192,10 @@ caller's permissions are always current):
 
 ### tools/call
 
+- Arguments are validated against the tool's inputSchema first (all providers).
 - Unknown or not-visible tool → JSON-RPC `-32602` (`Unknown tool: <name>`); invalid
   arguments (wrong type, unknown property, missing required) → `-32602` with the reason.
-- Builds the same command the CLI would send (`command`, `chainCommands`, `value`, args)
+- Command tools build the same command the CLI would send (`command`, `chainCommands`, `value`, args)
   and runs it through the **same executor and context as `/execute`** (so per-command
   behaviour, permission checks and any auditing are identical).
 - Result: `{ content: [{ type: "text", text }], isError }` where `text` is the outputs
@@ -163,6 +204,13 @@ caller's permissions are always current):
   `exitCode != 0`. When the outputs are exactly one json output whose value is an object,
   also return it as `structuredContent`.
 - Execution exceptions → `isError: true` with the message (not a JSON-RPC error).
+
+## Documentation placement
+
+MCP is documented as a **core server feature**: a top-level "MCP endpoint" section in each
+server README (enable, tools per feature, permissions, provider extension API, "Using the MCP
+endpoint from an MCP client"), and in the web-cli docs site server-integration page. The users
+plugin docs only cover API tokens and link to the MCP docs.
 
 ## Part 3 — web-cli (`@qodalis/cli-users`)
 

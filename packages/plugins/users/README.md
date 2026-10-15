@@ -142,19 +142,24 @@ their files to `root`, so a later account with the same name never inherits them
 | `last [user]` | `audit:read` | Sign-in history |
 | `audit [--user --event -n]`, `audit clear` | `audit:read` / `audit:clear` | Security audit log |
 
-## API tokens and MCP
+## API tokens
 
-In server mode, `token` creates long-lived, revocable bearer tokens for MCP clients
-(Claude Code, Claude Desktop, Cursor, …), CI jobs and scripts. A token acts as the
-user who created it, with that user's live permissions; `--permissions` narrows it
-further (you can only include permissions you hold).
+In server mode, `token` creates long-lived, revocable bearer tokens: the credential for
+MCP clients (Claude Code, Claude Desktop, Cursor, …), CI jobs and scripts. A token acts
+as the user who created it, with that user's live permissions; `--permissions` narrows
+it further (you can only include permissions you hold).
 
 ```bash
-token create claude --expires=90 --permissions=commands:execute
+token create claude --expires=90                          # shown once
+token create ci --expires=30 --permissions=commands:execute
 token list            # NAME, ID, EXPIRES, LAST USED, SCOPE
 token list --all      # every user's tokens (tokens:read), adds USER
 token revoke <id>     # own token, or any with tokens:revoke
 ```
+
+`token create` prints the token once, with a ready-to-paste
+`claude mcp add --transport http qcli <server>/api/qcli/mcp --header "Authorization: Bearer <token>"`.
+Clients send it as `Authorization: Bearer qcli_pat_…`, wherever a session token is accepted.
 
 - Expiry: 1-365 days (default 90). `--expires=never` works only when the server enables
   non-expiring tokens.
@@ -165,70 +170,9 @@ token revoke <id>     # own token, or any with tokens:revoke
   backends opt in by implementing `listApiTokens`, `createApiToken` and `revokeApiToken`
   of `ICliUsersBackend`.
 
-### Using the server's MCP endpoint from outside
-
-The servers expose their CLI commands as MCP tools at `POST <server>/api/qcli/mcp`
-(Streamable HTTP, stateless, JSON responses). Tools are filtered by the caller's
-permissions. Default ports: .NET `8046`, Node `8047`, Python `8048`.
-
-**1. Enable MCP on the server** (off by default). See each server's README section
-"Using the MCP endpoint from an MCP client":
-
-- .NET: `cli.EnableMcp()` — [cli-server-dotnet](https://github.com/qodalis-solutions/cli-server-dotnet#using-the-mcp-endpoint-from-an-mcp-client)
-- Node: `createCliServer({ mcp: true })` — [cli-server-node](https://github.com/qodalis-solutions/cli-server-node#using-the-mcp-endpoint-from-an-mcp-client)
-- Python: `CliServerOptions(mcp=True)` — [cli-server-python](https://github.com/qodalis-solutions/cli-server-python#using-the-mcp-endpoint-from-an-mcp-client)
-
-**2. Create a token** in a CLI connected to the server (`usersModule.configure({ server })`),
-signed in as the user the client should act as:
-
-```bash
-token create claude --expires=90
-```
-
-The token (`qcli_pat_…`) is shown once, together with the Claude Code command below.
-
-**3. Connect Claude Code:**
-
-```bash
-claude mcp add --transport http qcli http://localhost:8047/api/qcli/mcp --header "Authorization: Bearer <token>"
-```
-
-**4. Claude Desktop / Cursor** (`claude_desktop_config.json`, `.cursor/mcp.json`):
-
-```json
-{
-    "mcpServers": {
-        "qcli": {
-            "type": "http",
-            "url": "http://localhost:8047/api/qcli/mcp",
-            "headers": { "Authorization": "Bearer <token>" }
-        }
-    }
-}
-```
-
-**5. MCP Inspector** (interactive testing): run `npx @modelcontextprotocol/inspector`,
-choose transport *Streamable HTTP*, URL `http://localhost:8047/api/qcli/mcp`, add the
-header `Authorization: Bearer <token>`, then *Connect* and *List Tools*.
-
-**6. Raw request** (curl):
-
-```bash
-curl -s http://localhost:8047/api/qcli/mcp \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json, text/event-stream" \
-  -H "Authorization: Bearer $QCLI_TOKEN" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
-```
-
-**Troubleshooting**
-
-| Symptom | Cause |
-|---|---|
-| `401` | Token missing, mistyped, expired or revoked (`token list`), or its user is disabled |
-| `403` | The request's `Origin` is not allowed (add it to the server's allowed origins), or the user lacks `commands:execute` |
-| A tool is missing | The user (or the token's `--permissions` scope) lacks the command's permissions, or the server's `tools` / `exclude` lists hide it |
-| `405` | `GET`/`DELETE` used: the endpoint only accepts `POST` |
+The MCP endpoint itself is a feature of the CLI servers (enabling it, the tools it exposes,
+connecting Claude Code, Claude Desktop, Cursor or the MCP Inspector): see
+[MCP endpoint](https://cli.qodalis.com/docs/server-integration#mcp-endpoint).
 
 ## Rules (identical in every mode)
 

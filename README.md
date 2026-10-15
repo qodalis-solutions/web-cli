@@ -288,6 +288,7 @@ All three implement the same API surface:
 | `/ws/v1/cli/events` | WS | Server-push event streaming |
 | `/ws/v1/cli/shell` | WS | Interactive PTY shell session |
 | `/api/cli/fs/*` | Various | Filesystem operations (ls, cat, upload, download, mkdir, rm) |
+| `/api/qcli/mcp` | POST | MCP endpoint for AI clients (opt-in) |
 
 ### Connecting to a Server
 
@@ -319,6 +320,16 @@ The frontend includes built-in resilience features:
 - **Periodic health checks** for disconnected servers (30s interval)
 - **HTTP retry** on transient fetch failures (1 retry with 1s delay)
 - **Configurable request timeout** per server (default 30s)
+
+### MCP
+
+Each server can expose the whole system to AI clients (Claude Code, Claude Desktop, Cursor, …) over the [Model Context Protocol](https://modelcontextprotocol.io) at `POST /api/qcli/mcp` (opt-in): CLI commands, the filesystem API, the data explorer, jobs and plugin-contributed tools, each with the caller's permissions. It works with or without the users plugin, whose `token create` command issues the API tokens MCP clients sign in with:
+
+```bash
+claude mcp add --transport http qcli http://localhost:8047/api/qcli/mcp --header "Authorization: Bearer <token>"
+```
+
+See [MCP endpoint](https://cli.qodalis.com/docs/server-integration#mcp-endpoint) for enabling it, the tools and permissions, and client setup.
 
 ### Server Plugins
 

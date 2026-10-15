@@ -162,30 +162,118 @@ const res = await fetch(`$&#123;server.url&#125;/api/v1/qcli/...`, &#123; header
 
 <h2 id="mcp-endpoint">MCP endpoint</h2>
 <p>
-    Every server can expose its CLI commands to AI clients (Claude Code, Claude Desktop, Cursor, &hellip;) as
-    <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol</a> tools, with the
-    same permissions as a CLI user. The endpoint is <code>POST /api/qcli/mcp</code> (MCP "Streamable HTTP", stateless,
-    JSON responses) and is <strong>off by default</strong>.
+    Every server (.NET, Node, Python) can expose <strong>the whole system</strong> to AI clients (Claude Code, Claude
+    Desktop, Cursor, &hellip;) through the
+    <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol</a>: CLI commands,
+    the filesystem API, the data explorer, jobs, and tools contributed by plugins. It is a feature of the core server,
+    <strong>off by default</strong>, and works with or without the users plugin. Each tool runs with the same permissions
+    the caller would have in the CLI.
 </p>
-<ul>
-    <li><strong>Tools</strong> are built from the command registry on every request: <code>weather</code>,
-        <code>weather_current</code>, &hellip; Each command parameter becomes a property of the tool's input schema,
-        plus <code>value</code> for commands that take a positional value. The remote shell is never a tool.</li>
-    <li><strong>Calls</strong> run through the same executor as <code>/execute</code>; the outputs come back as text
-        (and as <code>structuredContent</code> when a command returns a single JSON object). A non-zero exit code sets
-        <code>isError</code>.</li>
-</ul>
-<p>Enable it (names per server):</p>
+<p>
+    The endpoint is <code>POST /api/qcli/mcp</code>: MCP "Streamable HTTP", stateless (no <code>Mcp-Session-Id</code>),
+    JSON responses only. <code>GET</code> and <code>DELETE</code> return <code>405</code>.
+</p>
+
+<h3 id="mcp-enable">Enabling</h3>
 <pre><code class="language-typescript">// Node
 createCliServer(&#123; mcp: true &#125;);
-createCliServer(&#123; mcp: &#123; tools: ['weather_*'], exclude: ['weather_admin'], instructions: 'Weather tools' &#125; &#125;);</code></pre>
+createCliServer(&#123; mcp: &#123; tools: ['weather_*', 'fs_*'], exclude: ['fs_delete'], instructions: 'Ops server' &#125; &#125;);</code></pre>
 <pre><code class="language-python"># Python
 CliServerOptions(mcp=True)</code></pre>
 <pre><code class="language-csharp">// .NET
-cli.EnableMcp(o =&gt; &#123; o.Tools = ["weather_*"]; &#125;);</code></pre>
-<p>Options: <code>tools</code> (allow-list, trailing <code>*</code> allowed), <code>exclude</code> (deny-list applied after
-    <code>tools</code>), <code>token</code> (static bearer token, only without the users plugin) and
-    <code>instructions</code> (returned to the client by <code>initialize</code>).</p>
+cli.EnableMcp(o =&gt; &#123; o.Exclude = ["fs_delete"]; &#125;);</code></pre>
+<table>
+    <thead>
+        <tr><th>Option</th><th>Meaning</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>tools</code></td><td>Allow-list of tool names; a trailing <code>*</code> matches a prefix (<code>weather_*</code>)</td></tr>
+        <tr><td><code>exclude</code></td><td>Deny-list, same syntax, applied after <code>tools</code></td></tr>
+        <tr><td><code>token</code></td><td>Static bearer token required by the endpoint; only used <em>without</em> the users plugin</td></tr>
+        <tr><td><code>instructions</code></td><td>Text returned to the client by <code>initialize</code></td></tr>
+    </tbody>
+</table>
+<p>Each server's README has the exact option names under "MCP endpoint".</p>
+
+<h3 id="mcp-tools">Tools</h3>
+<p>
+    Tools are collected on every request, so newly registered commands, enabled features and permission changes show up
+    immediately. A feature's tools exist only when that feature is enabled on the server, and they go through the same
+    services and safety checks as its HTTP routes (filesystem path whitelist, data-explorer limits, job scheduler).
+    <code>tools/list</code> only returns the tools the caller may use, and <code>tools/call</code> checks again.
+</p>
+<table>
+    <thead>
+        <tr><th>Tools</th><th>Available when</th><th>Permissions (users plugin)</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>server_info</code> (read-only)</td>
+            <td>Always</td>
+            <td>Any caller that reached the endpoint</td>
+        </tr>
+        <tr>
+            <td>One tool per command: <code>weather</code>, <code>weather_current</code>, &hellip; (command parameters become the
+                input schema, plus <code>value</code> for commands that take one)</td>
+            <td>Always</td>
+            <td><code>commands:execute</code> plus each command's <code>requiredPermissions</code> along the command path</td>
+        </tr>
+        <tr>
+            <td><code>fs_list</code>, <code>fs_stat</code>, <code>fs_read</code> (read-only)</td>
+            <td>Filesystem API enabled</td>
+            <td><code>files:read</code></td>
+        </tr>
+        <tr>
+            <td><code>fs_write</code>, <code>fs_mkdir</code>, <code>fs_delete</code> (destructive)</td>
+            <td>Filesystem API enabled</td>
+            <td><code>files:write</code></td>
+        </tr>
+        <tr>
+            <td><code>data_sources</code>, <code>data_schema</code> (read-only), <code>data_query</code></td>
+            <td>Data explorer enabled</td>
+            <td><code>data:query</code></td>
+        </tr>
+        <tr>
+            <td><code>jobs_list</code>, <code>jobs_get</code>, <code>jobs_history</code> (read-only)</td>
+            <td>Jobs plugin installed</td>
+            <td><code>jobs:read</code></td>
+        </tr>
+        <tr>
+            <td><code>jobs_trigger</code>, <code>jobs_pause</code>, <code>jobs_resume</code>, <code>jobs_stop</code>, <code>jobs_cancel</code></td>
+            <td>Jobs plugin installed</td>
+            <td><code>jobs:manage</code></td>
+        </tr>
+        <tr>
+            <td>Plugin-contributed tools</td>
+            <td>The plugin registers a tool provider</td>
+            <td>The permissions the tool declares</td>
+        </tr>
+    </tbody>
+</table>
+<p>
+    The interactive shell is never a tool. Results come back as text (plus <code>structuredContent</code> when a tool
+    returns a single JSON object); a failed command or service error sets <code>isError</code>. On a name collision,
+    built-in feature tools win over command tools. Plugins and host applications add tools by registering a
+    <strong>tool provider</strong> (Node <code>server.mcp.addProvider(p)</code>, Python <code>result.mcp.add_provider(p)</code>,
+    .NET <code>services.AddMcpToolProvider&lt;T&gt;()</code>); each tool declares its name, description, input schema,
+    required permissions and MCP annotations.
+</p>
+
+<h3 id="mcp-security">Authentication and security</h3>
+<ul>
+    <li><strong>With the users plugin</strong>: requests authenticate like any other server request, with a session or an
+        <strong>API token</strong> (<code>Authorization: Bearer qcli_pat_&hellip;</code>). The endpoint requires
+        <code>commands:execute</code>; each tool then checks its own permissions. Create tokens with the
+        <a routerLink="/docs/plugins/users">users plugin's</a> <code>token</code> command; a token created with
+        <code>--permissions</code> only sees what that scope (and the user's current permissions) allows. Revoking a token
+        or disabling its user takes effect on the next request.</li>
+    <li><strong>Without the users plugin</strong>: set the <code>token</code> option to require
+        <code>Authorization: Bearer &lt;token&gt;</code>. Without it the endpoint is as open as <code>/execute</code>; only do
+        that on a trusted network.</li>
+    <li><strong>Browsers</strong>: a request carrying an <code>Origin</code> header must come from an allowed origin or the
+        same origin (DNS-rebinding protection).</li>
+</ul>
+
 <h3 id="mcp-client">Using the MCP endpoint from an MCP client</h3>
 <p>Default ports: .NET <code>8046</code>, Node <code>8047</code>, Python <code>8048</code>. The examples use Node.</p>
 <ol>
@@ -198,10 +286,11 @@ cli.EnableMcp(o =&gt; &#123; o.Tools = ["weather_*"]; &#125;);</code></pre>
         </ul>
     </li>
     <li>
-        <strong>Create a token</strong> in a CLI connected to the server (<code>usersModule.configure(&#123; server &#125;)</code>),
-        signed in as the user the client should act as. The token (<code>qcli_pat_&hellip;</code>) is shown once, with the
-        Claude Code command:
+        <strong>Get a token.</strong> With the users plugin, sign in to a CLI connected to the server
+        (<code>usersModule.configure(&#123; server &#125;)</code>) as the user the client should act as, and create an API token.
+        It (<code>qcli_pat_&hellip;</code>) is shown once, together with the Claude Code command:
         <div class="code-block"><pre><code>token create claude --expires=90</code></pre></div>
+        Without the users plugin, use the server's static <code>token</code> option instead.
     </li>
     <li>
         <strong>Connect Claude Code</strong>:
@@ -240,25 +329,11 @@ cli.EnableMcp(o =&gt; &#123; o.Tools = ["weather_*"]; &#125;);</code></pre>
     </thead>
     <tbody>
         <tr><td><code>401</code></td><td>Token missing, mistyped, expired or revoked (<code>token list</code>), or its user is disabled</td></tr>
-        <tr><td><code>403</code></td><td>The request's <code>Origin</code> is not allowed (add it to the server's allowed origins), or the user lacks <code>commands:execute</code></td></tr>
-        <tr><td>A tool is missing</td><td>The user (or the token's <code>--permissions</code> scope) lacks the command's permissions, or the server's <code>tools</code> / <code>exclude</code> lists hide it</td></tr>
+        <tr><td><code>403</code></td><td>The request's <code>Origin</code> is not allowed (add it to the server's allowed origins), or the caller lacks <code>commands:execute</code></td></tr>
+        <tr><td>A tool is missing</td><td>The feature is not enabled on the server, the caller (or the token's <code>--permissions</code> scope) lacks the tool's permissions, or the <code>tools</code> / <code>exclude</code> lists hide it</td></tr>
         <tr><td><code>405</code></td><td><code>GET</code> / <code>DELETE</code> used: the endpoint only accepts <code>POST</code></td></tr>
     </tbody>
 </table>
-<p>Permissions and security:</p>
-<ul>
-    <li><strong>Users plugin</strong>: the request is authenticated like any other (session or API token) and needs
-        <code>commands:execute</code>. <code>tools/list</code> only shows the commands the caller may run (every
-        <code>requiredPermissions</code> along the command path); a token created with <code>--permissions</code> sees
-        only what that scope (and the user's current permissions) allows.</li>
-    <li><strong>No users plugin</strong>: set <code>token</code> to require <code>Authorization: Bearer &lt;token&gt;</code>;
-        without it the endpoint is as open as <code>/execute</code>.</li>
-    <li><strong>Browsers</strong>: requests carrying an <code>Origin</code> header must come from an allowed origin or
-        the same origin (DNS-rebinding protection).</li>
-    <li><strong>API tokens</strong> are long-lived but revocable (<code>token list</code>, <code>token revoke &lt;id&gt;</code>);
-        revoking one or disabling its user takes effect on the next request. A token cannot create other tokens or change
-        passwords.</li>
-</ul>
 
 <h2>{{ 'docs.server-integration.jobs-api' | translate }}</h2>
 <p>{{ 'docs.server-integration.jobs-api-desc' | translate }}</p>
