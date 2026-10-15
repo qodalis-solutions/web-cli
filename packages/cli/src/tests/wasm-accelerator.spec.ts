@@ -169,3 +169,21 @@ describe('ICliWasmAccelerator (JsFallback)', () => {
         });
     });
 });
+
+describe('wasmCandidates', () => {
+    const load = () => import('../lib/wasm/wasm-loader');
+
+    it('looks next to the page first for apps under a sub-path', async () => {
+        const { wasmCandidates } = await load();
+        const paths = wasmCandidates(undefined, 'http://host/qcli/admin/');
+        expect(paths[0]).toBe('/qcli/admin/assets/wasm/qodalis_cli_wasm_bg.wasm');
+        expect(paths).toContain('/assets/wasm/qodalis_cli_wasm_bg.wasm');
+    });
+
+    it('puts an explicit URL first and removes duplicates', async () => {
+        const { wasmCandidates } = await load();
+        const paths = wasmCandidates('/cdn/cli.wasm', 'http://host/');
+        expect(paths[0]).toBe('/cdn/cli.wasm');
+        expect(paths.filter((p) => p === '/assets/wasm/qodalis_cli_wasm_bg.wasm').length).toBe(1);
+    });
+});
