@@ -20,6 +20,18 @@ type ServerShellMessage =
     | { type: 'error'; message: string }
     | { type: 'ready'; shell: string; os: string };
 
+/**
+ * State of one ssh invocation. Kept per call (not on the processor, which is
+ * shared): one processor instance can serve several sessions at once, e.g.
+ * `engine.execute()` while an interactive shell is open.
+ */
+interface ShellSession {
+    socket: WebSocket | null;
+    resolved: boolean;
+    /** Full-screen was torn down (exit/dispose): a late close reports nothing */
+    disposed: boolean;
+}
+
 export class CliSshCommandProcessor implements ICliCommandProcessor {
     command = 'ssh';
     description = 'Open a remote shell session on a server';
@@ -39,10 +51,6 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             type: 'string',
         },
     ];
-
-    private socket: WebSocket | null = null;
-    private context: ICliExecutionContext | null = null;
-    private resolved = false;
 
     async processCommand(
         command: CliProcessCommand,
@@ -89,35 +97,37 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         }
     }
 
-    async onData(data: string, context: ICliExecutionContext): Promise<void> {
-        if (this.socket?.readyState === WebSocket.OPEN) {
-            const msg: ShellMessage = { type: 'stdin', data };
-            this.socket.send(JSON.stringify(msg));
-        }
-    }
-
-    onResize(
-        cols: number,
-        rows: number,
-        _context: ICliExecutionContext,
-    ): void {
-        if (this.socket?.readyState === WebSocket.OPEN) {
-            const msg: ShellMessage = { type: 'resize', cols, rows };
-            this.socket.send(JSON.stringify(msg));
-        }
-    }
-
-    onDispose(_context: ICliExecutionContext): void {
-        if (this.socket) {
-            if (
-                this.socket.readyState === WebSocket.OPEN ||
-                this.socket.readyState === WebSocket.CONNECTING
-            ) {
-                this.socket.close();
+    /**
+     * Full-screen handler for one session: input, resize and disposal go to
+     * that session's socket only.
+     */
+    private fullScreenHandler(session: ShellSession): ICliCommandProcessor {
+        const handler: ICliCommandProcessor = Object.create(this);
+        handler.onData = async (data: string) => {
+            if (session.socket?.readyState === WebSocket.OPEN) {
+                const msg: ShellMessage = { type: 'stdin', data };
+                session.socket.send(JSON.stringify(msg));
             }
-            this.socket = null;
-        }
-        this.context = null;
+        };
+        handler.onResize = (cols: number, rows: number) => {
+            if (session.socket?.readyState === WebSocket.OPEN) {
+                const msg: ShellMessage = { type: 'resize', cols, rows };
+                session.socket.send(JSON.stringify(msg));
+            }
+        };
+        handler.onDispose = () => {
+            session.disposed = true;
+            if (session.socket) {
+                if (
+                    session.socket.readyState === WebSocket.OPEN ||
+                    session.socket.readyState === WebSocket.CONNECTING
+                ) {
+                    session.socket.close();
+                }
+                session.socket = null;
+            }
+        };
+        return handler;
     }
 
     private async resolveServer(
@@ -228,7 +238,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         serverName: string,
         context: ICliExecutionContext,
     ): Promise<void> {
-        this.context = context;
+        const session: ShellSession = { socket: null, resolved: false, disposed: false };
 
         const cols = context.terminal.cols;
         const rows = context.terminal.rows;
@@ -236,15 +246,14 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
 
         context.spinner?.show(`Connecting to ${serverName}...`);
 
-        this.resolved = false;
         let fullScreen = false;
 
         return new Promise<void>((resolve) => {
             const signal = context.signal;
             const resolveOnce = () => {
                 signal?.removeEventListener('abort', onAbort);
-                if (!this.resolved) {
-                    this.resolved = true;
+                if (!session.resolved) {
+                    session.resolved = true;
                     resolve();
                 }
             };
@@ -252,7 +261,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             // Ctrl+C / kill: close the socket and give the terminal back
             const onAbort = () => {
                 context.spinner?.hide();
-                this.cleanup();
+                this.cleanup(session);
                 if (fullScreen) context.exitFullScreenMode();
                 context.process.exit(130, { silent: true });
                 resolveOnce();
@@ -265,7 +274,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             signal?.addEventListener('abort', onAbort, { once: true });
 
             try {
-                this.socket = new WebSocket(wsUrl);
+                session.socket = new WebSocket(wsUrl);
             } catch (e: any) {
                 context.spinner?.hide();
                 context.writer.writeError(
@@ -276,11 +285,11 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                 return;
             }
 
-            this.socket.onopen = () => {
+            session.socket.onopen = () => {
                 // Wait for 'ready' message before entering full-screen
             };
 
-            this.socket.onmessage = (event) => {
+            session.socket.onmessage = (event) => {
                 const msg = parseShellMessage(event.data);
                 if (!msg) return;
 
@@ -290,7 +299,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                         context.writer.writeInfo(
                             `Connected to ${serverName} (${msg.os}, ${msg.shell})`,
                         );
-                        context.enterFullScreenMode(this);
+                        context.enterFullScreenMode(this.fullScreenHandler(session));
                         fullScreen = true;
                         // Reset terminal for shell: clear screen, cursor home, show cursor
                         context.terminal.write('\x1b[2J\x1b[H\x1b[?25h');
@@ -310,7 +319,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                             `Shell exited with code ${msg.code}.`,
                         );
                         context.process.exit(msg.code, { silent: true });
-                        this.cleanup();
+                        this.cleanup(session);
                         resolveOnce();
                         break;
 
@@ -321,7 +330,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                             `Server error: ${msg.message}`,
                         );
                         context.process.exit(1, { silent: true });
-                        this.cleanup();
+                        this.cleanup(session);
                         resolveOnce();
                         break;
                 }
@@ -330,9 +339,9 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             // The close event carries the reason (auth, limits, timeout); an
             // error event is always followed by a close, so report there
             let errored = false;
-            this.socket.onclose = (event?: CloseEvent) => {
+            session.socket.onclose = (event?: CloseEvent) => {
                 context.spinner?.hide();
-                if (this.context && !this.resolved) {
+                if (!session.disposed && !session.resolved) {
                     if (fullScreen) context.exitFullScreenMode();
                     const reason = describeShellClose(event ?? {}, serverName);
                     if (reason) context.writer.writeError(reason);
@@ -340,11 +349,11 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                     else context.writer.writeWarning(`Connection to '${serverName}' closed.`);
                     context.process.exit(1, { silent: true });
                 }
-                this.cleanup();
+                this.cleanup(session);
                 resolveOnce();
             };
 
-            this.socket.onerror = () => {
+            session.socket.onerror = () => {
                 errored = true;
             };
         });
@@ -362,6 +371,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
 
         context.spinner?.show(`Running on ${serverName}...`);
 
+        const session: ShellSession = { socket: null, resolved: false, disposed: false };
         return new Promise<void>((resolvePromise) => {
             const signal = context.signal;
             const resolve = () => {
@@ -372,7 +382,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             // Ctrl+C / kill: stop the remote command and end this one
             const onAbort = () => {
                 context.spinner?.hide();
-                this.cleanup();
+                this.cleanup(session);
                 context.process.exit(130, { silent: true });
                 resolve();
             };
@@ -384,7 +394,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             signal?.addEventListener('abort', onAbort, { once: true });
 
             try {
-                this.socket = new WebSocket(wsUrl);
+                session.socket = new WebSocket(wsUrl);
             } catch (e: any) {
                 context.spinner?.hide();
                 context.writer.writeError(
@@ -395,7 +405,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                 return;
             }
 
-            this.socket.onmessage = (event) => {
+            session.socket.onmessage = (event) => {
                 const msg = parseShellMessage(event.data);
                 if (!msg) return;
 
@@ -416,7 +426,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                         if (msg.code !== 0) {
                             context.process.exit(msg.code, { silent: true });
                         }
-                        this.cleanup();
+                        this.cleanup(session);
                         resolve();
                         break;
 
@@ -426,25 +436,25 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                             `Server error: ${msg.message}`,
                         );
                         context.process.exit(1, { silent: true });
-                        this.cleanup();
+                        this.cleanup(session);
                         resolve();
                         break;
                 }
             };
 
             let errored = false;
-            this.socket.onclose = (event?: CloseEvent) => {
+            session.socket.onclose = (event?: CloseEvent) => {
                 context.spinner?.hide();
                 const reason = describeShellClose(event ?? {}, serverName);
                 if (reason || errored) {
                     context.writer.writeError(reason ?? `WebSocket error connecting to '${serverName}'.`);
                     context.process.exit(1, { silent: true });
                 }
-                this.cleanup();
+                this.cleanup(session);
                 resolve();
             };
 
-            this.socket.onerror = () => {
+            session.socket.onerror = () => {
                 errored = true;
             };
         });
@@ -469,20 +479,20 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         return connection.buildWebSocketUrl(path);
     }
 
-    private cleanup(): void {
-        if (this.socket) {
-            this.socket.onmessage = null;
-            this.socket.onclose = null;
-            this.socket.onerror = null;
+    private cleanup(session: ShellSession): void {
+        const socket = session.socket;
+        if (socket) {
+            socket.onmessage = null;
+            socket.onclose = null;
+            socket.onerror = null;
             if (
-                this.socket.readyState === WebSocket.OPEN ||
-                this.socket.readyState === WebSocket.CONNECTING
+                socket.readyState === WebSocket.OPEN ||
+                socket.readyState === WebSocket.CONNECTING
             ) {
-                this.socket.close();
+                socket.close();
             }
-            this.socket = null;
+            session.socket = null;
         }
-        this.context = null;
     }
 }
 

@@ -265,4 +265,45 @@ describe('ssh (shell over WebSocket)', () => {
         await new CliSshCommandProcessor().processCommand({ command: 'ssh', value: 'node' } as any, context);
         expect(FakeSocket.last).toBeUndefined();
     });
+
+    it('one processor instance serves concurrent sessions independently', async () => {
+        // e.g. engine.execute() called while an interactive ssh is open
+        const ssh = new CliSshCommandProcessor();
+        const a = setup();
+        const runA = ssh.processCommand({ command: 'ssh', value: 'node' } as any, a.context);
+        await flush();
+        const socketA = FakeSocket.last;
+        const b = setup();
+        const runB = ssh.processCommand({ command: 'ssh', value: 'node' } as any, b.context);
+        await flush();
+        const socketB = FakeSocket.last;
+        expect(socketB).not.toBe(socketA);
+
+        socketA.push({ type: 'ready', os: 'linux', shell: 'sh' });
+        socketB.push({ type: 'ready', os: 'linux', shell: 'sh' });
+        const handlerA = a.context.enterFullScreenMode.calls.mostRecent().args[0];
+        const handlerB = b.context.enterFullScreenMode.calls.mostRecent().args[0];
+        await handlerA.onData('a', a.context);
+        await handlerB.onData('b', b.context);
+        handlerA.onResize(100, 30, a.context);
+        expect(socketA.sent.map((m) => JSON.parse(m))).toEqual([
+            { type: 'stdin', data: 'a' },
+            { type: 'resize', cols: 100, rows: 30 },
+        ]);
+        expect(socketB.sent.map((m) => JSON.parse(m))).toEqual([{ type: 'stdin', data: 'b' }]);
+
+        // B ending must not close or detach A
+        socketB.push({ type: 'exit', code: 0 });
+        await runB;
+        expect(socketA.closed).toBeFalse();
+        expect(socketA.onmessage).not.toBeNull();
+        socketA.push({ type: 'stdout', data: 'still here' });
+        expect(a.written).toContain('still here');
+
+        // disposing A's full-screen closes only A
+        handlerA.onDispose(a.context);
+        expect(socketA.closed).toBeTrue();
+        expect(socketB.sent.length).toBe(1);
+        void runA;
+    });
 });
