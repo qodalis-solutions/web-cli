@@ -4,9 +4,11 @@ import {
     ICliAuthorizationService,
     ICliAuthorizationService_TOKEN,
     ICliPrincipal,
+    ICliUserSessionService_TOKEN,
 } from '@qodalis/cli-core';
+import { BehaviorSubject } from 'rxjs';
 import { IndexedDbFileSystemService } from '../lib/services/indexed-db-file-system.service';
-import { createFileAccessPolicy } from '../lib/services/files-access';
+import { createFileAccessPolicy, followUserSession } from '../lib/services/files-access';
 
 function contextFor(getPrincipal: () => ICliPrincipal | undefined, withAuth = true): any {
     const auth: ICliAuthorizationService = {
@@ -144,5 +146,24 @@ describe('files access policy', () => {
         expect(fs.canTraverse('/home/alice/notes.txt')).toBeFalse();
         as(alice);
         expect(fs.canTraverse('/home/alice/notes.txt')).toBeTrue();
+    });
+});
+
+describe('followUserSession', () => {
+    it('moves to the home on sign-in and back to / on sign-out', () => {
+        const fs = new IndexedDbFileSystemService();
+        const session$ = new BehaviorSubject<any>(undefined);
+        const ctx: any = {
+            services: {
+                get: (token: string) =>
+                    token === ICliUserSessionService_TOKEN ? { getUserSession: () => session$.asObservable() } : undefined,
+            },
+        };
+        const sub = followUserSession(ctx, fs)!;
+        session$.next({ user: { id: 'a', name: 'alice', groups: ['users'], homeDir: '/home/alice' } });
+        expect(fs.getCurrentDirectory()).toBe('/home/alice');
+        session$.next(undefined);
+        expect(fs.getCurrentDirectory()).toBe('/');
+        sub.unsubscribe();
     });
 });

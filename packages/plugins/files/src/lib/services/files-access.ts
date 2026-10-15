@@ -78,6 +78,15 @@ export function followUserSession(context: ICliExecutionContext, fs: IFileSystem
     return sessions.getUserSession().subscribe((session: ICliUserSession | undefined) => {
         if (!session?.user) {
             fs.setCurrentUser('', []);
+            // Signed out (or restored signed out): don't stay in someone's home
+            const cwd = fs.getCurrentDirectory();
+            if (previousUser !== null || (fs.canTraverse && !fs.canTraverse(cwd))) {
+                try {
+                    fs.setCurrentDirectory('/');
+                } catch {
+                    // keep the current directory
+                }
+            }
             previousUser = null;
             return;
         }
