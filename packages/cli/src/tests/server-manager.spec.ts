@@ -55,6 +55,34 @@ describe('CliServerManager bare aliases', () => {
         expect(names(registry)).toEqual(['data-explorer', 'node:status', 'status']);
     });
 
+    it('a server command that shares a local command name stays reachable by its namespaced name', async () => {
+        const { registry, manager, connection } = setup();
+        const localEcho: any = { command: 'echo', aliases: ['print'], processCommand: async () => undefined };
+        registry.registerProcessor(localEcho);
+        connection.commands.push({ command: 'echo', description: 'remote echo' });
+        await manager.reconnect('node');
+        expect(registry.findProcessor('echo', [])).toBe(localEcho);
+        expect(registry.findProcessor('node:echo', [])).toBeDefined();
+        expect(registry.findProcessor('node:echo', [])).not.toBe(localEcho);
+    });
+
+    it('server commands accept a value (node:hello world, bare and multi-server aliases)', async () => {
+        const { registry, manager, connection } = setup();
+        connection.commands.push(
+            { command: 'hello', description: 'Greets' },
+            { command: 'weather', description: 'Weather', processors: [{ command: 'current', description: 'Now' }] },
+        );
+        await manager.reconnect('node');
+        expect(registry.findProcessor('node:hello', ['world'])?.command).toBe('node:hello');
+        expect(registry.findProcessor('hello', ['world'])?.command).toBe('hello');
+        expect(registry.findProcessor('node:weather', ['current', 'london'])?.command).toBe('current');
+
+        const python: any = { ...connection, commands: [{ command: 'hello', description: 'Greets' }] };
+        manager.connections.set('python', python);
+        await manager.reconnect('python');
+        expect(registry.findProcessor('hello', ['world'])).toBeDefined();
+    });
+
     it('a disconnect removes only the server commands', async () => {
         const { registry, manager, connection } = setup();
         await manager.reconnect('node');
