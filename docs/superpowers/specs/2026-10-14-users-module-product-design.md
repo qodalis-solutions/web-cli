@@ -319,6 +319,7 @@ Applies on top of Appendix A. Where B conflicts with A, B wins.
   Demos set `allowedOrigins` to the local dev origins (`http://localhost:4300-4303`, `http://localhost:4200`, `http://127.0.0.1:*` equivalents as needed).
 - `session-kicked` and other user-scoped events are sent **only** to event sockets authenticated as that user/session.
 - Logs socket requires `logs:read`. Never log shell `cmd` values or tokens.
+- Event and logs sockets authenticated with a stored session are bound to it: when the session ends (logout, revoke, user disabled/deleted, expiry) the socket closes with `4401` `session ended`; for a revoke, `session-kicked` is sent first. Sockets authenticated by an external adapter have no stored session and are not re-checked.
 
 ### B3. No privilege escalation
 
