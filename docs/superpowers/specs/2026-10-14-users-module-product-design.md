@@ -197,7 +197,7 @@ Base: `/api/v1/qcli`. Collections accept paths with **and** without trailing sla
 ### Permissions
 
 Effective permissions = union of the user's groups' `permissions`. Matching:
-`resource:action`, segment `*` matches the rest (`*`, `users:*`), case-insensitive
+`resource:action`, a trailing `*` matches the rest (`*`, `users:*`), a `*` elsewhere matches exactly one segment (`*:read` matches `users:read`, not `users:delete`), case-insensitive
 (same semantics as `cliPermissionMatches` in web-cli core).
 
 | Endpoint | Requirement |

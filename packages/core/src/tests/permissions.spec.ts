@@ -18,6 +18,17 @@ describe('permission utils', () => {
         expect(cliPermissionMatches('users:*', 'groups:delete')).toBeFalse();
     });
 
+    it('a non-terminal wildcard matches one segment only', () => {
+        // `*:read` is read access everywhere, not every permission
+        expect(cliPermissionMatches('*:read', 'users:read')).toBeTrue();
+        expect(cliPermissionMatches('*:read', 'users:delete')).toBeFalse();
+        expect(cliPermissionMatches('*:read', '*')).toBeFalse();
+        expect(cliHasPermission(['*:read'], '*')).toBeFalse();
+        expect(cliPermissionMatches('files:*:read', 'files:etc:write')).toBeFalse();
+        expect(cliPermissionMatches('files:*:read', 'files:etc:read')).toBeTrue();
+        expect(cliPermissionMatches('files:*', 'files:etc:write')).toBeTrue();
+    });
+
     it('does not treat a prefix as a grant', () => {
         expect(cliPermissionMatches('users', 'users:create')).toBeFalse();
         expect(cliPermissionMatches('users:create', 'users')).toBeFalse();

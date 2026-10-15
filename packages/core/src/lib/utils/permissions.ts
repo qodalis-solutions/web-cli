@@ -1,11 +1,13 @@
 /**
  * Permission strings are `resource:action` (for example `users:create`).
- * A segment may be `*` to match anything at that level and below:
+ * A trailing `*` segment matches anything at that level and below; a `*`
+ * in any other position matches exactly one segment:
  *
  * | granted       | matches                               |
  * |---------------|---------------------------------------|
  * | `*`           | every permission                      |
  * | `users:*`     | `users:create`, `users:delete`, ...   |
+ * | `*:read`      | `users:read`, `groups:read`, ...      |
  * | `users:read`  | only `users:read`                     |
  *
  * Matching is case-insensitive.
@@ -14,8 +16,8 @@ export function cliPermissionMatches(granted: string, required: string): boolean
     const g = granted.trim().toLowerCase().split(':');
     const r = required.trim().toLowerCase().split(':');
     for (let i = 0; i < g.length; i++) {
-        if (g[i] === '*') return true;
-        if (i >= r.length || g[i] !== r[i]) return false;
+        if (g[i] === '*' && i === g.length - 1) return true;
+        if (i >= r.length || (g[i] !== '*' && g[i] !== r[i])) return false;
     }
     return g.length === r.length;
 }
