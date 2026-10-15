@@ -321,15 +321,15 @@ export class MultiSelectInputMode extends InputModeBase<string[]> {
         if (this.selectOptions?.searchable) {
             if (this.filter.length > 0) {
                 this.host.terminal.write(
-                    `\x1b[36m?\x1b[0m ${this.promptText}: ${this.filter}`,
+                    this.fitLine(`\x1b[36m?\x1b[0m ${this.promptText}: ${this.filter}`),
                 );
             } else {
                 this.host.terminal.write(
-                    `\x1b[36m?\x1b[0m ${this.promptText}: \x1b[2mType to filter...\x1b[0m`,
+                    this.fitLine(`\x1b[36m?\x1b[0m ${this.promptText}: \x1b[2mType to filter...\x1b[0m`),
                 );
             }
         } else {
-            this.host.terminal.write(`\x1b[36m?\x1b[0m ${this.promptText}:`);
+            this.host.terminal.write(this.fitLine(`\x1b[36m?\x1b[0m ${this.promptText}:`));
         }
     }
 
@@ -348,7 +348,7 @@ export class MultiSelectInputMode extends InputModeBase<string[]> {
 
         // Show scroll-up indicator
         if (visibleStart > 0) {
-            this.host.terminal.write(`\r\n\x1b[2m  \u2191 ${visibleStart} more above\x1b[0m`);
+            this.writeRow(`\x1b[2m  \u2191 ${visibleStart} more above\x1b[0m`);
             this.renderedLines++;
         }
 
@@ -357,8 +357,8 @@ export class MultiSelectInputMode extends InputModeBase<string[]> {
         for (const item of items) {
             if (item.type === 'group-header') {
                 if (this.isGroupVisible(item.groupName!, items, visibleStart, visibleEnd)) {
-                    this.host.terminal.write(
-                        `\r\n\x1b[35m\u2500\u2500 ${item.groupName} \u2500\u2500\x1b[0m`,
+                    this.writeRow(
+                        `\x1b[35m\u2500\u2500 ${item.groupName} \u2500\u2500\x1b[0m`,
                     );
                     this.renderedLines++;
                 }
@@ -383,7 +383,7 @@ export class MultiSelectInputMode extends InputModeBase<string[]> {
         // Show scroll-down indicator
         const remaining = selectables.length - visibleEnd;
         if (remaining > 0) {
-            this.host.terminal.write(`\r\n\x1b[2m  \u2193 ${remaining} more below\x1b[0m`);
+            this.writeRow(`\x1b[2m  \u2193 ${remaining} more below\x1b[0m`);
             this.renderedLines++;
         }
     }
@@ -455,16 +455,16 @@ export class MultiSelectInputMode extends InputModeBase<string[]> {
             const disabledCheckbox = isChecked
                 ? '\x1b[2m\u25C9\x1b[0m'
                 : '\x1b[2m\u25CB\x1b[0m';
-            this.host.terminal.write(
-                `\r\n    ${disabledCheckbox} \x1b[2m${opt.label}${desc} (disabled)\x1b[0m`,
+            this.writeRow(
+                `    ${disabledCheckbox} \x1b[2m${opt.label}${desc} (disabled)\x1b[0m`,
             );
         } else if (isSelected) {
-            this.host.terminal.write(
-                `\r\n  \x1b[48;5;24m\x1b[38;5;117m\u276F ${checkbox} ${label}${desc}\x1b[0m`,
+            this.writeRow(
+                `  \x1b[48;5;24m\x1b[38;5;117m\u276F ${checkbox} ${label}${desc}\x1b[0m`,
             );
         } else {
-            this.host.terminal.write(
-                `\r\n    ${checkbox} ${label}${desc}`,
+            this.writeRow(
+                `    ${checkbox} ${label}${desc}`,
             );
         }
     }
@@ -505,7 +505,7 @@ export class MultiSelectInputMode extends InputModeBase<string[]> {
             help = `${checkedCount} selected \u00B7 space to toggle \u00B7 a to select all \u00B7 enter to confirm`;
         }
 
-        this.host.terminal.write(`\r\n    \x1b[2m${help}\x1b[0m`);
+        this.writeRow(`    \x1b[2m${help}\x1b[0m`);
         this.renderedLines++;
     }
 }

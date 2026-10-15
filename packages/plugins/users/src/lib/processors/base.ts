@@ -118,7 +118,7 @@ export const MAX_PROMPT_ATTEMPTS = 3;
 export async function readValidated(
     context: ICliExecutionContext,
     prompt: string,
-    check: (value: string) => string | null,
+    check: (value: string) => string | null | Promise<string | null>,
 ): Promise<string | null> {
     for (let attempt = 1; attempt <= MAX_PROMPT_ATTEMPTS; attempt++) {
         const value = await context.reader.readLine(prompt);
@@ -126,7 +126,7 @@ export async function readValidated(
             context.writer.writeError('Aborted');
             return null;
         }
-        const error = check(value.trim());
+        const error = await check(value.trim());
         if (!error) return value.trim();
         context.writer.writeError(error);
     }
