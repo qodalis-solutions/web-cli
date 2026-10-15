@@ -305,15 +305,15 @@ export class SelectInputMode extends InputModeBase<string> {
         if (this.selectOptions?.searchable) {
             if (this.filter.length > 0) {
                 this.host.terminal.write(
-                    `\x1b[36m?\x1b[0m ${this.promptText}: ${this.filter}`,
+                    this.fitLine(`\x1b[36m?\x1b[0m ${this.promptText}: ${this.filter}`),
                 );
             } else {
                 this.host.terminal.write(
-                    `\x1b[36m?\x1b[0m ${this.promptText}: \x1b[2mType to filter...\x1b[0m`,
+                    this.fitLine(`\x1b[36m?\x1b[0m ${this.promptText}: \x1b[2mType to filter...\x1b[0m`),
                 );
             }
         } else {
-            this.host.terminal.write(`\x1b[36m?\x1b[0m ${this.promptText}:`);
+            this.host.terminal.write(this.fitLine(`\x1b[36m?\x1b[0m ${this.promptText}:`));
         }
     }
 
@@ -335,7 +335,7 @@ export class SelectInputMode extends InputModeBase<string> {
 
         // Show scroll-up indicator
         if (visibleStart > 0) {
-            this.host.terminal.write(`\r\n\x1b[2m  ↑ ${visibleStart} more above\x1b[0m`);
+            this.writeRow(`\x1b[2m  ↑ ${visibleStart} more above\x1b[0m`);
             this.renderedLines++;
         }
 
@@ -346,8 +346,8 @@ export class SelectInputMode extends InputModeBase<string> {
                 // Show group header if any of its options are in visible range
                 // Check if the next option's selectable index is in range
                 if (this.isGroupVisible(item.groupName!, items, visibleStart, visibleEnd)) {
-                    this.host.terminal.write(
-                        `\r\n\x1b[35m── ${item.groupName} ──\x1b[0m`,
+                    this.writeRow(
+                        `\x1b[35m── ${item.groupName} ──\x1b[0m`,
                     );
                     this.renderedLines++;
                 }
@@ -375,7 +375,7 @@ export class SelectInputMode extends InputModeBase<string> {
         // Show scroll-down indicator
         const remaining = selectables.length - visibleEnd;
         if (remaining > 0) {
-            this.host.terminal.write(`\r\n\x1b[2m  ↓ ${remaining} more below\x1b[0m`);
+            this.writeRow(`\x1b[2m  ↓ ${remaining} more below\x1b[0m`);
             this.renderedLines++;
         }
     }
@@ -446,16 +446,16 @@ export class SelectInputMode extends InputModeBase<string> {
             : '';
 
         if (opt.disabled) {
-            this.host.terminal.write(
-                `\r\n    \x1b[2m${opt.label}${desc} (disabled)\x1b[0m`,
+            this.writeRow(
+                `    \x1b[2m${opt.label}${desc} (disabled)\x1b[0m`,
             );
         } else if (isSelected) {
-            this.host.terminal.write(
-                `\r\n  \x1b[48;5;24m\x1b[38;5;117m\u276F ${label}${desc}\x1b[0m`,
+            this.writeRow(
+                `  \x1b[48;5;24m\x1b[38;5;117m\u276F ${label}${desc}\x1b[0m`,
             );
         } else {
-            this.host.terminal.write(
-                `\r\n    ${label}${desc}`,
+            this.writeRow(
+                `    ${label}${desc}`,
             );
         }
     }
@@ -495,7 +495,7 @@ export class SelectInputMode extends InputModeBase<string> {
             help = '\u2191/\u2193 navigate \u00B7 enter to select \u00B7 esc to cancel';
         }
 
-        this.host.terminal.write(`\r\n    \x1b[2m${help}\x1b[0m`);
+        this.writeRow(`    \x1b[2m${help}\x1b[0m`);
         this.renderedLines++;
     }
 }

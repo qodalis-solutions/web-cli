@@ -3,10 +3,21 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## v2.0.0-beta.16
+
+### CLI engine (`@qodalis/cli`, `@qodalis/cli-core`)
+
+- **Select and multi-select prompts redraw in place in narrow terminals.** A row wider than the terminal (a long label or description, or the help bar) wrapped onto two rows, the redraw moved the cursor up too few rows, and every arrow key printed the prompt again (`? Groups:` repeated). Rows are now cut to the terminal width with `…` (`readSelect`, `readMultiSelect`, and the help/error lines of every prompt). New `truncateToWidth(text, width)` in core (ANSI- and wide-character-aware).
+
+### Users (`@qodalis/cli-users`)
+
+- `adduser` reports a taken user name or email as soon as it is entered (asked again interactively; a name given on the command line or a taken `--email` fails before the password), instead of after the password.
+- The groups picker shows each group's description next to its name, and the summary line lists only the names.
+
 
 ### Docs site
 
+- Consecutive code blocks (e.g. the npm and runtime install commands) have a gap between them.
 - **Search engines see every docs page.** GitHub Pages answered deep links (`/docs/...`) from `404.html` with HTTP 404, so crawlers treated the pages as missing. The deploy now runs `apps/docs/scripts/generate-static-routes.mjs`, which writes a real page per route (HTTP 200) with its own title, description, canonical URL and Open Graph tags, a `noindex` 404 page for unknown URLs, and a `sitemap.xml` generated from the navigation and plugin list (replacing the hand-maintained one).
 
 ## v2.0.0-beta.15

@@ -36,15 +36,31 @@ export class CliAddUserCommandProcessor extends CliUsersCommand {
         // With --email it stays scriptable: only the password is asked for.
         const interactive = !a['email'];
 
-        const name = words(command)[0] ?? (await readValidated(context, 'Username: ', checkName));
+        // Taken names and emails are reported right away, before the remaining questions
+        const taken = (what: string) => async (value: string): Promise<string | null> => {
+            const user = await firstValueFrom(users.getUser(value)).catch(() => undefined);
+            return user ? `${what} already exists: ${value}` : null;
+        };
+        const checkNewName = async (value: string) => checkName(value) ?? (await taken('user')(value));
+        const checkNewEmail = async (value: string) => checkEmail(value) ?? (await taken('a user with email')(value));
+
+        const given = words(command)[0];
+        const name = given ?? (await readValidated(context, 'Username: ', checkNewName));
         if (!name) return;
-        const nameError = checkName(name);
+        const nameError = given ? await checkNewName(name) : null;
         if (nameError) {
             context.writer.writeError(nameError);
             return;
         }
-        const email = a['email'] || (await readValidated(context, 'Email: ', checkEmail));
+        const email = a['email'] || (await readValidated(context, 'Email: ', checkNewEmail));
         if (!email) return;
+        if (a['email']) {
+            const emailError = await taken('a user with email')(email);
+            if (emailError) {
+                context.writer.writeError(emailError);
+                return;
+            }
+        }
 
         let fullName: string | undefined = a['full-name'] ? String(a['full-name']).trim() : undefined;
         let groups = listArg(a['groups']);
@@ -106,8 +122,9 @@ async function readGroups(
     return context.reader.readMultiSelect(
         'Groups',
         available.map((g) => ({
-            label: g.description ? `${g.name} — ${g.description}` : g.name,
+            label: g.name,
             value: g.name,
+            description: g.description,
             checked: g.name === 'users',
         })),
     );

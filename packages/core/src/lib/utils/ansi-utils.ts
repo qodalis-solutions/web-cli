@@ -36,6 +36,41 @@ export function visibleLength(text: string): number {
 }
 
 /**
+ * Cut a string to at most `width` terminal columns, keeping ANSI escape codes intact.
+ * When the text is too wide it ends with `ellipsis` followed by a reset (`\x1b[0m`)
+ * so no colour leaks into the rest of the line. Use it for lines that are redrawn in
+ * place: a line that wraps takes two rows and breaks cursor-up based redraws.
+ * @param text The text potentially containing ANSI codes
+ * @param width The maximum number of columns (values below 1 return '')
+ * @param ellipsis Appended when the text is cut (default '…')
+ */
+export function truncateToWidth(text: string, width: number, ellipsis = '\u2026'): string {
+    if (width < 1) return '';
+    if (visibleLength(text) <= width) return text;
+    const room = Math.max(0, width - visibleLength(ellipsis));
+    let out = '';
+    let used = 0;
+    let i = 0;
+    while (i < text.length) {
+        if (text[i] === '\x1b') {
+            const m = /^\x1b\[[0-9;]*m/.exec(text.slice(i));
+            if (m) {
+                out += m[0];
+                i += m[0].length;
+                continue;
+            }
+        }
+        const ch = String.fromCodePoint(text.codePointAt(i)!);
+        const w = visibleLength(ch);
+        if (used + w > room) break;
+        out += ch;
+        used += w;
+        i += ch.length;
+    }
+    return `${out}${ellipsis}\x1b[0m`;
+}
+
+/**
  * Check if a Unicode code point occupies two terminal columns.
  */
 function isWideCharacter(cp: number): boolean {
