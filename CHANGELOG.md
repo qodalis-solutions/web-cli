@@ -3,7 +3,12 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## v2.0.0-beta.14 (unreleased)
+## Unreleased
+
+- **`adduser` is interactive**: it asks for the user name and email when they are omitted, and asks for the email before the password. Invalid emails and passwords that break the policy or don't match are asked for again (3 attempts, like `passwd`) instead of ending the command. `passwd` gets the same password retries.
+- **Docs**: opening another page starts at the top; Back/Forward return to the previous scroll position.
+
+## v2.0.0-beta.14
 
 ### Users, permissions and security (`@qodalis/cli-users`)
 

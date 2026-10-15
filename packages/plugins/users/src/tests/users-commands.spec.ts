@@ -139,6 +139,36 @@ describe('users commands (local mode)', () => {
         expect(r.out).toContain('password updated for a');
     });
 
+    it('adduser asks for the name and email when they are omitted', async () => {
+        const { run } = await setup();
+        const r = await run('adduser', 'carol', 'carol@x.io', 'password1', 'password1');
+        expect(r.err).toBe('');
+        expect(r.out).toContain("User 'carol' created");
+        expect((await run('listusers')).out).toContain('carol@x.io');
+    });
+
+    it('adduser re-asks for an invalid email before the password', async () => {
+        const { run } = await setup();
+        const r = await run('adduser dave', 'not-an-email', 'dave@x.io', 'password1', 'password1');
+        expect(r.err).toBe('Invalid email format');
+        expect(r.out).toContain("User 'dave' created");
+    });
+
+    it('adduser re-asks for a password that breaks the policy or does not match', async () => {
+        const { run } = await setup();
+        const r = await run('adduser erin --email=e@x.io', 'abc', 'password1', 'password2', 'password1', 'password1');
+        expect(r.err).toContain('at least 8 characters');
+        expect(r.err).toContain('passwords do not match');
+        expect(r.out).toContain("User 'erin' created");
+    });
+
+    it('adduser gives up after three bad emails without creating the user', async () => {
+        const { run } = await setup();
+        const r = await run('adduser frank', 'a', 'b', 'c', 'password1', 'password1');
+        expect(r.err.split('\n').length).toBe(3);
+        expect((await run('listusers')).out).not.toContain('frank');
+    });
+
     it('adduser accepts every email the backend accepts (root@localhost style)', async () => {
         const { run } = await setup();
         const r = await run('adduser ops --email=ops@localhost', 'password1', 'password1');
