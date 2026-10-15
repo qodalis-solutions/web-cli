@@ -109,28 +109,34 @@ const adminOnlyHook: ICliProcessorHook = {
 };
 
 // ── 4. validateBeforeExecution — abort if invalid ─────────────
-//    Unlike hooks, this method can return false to block execution.
+//    Unlike hooks, it can block execution: it runs synchronously before
+//    processCommand and returns { valid, message }. Interactive checks (a
+//    confirmation prompt) belong in processCommand, which can simply return.
 
 const dangerProcessor: ICliCommandProcessor = {
     command: 'danger-reset',
-    description: 'Dangerous operation that requires confirmation',
+    description: 'Dangerous operation that requires --force and a confirmation',
 
     hooks: [timingBeforeHook, timingAfterHook],
 
-    async validateBeforeExecution(
-        _command,
-        context: ICliExecutionContext,
-    ): Promise<boolean> {
+    parameters: [
+        { name: 'force', type: 'boolean', description: 'Required to run', required: false },
+    ],
+
+    validateBeforeExecution(command) {
+        return command.args['force']
+            ? { valid: true }
+            : { valid: false, message: 'Refusing to reset without --force.' };
+    },
+
+    async processCommand(_command, context: ICliExecutionContext) {
         const confirmed = await context.reader.readConfirm(
             'This will reset all data. Are you sure?',
         );
         if (!confirmed) {
             context.writer.writeWarning('Operation cancelled.');
+            return;
         }
-        return confirmed;
-    },
-
-    async processCommand(_command, context: ICliExecutionContext) {
         context.writer.writeln('Resetting all data...');
         await new Promise((r) => setTimeout(r, 1000));
         context.writer.writeSuccess('All data has been reset.');
