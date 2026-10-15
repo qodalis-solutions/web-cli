@@ -170,8 +170,12 @@ export class CliServerManager implements DefaultServerProvider {
     private unregisterBareAliases(): void {
         // Only the aliases created here: local processors that merely declare
         // `requireServer` (e.g. data-explorer) must survive reconnects
+        // `unregisterProcessor` removes by command name: skip aliases that a
+        // local processor has since replaced, or that one would be removed
         for (const p of this._bareAliases) {
-            this.registry.unregisterProcessor(p);
+            if (this.registry.processors.includes(p)) {
+                this.registry.unregisterProcessor(p);
+            }
         }
         this._bareAliases.clear();
     }

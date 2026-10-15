@@ -326,8 +326,12 @@ export class CliServerConnection {
                 type: 'daemon',
                 onStart: async (ctx) => {
                     const wsUrl = await this.buildWebSocketUrl('/ws/v1/qcli/events');
+                    // Disconnected while the URL (ticket) was being resolved
+                    if (!this._connected) return;
                     ctx.log(`Connecting to ${wsUrl.split('?')[0]}`);
 
+                    // Never leave a previous socket open (reconnect while connected)
+                    this.closeEventSocketDirect();
                     this._eventSocket = new WebSocket(wsUrl);
 
                     this._eventSocket.onopen = () => {
@@ -385,6 +389,10 @@ export class CliServerConnection {
     private async connectEventSocketDirectAsync(): Promise<void> {
         try {
             const wsUrl = await this.buildWebSocketUrl('/ws/v1/qcli/events');
+            // Disconnected while the URL (ticket) was being resolved
+            if (!this._connected) return;
+            // Never leave a previous socket open (reconnect while connected)
+            this.closeEventSocketDirect();
             this._eventSocket = new WebSocket(wsUrl);
 
             this._eventSocket.onopen = () => {

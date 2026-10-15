@@ -70,4 +70,14 @@ describe('CliServerManager bare aliases', () => {
         expect(registry.findProcessor('data-explorer', [])).toBe(local);
         expect(names(registry)).toContain('node:data-explorer');
     });
+    it('keeps a local processor installed later under the name of a bare alias', async () => {
+        const { registry, manager } = setup();
+        await manager.reconnect('node');
+        // e.g. `pkg add` installs a local `status` command after the server alias
+        const localStatus: any = { command: 'status', processCommand: async () => undefined };
+        registry.registerProcessor(localStatus);
+        await manager.reconnect('node');
+        expect(registry.findProcessor('status', [])).toBe(localStatus);
+        expect(names(registry)).toEqual(['data-explorer', 'node:status', 'status']);
+    });
 });
