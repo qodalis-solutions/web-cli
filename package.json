@@ -56,7 +56,7 @@
     "@angular-devkit/build-angular": "^19.2.0",
     "@angular/cli": "^19.2.0",
     "@angular/compiler-cli": "^19.2.0",
-    "@nx/js": "^22.5.3",
+    "@nx/js": "^23.3.0",
     "@types/jasmine": "~5.1.0",
     "@types/lodash": "^4.17.14",
     "@types/node": "^22.13.11",
@@ -71,29 +71,12 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "ng-packagr": "^19.2.0",
-    "nx": "^22.5.3",
+    "nx": "^23.3.0",
     "prettier": "^3.4.2",
     "sass": "^1.85.1",
     "tsup": "^8.5.1",
     "typedoc": "^0.27.6",
     "typescript": "~5.8.0",
     "typescript-eslint": "^8.30.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "tar": ">=7.0.0",
-      "minimatch@>=10.0.0": ">=10.2.3",
-      "flatted": ">=3.4.0",
-      "immutable": ">=5.1.5",
-      "serialize-javascript": ">=7.0.5",
-      "@babel/runtime": ">=7.26.10",
-      "node-forge": ">=1.4.0",
-      "brace-expansion@>=1.0.0 <2.0.0": ">=1.1.13",
-      "brace-expansion@>=2.0.0 <3.0.0": ">=2.0.3",
-      "brace-expansion@>=5.0.0": ">=5.0.5",
-      "picomatch@>=2.0.0 <3.0.0": ">=2.3.2",
-      "picomatch@>=4.0.0": ">=4.0.4",
-      "path-to-regexp@<1.0.0": ">=0.1.13"
-    }
   }
 }
