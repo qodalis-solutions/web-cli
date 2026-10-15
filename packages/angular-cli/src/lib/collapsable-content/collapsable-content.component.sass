@@ -317,6 +317,14 @@ $header-height: 60px
   .cli-panel-hide-tab-label
     letter-spacing: 0.03em
 
+  // Phones: icon only, so the tab covers as little of the page as possible
+  @media (max-width: 600px)
+    padding: 6px 8px
+
+    .cli-panel-hide-tab-label,
+    .cli-panel-hide-tab-arrow
+      display: none
+
   // Position: bottom
   &[data-position="bottom"]
     bottom: 0

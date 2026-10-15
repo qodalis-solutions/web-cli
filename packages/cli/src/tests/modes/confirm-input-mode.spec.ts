@@ -50,6 +50,15 @@ describe('ConfirmInputMode', () => {
         expect(host.written.join('')).toContain('(y/N)');
     });
 
+    it('should echo the default answer when Enter is pressed on an empty line', async () => {
+        const mode = makeMode('Enable?', true);
+        mode.activate();
+        host.written = [];
+        await mode.handleInput('\r');
+        expect(resolved).toBe(true);
+        expect(host.written.join('')).toMatch(/^y\r\n/);
+    });
+
     it('should resolve true when y is entered and Enter pressed', async () => {
         const mode = makeMode('Continue?', true);
         mode.activate();

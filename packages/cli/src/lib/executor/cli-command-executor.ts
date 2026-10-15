@@ -51,9 +51,17 @@ export interface ICliExecutionHost extends ICliExecutionContext {
     isExecuting?: boolean;
 }
 
+/** Shell-style exit status: 0 for success or no code, 1 for internal failures (-1). */
+function toExitStatus(code: number | undefined): number {
+    if (code === undefined) return 0;
+    return code < 0 ? 1 : code;
+}
+
 export class CliCommandExecutor implements ICliCommandExecutorService {
     private commandParser: CommandParser = new CommandParser();
     private globalParameters: ICliGlobalParameterHandler[] = [];
+    /** Exit status of the last command, expanded as `$?` (0 = success). */
+    private lastExitCode = 0;
 
     constructor(protected readonly registry: ICliCommandProcessorRegistry) {
         this.registerGlobalParameter(versionGlobalParameter);
@@ -185,6 +193,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 lastExitSuccess =
                     context.process.exitCode === undefined ||
                     context.process.exitCode === 0;
+                this.lastExitCode = toExitStatus(context.process.exitCode);
 
                 rootContext.lastCommandResult = {
                     command: part.value,
@@ -195,6 +204,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 pipelineData = context.process.data;
             } catch (e) {
                 lastExitSuccess = false;
+                this.lastExitCode = 1;
                 rootContext.lastCommandResult = {
                     command: part.value,
                     success: false,
@@ -224,7 +234,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         const process = context.process as CliExecutionProcess;
 
         // Substitute environment variables ($VAR / ${VAR}) before parsing
-        command = expandEnvironmentVars(command, context);
+        command = expandEnvironmentVars(command, context, this.lastExitCode);
 
         // Handle inline variable assignment: VAR=value (no command after it)
         const assignMatch = command.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);

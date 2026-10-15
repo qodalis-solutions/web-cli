@@ -18,6 +18,8 @@ export {
     ICliEnvironment,
     ICliEnvironment_TOKEN,
     CliEnvironment,
+    CliEnvironmentProfile,
+    CliEnvironmentSnapshot,
 } from './cli-environment';
 export { CliDragDropService } from './cli-drag-drop.service';
 export { CliHttpClient } from './cli-http-client';

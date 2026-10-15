@@ -19,6 +19,18 @@ export interface TerminalSetupResult {
     wheelListener: (e: WheelEvent) => void;
 }
 
+/** Viewports at or below this width (phones) get the smaller default font. */
+const NARROW_VIEWPORT = 640;
+
+/**
+ * Default terminal font size: 20px, or 14px on phone-sized viewports so a
+ * line still fits a useful number of columns (about 26 at 20px on a 390px screen).
+ */
+export function defaultFontSize(): number {
+    const width = typeof window !== 'undefined' ? window.innerWidth : 0;
+    return width > 0 && width <= NARROW_VIEWPORT ? 14 : 20;
+}
+
 /**
  * Merge user-supplied terminal options with sensible defaults.
  */
@@ -28,7 +40,7 @@ export function getTerminalOptions(
     return {
         cursorBlink: true,
         allowProposedApi: true,
-        fontSize: 20,
+        fontSize: defaultFontSize(),
         theme: DefaultThemes.default,
         convertEol: true,
         ...(userOptions ?? {}),

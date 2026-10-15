@@ -89,22 +89,22 @@ export const BUILT_IN_GROUPS: CommandGroup[] = [
     },
     {
         label: 'Packages',
-        commands: ['pkg add', 'pkg list', 'pkg remove'],
+        commands: ['pkg add', 'pkg ls', 'pkg remove'],
     },
     {
         label: 'Configuration',
         commands: [
-            'config set',
-            'config get',
-            'config list',
-            'config delete',
+            'configure',
+            'configure list',
+            'configure get',
+            'configure set',
         ],
     },
     {
         label: 'Theming',
         commands: [
-            'theme set',
-            'theme get',
+            'theme apply',
+            'theme current',
             'theme list',
             'font-size',
         ],
@@ -228,24 +228,25 @@ export const COMMAND_CATEGORIES: CommandCategory[] = [
         label: 'Packages',
         commands: [
             { command: 'pkg add', description: 'Install a plugin package at runtime', aliases: 'packages add' },
-            { command: 'pkg list', description: 'List installed packages' },
+            { command: 'pkg ls', description: 'List installed packages' },
             { command: 'pkg remove', description: 'Remove an installed package' },
         ],
     },
     {
         label: 'Configuration',
         commands: [
-            { command: 'config set', description: 'Set a configuration value' },
-            { command: 'config get', description: 'Get a configuration value' },
-            { command: 'config list', description: 'List all configuration values' },
-            { command: 'config delete', description: 'Delete a configuration value' },
+            { command: 'configure', description: 'Open the interactive configuration menu' },
+            { command: 'configure list', description: 'List all configuration values' },
+            { command: 'configure get', description: 'Get a configuration value' },
+            { command: 'configure set', description: 'Set a configuration value' },
+            { command: 'configure reset', description: 'Reset configuration to defaults' },
         ],
     },
     {
         label: 'Theming',
         commands: [
-            { command: 'theme set', description: 'Switch to a different theme' },
-            { command: 'theme get', description: 'Show the current theme' },
+            { command: 'theme apply', description: 'Switch to a different theme' },
+            { command: 'theme current', description: 'Show the current theme' },
             { command: 'theme list', description: 'List all available themes' },
             { command: 'font-size', description: 'Adjust the terminal font size', aliases: 'fontsize' },
         ],

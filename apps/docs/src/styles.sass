@@ -145,6 +145,9 @@ $radius-sm: 8px
   align-items: center
   justify-content: space-between
 
+  @media (max-width: 520px)
+    padding: 0 12px
+
 .nav-brand
   display: flex
   align-items: center
@@ -160,10 +163,16 @@ $radius-sm: 8px
   strong
     font-weight: 700
 
+  .brand-text
+    white-space: nowrap
+
 .nav-links
   display: flex
   align-items: center
   gap: 6px
+
+  @media (max-width: 520px)
+    gap: 2px
 
 .nav-link
   font-size: 0.82rem
@@ -172,7 +181,11 @@ $radius-sm: 8px
   text-decoration: none
   padding: 6px 12px
   border-radius: 6px
+  white-space: nowrap
   transition: color 0.15s, background-color 0.15s
+
+  @media (max-width: 520px)
+    padding: 6px 8px
 
   &:hover
     color: $text
@@ -190,6 +203,9 @@ $radius-sm: 8px
   .arrow
     font-size: 0.75rem
     opacity: 0.6
+
+    @media (max-width: 520px)
+      display: none
 
 // ─── Hero ───
 .hero
@@ -636,6 +652,7 @@ $radius-sm: 8px
 .terminal-body
   background: #000
   min-height: 420px
+  padding: 8px 0 0 10px
 
 // ─── Advanced Features ───
 .advanced-section
@@ -885,8 +902,9 @@ $radius-sm: 8px
   padding: 40px 48px
   max-width: 860px
 
+  // Clear the fixed sidebar toggle (top 64px, 36px tall) so it never covers the title
   @media (max-width: 768px)
-    padding: 24px 16px
+    padding: 56px 16px 24px
 
   h1
     font-size: 1.75rem
@@ -913,11 +931,22 @@ $radius-sm: 8px
     color: $text-secondary
     margin: 0 0 16px
 
+  // Code outside a .code-block (plain <pre>) scrolls inside itself too
+  pre
+    max-width: 100%
+    overflow-x: auto
+
   table
     width: 100%
     border-collapse: collapse
     margin: 16px 0 24px
     font-size: 0.82rem
+
+    // Wide tables scroll inside themselves instead of widening the page
+    @media (max-width: 768px)
+      display: block
+      overflow-x: auto
+      -webkit-overflow-scrolling: touch
 
     th
       text-align: left
@@ -1069,6 +1098,7 @@ $radius-sm: 8px
 .try-it-body
   background: #000
   min-height: 260px
+  padding: 8px 0 0 10px
 
 // ─── Next Steps Grid ───
 .next-steps-grid

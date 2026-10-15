@@ -28,6 +28,8 @@ export class ConfirmInputMode extends InputModeBase<boolean> {
     async handleInput(data: string): Promise<void> {
         if (data === '\r') {
             if (this.buffer === '') {
+                // Echo the default so the transcript shows what was answered
+                this.host.terminal.write(this.defaultValue ? 'y' : 'n');
                 this.resolveAndPop(this.defaultValue);
             } else {
                 const lower = this.buffer.toLowerCase();

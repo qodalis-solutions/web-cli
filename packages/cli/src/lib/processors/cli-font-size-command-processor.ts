@@ -9,14 +9,15 @@ import {
     DefaultLibraryAuthor,
     CliForegroundColor,
 } from '@qodalis/cli-core';
+import { defaultFontSize } from '../engine/cli-terminal-setup';
 
-const DEFAULT_FONT_SIZE = 20;
 const MIN_FONT_SIZE = 8;
 const MAX_FONT_SIZE = 40;
 const STEP = 2;
 
 interface FontSizeState {
-    fontSize: number;
+    /** Set only after the user picks a size; until then the host's font size stays. */
+    fontSize?: number;
 }
 
 export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
@@ -28,7 +29,7 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
 
     stateConfiguration: CliStateConfiguration = {
         storeName: 'font-size',
-        initialState: { fontSize: DEFAULT_FONT_SIZE } as FontSizeState,
+        initialState: {} as FontSizeState,
     };
 
     processors: ICliCommandProcessor[] = [
@@ -48,9 +49,9 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
         },
         {
             command: 'reset',
-            description: `Reset font size to default (${DEFAULT_FONT_SIZE}px)`,
+            description: 'Reset font size to the default',
             processCommand: async (_: CliProcessCommand, context: ICliExecutionContext) => {
-                await this.setFontSize(context, DEFAULT_FONT_SIZE);
+                await this.resetFontSize(context);
             },
         },
         {
@@ -73,7 +74,11 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
         },
     ];
 
+    /** The size the host configured (or the built-in default), restored by `font-size reset`. */
+    private hostFontSize?: number;
+
     async initialize(context: ICliExecutionContext): Promise<void> {
+        this.hostFontSize = context.terminal?.options?.fontSize as number | undefined;
         const state = context.state.getState<FontSizeState>();
         if (state?.fontSize != null && context.terminal?.options) {
             context.terminal.options.fontSize = state.fontSize;
@@ -95,7 +100,7 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
             `  ${context.writer.wrapInColor('font-size set <n>', CliForegroundColor.Cyan)}    Set to exact size`,
         );
         context.writer.writeln(
-            `  ${context.writer.wrapInColor('font-size reset', CliForegroundColor.Cyan)}      Reset to default (${DEFAULT_FONT_SIZE}px)`,
+            `  ${context.writer.wrapInColor('font-size reset', CliForegroundColor.Cyan)}      Reset to default (${this.getDefault()}px)`,
         );
     }
 
@@ -105,7 +110,21 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
             return fromTerminal;
         }
         const state = context.state.getState<FontSizeState>();
-        return state?.fontSize ?? DEFAULT_FONT_SIZE;
+        return state?.fontSize ?? this.getDefault();
+    }
+
+    private getDefault(): number {
+        return this.hostFontSize ?? defaultFontSize();
+    }
+
+    private async resetFontSize(context: ICliExecutionContext): Promise<void> {
+        const size = this.getDefault();
+        if (context.terminal?.options) {
+            context.terminal.options.fontSize = size;
+        }
+        context.state.updateState({ fontSize: undefined } as FontSizeState);
+        await context.state.persist();
+        context.writer.writeSuccess(`Font size set to ${size}px`);
     }
 
     private async setFontSize(context: ICliExecutionContext, size: number): Promise<void> {

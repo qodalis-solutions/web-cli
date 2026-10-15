@@ -238,6 +238,33 @@ describe('CliTestHarness', () => {
         expect(result.output).toContain('declare -x SHELL=');
     });
 
+    it('should set several variables with one export', async () => {
+        await harness.execute('export A=1 B="two words"');
+        const result = await harness.execute('echo $A-$B');
+        expect(result.output).toContain('1-two words');
+    });
+
+    it('should unset several variables at once', async () => {
+        await harness.execute('export X=1 Y=2');
+        await harness.execute('unset X Y');
+        const result = await harness.execute('echo [$X$Y]');
+        expect(result.output).toContain('[]');
+    });
+
+    it('should expand ~ to HOME at the start of a word', async () => {
+        const result = await harness.execute('echo ~ ~/docs a~b');
+        expect(result.output).toContain('/home/user /home/user/docs a~b');
+    });
+
+    it('should expand $? to the last exit status', async () => {
+        await harness.execute('no-such-command-xyz');
+        const failed = await harness.execute('echo $?');
+        expect(failed.output).toContain('1');
+
+        const ok = await harness.execute('echo $?');
+        expect(ok.output).toContain('0');
+    });
+
     it('should not expand variables inside single quotes', async () => {
         await harness.execute('export FOO=bar');
         const result = await harness.execute("echo '$FOO'");
