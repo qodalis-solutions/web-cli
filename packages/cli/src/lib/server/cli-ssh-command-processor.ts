@@ -449,22 +449,26 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
 
 /**
  * Message for a shell socket closed by the server with an application code
- * (servers accept, then close, so the browser can read why). `null` for a
- * normal close.
+ * (servers accept, then close, so the browser can read why; reason texts are
+ * the canonical ones from the server contract). `null` for a normal close.
  */
 export function describeShellClose(event: { code?: number; reason?: string }, serverName: string): string | null {
-    const detail = event.reason ? ` (${event.reason})` : '';
+    const reason = (event.reason ?? '').toLowerCase();
     switch (event.code) {
         case 4401:
-            return `ssh: login required or session ended on '${serverName}'${detail}`;
+            if (reason === 'session ended') return `ssh: your session on '${serverName}' ended. Please log in again.`;
+            if (reason === 'shell access is not configured') {
+                return `ssh: shell access is not configured on '${serverName}'`;
+            }
+            return `ssh: login required on '${serverName}'`;
         case 4403:
-            return `ssh: permission denied on '${serverName}'${detail || ' (requires shell:execute)'}`;
+            return `ssh: permission denied on '${serverName}' (requires shell:execute or a valid shell token)`;
         case 4404:
             return `ssh: the shell is disabled on '${serverName}'`;
         case 4408:
-            return `ssh: shell timed out on '${serverName}'${detail}`;
+            return `ssh: shell timed out on '${serverName}'`;
         case 4429:
-            return `ssh: too many shell sessions on '${serverName}'${detail}`;
+            return `ssh: too many shell sessions on '${serverName}'`;
         default:
             return null;
     }

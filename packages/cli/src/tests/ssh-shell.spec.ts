@@ -143,9 +143,9 @@ describe('ssh (shell over WebSocket)', () => {
         const run = new CliSshCommandProcessor().processCommand({ command: 'ssh', value: 'node' } as any, context);
         await flush();
         FakeSocket.last.onerror?.({});
-        FakeSocket.last.onclose({ code: 4403, reason: 'requires shell:execute' });
+        FakeSocket.last.onclose({ code: 4403, reason: 'forbidden' });
         await run;
-        expect(written).toContain("ssh: permission denied on 'node' (requires shell:execute)");
+        expect(written).toContain("ssh: permission denied on 'node' (requires shell:execute or a valid shell token)");
         expect(written.some((w) => w.includes('WebSocket error'))).toBeFalse();
         expect(context.process.exitCode).toBe(1);
         expect(context.exitFullScreenMode).not.toHaveBeenCalled(); // never entered
@@ -159,7 +159,7 @@ describe('ssh (shell over WebSocket)', () => {
         FakeSocket.last.onclose({ code: 4401, reason: 'session ended' });
         await run;
         expect(context.exitFullScreenMode).toHaveBeenCalled();
-        expect(written).toContain("ssh: login required or session ended on 'node' (session ended)");
+        expect(written).toContain("ssh: your session on 'node' ended. Please log in again.");
     });
 
     it('one-shot: a plain connection failure still reports a WebSocket error', async () => {
@@ -174,6 +174,8 @@ describe('ssh (shell over WebSocket)', () => {
     });
 
     it('maps every documented close code', () => {
+        expect(describeShellClose({ code: 4401, reason: 'login required' }, 's')).toBe("ssh: login required on 's'");
+        expect(describeShellClose({ code: 4401, reason: 'shell access is not configured' }, 's')).toContain('not configured');
         expect(describeShellClose({ code: 4404 }, 's')).toContain('disabled');
         expect(describeShellClose({ code: 4408 }, 's')).toContain('timed out');
         expect(describeShellClose({ code: 4429 }, 's')).toContain('too many');
