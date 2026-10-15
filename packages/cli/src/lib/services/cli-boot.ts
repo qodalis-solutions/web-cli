@@ -205,6 +205,7 @@ export class CliBoot {
                 this.registry.registerProcessor(processor);
             }
             await this.initializeProcessorsInternal(context, filtered);
+            this.adoptMergedSubProcessors(filtered);
         }
 
         this.bootedModules.add(module.name);
@@ -212,6 +213,28 @@ export class CliBoot {
         // Track in module registry for introspection (without triggering boot handlers)
         if (!this.moduleRegistry.has(module.name)) {
             this.moduleRegistry.track(module);
+        }
+    }
+
+    /**
+     * Sub-processors of an `extendsProcessor` processor are merged into the
+     * processor it extends, so they belong to that one: re-parent them so they
+     * inherit its access rules (`requiredPermissions` etc.) and help/root
+     * lookups resolve to the registered processor.
+     */
+    private adoptMergedSubProcessors(processors: ICliCommandProcessor[]): void {
+        for (const processor of processors) {
+            if (!processor.extendsProcessor) continue;
+            const name = processor.command.toLowerCase();
+            const host = this.registry.processors.find(
+                (p) => p.command.toLowerCase() === name,
+            );
+            if (!host || host === processor) continue;
+            for (const sub of processor.processors ?? []) {
+                if (host.processors?.includes(sub)) {
+                    (sub as ICliCommandChildProcessor).parent = host;
+                }
+            }
         }
     }
 

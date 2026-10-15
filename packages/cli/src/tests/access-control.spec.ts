@@ -137,6 +137,31 @@ describe('Access control (generic layer)', () => {
         expect(registry.get('DEPLOY:RUN')).toEqual({ name: 'deploy:run', description: 'Run deployments', module: 'deploy-module' });
     });
 
+    it('sub-commands added by an extending module inherit the access rules of the extended command', async () => {
+        const h = new CliTestHarness();
+        const boot = new CliBoot(h.registry, h.services);
+        const context: any = {
+            services: h.services,
+            logger: { info() {}, warn() {}, error() {} },
+            translator: { addTranslations() {} },
+            writer: { writeWarning() {} },
+        };
+        const status = proc('status');
+        const deploy: any = { ...proc('deploy', { requiredPermissions: ['deploy:run'] }), processors: [status] };
+        const rollback = proc('rollback');
+        const extension: any = { ...proc('deploy'), extendsProcessor: true, processors: [rollback] };
+        const mod = (name: string, processors: any[]) => ({ name, apiVersion: 2, version: '1.0.0', description: name, processors });
+        await (boot as any).bootModule(mod('deploy-module', [deploy]), context);
+        await (boot as any).bootModule(mod('deploy-extension', [extension]), context);
+
+        h.registerService(ICliAuthorizationService_TOKEN, authorization({ ...ALICE, permissions: [] }));
+        const r1 = await h.execute('deploy status');
+        const r2 = await h.execute('deploy rollback');
+        expect([status.runs, rollback.runs]).toEqual([0, 0]);
+        expect(r1.stderr.join()).toContain('permission denied');
+        expect(r2.stderr.join()).toContain('permission denied');
+    });
+
     describe('cliEvaluateAccess (rwx)', () => {
         const file = { ownership: { uid: 'alice', gid: 'dev' }, permissions: 'rw-r-----' };
         it('owner / group / other bits', () => {
