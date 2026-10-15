@@ -1,21 +1,52 @@
 import {
     CliForegroundColor,
     CliProcessCommand,
+    CliStateConfiguration,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
 } from '@qodalis/cli-core';
 import {
+    CliEnvironment,
+    CliEnvironmentSnapshot,
     ICliEnvironment,
     ICliEnvironment_TOKEN,
 } from '../services/cli-environment';
+
+interface EnvironmentState {
+    profiles: CliEnvironmentSnapshot;
+}
+
+/** `NAME=value` pairs; values may be quoted to hold spaces. */
+const ASSIGNMENT = /([A-Za-z_][A-Za-z0-9_]*)=("[^"]*"|'[^']*'|\S*)/y;
+const NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+/** Parse `A=1 B="two words" C` into assignments; bare names have no value. */
+export function parseAssignments(raw: string): { name: string; value?: string }[] | null {
+    const result: { name: string; value?: string }[] = [];
+    for (const token of raw.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) ?? []) {
+        ASSIGNMENT.lastIndex = 0;
+        const match = ASSIGNMENT.exec(token);
+        if (match && ASSIGNMENT.lastIndex === token.length) {
+            const quoted = /^(["']).*\1$/.test(match[2]);
+            result.push({ name: match[1], value: quoted ? match[2].slice(1, -1) : match[2] });
+        } else if (NAME.test(token)) {
+            result.push({ name: token });
+        } else {
+            return null;
+        }
+    }
+    return result;
+}
 
 /**
  * `export` — set environment variables.
  *
  * Usage:
  *   export VAR=value
- *   export VAR="value with spaces"
+ *   export VAR="value with spaces" OTHER=1
+ *
+ * Changes are saved per user and restored on the next visit.
  */
 export class CliExportCommandProcessor implements ICliCommandProcessor {
     command = 'export';
@@ -23,6 +54,23 @@ export class CliExportCommandProcessor implements ICliCommandProcessor {
     author = DefaultLibraryAuthor;
     acceptsRawInput = true;
     metadata = { icon: '📦', module: 'system' };
+
+    stateConfiguration: CliStateConfiguration = {
+        storeName: 'environment',
+        initialState: { profiles: {} } as EnvironmentState,
+    };
+
+    /** Restore saved variables and save every later change (export, unset, VAR=value). */
+    async initialize(context: ICliExecutionContext): Promise<void> {
+        const env = context.services.get<ICliEnvironment>(ICliEnvironment_TOKEN);
+        if (!(env instanceof CliEnvironment)) return;
+        const store = context.state;
+        env.load(store.getState<EnvironmentState>()?.profiles);
+        env.onChange = (profiles) => {
+            store.updateState({ profiles } as EnvironmentState);
+            void store.persist();
+        };
+    }
 
     async processCommand(
         command: CliProcessCommand,
@@ -45,9 +93,9 @@ export class CliExportCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        // Parse VAR=value (possibly multiple)
-        const match = raw.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-        if (!match) {
+        // Parse VAR=value (possibly multiple); a bare VAR keeps its value or becomes empty
+        const assignments = parseAssignments(raw);
+        if (!assignments?.length) {
             context.writer.writeError(
                 `export: invalid syntax: ${raw}`,
             );
@@ -55,18 +103,13 @@ export class CliExportCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        const varName = match[1];
-        let varValue = match[2];
-
-        // Strip surrounding quotes
-        if (
-            (varValue.startsWith('"') && varValue.endsWith('"')) ||
-            (varValue.startsWith("'") && varValue.endsWith("'"))
-        ) {
-            varValue = varValue.slice(1, -1);
+        for (const { name, value } of assignments) {
+            if (value !== undefined) {
+                env.set(name, value);
+            } else if (!env.has(name)) {
+                env.set(name, '');
+            }
         }
-
-        env.set(varName, varValue);
     }
 
     writeDescription(context: ICliExecutionContext): void {
@@ -82,6 +125,13 @@ export class CliExportCommandProcessor implements ICliCommandProcessor {
         );
         writer.writeln(
             `  ${writer.wrapInColor('export VAR="hello world"', CliForegroundColor.Cyan)}  ${t.t('cli.export.set_spaces', 'Set with spaces')}`,
+        );
+        writer.writeln(
+            `  ${writer.wrapInColor('export A=1 B=2', CliForegroundColor.Cyan)}            ${t.t('cli.export.set_many', 'Set several at once')}`,
+        );
+        writer.writeln();
+        writer.writeln(
+            t.t('cli.export.saved', 'Variables are saved for the signed-in user and used as $VAR or ${VAR} in commands.'),
         );
     }
 }
@@ -104,19 +154,17 @@ export class CliUnsetCommandProcessor implements ICliCommandProcessor {
             ICliEnvironment_TOKEN,
         );
 
-        const varName = (command.value || '').trim();
-        if (!varName) {
+        const names = (command.value || '').trim().split(/\s+/).filter(Boolean);
+        if (!names.length) {
             context.writer.writeError('unset: missing variable name');
             context.process.exit(1, { silent: true });
             return;
         }
 
-        if (!env.has(varName)) {
-            // Silently succeed like bash
-            return;
+        for (const name of names) {
+            // Unknown names succeed silently, like bash
+            if (env.has(name)) env.unset(name);
         }
-
-        env.unset(varName);
     }
 
     writeDescription(context: ICliExecutionContext): void {
@@ -125,7 +173,7 @@ export class CliUnsetCommandProcessor implements ICliCommandProcessor {
         writer.writeln();
         writer.writeln(t.t('cli.common.usage', 'Usage:'));
         writer.writeln(
-            `  ${writer.wrapInColor('unset VAR', CliForegroundColor.Cyan)}`,
+            `  ${writer.wrapInColor('unset VAR [VAR...]', CliForegroundColor.Cyan)}`,
         );
     }
 }

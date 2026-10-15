@@ -119,24 +119,27 @@ export function substituteVars(
 }
 
 /**
- * Expand $VAR and ${VAR} references using the global environment store.
- * Variables inside single-quoted strings are NOT expanded (like bash).
+ * Expand `$VAR` and `${VAR}` references using the global environment store, `$?`
+ * to the last exit status, and a leading `~` (alone or as `~/…`) to `$HOME`.
+ * Nothing is expanded inside single-quoted strings (like bash).
  */
 export function expandEnvironmentVars(
     command: string,
     context: ICliExecutionContext,
+    lastExitCode?: number,
 ): string {
     const env = context.services.get<ICliEnvironment>(ICliEnvironment_TOKEN);
     if (!env) {
         return command;
     }
 
-    // Don't expand inside single-quoted strings
-    // Split by single quotes, expand only outside quotes
+    // Don't expand inside single quotes: split by them and expand only outside
     const parts = command.split("'");
     for (let i = 0; i < parts.length; i++) {
         if (i % 2 === 0) {
-            // Outside single quotes — expand variables
+            if (lastExitCode !== undefined) {
+                parts[i] = parts[i].replace(/\$\?/g, String(lastExitCode));
+            }
             parts[i] = parts[i].replace(
                 /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g,
                 (_, name) => env.get(name) ?? '',
@@ -145,6 +148,14 @@ export function expandEnvironmentVars(
                 /\$([A-Za-z_][A-Za-z0-9_]*)/g,
                 (_, name) => env.get(name) ?? '',
             );
+            const home = env.get('HOME');
+            if (home) {
+                // Only a word that starts with ~ (and the very first part may start the line)
+                parts[i] = parts[i].replace(
+                    /(^|\s)~(?=\/|\s|$)/g,
+                    (match, before, offset) => (i > 0 && offset === 0 && !before ? match : `${before}${home}`),
+                );
+            }
         }
     }
 

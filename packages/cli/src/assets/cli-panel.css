@@ -658,6 +658,18 @@
   letter-spacing: 0.03em;
 }
 
+/* Phones: icon only, so the tab covers as little of the page as possible */
+@media (max-width: 600px) {
+  .cli-panel-hide-tab {
+    padding: 6px 8px;
+  }
+
+  .cli-panel-hide-tab .cli-panel-hide-tab-label,
+  .cli-panel-hide-tab .cli-panel-hide-tab-arrow {
+    display: none;
+  }
+}
+
 /* Arrow pulse on hover */
 @keyframes cli-hide-tab-pulse {
   0%, 100% { transform: translateX(0); }

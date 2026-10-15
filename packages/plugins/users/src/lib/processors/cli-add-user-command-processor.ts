@@ -76,6 +76,7 @@ export class CliAddUserCommandProcessor extends CliUsersCommand {
             if (!groups) {
                 const picked = await readGroups(context, () => firstValueFrom(groupsStore.getGroups()));
                 if (picked === null) return aborted(context);
+                if (!picked.length) context.writer.writeInfo('No group picked: the user joins the default group "users"');
                 groups = picked;
             }
             if (!a['home']) {

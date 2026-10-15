@@ -64,7 +64,7 @@ export class InlineSelectInputMode extends InputModeBase<string> {
         const selectedOpt = this.selectableOptions.find(o => o.value === value);
         const label = selectedOpt ? selectedOpt.label : value;
         this.host.terminal.write('\x1b[2K\r');
-        this.host.terminal.write(`\x1b[32m\u2714\x1b[0m ${this.promptText}: \x1b[36m${label}\x1b[0m`);
+        this.host.terminal.write(`\x1b[32m\u2714\x1b[0m ${this.label(this.promptText)}: \x1b[36m${label}\x1b[0m`);
         this.host.terminal.write('\x1b[?25h'); // Show cursor
         super.resolveAndPop(value);
     }
@@ -75,7 +75,7 @@ export class InlineSelectInputMode extends InputModeBase<string> {
     protected override abort(): void {
         this.clearExtraLines();
         this.host.terminal.write('\x1b[2K\r');
-        this.host.terminal.write(`\x1b[33m\u2718\x1b[0m ${this.promptText}: \x1b[2mcancelled\x1b[0m`);
+        this.host.terminal.write(`\x1b[33m\u2718\x1b[0m ${this.label(this.promptText)}: \x1b[2mcancelled\x1b[0m`);
         this.host.terminal.write('\x1b[?25h'); // Show cursor
         super.abort();
     }
@@ -131,14 +131,14 @@ export class InlineSelectInputMode extends InputModeBase<string> {
      * Get the prompt prefix string (without ANSI escapes for width calculation).
      */
     private getPromptPrefix(): string {
-        return `? ${this.promptText}: `;
+        return `? ${this.label(this.promptText)}: `;
     }
 
     /**
      * Get the rendered prompt prefix (with ANSI color codes).
      */
     private getRenderedPromptPrefix(): string {
-        return `\x1b[36m?\x1b[0m ${this.promptText}: `;
+        return `\x1b[36m?\x1b[0m ${this.label(this.promptText)}: `;
     }
 
     /**

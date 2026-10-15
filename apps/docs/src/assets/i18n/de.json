@@ -132,6 +132,8 @@
   "docs.built-in-commands.th-aliases": "Aliase",
   "docs.built-in-commands.try-it": "Ausprobieren",
   "docs.built-in-commands.try-it-desc": "Probiere jeden der obigen Befehle in diesem Live-Terminal aus. Zum Beispiel: json format '{\"a\":1}', hash sha256 hello, oder theme list.",
+  "docs.built-in-commands.env-title": "Umgebungsvariablen",
+  "docs.built-in-commands.env-desc": "Setze Variablen mit export (oder NAME=wert) und nutze sie als $NAME oder ${NAME} in jedem Befehl; in einfachen Anführungszeichen wird nichts ersetzt. USER, HOME und PWD folgen dem angemeldeten Benutzer und dem aktuellen Verzeichnis, ~ wird zu $HOME und $? zum letzten Exit-Status. Variablen werden pro Benutzer gespeichert und beim nächsten Besuch wiederhergestellt.",
 
   "docs.configuration.title": "Konfiguration",
   "docs.configuration.intro": "Qodalis CLI kann zur Kompilierungszeit über Komponenteneigenschaften oder zur Laufzeit mit eingebauten Konfigurationsbefehlen konfiguriert werden.",
@@ -158,7 +160,7 @@
   "docs.configuration.list-config": "Alle Konfigurationswerte auflisten",
   "docs.configuration.get-config": "Einen bestimmten Wert abrufen",
   "docs.configuration.set-config": "Einen Wert setzen",
-  "docs.configuration.delete-config": "Einen Wert löschen",
+  "docs.configuration.delete-config": "Eine Kategorie auf die Standardwerte zurücksetzen",
 
   "docs.core-concepts.command-processors.title": "Befehlsprozessoren",
   "docs.core-concepts.command-processors.intro": "Jeder Befehl in Qodalis CLI wird von einem Befehlsprozessor gesteuert. Ein Prozessor implementiert die ICliCommandProcessor-Schnittstelle und definiert den Befehlsnamen, die Beschreibung, Parameter und die Logik, die bei der Ausführung des Befehls läuft.",
