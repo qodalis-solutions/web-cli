@@ -44,7 +44,9 @@ permissions are the union of their groups' permissions.
 - Permission strings are `resource:action`, with `*` wildcards: `users:*`, `*`.
 - Built-in groups: `admin` (`*`, cannot be changed or deleted) and `users` (default for new accounts, grants `commands:execute` so members can run server commands).
 - Built-in permissions: `users:read|create|update|delete`, `groups:read|create|update|delete`,
-  `sessions:read|revoke`, `audit:read|clear`.
+  `sessions:read|revoke`, `audit:read|clear`; core also declares `system:packages|services|eval`
+  and `shell:execute` (`ssh` remote shells; not granted to `users` by default:
+  `groupadd ops --permissions=shell:execute`).
 - Any module can declare its own (`ICliModule.permissions`) and protect commands with them.
 
 ```bash
