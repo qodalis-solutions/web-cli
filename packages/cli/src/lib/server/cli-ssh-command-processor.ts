@@ -155,7 +155,11 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             const candidateName = parts[0];
             const entry = shellServers.find((s) => s.name === candidateName);
             if (entry) {
-                const oneShotCmd = parts.slice(1).join(' ') || null;
+                // Take the remote command verbatim from the raw line: the parsed
+                // value has flag-like tokens (e.g. `sh -c '...'`) stripped
+                const oneShotCmd =
+                    this.remoteCommandFromRaw(command.rawCommand, candidateName) ??
+                    (parts.slice(1).join(' ') || null);
                 return {
                     serverName: candidateName,
                     oneShotCmd,
@@ -404,6 +408,12 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                 resolve();
             };
         });
+    }
+
+    /** `ssh <server> <cmd...>` → `<cmd...>` exactly as typed */
+    private remoteCommandFromRaw(raw: string | undefined, serverName: string): string | null {
+        const match = raw?.trim().match(/^\S+\s+(\S+)\s+([\s\S]+)$/);
+        return match && match[1] === serverName ? match[2].trim() : null;
     }
 
     private buildShellUrl(

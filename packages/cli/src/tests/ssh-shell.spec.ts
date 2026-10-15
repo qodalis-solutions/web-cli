@@ -119,4 +119,18 @@ describe('ssh (shell over WebSocket)', () => {
         expect(written).toContain('hi');
         expect(context.process.exitCode).toBe(2);
     });
+
+    it('one-shot: passes the remote command verbatim, including flag-like tokens', async () => {
+        const { context } = setup();
+        // the executor strips "-c" from value; rawCommand keeps it
+        const run = new CliSshCommandProcessor().processCommand(
+            { command: 'ssh', value: "node sh 'exit 4'", rawCommand: "ssh node sh -c 'exit 4'", args: { c: true } } as any,
+            context,
+        );
+        await flush();
+        expect(decodeURIComponent(FakeSocket.last.url)).toContain("&cmd=sh -c 'exit 4'");
+        FakeSocket.last.push({ type: 'exit', code: 4 });
+        await run;
+        expect(context.process.exitCode).toBe(4);
+    });
 });
