@@ -210,3 +210,134 @@ describe('CommandLineMode history navigation', () => {
         expect(lineBuffer.text).toBe('fourth');
     });
 });
+
+describe('CommandLineMode type-ahead', () => {
+    let lineBuffer: CliLineBuffer;
+    let host: CommandLineModeHost;
+    let mode: CommandLineMode;
+    let submitted: string[];
+    let finishCommand: () => void;
+    let rawMode: boolean;
+    let written: string;
+
+    const type = async (text: string) => {
+        for (const ch of text) {
+            await mode.handleInput(ch);
+        }
+    };
+
+    beforeEach(async () => {
+        const history = new CliCommandHistory(new MockKeyValueStore());
+        await history.initialize();
+        lineBuffer = new CliLineBuffer();
+        submitted = [];
+        rawMode = false;
+        written = '';
+        host = createMockHost(history, lineBuffer);
+        (host.terminal as any).write = (data: string) => (written += data);
+        (host as any).isRawModeActive = () => rawMode;
+        host.getExecutionContext = () =>
+            ({
+                setContextProcessor: () => {},
+                // Each command runs until the test finishes it; the new
+                // prompt then clears the line, as the real context does.
+                submitCommand: (text: string) => {
+                    submitted.push(text);
+                    return new Promise<void>((resolve) => {
+                        finishCommand = () => {
+                            lineBuffer.clear();
+                            resolve();
+                        };
+                    });
+                },
+            }) as any;
+        mode = new CommandLineMode(host);
+        mode.activate();
+    });
+
+    it('holds keys typed while a command runs and replays them at the next prompt', async () => {
+        await type('first');
+        const running = mode.handleInput('\r');
+        written = '';
+        await type('next');
+
+        expect(lineBuffer.text).toBe('first');
+        expect(written).toBe('');
+
+        finishCommand();
+        await running;
+
+        expect(lineBuffer.text).toBe('next');
+        expect(submitted).toEqual(['first']);
+    });
+
+    it('runs typed-ahead commands in order', async () => {
+        await type('one');
+        const running = mode.handleInput('\r');
+        await type('two\rthree');
+
+        finishCommand();
+        await Promise.resolve();
+        await new Promise((r) => setTimeout(r));
+        expect(submitted).toEqual(['one', 'two']);
+
+        finishCommand();
+        await running;
+        expect(lineBuffer.text).toBe('three');
+    });
+
+    it('drops typed-ahead keys when Ctrl+C is pressed', async () => {
+        await type('slow');
+        const running = mode.handleInput('\r');
+        await type('oops');
+
+        mode.handleKeyEvent(new KeyboardEvent('keydown', { code: 'KeyC', ctrlKey: true }));
+        finishCommand();
+        await running;
+
+        expect(lineBuffer.text).toBe('');
+        expect(submitted).toEqual(['slow']);
+    });
+
+    it('does not replay keys into the prompt when the command took over the terminal', async () => {
+        await type('game');
+        const running = mode.handleInput('\r');
+        await type('xyz');
+
+        rawMode = true;
+        finishCommand();
+        await running;
+
+        expect(lineBuffer.text).toBe('');
+    });
+});
+
+describe('CommandLineMode history after running commands', () => {
+    it('recalls the command just run with Up, then the one before it', async () => {
+        const history = new CliCommandHistory(new MockKeyValueStore());
+        await history.initialize();
+        const lineBuffer = new CliLineBuffer();
+        const host = createMockHost(history, lineBuffer);
+        host.getExecutionContext = () =>
+            ({
+                submitCommand: async (text: string) => {
+                    await history.addCommand(text);
+                    lineBuffer.clear();
+                },
+            }) as any;
+        const mode = new CommandLineMode(host);
+        mode.activate();
+
+        for (const command of ['echo first', 'echo second']) {
+            for (const ch of command) {
+                await mode.handleInput(ch);
+            }
+            await mode.handleInput('\r');
+        }
+
+        await mode.handleInput(UP);
+        expect(lineBuffer.text).toBe('echo second');
+        await mode.handleInput(UP);
+        expect(lineBuffer.text).toBe('echo first');
+    });
+});

@@ -47,6 +47,12 @@ export class CommandLineMode implements IInputMode {
     private historySearchPrefix: string | null = null;
     /** True when the buffer text was set by history navigation (not typed by user). */
     private bufferSetByHistory = false;
+    /**
+     * Keys typed while a command runs. They belong to the next prompt, so they
+     * are held back and replayed once it is shown, instead of being echoed
+     * into the command's output and appended to the line just submitted.
+     */
+    private typeAhead: string[] = [];
 
     constructor(private readonly host: CommandLineModeHost) {}
 
@@ -57,6 +63,11 @@ export class CommandLineMode implements IInputMode {
     }
 
     async handleInput(data: string): Promise<void> {
+        if (this.isExecutingCommand) {
+            this.typeAhead.push(data);
+            return;
+        }
+
         const buffer = this.host.lineBuffer;
 
         if (data === '\u0009') {
@@ -72,15 +83,22 @@ export class CommandLineMode implements IInputMode {
             this.host.terminal.write('\r\n');
 
             const text = buffer.text;
-            if (text) {
-                this.historyIndex = this.host.commandHistory.getLastIndex();
-                this.bufferSetByHistory = false;
-            }
 
             this.isExecutingCommand = true;
-            const ctx = this.host.getExecutionContext();
-            await ctx.submitCommand(text);
-            this.isExecutingCommand = false;
+            try {
+                const ctx = this.host.getExecutionContext();
+                await ctx.submitCommand(text);
+            } finally {
+                this.isExecutingCommand = false;
+            }
+            if (text) {
+                // Read after submitting: the command is in history only now,
+                // so the next Up arrow recalls it.
+                this.historyIndex = this.host.commandHistory.getLastIndex();
+                this.bufferSetByHistory = false;
+                this.historySearchPrefix = null;
+            }
+            await this.replayTypeAhead();
         } else if (data === '\u001B[A') {
             this.showPreviousCommand();
         } else if (data === '\u001B[B') {
@@ -107,8 +125,26 @@ export class CommandLineMode implements IInputMode {
         }
     }
 
+    /**
+     * Feeds held-back keys to the new prompt in order. A replayed Enter runs
+     * the next command, which holds back and replays whatever follows it.
+     */
+    private async replayTypeAhead(): Promise<void> {
+        // A command that took over the terminal (a game, an editor) owns the
+        // keyboard now; keys typed before it started are not meant for it.
+        if (this.host.isRawModeActive()) {
+            this.typeAhead = [];
+            return;
+        }
+        while (this.typeAhead.length > 0 && !this.isExecutingCommand) {
+            await this.handleInput(this.typeAhead.shift()!);
+        }
+    }
+
     handleKeyEvent(event: KeyboardEvent): boolean {
         if (event.code === 'KeyC' && event.ctrlKey) {
+            // Ctrl+C also discards anything typed ahead of the prompt
+            this.typeAhead = [];
             this.host.abort();
             this.host.terminal.writeln('Ctrl+C');
 
@@ -123,6 +159,7 @@ export class CommandLineMode implements IInputMode {
         }
 
         if (event.code === 'Escape') {
+            this.typeAhead = [];
             this.host.abort();
             this.host.showPrompt({ newLine: true });
             return false;
