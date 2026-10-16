@@ -3,6 +3,13 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### CLI engine (`@qodalis/cli`)
+
+- **Typing ahead works.** Keys typed while a command is still running are held and replayed at the next prompt, in order, including Enter. They used to be echoed into the command's output and appended to the line just submitted (`/$ echo hi` then `help` showed `/$ echo hihelp`). Ctrl+C and Esc discard them, and they are dropped when the command takes over the terminal (games, `nano`).
+- **Up arrow recalls the command you just ran.** After running a command, Up skipped it and showed the one before (and did nothing after the very first command).
+
 ## v2.0.0-beta.17
 
 ### CLI engine (`@qodalis/cli`, `@qodalis/cli-core`)
