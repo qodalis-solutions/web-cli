@@ -28,6 +28,11 @@
             "glob": "qodalis_cli_wasm_bg.wasm",
             "input": "dist/cli/wasm",
             "output": "/assets/wasm"
+          },
+          {
+            "glob": "**/*",
+            "input": "apps/docs/src/static",
+            "output": "/"
           }
         ],
         "styles": [
