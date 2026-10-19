@@ -82,23 +82,26 @@ export class PluginDetailComponent implements OnInit {
 
     ngOnInit(): void {
         this.route.params.subscribe((params) => {
-            // Briefly clear the plugin so @if (plugin) destroys the entire
-            // template.  This forces Prism-highlighted code blocks AND the
-            // <cli> terminal to be recreated with the new plugin's data.
-            this.plugin = undefined;
+            // Moving to another plugin reuses this component: render it
+            // without a plugin first, so @if (plugin) destroys the whole
+            // template and the Prism-highlighted code blocks and the <cli>
+            // terminal are recreated with the new plugin's data. (The app is
+            // zoneless: clearing it and setting the next one before change
+            // detection runs would keep the old content.)
+            if (this.plugin) {
+                this.plugin = undefined;
+                this.cdr.detectChanges();
+            }
 
-            setTimeout(() => {
-                this.plugin = PLUGINS.find((p) => p.id === params['pluginId']);
-                if (this.plugin) {
-                    const mod = MODULE_MAP[this.plugin.moduleExport];
-                    const deps = (this.plugin.tryItDeps ?? [])
-                        .map((name) => MODULE_MAP[name])
-                        .filter(Boolean);
-                    this.tryItModules = mod ? [mod, ...deps] : [];
-                }
-                // The app is zoneless: a timer does not trigger change detection.
-                this.cdr.markForCheck();
-            });
+            this.plugin = PLUGINS.find((p) => p.id === params['pluginId']);
+            if (this.plugin) {
+                const mod = MODULE_MAP[this.plugin.moduleExport];
+                const deps = (this.plugin.tryItDeps ?? [])
+                    .map((name) => MODULE_MAP[name])
+                    .filter(Boolean);
+                this.tryItModules = mod ? [mod, ...deps] : [];
+            }
+            this.cdr.markForCheck();
         });
     }
 
@@ -117,6 +120,11 @@ export class PluginDetailComponent implements OnInit {
 
     get runtimeInstall(): string {
         return `pkg add ${this.plugin?.npmPackage}`;
+    }
+
+    /** `lang-de` → `de`, the value for `configure set system.language`. */
+    get languageCode(): string {
+        return this.plugin?.id.replace(/^lang-/, '') ?? '';
     }
 
     get hasTryIt(): boolean {

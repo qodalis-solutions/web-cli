@@ -28,6 +28,21 @@
         <pre><code>{{ runtimeInstall }}</code></pre>
       </div>
     }
+    @if (plugin.category === "language") {
+      <p>{{ "docs.plugin-detail.language-switch" | translate }}</p>
+      <div class="code-block">
+        <span class="code-label">{{
+          "docs.plugin-detail.runtime-install" | translate
+        }}</span>
+        <pre><code>{{ runtimeInstall }}
+configure set system.language {{ languageCode }}</code></pre>
+      </div>
+      <p>
+        <a routerLink="/docs/language-packs">{{
+          "sidebar.language-packs" | translate
+        }}</a>
+      </p>
+    }
     @if (plugin.command) {
       <h2>{{ "docs.plugin-detail.commands" | translate }}</h2>
     }
