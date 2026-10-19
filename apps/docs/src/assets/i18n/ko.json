@@ -215,6 +215,7 @@
   "docs.core-concepts.command-line.scripts-title": "스크립트",
   "docs.core-concepts.command-line.scripts-desc": "files 플러그인을 사용하면 <code>sh script.sh</code>, <code>source script.sh</code>, <code>./script.sh</code>로 파일을 한 줄씩 실행합니다. 스크립트는 <code>if</code> / <code>elif</code> / <code>else</code>, <code>for … in</code>, <code>while</code>과 <code>until</code>, <code>break</code>와 <code>continue</code>, <code>exit</code>, 주석을 지원합니다. 조건은 명령이며, 성공이 참을 뜻합니다. <code>test</code>(또는 <code>[ … ]</code>)는 문자열과 숫자를 비교하고 경로를 확인합니다. <code>true</code>와 <code>false</code>는 이름 그대로 동작합니다. 실패한 명령은 스크립트를 중단합니다(<code>set +e</code>로 끌 수 있음). 단, 조건 안에서는 중단하지 않습니다. Ctrl+C로도 중단됩니다.",
   "docs.core-concepts.command-line.scripts-unsupported": "지원하지 않음: 함수, <code>case</code>, 산술 <code>$((…))</code>, <code>read</code>, 스크립트 인수(<code>$1</code>).",
+  "docs.core-concepts.command-line.scripts-prompt": "반복문과 조건문은 프롬프트에 한 줄로 입력해도 동작합니다. 이때는 대화형 셸처럼 명령이 실패해도 반복이 멈추지 않습니다.",
   "docs.core-concepts.command-line.completion-title": "Tab 자동 완성",
   "docs.core-concepts.command-line.completion-desc": "Tab은 명령, 하위 명령, 플래그와 files 플러그인이 있으면 경로까지 완성합니다. 공백이 있는 이름은 따옴표로 묶어 완성되며(<code>cat my</code> + Tab → <code>cat \"my notes.txt\"</code>), 직접 연 따옴표 안에서도 마찬가지입니다. Tab을 두 번 누르면 선택지가 나열됩니다.",
 
@@ -232,6 +233,7 @@
   "docs.core-concepts.command-processors.field-extends": "추가 하위 명령으로 래핑/확장할 명령 이름",
   "docs.core-concepts.command-processors.process-command-title": "processCommand 메서드",
   "docs.core-concepts.command-processors.process-command-desc": "processCommand(command, context) 메서드는 사용자가 명령을 입력할 때 호출됩니다. 파싱된 명령과 터미널 I/O, 상태, 스피너 등에 접근할 수 있는 실행 컨텍스트를 받습니다.",
+  "docs.core-concepts.command-processors.arguments-desc": "사용자가 입력한 내용은 <code>CliProcessCommand</code>로 명령에 전달됩니다. <code>command.positionals</code>는 명령 뒤의 단어를 셸처럼 나눈 것(따옴표 제거, <code>greet \"Ada Lovelace\"</code>는 <code>['Ada Lovelace']</code>), <code>command.args</code>는 이름별 플래그(<code>--units metric</code>은 <code>args.units</code>), <code>command.value</code>는 명령 뒤의 텍스트, <code>command.rawCommand</code>는 전체 줄입니다. 입력한 줄을 그대로 받는 명령(식, 프로그램)은 <code>metadata.literalInput</code>을 설정합니다. 그러면 <code>|</code>, <code>&gt;</code>, <code>&amp;&amp;</code>, <code>$</code>, 와일드카드는 명령이 처리합니다. core는 명령줄을 만들 때 쓰는 <code>splitShellWords</code>, <code>joinShellWords</code>, <code>quoteShellWord</code>를 제공합니다.",
   "docs.core-concepts.command-processors.example-title": "구현 예제",
   "docs.core-concepts.command-processors.sub-commands-title": "하위 명령",
   "docs.core-concepts.command-processors.sub-commands-desc": "프로세서는 중첩된 프로세서를 정의하여 명령 계층 구조를 만들 수 있습니다. 예를 들어, git 프로세서는 commit과 push를 하위 명령 프로세서로 가질 수 있습니다.",

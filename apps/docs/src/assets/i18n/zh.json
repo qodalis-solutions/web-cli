@@ -215,6 +215,7 @@
   "docs.core-concepts.command-line.scripts-title": "脚本",
   "docs.core-concepts.command-line.scripts-desc": "使用 files 插件时，<code>sh script.sh</code>、<code>source script.sh</code> 或 <code>./script.sh</code> 会逐行运行文件。脚本支持 <code>if</code> / <code>elif</code> / <code>else</code>、<code>for … in</code>、<code>while</code> 和 <code>until</code>、<code>break</code> 和 <code>continue</code>、<code>exit</code> 以及注释。条件就是命令：成功即为真。<code>test</code>（或 <code>[ … ]</code>）用于比较字符串和数字以及检查路径；<code>true</code> 和 <code>false</code> 名副其实。失败的命令会停止脚本（<code>set +e</code> 可关闭此行为），但在条件中除外；Ctrl+C 也会停止脚本。",
   "docs.core-concepts.command-line.scripts-unsupported": "不支持：函数、<code>case</code>、算术 <code>$((…))</code>、<code>read</code> 以及脚本参数（<code>$1</code>）。",
+  "docs.core-concepts.command-line.scripts-prompt": "循环和条件也可以在提示符下写成一行直接输入。此时与交互式 shell 一样,命令失败不会中止循环。",
   "docs.core-concepts.command-line.completion-title": "Tab 补全",
   "docs.core-concepts.command-line.completion-desc": "Tab 可补全命令、子命令、标志，安装 files 插件后还可补全路径。含空格的名称会以引号形式补全（<code>cat my</code> + Tab 得到 <code>cat \"my notes.txt\"</code>），在你已输入的引号内也是如此。按两次 Tab 可列出所有选项。",
 
@@ -232,6 +233,7 @@
   "docs.core-concepts.command-processors.field-extends": "要包装/扩展的命令名称，用于添加子命令",
   "docs.core-concepts.command-processors.process-command-title": "processCommand 方法",
   "docs.core-concepts.command-processors.process-command-desc": "当用户输入命令时，会调用 processCommand(command, context) 方法。它接收解析后的命令和一个执行上下文，提供对终端 I/O、状态、加载动画等的访问。",
+  "docs.core-concepts.command-processors.arguments-desc": "用户输入的内容以 <code>CliProcessCommand</code> 传给命令:<code>command.positionals</code> 是命令后的单词,按 shell 的方式拆分(去掉引号,<code>greet \"Ada Lovelace\"</code> 得到 <code>['Ada Lovelace']</code>),<code>command.args</code> 是按名称的选项(<code>--units metric</code> 得到 <code>args.units</code>),<code>command.value</code> 是命令后的文本,<code>command.rawCommand</code> 是整行。需要原样接收输入行的命令(表达式、程序)设置 <code>metadata.literalInput</code>:这样 <code>|</code>、<code>&gt;</code>、<code>&amp;&amp;</code>、<code>$</code> 和通配符都交给命令处理。core 导出 <code>splitShellWords</code>、<code>joinShellWords</code> 和 <code>quoteShellWord</code>,用于构建命令行。",
   "docs.core-concepts.command-processors.example-title": "实现示例",
   "docs.core-concepts.command-processors.sub-commands-title": "子命令",
   "docs.core-concepts.command-processors.sub-commands-desc": "处理器可以定义嵌套处理器来创建命令层级。例如，git 处理器可以拥有 commit 和 push 作为子命令处理器。",

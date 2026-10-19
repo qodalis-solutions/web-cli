@@ -215,6 +215,7 @@
   "docs.core-concepts.command-line.scripts-title": "スクリプト",
   "docs.core-concepts.command-line.scripts-desc": "files プラグインを使うと、<code>sh script.sh</code>、<code>source script.sh</code>、<code>./script.sh</code> でファイルを 1 行ずつ実行できます。スクリプトは <code>if</code> / <code>elif</code> / <code>else</code>、<code>for … in</code>、<code>while</code> と <code>until</code>、<code>break</code> と <code>continue</code>、<code>exit</code>、コメントに対応しています。条件はコマンドで、成功が真を意味します。<code>test</code>（または <code>[ … ]</code>）は文字列や数値を比較し、パスを確認します。<code>true</code> と <code>false</code> は名前のとおりに動作します。失敗したコマンドはスクリプトを停止します（<code>set +e</code> で無効化）。ただし条件内では停止しません。Ctrl+C でも停止できます。",
   "docs.core-concepts.command-line.scripts-unsupported": "未対応: 関数、<code>case</code>、算術式 <code>$((…))</code>、<code>read</code>、スクリプト引数（<code>$1</code>）。",
+  "docs.core-concepts.command-line.scripts-prompt": "ループと条件はプロンプトに 1 行で入力しても動作します。その場合、対話シェルと同じく、失敗したコマンドでループは止まりません。",
   "docs.core-concepts.command-line.completion-title": "Tab 補完",
   "docs.core-concepts.command-line.completion-desc": "Tab でコマンド、サブコマンド、フラグ、files プラグインがあればパスを補完できます。スペースを含む名前は引用符付きで補完されます（<code>cat my</code> + Tab で <code>cat \"my notes.txt\"</code>）。自分で開いた引用符の中でも同様です。Tab を 2 回押すと候補が一覧表示されます。",
 
@@ -232,6 +233,7 @@
   "docs.core-concepts.command-processors.field-extends": "追加のサブコマンドでラップ/拡張するコマンド名",
   "docs.core-concepts.command-processors.process-command-title": "processCommand メソッド",
   "docs.core-concepts.command-processors.process-command-desc": "processCommand(command, context) メソッドは、ユーザーがコマンドを入力すると呼び出されます。解析されたコマンドと、ターミナルI/O、状態、スピナーなどへのアクセスを提供する実行コンテキストを受け取ります。",
+  "docs.core-concepts.command-processors.arguments-desc": "ユーザーの入力は <code>CliProcessCommand</code> としてコマンドに渡されます。<code>command.positionals</code> はコマンドの後の単語をシェルと同じように分割したもの(引用符は除去され、<code>greet \"Ada Lovelace\"</code> は <code>['Ada Lovelace']</code>)、<code>command.args</code> は名前付きのフラグ(<code>--units metric</code> は <code>args.units</code>)、<code>command.value</code> はコマンドの後のテキスト、<code>command.rawCommand</code> は行全体です。入力行をそのまま受け取るコマンド(式やプログラム)は <code>metadata.literalInput</code> を設定します。すると <code>|</code>、<code>&gt;</code>、<code>&amp;&amp;</code>、<code>$</code>、ワイルドカードはコマンドに任されます。コマンドラインの組み立てには core の <code>splitShellWords</code>、<code>joinShellWords</code>、<code>quoteShellWord</code> を使えます。",
   "docs.core-concepts.command-processors.example-title": "実装例",
   "docs.core-concepts.command-processors.sub-commands-title": "サブコマンド",
   "docs.core-concepts.command-processors.sub-commands-desc": "プロセッサはネストされたプロセッサを定義してコマンド階層を作成できます。例えば、git プロセッサは commit と push をサブコマンドプロセッサとして持つことができます。",

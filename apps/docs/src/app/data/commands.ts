@@ -45,6 +45,15 @@ export const BUILT_IN_GROUPS: CommandGroup[] = [
             'debug',
             'hotkeys',
             'feedback',
+            'events',
+        ],
+    },
+    {
+        label: 'Scripting',
+        commands: [
+            'test',
+            'true',
+            'false',
         ],
     },
     {
@@ -193,6 +202,15 @@ export const COMMAND_CATEGORIES: CommandCategory[] = [
             { command: 'debug', description: 'Display system diagnostics and CLI internals' },
             { command: 'hotkeys', description: 'Displays the hotkeys information', aliases: 'shortcuts, keys' },
             { command: 'feedback', description: 'Send feedback, bug reports, or feature requests' },
+            { command: 'events', description: 'Watch, list and emit events on the event bus' },
+        ],
+    },
+    {
+        label: 'Scripting',
+        commands: [
+            { command: 'test', description: 'Check a condition: strings, numbers, paths (also [ … ])' },
+            { command: 'true', description: 'Do nothing, successfully (also :)' },
+            { command: 'false', description: 'Do nothing, unsuccessfully' },
         ],
     },
     {
@@ -207,7 +225,7 @@ export const COMMAND_CATEGORIES: CommandCategory[] = [
         label: 'Environment',
         commands: [
             { command: 'env', description: 'Display environment variables' },
-            { command: 'export', description: 'Set environment variables' },
+            { command: 'export', description: 'Save variables for the user (--global: for everyone)' },
             { command: 'unset', description: 'Remove environment variables' },
             { command: 'alias', description: 'Manage aliases for commands' },
             { command: 'unalias', description: 'Remove aliases for commands' },

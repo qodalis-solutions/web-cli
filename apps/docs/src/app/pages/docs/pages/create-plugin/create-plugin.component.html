@@ -135,7 +135,7 @@ export class WeatherProcessor implements ICliCommandProcessor &#123;
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise&lt;void&gt; &#123;
-        const city = command.args[0];
+        const city = command.positionals?.[0];
         if (!city) &#123;
             context.writer.writeError('Please provide a city name.');
             return;

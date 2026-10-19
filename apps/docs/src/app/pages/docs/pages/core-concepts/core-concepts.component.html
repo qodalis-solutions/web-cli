@@ -139,6 +139,11 @@ if grep -q TODO notes.md; then echo "notes have TODOs"; fi
 for n in &#123;1..3&#125;; do echo "tick $n"; done
 until [ -f ready.txt ]; do touch ready.txt; done</code></pre>
     </div>
+    <p [innerHTML]="'docs.core-concepts.command-line.scripts-prompt' | translate"></p>
+    <div class="code-block">
+      <pre><code>for f in *.log; do wc -l "$f"; done
+if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
+    </div>
     <p [innerHTML]="'docs.core-concepts.command-line.scripts-unsupported' | translate"></p>
 
     <h2>{{ "docs.core-concepts.command-line.completion-title" | translate }}</h2>
@@ -265,7 +270,8 @@ until [ -f ready.txt ]; do touch ready.txt; done</code></pre>
           <td>
             Additional metadata: <code>sealed</code>, <code>hidden</code>,
             <code>icon</code>, <code>requireServer</code>,
-            <code>requiredCoreVersion</code>, <code>requiredCliVersion</code>
+            <code>requiredCoreVersion</code>, <code>requiredCliVersion</code>,
+            <code>literalInput</code> (the whole line goes to the command as typed)
           </td>
         </tr>
         <tr>
@@ -385,11 +391,12 @@ until [ -f ready.txt ]; do touch ready.txt; done</code></pre>
         command: CliProcessCommand,
         context: ICliExecutionContext,
         ): Promise&lt;void&gt; &#123;
-        const name = command.args[0] || 'World';
+        const name = command.positionals?.[0] || 'World';
         context.writer.writeln(`Hello, $&#123;name&#125;!`);
         &#125;
       &#125;</code></pre>
     </div>
+    <p [innerHTML]="'docs.core-concepts.command-processors.arguments-desc' | translate"></p>
     <h2>
       {{
         "docs.core-concepts.command-processors.sub-commands-title" | translate
@@ -2808,8 +2815,8 @@ context.events?.emit('todo:refresh');</code></pre>
         <code>requireAuth</code> and <code>requiredGroups</code>.
       </li>
       <li>
-        <code>command.value</code> and <code>command.args</code> hold the parsed
-        input.
+        <code>command.positionals</code>, <code>command.args</code> and
+        <code>command.value</code> hold the parsed input.
       </li>
       <li>
         <code>context.reader</code> can prompt the user, e.g. for a confirmation
