@@ -29,6 +29,9 @@ export class CliStateStore implements ICliStateStore {
 
     /** Keys changed since the last save (only these are written). */
     private readonly unsaved = new Set<string>();
+    /** When each key was last changed here (`updateState`), to tell local edits from synced ones. */
+    private readonly editedAt = new Map<string, number>();
+    private edits = 0;
 
     /** `reset()` since the last save: the whole state is written. */
     private replaceOnSave = false;
@@ -115,9 +118,11 @@ export class CliStateStore implements ICliStateStore {
     }
 
     updateState(newState: Partial<CliState>): void {
+        const edit = ++this.edits;
         for (const key of Object.keys(newState)) {
             if (!this.loaded) this.changedBeforeLoad.add(key);
             this.unsaved.add(key);
+            this.editedAt.set(key, edit);
         }
         this.state$.next({ ...this.state$.getValue(), ...newState });
         this.schedulePersist();
@@ -224,6 +229,32 @@ export class CliStateStore implements ICliStateStore {
     }
 
     /**
+     * Another tab or terminal saved this store: apply what is saved now.
+     * Messages can arrive out of order (one sent before this terminal's own
+     * save can arrive after it), so storage, not the message, is the truth.
+     * Reads are chained so the last one applied is the latest.
+     */
+    refreshFromStorage(fallback?: CliState): Promise<void> {
+        this.refreshing = this.refreshing.then(async () => {
+            if (this.isSession) return;
+            const keyValueStore = this.services.get<ICliKeyValueStore>(
+                CliKeyValueStore_TOKEN,
+            );
+            try {
+                const saved = keyValueStore
+                    ? await keyValueStore.get<CliState>(this.storageKey)
+                    : fallback;
+                if (saved && typeof saved === 'object') this.applySaved(saved);
+            } catch {
+                if (fallback) this.applySaved(fallback);
+            }
+        });
+        return this.refreshing;
+    }
+
+    private refreshing: Promise<void> = Promise.resolve();
+
+    /**
      * Complete the BehaviorSubject so all subscribers are notified
      * and no further emissions occur. Called during engine teardown.
      */
@@ -306,6 +337,7 @@ export class CliStateStore implements ICliStateStore {
             const replace = this.replaceOnSave;
             const keys = this.changedKeys();
             const current = this.state$.getValue();
+            const editsBefore = this.edits;
 
             // Keys changed here win; for the others, what is saved is newer
             // (another terminal may have saved them since)
@@ -334,9 +366,11 @@ export class CliStateStore implements ICliStateStore {
             // Written: take the keys others saved, keep changes made while
             // saving (they stay unsaved)
             if (replace) this.replaceOnSave = false;
+            // Only edits made here count: a state synced from another tab
+            // meanwhile is older than what was just written
             const latest = this.state$.getValue();
             const changedMeanwhile = Object.keys(latest).filter(
-                (key) => latest[key] !== current[key],
+                (key) => (this.editedAt.get(key) ?? 0) > editsBefore,
             );
             for (const key of keys) {
                 if (!changedMeanwhile.includes(key)) this.unsaved.delete(key);

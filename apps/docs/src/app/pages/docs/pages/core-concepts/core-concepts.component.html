@@ -95,18 +95,46 @@ build 2> errors.txt           # errors to a file (2>> to add)</code></pre>
 
     <h2>Variables</h2>
     <p>
-      <code>NAME=value</code> (or <code>export NAME=value</code>) sets a
-      variable, <code>env</code> lists them. <code>$NAME</code> and
-      <code>$&#123;NAME&#125;</code> are replaced by their value,
-      <code>$?</code> by the exit code of the last command, and a leading
-      <code>~</code> by the home directory. Inside single quotes nothing is
-      replaced; inside double quotes it is.
+      <code>$NAME</code> and <code>$&#123;NAME&#125;</code> are replaced by
+      their value, <code>$?</code> by the exit code of the last command, and a
+      leading <code>~</code> by the home directory. Inside single quotes
+      nothing is replaced; inside double quotes it is. A variable lives in one
+      of three places:
+    </p>
+    <table>
+      <thead>
+        <tr><th>Set with</th><th>Where</th><th>Saved</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>NAME=value</code></td><td>This terminal only</td><td>No, gone when the terminal closes</td></tr>
+        <tr><td><code>export NAME=value</code></td><td>The signed-in user (one set while nobody is signed in)</td><td>Yes</td></tr>
+        <tr><td><code>export --global NAME=value</code></td><td>Every user</td><td>Yes</td></tr>
+      </tbody>
+    </table>
+    <p>
+      The terminal's value wins over the user's, which wins over the shared
+      one, which wins over the built-in ones (<code>HOME</code>,
+      <code>USER</code>, <code>PWD</code>, <code>SHELL</code>, …).
+      <code>export NAME</code> saves the value a variable has in this
+      terminal. <code>unset NAME</code> removes it for this terminal and the
+      user (a shared value is then hidden for this user);
+      <code>unset --global NAME</code> removes the shared value.
+      <code>env</code> lists the variables with where each comes from.
+    </p>
+    <p>
+      With the users plugin, changing shared variables needs the
+      <code>system:env:global</code> permission (administrators have it).
+      Saved changes reach other tabs right away, and two tabs changing
+      variables at the same time both keep their change.
     </p>
     <div class="code-block">
-      <pre><code>GREETING=Hello
-echo "$GREETING, world"     # Hello, world
-echo '$GREETING'            # $GREETING
-cat ~/notes.txt</code></pre>
+      <pre><code>GREETING=Hello                    # this terminal
+echo "$GREETING, world"           # Hello, world
+echo '$GREETING'                  # $GREETING
+export EDITOR=nano                # saved for me
+export --global API_URL=https://api.example.com
+export API_URL=http://localhost   # mine wins for me
+env                               # API_URL=http://localhost  # user</code></pre>
     </div>
 
     <h2>Wildcards</h2>

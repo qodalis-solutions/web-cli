@@ -22,6 +22,10 @@ export {
     CliEnvironment,
     CliEnvironmentProfile,
     CliEnvironmentSnapshot,
+    CliEnvironmentScope,
+    CliEnvironmentSource,
+    CliEnvironmentChange,
+    applyEnvironmentChange,
 } from './cli-environment';
 export { CliDragDropService } from './cli-drag-drop.service';
 export { CliHttpClient } from './cli-http-client';

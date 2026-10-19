@@ -158,7 +158,7 @@ export class CliStateStoreManager implements ICliStateStoreManager {
             if (!key || !state || typeof state !== 'object') return;
             for (const store of this.stores.values()) {
                 if (store.key === key && store.syncAcrossTabs) {
-                    store.applySaved(state);
+                    void store.refreshFromStorage(state);
                 }
             }
         };

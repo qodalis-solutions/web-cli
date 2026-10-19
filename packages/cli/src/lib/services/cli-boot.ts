@@ -482,6 +482,10 @@ export class CliBoot {
                     description: 'Emit events on the event bus (events emit)',
                 },
                 {
+                    name: 'system:env:global',
+                    description: 'Set and remove shared environment variables (export --global)',
+                },
+                {
                     name: 'system:eval',
                     description:
                         'Evaluate JavaScript (eval, also requires allowEval)',

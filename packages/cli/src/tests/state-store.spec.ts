@@ -506,6 +506,33 @@ describe('CliStateStore persistence', () => {
             expect(await kvStore.get('store-state-auto')).toEqual({ n: 1 });
         });
 
+        it('a sync arriving while saving does not undo what was saved', async () => {
+            const a = createManager().getStateStore('env', { list: [] as string[] });
+            await a.initialize();
+            // Another tab's older state arrives while the save is being written
+            const set = kvStore.set.bind(kvStore);
+            spyOn(kvStore, 'set').and.callFake(async (key: string, value: any) => {
+                (a as CliStateStore).applySaved({ list: [] });
+                return set(key, value);
+            });
+            await a.update((s) => ({ list: [...(s['list'] as string[]), 'mine'] }));
+            expect(a.getState<any>().list).toEqual(['mine']);
+            expect(await kvStore.get('store-state-env')).toEqual({ list: ['mine'] });
+        });
+
+        it('a late sync message does not replace newer saved state', async () => {
+            const b = createManager().getStateStore('env', { v: 0 });
+            await b.initialize();
+            // Storage already holds the newer value; an older message arrives last
+            await kvStore.set('store-state-env', { v: 2 });
+            const channel = new BroadcastChannel('qodalis-cli-state');
+            channel.postMessage({ key: 'store-state-env', state: { v: 1 } });
+            await waitFor(async () => b.getState<any>().v, (v) => v !== 0);
+            await new Promise((r) => setTimeout(r, 50));
+            channel.close();
+            expect(b.getState<any>().v).toBe(2);
+        });
+
         it('applies state saved by another tab or terminal', async () => {
             const a = createManager().getStateStore('theme', { name: 'x' });
             const b = createManager().getStateStore('theme', { name: 'x' });

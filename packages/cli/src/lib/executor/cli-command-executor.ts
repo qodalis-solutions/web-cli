@@ -250,7 +250,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         // Then wildcards (`rm *.txt`), against the files plugin's file system
         command = expandGlobs(command, context);
 
-        // Handle inline variable assignment: VAR=value (no command after it)
+        // Handle inline variable assignment: VAR=value (no command after it),
+        // for this terminal only
         const assignMatch = command.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
         if (assignMatch) {
             const env = context.services.get<ICliEnvironment>(ICliEnvironment_TOKEN);
@@ -262,7 +263,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 ) {
                     val = val.slice(1, -1);
                 }
-                env.set(assignMatch[1], val);
+                // As in a shell: this terminal only (`export` saves it)
+                env.set(assignMatch[1], val, 'session');
                 process.start();
                 process.end();
                 return;
