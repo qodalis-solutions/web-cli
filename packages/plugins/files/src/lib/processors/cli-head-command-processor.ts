@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -25,6 +28,25 @@ export class CliHeadCommandProcessor implements ICliCommandProcessor {
             type: 'number' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Print the first lines of a file, 10 by default. Works on piped input too. With several files, each one gets a ==> name <== header.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['head <file>', 'First 10 lines'],
+            ['head -n <count> <file>', 'First <count> lines'],
+            ['<command> | head', 'First lines of piped input'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['head notes.txt', 'Show the start of a file'],
+            ['head -n 3 a.txt b.txt', 'First 3 lines of each file'],
+            ['cat app.log | head -n 20', 'First 20 lines of the log'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

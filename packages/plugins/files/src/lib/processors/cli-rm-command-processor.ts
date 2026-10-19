@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -32,6 +35,25 @@ export class CliRmCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Delete a file. Directories are only removed with -r, which deletes everything inside them. Deleted files cannot be recovered.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['rm <file>', 'Delete a file'],
+            ['rm -r <dir>', 'Delete a directory and its contents'],
+            ['rm -f <file>', 'Delete without an error if it is missing'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['rm notes.bak', 'Delete one file'],
+            ['rm -r old-project', 'Delete a whole directory'],
+            ['rm -f maybe.txt', 'Quiet if the file does not exist'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

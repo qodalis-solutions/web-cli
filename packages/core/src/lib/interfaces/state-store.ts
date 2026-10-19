@@ -72,6 +72,18 @@ export interface ICliStateStore {
     updateState(newState: Partial<CliState>): void;
 
     /**
+     * Change the state from its latest saved value and save it, atomically
+     * (under a lock shared by all tabs): use it for read-modify-write changes
+     * such as adding an item to a list, so terminals changing the same key at
+     * once never lose each other's change.
+     *
+     * ```ts
+     * await context.state.update((s) => ({ todos: [...s.todos, todo] }));
+     * ```
+     */
+    update(change: (state: CliState) => Partial<CliState>): Promise<void>;
+
+    /**
      * Select a specific property or computed value from the state.
      * @param selector A function to project a slice of the state.
      * @returns Observable of the selected value.

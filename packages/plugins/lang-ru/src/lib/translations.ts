@@ -195,4 +195,17 @@ export const ruTranslations: Record<string, string> = {
     'cli.debug.modules': 'Все загруженные модули',
     'cli.debug.state': 'Просмотр хранилищ состояния',
     'cli.packages.description': 'Управление пакетами CLI',
+
+    // ── Servers and events ───────────────────────────────────────────
+    'cli.server.description': 'Управление подключениями к удалённым серверам CLI',
+    'cli.server.list.description': 'Показать серверы с состоянием, версией и командами',
+    'cli.server.status.description': 'Проверить доступность серверов (всех или одного подробно)',
+    'cli.server.commands.description': 'Показать команды каждого сервера',
+    'cli.server.reconnect.description': 'Переподключиться к серверам и перезагрузить их команды',
+    'cli.server.default.description': 'Показать или задать сервер для общих команд',
+    'cli.ssh.description': 'Открыть удалённый сеанс оболочки на сервере',
+    'cli.events.description': 'Отслеживать, просматривать и отправлять события шины событий',
+    'cli.events.watch.description': 'Показывать события по мере появления (Ctrl+C для остановки)',
+    'cli.events.log.description': 'Показать недавние события (в памяти, не сохраняются)',
+    'cli.events.emit.description': 'Отправить событие: events emit <тип> [json]',
 };

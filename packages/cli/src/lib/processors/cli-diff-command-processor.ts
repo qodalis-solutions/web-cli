@@ -7,6 +7,9 @@ import {
     CliIcon,
     DefaultLibraryAuthor,
     ICliCommandParameterDescriptor,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { computeDiff, formatDiff } from './diff-utils';
 
@@ -38,8 +41,16 @@ export class CliDiffCommandProcessor implements ICliCommandProcessor {
     ];
 
     async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
-        // First text: from --a param or piped value
-        const a = (command.args['a'] as string | undefined) ?? (command.value ?? '');
+        // First text: --a, the value, or piped input (`echo x | diff --b y`)
+        const piped =
+            command.data === undefined || command.data === null
+                ? undefined
+                : typeof command.data === 'string'
+                  ? command.data
+                  : JSON.stringify(command.data, null, 2);
+        const a =
+            (command.args['a'] as string | undefined) ??
+            (command.value || piped || '');
         const b = command.args['b'] as string | undefined;
         const rawContext = command.args?.['context'];
         const parsed = rawContext !== undefined ? parseInt(String(rawContext), 10) : NaN;
@@ -70,5 +81,22 @@ export class CliDiffCommandProcessor implements ICliCommandProcessor {
         for (const line of formatted) {
             context.writer.writeln(line);
         }
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Compare two texts line by line: added lines are shown in green with +, removed lines in red with -, with a few unchanged lines around each change for context.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['diff --a "<text1>" --b "<text2>"', 'Compare two texts'],
+            ['diff --a "<text1>" --b "<text2>" --context 0', 'Only the changed lines'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['diff --a "hello world" --b "hello there"', 'One line changed'],
+            ['diff --a "v1.2.0" --b "v1.2.0"', 'Prints: No differences found'],
+        ]);
     }
 }

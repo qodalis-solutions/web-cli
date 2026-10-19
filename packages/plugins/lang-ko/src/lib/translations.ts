@@ -195,4 +195,17 @@ export const koTranslations: Record<string, string> = {
     'cli.debug.modules': '로드된 모든 모듈',
     'cli.debug.state': '상태 저장소 검사',
     'cli.packages.description': 'CLI 패키지 관리',
+
+    // ── Servers and events ───────────────────────────────────────────
+    'cli.server.description': '원격 CLI 서버 연결 관리',
+    'cli.server.list.description': '서버의 상태, 버전, 명령 표시',
+    'cli.server.status.description': '서버 응답 확인 (전체 또는 한 서버 상세)',
+    'cli.server.commands.description': '각 서버의 명령 표시',
+    'cli.server.reconnect.description': '서버에 다시 연결하고 명령 다시 불러오기',
+    'cli.server.default.description': '공통 명령을 실행할 서버 표시 또는 설정',
+    'cli.ssh.description': '서버에서 원격 셸 세션 열기',
+    'cli.events.description': '이벤트 버스의 이벤트 관찰, 목록 표시, 보내기',
+    'cli.events.watch.description': '이벤트가 발생할 때마다 표시 (Ctrl+C로 중지)',
+    'cli.events.log.description': '최근 이벤트 표시 (메모리에만 있으며 저장되지 않음)',
+    'cli.events.emit.description': '이벤트 보내기: events emit <type> [json]',
 };

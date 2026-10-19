@@ -62,8 +62,6 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
 
     private todos: TodoItem[] = [];
 
-    private nextId = 1;
-
     getTodos(): TodoItem[] {
         return this.todos;
     }
@@ -112,10 +110,6 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
             .select<TodoItem[]>((x) => x['todos'])
             .subscribe((todos) => {
                 this.todos = (todos || []).map(migrateTodoItem);
-                this.nextId =
-                    this.todos.length > 0
-                        ? Math.max(...this.todos.map((t) => t.id)) + 1
-                        : 1;
             });
     }
 
@@ -245,16 +239,19 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         dueDate = parsed;
                     }
 
-                    const newItem: TodoItem = {
-                        id: this.nextId++,
-                        text,
-                        completed: false,
-                        createdAt: new Date().toISOString(),
-                        dueDate,
-                    };
-
-                    this.todos.push(newItem);
-                    await this.saveToStorage(context);
+                    // The id comes from the latest saved list: two tabs
+                    // adding at once never get the same id
+                    let newItem!: TodoItem;
+                    await this.changeTodos(context, (todos) => {
+                        newItem = {
+                            id: nextIdOf(todos),
+                            text,
+                            completed: false,
+                            createdAt: new Date().toISOString(),
+                            dueDate,
+                        };
+                        todos.push(newItem);
+                    });
 
                     let msg = `Added: "${text}"`;
                     if (dueDate) {
@@ -299,36 +296,37 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                     }
 
                     const dueArg = command.args['due'];
-                    let changed = false;
+                    const edit: Partial<TodoItem> = {};
 
                     if (newText) {
-                        todo.text = newText;
-                        changed = true;
+                        edit.text = newText;
                     }
 
                     if (dueArg) {
                         if (dueArg === 'none') {
-                            todo.dueDate = undefined;
-                            changed = true;
+                            edit.dueDate = undefined;
                         } else {
                             const parsed = parseDueDate(dueArg);
                             if (!parsed) {
                                 context.writer.writeError(`Invalid due date: "${dueArg}".`);
                                 return;
                             }
-                            todo.dueDate = parsed;
-                            changed = true;
+                            edit.dueDate = parsed;
                         }
                     }
 
-                    if (!changed) {
+                    if (Object.keys(edit).length === 0) {
                         context.writer.writeError('Nothing to update. Provide new text or --due.');
                         return;
                     }
 
-                    await this.saveToStorage(context);
+                    let updated: TodoItem | undefined;
+                    await this.changeTodos(context, (todos) => {
+                        const item = todos.find((t) => t.id === id);
+                        if (item) updated = Object.assign(item, edit);
+                    });
                     context.writer.writeSuccess(`Updated task #${id}.`);
-                    context.process.output(todo);
+                    context.process.output(updated ?? { ...todo, ...edit });
                 },
             },
 
@@ -357,11 +355,16 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         return;
                     }
 
-                    todo.completed = true;
-                    todo.completedAt = new Date().toISOString();
-                    await this.saveToStorage(context);
+                    const completedAt = new Date().toISOString();
+                    await this.changeTodos(context, (todos) => {
+                        const item = todos.find((t) => t.id === id);
+                        if (item) {
+                            item.completed = true;
+                            item.completedAt = completedAt;
+                        }
+                    });
                     context.writer.writeSuccess(`Done: "${todo.text}"`);
-                    context.process.output(todo);
+                    context.process.output({ ...todo, completed: true, completedAt });
                 },
             },
 
@@ -384,13 +387,19 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         return;
                     }
 
-                    todo.completed = !todo.completed;
-                    todo.completedAt = todo.completed ? new Date().toISOString() : undefined;
-                    await this.saveToStorage(context);
+                    const completed = !todo.completed;
+                    const completedAt = completed ? new Date().toISOString() : undefined;
+                    await this.changeTodos(context, (todos) => {
+                        const item = todos.find((t) => t.id === id);
+                        if (item) {
+                            item.completed = completed;
+                            item.completedAt = completedAt;
+                        }
+                    });
 
-                    const status = todo.completed ? 'done' : 'reopened';
+                    const status = completed ? 'done' : 'reopened';
                     context.writer.writeSuccess(`Task #${id} marked as ${status}.`);
-                    context.process.output(todo);
+                    context.process.output({ ...todo, completed, completedAt });
                 },
             },
 
@@ -427,8 +436,7 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                             return;
                         }
 
-                        this.todos = [];
-                        await this.saveToStorage(context);
+                        await this.changeTodos(context, () => []);
                         context.writer.writeSuccess('Removed all tasks.');
                         return;
                     }
@@ -457,8 +465,10 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         }
                     }
 
-                    const removed = this.todos.splice(index, 1)[0];
-                    await this.saveToStorage(context);
+                    const removed = this.todos[index];
+                    await this.changeTodos(context, (todos) =>
+                        todos.filter((t) => t.id !== id),
+                    );
                     context.writer.writeSuccess(`Removed: "${removed.text}"`);
                 },
             },
@@ -475,9 +485,26 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
         }
     }
 
-    private async saveToStorage(context: ICliExecutionContext): Promise<void> {
-        context.state.updateState({ todos: this.todos });
-        await context.state.persist();
+    /**
+     * Change the list and save it, atomically: `change` gets the latest saved
+     * list (another tab may have changed it) to edit in place, or returns a
+     * new one.
+     */
+    private async changeTodos(
+        context: ICliExecutionContext,
+        change: (todos: TodoItem[]) => TodoItem[] | void,
+    ): Promise<void> {
+        await context.state.update((state) => {
+            const todos = ((state['todos'] as TodoItem[] | undefined) ?? []).map(
+                (t) => ({ ...migrateTodoItem(t) }),
+            );
+            return { todos: change(todos) ?? todos };
+        });
         localStorage.removeItem('todo-items');
     }
+}
+
+/** The id for a new task: one more than the highest. */
+function nextIdOf(todos: TodoItem[]): number {
+    return todos.length > 0 ? Math.max(...todos.map((t) => t.id)) + 1 : 1;
 }

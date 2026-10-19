@@ -5,6 +5,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import {
     IFileSystemService,
@@ -65,6 +68,26 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Print the lines that match a pattern. The pattern is a regular expression, matches are highlighted, and the input can be files, directories (with -r) or piped text.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['grep <pattern> <file...>', 'Search one or more files'],
+            ['grep -r <pattern> <dir>', 'Search every file under a directory'],
+            ['<command> | grep <pattern>', 'Filter piped input'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['grep -i error app.log', 'Case-insensitive search'],
+            ['grep -r -n TODO src', 'Find TODOs with line numbers'],
+            ['grep -v ^# config.txt', 'Hide comment lines'],
+            ['cat app.log | grep -c ERROR', 'Count matching lines'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

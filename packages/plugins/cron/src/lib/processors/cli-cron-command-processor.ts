@@ -9,6 +9,9 @@ import {
     DefaultLibraryAuthor,
     CliForegroundColor,
     ICliCommandChildProcessor,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { parseInterval, formatInterval } from '../cron-utils';
 
@@ -72,9 +75,9 @@ export class CliCronCommandProcessor implements ICliCommandProcessor {
                     enabled: true,
                     runCount: 0,
                 };
-                const updated = [...state.jobs, job];
-                context.state.updateState({ jobs: updated });
-                await context.state.persist();
+                await context.state.update((saved) => ({
+                    jobs: [...((saved['jobs'] as CronJob[]) ?? []), job],
+                }));
                 this.startJob(job, context);
                 context.writer.writeSuccess(
                     `Job "${name}" added — runs every ${formatInterval(intervalMs)}: ${command}`,
@@ -119,9 +122,9 @@ export class CliCronCommandProcessor implements ICliCommandProcessor {
                 }
                 const job = state.jobs[idx];
                 this.stopJob(job.id);
-                const updated = state.jobs.filter((j) => j.name !== name);
-                context.state.updateState({ jobs: updated });
-                await context.state.persist();
+                await context.state.update((saved) => ({
+                    jobs: ((saved['jobs'] as CronJob[]) ?? []).filter((j) => j.name !== name),
+                }));
                 context.writer.writeSuccess(`Job "${name}" removed`);
             },
         },
@@ -150,6 +153,32 @@ export class CliCronCommandProcessor implements ICliCommandProcessor {
         for (const job of jobs.filter((j) => j.enabled)) {
             this.startJob(job, context);
         }
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Run a command again and again at a fixed interval while the terminal is open. Jobs are saved: they start again when the terminal starts, and can be paused without removing them.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['cron add <name> <interval> <command>', 'Add a job'],
+            ['cron list', 'Jobs with interval, status and run count (ls)'],
+            ['cron disable <name>', 'Pause a job'],
+            ['cron enable <name>', 'Resume a paused job'],
+            ['cron remove <name>', 'Remove a job (rm, delete)'],
+        ]);
+        context.writer.writeln();
+        writeWrapped(
+            context,
+            'Intervals: seconds (30), or hours, minutes and seconds (1h, 5m, 1h30m, 90s); at least 10 seconds.',
+        );
+        context.writer.writeln();
+        writeExamples(context, [
+            ['cron add ping 5m echo heartbeat', 'Every 5 minutes'],
+            ['cron add backup 1h30m server jobs trigger backup', 'Every hour and a half'],
+            ['cron disable ping', 'Pause it'],
+        ]);
     }
 
     async processCommand(_: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
@@ -199,9 +228,11 @@ export class CliCronCommandProcessor implements ICliCommandProcessor {
         } else {
             this.stopJob(job.id);
         }
-        const updated = state.jobs.map((j) => j.name === name ? { ...j, enabled } : j);
-        context.state.updateState({ jobs: updated });
-        await context.state.persist();
+        await context.state.update((saved) => ({
+            jobs: ((saved['jobs'] as CronJob[]) ?? []).map((j) =>
+                j.name === name ? { ...j, enabled } : j,
+            ),
+        }));
         context.writer.writeSuccess(`Job "${name}" ${enabled ? 'enabled' : 'disabled'}`);
     }
 }

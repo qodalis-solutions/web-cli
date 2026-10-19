@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -14,6 +17,25 @@ export class CliCdCommandProcessor implements ICliCommandProcessor {
     version = LIBRARY_VERSION;
     acceptsRawInput = true;
     metadata = { icon: '📁', module: 'file management' };
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Change the current directory. Without a path it goes to your home directory. Paths can be absolute (/...), relative to where you are, or start with ~ for home.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['cd', 'Go to your home directory'],
+            ['cd <dir>', 'Go into a directory'],
+            ['cd ..', 'Go up one level'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['cd ~/docs', 'Go to docs in your home'],
+            ['cd ../projects', 'Go to a sibling directory'],
+            ['cd /', 'Go to the root'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

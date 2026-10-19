@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -17,21 +20,42 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
     originalProcessor?: ICliCommandProcessor;
     metadata = { icon: '💬', module: 'file management' };
 
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Print text to the terminal. Add > file to save it to a file (replacing it) or >> file to add it to the end.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['echo <text>', 'Print text'],
+            ['echo <text> > <file>', 'Write text to a file'],
+            ['echo <text> >> <file>', 'Append text to a file'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['echo Hello world', 'Print a greeting'],
+            ['echo first line > notes.txt', 'Create or replace notes.txt'],
+            ['echo another line >> notes.txt', 'Add a line to it'],
+        ]);
+    }
+
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
         const afterEcho = command.value || '';
 
-        // Check for file redirection syntax
-        const hasRedirection = />>?\s*.+$/.test(afterEcho);
+        // Check for file redirection syntax (a `>` inside quotes is text)
+        const redirect = findRedirect(afterEcho);
 
-        if (!hasRedirection) {
+        if (!redirect) {
             // No redirection — delegate to the original echo processor
             if (this.originalProcessor) {
                 await this.originalProcessor.processCommand(command, context);
             } else {
-                context.writer.writeln(afterEcho);
+                const text = unquote(afterEcho);
+                context.writer.writeln(text);
+                context.process.output(text);
             }
             return;
         }
@@ -40,29 +64,10 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
             IFileSystemService_TOKEN,
         );
 
-        let text: string;
-        let filePath: string;
-        let append = false;
+        let text = redirect.text;
+        const { filePath, append } = redirect;
 
-        const appendMatch = afterEcho.match(/^(.*?)\s*>>\s*(.+)$/);
-        const overwriteMatch = afterEcho.match(/^(.*?)\s*>\s*(.+)$/);
-
-        if (appendMatch) {
-            text = appendMatch[1].trim();
-            filePath = appendMatch[2].trim();
-            append = true;
-        } else {
-            text = overwriteMatch![1].trim();
-            filePath = overwriteMatch![2].trim();
-        }
-
-        // Remove surrounding quotes
-        if (
-            (text.startsWith('"') && text.endsWith('"')) ||
-            (text.startsWith("'") && text.endsWith("'"))
-        ) {
-            text = text.slice(1, -1);
-        }
+        text = unquote(text);
 
         // Interpret escape sequences (\n, \t, etc.)
         text = text.replace(/\\([\\nrtv0])/g, (_, ch: string) => {
@@ -84,4 +89,41 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
             context.writer.writeError(e.message);
         }
     }
+}
+
+/**
+ * The first `>` or `>>` outside quotes, splitting `text > file`.
+ * Undefined when there is none or no file name follows it.
+ */
+export function findRedirect(
+    input: string,
+): { text: string; filePath: string; append: boolean } | undefined {
+    let quote: string | null = null;
+    for (let i = 0; i < input.length; i++) {
+        const ch = input[i];
+        if (quote) {
+            if (ch === '\\' && quote === '"') i++;
+            else if (ch === quote) quote = null;
+            continue;
+        }
+        if (ch === '"' || ch === "'") {
+            quote = ch;
+            continue;
+        }
+        if (ch !== '>') continue;
+        const append = input[i + 1] === '>';
+        const filePath = unquote(input.slice(i + (append ? 2 : 1)).trim());
+        if (!filePath) return undefined;
+        return { text: input.slice(0, i).trim(), filePath, append };
+    }
+    return undefined;
+}
+
+/** Text without one pair of surrounding quotes. */
+function unquote(text: string): string {
+    return text.length > 1 &&
+        ((text.startsWith('"') && text.endsWith('"')) ||
+            (text.startsWith("'") && text.endsWith("'")))
+        ? text.slice(1, -1)
+        : text;
 }

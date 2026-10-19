@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -53,6 +56,29 @@ export class CliSortCommandProcessor implements ICliCommandProcessor {
             type: 'string' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Sort the lines of a file or piped input, alphabetically by default. Sort numerically, in reverse, by a field, or drop duplicates. Each file is sorted on its own.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['sort <file>', 'Sort lines alphabetically'],
+            [
+                'sort -k <n> -t <sep> <file>',
+                'Sort by field <n>, split on <sep>',
+            ],
+            ['<command> | sort', 'Sort piped input'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['sort names.txt', 'A to Z'],
+            ['sort -n -r scores.txt', 'Largest number first'],
+            ['sort -t , -k 2 data.csv', 'Sort a CSV by its second column'],
+            ['cat words.txt | sort -u', 'Sorted, without duplicates'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

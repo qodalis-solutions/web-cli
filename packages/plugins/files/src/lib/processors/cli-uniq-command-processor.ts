@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -46,6 +49,24 @@ export class CliUniqCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Collapse repeated lines that are next to each other into one. Only adjacent duplicates are merged, so sort the input first to catch them all.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['uniq <file>', 'Drop adjacent duplicate lines'],
+            ['<command> | uniq', 'Filter piped input'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['uniq log.txt', 'Collapse repeated lines'],
+            ['sort words.txt | uniq -c', 'Count how often each line appears'],
+            ['sort words.txt | uniq -d', 'Show only the duplicated lines'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

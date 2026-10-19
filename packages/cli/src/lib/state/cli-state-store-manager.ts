@@ -5,6 +5,7 @@ import {
     ICliCommandProcessorRegistry,
     ICliServiceProvider,
     ICliStateStore,
+    ICliEventBus,
 } from '@qodalis/cli-core';
 import { CliStateStore } from './cli-state-store';
 
@@ -31,6 +32,11 @@ export class CliStateStoreManager implements ICliStateStoreManager {
 
     private channel?: BroadcastChannel;
 
+    /** The signed-in user (for `scope: 'user'` stores). */
+    private user?: string;
+
+    private stopFollowingUser?: () => void;
+
     constructor(
         private readonly services: ICliServiceProvider,
         private readonly registry: ICliCommandProcessorRegistry,
@@ -54,6 +60,7 @@ export class CliStateStoreManager implements ICliStateStoreManager {
                 defaultState ?? {},
                 options,
             );
+            store.setUser(this.user);
             store.onPersisted = (key, state) => this.publish(key, state);
             this.stores.set(name, store);
             this.listen();
@@ -85,6 +92,26 @@ export class CliStateStoreManager implements ICliStateStoreManager {
     }
 
     /**
+     * Follow the signed-in user (`session:changed` events), so `scope: 'user'`
+     * stores switch to that user's state.
+     */
+    followUser(events: ICliEventBus): void {
+        this.stopFollowingUser?.();
+        this.stopFollowingUser = events.on('session:changed', (event) =>
+            this.setUser(event.data.user),
+        );
+    }
+
+    /** Switch `scope: 'user'` stores to `user`'s saved state. */
+    setUser(user: string | undefined): void {
+        if (user === this.user) return;
+        this.user = user;
+        for (const store of this.stores.values()) {
+            store.setUser(user);
+        }
+    }
+
+    /**
      * Returns all store names and their current state values.
      */
     getStoreEntries(): { name: string; state: Record<string, any> }[] {
@@ -100,6 +127,8 @@ export class CliStateStoreManager implements ICliStateStoreManager {
      * Called during engine teardown.
      */
     dispose(): void {
+        this.stopFollowingUser?.();
+        this.stopFollowingUser = undefined;
         this.stores.forEach((store) => store.dispose());
         this.stores.clear();
         this.channel?.close();

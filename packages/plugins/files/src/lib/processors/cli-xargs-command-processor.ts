@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -32,6 +35,28 @@ export class CliXargsCommandProcessor implements ICliCommandProcessor {
             type: 'number' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Run a command with arguments taken from input, one argument per line. By default all of them are appended to one command; -n runs it in batches and -I runs it once per line, replacing a placeholder. Input is piped text or, without a pipe, the last file named.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['<command> | xargs <cmd>', 'Append input lines to <cmd>'],
+            ['<command> | xargs -I {} <cmd {}>', 'Run <cmd> once per line'],
+            ['xargs <cmd> <file>', 'Read the arguments from a file'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['find . --name *.tmp | xargs rm', 'Delete every .tmp file'],
+            [
+                'cat files.txt | xargs -I {} cp {} backup',
+                'Copy each listed file',
+            ],
+            ['cat dirs.txt | xargs -n 1 mkdir', 'One mkdir per line'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

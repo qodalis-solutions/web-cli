@@ -195,4 +195,17 @@ export const roTranslations: Record<string, string> = {
     'cli.debug.modules': 'Toate modulele încărcate',
     'cli.debug.state': 'Inspectează depozitele de stare',
     'cli.packages.description': 'Gestionarea pachetelor CLI',
+
+    // ── Servers and events ───────────────────────────────────────────
+    'cli.server.description': 'Gestionarea conexiunilor la serverele CLI la distanță',
+    'cli.server.list.description': 'Afișează serverele cu starea, versiunea și comenzile lor',
+    'cli.server.status.description': 'Verifică dacă serverele răspund (toate, sau unul în detaliu)',
+    'cli.server.commands.description': 'Afișează comenzile fiecărui server',
+    'cli.server.reconnect.description': 'Reconectare la servere și reîncărcarea comenzilor',
+    'cli.server.default.description': 'Afișează sau setează serverul care rulează comenzile comune',
+    'cli.ssh.description': 'Deschide o sesiune shell la distanță pe un server',
+    'cli.events.description': 'Urmărește, listează și emite evenimente pe magistrala de evenimente',
+    'cli.events.watch.description': 'Afișează evenimentele pe măsură ce apar (Ctrl+C pentru oprire)',
+    'cli.events.log.description': 'Afișează evenimentele recente (în memorie, nesalvate)',
+    'cli.events.emit.description': 'Emite un eveniment: events emit <tip> [json]',
 };

@@ -1,3 +1,4 @@
+import { skip } from 'rxjs/operators';
 import {
     CliForegroundColor,
     CliProcessCommand,
@@ -582,6 +583,22 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
 
     async initialize(context: ICliExecutionContext): Promise<void> {
         this.defaultTheme = context.terminal.options.theme!;
+        this.applySavedTheme(context, false);
+
+        // A theme applied in another tab or terminal is applied here too
+        context.state
+            .select((state) =>
+                JSON.stringify([
+                    state['selectedTheme'] ?? null,
+                    state['customOptions'] ?? null,
+                ]),
+            )
+            .pipe(skip(1))
+            .subscribe(() => this.applySavedTheme(context, true));
+    }
+
+    /** Apply the saved theme (or the default one when `reset` and none is saved). */
+    private applySavedTheme(context: ICliExecutionContext, reset: boolean): void {
         const state = context.state.getState<ThemeState>();
 
         if (state.selectedTheme && state.selectedTheme !== 'default') {
@@ -591,6 +608,8 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
             }
         } else if (state.customOptions) {
             context.terminal.options.theme = state.customOptions;
+        } else if (reset) {
+            context.terminal.options.theme = { ...this.defaultTheme };
         }
 
         this.applyStyles(context);

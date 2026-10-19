@@ -9,6 +9,9 @@ import {
     CliStateConfiguration,
     DefaultLibraryAuthor,
     CliForegroundColor,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 
 interface SnippetState {
@@ -74,10 +77,10 @@ export class CliSnippetCommandProcessor implements ICliCommandProcessor {
                     context.writer.writeError('Usage: snippet save <name> "<template>"');
                     return;
                 }
-                const { snippets } = context.state.getState<SnippetState>();
-                const updated = { ...snippets, [name]: template };
-                context.state.updateState({ snippets: updated });
-                await context.state.persist();
+                // From the latest saved snippets (another tab may have added some)
+                await context.state.update((state) => ({
+                    snippets: { ...(state['snippets'] ?? {}), [name]: template },
+                }));
                 context.writer.writeSuccess(`Snippet "${name}" saved`);
             },
         },
@@ -111,10 +114,11 @@ export class CliSnippetCommandProcessor implements ICliCommandProcessor {
                     context.writer.writeError(`Snippet "${name}" not found`);
                     return;
                 }
-                const updated = { ...snippets };
-                delete updated[name];
-                context.state.updateState({ snippets: updated });
-                await context.state.persist();
+                await context.state.update((state) => {
+                    const updated = { ...(state['snippets'] ?? {}) };
+                    delete updated[name];
+                    return { snippets: updated };
+                });
                 context.writer.writeSuccess(`Snippet "${name}" deleted`);
             },
         },
@@ -163,6 +167,27 @@ export class CliSnippetCommandProcessor implements ICliCommandProcessor {
             },
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Save command lines you use often as named templates, with {{placeholders}} filled in when you run them. Snippets are saved in the browser and shared by all your terminals and tabs.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['snippet save <name> "<template>"', 'Save (or replace) a snippet'],
+            ['snippet run <name> [var=value ...]', 'Fill in the placeholders and run it'],
+            ['snippet list', 'All saved snippets'],
+            ['snippet show <name>', 'Print a snippet'],
+            ['snippet delete <name>', 'Delete a snippet (rm, remove)'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['snippet save greet "echo Hello {{name}}"', 'A template with a placeholder'],
+            ['snippet run greet name=Ada', 'Runs: echo Hello Ada'],
+            ['snip run greet name="Ada Lovelace"', 'Quote values with spaces'],
+        ]);
+    }
 
     async processCommand(_: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
         const { snippets } = context.state.getState<SnippetState>();

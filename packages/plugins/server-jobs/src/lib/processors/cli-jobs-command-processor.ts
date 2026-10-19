@@ -11,6 +11,9 @@ import {
     ICliCommandParameterDescriptor,
     resolveServerWebSocketUrl,
     resolveServerHeaders,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { CliJobsService } from '../services/cli-jobs-service';
 import { JobDto, JobExecutionDto, UpdateJobRequest } from '../models';
@@ -161,6 +164,25 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             command: 'jobs',
             description: 'Manage background jobs on connected servers',
             author: DefaultLibraryAuthor,
+            writeDescription: (context: ICliExecutionContext) => {
+                writeWrapped(
+                    context,
+                    'See and control the background jobs that run on connected servers: list them, run one now, pause or stop it, read its history and logs, change its settings, or watch events live. A job is picked by name (any case) or ID and looked up on the connected servers; --server limits a command to one server.',
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs', 'Same as server jobs list'],
+                    ['server jobs <action> <name|id>', 'info, trigger, pause, resume, stop, cancel, history, logs, edit'],
+                    ['server jobs watch', 'Live job events'],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs', 'All jobs'],
+                    ['server jobs trigger cleanup', 'Run the cleanup job now'],
+                    ['server jobs history cleanup --status failed', 'Its failed runs'],
+                    ['server jobs logs cleanup --server node', 'Last run output, on node'],
+                ]);
+            },
             metadata: {
                 icon: CliIcon.Gear,
                 module: '@qodalis/cli-server-jobs',
@@ -171,6 +193,22 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         {
             command: 'list',
             description: 'List all jobs across connected servers',
+            writeDescription: (context: ICliExecutionContext) => {
+                writeWrapped(
+                    context,
+                    'List the jobs of every connected server: group, status, schedule, last and next run, and how long the last run took. With several servers, each gets its own table.',
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs list', 'Jobs on all connected servers'],
+                    ['server jobs ls --group <name>', 'Only one group'],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs ls --server node', 'Jobs on the node server'],
+                    ['server jobs list --group reports', 'Jobs in the reports group'],
+                ]);
+            },
             aliases: ['ls'],
             parameters: [
                 serverParam,
@@ -192,6 +230,20 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         {
             command: 'info',
             description: 'Show detailed information about a job',
+            writeDescription: (context: ICliExecutionContext) => {
+                writeWrapped(
+                    context,
+                    'Show everything about one job: schedule, retries, timeout, overlap policy, the execution running now and the result of the last run. The job is found by name (any case) or ID.',
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs info <name|id>', ''],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs info cleanup', 'Details of the cleanup job'],
+                ]);
+            },
             valueRequired: true,
             parameters: [serverParam],
             processCommand: async (
@@ -205,6 +257,21 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         {
             command: 'trigger',
             description: 'Trigger immediate execution of a job',
+            writeDescription: (context: ICliExecutionContext) => {
+                writeWrapped(
+                    context,
+                    'Run a job now, without waiting for its next scheduled time. Its schedule does not change.',
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs trigger <name|id>', ''],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs trigger cleanup', 'Run cleanup now'],
+                    ['server jobs logs cleanup', 'Then read its output'],
+                ]);
+            },
             valueRequired: true,
             parameters: [serverParam],
             processCommand: async (
@@ -218,6 +285,21 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         {
             command: 'pause',
             description: 'Pause scheduled execution of a job',
+            writeDescription: (context: ICliExecutionContext) => {
+                writeWrapped(
+                    context,
+                    'Stop running a job on its schedule until it is resumed. Use cancel or stop for a run that is already in progress.',
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs pause <name|id>', ''],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs pause cleanup', 'Hold cleanup'],
+                    ['server jobs resume cleanup', 'Put it back on schedule'],
+                ]);
+            },
             valueRequired: true,
             parameters: [serverParam],
             processCommand: async (
@@ -231,6 +313,20 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         {
             command: 'resume',
             description: 'Resume a paused job',
+            writeDescription: (context: ICliExecutionContext) => {
+                writeWrapped(
+                    context,
+                    'Put a paused job back on its schedule.',
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs resume <name|id>', ''],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs resume cleanup', 'Run cleanup on schedule again'],
+                ]);
+            },
             valueRequired: true,
             parameters: [serverParam],
             processCommand: async (
@@ -244,6 +340,20 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         {
             command: 'stop',
             description: 'Stop a job and cancel current execution if running',
+            writeDescription: (context: ICliExecutionContext) => {
+                writeWrapped(
+                    context,
+                    'Take a job off its schedule and cancel the run in progress, if there is one.',
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs stop <name|id>', ''],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs stop cleanup', 'Stop cleanup completely'],
+                ]);
+            },
             valueRequired: true,
             parameters: [serverParam],
             processCommand: async (
@@ -257,6 +367,20 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         {
             command: 'cancel',
             description: 'Cancel the current execution of a job',
+            writeDescription: (context: ICliExecutionContext) => {
+                writeWrapped(
+                    context,
+                    'Cancel the run in progress of a job. The job stays on its schedule and runs again at the next time.',
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs cancel <name|id>', ''],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs cancel cleanup', 'Abort the current cleanup run'],
+                ]);
+            },
             valueRequired: true,
             parameters: [serverParam],
             processCommand: async (
@@ -270,6 +394,22 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         {
             command: 'history',
             description: 'Show execution history for a job',
+            writeDescription: (context: ICliExecutionContext) => {
+                writeWrapped(
+                    context,
+                    'List the past runs of a job: status, start time, duration, retry attempt and the start of the error message. Use the short ID with logs --exec to read the output of one run.',
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs history <name|id>', 'The last 20 runs'],
+                    ['server jobs history <name|id> --limit <n> --offset <n>', 'Page through older runs'],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs history cleanup --status failed', 'Only failed runs'],
+                    ['server jobs history cleanup --limit 5', 'The last 5 runs'],
+                ]);
+            },
             valueRequired: true,
             parameters: [
                 serverParam,
@@ -305,6 +445,21 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         {
             command: 'logs',
             description: 'Show logs from the latest or a specific execution',
+            writeDescription: (context: ICliExecutionContext) => {
+                writeWrapped(
+                    context,
+                    'Print the log entries of the latest run of a job, or of one run picked by its execution ID (from history).',
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs logs <name|id>', 'Logs of the latest run'],
+                    ['server jobs logs <name|id> --exec <id>', 'Logs of one run'],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs logs cleanup', 'What the last cleanup run printed'],
+                ]);
+            },
             valueRequired: true,
             parameters: [
                 serverParam,
@@ -326,6 +481,20 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         {
             command: 'edit',
             description: 'Interactively edit job settings',
+            writeDescription: (context: ICliExecutionContext) => {
+                writeWrapped(
+                    context,
+                    'Change a job step by step: description, group, cron schedule or interval, max retries, timeout and overlap policy (skip, queue or cancel). Press Enter to keep a value; nothing changes until you confirm.',
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs edit <name|id>', ''],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs edit cleanup', 'Edit cleanup on the server that has it'],
+                ]);
+            },
             valueRequired: true,
             parameters: [serverParam],
             processCommand: async (
@@ -339,6 +508,20 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         {
             command: 'watch',
             description: 'Live view of job events via WebSocket',
+            writeDescription: (context: ICliExecutionContext) => {
+                writeWrapped(
+                    context,
+                    'Follow job events as they happen (started, completed, failed and so on) on every connected server, one line per event. Press Ctrl+C to stop.',
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs watch', 'Events from all connected servers'],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs watch --server node', 'Only events from node'],
+                ]);
+            },
             parameters: [serverParam],
             processCommand: async (
                 cmd: CliProcessCommand,
@@ -443,7 +626,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         const nameOrId = (cmd.value ?? '').trim();
         if (!nameOrId) {
-            context.writer.writeError('Usage: jobs info <id|name>');
+            context.writer.writeError('Usage: server jobs info <id|name>');
             return;
         }
 
@@ -453,13 +636,17 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
+        let missing = 0;
         for (const { name, service } of services) {
             try {
                 const job = await resolveJobId(service, nameOrId);
                 if (!job) {
-                    if (services.length === 1) {
+                    // Report once, when no server has the job
+                    if (++missing === services.length) {
                         context.writer.writeError(
-                            `Job "${nameOrId}" not found on server ${name}.`,
+                            services.length === 1
+                                ? `Job "${nameOrId}" not found on server ${name}.`
+                                : `Job "${nameOrId}" not found on any of the ${services.length} connected servers.`,
                         );
                     }
                     continue;
@@ -534,7 +721,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         const nameOrId = (cmd.value ?? '').trim();
         if (!nameOrId) {
-            context.writer.writeError(`Usage: jobs ${action} <id|name>`);
+            context.writer.writeError(`Usage: server jobs ${action} <id|name>`);
             return;
         }
 
@@ -544,13 +731,17 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
+        let missing = 0;
         for (const { name, service } of services) {
             try {
                 const job = await resolveJobId(service, nameOrId);
                 if (!job) {
-                    if (services.length === 1) {
+                    // Report once, when no server has the job
+                    if (++missing === services.length) {
                         context.writer.writeError(
-                            `Job "${nameOrId}" not found on server ${name}.`,
+                            services.length === 1
+                                ? `Job "${nameOrId}" not found on server ${name}.`
+                                : `Job "${nameOrId}" not found on any of the ${services.length} connected servers.`,
                         );
                     }
                     continue;
@@ -577,7 +768,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 const serverSuffix =
                     services.length > 1 ? ` on server ${name}` : '';
                 context.writer.writeSuccess(
-                    `Job "${job.name}" ${action}${action.endsWith('e') ? 'd' : 'ed'}${serverSuffix}.`,
+                    `Job "${job.name}" ${PAST_TENSE[action] ?? `${action}ed`}${serverSuffix}.`,
                 );
                 return;
             } catch (e: any) {
@@ -596,7 +787,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         const nameOrId = (cmd.value ?? '').trim();
         if (!nameOrId) {
-            context.writer.writeError('Usage: jobs history <id|name>');
+            context.writer.writeError('Usage: server jobs history <id|name>');
             return;
         }
 
@@ -610,13 +801,17 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         const offset = (cmd.args['offset'] as number) ?? 0;
         const status = cmd.args['status'] as string | undefined;
 
+        let missing = 0;
         for (const { name, service } of services) {
             try {
                 const job = await resolveJobId(service, nameOrId);
                 if (!job) {
-                    if (services.length === 1) {
+                    // Report once, when no server has the job
+                    if (++missing === services.length) {
                         context.writer.writeError(
-                            `Job "${nameOrId}" not found on server ${name}.`,
+                            services.length === 1
+                                ? `Job "${nameOrId}" not found on server ${name}.`
+                                : `Job "${nameOrId}" not found on any of the ${services.length} connected servers.`,
                         );
                     }
                     continue;
@@ -683,7 +878,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         const nameOrId = (cmd.value ?? '').trim();
         if (!nameOrId) {
-            context.writer.writeError('Usage: jobs logs <id|name>');
+            context.writer.writeError('Usage: server jobs logs <id|name>');
             return;
         }
 
@@ -695,13 +890,17 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
 
         const execId = cmd.args['exec'] as string | undefined;
 
+        let missing = 0;
         for (const { name, service } of services) {
             try {
                 const job = await resolveJobId(service, nameOrId);
                 if (!job) {
-                    if (services.length === 1) {
+                    // Report once, when no server has the job
+                    if (++missing === services.length) {
                         context.writer.writeError(
-                            `Job "${nameOrId}" not found on server ${name}.`,
+                            services.length === 1
+                                ? `Job "${nameOrId}" not found on server ${name}.`
+                                : `Job "${nameOrId}" not found on any of the ${services.length} connected servers.`,
                         );
                     }
                     continue;
@@ -774,7 +973,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         const nameOrId = (cmd.value ?? '').trim();
         if (!nameOrId) {
-            context.writer.writeError('Usage: jobs edit <id|name>');
+            context.writer.writeError('Usage: server jobs edit <id|name>');
             return;
         }
 
@@ -785,13 +984,17 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         }
 
         // Use the first matching server
+        let missing = 0;
         for (const { name, service } of services) {
             try {
                 const job = await resolveJobId(service, nameOrId);
                 if (!job) {
-                    if (services.length === 1) {
+                    // Report once, when no server has the job
+                    if (++missing === services.length) {
                         context.writer.writeError(
-                            `Job "${nameOrId}" not found on server ${name}.`,
+                            services.length === 1
+                                ? `Job "${nameOrId}" not found on server ${name}.`
+                                : `Job "${nameOrId}" not found on any of the ${services.length} connected servers.`,
                         );
                     }
                     continue;
@@ -1055,3 +1258,12 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         context.writer.writeInfo('Stopped watching job events.');
     }
 }
+
+/** Past tense of the job actions, for the confirmation message. */
+const PAST_TENSE: Record<string, string> = {
+    trigger: 'triggered',
+    pause: 'paused',
+    resume: 'resumed',
+    stop: 'stopped',
+    cancel: 'cancelled',
+};

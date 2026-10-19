@@ -656,3 +656,131 @@ describe('CliStateStore defaults and sync', () => {
         expect(store.getState()).toEqual({ x: 3 });
     });
 });
+
+describe('CliStateStore update()', () => {
+    let kvStore: MockKeyValueStore;
+    let services: MockServiceProvider;
+
+    beforeEach(() => {
+        kvStore = new MockKeyValueStore();
+        services = new MockServiceProvider();
+        services.set({ provide: CliKeyValueStore_TOKEN, useValue: kvStore });
+    });
+
+    it('two terminals adding to the same list at once keep both items', async () => {
+        const a = new CliStateStore(services, 'todo', { todos: [] as string[] });
+        const b = new CliStateStore(services, 'todo', { todos: [] as string[] });
+        await a.initialize();
+        await b.initialize();
+
+        await Promise.all([
+            a.update((s) => ({ todos: [...s['todos'], 'from a'] })),
+            b.update((s) => ({ todos: [...s['todos'], 'from b'] })),
+        ]);
+
+        const saved = (await kvStore.get('store-state-todo')).todos;
+        expect(saved.sort()).toEqual(['from a', 'from b']);
+        // The later one has both; each has at least its own
+        expect(a.getState()['todos']).toContain('from a');
+        expect(b.getState()['todos']).toContain('from b');
+    });
+
+    it('sees what another terminal saved since this one loaded', async () => {
+        const store = new CliStateStore(services, 'todo', { todos: [] as string[] });
+        await store.initialize();
+        await kvStore.set('store-state-todo', { todos: ['elsewhere'] });
+
+        await store.update((s) => ({ todos: [...s['todos'], 'here'] }));
+
+        expect(store.getState()['todos']).toEqual(['elsewhere', 'here']);
+        expect((await kvStore.get('store-state-todo')).todos).toEqual(['elsewhere', 'here']);
+    });
+
+    it('keeps other keys and this terminal\'s unsaved changes', async () => {
+        await kvStore.set('store-state-s', { list: [1], other: 'saved' });
+        const store = new CliStateStore(services, 's', { list: [], other: '', mine: 0 });
+        await store.initialize();
+        store.updateState({ mine: 5 });
+
+        await store.update((s) => ({ list: [...s['list'], 2] }));
+
+        expect(store.getState()).toEqual({ list: [1, 2], other: 'saved', mine: 5 });
+        expect(await kvStore.get('store-state-s')).toEqual({ list: [1, 2], other: 'saved', mine: 5 });
+    });
+
+    it('is a plain change for a session store', async () => {
+        const store = new CliStateStore(services, 's', { n: 1 }, { scope: 'session' });
+        await store.update((s) => ({ n: s['n'] + 1 }));
+        expect(store.getState()).toEqual({ n: 2 });
+        expect(await kvStore.get('store-state-s')).toBeUndefined();
+    });
+});
+
+describe('CliStateStore user scope', () => {
+    let kvStore: MockKeyValueStore;
+    let services: MockServiceProvider;
+    let manager: CliStateStoreManager;
+
+    beforeEach(() => {
+        kvStore = new MockKeyValueStore();
+        services = new MockServiceProvider();
+        services.set({ provide: CliKeyValueStore_TOKEN, useValue: kvStore });
+        manager = new CliStateStoreManager(services, new CliCommandProcessorRegistry());
+    });
+    afterEach(() => manager.dispose());
+
+    it('saves each signed-in user separately, shared while signed out', async () => {
+        const store = manager.getStateStore('notes', { text: '' }, { scope: 'user' });
+        await store.initialize();
+        store.updateState({ text: 'anonymous' });
+        await store.persist();
+
+        manager.setUser('alice');
+        await store.initialize();
+        expect(store.getState()).toEqual({ text: '' });
+        store.updateState({ text: 'alice notes' });
+        await store.persist();
+
+        manager.setUser('bob');
+        await store.initialize();
+        expect(store.getState()).toEqual({ text: '' });
+
+        manager.setUser('alice');
+        await store.initialize();
+        expect(store.getState()).toEqual({ text: 'alice notes' });
+
+        manager.setUser(undefined);
+        await store.initialize();
+        expect(store.getState()).toEqual({ text: 'anonymous' });
+
+        expect(await kvStore.get('store-state-notes:user:alice')).toEqual({ text: 'alice notes' });
+        expect(await kvStore.get('store-state-notes')).toEqual({ text: 'anonymous' });
+    });
+
+    it('a store created after sign-in starts with that user', async () => {
+        await kvStore.set('store-state-prefs:user:alice', { dark: true });
+        manager.setUser('alice');
+        const store = manager.getStateStore('prefs', { dark: false }, { scope: 'user' });
+        await store.initialize();
+        expect(store.getState()).toEqual({ dark: true });
+    });
+
+    it('global stores do not change when the user does', async () => {
+        const store = manager.getStateStore('theme', { name: 'x' });
+        await store.initialize();
+        store.updateState({ name: 'nord' });
+        manager.setUser('alice');
+        expect(store.getState()).toEqual({ name: 'nord' });
+    });
+
+    it('follows session:changed on the event bus', () => {
+        let handler: ((e: any) => void) | undefined;
+        const bus: any = { on: (_: string, h: (e: any) => void) => ((handler = h), () => (handler = undefined)) };
+        const spy = spyOn(manager, 'setUser').and.callThrough();
+        manager.followUser(bus);
+        handler!({ data: { user: 'alice' } });
+        expect(spy).toHaveBeenCalledWith('alice');
+        manager.dispose();
+        expect(handler).toBeUndefined();
+    });
+});

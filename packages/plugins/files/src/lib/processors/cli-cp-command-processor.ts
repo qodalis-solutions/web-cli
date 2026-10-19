@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -24,6 +27,25 @@ export class CliCpCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Copy a file to a new path, or into an existing directory. Copying a directory needs -r, which copies everything inside it. A file already at the destination is replaced.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['cp <source> <dest>', 'Copy a file to a new name'],
+            ['cp <source> <dir>', 'Copy a file into a directory'],
+            ['cp -r <dir> <dest>', 'Copy a directory and its contents'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['cp notes.txt notes.bak', 'Make a backup copy'],
+            ['cp report.txt ~/docs', 'Copy into ~/docs'],
+            ['cp -r project project-copy', 'Duplicate a whole directory'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

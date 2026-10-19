@@ -297,4 +297,17 @@ export const frTranslations: Record<string, string> = {
 
     // ── Packages ──────────────────────────────────────────────────────
     'cli.packages.description': 'Gérer les paquets dans le CLI',
+
+    // ── Servers and events ───────────────────────────────────────────
+    'cli.server.description': 'Gérer les connexions aux serveurs CLI distants',
+    'cli.server.list.description': 'Afficher les serveurs avec leur état, version et commandes',
+    'cli.server.status.description': 'Vérifier que les serveurs répondent (tous, ou un en détail)',
+    'cli.server.commands.description': 'Afficher les commandes de chaque serveur',
+    'cli.server.reconnect.description': 'Se reconnecter aux serveurs et recharger leurs commandes',
+    'cli.server.default.description': 'Afficher ou définir le serveur qui exécute les commandes partagées',
+    'cli.ssh.description': 'Ouvrir une session shell distante sur un serveur',
+    'cli.events.description': 'Observer, lister et émettre des événements du bus d’événements',
+    'cli.events.watch.description': 'Afficher les événements dès qu’ils se produisent (Ctrl+C pour arrêter)',
+    'cli.events.log.description': 'Afficher les événements récents (en mémoire, non enregistrés)',
+    'cli.events.emit.description': 'Émettre un événement : events emit <type> [json]',
 };

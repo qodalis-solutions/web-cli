@@ -1,3 +1,4 @@
+import { skip } from 'rxjs/operators';
 import {
     ICliCommandProcessor,
     ICliExecutionContext,
@@ -8,6 +9,9 @@ import {
     CliStateConfiguration,
     DefaultLibraryAuthor,
     CliForegroundColor,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { defaultFontSize } from '../engine/cli-terminal-setup';
 
@@ -83,6 +87,16 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
         if (state?.fontSize != null && context.terminal?.options) {
             context.terminal.options.fontSize = state.fontSize;
         }
+
+        // A size set in another tab or terminal is applied here too
+        context.state
+            .select((s) => (s as FontSizeState).fontSize ?? null)
+            .pipe(skip(1))
+            .subscribe((fontSize) => {
+                if (!context.terminal?.options) return;
+                context.terminal.options.fontSize =
+                    fontSize ?? this.hostFontSize ?? context.terminal.options.fontSize;
+            });
     }
 
     async processCommand(_: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
@@ -102,6 +116,26 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
         context.writer.writeln(
             `  ${context.writer.wrapInColor('font-size reset', CliForegroundColor.Cyan)}      Reset to default (${this.getDefault()}px)`,
         );
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            `Make the terminal text bigger or smaller, from ${MIN_FONT_SIZE}px to ${MAX_FONT_SIZE}px. The size you pick is saved and restored the next time the terminal opens; reset goes back to the size the page started with.`,
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['font-size', 'Show the current size'],
+            ['font-size increase|decrease', `Bigger or smaller by ${STEP}px`],
+            ['font-size set <n>', `Exact size in pixels (${MIN_FONT_SIZE}-${MAX_FONT_SIZE})`],
+            ['font-size reset', 'Back to the default size'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['font-size set 16', 'Use 16px text'],
+            ['fontsize increase', `Grow by ${STEP}px`],
+            ['font-size reset', 'Forget the saved size'],
+        ]);
     }
 
     private getCurrent(context: ICliExecutionContext): number {

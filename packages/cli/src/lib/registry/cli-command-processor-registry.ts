@@ -7,6 +7,15 @@ import {
 export class CliCommandProcessorRegistry implements ICliCommandProcessorRegistry {
     public readonly processors: ICliCommandProcessor[] = [];
 
+    /**
+     * Sub-commands each extension (`extendsProcessor`) merged into an
+     * existing command, removed again when the extension is unregistered.
+     */
+    private readonly mergedByExtension = new Map<
+        ICliCommandProcessor,
+        { target: ICliCommandProcessor; subs: ICliCommandProcessor[] }
+    >();
+
     constructor(initialProcessors?: ICliCommandProcessor[]) {
         if (initialProcessors) {
             this.processors.push(...initialProcessors);
@@ -33,13 +42,21 @@ export class CliCommandProcessorRegistry implements ICliCommandProcessorRegistry
                     if (!existingProcessor.processors) {
                         existingProcessor.processors = [];
                     }
+                    const added: ICliCommandProcessor[] = [];
                     for (const sub of processor.processors) {
                         const exists = existingProcessor.processors.find(
                             (p) => p.command === sub.command,
                         );
                         if (!exists) {
                             existingProcessor.processors.push(sub);
+                            added.push(sub);
                         }
+                    }
+                    if (added.length > 0) {
+                        this.mergedByExtension.set(processor, {
+                            target: existingProcessor,
+                            subs: added,
+                        });
                     }
                 }
                 return;
@@ -61,6 +78,23 @@ export class CliCommandProcessorRegistry implements ICliCommandProcessorRegistry
     }
 
     public unregisterProcessor(processor: ICliCommandProcessor): void {
+        // An extension only removes the sub-commands it added, never the
+        // command it extended (e.g. `pkg remove server-logs` removes
+        // `server logs`, not `server`)
+        const merged = this.mergedByExtension.get(processor);
+        if (merged) {
+            this.mergedByExtension.delete(processor);
+            merged.target.processors = (merged.target.processors ?? []).filter(
+                (sub) => !merged.subs.includes(sub),
+            );
+            return;
+        }
+        if (processor.extendsProcessor) {
+            // Merged nothing (all its sub-commands already existed)
+            const existing = this.getProcessorByName(processor.command);
+            if (existing && existing !== processor) return;
+        }
+
         const existingProcessor = this.getProcessorByName(processor.command);
 
         if (existingProcessor) {

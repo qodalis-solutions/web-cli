@@ -77,6 +77,36 @@ describe('CliServerConnection event socket', () => {
         }
     });
 
+    it('a closed socket from a server that stopped marks it disconnected at once', async () => {
+        const connection = new CliServerConnection({ name: 'node', url: 'http://srv' });
+        let disconnected = 0;
+        connection.onDisconnect = () => disconnected++;
+        await connection.connect();
+        await flush();
+        expect(connection.connected).toBeTrue();
+        (globalThis.fetch as jasmine.Spy).and.callFake(async () => {
+            throw new TypeError('Failed to fetch');
+        });
+        FakeSocket.all[0].readyState = FakeSocket.CLOSED;
+        FakeSocket.all[0].onclose({ code: 1006 });
+        await flush();
+        expect(connection.connected).toBeFalse();
+        expect(disconnected).toBe(1);
+        connection.disconnect();
+    });
+
+    it('a dropped socket on a server that still answers keeps the connection', async () => {
+        const connection = new CliServerConnection({ name: 'node', url: 'http://srv' });
+        await connection.connect();
+        await flush();
+        (globalThis.fetch as jasmine.Spy).and.callFake(async () => new Response('{}', { status: 200 }));
+        FakeSocket.all[0].readyState = FakeSocket.CLOSED;
+        FakeSocket.all[0].onclose({ code: 1006 });
+        await flush();
+        expect(connection.connected).toBeTrue();
+        connection.disconnect();
+    });
+
     describe('with background services', () => {
         function setup() {
             const registry = new CliBackgroundServiceRegistry({} as any, {} as any);

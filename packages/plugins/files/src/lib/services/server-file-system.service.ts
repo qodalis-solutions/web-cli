@@ -492,6 +492,17 @@ export class ServerFileSystemService implements IFileSystemService {
         const destResolved = this.resolvePath(dest);
         const destNode = this.getNode(destResolved);
 
+        // A directory cannot go inside itself (it would detach from the tree)
+        if (
+            srcNode.type === 'directory' &&
+            (destResolved === srcResolved ||
+                destResolved.startsWith(srcResolved + '/'))
+        ) {
+            throw new Error(
+                `mv: cannot move '${src}' to a subdirectory of itself, '${dest}'`,
+            );
+        }
+
         const srcParts = srcResolved.split('/').filter(Boolean);
         const srcParentPath = '/' + srcParts.slice(0, -1).join('/');
         const srcParent = this.getNode(srcParentPath);

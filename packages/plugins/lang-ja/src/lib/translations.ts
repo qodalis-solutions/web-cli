@@ -195,4 +195,17 @@ export const jaTranslations: Record<string, string> = {
     'cli.debug.modules': '読み込み済みの全モジュール',
     'cli.debug.state': 'ステートストアを検査',
     'cli.packages.description': 'CLIのパッケージを管理',
+
+    // ── Servers and events ───────────────────────────────────────────
+    'cli.server.description': 'リモート CLI サーバーへの接続を管理',
+    'cli.server.list.description': 'サーバーの状態、バージョン、コマンドを表示',
+    'cli.server.status.description': 'サーバーが応答するか確認（すべて、または 1 台を詳細に）',
+    'cli.server.commands.description': '各サーバーのコマンドを表示',
+    'cli.server.reconnect.description': 'サーバーに再接続してコマンドを再読み込み',
+    'cli.server.default.description': '共通コマンドを実行するサーバーを表示または設定',
+    'cli.ssh.description': 'サーバーでリモートシェルセッションを開く',
+    'cli.events.description': 'イベントバスのイベントを監視、一覧表示、送信',
+    'cli.events.watch.description': '発生したイベントを表示（Ctrl+C で停止）',
+    'cli.events.log.description': '最近のイベントを表示（メモリ内のみ、保存されません）',
+    'cli.events.emit.description': 'イベントを送信: events emit <type> [json]',
 };

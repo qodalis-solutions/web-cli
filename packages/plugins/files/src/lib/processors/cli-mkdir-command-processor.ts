@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -25,6 +28,23 @@ export class CliMkdirCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Create a new directory. With -p, any missing parent directories are created too.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['mkdir <dir>', 'Create a directory'],
+            ['mkdir -p <path>', 'Create a directory and its missing parents'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['mkdir projects', 'Create projects in the current directory'],
+            ['mkdir -p ~/docs/2026/notes', 'Create the whole path at once'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

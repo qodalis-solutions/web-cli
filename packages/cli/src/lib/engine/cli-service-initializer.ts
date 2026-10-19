@@ -195,6 +195,8 @@ export async function initializeServices(
     services.set([
         { provide: ICliEventBus_TOKEN, useValue: events, sealed: true },
     ]);
+    // `scope: 'user'` stores follow the signed-in user
+    stateStoreManager.followUser(events);
 
     return {
         services,

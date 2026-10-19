@@ -195,4 +195,17 @@ export const zhTranslations: Record<string, string> = {
     'cli.debug.modules': '所有已加载的模块',
     'cli.debug.state': '检查状态存储',
     'cli.packages.description': '管理 CLI 包',
+
+    // ── Servers and events ───────────────────────────────────────────
+    'cli.server.description': '管理远程 CLI 服务器连接',
+    'cli.server.list.description': '显示服务器的状态、版本和命令',
+    'cli.server.status.description': '检查服务器是否可达（全部，或详细查看一个）',
+    'cli.server.commands.description': '显示每个服务器提供的命令',
+    'cli.server.reconnect.description': '重新连接服务器并重新加载其命令',
+    'cli.server.default.description': '显示或设置运行共享命令的服务器',
+    'cli.ssh.description': '在服务器上打开远程 Shell 会话',
+    'cli.events.description': '查看、列出和发送事件总线上的事件',
+    'cli.events.watch.description': '实时显示发生的事件（按 Ctrl+C 停止）',
+    'cli.events.log.description': '显示最近的事件（仅在内存中，不会保存）',
+    'cli.events.emit.description': '发送事件：events emit <type> [json]',
 };

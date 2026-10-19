@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -41,6 +44,25 @@ export class CliCutCommandProcessor implements ICliCommandProcessor {
         },
     ];
 
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Print selected parts of each line: fields split by a delimiter (-f, tab by default) or character positions (-c). A list can be single numbers, ranges or both, such as 1,3 or 2-4 or 3-.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['cut -d <sep> -f <list> <file>', 'Select fields'],
+            ['cut -c <list> <file>', 'Select character positions'],
+            ['<command> | cut -f <list>', 'Cut piped input'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['cut -d , -f 1,3 data.csv', 'First and third CSV column'],
+            ['cut -c 1-10 notes.txt', 'First 10 characters of each line'],
+            ['cat users.txt | cut -d : -f 1-2', 'First two fields split on :'],
+        ]);
+    }
+
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
@@ -50,17 +72,21 @@ export class CliCutCommandProcessor implements ICliCommandProcessor {
         );
 
         const delimiter = command.args['d'] || command.args['delimiter'] || '\t';
-        const fieldsSpec = command.args['f'] || command.args['fields'];
-        const charsSpec = command.args['c'] || command.args['characters'];
+        const fieldsSpec = command.args['f'] ?? command.args['fields'];
+        const charsSpec = command.args['c'] ?? command.args['characters'];
 
-        if (!fieldsSpec && !charsSpec) {
+        if (
+            (fieldsSpec === undefined || fieldsSpec === '') &&
+            (charsSpec === undefined || charsSpec === '')
+        ) {
             context.writer.writeError(
                 'cut: you must specify either -f (fields) or -c (characters)',
             );
             return;
         }
 
-        const spec = fieldsSpec || charsSpec!;
+        // A plain number arrives parsed (`-f 2`), so normalize to text
+        const spec = String(fieldsSpec ?? charsSpec);
         const indices = this.parseSpec(spec);
         const paths = this.parsePaths(command);
 

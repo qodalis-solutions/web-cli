@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -14,6 +17,23 @@ export class CliDirnameCommandProcessor implements ICliCommandProcessor {
     acceptsRawInput = true;
     valueRequired = true;
     metadata = { icon: '📂', module: 'file management' };
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Print the directory part of a path, everything before the last /. A bare name with no / gives . (the current directory).',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['dirname <path>', 'Path without its last part'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['dirname /home/user/notes.txt', 'Prints /home/user'],
+            ['dirname notes.txt', 'Prints .'],
+            ['dirname /home', 'Prints /'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

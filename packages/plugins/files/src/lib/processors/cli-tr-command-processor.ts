@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -130,6 +133,26 @@ export class CliTrCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Translate characters from SET1 into the matching characters of SET2, delete them (-d) or squeeze repeats into one (-s). Sets can use ranges like a-z and classes like [:upper:], [:lower:], [:digit:], [:alpha:], [:alnum:] and [:space:]. Reads a file or piped input.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['tr <set1> <set2> [file]', 'Replace characters'],
+            ['tr -d <set1> [file]', 'Delete characters'],
+            ['tr -s <set1> [file]', 'Squeeze repeated characters'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['tr a-z A-Z notes.txt', 'Convert to upper case'],
+            ['echo hello | tr a-z A-Z', 'Upper-case piped text'],
+            ['tr -d 0-9 notes.txt', 'Remove all digits'],
+            ["tr -s ' ' notes.txt", 'Collapse runs of spaces'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

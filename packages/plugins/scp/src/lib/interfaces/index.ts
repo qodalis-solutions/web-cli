@@ -1,6 +1,7 @@
-import { CliHeadersProvider } from '@qodalis/cli-core';
+import { CliHeadersProvider, createCliToken } from '@qodalis/cli-core';
 
-export const IScpTransferService_TOKEN = 'scp-transfer-service';
+export const IScpTransferService_TOKEN =
+    createCliToken<IScpTransferService>('scp-transfer-service');
 
 export interface IScpFileEntry {
     name: string;

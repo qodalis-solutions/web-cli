@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -39,6 +42,28 @@ export class CliWcCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Count lines, words and characters in files or piped input. With several files, a total line is printed at the end.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['wc <file...>', 'Lines, words and characters'],
+            ['wc -l <file>', 'Only the line count'],
+            ['<command> | wc', 'Count piped input'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['wc notes.txt', 'All three counts'],
+            ['wc -l a.txt b.txt', 'Line counts with a total'],
+            [
+                'cat app.log | grep error | wc -l',
+                'How many lines mention error',
+            ],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

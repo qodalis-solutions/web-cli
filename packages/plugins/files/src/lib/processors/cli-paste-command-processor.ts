@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -33,6 +36,24 @@ export class CliPasteCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Join files side by side: line 1 of each file goes on one output line, separated by a tab, then line 2, and so on. With -s, each file is joined onto a single line instead.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['paste <file1> <file2...>', 'Merge files line by line'],
+            ['paste -s <file>', 'Join all lines of a file into one'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['paste names.txt ages.txt', 'Two columns, tab separated'],
+            ['paste -d , a.txt b.txt', 'Merge as comma-separated'],
+            ['paste -s -d , list.txt', 'Turn a list into one CSV line'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

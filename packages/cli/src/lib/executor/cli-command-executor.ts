@@ -517,9 +517,13 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 context.abort?.();
 
                 if (e.code !== 0) {
-                    context.writer.writeError(
-                        `Process exited with code ${e.code}`,
-                    );
+                    // A command that already explained the error needs no
+                    // generic line after it (the exit code is kept)
+                    if (!capturingWriter.hasErrors()) {
+                        context.writer.writeError(
+                            `Process exited with code ${e.code}`,
+                        );
+                    }
                 } else {
                     context.writer.writeInfo(
                         'Process exited successfully with code 0',

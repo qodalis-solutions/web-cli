@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -25,6 +28,25 @@ export class CliTailCommandProcessor implements ICliCommandProcessor {
             type: 'number' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Print the last lines of a file, 10 by default. Works on piped input too. With several files, each one gets a ==> name <== header.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['tail <file>', 'Last 10 lines'],
+            ['tail -n <count> <file>', 'Last <count> lines'],
+            ['<command> | tail', 'Last lines of piped input'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['tail app.log', 'Show the end of a log'],
+            ['tail -n 5 notes.txt', 'Last 5 lines'],
+            ['cat app.log | tail -n 20', 'Last 20 lines of the log'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

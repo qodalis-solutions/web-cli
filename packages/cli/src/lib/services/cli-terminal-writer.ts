@@ -169,10 +169,16 @@ export class CliTerminalWriter implements ICliTerminalWriter {
             padding?: number;
         },
     ): void {
-        const lines = Array.isArray(content) ? content : [content];
         const pad = options?.padding ?? 1;
         const color = options?.borderColor;
         const wrap = (s: string) => (color ? this.wrapInColor(s, color) : s);
+
+        // Keep the box inside the terminal: wrap long lines at words (a box
+        // wider than the terminal breaks its borders on phones)
+        const available = Math.max(10, (this.terminal.cols || 80) - 2 - pad * 2);
+        const lines = (Array.isArray(content) ? content : [content]).flatMap(
+            (line) => wrapWords(line, available),
+        );
 
         const maxContentWidth = Math.max(
             ...lines.map((l) => visibleLength(l)),
@@ -329,4 +335,21 @@ export class CliTerminalWriter implements ICliTerminalWriter {
             );
         });
     }
+}
+
+/** Split `text` into lines of at most `width` visible characters, at spaces. */
+function wrapWords(text: string, width: number): string[] {
+    if (visibleLength(text) <= width) return [text];
+    const lines: string[] = [];
+    let line = '';
+    for (const word of text.split(' ')) {
+        if (line && visibleLength(line) + 1 + visibleLength(word) > width) {
+            lines.push(line);
+            line = word;
+        } else {
+            line = line ? `${line} ${word}` : word;
+        }
+    }
+    if (line) lines.push(line);
+    return lines;
 }

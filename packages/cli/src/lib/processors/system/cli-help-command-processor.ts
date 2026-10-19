@@ -6,6 +6,7 @@ import {
     CliProcessorMetadata,
     CliIcon,
     ICliCommandProcessorRegistry,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { CliProcessorsRegistry_TOKEN } from '../../tokens';
@@ -83,7 +84,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                     );
                     if (narrow) {
                         writer.writeln(`  ${icon} ${name}${aliasText}`);
-                        writer.writeln(`      ${desc}`);
+                        writeWrapped(context, desc, 6);
                         return;
                     }
                     writer.writeln(`    ${icon}  ${name} ${desc}${aliasText}`);
@@ -238,7 +239,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 );
                 if (narrow) {
                     writer.writeln(`    ${subName}${subAliases}`);
-                    writer.writeln(`      ${subDesc}`);
+                    writeWrapped(context, subDesc, 6);
                     return;
                 }
                 writer.writeln(
@@ -258,7 +259,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             commandParams.forEach((param) => {
-                this.writeParameter(param, writer, t, isNarrow(context));
+                this.writeParameter(param, context, isNarrow(context));
             });
         }
 
@@ -269,7 +270,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             globalParams.forEach((param) => {
-                this.writeParameter(param, writer, t, isNarrow(context));
+                this.writeParameter(param, context, isNarrow(context));
             });
         }
 
@@ -301,10 +302,10 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
     private writeParameter(
         param: { name: string; aliases?: string[]; type: string; description: string; required: boolean; defaultValue?: any },
-        writer: ICliExecutionContext['writer'],
-        translator: ICliExecutionContext['translator'],
+        context: ICliExecutionContext,
         narrow = false,
     ) {
+        const { writer, translator } = context;
         const aliases = param.aliases?.length
             ? `, ${param.aliases.map((a) => `-${a}`).join(', ')}`
             : '';
@@ -322,7 +323,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 : '';
         if (narrow) {
             writer.writeln(`    ${nameStr} ${typeStr}${required}${defaultVal}`);
-            writer.writeln(`      ${param.description}`);
+            writeWrapped(context, param.description, 6);
             return;
         }
         writer.writeln(

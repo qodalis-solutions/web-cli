@@ -669,6 +669,108 @@
           }
         }
       }
+    },
+    "server-jobs": {
+      "projectType": "library",
+      "root": "packages/plugins/server-jobs",
+      "sourceRoot": "packages/plugins/server-jobs/src",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/server-jobs/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
+    },
+    "2048": {
+      "projectType": "library",
+      "root": "packages/plugins/2048",
+      "sourceRoot": "packages/plugins/2048/src",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/2048/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
+    },
+    "minesweeper": {
+      "projectType": "library",
+      "root": "packages/plugins/minesweeper",
+      "sourceRoot": "packages/plugins/minesweeper/src",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/minesweeper/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
+    },
+    "snake": {
+      "projectType": "library",
+      "root": "packages/plugins/snake",
+      "sourceRoot": "packages/plugins/snake/src",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/snake/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
+    },
+    "tetris": {
+      "projectType": "library",
+      "root": "packages/plugins/tetris",
+      "sourceRoot": "packages/plugins/tetris/src",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/tetris/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
+    },
+    "wordle": {
+      "projectType": "library",
+      "root": "packages/plugins/wordle",
+      "sourceRoot": "packages/plugins/wordle/src",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "packages/plugins/wordle/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
     }
   },
   "cli": {

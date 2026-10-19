@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -14,6 +17,24 @@ export class CliBasenameCommandProcessor implements ICliCommandProcessor {
     acceptsRawInput = true;
     valueRequired = true;
     metadata = { icon: '📛', module: 'file management' };
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Print the last part of a path, the file or directory name, without the directories in front. If a suffix is given, it is removed from the end too.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['basename <path>', 'Name without the directories'],
+            ['basename <path> <suffix>', 'Also remove a trailing suffix'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['basename /home/user/notes.txt', 'Prints notes.txt'],
+            ['basename /home/user/notes.txt .txt', 'Prints notes'],
+            ['basename /home/user/', 'Prints user'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

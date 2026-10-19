@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -17,6 +20,22 @@ export class CliStatCommandProcessor implements ICliCommandProcessor {
     metadata = { icon: '📊', module: 'file management' };
 
     parameters = [];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Show details about files or directories: full path, size, type, permissions, owner, group, and when it was created and last modified.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['stat <path...>', 'Show details for each path'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['stat notes.txt', 'Details of one file'],
+            ['stat ~/docs notes.txt', 'Several paths at once'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

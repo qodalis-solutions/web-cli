@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -14,6 +17,24 @@ export class CliMvCommandProcessor implements ICliCommandProcessor {
     version = LIBRARY_VERSION;
     acceptsRawInput = true;
     metadata = { icon: '📦', module: 'file management' };
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Move or rename a file or directory. If the destination is an existing directory, the source is moved into it; otherwise it is renamed. A file already at the destination is replaced.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['mv <source> <dest>', 'Rename a file or directory'],
+            ['mv <source> <dir>', 'Move it into a directory'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['mv draft.txt final.txt', 'Rename a file'],
+            ['mv final.txt ~/docs', 'Move it into ~/docs'],
+            ['mv old-dir new-dir', 'Rename a directory'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

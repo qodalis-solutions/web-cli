@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -25,6 +28,28 @@ export class CliTeeCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Print text and save a copy of it to one or more files at the same time. With piped input, every file named receives the text. Without a pipe, the last file is the input and is copied to the others.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['<command> | tee <file...>', 'Show piped output and save it'],
+            ['<command> | tee -a <file>', 'Append instead of overwriting'],
+            ['tee <out...> <input>', 'Copy <input> to the other files'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['cat notes.txt | tee copy.txt', 'Show and save a copy'],
+            ['echo done | tee -a log.txt', 'Add a line to a log'],
+            [
+                'tee a.txt b.txt source.txt',
+                'Copy source.txt into a.txt and b.txt',
+            ],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

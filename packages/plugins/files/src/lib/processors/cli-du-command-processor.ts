@@ -4,6 +4,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileNode } from '../interfaces/i-file-node';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
@@ -39,6 +42,25 @@ export class CliDuCommandProcessor implements ICliCommandProcessor {
             type: 'number' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Show how much space files and directories use, in bytes. For a directory, every subdirectory is listed with its total size; use -s for just the total or -d to limit how deep it goes.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['du <path...>', 'Sizes of a path and its subdirectories'],
+            ['du -s <path>', 'Only the total'],
+            ['du -d <n> <path>', 'Only <n> levels deep'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['du ~/docs', 'Size of each directory in ~/docs'],
+            ['du -h -s ~', 'Total of your home in K/M/G'],
+            ['du -h -d 1 .', 'Size of each top-level folder'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

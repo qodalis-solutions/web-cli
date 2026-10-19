@@ -124,15 +124,14 @@ export class CliAliasCommandProcessor implements ICliCommandProcessor {
             context.writer.writeInfo(`${alias} -> ${command.args[alias]}`);
         }
 
+        // From the latest saved aliases (another tab may have changed them)
         const owner = aliasOwner(context);
-        context.state.updateState(
-            withAliases(this.aliasState, owner, {
-                ...aliasesFor(this.aliasState, owner),
+        await context.state.update((saved) =>
+            withAliases(saved as CliAliasState, owner, {
+                ...aliasesFor(saved as CliAliasState, owner),
                 ...command.args,
             }),
         );
-
-        await context.state.persist();
     }
 
     async initialize(context: ICliExecutionContext): Promise<void> {

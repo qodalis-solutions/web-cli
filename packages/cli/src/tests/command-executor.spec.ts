@@ -80,6 +80,9 @@ function createStubStateStore(): ICliStateStore {
         reset: () => {},
         persist: async () => {},
         initialize: async () => {},
+        update: async (change: (s: any) => any) => {
+            Object.assign(state, change(state));
+        },
     } as ICliStateStore;
 }
 
@@ -961,6 +964,38 @@ describe('CliCommandExecutor', () => {
             ).toBeTrue();
         });
 
+        it('should not add the generic exit line after the command\'s own error', async () => {
+            registry.registerProcessor(
+                createTestProcessor('cmd', async (_cmd, ctx) => {
+                    ctx.writer.writeError('Unknown server nod');
+                    ctx.process.exit(1);
+                }),
+            );
+
+            await executor.executeCommand('cmd', context);
+
+            expect(writer.written.some((w) => w.includes('Unknown server nod'))).toBeTrue();
+            expect(
+                writer.written.some((w) => w.includes('Process exited with code')),
+            ).toBeFalse();
+            expect(context.process.exitCode).toBe(1);
+        });
+
+        it('should keep the generic exit line when the command only warned', async () => {
+            registry.registerProcessor(
+                createTestProcessor('cmd', async (_cmd, ctx) => {
+                    ctx.writer.writeWarning('careful');
+                    ctx.process.exit(2);
+                }),
+            );
+
+            await executor.executeCommand('cmd', context);
+
+            expect(
+                writer.written.some((w) => w.includes('Process exited with code 2')),
+            ).toBeTrue();
+        });
+
         it('should write error message for ProcessExitedError with non-zero code', async () => {
             registry.registerProcessor(
                 createTestProcessor('cmd', async (_cmd, ctx) => {
@@ -1163,7 +1198,7 @@ describe('CliCommandExecutor', () => {
             await executor.executeCommand('producer > output.txt', context);
 
             expect(writtenPath).toBe('output.txt');
-            expect(writtenContent).toBe('hello world');
+            expect(writtenContent).toBe('hello world\n');
         });
 
         it('should overwrite existing file with > redirect', async () => {
@@ -1191,7 +1226,7 @@ describe('CliCommandExecutor', () => {
 
             await executor.executeCommand('producer > output.txt', context);
 
-            expect(writtenContent).toBe('new content');
+            expect(writtenContent).toBe('new content\n');
             expect(appendMode).toBeFalsy();
         });
     });
@@ -1225,7 +1260,7 @@ describe('CliCommandExecutor', () => {
 
             await executor.executeCommand('producer >> output.txt', context);
 
-            expect(writtenContent).toBe('appended content');
+            expect(writtenContent).toBe('appended content\n');
             expect(appendMode).toBe(true);
         });
 
@@ -1255,7 +1290,7 @@ describe('CliCommandExecutor', () => {
             await executor.executeCommand('producer >> newfile.txt', context);
 
             expect(createdPath).toBe('newfile.txt');
-            expect(createdContent).toBe('new file content');
+            expect(createdContent).toBe('new file content\n');
         });
     });
 

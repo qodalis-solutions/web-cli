@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -36,6 +39,29 @@ export class CliAwkCommandProcessor implements ICliCommandProcessor {
             type: 'string' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Process text as records and fields: each line is split into fields $1, $2, ... ($0 is the whole line), and each rule runs its { action } on matching lines. Supports BEGIN and END blocks, /regex/ and field comparison patterns, print, variables, NR and NF. Put the program in quotes.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ["awk '<program>' <file>", 'Run a program over a file'],
+            [
+                "awk -F <sep> '<program>' <file>",
+                'Split fields on <sep> instead of spaces',
+            ],
+            ["<command> | awk '<program>'", 'Run a program over piped input'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ["awk '{print $1}' data.txt", 'Print the first column'],
+            ["awk -F , '{print $2}' data.csv", 'Second column of a CSV'],
+            ["awk '$3 > 100 {print $1}' sales.txt", 'Filter rows by a field'],
+            ["awk '{s += $2} END {print s}' data.txt", 'Sum the second column'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

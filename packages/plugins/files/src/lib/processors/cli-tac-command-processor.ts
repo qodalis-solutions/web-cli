@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -15,6 +18,23 @@ export class CliTacCommandProcessor implements ICliCommandProcessor {
     acceptsRawInput = true;
     valueRequired = true;
     metadata = { icon: '🔄', module: 'file management' };
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Print a file with its lines in reverse order, last line first. Works on piped input too.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['tac <file>', 'Print a file bottom to top'],
+            ['<command> | tac', 'Reverse piped input'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['tac app.log', 'Newest log lines first'],
+            ['cat list.txt | tac', 'Reverse a list'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

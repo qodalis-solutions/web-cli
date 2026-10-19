@@ -29,6 +29,9 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
     /** Raw text lines captured from writeError/writeWarning calls. */
     private _stderrLines: string[] = [];
 
+    /** Number of writeError calls (warnings excluded). */
+    private _errorCount = 0;
+
     constructor(private readonly inner: ICliTerminalWriter) {}
 
     // -- stdout-equivalent methods (captured) --------------------------------
@@ -79,6 +82,7 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
 
     writeError(message: string): void {
         this._stderrLines.push(stripAnsi(message));
+        this._errorCount++;
         this.inner.writeError(message);
     }
 
@@ -195,6 +199,11 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
         }
 
         return undefined;
+    }
+
+    /** Whether the command wrote an error message itself. */
+    hasErrors(): boolean {
+        return this._errorCount > 0;
     }
 
     /**

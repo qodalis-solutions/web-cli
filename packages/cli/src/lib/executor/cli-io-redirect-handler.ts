@@ -4,6 +4,15 @@ import { CapturingTerminalWriter } from '../services/capturing-terminal-writer';
 const FS_TOKEN = 'cli-file-system-service';
 
 /**
+ * Output as file text: whole lines, as in a Unix shell, so that
+ * `echo a > f; echo b >> f` gives two lines rather than `ab`.
+ */
+function asFileText(output: unknown): string {
+    const text = typeof output === 'string' ? output : JSON.stringify(output);
+    return text === '' || text.endsWith('\n') ? text : text + '\n';
+}
+
+/**
  * Write stdout data to a file (overwrite mode).
  */
 export async function writeOutputToFile(
@@ -25,8 +34,7 @@ export async function writeOutputToFile(
 
     try {
         const resolved = fs.resolvePath(filePath.trim());
-        const content =
-            typeof output === 'string' ? output : JSON.stringify(output);
+        const content = asFileText(output);
         if (fs.exists(resolved)) {
             fs.writeFile(resolved, content); // overwrite (no append flag)
         } else {
@@ -60,8 +68,7 @@ export async function appendOutputToFile(
 
     try {
         const resolved = fs.resolvePath(filePath.trim());
-        const content =
-            typeof output === 'string' ? output : JSON.stringify(output);
+        const content = asFileText(output);
         if (fs.exists(resolved)) {
             fs.writeFile(resolved, content, true); // append
         } else {

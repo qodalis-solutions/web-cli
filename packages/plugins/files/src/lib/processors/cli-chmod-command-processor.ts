@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileNode } from '../interfaces/i-file-node';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
@@ -25,6 +28,28 @@ export class CliChmodCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Change who can read (r), write (w) and execute (x) a file. Use an octal mode such as 755 or a symbolic one: who (u user, g group, o others, a all), then + to add, - to remove or = to set, then the permissions.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['chmod <mode> <file...>', 'Set permissions'],
+            [
+                'chmod -R <mode> <dir>',
+                'Apply to a directory and everything in it',
+            ],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['chmod 644 notes.txt', 'rw-r--r--: owner writes, others read'],
+            ['chmod u+x script.sh', 'Let the owner execute it'],
+            ['chmod go-w shared.txt', 'Take away write for group and others'],
+            ['chmod -R 755 site', 'Set a whole directory tree'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

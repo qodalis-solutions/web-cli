@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -24,6 +27,22 @@ export class CliLnCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Create a symbolic link: a new path that points to another file or directory. Only symbolic links (-s) are supported, and the target does not need to exist yet.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['ln -s <target> <link>', 'Create <link> pointing at <target>'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['ln -s ~/docs/notes.txt notes', 'Shortcut to a file'],
+            ['ln -s /var/log logs', 'Shortcut to a directory'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

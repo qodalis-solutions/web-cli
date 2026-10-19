@@ -4,6 +4,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -33,6 +36,24 @@ export class CliDiffCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Compare two files line by line and show what changed: lines starting with < (or -) are only in the first file, lines starting with > (or +) only in the second.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['diff <file1> <file2>', 'Show the differences'],
+            ['diff -u <file1> <file2>', 'Unified format with context'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['diff old.txt new.txt', 'What changed between versions'],
+            ['diff -u config.bak config.txt', 'Review edits, git style'],
+            ['diff -i a.txt b.txt', 'Ignore upper/lower case'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

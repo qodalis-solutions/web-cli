@@ -4,6 +4,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import {
     IFileSystemService,
@@ -40,6 +43,26 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
             type: 'number' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'List files and directories under a path (the current directory by default), searching all subdirectories. Filter by name with a glob pattern (* and ?, case-insensitive) or by type.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['find [path]', 'List everything under a path'],
+            ['find [path] --name <pattern>', 'Match names against a glob'],
+            ['find [path] --type f|d', 'Only files (f) or directories (d)'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['find ~/docs', 'List everything in ~/docs'],
+            ['find . --name *.txt', 'Find all .txt files'],
+            ['find . --type d --maxdepth 1', 'Directories near the top'],
+            ['find . --name *.tmp | xargs rm', 'Delete all .tmp files'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

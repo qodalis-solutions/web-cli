@@ -120,6 +120,33 @@ describe('Files plugin integration: single commands', () => {
         ({ harness, fs } = setupHarness());
     });
 
+    it('cut accepts a plain field number', async () => {
+        const result = await harness.execute('cut -d , -f 2 /home/user/data.csv');
+        expect(result.stderr).toEqual([]);
+        expect(result.output).toContain('age');
+        expect(result.output).toContain('30');
+        expect(result.output).not.toContain('alice');
+    });
+
+    it('echo keeps a quoted > as text', async () => {
+        const result = await harness.execute('echo "a > b"');
+        expect(result.output).toContain('a > b');
+        expect(fs.exists('/home/user/b')).toBe(false);
+    });
+
+    it('echo still redirects after quoted text', async () => {
+        await harness.execute('echo "x > y" > out.txt');
+        expect(fs.readFile('/home/user/out.txt')).toBe('x > y\n');
+        await harness.execute('echo more >> out.txt');
+        expect(fs.readFile('/home/user/out.txt')).toBe('x > y\nmore\n');
+    });
+
+    it('mv refuses to move a directory into itself', async () => {
+        const result = await harness.execute('mv docs docs/sub');
+        expect(result.stderr.some((l) => l.includes('subdirectory of itself'))).toBe(true);
+        expect(fs.exists('/home/user/docs/readme.md')).toBe(true);
+    });
+
     it('cat should display file contents', async () => {
         const result = await harness.execute('cat /home/user/hello.txt');
         expect(result.output).toContain('Hello World');

@@ -313,6 +313,16 @@ export class CliServerConnection {
         }
     }
 
+    /** Whether the server answers HTTP at all (any status: it is running). */
+    private async answers(): Promise<boolean> {
+        try {
+            await this.httpFetch(`${this.normalizeUrl(this._config.url)}/api/qcli/versions`);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     private connectEventSocket(): void {
         if (!this._backgroundServices) {
             this.connectEventSocketDirect();
@@ -511,6 +521,19 @@ export class CliServerConnection {
 
         // Clean up the dead socket before scheduling a new connection
         this.closeEventSocketDirect();
+
+        // A server that stopped is marked disconnected at once (rather than
+        // after every retry), so statuses and `server list` are current
+        if (this._wsReconnectAttempts === 0) {
+            void this.answers().then((alive) => {
+                if (!alive && this._connected) {
+                    this._logger?.warn(
+                        `Server "${this._config.name}" is not responding. Marking disconnected.`,
+                    );
+                    this.handleServerDisconnect();
+                }
+            });
+        }
 
         const delay = Math.min(
             1000 * Math.pow(2, this._wsReconnectAttempts),

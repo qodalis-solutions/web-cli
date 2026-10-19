@@ -2014,8 +2014,10 @@
           <td><code>'global'</code></td>
           <td>
             <code>'global'</code>: saved and shared by every terminal and tab of
-            the browser. <code>'session'</code>: this terminal only, in memory,
-            never saved.
+            the browser. <code>'user'</code>: saved separately for each
+            signed-in user (shared while nobody is signed in), and switched when
+            the user changes. <code>'session'</code>: this terminal only, in
+            memory, never saved.
           </td>
         </tr>
         <tr>
@@ -2055,6 +2057,18 @@
             Shallow-merge new values (only the provided keys change) and notify
             subscribers. Saved with <code>persist()</code>, or automatically
             with <code>autoPersist</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>update(change)</code></td>
+          <td>
+            <code>update((state) =&gt; Partial&lt;CliState&gt;): Promise&lt;void&gt;</code>
+          </td>
+          <td>
+            Read, change and save in one step, under the cross-tab lock:
+            <code>change</code> receives the latest saved state, so two
+            terminals changing the same key (adding to one list) both keep
+            their change.
           </td>
         </tr>
         <tr>
@@ -2122,15 +2136,24 @@
         kept.
       </li>
       <li>
-        For the same key, the last save wins. Keep values that change
-        independently under separate keys (e.g. one key per item) when that
-        matters.
+        For the same key, the last <code>persist()</code> wins. To change a
+        value based on what it is now (append to a list, increment a counter),
+        use <code>update()</code>: it reads the latest saved state under the
+        lock, so no terminal's change is lost.
       </li>
     </ul>
+    <div class="code-block">
+      <pre><code>// Two tabs adding a todo at the same time both keep theirs
+await context.state.update((state) =&gt; (&#123;
+    todos: [...state['todos'], &#123; id: Date.now(), text &#125;],
+&#125;));</code></pre>
+    </div>
     <p>
       State that only makes sense for one terminal (a cursor, a game in
       progress) belongs in a <code>scope: 'session'</code> store: it is never
-      saved or shared.
+      saved or shared. Personal data (preferences, notes) can use
+      <code>scope: 'user'</code>: with the users plugin, each user signed in to
+      the terminal gets their own saved state, loaded when they sign in.
     </p>
     <h2>Migrating Saved State</h2>
     <p>
@@ -2245,7 +2268,10 @@ const myModule: ICliModule = &#123;
     <p>
       The built-in tokens (<code>ICliEventBus_TOKEN</code>,
       <code>ICliKeyValueStore_TOKEN</code>,
-      <code>ICliAuthorizationService_TOKEN</code>, …) are typed.
+      <code>ICliAuthorizationService_TOKEN</code>, …) are typed, and so are
+      the tokens plugins export, such as <code>IFileSystemService_TOKEN</code>
+      (files), <code>IScpTransferService_TOKEN</code> (scp) and
+      <code>CliApiTokensService_TOKEN</code> (users).
     </p>
     <h2>Providers</h2>
     <table>

@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -15,6 +18,22 @@ export class CliRmdirCommandProcessor implements ICliCommandProcessor {
     acceptsRawInput = true;
     valueRequired = true;
     metadata = { icon: '🗑', module: 'file management' };
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Remove an empty directory. It refuses to remove a directory that still contains files; use rm -r for that.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['rmdir <dir>', 'Remove an empty directory'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['rmdir empty-folder', 'Remove a directory in the current one'],
+            ['rmdir ~/docs/old', 'Remove by full path'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

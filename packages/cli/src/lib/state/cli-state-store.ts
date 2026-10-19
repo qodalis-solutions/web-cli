@@ -12,7 +12,8 @@ import { distinctUntilChanged, map } from 'rxjs/operators';
 export class CliStateStore implements ICliStateStore {
     private state$: BehaviorSubject<CliState>;
 
-    private storageKey: string;
+    /** Signed-in user, for `scope: 'user'` stores. */
+    private user?: string;
 
     private initialState: CliState;
 
@@ -58,12 +59,45 @@ export class CliStateStore implements ICliStateStore {
         this.state$ = new BehaviorSubject<CliState>({ ...initialState });
         this.setBaseline(initialState);
 
-        this.storageKey = `store-state-${name}`;
     }
 
     /** Key the state is saved under. */
     get key(): string {
         return this.storageKey;
+    }
+
+    /**
+     * Saved per store, or per signed-in user for `scope: 'user'` (signed
+     * out, the state is shared like a global store).
+     */
+    private get storageKey(): string {
+        const base = `store-state-${this.name}`;
+        return this.options.scope === 'user' && this.user
+            ? `${base}:user:${this.user}`
+            : base;
+    }
+
+    /**
+     * The signed-in user changed: a `scope: 'user'` store switches to that
+     * user's saved state (unsaved changes of the previous user are dropped,
+     * so save before switching users).
+     */
+    setUser(user: string | undefined): void {
+        if (user === this.user) return;
+        const before = this.storageKey;
+        this.user = user;
+        if (this.options.scope !== 'user' || this.storageKey === before) return;
+
+        this.unsaved.clear();
+        this.changedBeforeLoad.clear();
+        this.replaceOnSave = false;
+        this.setBaseline(this.initialState);
+        this.state$.next({ ...this.initialState });
+        const wasLoading = !!this.loading;
+        this.loaded = false;
+        this.loading = undefined;
+        // Loaded already for the previous user: load the new user's state now
+        if (wasLoading) void this.initialize();
     }
 
     /** Whether changes saved by other tabs are applied to this store. */
@@ -114,6 +148,26 @@ export class CliStateStore implements ICliStateStore {
     async persist(): Promise<void> {
         await this.initialize();
         await this.write();
+    }
+
+    /**
+     * Change the state from its latest saved value and save it, atomically:
+     * under the cross-tab lock, `change` gets the state as saved (plus this
+     * terminal's unsaved changes) and its result is merged and written. Two
+     * terminals updating the same key never lose each other's change, e.g.
+     * both adding an item to a list. Without storage (or for a session
+     * store) it is a plain `updateState`.
+     */
+    async update(change: (state: CliState) => Partial<CliState>): Promise<void> {
+        await this.initialize();
+        const keyValueStore = this.services.get<ICliKeyValueStore>(
+            CliKeyValueStore_TOKEN,
+        );
+        if (!keyValueStore || this.isSession) {
+            this.updateState(change(this.getState()));
+            return;
+        }
+        await this.write(change);
     }
 
     initialize(): Promise<void> {
@@ -238,7 +292,9 @@ export class CliStateStore implements ICliStateStore {
      * tabs, so two terminals saving at once do not lose each other's keys.
      * Keys others saved meanwhile are applied here.
      */
-    private async write(): Promise<void> {
+    private async write(
+        mutate?: (state: CliState) => Partial<CliState>,
+    ): Promise<void> {
         const keyValueStore = this.services.get<ICliKeyValueStore>(
             CliKeyValueStore_TOKEN,
         );
@@ -265,6 +321,10 @@ export class CliStateStore implements ICliStateStore {
                         ...this.pick(current, keys),
                     };
                 }
+            }
+            // update(): the change is computed from the latest saved state
+            if (mutate) {
+                next = { ...next, ...mutate({ ...next }) };
             }
             await keyValueStore.set(this.storageKey, next);
             if (this.options.version !== undefined) {

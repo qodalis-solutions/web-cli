@@ -255,6 +255,9 @@ export type CliStateConfiguration = {
      * - `'global'`: saved in the browser and shared by every terminal and tab
      *   (each save merges the keys it changed, so terminals changing
      *   different keys never overwrite each other).
+     * - `'user'`: like `'global'`, but saved separately for each signed-in
+     *   user (signed out, the state is shared); it switches when the user
+     *   signs in or out.
      * - `'session'`: this terminal only, in memory; never saved or shared.
      * @default 'global'
      */
@@ -262,7 +265,7 @@ export type CliStateConfiguration = {
 };
 
 /** See {@link CliStateConfiguration.scope}. */
-export type CliStateScope = 'global' | 'session';
+export type CliStateScope = 'global' | 'user' | 'session';
 
 /** Options of a state store (see {@link CliStateConfiguration}). */
 export type CliStateStoreOptions = Pick<

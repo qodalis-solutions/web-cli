@@ -4,6 +4,9 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     ICliProcessRegistry,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { CliProcessRegistry_TOKEN } from '../../services/cli-process-registry';
 
@@ -42,5 +45,19 @@ export class CliKillCommandProcessor implements ICliCommandProcessor {
         } else {
             context.writer.writeError(`kill: no running process with PID ${pid}`);
         }
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Stop a running process by its PID, as shown by ps. A command is cancelled, a background service is stopped. Only running processes can be killed; they show as killed with exit code -9 afterwards.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [['kill <pid>', 'Stop the process with that PID']]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['ps', 'Find the PID'],
+            ['kill 3', 'Stop process 3'],
+        ]);
     }
 }

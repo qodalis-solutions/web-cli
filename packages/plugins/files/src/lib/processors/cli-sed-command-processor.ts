@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -57,6 +60,27 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
             type: 'string' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Edit text line by line with a script: substitute (s/old/new/), delete (d) or print (p) lines, optionally limited to a line number, a range (1,5 or 3,$) or lines matching /regex/. Reads a file or piped input and prints the result, or rewrites the file with -i.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ["sed '<script>' <file>", 'Print the edited file'],
+            ["sed -i '<script>' <file>", 'Save the edits into the file'],
+            ["sed -n '<script>p' <file>", 'Print only selected lines'],
+            ["<command> | sed '<script>'", 'Edit piped input'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ["sed 's/cat/dog/g' pets.txt", 'Replace every cat with dog'],
+            ["sed -i 's/v1/v2/' config.txt", 'Edit the file in place'],
+            ["sed '/^#/d' config.txt", 'Drop comment lines'],
+            ["sed -n '1,5p' notes.txt", 'Print lines 1 to 5'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

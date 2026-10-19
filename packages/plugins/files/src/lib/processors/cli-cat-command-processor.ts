@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -15,6 +18,24 @@ export class CliCatCommandProcessor implements ICliCommandProcessor {
     acceptsRawInput = true;
     valueRequired = true;
     metadata = { icon: '📖', module: 'file management' };
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Print the contents of a file to the terminal. Pipe the output into other commands to search, sort or count it.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['cat <file>', 'Print a file'],
+            ['cat <file> | <command>', 'Send a file to another command'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['cat notes.txt', 'Show the whole file'],
+            ['cat app.log | grep error', 'Show only lines with error'],
+            ['cat names.txt | sort', 'Print the lines sorted'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

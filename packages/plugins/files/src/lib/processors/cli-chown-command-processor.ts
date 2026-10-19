@@ -3,6 +3,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileNode } from '../interfaces/i-file-node';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
@@ -25,6 +28,31 @@ export class CliChownCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Change the owner and/or group of files. Give user, user:group, user: (owner only) or :group (group only).',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            [
+                'chown <user>[:<group>] <file...>',
+                'Change owner, and group if given',
+            ],
+            ['chown :<group> <file>', 'Change only the group'],
+            [
+                'chown -R <user> <dir>',
+                'Apply to a directory and everything in it',
+            ],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['chown alice notes.txt', 'Make alice the owner'],
+            ['chown alice:staff report.txt', 'Set owner and group'],
+            ['chown -R bob ~/shared', 'Give bob a whole directory'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,

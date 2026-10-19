@@ -5,6 +5,9 @@ import {
     DefaultLibraryAuthor,
     CliIcon,
     ICliCommandChildProcessor,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { renderMarkdown } from '../markdown-renderer';
 
@@ -39,5 +42,23 @@ export class CliMarkdownCommandProcessor implements ICliCommandProcessor {
     async processCommand(_: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
         context.writer.writeln('Usage: echo "# Hello" | md render');
         context.writer.writeln('       md render "## Title"');
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Show Markdown formatted in the terminal: headings, bold and italic text, lists, quotes, code and links. Pass the text inline or pipe it from another command.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['md render "<markdown>"', 'Render inline text'],
+            ['<command> | md render', 'Render the output of a command'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['md render "## Title"', 'A heading'],
+            ['echo "# Hello" | md render', 'Piped text'],
+            ['markdown view "**bold** and *italic*"', 'Same, using aliases'],
+        ]);
     }
 }

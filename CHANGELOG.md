@@ -28,6 +28,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - `getState()` returns a copy, as documented; `persist()` does nothing without storage instead of throwing.
 - **State across terminals and tabs.** A store is still one saved state per browser, now safe to share: a save writes the keys this terminal changed (or changed in place), merged into what is saved under a cross-tab lock, so terminals changing different keys never overwrite each other; other terminals and tabs apply saved changes right away (`syncAcrossTabs`, on by default). New `scope: 'session'` for state that belongs to one terminal and is never saved.
 - **State options:** `autoPersist` (save after every change), `version` + `migrate` (convert older saved state), `reload()`.
+- **Atomic state changes.** `state.update(state => changes)` reads the latest saved state, applies the change and saves it under the cross-tab lock, so two tabs adding to the same list both keep their item. `todo`, `snippet`, `cron` and `alias` / `unalias` use it (adding a todo in two tabs at once used to lose one).
+- **Per-user state.** New `scope: 'user'`: the store is saved separately for each user signed in to the terminal (users plugin) and switches when the user changes (`session:changed`). Signed out, it is shared like a global store.
+- **Theme and font size follow other tabs.** `theme apply` and `font-size set` in one tab or terminal now change the others right away.
+- **Unloading a plugin that adds sub-commands to another command** (`extendsProcessor`) removes only the sub-commands it added; the command itself stays. It used to remove the whole command, or nothing.
+- **No more "Process exited with code 1" after an error message.** The line is shown only when a command fails without printing an error.
+- **Help pages.** Over 40 more commands have a help page with usage and examples (`help grep`, `help cron`, `help server jobs stop`, …). On narrow terminals (phones) descriptions in `help` wrap at word boundaries instead of mid-word, and boxes (`writeBox`) wrap their content. The help helpers (`writeUsage`, `writeExamples`, `writeWrapped`, `writeHint`) are exported from `@qodalis/cli-core` for plugins.
+- **Redirects write whole lines.** `echo one > f.txt; echo two >> f.txt` gives two lines (it gave `onetwo`).
+- **A server that stops is shown as disconnected at once** (`server:disconnected`, panel status, `server list`), instead of after about 30 seconds of event-socket retries.
+- `diff` compares piped input: `echo "a" | diff --b "b"`.
+- Translations for the `server`, `ssh` and `events` commands in all 10 language packs.
 - **Services (DI):**
   - Unloading a module (`pkg remove`, `pkg update`) now removes everything it registered: its guards and permissions at once (a removed plugin's guards used to keep running, and ran twice after `pkg update`), then calls its `onDestroy` (it was only called when the whole terminal was destroyed), then removes its services. An overridden service becomes the previous one again. The users plugin also removes the services it registers at runtime.
   - `useClass` / `useFactory` providers are created on first use, so their `deps` can be registered after them; dependency cycles are reported.
@@ -52,7 +62,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - User events (sign-in, sign-out, user and group changes) are also published on the event bus as `user:<type>` (`user:login`, `user:logout`, …), so other plugins can react without depending on the users plugin.
 
+### Plugins
+
+- **Typed tokens:** `IFileSystemService_TOKEN` (files), `IScpTransferService_TOKEN` (scp), `CliUsersModuleConfig_TOKEN` and `CliApiTokensService_TOKEN` (users) are created with `createCliToken`, so `services.get()` returns the right type.
+- **Files** (`@qodalis/cli-files`): `cut -f 2` works (a plain number used to fail); `mv dir dir/sub` is refused instead of losing the directory; `echo "a > b"` prints the text instead of writing a file named `b`. Every file command has a help page.
+- **Server jobs** (`@qodalis/cli-server-jobs`): `server jobs stop` says "stopped" (was "stoped"); with several servers, a job found on none of them is reported instead of printing nothing; usage messages say `server jobs …`. Help pages for every sub-command.
+- Tests for server jobs, 2048, minesweeper, snake, tetris and wordle.
+
 ### Docs site
+
+- State Management: `update()` and `scope: 'user'`. Services: the typed plugin tokens.
 
 - New "Using servers from the terminal" section on the Server Integration page (configuration, running remote commands, all `server` commands and aliases, troubleshooting); the Built-in Commands page lists the server commands.
 - New "Event Bus" and "Services (DI)" pages under Core Concepts. The State Management page described storage that did not exist (`localStorage`, saving on every `updateState`); it now covers the options, several terminals and migrations.

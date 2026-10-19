@@ -7,6 +7,9 @@ import {
     CliIcon,
     DefaultLibraryAuthor,
     ICliCommandParameterDescriptor,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { ITheme } from '@xterm/xterm';
 
@@ -79,6 +82,25 @@ export class CliCaptureCommandProcessor implements ICliCommandProcessor {
             this.download(`${filename}.html`, content, 'text/html');
             context.writer.writeSuccess(`Downloaded ${filename}.html (${lines.length} lines)`);
         }
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Save what is on the terminal, including the scrollback, as a file your browser downloads. HTML keeps the theme background and text color; txt is plain text. Colors of individual lines are not kept.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['capture', 'Everything as terminal-<timestamp>.html'],
+            ['capture --format txt', 'Plain text file'],
+            ['capture --lines <n>', 'Only the last n lines'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['capture --format txt --filename session', 'Downloads session.txt'],
+            ['capture --lines 50', 'The last 50 lines as HTML'],
+            ['export-output', 'Same as capture'],
+        ]);
     }
 
     private sanitizeCssColor(value: string | undefined, fallback: string): string {

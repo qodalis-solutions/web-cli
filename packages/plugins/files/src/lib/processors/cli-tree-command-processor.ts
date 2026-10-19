@@ -5,6 +5,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import {
     IFileSystemService,
@@ -30,6 +33,24 @@ export class CliTreeCommandProcessor implements ICliCommandProcessor {
             type: 'number' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        writeWrapped(
+            context,
+            'Draw a directory and everything below it as a tree, directories first, followed by a count of directories and files. Defaults to the current directory.',
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['tree [dir]', 'Show the whole tree'],
+            ['tree -L <n> [dir]', 'Only <n> levels deep'],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['tree', 'Tree of the current directory'],
+            ['tree ~/docs', 'Tree of ~/docs'],
+            ['tree -L 2', 'Top two levels only'],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,
