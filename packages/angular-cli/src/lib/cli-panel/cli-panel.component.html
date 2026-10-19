@@ -1,151 +1,238 @@
-<collapsable-content
-  [isCollapsed]="resolvedCollapsed"
-  [isHidden]="resolvedHidden"
-  [isMaximized]="resolvedMaximized"
-  [position]="resolvedPosition"
-  [closable]="options?.closable ?? true"
-  [resizable]="options?.resizable ?? true"
-  [hideable]="options?.hideable ?? true"
-  [hideAlignment]="options?.hideAlignment ?? 'center'"
-  [themeStyles]="themeStyles"
-  [statusExecutionState]="tabStatuses[resolvedActiveTabId]?.executionState || 'idle'"
-  [statusLastCommand]="tabStatuses[resolvedActiveTabId]?.lastCommandStatus ? { name: tabStatuses[resolvedActiveTabId]?.lastCommandName || '', success: tabStatuses[resolvedActiveTabId]?.lastCommandStatus === 'success' } : null"
-  [statusServiceCount]="{ running: globalStatus.runningServiceCount, total: globalStatus.totalServiceCount }"
-  [statusServiceDetails]="globalStatus.serviceDetails"
-  [statusServerState]="globalStatus.serverConnectionState"
-  [statusServerDetails]="globalStatus.serverDetails"
-  [statusUptime]="globalStatus.uptime"
-  [notification]="tabStatuses[resolvedActiveTabId]?.notification || null"
-  (onToggle)="onToggle($event)"
-  (onContentSizeChange)="onContentSizeChange($event)"
-  (onPositionChange)="onPositionChange($event)"
-  (onClose)="onClose.emit()"
-  *ngIf="visible"
->
-  <ng-container *ngIf="initialized">
-    <div class="terminal-tabs">
-      <ul class="tab-list">
-        <li
-          *ngFor="let tab of tabs; trackBy: trackByTabId"
-          class="tab"
-          [class.active]="tab.id === resolvedActiveTabId"
-          (click)="selectTab(tab.id)"
-          (dblclick)="onTabDoubleClick(tab)"
-          (contextmenu)="onTabContextMenu($event, tab)"
-        >
-          <input
-            *ngIf="tab.isEditing"
-            class="tab-rename-input"
-            type="text"
-            [value]="tab.title"
-            (keydown)="onRenameKeydown($event, tab)"
-            (blur)="onRenameBlur($event, tab)"
-            (click)="$event.stopPropagation()"
-            (dblclick)="$event.stopPropagation()"
-            #renameInput
-          />
-          <span *ngIf="!tab.isEditing" class="tab-dot" [ngClass]="getTabDotClass(tab.id)"></span>
-          <span *ngIf="!tab.isEditing" class="tab-title">{{ tab.title }}</span>
-          <button
-            *ngIf="!tab.isEditing"
-            class="close-btn"
-            title="Close tab"
-            (click)="closeTab(tab.id); $event.stopPropagation()"
+<ng-container *ngIf="s.visible">
+  <!-- Hide tab (shown when the panel is hidden) -->
+  <button
+    *ngIf="s.hidden"
+    class="cli-panel-hide-tab"
+    [attr.data-position]="s.position"
+    [attr.data-hide-align]="s.hideAlignment"
+    [ngStyle]="s.themeStyles"
+    [title]="labels.showCli"
+    (click)="controller.unhide()"
+  >
+    <cli-panel-icon [icon]="hideTabIcon" svgClass="cli-panel-hide-tab-icon" />
+    <span class="cli-panel-hide-tab-label">{{ labels.title }}</span>
+    <cli-panel-icon [icon]="view.hideTabArrowIcon" svgClass="cli-panel-hide-tab-arrow" />
+  </button>
+
+  <!-- Panel (kept in the DOM while hidden to preserve terminal state) -->
+  <div
+    [class]="view.wrapperClass"
+    [ngStyle]="view.wrapperStyle"
+    [attr.data-position]="s.position"
+    [attr.data-resizable]="s.resizable"
+    [attr.data-closable]="s.closable"
+    [attr.data-hideable]="s.hideable"
+  >
+    <div class="cli-panel-header">
+      <div class="cli-panel-resize-bar" (mousedown)="onPanelResizeStart($event)">
+        <div class="cli-panel-resize-grip"></div>
+      </div>
+      <div class="cli-panel-header-content">
+        <p class="cli-panel-title">
+          <span class="cli-panel-title-icon"><cli-panel-icon [icon]="terminalIcon" /></span>
+          {{ labels.title }}
+        </p>
+
+        <div class="cli-panel-status-indicators" *ngIf="s.showStatusIndicators">
+          <span
+            *ngFor="let item of view.indicators; trackBy: trackByKey"
+            [class]="'cli-panel-status-item ' + item.itemClass"
+            (click)="onIndicatorClick($event, item)"
           >
-            &times;
-          </button>
-        </li>
-      </ul>
-      <button class="add-tab" title="New terminal" (click)="addTab()">+</button>
-    </div>
-    <div class="terminal-instances">
-      <div
-        *ngFor="let tab of tabs; trackBy: trackByTabId"
-        class="terminal-instance"
-        [hidden]="tab.id !== resolvedActiveTabId"
-      >
-        <div
-          class="terminal-panes-container"
-          [attr.data-tab-id]="tab.id"
-          [class.resizing]="paneResizing"
-        >
-          <ng-container
-            *ngFor="
-              let pane of tab.panes;
-              let i = index;
-              trackBy: trackByPaneId
-            "
+            <span *ngIf="item.dotClass" [class]="'cli-panel-status-dot ' + item.dotClass"></span>
+            <span *ngIf="item.icon" [class]="'cli-panel-status-icon ' + (item.iconClass || '')">{{ item.icon }}</span>
+            <span class="cli-panel-status-label">{{ item.label }}</span>
+          </span>
+        </div>
+
+        <!-- Compact indicators for left/right positions (CSS controls visibility) -->
+        <div class="cli-panel-status-indicators-compact">
+          <span
+            *ngFor="let item of view.indicators; trackBy: trackByKey"
+            [class]="'cli-panel-status-compact-item ' + item.compactClass"
+            [title]="item.title"
+            (click)="onIndicatorClick($event, item)"
           >
-            <div
-              *ngIf="i > 0"
-              class="pane-divider"
-              (mousedown)="onPaneResizeStart($event, tab.id, i - 1)"
+            <span *ngIf="item.compactDotClass" [class]="item.compactDotClass"></span>
+            <span *ngIf="item.dotClass" [class]="'cli-panel-status-dot ' + item.dotClass"></span>
+            <span *ngIf="item.icon" [class]="'cli-panel-status-icon ' + (item.iconClass || '')">{{ item.icon }}</span>
+          </span>
+        </div>
+
+        <div class="cli-panel-action-buttons">
+          <div class="cli-panel-btn-position-wrapper" (click)="$event.stopPropagation()">
+            <button
+              class="cli-panel-btn cli-panel-btn-position"
+              [title]="labels.movePanel"
+              (click)="controller.togglePositionDropdown()"
             >
-              <div class="pane-divider-grip"></div>
-            </div>
-            <div
-              class="terminal-pane"
-              [class.active-pane]="
-                pane.id === activePaneId && tab.id === resolvedActiveTabId
-              "
-              [style.flex]="pane.widthPercent + ' 1 0'"
-              (click)="onPaneClick(tab.id, pane.id)"
-            >
+              <cli-panel-icon [icon]="view.positionIcon" />
+            </button>
+            <div class="cli-panel-position-dropdown" *ngIf="s.positionDropdownOpen">
               <button
-                *ngIf="tab.panes.length > 1"
-                class="pane-close-btn"
-                (click)="closePane(pane.id); $event.stopPropagation()"
-                title="Close pane"
+                *ngFor="let opt of view.positionOptions; trackBy: trackByKey"
+                [class]="opt.className"
+                (click)="controller.setPosition(opt.position)"
               >
-                &times;
+                <cli-panel-icon [icon]="opt.icon" />
+                {{ opt.label }}
               </button>
-              <cli
-                [options]="options"
-                [height]="terminalHeight"
-                [modules]="modules"
-                [processors]="processors"
-                [snapshot]="pane.snapshot"
-                (engineReady)="onPaneEngineReady(tab.id, pane.id, $event)"
-              />
             </div>
-          </ng-container>
+          </div>
+          <button
+            *ngIf="s.hideable"
+            class="cli-panel-btn cli-panel-btn-hide"
+            [title]="labels.hide"
+            (click)="controller.hide()"
+          >
+            <cli-panel-icon [icon]="hideIcon" />
+          </button>
+          <button
+            class="cli-panel-btn"
+            [title]="s.maximized ? labels.restore : labels.maximize"
+            [disabled]="s.collapsed"
+            (click)="controller.toggleMaximize()"
+          >
+            <cli-panel-icon [icon]="view.maximizeIcon" />
+          </button>
+          <button
+            class="cli-panel-btn"
+            [title]="s.collapsed ? labels.expand : labels.collapse"
+            (click)="controller.toggle()"
+          >
+            <cli-panel-icon [icon]="view.collapseIcon" />
+          </button>
+          <button
+            *ngIf="s.closable"
+            class="cli-panel-btn cli-panel-btn-close"
+            [title]="labels.close"
+            (click)="controller.close()"
+          >
+            <cli-panel-icon [icon]="closeIcon" />
+          </button>
+        </div>
+      </div>
+      <div [class]="view.glowLineClass"></div>
+    </div>
+
+    <div class="cli-panel-content" *ngIf="s.initialized" [style.display]="s.collapsed ? 'none' : null">
+      <div class="cli-panel-tabs">
+        <ul class="cli-panel-tab-list">
+          <li
+            *ngFor="let tab of s.tabs; trackBy: trackByTabId"
+            [class]="tabClass(tab)"
+            (click)="controller.selectTab(tab.id)"
+            (dblclick)="controller.startRename(tab.id)"
+            (contextmenu)="onTabContextMenu($event, tab)"
+          >
+            <input
+              *ngIf="tab.isEditing"
+              #renameInput
+              class="cli-panel-tab-rename-input"
+              type="text"
+              [value]="tab.title"
+              (keydown)="onRenameKeydown($event, tab)"
+              (blur)="onRenameBlur($event, tab)"
+              (click)="$event.stopPropagation()"
+              (dblclick)="$event.stopPropagation()"
+            />
+            <ng-container *ngIf="!tab.isEditing">
+              <span [class]="tabDotClass(tab)"></span>
+              <span class="cli-panel-tab-title">{{ tab.title }}</span>
+              <button
+                class="cli-panel-tab-close-btn"
+                [title]="labels.closeTab"
+                (click)="controller.closeTab(tab.id); $event.stopPropagation()"
+              >
+                {{ closeGlyph }}
+              </button>
+            </ng-container>
+          </li>
+        </ul>
+        <button class="cli-panel-add-tab" [title]="labels.newTerminal" (click)="controller.addTab()">+</button>
+      </div>
+
+      <div class="cli-panel-instances">
+        <div
+          *ngFor="let tab of s.tabs; trackBy: trackByTabId"
+          class="cli-panel-instance"
+          [style.display]="tab.id === s.activeTabId ? null : 'none'"
+        >
+          <div [class]="view.panesContainerClass">
+            <ng-container *ngFor="let pane of tab.panes; let i = index; trackBy: trackByPaneId">
+              <div *ngIf="i > 0" class="cli-panel-pane-divider" (mousedown)="onPaneResizeStart($event, tab.id, i - 1)">
+                <div class="cli-panel-pane-divider-grip"></div>
+              </div>
+              <div
+                [class]="paneClass(tab.id, pane.id)"
+                [style.flex]="pane.widthPercent + ' 1 0'"
+                (click)="controller.activatePane(tab.id, pane.id)"
+              >
+                <button
+                  *ngIf="tab.panes.length > 1"
+                  class="cli-panel-pane-close-btn"
+                  [title]="labels.closePane"
+                  (click)="controller.closePane(pane.id); $event.stopPropagation()"
+                >
+                  {{ closeGlyph }}
+                </button>
+                <cli
+                  [options]="options"
+                  height="100%"
+                  [modules]="modules"
+                  [processors]="processors"
+                  [snapshot]="pane.snapshot"
+                  (engineReady)="onPaneEngineReady(tab.id, pane.id, $event)"
+                />
+              </div>
+            </ng-container>
+          </div>
         </div>
       </div>
     </div>
-  </ng-container>
-</collapsable-content>
+  </div>
 
-<!-- Context menu rendered outside collapsable-content to escape transform/overflow clipping -->
-<div
-  class="tab-context-menu"
-  *ngIf="contextMenu.visible"
-  [style.left.px]="contextMenu.x"
-  [style.top.px]="contextMenu.y"
-  (click)="$event.stopPropagation()"
->
-  <button class="context-menu-item" (click)="contextMenuRename()">
-    Rename
-  </button>
-  <button class="context-menu-item" (click)="contextMenuDuplicate()">
-    Duplicate
-  </button>
-  <button class="context-menu-item" (click)="contextMenuSplitRight()">
-    Split Right
-  </button>
-  <div class="context-menu-separator"></div>
-  <button class="context-menu-item" (click)="contextMenuClose()">Close</button>
-  <button
-    class="context-menu-item"
-    (click)="contextMenuCloseOthers()"
-    [disabled]="tabs.length <= 1"
+  <!-- Menus are rendered outside the panel to escape its transform/overflow clipping -->
+  <div
+    class="cli-panel-context-menu"
+    *ngIf="s.contextMenu.visible"
+    [ngStyle]="view.contextMenuStyle"
+    (click)="$event.stopPropagation()"
   >
-    Close Others
-  </button>
-  <button class="context-menu-item" (click)="contextMenuCloseToTheRight()">
-    Close to the Right
-  </button>
-  <div class="context-menu-separator"></div>
-  <button class="context-menu-item destructive" (click)="contextMenuCloseAll()">
-    Close All
-  </button>
-</div>
+    <ng-container *ngFor="let item of view.contextMenuItems; trackBy: trackByKey">
+      <div *ngIf="item.separatorBefore" class="cli-panel-context-menu-separator"></div>
+      <button
+        class="cli-panel-context-menu-item"
+        [class.destructive]="item.destructive"
+        [disabled]="item.disabled"
+        (click)="onContextMenuAction(item.action)"
+      >
+        {{ item.label }}
+      </button>
+    </ng-container>
+  </div>
+
+  <div
+    class="cli-panel-services-dropdown"
+    *ngIf="view.statusDropdown as dropdown"
+    [ngStyle]="dropdown.style"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="cli-panel-services-dropdown-header">{{ dropdown.header }}</div>
+    <div class="cli-panel-services-dropdown-list">
+      <div class="cli-panel-services-dropdown-item" *ngFor="let row of dropdown.rows; trackBy: trackByKey">
+        <span [class]="row.dotClass"></span>
+        <div class="cli-panel-svc-info">
+          <span class="cli-panel-svc-name">{{ row.name }}</span>
+          <span class="cli-panel-svc-desc" *ngIf="row.description">{{ row.description }}</span>
+        </div>
+        <div class="cli-panel-srv-meta" *ngIf="dropdown.kind === 'servers'; else plainStatus">
+          <span class="cli-panel-svc-status">{{ row.status }}</span>
+          <span class="cli-panel-svc-desc" *ngFor="let m of row.meta">{{ m }}</span>
+        </div>
+        <ng-template #plainStatus><span class="cli-panel-svc-status">{{ row.status }}</span></ng-template>
+      </div>
+    </div>
+    <div class="cli-panel-services-dropdown-empty" *ngIf="dropdown.rows.length === 0">{{ dropdown.emptyText }}</div>
+  </div>
+</ng-container>
