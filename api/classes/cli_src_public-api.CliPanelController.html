@@ -1,0 +1,752 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>CliPanelController | Qodalis CLI - v2.0.0-beta.18</title><meta name="description" content="Documentation for Qodalis CLI"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">Qodalis CLI - v2.0.0-beta.18</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="../modules/cli_src_public-api.html">cli/src/public-api</a></li>
+<li><a href="" aria-current="page">CliPanelController</a></li></ul>
+<h1>Class CliPanelController</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>Framework-agnostic state and behaviour of the collapsible CLI panel:
+tabs and panes, chrome (collapse, hide, maximize, position, size),
+menus, drag resizing, theme sync and the status bar.</p>
+<p>Views subscribe with <a href="#subscribe" class="tsd-kind-method">subscribe</a> and render <a href="#getsnapshot" class="tsd-kind-method">getSnapshot</a>;
+every change produces a new immutable snapshot. Hosts may control any of
+the bindable values through <a href="#setcontrolled" class="tsd-kind-method">setControlled</a>; the matching
+<code>onXChange</code> callback is invoked whenever the panel wants to change it.</p>
+</div></section>
+<section class="tsd-panel">
+<h4>Implements</h4>
+<ul class="tsd-hierarchy">
+<li><span class="tsd-signature-type">ICliPanelRef</span><span class="tsd-signature-symbol">&lt;</span><a href="cli_src_public-api.CliEngine.html" class="tsd-signature-type tsd-kind-class">CliEngine</a><span class="tsd-signature-symbol">&gt;</span></li></ul></section><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L79">packages/cli/src/lib/panel/cli-panel-controller.ts:79</a></li></ul></aside>
+<section class="tsd-panel-group tsd-index-group">
+<section class="tsd-panel tsd-index-panel">
+<details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h5 class="tsd-index-heading uppercase">Index</h5></summary>
+<div class="tsd-accordion-details">
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="constructors">Constructors<a href="#constructors" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="properties">Properties<a href="#properties" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#callbacks" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>callbacks</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="methods">Methods<a href="#methods" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#activatepane" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>activate<wbr/>Pane</span></a>
+<a href="#addtab" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>add<wbr/>Tab</span></a>
+<a href="#cancelrename" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>cancel<wbr/>Rename</span></a>
+<a href="#close" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close</span></a>
+<a href="#closealltabs" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>All<wbr/>Tabs</span></a>
+<a href="#closecontextmenu" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Context<wbr/>Menu</span></a>
+<a href="#closemenus" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Menus</span></a>
+<a href="#closeothertabs" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Other<wbr/>Tabs</span></a>
+<a href="#closepane" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Pane</span></a>
+<a href="#closetab" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Tab</span></a>
+<a href="#closetabstotheright" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Tabs<wbr/>To<wbr/>The<wbr/>Right</span></a>
+<a href="#collapse" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>collapse</span></a>
+<a href="#commitrename" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>commit<wbr/>Rename</span></a>
+<a href="#destroy" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>destroy</span></a>
+<a href="#duplicatetab" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>duplicate<wbr/>Tab</span></a>
+<a href="#getengine" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Engine</span></a>
+<a href="#getsnapshot" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Snapshot</span></a>
+<a href="#getstate" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>State</span></a>
+<a href="#hide" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>hide</span></a>
+<a href="#maximize" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>maximize</span></a>
+<a href="#open" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>open</span></a>
+<a href="#opencontextmenu" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>open<wbr/>Context<wbr/>Menu</span></a>
+<a href="#registerengine" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>register<wbr/>Engine</span></a>
+<a href="#renametab" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>rename<wbr/>Tab</span></a>
+<a href="#resize" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>resize</span></a>
+<a href="#restore" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>restore</span></a>
+<a href="#selecttab" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>select<wbr/>Tab</span></a>
+<a href="#setcallbacks" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>set<wbr/>Callbacks</span></a>
+<a href="#setcontrolled" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>set<wbr/>Controlled</span></a>
+<a href="#setoptions" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>set<wbr/>Options</span></a>
+<a href="#setposition" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>set<wbr/>Position</span></a>
+<a href="#setrootelement" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>set<wbr/>Root<wbr/>Element</span></a>
+<a href="#splitpane" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>split<wbr/>Pane</span></a>
+<a href="#startpanelresize" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>start<wbr/>Panel<wbr/>Resize</span></a>
+<a href="#startpaneresize" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>start<wbr/>Pane<wbr/>Resize</span></a>
+<a href="#startrename" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>start<wbr/>Rename</span></a>
+<a href="#subscribe" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>subscribe</span></a>
+<a href="#syncthemefromengine" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>sync<wbr/>Theme<wbr/>From<wbr/>Engine</span></a>
+<a href="#toggle" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle</span></a>
+<a href="#togglecollapse" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle<wbr/>Collapse</span></a>
+<a href="#togglehide" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle<wbr/>Hide</span></a>
+<a href="#togglemaximize" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle<wbr/>Maximize</span></a>
+<a href="#togglepositiondropdown" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle<wbr/>Position<wbr/>Dropdown</span></a>
+<a href="#toggleserversdropdown" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle<wbr/>Servers<wbr/>Dropdown</span></a>
+<a href="#toggleservicesdropdown" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle<wbr/>Services<wbr/>Dropdown</span></a>
+<a href="#unhide" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>unhide</span></a>
+</div></section></div></details></section></section>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="constructors-1">Constructors<a href="#constructors-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="constructor"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="constructorclipanelcontroller"><span class="tsd-signature-keyword">new</span> <span class="tsd-kind-constructor-signature">CliPanelController</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">options</span><span class="tsd-signature-symbol">?:</span> <a href="../interfaces/cli_src_public-api.CliPanelControllerOptions.html" class="tsd-signature-type tsd-kind-interface">CliPanelControllerOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="" class="tsd-signature-type tsd-kind-class">CliPanelController</a><a href="#constructorclipanelcontroller" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">options</span>: <a href="../interfaces/cli_src_public-api.CliPanelControllerOptions.html" class="tsd-signature-type tsd-kind-interface">CliPanelControllerOptions</a><span class="tsd-signature-symbol"> = {}</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="" class="tsd-signature-type tsd-kind-class">CliPanelController</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L103">packages/cli/src/lib/panel/cli-panel-controller.ts:103</a></li></ul></aside></div></li></ul></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="properties-1">Properties<a href="#properties-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="callbacks"><span>callbacks</span><a href="#callbacks" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">callbacks</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/cli_src_public-api.CliPanelCallbacks.html" class="tsd-signature-type tsd-kind-interface">CliPanelCallbacks</a></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L80">packages/cli/src/lib/panel/cli-panel-controller.ts:80</a></li></ul></aside></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="activatepane"><span>activate<wbr/>Pane</span><a href="#activatepane" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="activatepane-1"><span class="tsd-kind-call-signature">activatePane</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">paneId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#activatepane-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>A pane was clicked: make it (and its tab) active and focus its terminal.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li>
+<li><span><span class="tsd-kind-parameter">paneId</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L451">packages/cli/src/lib/panel/cli-panel-controller.ts:451</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="addtab"><span>add<wbr/>Tab</span><a href="#addtab" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="addtab-1"><span class="tsd-kind-call-signature">addTab</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">title</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><a href="#addtab-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Create a new tab. Returns the new tab's ID. Title defaults to &quot;Terminal {id}&quot;.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">title</span>: <span class="tsd-signature-type">string</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.addTab</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L317">packages/cli/src/lib/panel/cli-panel-controller.ts:317</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="cancelrename"><span>cancel<wbr/>Rename</span><a href="#cancelrename" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="cancelrename-1"><span class="tsd-kind-call-signature">cancelRename</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#cancelrename-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L374">packages/cli/src/lib/panel/cli-panel-controller.ts:374</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="close"><span>close</span><a href="#close" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="close-1"><span class="tsd-kind-call-signature">close</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#close-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Destroy the panel (removes from DOM). Irreversible.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.close</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L265">packages/cli/src/lib/panel/cli-panel-controller.ts:265</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="closealltabs"><span>close<wbr/>All<wbr/>Tabs</span><a href="#closealltabs" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="closealltabs-1"><span class="tsd-kind-call-signature">closeAllTabs</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#closealltabs-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L412">packages/cli/src/lib/panel/cli-panel-controller.ts:412</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="closecontextmenu"><span>close<wbr/>Context<wbr/>Menu</span><a href="#closecontextmenu" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="closecontextmenu-1"><span class="tsd-kind-call-signature">closeContextMenu</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#closecontextmenu-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L502">packages/cli/src/lib/panel/cli-panel-controller.ts:502</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="closemenus"><span>close<wbr/>Menus</span><a href="#closemenus" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="closemenus-1"><span class="tsd-kind-call-signature">closeMenus</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#closemenus-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Close the context menu and every dropdown.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L537">packages/cli/src/lib/panel/cli-panel-controller.ts:537</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="closeothertabs"><span>close<wbr/>Other<wbr/>Tabs</span><a href="#closeothertabs" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="closeothertabs-1"><span class="tsd-kind-call-signature">closeOtherTabs</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#closeothertabs-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L398">packages/cli/src/lib/panel/cli-panel-controller.ts:398</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="closepane"><span>close<wbr/>Pane</span><a href="#closepane" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="closepane-1"><span class="tsd-kind-call-signature">closePane</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">paneId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#closepane-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Close a pane by ID. Searches all tabs for the pane.
+No-op if the ID does not exist.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">paneId</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.closePane</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L432">packages/cli/src/lib/panel/cli-panel-controller.ts:432</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="closetab"><span>close<wbr/>Tab</span><a href="#closetab" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="closetab-1"><span class="tsd-kind-call-signature">closeTab</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#closetab-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Close a tab by ID. No-op if the ID does not exist.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.closeTab</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L327">packages/cli/src/lib/panel/cli-panel-controller.ts:327</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="closetabstotheright"><span>close<wbr/>Tabs<wbr/>To<wbr/>The<wbr/>Right</span><a href="#closetabstotheright" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="closetabstotheright-1"><span class="tsd-kind-call-signature">closeTabsToTheRight</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#closetabstotheright-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L405">packages/cli/src/lib/panel/cli-panel-controller.ts:405</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="collapse"><span>collapse</span><a href="#collapse" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="collapse-1"><span class="tsd-kind-call-signature">collapse</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#collapse-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Collapse the panel body (sets collapsed=true).</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.collapse</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L240">packages/cli/src/lib/panel/cli-panel-controller.ts:240</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="commitrename"><span>commit<wbr/>Rename</span><a href="#commitrename" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="commitrename-1"><span class="tsd-kind-call-signature">commitRename</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">value</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#commitrename-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Finish inline editing; an empty value keeps the old title.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li>
+<li><span><span class="tsd-kind-parameter">value</span>: <span class="tsd-signature-type">string</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L367">packages/cli/src/lib/panel/cli-panel-controller.ts:367</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="destroy"><span>destroy</span><a href="#destroy" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="destroy-1"><span class="tsd-kind-call-signature">destroy</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#destroy-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Stop timers, observers and document listeners. Engines are not
+destroyed (their views own them). Registering an engine again
+restarts status tracking, so a remounted view can reuse the controller.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L211">packages/cli/src/lib/panel/cli-panel-controller.ts:211</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="duplicatetab"><span>duplicate<wbr/>Tab</span><a href="#duplicatetab" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="duplicatetab-1"><span class="tsd-kind-call-signature">duplicateTab</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><a href="#duplicatetab-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Open a new tab next to <code>tabId</code> with a copy of its first terminal's content.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L380">packages/cli/src/lib/panel/cli-panel-controller.ts:380</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getengine"><span>get<wbr/>Engine</span><a href="#getengine" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getengine-1"><span class="tsd-kind-call-signature">getEngine</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">paneId</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="cli_src_public-api.CliEngine.html" class="tsd-signature-type tsd-kind-class">CliEngine</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><a href="#getengine-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Get the engine for a specific pane, or the active pane if omitted.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">paneId</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="cli_src_public-api.CliEngine.html" class="tsd-signature-type tsd-kind-class">CliEngine</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.getEngine</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L467">packages/cli/src/lib/panel/cli-panel-controller.ts:467</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getsnapshot"><code class="tsd-tag">Readonly</code><span>get<wbr/>Snapshot</span><a href="#getsnapshot" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getsnapshot-1"><span class="tsd-kind-call-signature">getSnapshot</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/cli_src_public-api.CliPanelSnapshot.html" class="tsd-signature-type tsd-kind-interface">CliPanelSnapshot</a><a href="#getsnapshot-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/cli_src_public-api.CliPanelSnapshot.html" class="tsd-signature-type tsd-kind-interface">CliPanelSnapshot</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L166">packages/cli/src/lib/panel/cli-panel-controller.ts:166</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getstate"><span>get<wbr/>State</span><a href="#getstate" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getstate-1"><span class="tsd-kind-call-signature">getState</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">CliPanelState</span><a href="#getstate-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">CliPanelState</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.getState</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L471">packages/cli/src/lib/panel/cli-panel-controller.ts:471</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="hide"><span>hide</span><a href="#hide" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="hide-1"><span class="tsd-kind-call-signature">hide</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#hide-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Hide the panel to a small viewport-edge tab (reversible via unhide).</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.hide</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L248">packages/cli/src/lib/panel/cli-panel-controller.ts:248</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="maximize"><span>maximize</span><a href="#maximize" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="maximize-1"><span class="tsd-kind-call-signature">maximize</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#maximize-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.maximize</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L271">packages/cli/src/lib/panel/cli-panel-controller.ts:271</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="open"><span>open</span><a href="#open" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="open-1"><span class="tsd-kind-call-signature">open</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#open-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Expand the panel (sets collapsed=false). Initializes the first tab on first call.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.open</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L231">packages/cli/src/lib/panel/cli-panel-controller.ts:231</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="opencontextmenu"><span>open<wbr/>Context<wbr/>Menu</span><a href="#opencontextmenu" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="opencontextmenu-1"><span class="tsd-kind-call-signature">openContextMenu</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">x</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">y</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#opencontextmenu-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li>
+<li><span><span class="tsd-kind-parameter">x</span>: <span class="tsd-signature-type">number</span></span></li>
+<li><span><span class="tsd-kind-parameter">y</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L492">packages/cli/src/lib/panel/cli-panel-controller.ts:492</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="registerengine"><span>register<wbr/>Engine</span><a href="#registerengine" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="registerengine-1"><span class="tsd-kind-call-signature">registerEngine</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">paneId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">engine</span><span class="tsd-signature-symbol">:</span> <a href="cli_src_public-api.CliEngine.html" class="tsd-signature-type tsd-kind-class">CliEngine</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#registerengine-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Called by the view once a pane's terminal engine is running.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li>
+<li><span><span class="tsd-kind-parameter">paneId</span>: <span class="tsd-signature-type">number</span></span></li>
+<li><span><span class="tsd-kind-parameter">engine</span>: <a href="cli_src_public-api.CliEngine.html" class="tsd-signature-type tsd-kind-class">CliEngine</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L460">packages/cli/src/lib/panel/cli-panel-controller.ts:460</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="renametab"><span>rename<wbr/>Tab</span><a href="#renametab" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="renametab-1"><span class="tsd-kind-call-signature">renameTab</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">title</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#renametab-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Programmatically rename a tab. No-op if the ID does not exist.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li>
+<li><span><span class="tsd-kind-parameter">title</span>: <span class="tsd-signature-type">string</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.renameTab</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L355">packages/cli/src/lib/panel/cli-panel-controller.ts:355</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="resize"><span>resize</span><a href="#resize" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="resize-1"><span class="tsd-kind-call-signature">resize</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">dimensions</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">height</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">width</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#resize-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Set panel dimensions. Only the dimension relevant to the current
+position is applied immediately (height for top/bottom, width for
+left/right). The other dimension is stored for when the position changes.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">dimensions</span>: <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">height</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">width</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span> <span class="tsd-signature-symbol">}</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.resize</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L296">packages/cli/src/lib/panel/cli-panel-controller.ts:296</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="restore"><span>restore</span><a href="#restore" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="restore-1"><span class="tsd-kind-call-signature">restore</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#restore-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.restore</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L284">packages/cli/src/lib/panel/cli-panel-controller.ts:284</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="selecttab"><span>select<wbr/>Tab</span><a href="#selecttab" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="selecttab-1"><span class="tsd-kind-call-signature">selectTab</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#selecttab-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Activate a tab by ID. No-op if the ID does not exist.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.selectTab</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L347">packages/cli/src/lib/panel/cli-panel-controller.ts:347</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="setcallbacks"><span>set<wbr/>Callbacks</span><a href="#setcallbacks" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="setcallbacks-1"><span class="tsd-kind-call-signature">setCallbacks</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">callbacks</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/cli_src_public-api.CliPanelCallbacks.html" class="tsd-signature-type tsd-kind-interface">CliPanelCallbacks</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#setcallbacks-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Replace the change callbacks (wrappers call this when their props change).</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">callbacks</span>: <a href="../interfaces/cli_src_public-api.CliPanelCallbacks.html" class="tsd-signature-type tsd-kind-interface">CliPanelCallbacks</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L187">packages/cli/src/lib/panel/cli-panel-controller.ts:187</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="setcontrolled"><span>set<wbr/>Controlled</span><a href="#setcontrolled" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="setcontrolled-1"><span class="tsd-kind-call-signature">setControlled</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">values</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/cli_src_public-api.CliPanelControlledState.html" class="tsd-signature-type tsd-kind-interface">CliPanelControlledState</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#setcontrolled-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Update host-controlled values. Unchanged values are ignored.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">values</span>: <a href="../interfaces/cli_src_public-api.CliPanelControlledState.html" class="tsd-signature-type tsd-kind-interface">CliPanelControlledState</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L192">packages/cli/src/lib/panel/cli-panel-controller.ts:192</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="setoptions"><span>set<wbr/>Options</span><a href="#setoptions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="setoptions-1"><span class="tsd-kind-call-signature">setOptions</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">config</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">CliPanelConfig</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#setoptions-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Apply a new panel configuration (chrome buttons, theme sync).</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">config</span>: <span class="tsd-signature-type">CliPanelConfig</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L169">packages/cli/src/lib/panel/cli-panel-controller.ts:169</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="setposition"><span>set<wbr/>Position</span><a href="#setposition" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="setposition-1"><span class="tsd-kind-call-signature">setPosition</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">position</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">CliPanelPosition</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#setposition-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">position</span>: <span class="tsd-signature-type">CliPanelPosition</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.setPosition</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L307">packages/cli/src/lib/panel/cli-panel-controller.ts:307</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="setrootelement"><span>set<wbr/>Root<wbr/>Element</span><a href="#setrootelement" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="setrootelement-1"><span class="tsd-kind-call-signature">setRootElement</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">element</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ParentNode</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#setrootelement-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Element containing the terminals, used for theme sync.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">element</span>: <span class="tsd-signature-type">ParentNode</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L201">packages/cli/src/lib/panel/cli-panel-controller.ts:201</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="splitpane"><span>split<wbr/>Pane</span><a href="#splitpane" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="splitpane-1"><span class="tsd-kind-call-signature">splitPane</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><a href="#splitpane-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Split the active pane (or a pane within the specified tab) to create
+a new pane to the right. Returns the new pane's ID.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.splitPane</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L420">packages/cli/src/lib/panel/cli-panel-controller.ts:420</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="startpanelresize"><span>start<wbr/>Panel<wbr/>Resize</span><a href="#startpanelresize" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="startpanelresize-1"><span class="tsd-kind-call-signature">startPanelResize</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">clientX</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">clientY</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#startpanelresize-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Mouse down on the panel's resize bar.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">clientX</span>: <span class="tsd-signature-type">number</span></span></li>
+<li><span><span class="tsd-kind-parameter">clientY</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L553">packages/cli/src/lib/panel/cli-panel-controller.ts:553</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="startpaneresize"><span>start<wbr/>Pane<wbr/>Resize</span><a href="#startpaneresize" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="startpaneresize-1"><span class="tsd-kind-call-signature">startPaneResize</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">dividerIndex</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">clientX</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">containerWidth</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#startpaneresize-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Mouse down on the divider before pane <code>dividerIndex + 1</code> of a tab.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li>
+<li><span><span class="tsd-kind-parameter">dividerIndex</span>: <span class="tsd-signature-type">number</span></span></li>
+<li><span><span class="tsd-kind-parameter">clientX</span>: <span class="tsd-signature-type">number</span></span></li>
+<li><span><span class="tsd-kind-parameter">containerWidth</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L568">packages/cli/src/lib/panel/cli-panel-controller.ts:568</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="startrename"><span>start<wbr/>Rename</span><a href="#startrename" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="startrename-1"><span class="tsd-kind-call-signature">startRename</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tabId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#startrename-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Switch a tab's title into inline editing.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">tabId</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L361">packages/cli/src/lib/panel/cli-panel-controller.ts:361</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="subscribe"><code class="tsd-tag">Readonly</code><span>subscribe</span><a href="#subscribe" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="subscribe-1"><span class="tsd-kind-call-signature">subscribe</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">listener</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><a href="#subscribe-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">listener</span>: <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L159">packages/cli/src/lib/panel/cli-panel-controller.ts:159</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="syncthemefromengine"><span>sync<wbr/>Theme<wbr/>From<wbr/>Engine</span><a href="#syncthemefromengine" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="syncthemefromengine-1"><span class="tsd-kind-call-signature">syncThemeFromEngine</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#syncthemefromengine-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Read the first terminal's theme and derive the panel colours from it.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L667">packages/cli/src/lib/panel/cli-panel-controller.ts:667</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="toggle"><span>toggle</span><a href="#toggle" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="toggle-1"><span class="tsd-kind-call-signature">toggle</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#toggle-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Header collapse button: expand (creating the first tab) or collapse.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L222">packages/cli/src/lib/panel/cli-panel-controller.ts:222</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="togglecollapse"><span>toggle<wbr/>Collapse</span><a href="#togglecollapse" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="togglecollapse-1"><span class="tsd-kind-call-signature">toggleCollapse</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#togglecollapse-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.toggleCollapse</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L244">packages/cli/src/lib/panel/cli-panel-controller.ts:244</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="togglehide"><span>toggle<wbr/>Hide</span><a href="#togglehide" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="togglehide-1"><span class="tsd-kind-call-signature">toggleHide</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#togglehide-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.toggleHide</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L260">packages/cli/src/lib/panel/cli-panel-controller.ts:260</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="togglemaximize"><span>toggle<wbr/>Maximize</span><a href="#togglemaximize" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="togglemaximize-1"><span class="tsd-kind-call-signature">toggleMaximize</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#togglemaximize-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.toggleMaximize</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L291">packages/cli/src/lib/panel/cli-panel-controller.ts:291</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="togglepositiondropdown"><span>toggle<wbr/>Position<wbr/>Dropdown</span><a href="#togglepositiondropdown" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="togglepositiondropdown-1"><span class="tsd-kind-call-signature">togglePositionDropdown</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#togglepositiondropdown-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L507">packages/cli/src/lib/panel/cli-panel-controller.ts:507</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="toggleserversdropdown"><span>toggle<wbr/>Servers<wbr/>Dropdown</span><a href="#toggleserversdropdown" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="toggleserversdropdown-1"><span class="tsd-kind-call-signature">toggleServersDropdown</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">anchor</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">Element</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#toggleserversdropdown-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">anchor</span>: <span class="tsd-signature-type">Element</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L526">packages/cli/src/lib/panel/cli-panel-controller.ts:526</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="toggleservicesdropdown"><span>toggle<wbr/>Services<wbr/>Dropdown</span><a href="#toggleservicesdropdown" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="toggleservicesdropdown-1"><span class="tsd-kind-call-signature">toggleServicesDropdown</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">anchor</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">Element</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#toggleservicesdropdown-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p><code>anchor</code> is the clicked status item; the dropdown is placed next to it.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">anchor</span>: <span class="tsd-signature-type">Element</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L516">packages/cli/src/lib/panel/cli-panel-controller.ts:516</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="unhide"><span>unhide</span><a href="#unhide" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="unhide-1"><span class="tsd-kind-call-signature">unhide</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#unhide-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of ICliPanelRef.unhide</p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/panel/cli-panel-controller.ts#L254">packages/cli/src/lib/panel/cli-panel-controller.ts:254</a></li></ul></aside></div></li></ul></section></section></details></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details">
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Constructors</summary>
+<div><a href="#constructor"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
+<div><a href="#callbacks"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>callbacks</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
+<div><a href="#activatepane"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>activate<wbr/>Pane</span></a><a href="#addtab"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>add<wbr/>Tab</span></a><a href="#cancelrename"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>cancel<wbr/>Rename</span></a><a href="#close"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close</span></a><a href="#closealltabs"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>All<wbr/>Tabs</span></a><a href="#closecontextmenu"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Context<wbr/>Menu</span></a><a href="#closemenus"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Menus</span></a><a href="#closeothertabs"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Other<wbr/>Tabs</span></a><a href="#closepane"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Pane</span></a><a href="#closetab"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Tab</span></a><a href="#closetabstotheright"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>close<wbr/>Tabs<wbr/>To<wbr/>The<wbr/>Right</span></a><a href="#collapse"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>collapse</span></a><a href="#commitrename"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>commit<wbr/>Rename</span></a><a href="#destroy"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>destroy</span></a><a href="#duplicatetab"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>duplicate<wbr/>Tab</span></a><a href="#getengine"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Engine</span></a><a href="#getsnapshot"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Snapshot</span></a><a href="#getstate"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>State</span></a><a href="#hide"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>hide</span></a><a href="#maximize"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>maximize</span></a><a href="#open"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>open</span></a><a href="#opencontextmenu"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>open<wbr/>Context<wbr/>Menu</span></a><a href="#registerengine"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>register<wbr/>Engine</span></a><a href="#renametab"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>rename<wbr/>Tab</span></a><a href="#resize"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>resize</span></a><a href="#restore"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>restore</span></a><a href="#selecttab"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>select<wbr/>Tab</span></a><a href="#setcallbacks"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>set<wbr/>Callbacks</span></a><a href="#setcontrolled"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>set<wbr/>Controlled</span></a><a href="#setoptions"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>set<wbr/>Options</span></a><a href="#setposition"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>set<wbr/>Position</span></a><a href="#setrootelement"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>set<wbr/>Root<wbr/>Element</span></a><a href="#splitpane"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>split<wbr/>Pane</span></a><a href="#startpanelresize"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>start<wbr/>Panel<wbr/>Resize</span></a><a href="#startpaneresize"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>start<wbr/>Pane<wbr/>Resize</span></a><a href="#startrename"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>start<wbr/>Rename</span></a><a href="#subscribe"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>subscribe</span></a><a href="#syncthemefromengine"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>sync<wbr/>Theme<wbr/>From<wbr/>Engine</span></a><a href="#toggle"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle</span></a><a href="#togglecollapse"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle<wbr/>Collapse</span></a><a href="#togglehide"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle<wbr/>Hide</span></a><a href="#togglemaximize"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle<wbr/>Maximize</span></a><a href="#togglepositiondropdown"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle<wbr/>Position<wbr/>Dropdown</span></a><a href="#toggleserversdropdown"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle<wbr/>Servers<wbr/>Dropdown</span></a><a href="#toggleservicesdropdown"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>toggle<wbr/>Services<wbr/>Dropdown</span></a><a href="#unhide"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>unhide</span></a></div></details></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">Qodalis CLI - v2.0.0-beta.18</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer></footer>
+<div class="overlay"></div></body></html>
