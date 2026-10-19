@@ -1,3 +1,4 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
@@ -23,6 +24,13 @@ export class CliLnCommandProcessor implements ICliCommandProcessor {
         {
             name: 's',
             description: 'Create a symbolic link',
+            required: false,
+            type: 'boolean' as const,
+        },
+        {
+            name: 'force',
+            aliases: ['f'],
+            description: 'Replace an existing file at the link path',
             required: false,
             type: 'boolean' as const,
         },
@@ -68,7 +76,11 @@ export class CliLnCommandProcessor implements ICliCommandProcessor {
         const resolvedLink = fs.resolvePath(linkName);
         const resolvedTarget = fs.resolvePath(target);
 
-        // Check if the link already exists
+        // Check if the link already exists (-f replaces a file, not a directory)
+        const force = !!(command.args['force'] || command.args['f']);
+        if (force && fs.exists(resolvedLink) && !fs.isDirectory(resolvedLink)) {
+            fs.remove(resolvedLink);
+        }
         if (fs.exists(resolvedLink)) {
             context.writer.writeError(
                 `ln: failed to create symbolic link '${linkName}': File exists`,
@@ -94,7 +106,7 @@ export class CliLnCommandProcessor implements ICliCommandProcessor {
         linkName: string | null;
     } {
         const raw = command.value || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
+        const tokens = splitArgs(raw).filter(Boolean);
         const symbolic = command.args['s'] || false;
 
         return {

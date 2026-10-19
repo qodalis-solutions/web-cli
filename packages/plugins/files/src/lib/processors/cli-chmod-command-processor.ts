@@ -1,3 +1,4 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
@@ -98,7 +99,7 @@ export class CliChmodCommandProcessor implements ICliCommandProcessor {
         paths: string[];
     } {
         const raw = command.value || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
+        const tokens = splitArgs(raw).filter(Boolean);
         const recursive = command.args['R'] || false;
         const mode = tokens.length > 0 ? tokens[0] : null;
         const paths = tokens.slice(1);

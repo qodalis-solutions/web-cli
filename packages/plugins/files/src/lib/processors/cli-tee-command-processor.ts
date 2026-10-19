@@ -1,3 +1,4 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
@@ -9,6 +10,7 @@ import {
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { pipedText } from '../utils/lines';
 
 export class CliTeeCommandProcessor implements ICliCommandProcessor {
     command = 'tee';
@@ -64,25 +66,24 @@ export class CliTeeCommandProcessor implements ICliCommandProcessor {
         let content: string;
 
         if (command.data != null) {
-            // Piped mode: all positional args are output files
-            content =
-                typeof command.data === 'string'
-                    ? command.data
-                    : JSON.stringify(command.data);
-            const outputFiles = this.getAllPaths(command);
-
-            // Write to stdout
+            // Piped mode, as Unix tee: the input goes unchanged to the output
+            // and to every file named (overwritten, or appended with -a)
+            content = pipedText(command.data);
             context.writer.writeln(content);
 
-            // Write to each output file
-            for (const outFile of outputFiles) {
-                if (append && fs.exists(outFile)) {
-                    fs.writeFile(outFile, content, true);
-                } else {
-                    fs.writeFile(outFile, content);
+            // Files get the text as a line, like a `>` redirect
+            const fileText =
+                content === '' || content.endsWith('\n') ? content : content + '\n';
+            let changed = false;
+            for (const outFile of this.getAllPaths(command)) {
+                try {
+                    fs.writeFile(outFile, fileText, append);
+                    changed = true;
+                } catch (e: any) {
+                    context.writer.writeError(`tee: ${e.message}`);
                 }
             }
-            await fs.persist();
+            if (changed) await fs.persist();
         } else {
             // File mode: last arg is input, rest are output
             if (parsed.outputFiles.length === 0 && !parsed.inputFile) {
@@ -127,7 +128,7 @@ export class CliTeeCommandProcessor implements ICliCommandProcessor {
 
     private getAllPaths(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
+        return splitArgs(raw).filter(Boolean);
     }
 
     private parseArgs(command: CliProcessCommand): {
@@ -135,7 +136,7 @@ export class CliTeeCommandProcessor implements ICliCommandProcessor {
         inputFile: string | null;
     } {
         const raw = command.value || '';
-        const paths = raw.split(/\s+/).filter(Boolean);
+        const paths = splitArgs(raw).filter(Boolean);
 
         // Last path is input file, rest are output files
         if (paths.length < 2) {

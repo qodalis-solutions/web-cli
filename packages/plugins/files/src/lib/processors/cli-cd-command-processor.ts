@@ -9,6 +9,7 @@ import {
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { splitArgs } from '../utils/split-args';
 
 export class CliCdCommandProcessor implements ICliCommandProcessor {
     command = 'cd';
@@ -44,7 +45,7 @@ export class CliCdCommandProcessor implements ICliCommandProcessor {
         const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
-        const target = command.value || '~';
+        const target = splitArgs(command.value || '').join(' ') || '~';
 
         try {
             fs.setCurrentDirectory(target);

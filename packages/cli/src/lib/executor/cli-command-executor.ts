@@ -189,10 +189,15 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             }
 
             try {
+                // Output going into a pipe or a file is not shown (as in a
+                // shell); errors and warnings still are
+                const nextType = parts[i + 1]?.type;
+                const muted = nextType === '|' || nextType === '>' || nextType === '>>';
                 lastCapturingWriter = await this.executeSingleCommand(
                     part.value,
                     pipelineData,
                     rootContext,
+                    muted,
                 );
 
                 lastExitSuccess =
@@ -235,6 +240,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         command: string,
         data: any | undefined,
         context: ICliExecutionHost,
+        muted = false,
     ): Promise<CapturingTerminalWriter | undefined> {
         const process = context.process as CliExecutionProcess;
 
@@ -314,6 +320,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                     aliases[mainCommand],
                     data,
                     context,
+                    muted,
                 );
             }
 
@@ -456,6 +463,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         // the captured text becomes the implicit pipeline data.
         const capturingWriter = new CapturingTerminalWriter(
             commandContext.writer,
+            { muted },
         );
         commandContext.writer = capturingWriter;
 

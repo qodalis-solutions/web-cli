@@ -1,3 +1,4 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
@@ -26,6 +27,13 @@ export class CliCpCommandProcessor implements ICliCommandProcessor {
             required: false,
             type: 'boolean' as const,
         },
+        {
+            name: 'force',
+            aliases: ['f'],
+            description: 'Overwrite existing files (always done; accepted for -rf)',
+            required: false,
+            type: 'boolean' as const,
+        },
     ];
 
     writeDescription(context: ICliExecutionContext): void {
@@ -36,7 +44,7 @@ export class CliCpCommandProcessor implements ICliCommandProcessor {
         context.writer.writeln();
         writeUsage(context, [
             ['cp <source> <dest>', 'Copy a file to a new name'],
-            ['cp <source> <dir>', 'Copy a file into a directory'],
+            ['cp <source...> <dir>', 'Copy files into a directory'],
             ['cp -r <dir> <dest>', 'Copy a directory and its contents'],
         ]);
         context.writer.writeln();
@@ -67,19 +75,29 @@ export class CliCpCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        const src = parts[0];
-        const dest = parts[1];
-
-        try {
-            fs.copy(src, dest, recursive);
-            await fs.persist();
-        } catch (e: any) {
-            context.writer.writeError(e.message);
+        // Several sources go into the last operand, which must be a directory
+        const dest = parts[parts.length - 1];
+        const sources = parts.slice(0, -1);
+        if (sources.length > 1 && !fs.isDirectory(dest)) {
+            context.writer.writeError(`cp: target '${dest}' is not a directory`);
+            return;
         }
+
+        let changed = false;
+        for (const src of sources) {
+            try {
+                fs.copy(src, dest, recursive);
+                changed = true;
+            } catch (e: any) {
+                context.writer.writeError(e.message);
+            }
+        }
+        if (changed) await fs.persist();
     }
 
     private parseArgs(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter((t) => t && !t.startsWith('--') && !t.startsWith('-'));
+        // Flags never reach the value, so a quoted `-name` is a file
+        return splitArgs(raw).filter(Boolean);
     }
 }

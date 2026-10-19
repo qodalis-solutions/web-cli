@@ -220,7 +220,7 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                     },
                 ],
                 processCommand: async (command, context) => {
-                    const text = command.value;
+                    const text = unquote(command.value ?? '');
                     if (!text) {
                         context.writer.writeError('Please provide a task description.');
                         return;
@@ -281,7 +281,7 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                     const spaceIndex = raw.indexOf(' ');
 
                     const idStr = spaceIndex === -1 ? raw : raw.substring(0, spaceIndex);
-                    const newText = spaceIndex === -1 ? undefined : raw.substring(spaceIndex + 1).trim();
+                    const newText = spaceIndex === -1 ? undefined : unquote(raw.substring(spaceIndex + 1).trim());
 
                     const id = parseInt(idStr, 10);
                     if (isNaN(id)) {
@@ -507,4 +507,13 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
 /** The id for a new task: one more than the highest. */
 function nextIdOf(todos: TodoItem[]): number {
     return todos.length > 0 ? Math.max(...todos.map((t) => t.id)) + 1 : 1;
+}
+
+/** `"buy milk"` or `'buy milk'` without its quotes. */
+function unquote(text: string): string {
+    const t = text.trim();
+    return t.length > 1 &&
+        ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'")))
+        ? t.slice(1, -1)
+        : t;
 }

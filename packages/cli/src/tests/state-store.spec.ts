@@ -68,6 +68,17 @@ class MockServiceProvider implements ICliServiceProvider {
 // ---------------------------------------------------------------------------
 // CliStateStore
 // ---------------------------------------------------------------------------
+
+/** Wait until `read()` passes `ok` (saves go through the cross-tab lock, so no fixed tick). */
+async function waitFor<T>(read: () => Promise<T>, ok: (value: T) => boolean): Promise<T> {
+    let value = await read();
+    for (let i = 0; i < 200 && !ok(value); i++) {
+        await new Promise((r) => setTimeout(r, 10));
+        value = await read();
+    }
+    return value;
+}
+
 describe('CliStateStore', () => {
     let store: CliStateStore;
     let services: MockServiceProvider;
@@ -392,12 +403,13 @@ describe('CliStateStore persistence', () => {
         const setSpy = spyOn(kvStore, 'set').and.callThrough();
         store.updateState({ a: 1 });
         store.updateState({ a: 2 });
+        await waitFor(async () => setSpy.calls.count(), (n) => n > 0);
         await flush();
         expect(setSpy).toHaveBeenCalledTimes(1);
         expect(await kvStore.get('store-state-s')).toEqual({ a: 2 });
 
         store.reset();
-        await flush();
+        await waitFor(() => kvStore.get<any>('store-state-s'), (v) => v?.a === 0);
         expect(await kvStore.get('store-state-s')).toEqual({ a: 0 });
     });
 
@@ -490,7 +502,7 @@ describe('CliStateStore persistence', () => {
                 async processCommand() {},
             });
             store.updateState({ n: 1 });
-            await flush();
+            await waitFor(() => kvStore.get('store-state-auto'), (v) => !!v);
             expect(await kvStore.get('store-state-auto')).toEqual({ n: 1 });
         });
 
@@ -623,7 +635,7 @@ describe('CliStateStore across terminals', () => {
         );
         store.setOptions({ autoPersist: undefined, version: undefined });
         store.updateState({ x: 1 });
-        await new Promise((r) => setTimeout(r, 20));
+        await waitFor(() => kvStore.get('store-state-s'), (v) => !!v);
         expect(await kvStore.get('store-state-s')).toEqual({ x: 1 });
     });
 });

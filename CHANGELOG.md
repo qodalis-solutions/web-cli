@@ -34,6 +34,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Unloading a plugin that adds sub-commands to another command** (`extendsProcessor`) removes only the sub-commands it added; the command itself stays. It used to remove the whole command, or nothing.
 - **No more "Process exited with code 1" after an error message.** The line is shown only when a command fails without printing an error.
 - **Help pages.** Over 40 more commands have a help page with usage and examples (`help grep`, `help cron`, `help server jobs stop`, …). On narrow terminals (phones) descriptions in `help` wrap at word boundaries instead of mid-word, and boxes (`writeBox`) wrap their content. The help helpers (`writeUsage`, `writeExamples`, `writeWrapped`, `writeHint`) are exported from `@qodalis/cli-core` for plugins.
+- **Quotes and combined flags on the command line.** A quoted argument stays one argument (`grep "hello world" notes.txt`), keeps its spacing, and flags inside quotes are text (`echo "a --b"`). Values given after a flag lose their quotes (`find --name "my file.txt"`, `sort -t ','`). Short flags can be combined (`rm -rf dir`, `ls -la`) when each letter is a flag of the command.
+- **Pipes and redirects show only the final output.** In `cat f | grep x` only grep's output appears, and `echo hi > f` prints nothing, as in a shell (every stage used to print). Errors and warnings of every stage are still shown. Tables, lists and key-value output are passed down a pipe as text, so `server list | grep node` works. A lone `-` is kept as an operand (`paste - b.txt`), `-n5` / `-f2` work like `-n 5`, and redirect targets can be quoted (`> "my dir/f.txt"`).
 - **Redirects write whole lines.** `echo one > f.txt; echo two >> f.txt` gives two lines (it gave `onetwo`).
 - **A server that stops is shown as disconnected at once** (`server:disconnected`, panel status, `server list`), instead of after about 30 seconds of event-socket retries.
 - `diff` compares piped input: `echo "a" | diff --b "b"`.
@@ -65,8 +67,21 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ### Plugins
 
 - **Typed tokens:** `IFileSystemService_TOKEN` (files), `IScpTransferService_TOKEN` (scp), `CliUsersModuleConfig_TOKEN` and `CliApiTokensService_TOKEN` (users) are created with `createCliToken`, so `services.get()` returns the right type.
-- **Files** (`@qodalis/cli-files`): `cut -f 2` works (a plain number used to fail); `mv dir dir/sub` is refused instead of losing the directory; `echo "a > b"` prints the text instead of writing a file named `b`. Every file command has a help page.
-- **Server jobs** (`@qodalis/cli-server-jobs`): `server jobs stop` says "stopped" (was "stoped"); with several servers, a job found on none of them is reported instead of printing nothing; usage messages say `server jobs …`. Help pages for every sub-command.
+- **Files** (`@qodalis/cli-files`), closer to Unix:
+  - `cut -f 2` works (a plain number used to fail); `mv dir dir/sub` is refused instead of losing the directory; `echo "a > b"` prints the text instead of writing a file named `b`; `rmdir` removes directories (it always failed).
+  - Quoted paths and patterns work everywhere (`cat "my file.txt"`, `grep "two words"`); combined flags (`rm -rf`, `ls -lah`, `cp -rf`, `grep -in`).
+  - `cat`, `rm`, `mkdir` (`-p`), `touch` and `rmdir` take several paths; `cat` and `paste` read piped input; `sort` sorts several files together; `du` defaults to the current directory; `cp` and `mv` take several sources into a directory.
+  - `wc -l` counts lines like Unix (a final newline is not an extra line); `head` / `tail` no longer print a blank last line, `tail -n 0` prints nothing.
+  - `find`: `--maxdepth` counts from the start path (0 = the path itself), `--name` is case-sensitive, new `--iname`.
+  - `sed`: `-n` and `p`, `&` and `\1`…`\9` in replacements, `-E`, several `-e`, `;`-separated commands, address ranges, `!`, `q`; `$` is the real last line.
+  - `awk` accepts an unquoted program (`awk {print $1} file`) and several files. `xargs` passes the inner command's flags (`xargs rm -r`). `tee` writes whole lines and passes its input through. `tr` never reads a set as a file name with piped input, and supports `\n`, `\t`, `-d` and `-s` together.
+  - Every file command has a help page.
+- **Markdown** (`@qodalis/cli-markdown`): `md "# Title"` renders (it was "Command not found"); `\n` makes new lines; piped input is rendered.
+- **Todo:** `todo add "buy milk"` stores the text without the quotes.
+- **Server jobs** (`@qodalis/cli-server-jobs`):
+  - With several servers, actions (`trigger`, `pause`, `resume`, `stop`, `cancel`) and `info` / `history` / `logs` apply to every server that has the job (they stopped at the first), with a note naming the servers; `edit` asks for `--server` when the job is on several. A job found on none of them is reported instead of printing nothing.
+  - `watch` stops on Ctrl+C and when the servers close the connection, and cleans up its subscriptions (it never ended). `edit` can be cancelled at every prompt, and nothing is sent.
+  - `server jobs stop` says "stopped" (was "stoped"); usage messages say `server jobs …`. Help pages for every sub-command.
 - Tests for server jobs, 2048, minesweeper, snake, tetris and wordle.
 
 ### Docs site

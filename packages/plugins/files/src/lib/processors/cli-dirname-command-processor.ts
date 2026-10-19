@@ -1,3 +1,4 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
@@ -77,6 +78,6 @@ export class CliDirnameCommandProcessor implements ICliCommandProcessor {
 
     private parseTokens(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
+        return splitArgs(raw).filter(Boolean);
     }
 }

@@ -8,6 +8,7 @@ import {
     writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
+import { splitArgs } from '../utils/split-args';
 import { LIBRARY_VERSION } from '../version';
 
 export class CliMkdirCommandProcessor implements ICliCommandProcessor {
@@ -36,7 +37,7 @@ export class CliMkdirCommandProcessor implements ICliCommandProcessor {
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['mkdir <dir>', 'Create a directory'],
+            ['mkdir <dir...>', 'Create one or more directories'],
             ['mkdir -p <path>', 'Create a directory and its missing parents'],
         ]);
         context.writer.writeln();
@@ -53,19 +54,24 @@ export class CliMkdirCommandProcessor implements ICliCommandProcessor {
         const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
-        const path = command.value;
+        const paths = splitArgs(command.value || '');
         const recursive = command.args['parents'] || command.args['p'];
 
-        if (!path) {
+        if (paths.length === 0) {
             context.writer.writeError('mkdir: missing operand');
             return;
         }
 
-        try {
-            fs.createDirectory(path, recursive);
-            await fs.persist();
-        } catch (e: any) {
-            context.writer.writeError(e.message);
+        let changed = false;
+        for (const path of paths) {
+            try {
+                if (recursive && fs.isDirectory(path)) continue;
+                fs.createDirectory(path, recursive);
+                changed = true;
+            } catch (e: any) {
+                context.writer.writeError(e.message);
+            }
         }
+        if (changed) await fs.persist();
     }
 }

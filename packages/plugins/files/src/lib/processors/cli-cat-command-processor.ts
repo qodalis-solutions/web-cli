@@ -9,6 +9,8 @@ import {
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { splitArgs } from '../utils/split-args';
+import { pipedText } from '../utils/lines';
 
 export class CliCatCommandProcessor implements ICliCommandProcessor {
     command = 'cat';
@@ -22,11 +24,11 @@ export class CliCatCommandProcessor implements ICliCommandProcessor {
     writeDescription(context: ICliExecutionContext): void {
         writeWrapped(
             context,
-            'Print the contents of a file to the terminal. Pipe the output into other commands to search, sort or count it.',
+            'Print the contents of one or more files, joined in order, or of piped input. Pipe the output into other commands to search, sort or count it.',
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['cat <file>', 'Print a file'],
+            ['cat <file...>', 'Print files one after another'],
             ['cat <file> | <command>', 'Send a file to another command'],
         ]);
         context.writer.writeln();
@@ -44,20 +46,39 @@ export class CliCatCommandProcessor implements ICliCommandProcessor {
         const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
-        const path = command.value;
+        const paths = splitArgs(command.value || '');
 
-        if (!path) {
+        if (paths.length === 0) {
+            if (command.data != null) {
+                context.writer.writeln(pipedText(command.data));
+                return;
+            }
             context.writer.writeError('cat: missing file operand');
             return;
         }
 
-        try {
-            const content = fs.readFile(path);
-            if (content !== null) {
-                context.writer.writeln(content);
+        // Concatenate the files in order; a missing one is reported and skipped
+        let output = '';
+        for (const path of paths) {
+            try {
+                if (fs.isDirectory(path)) {
+                    context.writer.writeError(`cat: ${path}: Is a directory`);
+                    continue;
+                }
+                const content = fs.readFile(path);
+                if (content === null) {
+                    context.writer.writeError(
+                        `cat: ${path}: No such file or directory`,
+                    );
+                    continue;
+                }
+                output += content;
+            } catch (e: any) {
+                context.writer.writeError(e.message);
             }
-        } catch (e: any) {
-            context.writer.writeError(e.message);
+        }
+        if (output !== '') {
+            context.writer.writeln(output.replace(/\n$/, ''));
         }
     }
 }

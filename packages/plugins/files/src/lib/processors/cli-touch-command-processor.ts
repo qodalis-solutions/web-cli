@@ -8,6 +8,7 @@ import {
     writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
+import { splitArgs } from '../utils/split-args';
 import { LIBRARY_VERSION } from '../version';
 
 export class CliTouchCommandProcessor implements ICliCommandProcessor {
@@ -26,7 +27,7 @@ export class CliTouchCommandProcessor implements ICliCommandProcessor {
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['touch <file>', 'Create the file, or refresh its timestamp'],
+            ['touch <file...>', 'Create the files, or refresh their timestamps'],
         ]);
         context.writer.writeln();
         writeExamples(context, [
@@ -42,18 +43,22 @@ export class CliTouchCommandProcessor implements ICliCommandProcessor {
         const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
-        const path = command.value;
+        const paths = splitArgs(command.value || '');
 
-        if (!path) {
+        if (paths.length === 0) {
             context.writer.writeError('touch: missing file operand');
             return;
         }
 
-        try {
-            fs.createFile(path);
-            await fs.persist();
-        } catch (e: any) {
-            context.writer.writeError(e.message);
+        let changed = false;
+        for (const path of paths) {
+            try {
+                fs.createFile(path);
+                changed = true;
+            } catch (e: any) {
+                context.writer.writeError(e.message);
+            }
         }
+        if (changed) await fs.persist();
     }
 }

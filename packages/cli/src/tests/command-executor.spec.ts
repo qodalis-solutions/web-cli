@@ -435,6 +435,26 @@ describe('CliCommandExecutor', () => {
     // 4. Operator | — pipe
     // -----------------------------------------------------------------------
     describe('Operator | — pipe', () => {
+        it('does not show the output of a stage that is piped, only the last one', async () => {
+            registry.registerProcessor(
+                createTestProcessor('producer', async (_cmd, ctx) => {
+                    ctx.writer.writeln('intermediate');
+                    ctx.writer.writeError('producer problem');
+                }),
+            );
+            registry.registerProcessor(
+                createTestProcessor('consumer', async (cmd, ctx) => {
+                    ctx.writer.writeln(`got ${cmd.data}`);
+                }),
+            );
+
+            await executor.executeCommand('producer | consumer', context);
+
+            expect(writer.written.some((l) => l.includes('intermediate') && !l.includes('got'))).toBeFalse();
+            expect(writer.written.some((l) => l.includes('producer problem'))).toBeTrue();
+            expect(writer.written.some((l) => l.includes('got intermediate'))).toBeTrue();
+        });
+
         it('should pass explicit output of first command as data to second', async () => {
             let receivedData: any;
             registry.registerProcessor(

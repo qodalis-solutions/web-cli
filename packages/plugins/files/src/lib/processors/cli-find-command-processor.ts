@@ -1,3 +1,4 @@
+import { splitArgs } from '../utils/split-args';
 import { readableChildren } from '../utils/readable-children';
 import {
     CliProcessCommand,
@@ -26,7 +27,13 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
     parameters = [
         {
             name: 'name',
-            description: 'Match filename pattern (glob: * and ? supported)',
+            description: 'Match filename pattern (glob: * and ? supported), case-sensitive',
+            required: false,
+            type: 'string' as const,
+        },
+        {
+            name: 'iname',
+            description: 'Like --name, but case-insensitive',
             required: false,
             type: 'string' as const,
         },
@@ -38,7 +45,7 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
         },
         {
             name: 'maxdepth',
-            description: 'Maximum directory depth to search',
+            description: 'Maximum depth: 0 is only the start path, 1 its direct children',
             required: false,
             type: 'number' as const,
         },
@@ -47,12 +54,13 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
     writeDescription(context: ICliExecutionContext): void {
         writeWrapped(
             context,
-            'List files and directories under a path (the current directory by default), searching all subdirectories. Filter by name with a glob pattern (* and ?, case-insensitive) or by type.',
+            'List files and directories under a path (the current directory by default), searching all subdirectories. The start path itself is listed first. Filter by name with a glob pattern (* and ?; --name is case-sensitive, --iname is not) or by type.',
         );
         context.writer.writeln();
         writeUsage(context, [
             ['find [path]', 'List everything under a path'],
             ['find [path] --name <pattern>', 'Match names against a glob'],
+            ['find [path] --iname <pattern>', 'Same, ignoring case'],
             ['find [path] --type f|d', 'Only files (f) or directories (d)'],
         ]);
         context.writer.writeln();
@@ -73,11 +81,13 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
         );
 
         const searchPath = this.parseSearchPath(command) || fs.getCurrentDirectory();
-        const namePattern = command.args['name'] || null;
         const typeFilter = command.args['type'] || null;
-        const maxDepth = command.args['maxdepth']
-            ? parseInt(command.args['maxdepth'], 10)
-            : Infinity;
+        const maxDepthArg = command.args['maxdepth'];
+        const parsedDepth = parseInt(String(maxDepthArg ?? ''), 10);
+        const maxDepth =
+            maxDepthArg != null && maxDepthArg !== true && !isNaN(parsedDepth)
+                ? parsedDepth
+                : Infinity;
 
         try {
             const node = fs.getNode(searchPath);
@@ -87,27 +97,28 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
                 );
                 return;
             }
-            if (node.type !== 'directory') {
-                context.writer.writeError(
-                    `find: '${searchPath}': Not a directory`,
-                );
-                return;
-            }
-
             const resolvedBase = fs.resolvePath(searchPath);
-            const nameRegex = namePattern ? this.globToRegex(namePattern) : null;
+            const nameRegex = this.nameRegex(command);
 
             const results: string[] = [];
             this.fs = fs;
-            this.walk(
-                node,
-                resolvedBase,
-                0,
-                maxDepth,
-                nameRegex,
-                typeFilter,
-                results,
-            );
+
+            // The start path is at depth 0, as in GNU find
+            const baseName = resolvedBase.split('/').filter(Boolean).pop() ?? '/';
+            if (this.matches(baseName, node.type, nameRegex, typeFilter)) {
+                results.push(resolvedBase);
+            }
+            if (node.type === 'directory' && maxDepth > 0) {
+                this.walk(
+                    node,
+                    resolvedBase,
+                    1,
+                    maxDepth,
+                    nameRegex,
+                    typeFilter,
+                    results,
+                );
+            }
 
             for (const r of results) {
                 context.writer.writeln(r);
@@ -117,21 +128,47 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
         }
     }
 
+    /** `--name` matches case-sensitively, `--iname` ignoring case. */
+    private nameRegex(command: CliProcessCommand): RegExp | null {
+        const name = command.args['name'];
+        if (name != null && name !== true) {
+            return this.globToRegex(String(name), false);
+        }
+        const iname = command.args['iname'];
+        if (iname != null && iname !== true) {
+            return this.globToRegex(String(iname), true);
+        }
+        return null;
+    }
+
+    private matches(
+        name: string,
+        type: string,
+        nameRegex: RegExp | null,
+        typeFilter: string | null,
+    ): boolean {
+        if (nameRegex && !nameRegex.test(name)) return false;
+        if (typeFilter === 'f' && type !== 'file') return false;
+        if (typeFilter === 'd' && type !== 'directory') return false;
+        return true;
+    }
+
     private parseSearchPath(command: CliProcessCommand): string | null {
         const raw = command.value || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
+        const tokens = splitArgs(raw).filter(Boolean);
         return tokens.length > 0 ? tokens[0] : null;
     }
 
-    private globToRegex(pattern: string): RegExp {
+    private globToRegex(pattern: string, ignoreCase: boolean): RegExp {
         const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&');
         const regexStr = escaped.replace(/\*/g, '.*').replace(/\?/g, '.');
-        return new RegExp(`^${regexStr}$`, 'i');
+        return new RegExp(`^${regexStr}$`, ignoreCase ? 'i' : '');
     }
 
     /** File system of the running command (listing goes through access checks) */
     private fs?: IFileSystemService;
 
+    /** Lists the children of `node`, which are at `depth` (1 = direct children). */
     private walk(
         node: IFileNode,
         currentPath: string,
@@ -150,18 +187,7 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
                     ? `/${child.name}`
                     : `${currentPath}/${child.name}`;
 
-            let matches = true;
-            if (nameRegex && !nameRegex.test(child.name)) {
-                matches = false;
-            }
-            if (typeFilter === 'f' && child.type !== 'file') {
-                matches = false;
-            }
-            if (typeFilter === 'd' && child.type !== 'directory') {
-                matches = false;
-            }
-
-            if (matches) {
+            if (this.matches(child.name, child.type, nameRegex, typeFilter)) {
                 results.push(childPath);
             }
 

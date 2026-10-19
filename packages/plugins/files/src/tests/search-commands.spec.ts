@@ -218,13 +218,13 @@ describe('CliFindCommandProcessor', () => {
     });
 
     it('should respect -maxdepth', async () => {
-        const cmd = makeCommand('find /home/user -maxdepth 0 -name *.txt', {
+        const cmd = makeCommand('find /home/user -maxdepth 1 -name *.txt', {
             name: '*.txt',
-            maxdepth: '0',
+            maxdepth: '1',
         });
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
-        // maxdepth 0 = only direct children of /home/user, no recursion into docs/
+        // maxdepth 1 = only direct children of /home/user, no recursion into docs/
         expect(output).toContain('welcome.txt');
         expect(output).not.toContain('notes.txt');
     });

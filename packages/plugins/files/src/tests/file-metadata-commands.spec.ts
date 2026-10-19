@@ -355,10 +355,12 @@ describe('CliDuCommandProcessor', () => {
         expect(writer.written.some(l => l.includes('No such file or directory'))).toBe(true);
     });
 
-    it('should error on missing operand', async () => {
+    it('should default to the current directory', async () => {
+        fs.setCurrentDirectory('/home/user/docs');
         const cmd = makeCommand('du');
         await processor.processCommand(cmd, ctx);
-        expect(writer.written.some(l => l.includes('missing operand'))).toBe(true);
+        expect(writer.written.some(l => l.includes('missing operand'))).toBe(false);
+        expect(writer.written.some(l => l.endsWith('\t/home/user/docs'))).toBe(true);
     });
 });
 

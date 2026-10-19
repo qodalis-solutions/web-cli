@@ -8,6 +8,7 @@ import {
     writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
+import { splitArgs } from '../utils/split-args';
 import { LIBRARY_VERSION } from '../version';
 
 export class CliRmdirCommandProcessor implements ICliCommandProcessor {
@@ -26,7 +27,7 @@ export class CliRmdirCommandProcessor implements ICliCommandProcessor {
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['rmdir <dir>', 'Remove an empty directory'],
+            ['rmdir <dir...>', 'Remove empty directories'],
         ]);
         context.writer.writeln();
         writeExamples(context, [
@@ -42,35 +43,40 @@ export class CliRmdirCommandProcessor implements ICliCommandProcessor {
         const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
-        const path = command.value;
+        const paths = splitArgs(command.value || '');
 
-        if (!path) {
+        if (paths.length === 0) {
             context.writer.writeError('rmdir: missing operand');
             return;
         }
 
-        try {
-            const node = fs.getNode(path);
-            if (!node) {
-                context.writer.writeError(
-                    `rmdir: ${path}: No such file or directory`,
-                );
-                return;
+        let changed = false;
+        for (const path of paths) {
+            try {
+                const node = fs.getNode(path);
+                if (!node) {
+                    context.writer.writeError(
+                        `rmdir: ${path}: No such file or directory`,
+                    );
+                    continue;
+                }
+                if (node.type !== 'directory') {
+                    context.writer.writeError(`rmdir: ${path}: Not a directory`);
+                    continue;
+                }
+                if (node.children && node.children.length > 0) {
+                    context.writer.writeError(
+                        `rmdir: ${path}: Directory not empty`,
+                    );
+                    continue;
+                }
+                // Checked empty above; the service removes directories only recursively
+                fs.remove(path, true);
+                changed = true;
+            } catch (e: any) {
+                context.writer.writeError(e.message);
             }
-            if (node.type !== 'directory') {
-                context.writer.writeError(`rmdir: ${path}: Not a directory`);
-                return;
-            }
-            if (node.children && node.children.length > 0) {
-                context.writer.writeError(
-                    `rmdir: ${path}: Directory not empty`,
-                );
-                return;
-            }
-            fs.remove(path);
-            await fs.persist();
-        } catch (e: any) {
-            context.writer.writeError(e.message);
         }
+        if (changed) await fs.persist();
     }
 }

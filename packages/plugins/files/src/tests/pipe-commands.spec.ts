@@ -241,7 +241,7 @@ describe('CliTeeCommandProcessor (piped input)', () => {
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         expect(output).toContain('piped content');
-        expect(fs.readFile('/home/user/out.txt')).toBe('piped content');
+        expect(fs.readFile('/home/user/out.txt')).toBe('piped content\n');
     });
 
     it('should append piped data with -a', async () => {
@@ -256,8 +256,8 @@ describe('CliTeeCommandProcessor (piped input)', () => {
     it('should write piped data to multiple output files', async () => {
         const cmd = makeCommand('tee /home/user/a.txt /home/user/b.txt', {}, 'hello pipes');
         await processor.processCommand(cmd, ctx);
-        expect(fs.readFile('/home/user/a.txt')).toBe('hello pipes');
-        expect(fs.readFile('/home/user/b.txt')).toBe('hello pipes');
+        expect(fs.readFile('/home/user/a.txt')).toBe('hello pipes\n');
+        expect(fs.readFile('/home/user/b.txt')).toBe('hello pipes\n');
     });
 });
 

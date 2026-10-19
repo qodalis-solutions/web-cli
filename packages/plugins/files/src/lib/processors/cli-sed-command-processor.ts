@@ -9,24 +9,29 @@ import {
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { splitLines } from '../utils/lines';
+
+type SedSingleAddress =
+    | { type: 'line'; line: number }
+    | { type: 'last' }
+    | { type: 'regex'; regex: RegExp };
 
 interface SedExpression {
-    address: SedAddress | null;
-    command: string; // 's', 'd', 'p'
+    start: SedSingleAddress | null;
+    /** End of a range address (`1,5`, `/a/,/b/`) */
+    end: SedSingleAddress | null;
+    negate: boolean;
+    /** Inside a range: the start matched and the end not yet */
+    active: boolean;
+    command: 's' | 'd' | 'p' | 'q';
     // For substitution:
     pattern?: RegExp;
     replacement?: string;
-    globalFlag?: boolean;
+    groupCount?: number;
     printFlag?: boolean;
-}
-
-interface SedAddress {
-    type: 'line' | 'last' | 'range' | 'regex';
-    line?: number;
-    startLine?: number;
-    endLine?: number;
-    endIsLast?: boolean;
-    regex?: RegExp;
+    /** `s/a/b/2`: replace only the Nth match (with g, the Nth and later) */
+    occurrence?: number;
+    globalFlag?: boolean;
 }
 
 export class CliSedCommandProcessor implements ICliCommandProcessor {
@@ -55,16 +60,23 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
         {
             name: 'expression',
             aliases: ['e'],
-            description: 'Add the expression to the commands to be executed',
+            description: 'Add the expression to the commands to be executed (repeatable)',
             required: false,
-            type: 'string' as const,
+            type: 'array' as const,
+        },
+        {
+            name: 'regexp-extended',
+            aliases: ['E', 'r'],
+            description: 'Use extended regular expressions: (, ), +, ?, | and { } without backslashes',
+            required: false,
+            type: 'boolean' as const,
         },
     ];
 
     writeDescription(context: ICliExecutionContext): void {
         writeWrapped(
             context,
-            'Edit text line by line with a script: substitute (s/old/new/), delete (d) or print (p) lines, optionally limited to a line number, a range (1,5 or 3,$) or lines matching /regex/. Reads a file or piped input and prints the result, or rewrites the file with -i.',
+            'Edit text line by line with a script: substitute (s/old/new/), delete (d), print (p) or quit (q), optionally limited to a line number, a range (1,5, 3,$ or /start/,/end/) or lines matching /regex/; ! after an address inverts it and ; separates commands. The replacement can use & (the match) and \\1 to \\9 (groups, written \\(...\\) or, with -E, (...)). Reads files or piped input and prints the result, or rewrites the files with -i.',
         );
         context.writer.writeln();
         writeUsage(context, [
@@ -79,6 +91,7 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
             ["sed -i 's/v1/v2/' config.txt", 'Edit the file in place'],
             ["sed '/^#/d' config.txt", 'Drop comment lines'],
             ["sed -n '1,5p' notes.txt", 'Print lines 1 to 5'],
+            ["sed -E 's/(\\w+) (\\w+)/\\2 \\1/' names.txt", 'Swap two words'],
         ]);
     }
 
@@ -90,7 +103,7 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
             IFileSystemService_TOKEN,
         );
 
-        const { inPlace, suppress, expressions, filePath } =
+        const { inPlace, suppress, extended, expressions, filePaths } =
             this.parseRawCommand(command);
 
         if (expressions.length === 0) {
@@ -100,160 +113,195 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        let content: string;
-        if (filePath) {
-            const resolved = fs.resolvePath(filePath);
+        const parse = (): SedExpression[] | null => {
+            try {
+                return expressions.flatMap((e) => this.parseScript(e, extended));
+            } catch (e: any) {
+                context.writer.writeError(`sed: ${e.message}`);
+                return null;
+            }
+        };
 
+        if (filePaths.length === 0) {
+            if (command.data == null) {
+                context.writer.writeError(
+                    'sed: missing file operand. Usage: sed [options] \'expression\' <file>',
+                );
+                return;
+            }
+            const script = parse();
+            if (!script) return;
+            const content = typeof command.data === 'string'
+                ? command.data : JSON.stringify(command.data);
+            this.writeLines(context, this.run(script, splitLines(content), suppress));
+            return;
+        }
+
+        // Read every file first, so a missing one stops before any edit
+        const contents: string[] = [];
+        for (const filePath of filePaths) {
+            const resolved = fs.resolvePath(filePath);
             if (!fs.exists(resolved)) {
                 context.writer.writeError(
                     `sed: ${filePath}: No such file or directory`,
                 );
                 return;
             }
-
             if (fs.isDirectory(resolved)) {
                 context.writer.writeError(`sed: ${filePath}: Is a directory`);
                 return;
             }
-
-            content = fs.readFile(resolved) ?? '';
-        } else if (command.data != null) {
-            content = typeof command.data === 'string'
-                ? command.data : JSON.stringify(command.data);
-        } else {
-            context.writer.writeError(
-                'sed: missing file operand. Usage: sed [options] \'expression\' <file>',
-            );
-            return;
-        }
-
-        // Parse expressions
-        const parsedExpressions: SedExpression[] = [];
-        for (const expr of expressions) {
             try {
-                const parsed = this.parseExpression(expr);
-                parsedExpressions.push(parsed);
+                contents.push(fs.readFile(resolved) ?? '');
             } catch (e: any) {
                 context.writer.writeError(`sed: ${e.message}`);
                 return;
             }
         }
-        const lines = content.split('\n');
-        const outputLines: string[] = [];
+
+        if (inPlace) {
+            // Each file is edited on its own
+            for (let i = 0; i < filePaths.length; i++) {
+                const script = parse();
+                if (!script) return;
+                const output = this.run(script, splitLines(contents[i]), suppress);
+                const keepNewline = contents[i].endsWith('\n') && output.length > 0;
+                try {
+                    fs.writeFile(
+                        fs.resolvePath(filePaths[i]),
+                        output.join('\n') + (keepNewline ? '\n' : ''),
+                    );
+                } catch (e: any) {
+                    context.writer.writeError(`sed: ${e.message}`);
+                    return;
+                }
+            }
+            await fs.persist();
+            return;
+        }
+
+        // Several files are one stream: line numbers and $ span them all
+        const script = parse();
+        if (!script) return;
+        const lines = contents.flatMap((c) => splitLines(c));
+        this.writeLines(context, this.run(script, lines, suppress));
+    }
+
+    private writeLines(context: ICliExecutionContext, lines: string[]): void {
+        for (const line of lines) {
+            context.writer.writeln(line);
+        }
+    }
+
+    /** Runs the script over the lines and returns the output lines. */
+    private run(
+        script: SedExpression[],
+        lines: string[],
+        suppress: boolean,
+    ): string[] {
+        const output: string[] = [];
 
         for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
             let line = lines[lineIdx];
             let deleted = false;
-            let printed = false;
+            let quit = false;
 
-            for (const expr of parsedExpressions) {
-                if (deleted) break;
-
-                if (
-                    !this.addressMatches(
-                        expr.address,
-                        lineIdx + 1,
-                        lines.length,
-                        line,
-                    )
-                ) {
+            for (const expr of script) {
+                if (!this.addressMatches(expr, lineIdx + 1, lines.length, line)) {
                     continue;
                 }
 
-                switch (expr.command) {
-                    case 's': {
-                        const pattern = expr.pattern!;
-                        pattern.lastIndex = 0;
-                        const newLine = line.replace(pattern, (...args) => {
-                            const match = args[0];
-                            return expr.replacement!.replace(/&/g, match);
-                        });
-                        const matched = newLine !== line;
-                        line = newLine;
-                        if (matched && expr.printFlag) {
-                            printed = true;
+                if (expr.command === 's') {
+                    let replaced = false;
+                    let seen = 0;
+                    const pattern = expr.pattern!;
+                    pattern.lastIndex = 0;
+                    line = line.replace(pattern, (...args: any[]) => {
+                        seen++;
+                        const nth = expr.occurrence;
+                        if (nth && (expr.globalFlag ? seen < nth : seen !== nth)) {
+                            return args[0];
                         }
-                        break;
-                    }
-                    case 'd':
-                        deleted = true;
-                        break;
-                    case 'p':
-                        printed = true;
-                        break;
+                        replaced = true;
+                        const groups = args.slice(0, expr.groupCount! + 1);
+                        return this.expandReplacement(expr.replacement!, groups);
+                    });
+                    if (replaced && expr.printFlag) output.push(line);
+                } else if (expr.command === 'p') {
+                    output.push(line);
+                } else if (expr.command === 'd') {
+                    deleted = true;
+                    break;
+                } else if (expr.command === 'q') {
+                    quit = true;
+                    break;
                 }
             }
 
-            if (!deleted) {
-                if (suppress) {
-                    if (printed) {
-                        outputLines.push(line);
-                    }
+            if (!deleted && !suppress) output.push(line);
+            if (quit) break;
+        }
+
+        return output;
+    }
+
+    /** `&` is the match, `\1`..`\9` the groups, `\n` a newline, `\x` a literal x. */
+    private expandReplacement(replacement: string, groups: string[]): string {
+        let out = '';
+        for (let i = 0; i < replacement.length; i++) {
+            const ch = replacement[i];
+            if (ch === '\\' && i + 1 < replacement.length) {
+                const next = replacement[++i];
+                if (next >= '0' && next <= '9') {
+                    out += groups[Number(next)] ?? '';
+                } else if (next === 'n') {
+                    out += '\n';
+                } else if (next === 't') {
+                    out += '\t';
                 } else {
-                    outputLines.push(line);
+                    out += next;
                 }
+            } else if (ch === '&') {
+                out += groups[0];
+            } else {
+                out += ch;
             }
         }
-
-        const result = outputLines.join('\n');
-
-        if (inPlace && filePath) {
-            const resolved = fs.resolvePath(filePath);
-            fs.writeFile(resolved, result);
-            await fs.persist();
-        } else {
-            // Print the result
-            const resultLines = result.split('\n');
-            for (const line of resultLines) {
-                context.writer.writeln(line);
-            }
-        }
+        return out;
     }
 
     private parseRawCommand(command: CliProcessCommand): {
         inPlace: boolean;
         suppress: boolean;
+        extended: boolean;
         expressions: string[];
-        filePath: string | null;
+        filePaths: string[];
     } {
         const raw = command.value || '';
         const tokens = this.tokenize(raw);
 
         const inPlace = !!command.args['in-place'] || !!command.args['i'];
         const suppress = !!command.args['quiet'] || !!command.args['n'];
+        const extended =
+            !!command.args['regexp-extended'] ||
+            !!command.args['E'] ||
+            !!command.args['r'];
         const expressions: string[] = [];
-        let filePath: string | null = null;
-        const nonFlagTokens: string[] = [];
 
-        // Check for -e expressions from args
-        if (command.args['expression'] || command.args['e']) {
-            const eValue = command.args['expression'] || command.args['e'];
-            if (Array.isArray(eValue)) {
-                for (const v of eValue) {
-                    if (v && typeof v === 'string') {
-                        expressions.push(v);
-                    }
-                }
-            } else if (eValue && typeof eValue === 'string') {
-                expressions.push(eValue);
+        // -e expressions (one or several)
+        const eValue = command.args['expression'] ?? command.args['e'];
+        for (const v of Array.isArray(eValue) ? eValue : [eValue]) {
+            if (v != null && v !== true && v !== '') {
+                expressions.push(String(v));
             }
         }
 
-        for (const t of tokens) {
-            nonFlagTokens.push(t);
+        // Without -e, the first operand is the script
+        if (expressions.length === 0 && tokens.length > 0) {
+            expressions.push(tokens.shift()!);
         }
 
-        // If no -e expressions, first non-flag token is the expression
-        if (expressions.length === 0 && nonFlagTokens.length > 0) {
-            expressions.push(nonFlagTokens.shift()!);
-        }
-
-        // Remaining non-flag token is the file path
-        if (nonFlagTokens.length > 0) {
-            filePath = nonFlagTokens[nonFlagTokens.length - 1];
-        }
-
-        return { inPlace, suppress, expressions, filePath };
+        return { inPlace, suppress, extended, expressions, filePaths: tokens };
     }
 
     private tokenize(raw: string): string[] {
@@ -266,88 +314,103 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
                 continue;
             }
 
-            // Handle quoted strings
-            if (raw[i] === "'" || raw[i] === '"') {
-                const quote = raw[i];
-                i++;
-                let token = '';
-                while (i < raw.length && raw[i] !== quote) {
+            // A word, with quoted parts (quotes removed)
+            let token = '';
+            while (i < raw.length && raw[i] !== ' ' && raw[i] !== '\t') {
+                if (raw[i] === "'" || raw[i] === '"') {
+                    const quote = raw[i];
+                    i++;
+                    while (i < raw.length && raw[i] !== quote) {
+                        token += raw[i];
+                        i++;
+                    }
+                    if (i < raw.length) i++; // skip closing quote
+                } else {
                     token += raw[i];
                     i++;
                 }
-                if (i < raw.length) i++; // skip closing quote
-                tokens.push(token);
-                continue;
-            }
-
-            // Regular token
-            let token = '';
-            while (i < raw.length && raw[i] !== ' ' && raw[i] !== '\t') {
-                token += raw[i];
-                i++;
             }
             tokens.push(token);
         }
         return tokens;
     }
 
-    private parseExpression(expr: string): SedExpression {
+    /** Commands of a script, separated by `;` or newlines. */
+    private parseScript(script: string, extended: boolean): SedExpression[] {
+        const result: SedExpression[] = [];
         let pos = 0;
+        const skipSeparators = () => {
+            while (pos < script.length && /[\s;]/.test(script[pos])) pos++;
+        };
 
-        // Parse optional address
-        let address: SedAddress | null = null;
-        if (pos < expr.length) {
-            const addrResult = this.parseAddress(expr, pos);
-            if (addrResult) {
-                address = addrResult.address;
-                pos = addrResult.pos;
-
-                // Check for range address
-                if (pos < expr.length && expr[pos] === ',') {
-                    pos++;
-                    const endResult = this.parseAddress(expr, pos);
-                    if (endResult) {
-                        if (endResult.address.type === 'last') {
-                            address = {
-                                type: 'range',
-                                startLine: address.line,
-                                endLine: 0,
-                                endIsLast: true,
-                            };
-                        } else {
-                            address = {
-                                type: 'range',
-                                startLine: address.line,
-                                endLine: endResult.address.line,
-                            };
-                        }
-                        pos = endResult.pos;
-                    }
-                }
+        skipSeparators();
+        while (pos < script.length) {
+            const parsed = this.parseCommand(script, pos, extended);
+            result.push(parsed.expression);
+            pos = parsed.pos;
+            while (pos < script.length && /[ \t]/.test(script[pos])) pos++;
+            if (pos < script.length && !/[;\n]/.test(script[pos])) {
+                throw new Error(`extra characters after command: '${script.slice(pos)}'`);
             }
+            skipSeparators();
+        }
+
+        if (result.length === 0) {
+            throw new Error(`invalid expression: '${script}'`);
+        }
+        return result;
+    }
+
+    private parseCommand(
+        expr: string,
+        pos: number,
+        extended: boolean,
+    ): { expression: SedExpression; pos: number } {
+        // Optional address, or range of two
+        let start: SedSingleAddress | null = null;
+        let end: SedSingleAddress | null = null;
+        const first = this.parseAddress(expr, pos, extended);
+        if (first) {
+            start = first.address;
+            pos = first.pos;
+            if (expr[pos] === ',') {
+                const second = this.parseAddress(expr, pos + 1, extended);
+                if (!second) {
+                    throw new Error(`unexpected ',' in '${expr}'`);
+                }
+                end = second.address;
+                pos = second.pos;
+            }
+        }
+        while (pos < expr.length && /[ \t]/.test(expr[pos])) pos++;
+        let negate = false;
+        if (expr[pos] === '!') {
+            negate = true;
+            pos++;
+            while (pos < expr.length && /[ \t]/.test(expr[pos])) pos++;
         }
 
         if (pos >= expr.length) {
             throw new Error(`invalid expression: '${expr}'`);
         }
 
+        const base = { start, end, negate, active: false };
         const cmd = expr[pos];
 
         if (cmd === 's') {
-            return this.parseSubstitution(expr, pos, address);
-        } else if (cmd === 'd') {
-            return { address, command: 'd' };
-        } else if (cmd === 'p') {
-            return { address, command: 'p' };
-        } else {
-            throw new Error(`unknown command: '${cmd}'`);
+            return this.parseSubstitution(expr, pos, base, extended);
         }
+        if (cmd === 'd' || cmd === 'p' || cmd === 'q') {
+            return { expression: { ...base, command: cmd }, pos: pos + 1 };
+        }
+        throw new Error(`unknown command: '${cmd}'`);
     }
 
     private parseAddress(
         expr: string,
         pos: number,
-    ): { address: SedAddress; pos: number } | null {
+        extended: boolean,
+    ): { address: SedSingleAddress; pos: number } | null {
         if (pos >= expr.length) return null;
 
         // Line number
@@ -370,62 +433,90 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
 
         // Regex address
         if (expr[pos] === '/') {
-            pos++; // skip opening /
-            let pattern = '';
-            while (pos < expr.length && expr[pos] !== '/') {
-                if (expr[pos] === '\\' && pos + 1 < expr.length) {
-                    pattern += expr[pos + 1];
-                    pos += 2;
-                } else {
-                    pattern += expr[pos];
-                    pos++;
-                }
-            }
-            if (pos < expr.length) pos++; // skip closing /
+            const parsed = this.readDelimited(expr, pos + 1, '/');
             try {
                 return {
-                    address: { type: 'regex', regex: new RegExp(pattern) },
-                    pos,
+                    address: {
+                        type: 'regex',
+                        regex: new RegExp(this.toJsRegex(parsed.text, extended)),
+                    },
+                    pos: parsed.pos,
                 };
             } catch {
-                throw new Error(`invalid regex in address: '${pattern}'`);
+                throw new Error(`invalid regex in address: '${parsed.text}'`);
             }
         }
 
         return null;
     }
 
+    /**
+     * Text up to the next unescaped delimiter, escapes kept (an escaped
+     * delimiter becomes the plain character when it has no regex meaning).
+     */
+    private readDelimited(
+        expr: string,
+        pos: number,
+        delimiter: string,
+    ): { text: string; pos: number } {
+        let text = '';
+        while (pos < expr.length && expr[pos] !== delimiter) {
+            if (expr[pos] === '\\' && pos + 1 < expr.length) {
+                const next = expr[pos + 1];
+                text += next === delimiter && /\w|\//.test(next) ? next : '\\' + next;
+                pos += 2;
+            } else {
+                text += expr[pos];
+                pos++;
+            }
+        }
+        if (pos < expr.length) pos++; // skip the delimiter
+        return { text, pos };
+    }
+
+    /**
+     * Basic regular expressions use \( \) \{ \} \+ \? \| for groups and
+     * operators. When a pattern uses them (or never in -E mode), they are
+     * turned into the JavaScript form and the bare characters made literal.
+     */
+    private toJsRegex(pattern: string, extended: boolean): string {
+        if (extended || !/\\[(){}+?|]/.test(pattern)) return pattern;
+        let out = '';
+        for (let i = 0; i < pattern.length; i++) {
+            const ch = pattern[i];
+            if (ch === '\\' && i + 1 < pattern.length) {
+                const next = pattern[++i];
+                out += '(){}+?|'.includes(next) ? next : '\\' + next;
+            } else if ('(){}+?|'.includes(ch)) {
+                out += '\\' + ch;
+            } else {
+                out += ch;
+            }
+        }
+        return out;
+    }
+
     private parseSubstitution(
         expr: string,
         pos: number,
-        address: SedAddress | null,
-    ): SedExpression {
+        base: Pick<SedExpression, 'start' | 'end' | 'negate' | 'active'>,
+        extended: boolean,
+    ): { expression: SedExpression; pos: number } {
         pos++; // skip 's'
         if (pos >= expr.length) {
             throw new Error(`invalid substitution expression: '${expr}'`);
         }
 
         const delimiter = expr[pos];
-        pos++;
+        const pattern = this.readDelimited(expr, pos + 1, delimiter);
+        pos = pattern.pos;
 
-        // Parse pattern
-        let pattern = '';
-        while (pos < expr.length && expr[pos] !== delimiter) {
-            if (expr[pos] === '\\' && pos + 1 < expr.length) {
-                pattern += '\\' + expr[pos + 1];
-                pos += 2;
-            } else {
-                pattern += expr[pos];
-                pos++;
-            }
-        }
-        if (pos < expr.length) pos++; // skip delimiter
-
-        // Parse replacement
+        // Replacement: escapes kept for expandReplacement, except the delimiter
         let replacement = '';
         while (pos < expr.length && expr[pos] !== delimiter) {
             if (expr[pos] === '\\' && pos + 1 < expr.length) {
-                replacement += expr[pos + 1];
+                replacement +=
+                    expr[pos + 1] === delimiter ? delimiter : '\\' + expr[pos + 1];
                 pos += 2;
             } else {
                 replacement += expr[pos];
@@ -434,63 +525,100 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
         }
         if (pos < expr.length) pos++; // skip delimiter
 
-        // Parse flags
+        // Flags, up to the end of the command
         let globalFlag = false;
         let caseInsensitive = false;
         let printFlag = false;
-        while (pos < expr.length) {
+        let occurrence = '';
+        while (pos < expr.length && !/[;\n\s}]/.test(expr[pos])) {
             const f = expr[pos];
             if (f === 'g') globalFlag = true;
-            else if (f === 'i') caseInsensitive = true;
+            else if (f === 'i' || f === 'I') caseInsensitive = true;
             else if (f === 'p') printFlag = true;
+            else if (f >= '0' && f <= '9') occurrence += f;
+            else throw new Error(`unknown option to 's': '${f}'`);
             pos++;
+        }
+        const nth = occurrence ? parseInt(occurrence, 10) : undefined;
+        if (nth === 0) {
+            throw new Error("number option to 's' command may not be zero");
         }
 
         let regexFlags = '';
         if (caseInsensitive) regexFlags += 'i';
-        if (globalFlag) regexFlags += 'g';
+        if (globalFlag || nth) regexFlags += 'g';
 
         let regex: RegExp;
+        let groupCount: number;
         try {
-            regex = new RegExp(pattern, regexFlags);
+            const source = this.toJsRegex(pattern.text, extended);
+            regex = new RegExp(source, regexFlags);
+            groupCount = (new RegExp(`${source}|`).exec('')?.length ?? 1) - 1;
         } catch {
-            throw new Error(`invalid regex: '${pattern}'`);
+            throw new Error(`invalid regex: '${pattern.text}'`);
         }
 
         return {
-            address,
-            command: 's',
-            pattern: regex,
-            replacement,
-            globalFlag,
-            printFlag,
+            expression: {
+                ...base,
+                command: 's',
+                pattern: regex,
+                replacement,
+                groupCount,
+                printFlag,
+                occurrence: nth,
+                globalFlag,
+            },
+            pos,
         };
     }
 
     private addressMatches(
-        address: SedAddress | null,
+        expr: SedExpression,
         lineNum: number,
         totalLines: number,
         lineText: string,
     ): boolean {
-        if (!address) return true;
+        let matches: boolean;
+        if (!expr.start) {
+            matches = true;
+        } else if (!expr.end) {
+            matches = this.singleMatches(expr.start, lineNum, totalLines, lineText);
+        } else if (!expr.active) {
+            matches = this.singleMatches(expr.start, lineNum, totalLines, lineText);
+            if (matches) {
+                // A line-number end at or before the start ends the range at once
+                const end = expr.end;
+                const endsHere =
+                    (end.type === 'line' && end.line <= lineNum) ||
+                    (end.type === 'last' && lineNum === totalLines);
+                expr.active = !endsHere;
+            }
+        } else {
+            matches = true;
+            const end = expr.end;
+            const endsHere =
+                end.type === 'line'
+                    ? lineNum >= end.line
+                    : this.singleMatches(end, lineNum, totalLines, lineText);
+            if (endsHere) expr.active = false;
+        }
+        return expr.negate ? !matches : matches;
+    }
 
+    private singleMatches(
+        address: SedSingleAddress,
+        lineNum: number,
+        totalLines: number,
+        lineText: string,
+    ): boolean {
         switch (address.type) {
             case 'line':
-                return lineNum === address.line!;
+                return lineNum === address.line;
             case 'last':
                 return lineNum === totalLines;
-            case 'range': {
-                const start = address.startLine!;
-                const end = address.endIsLast
-                    ? totalLines
-                    : address.endLine!;
-                return lineNum >= start && lineNum <= end;
-            }
             case 'regex':
-                return address.regex!.test(lineText);
-            default:
-                return true;
+                return address.regex.test(lineText);
         }
     }
 }

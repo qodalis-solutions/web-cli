@@ -15,6 +15,7 @@ import {
     IFileNode,
 } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { splitArgs } from '../utils/split-args';
 
 export class CliTreeCommandProcessor implements ICliCommandProcessor {
     command = 'tree';
@@ -59,7 +60,8 @@ export class CliTreeCommandProcessor implements ICliCommandProcessor {
         const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
-        const targetPath = command.value || fs.getCurrentDirectory();
+        const targetPath =
+            splitArgs(command.value || '').join(' ') || fs.getCurrentDirectory();
         const maxDepth = command.args['depth']
             ? parseInt(command.args['depth'])
             : command.args['L']

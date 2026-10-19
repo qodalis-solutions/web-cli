@@ -7,6 +7,7 @@ import {
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { splitArgs } from '../utils/split-args';
 
 /**
  * Execute a script file containing CLI commands.
@@ -46,18 +47,17 @@ export class CliShCommandProcessor implements ICliCommandProcessor {
             IFileSystemService_TOKEN,
         );
 
-        let filePath = (command.value || '').trim();
+        let words = splitArgs(command.value || '');
 
         // When invoked via alias (source, .), getRightOfWord fails to extract
         // the value because it looks for 'sh' in the command string. Fall back
-        // to parsing the raw command.
-        if (!filePath && command.rawCommand) {
-            const raw = command.rawCommand.trim();
-            const firstSpace = raw.indexOf(' ');
-            if (firstSpace > -1) {
-                filePath = raw.slice(firstSpace + 1).trim();
-            }
+        // to parsing the raw command (flags are not file names).
+        if (words.length === 0 && command.rawCommand) {
+            words = splitArgs(command.rawCommand)
+                .slice(1)
+                .filter((w) => !w.startsWith('-'));
         }
+        const filePath = words[0] ?? '';
 
         if (!filePath) {
             context.writer.writeError('sh: missing file operand');

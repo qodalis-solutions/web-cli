@@ -349,3 +349,16 @@ describe('CliTodoCommandProcessor', () => {
         });
     });
 });
+
+describe('todo through the engine', () => {
+    it('stores quoted text without its quotes, flags inside quotes included', async () => {
+        const { CliTestHarness } = await import('@qodalis/cli');
+        const harness = new CliTestHarness();
+        harness.registerProcessors([new CliTodoCommandProcessor()]);
+        const first = await harness.execute('todo add "buy milk --urgent"');
+        const second = await harness.execute("todo add 'call Bob'");
+        expect(first.output).toContain('Added: "buy milk --urgent"');
+        expect(first.output).not.toContain('""');
+        expect(second.output).toContain('Added: "call Bob"');
+    });
+});

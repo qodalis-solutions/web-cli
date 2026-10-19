@@ -1,3 +1,4 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
@@ -26,7 +27,7 @@ export class CliMvCommandProcessor implements ICliCommandProcessor {
         context.writer.writeln();
         writeUsage(context, [
             ['mv <source> <dest>', 'Rename a file or directory'],
-            ['mv <source> <dir>', 'Move it into a directory'],
+            ['mv <source...> <dir>', 'Move them into a directory'],
         ]);
         context.writer.writeln();
         writeExamples(context, [
@@ -52,19 +53,29 @@ export class CliMvCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        const src = parts[0];
-        const dest = parts[1];
-
-        try {
-            fs.move(src, dest);
-            await fs.persist();
-        } catch (e: any) {
-            context.writer.writeError(e.message);
+        // Several sources go into the last operand, which must be a directory
+        const dest = parts[parts.length - 1];
+        const sources = parts.slice(0, -1);
+        if (sources.length > 1 && !fs.isDirectory(dest)) {
+            context.writer.writeError(`mv: target '${dest}' is not a directory`);
+            return;
         }
+
+        let changed = false;
+        for (const src of sources) {
+            try {
+                fs.move(src, dest);
+                changed = true;
+            } catch (e: any) {
+                context.writer.writeError(e.message);
+            }
+        }
+        if (changed) await fs.persist();
     }
 
     private parseArgs(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter((t) => t && !t.startsWith('--') && !t.startsWith('-'));
+        // Flags never reach the value, so a quoted `-name` is a file
+        return splitArgs(raw).filter(Boolean);
     }
 }

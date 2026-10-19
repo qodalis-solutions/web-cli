@@ -212,3 +212,25 @@ describe('CapturingTerminalWriter', () => {
         cw.writeDivider();
     });
 });
+
+describe('CapturingTerminalWriter muted (output into a pipe or file)', () => {
+    it('captures output without showing it, but still shows diagnostics', () => {
+        const inner = createStubWriter();
+        const cw = new CapturingTerminalWriter(inner, { muted: true });
+        cw.writeln('data line');
+        cw.writeJson({ a: 1 });
+        cw.writeError('broken');
+        cw.writeWarning('careful');
+        cw.writeInfo('note');
+        expect(inner.written).toEqual(['[error] broken', '[warn] careful', '[info] note']);
+        expect(cw.getCapturedData()).toEqual({ a: 1 });
+    });
+
+    it('captures tables, lists and key-values as text', () => {
+        const cw = new CapturingTerminalWriter(createStubWriter());
+        cw.writeTable(['Name', 'Status'], [['node', 'up']]);
+        cw.writeList(['one']);
+        cw.writeKeyValue({ URL: 'http://x' });
+        expect(cw.getCapturedData()).toBe('Name  Status\nnode  up\none\nURL: http://x');
+    });
+});

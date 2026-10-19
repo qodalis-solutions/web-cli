@@ -4,7 +4,14 @@ export type ParsedArg = {
 };
 
 export type ParsedToken =
-    | { kind: 'flag'; name: string; value: string | number | boolean; hasEquals: boolean }
+    | {
+          kind: 'flag';
+          name: string;
+          value: string | number | boolean;
+          hasEquals: boolean;
+          /** Written with one dash (`-rf`), so it may be several short flags */
+          short?: boolean;
+      }
     | { kind: 'word'; value: string };
 
 export type CommandParserOutput = {
@@ -150,9 +157,11 @@ export class CommandParser {
      * @returns An object containing the full command name and arguments.
      */
     parse(command: string): CommandParserOutput {
-        // Match quoted strings, single-quoted strings, or unquoted words
+        // Flags (`--name`, `-n`, `--name=value`), then words. A word may
+        // contain quoted parts with spaces (`"hello world"`), kept as one
+        // word with its quotes; a lone quote is an ordinary character.
         const regex =
-            /(?:--?([a-zA-Z0-9-_]+)(?:=("[^"]*"|'[^']*'|[^\s]+))?)|(?:[^\s]+)/g;
+            /(?:(--?)([a-zA-Z0-9-_][^\s="']*)(?:=("[^"]*"|'[^']*'|[^\s]+))?)|(?:(?:"[^"]*"|'[^']*'|[^\s"']|["'](?![^"']*["']))+)/g;
 
         const matches = Array.from(command.matchAll(regex));
 
@@ -165,10 +174,10 @@ export class CommandParser {
         const tokens: ParsedToken[] = [];
 
         for (const match of matches) {
-            if (match[1]) {
-                const key = match[1];
-                const hasEquals = match[2] !== undefined;
-                let value: any = match[2];
+            if (match[2]) {
+                const key = match[2];
+                const hasEquals = match[3] !== undefined;
+                let value: any = match[3];
                 if (value) {
                     // Remove surrounding quotes
                     value = value.replace(/^['"]|['"]$/g, '');
@@ -186,8 +195,10 @@ export class CommandParser {
                     name: key,
                     value: parsedValue,
                     hasEquals,
+                    ...(match[1] === '-' ? { short: true } : {}),
                 });
-            } else if (!match[0].startsWith('-')) {
+            } else if (match[0] === '-' || !match[0].startsWith('-')) {
+                // A lone `-` is an operand (stdin), not a flag
                 commandParts.push(match[0]);
                 tokens.push({ kind: 'word', value: match[0] });
             }

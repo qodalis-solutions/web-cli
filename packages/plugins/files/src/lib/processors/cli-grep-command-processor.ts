@@ -1,3 +1,4 @@
+import { splitArgs } from '../utils/split-args';
 import { readableChildren } from '../utils/readable-children';
 import {
     CliForegroundColor,
@@ -15,6 +16,7 @@ import {
     IFileNode,
 } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { splitLines } from '../utils/lines';
 
 export class CliGrepCommandProcessor implements ICliCommandProcessor {
     command = 'grep';
@@ -67,6 +69,27 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
             required: false,
             type: 'boolean' as const,
         },
+        {
+            name: 'word-regexp',
+            aliases: ['w'],
+            description: 'Match only whole words',
+            required: false,
+            type: 'boolean' as const,
+        },
+        {
+            name: 'only-matching',
+            aliases: ['o'],
+            description: 'Print only the matched parts, one per line',
+            required: false,
+            type: 'boolean' as const,
+        },
+        {
+            name: 'extended-regexp',
+            aliases: ['E'],
+            description: 'Extended regular expressions (patterns always are)',
+            required: false,
+            type: 'boolean' as const,
+        },
     ];
 
     writeDescription(context: ICliExecutionContext): void {
@@ -113,6 +136,11 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
         const invert =
             command.args['invert-match'] || command.args['v'] || false;
 
+        const wordRegexp =
+            command.args['word-regexp'] || command.args['w'] || false;
+        const onlyMatching =
+            command.args['only-matching'] || command.args['o'] || false;
+
         const { pattern, paths } = this.parseArgs(command);
         if (!pattern) {
             context.writer.writeError(
@@ -120,34 +148,27 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
             );
             return;
         }
+        let regex: RegExp;
+        try {
+            const source = wordRegexp ? `(?<!\\w)(?:${pattern})(?!\\w)` : pattern;
+            regex = new RegExp(source, ignoreCase ? 'gi' : 'g');
+        } catch {
+            context.writer.writeError(`grep: invalid pattern '${pattern}'`);
+            return;
+        }
         if (paths.length === 0) {
             if (command.data != null) {
-                let regex: RegExp;
-                try {
-                    regex = new RegExp(pattern, ignoreCase ? 'gi' : 'g');
-                } catch {
-                    context.writer.writeError(`grep: invalid pattern '${pattern}'`);
-                    return;
-                }
                 const content = typeof command.data === 'string'
                     ? command.data
                     : JSON.stringify(command.data);
                 this.grepContent(content, null, regex, {
-                    ignoreCase, showLineNum, countOnly, filesOnly, invert,
+                    ignoreCase, showLineNum, countOnly, filesOnly, invert, onlyMatching,
                 }, context, false);
                 return;
             }
             context.writer.writeError(
                 'grep: missing file operand. Usage: grep [options] <pattern> <file>',
             );
-            return;
-        }
-
-        let regex: RegExp;
-        try {
-            regex = new RegExp(pattern, ignoreCase ? 'gi' : 'g');
-        } catch {
-            context.writer.writeError(`grep: invalid pattern '${pattern}'`);
             return;
         }
 
@@ -182,7 +203,7 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
             try {
                 const content = fs.readFile(filePath) ?? '';
                 this.grepContent(content, filePath, regex, {
-                    ignoreCase, showLineNum, countOnly, filesOnly, invert,
+                    ignoreCase, showLineNum, countOnly, filesOnly, invert, onlyMatching,
                 }, context, multiFile);
             } catch (e: any) {
                 context.writer.writeError(`grep: ${filePath}: ${e.message}`);
@@ -200,11 +221,12 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
             countOnly: boolean;
             filesOnly: boolean;
             invert: boolean;
+            onlyMatching: boolean;
         },
         context: ICliExecutionContext,
         multiFile: boolean,
     ): void {
-        const lines = content.split('\n');
+        const lines = splitLines(content);
         let matchCount = 0;
         const matchingLines: { num: number; text: string }[] = [];
 
@@ -238,6 +260,18 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
                     parts.push(context.writer.wrapInColor(String(m.num), CliForegroundColor.Green));
                     parts.push(':');
                 }
+                if (options.onlyMatching && !options.invert) {
+                    regex.lastIndex = 0;
+                    const prefix = parts.join('');
+                    for (const match of m.text.match(regex) ?? []) {
+                        if (match !== '') {
+                            context.writer.writeln(
+                                prefix + context.writer.wrapInColor(match, CliForegroundColor.Red),
+                            );
+                        }
+                    }
+                    continue;
+                }
                 if (!options.invert) {
                     regex.lastIndex = 0;
                     const highlighted = m.text.replace(regex, (match) =>
@@ -256,7 +290,7 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
     ): { pattern: string | null; paths: string[] } {
         const raw = command.value || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
+        const tokens = splitArgs(raw).filter(Boolean);
 
         if (tokens.length === 0) {
             return { pattern: null, paths: [] };

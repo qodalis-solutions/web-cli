@@ -1,4 +1,5 @@
 import { ICliCommandProcessor, ICliServerAuthService_TOKEN } from '@qodalis/cli-core';
+import { Subject } from 'rxjs';
 import { CliJobsCommandProcessor } from '../lib/processors/cli-jobs-command-processor';
 import { CliJobNameCompletionProvider } from '../lib/completion/cli-job-name-completion-provider';
 import { CliJobsService } from '../lib/services/cli-jobs-service';
@@ -58,7 +59,7 @@ interface FakeServer {
 
 function createContext(
     servers: FakeServer[],
-    opts: { authService?: any; readLines?: (string | null)[]; confirm?: boolean } = {},
+    opts: { authService?: any; readLines?: (string | null)[]; confirm?: boolean | null } = {},
 ) {
     const connections = new Map<string, any>();
     for (const s of servers) {
@@ -82,6 +83,8 @@ function createContext(
         tables: [] as { headers: string[]; rows: string[][] }[],
     };
     const readLines = [...(opts.readLines ?? [])];
+    const onAbort = new Subject<void>();
+    const abortController = new AbortController();
 
     const context: any = {
         services: { get: resolve, getRequired: resolve },
@@ -98,10 +101,12 @@ function createContext(
         },
         reader: {
             readLine: async () => (readLines.length ? readLines.shift()! : ''),
-            readConfirm: async () => opts.confirm ?? true,
+            readConfirm: async () => ('confirm' in opts ? opts.confirm : true),
         },
+        onAbort,
+        signal: abortController.signal,
     };
-    return { context, out };
+    return { context, out, onAbort, abortController };
 }
 
 function jobsProcessor(): ICliCommandProcessor {
@@ -551,6 +556,363 @@ describe('server jobs sub-commands', () => {
         expect(out2.info).toContain('Edit cancelled.');
 
         expect(calls.some((c) => c.method === 'PUT')).toBeFalse();
+    });
+});
+
+// ── Several servers ─────────────────────────────────────────
+
+describe('server jobs with several servers', () => {
+    const servers = [
+        { name: 'one', url: 'http://srv1.test' },
+        { name: 'two', url: 'http://srv2.test' },
+    ];
+
+    it('actions apply to every server that has the job and say it is on several', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`GET ${BASE2}`]: { body: [{ ...JOB, id: 'job-9' }] },
+            [`POST ${BASE}/job-1/trigger`]: {},
+            [`POST ${BASE2}/job-9/trigger`]: {},
+        });
+        const { context, out } = createContext(servers);
+
+        await run('trigger', context, 'cleanup');
+
+        expect(calls.filter((c) => c.method === 'POST').map((c) => c.url)).toEqual([
+            `${BASE}/job-1/trigger`,
+            `${BASE2}/job-9/trigger`,
+        ]);
+        expect(out.success).toEqual([
+            'Job "Cleanup" triggered on server one.',
+            'Job "Cleanup" triggered on server two.',
+        ]);
+        expect(out.info.length).toBe(1);
+        expect(out.info[0]).toContain('is on 2 servers (one, two)');
+        expect(out.info[0]).toContain('--server');
+        expect(out.error).toEqual([]);
+    });
+
+    it('a failure on one server does not stop the action on the others', async () => {
+        installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`GET ${BASE2}`]: { body: [JOB] },
+            [`POST ${BASE}/job-1/stop`]: { status: 500, body: { error: 'boom' } },
+            [`POST ${BASE2}/job-1/stop`]: {},
+        });
+        const { context, out } = createContext(servers);
+
+        await run('stop', context, 'Cleanup');
+
+        expect(out.error).toEqual(['Failed to stop job on one: boom']);
+        expect(out.success).toEqual(['Job "Cleanup" stopped on server two.']);
+    });
+
+    it('--server limits an action to one server even when both have the job', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`GET ${BASE2}`]: { body: [JOB] },
+            [`POST ${BASE2}/job-1/pause`]: {},
+        });
+        const { context, out } = createContext(servers);
+
+        await run('pause', context, 'Cleanup', { server: 'two' });
+
+        expect(calls.every((c) => c.url.startsWith('http://srv2.test'))).toBeTrue();
+        expect(out.success).toEqual(['Job "Cleanup" paused.']);
+        expect(out.info).toEqual([]);
+    });
+
+    it('reports a lookup error and the servers that lack the job', async () => {
+        installFetch({
+            [`GET ${BASE}`]: { status: 500, body: { error: 'down' } },
+            [`GET ${BASE2}`]: { body: [OTHER] },
+        });
+        const { context, out } = createContext(servers);
+
+        await run('resume', context, 'Cleanup');
+
+        expect(out.error).toEqual([
+            'Error on server one: down',
+            'Job "Cleanup" not found on server two.',
+        ]);
+        expect(out.success).toEqual([]);
+    });
+
+    it('info shows the job of every server that has it', async () => {
+        installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`GET ${BASE2}`]: { body: [{ ...JOB, id: 'job-9' }] },
+        });
+        const { context, out } = createContext(servers);
+
+        await run('info', context, 'Cleanup');
+
+        expect(out.lines).toContain('Server: one');
+        expect(out.lines).toContain('Server: two');
+        const text = out.lines.join('\n');
+        expect(text).toContain('job-1');
+        expect(text).toContain('job-9');
+    });
+
+    it('prefers an exact name over a case-insensitive one', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [{ ...JOB, id: 'job-lower', name: 'cleanup' }, JOB] },
+            [`POST ${BASE}/job-1/trigger`]: {},
+        });
+        const { context } = createContext([servers[0]]);
+
+        await run('trigger', context, 'Cleanup');
+
+        expect(calls[1].url).toBe(`${BASE}/job-1/trigger`);
+    });
+
+    it('edit asks for --server when several servers have the job', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`GET ${BASE2}`]: { body: [JOB] },
+        });
+        const { context, out } = createContext(servers, { readLines: ['x'] });
+
+        await run('edit', context, 'Cleanup');
+
+        expect(out.error.length).toBe(1);
+        expect(out.error[0]).toContain('--server');
+        expect(calls.some((c) => c.method === 'PUT')).toBeFalse();
+    });
+});
+
+// ── Edit cancellation ───────────────────────────────────────
+
+describe('server jobs edit cancellation', () => {
+    // description, group, schedule (empty -> interval), interval, retries,
+    // timeout, overlap policy
+    const answers = ['New desc', 'grp', '', '30s', '5', '1m', 'queue'];
+
+    for (let i = 0; i < answers.length; i++) {
+        it(`Ctrl+C at prompt ${i + 1} cancels without sending changes`, async () => {
+            const calls = installFetch({
+                [`GET ${BASE}`]: { body: [JOB] },
+                [`PUT ${BASE}/job-1`]: {},
+            });
+            const readLines: (string | null)[] = [...answers.slice(0, i), null, ...answers.slice(i + 1)];
+            const { context, out } = createContext(
+                [{ name: 'one', url: 'http://srv1.test' }],
+                { readLines, confirm: true },
+            );
+
+            await run('edit', context, 'Cleanup');
+
+            expect(calls.some((c) => c.method === 'PUT')).toBeFalse();
+            expect(out.info).toContain('Edit cancelled.');
+            expect(out.success).toEqual([]);
+        });
+    }
+
+    it('Ctrl+C at the confirmation cancels', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`PUT ${BASE}/job-1`]: {},
+        });
+        const { context, out } = createContext(
+            [{ name: 'one', url: 'http://srv1.test' }],
+            { readLines: ['New desc'], confirm: null },
+        );
+
+        await run('edit', context, 'Cleanup');
+
+        expect(calls.some((c) => c.method === 'PUT')).toBeFalse();
+        expect(out.info).toContain('Edit cancelled.');
+    });
+
+    it('an aborted signal cancels even if the reader answers', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`PUT ${BASE}/job-1`]: {},
+        });
+        const { context, out, abortController } = createContext(
+            [{ name: 'one', url: 'http://srv1.test' }],
+            { confirm: true },
+        );
+        context.reader.readLine = async () => {
+            abortController.abort();
+            return 'typed';
+        };
+
+        await run('edit', context, 'Cleanup');
+
+        expect(calls.some((c) => c.method === 'PUT')).toBeFalse();
+        expect(out.info).toContain('Edit cancelled.');
+    });
+
+    it('all answers given still sends the update', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`PUT ${BASE}/job-1`]: {},
+        });
+        const { context, out } = createContext(
+            [{ name: 'one', url: 'http://srv1.test' }],
+            { readLines: answers, confirm: true },
+        );
+
+        await run('edit', context, 'Cleanup');
+
+        const put = calls.find((c) => c.method === 'PUT')!;
+        expect(put.body).toEqual({
+            description: 'New desc',
+            group: 'grp',
+            interval: '30s',
+            maxRetries: 5,
+            timeout: '1m',
+            overlapPolicy: 'queue',
+        });
+        expect(out.success).toEqual(['Job "Cleanup" updated successfully.']);
+    });
+});
+
+// ── Watch ───────────────────────────────────────────────────
+
+class FakeWebSocket {
+    static instances: FakeWebSocket[] = [];
+    onmessage: ((e: { data: string }) => void) | null = null;
+    onerror: (() => void) | null = null;
+    onclose: (() => void) | null = null;
+    closed = false;
+
+    constructor(public url: string) {
+        FakeWebSocket.instances.push(this);
+    }
+
+    close(): void {
+        this.closed = true;
+    }
+
+    /** The server ends the connection. */
+    serverClose(): void {
+        this.closed = true;
+        this.onclose?.();
+    }
+
+    emit(data: any): void {
+        this.onmessage?.({ data: JSON.stringify(data) });
+    }
+}
+
+async function waitFor(check: () => boolean): Promise<void> {
+    for (let i = 0; i < 100 && !check(); i++) {
+        await new Promise((r) => setTimeout(r, 1));
+    }
+    expect(check()).toBeTrue();
+}
+
+describe('server jobs watch', () => {
+    let originalWebSocket: any;
+
+    beforeEach(() => {
+        originalWebSocket = (window as any).WebSocket;
+        (window as any).WebSocket = FakeWebSocket;
+        FakeWebSocket.instances = [];
+    });
+
+    afterEach(() => {
+        (window as any).WebSocket = originalWebSocket;
+    });
+
+    const servers = [
+        { name: 'one', url: 'https://srv1.test/' },
+        { name: 'two', url: 'http://srv2.test' },
+    ];
+
+    it('prints job events and stops on Ctrl+C (onAbort), closing sockets and unsubscribing', async () => {
+        const { context, out, onAbort } = createContext(servers);
+        const removeSpy = spyOn(context.signal, 'removeEventListener').and.callThrough();
+
+        let finished = false;
+        const watching = run('watch', context).then(() => (finished = true));
+        await waitFor(() => FakeWebSocket.instances.length === 2);
+
+        const [ws1, ws2] = FakeWebSocket.instances;
+        expect(ws1.url).toBe('wss://srv1.test/ws/v1/qcli/events');
+        expect(ws2.url).toBe('ws://srv2.test/ws/v1/qcli/events');
+
+        ws1.emit({ type: 'job:completed', jobId: 'job-1', duration: 1500 });
+        ws1.emit({ type: 'other:event' });
+        expect(out.lines.some((l) => l.includes('[one] completed jobId=job-1 duration=1.5s'))).toBeTrue();
+        expect(out.lines.filter((l) => l.includes('other')).length).toBe(0);
+
+        expect(finished).toBeFalse();
+        onAbort.next();
+        await watching;
+
+        expect(ws1.closed && ws2.closed).toBeTrue();
+        expect(ws1.onmessage).toBeNull();
+        expect(onAbort.observed).toBeFalse();
+        expect(removeSpy).toHaveBeenCalledWith('abort', jasmine.any(Function));
+        expect(out.info).toContain('Stopped watching job events.');
+    });
+
+    it('stops when the abort signal fires', async () => {
+        const { context, out, onAbort, abortController } = createContext([servers[1]]);
+        const watching = run('watch', context);
+        await waitFor(() => FakeWebSocket.instances.length === 1);
+
+        abortController.abort();
+        await watching;
+
+        expect(FakeWebSocket.instances[0].closed).toBeTrue();
+        expect(onAbort.observed).toBeFalse();
+        expect(out.info).toContain('Stopped watching job events.');
+    });
+
+    it('ends when every server closes its connection', async () => {
+        const { context, out, onAbort } = createContext(servers);
+        let finished = false;
+        const watching = run('watch', context).then(() => (finished = true));
+        await waitFor(() => FakeWebSocket.instances.length === 2);
+
+        FakeWebSocket.instances[0].serverClose();
+        await new Promise((r) => setTimeout(r, 5));
+        expect(finished).toBeFalse();
+
+        FakeWebSocket.instances[1].serverClose();
+        await watching;
+
+        expect(out.info).toContain('Connection to server one closed.');
+        expect(out.info).toContain('Connection to server two closed.');
+        expect(out.info).toContain('Stopped watching job events: no server connection left.');
+        expect(onAbort.observed).toBeFalse();
+    });
+
+    it('returns at once when the target server is not connected', async () => {
+        const { context, out } = createContext(servers);
+
+        await run('watch', context, undefined, { server: 'nope' });
+
+        expect(FakeWebSocket.instances.length).toBe(0);
+        expect(out.info).toEqual(['Server "nope" is not connected.']);
+    });
+
+    it('returns at once when already aborted', async () => {
+        const { context, abortController, onAbort } = createContext(servers);
+        abortController.abort();
+
+        await run('watch', context);
+
+        expect(FakeWebSocket.instances.length).toBe(0);
+        expect(onAbort.observed).toBeFalse();
+    });
+
+    it('ends when no socket could be opened', async () => {
+        (window as any).WebSocket = class {
+            constructor() {
+                throw new Error('refused');
+            }
+        };
+        const { context, out } = createContext([servers[1]]);
+
+        await run('watch', context);
+
+        expect(out.error).toEqual(['Failed to connect to two: refused']);
+        expect(out.info).toContain('Stopped watching job events: no server connection left.');
     });
 });
 
