@@ -1,3 +1,4 @@
+import { createCliToken } from '@qodalis/cli-core';
 import {
     CliServerConfig,
     ICliBackgroundServiceRegistry,
@@ -14,7 +15,8 @@ import {
     DefaultServerProvider,
 } from './cli-server-multi-proxy-processor';
 
-export const CliServerManager_TOKEN = 'cli-server-manager';
+export const CliServerManager_TOKEN =
+    createCliToken<CliServerManager>('cli-server-manager');
 
 export class CliServerManager implements DefaultServerProvider {
     readonly connections = new Map<string, CliServerConnection>();

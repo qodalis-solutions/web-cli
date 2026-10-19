@@ -39,8 +39,22 @@ export interface ICliKeyValueStore {
  *
  * State is a plain object (`Record<string, any>`). Updates are shallow-merged
  * (top-level keys are replaced, nested objects are not deep-merged).
- * `getState()` returns a snapshot — mutating the returned object has no effect;
- * always use `updateState()` to change state.
+ * `getState()` returns a shallow copy: assigning its top-level keys has no
+ * effect, and nested objects must not be mutated in place either; always use
+ * `updateState()` to change state.
+ *
+ * Saved state is loaded once, before the store's command first runs (or by
+ * `initialize()`), and merged over the initial state, so keys added to the
+ * initial state later are present. Changes are saved with `persist()`, or
+ * after every change with `autoPersist`.
+ *
+ * A store is global by default: one saved state shared by every terminal and
+ * tab of the browser. A save writes only the top-level keys this terminal
+ * changed (merged into what is saved, under a cross-tab lock), so terminals
+ * changing different keys never overwrite each other; for the same key the
+ * last save wins. Changes saved elsewhere are applied here, except keys
+ * changed here and not saved yet. A store with `scope: 'session'` belongs to
+ * one terminal and is never saved.
  */
 export interface ICliStateStore {
     /**
@@ -77,12 +91,16 @@ export interface ICliStateStore {
     reset(): void;
 
     /**
-     * Persist the state to storage.
+     * Persist the state to storage (does nothing when no storage is available).
      */
     persist(): Promise<void>;
 
     /**
-     * Initialize the state from storage.
+     * Load the saved state, once: later calls resolve when that first load
+     * is done and keep changes made since.
      */
     initialize(): Promise<void>;
+
+    /** Read the saved state again, replacing the current state. */
+    reload?(): Promise<void>;
 }

@@ -1958,10 +1958,9 @@
   <div>
     <h1>State Management</h1>
     <p>
-      The <code>ICliStateStore</code> provides reactive, persistent state scoped
-      to each command processor. State is automatically persisted to
-      <code>localStorage</code> and restored on boot. Access it via
-      <code>context.state</code>.
+      The <code>ICliStateStore</code> holds reactive state scoped to each
+      command processor, saved in the browser (IndexedDB) and restored the next
+      time the terminal starts. Access it with <code>context.state</code>.
     </p>
     <h2>Declaring State</h2>
     <p>
@@ -1970,15 +1969,67 @@
     </p>
     <div class="code-block">
       <pre><code>const myProcessor: ICliCommandProcessor = &#123;
-        command: 'counter',
-        description: 'Persistent counter',
-        stateConfiguration: &#123;
+    command: 'counter',
+    description: 'Persistent counter',
+    stateConfiguration: &#123;
         initialState: &#123; count: 0, lastAction: 'none' &#125;,
-        storeName: 'my-counter', // optional custom key (defaults to command name)
-        &#125;,
-        // ...
-      &#125;;</code></pre>
+        storeName: 'my-counter', // optional (defaults to the command name)
+        autoPersist: true,       // save after every change
+    &#125;,
+    // ...
+&#125;;</code></pre>
     </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Option</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>initialState</code></td>
+          <td>(required)</td>
+          <td>
+            The state before anything is saved. Saved state is merged over it,
+            so keys you add in a later version are present for existing users.
+          </td>
+        </tr>
+        <tr>
+          <td><code>storeName</code></td>
+          <td>command name</td>
+          <td>Key of the store; commands using the same name share it.</td>
+        </tr>
+        <tr>
+          <td><code>autoPersist</code></td>
+          <td><code>false</code></td>
+          <td>
+            Save after every change (changes made in the same tick are saved
+            together). Without it, call <code>persist()</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>scope</code></td>
+          <td><code>'global'</code></td>
+          <td>
+            <code>'global'</code>: saved and shared by every terminal and tab of
+            the browser. <code>'session'</code>: this terminal only, in memory,
+            never saved.
+          </td>
+        </tr>
+        <tr>
+          <td><code>syncAcrossTabs</code></td>
+          <td><code>true</code></td>
+          <td>Apply changes saved by other tabs and terminals right away.</td>
+        </tr>
+        <tr>
+          <td><code>version</code>, <code>migrate</code></td>
+          <td>—</td>
+          <td>Convert saved state when its shape changes (see below).</td>
+        </tr>
+      </tbody>
+    </table>
     <h2>State Store API</h2>
     <table>
       <thead>
@@ -1993,16 +2044,17 @@
           <td><code>getState()</code></td>
           <td><code>getState&lt;T&gt;(): T</code></td>
           <td>
-            Get a shallow copy of the current state. Mutating the returned
-            object has no effect.
+            A shallow copy of the current state. Change state with
+            <code>updateState</code>, not by mutating the result.
           </td>
         </tr>
         <tr>
           <td><code>updateState(partial)</code></td>
           <td><code>updateState(Partial&lt;CliState&gt;): void</code></td>
           <td>
-            Shallow-merge new values. Only provided keys are updated. Triggers
-            subscribers and persists.
+            Shallow-merge new values (only the provided keys change) and notify
+            subscribers. Saved with <code>persist()</code>, or automatically
+            with <code>autoPersist</code>.
           </td>
         </tr>
         <tr>
@@ -2025,37 +2077,87 @@
         <tr>
           <td><code>persist()</code></td>
           <td><code>persist(): Promise&lt;void&gt;</code></td>
-          <td>Manually flush state to storage</td>
+          <td>Save the state (does nothing when no storage is available)</td>
         </tr>
         <tr>
           <td><code>initialize()</code></td>
           <td><code>initialize(): Promise&lt;void&gt;</code></td>
-          <td>Load state from storage (called automatically on boot)</td>
+          <td>
+            Load the saved state, once. Done for you before the command first
+            runs; later calls keep the changes made since.
+          </td>
+        </tr>
+        <tr>
+          <td><code>reload()</code></td>
+          <td><code>reload(): Promise&lt;void&gt;</code></td>
+          <td>Read the saved state again, replacing the current state</td>
         </tr>
       </tbody>
     </table>
     <h2>Example: Counter with Persistent State</h2>
     <div class="code-block">
       <pre><code>async processCommand(command, context) &#123;
-        const state = context.state.getState&lt;&#123; count: number &#125;&gt;();
-        // Read
-        context.writer.writeInfo('Current count: ' + state.count);
-        // Update (shallow merge)
-        context.state.updateState(&#123; count: state.count + 1 &#125;);
-        // Reset
-        // context.state.reset();
-      &#125;</code></pre>
+    const state = context.state.getState&lt;&#123; count: number &#125;&gt;();
+    context.writer.writeInfo('Current count: ' + state.count);
+
+    context.state.updateState(&#123; count: state.count + 1 &#125;);
+    await context.state.persist(); // not needed with autoPersist
+&#125;</code></pre>
+    </div>
+    <h2>Several Terminals and Tabs</h2>
+    <p>
+      A global store has one saved state for the whole browser: every terminal
+      (panel tabs, split panes) and every browser tab reads and writes the same
+      data. Saving is safe when several of them change it:
+    </p>
+    <ul>
+      <li>
+        A save writes the top-level keys this terminal changed, merged into
+        what is saved, under a lock shared by all tabs. Two terminals changing
+        different keys never overwrite each other.
+      </li>
+      <li>
+        Other terminals apply the saved change right away, so the next change
+        they make starts from it. Keys they changed and have not saved yet are
+        kept.
+      </li>
+      <li>
+        For the same key, the last save wins. Keep values that change
+        independently under separate keys (e.g. one key per item) when that
+        matters.
+      </li>
+    </ul>
+    <p>
+      State that only makes sense for one terminal (a cursor, a game in
+      progress) belongs in a <code>scope: 'session'</code> store: it is never
+      saved or shared.
+    </p>
+    <h2>Migrating Saved State</h2>
+    <p>
+      When the shape of your state changes, raise <code>version</code> and
+      convert older saved state in <code>migrate</code>. Saved state without a
+      version counts as version 0. The converted state is saved again.
+    </p>
+    <div class="code-block">
+      <pre><code>stateConfiguration: &#123;
+    initialState: &#123; todos: [] &#125;,
+    version: 1,
+    migrate: (state, fromVersion) =&gt;
+        fromVersion &lt; 1
+            ? &#123; todos: state.items.map((text) =&gt; (&#123; text, done: false &#125;)) &#125;
+            : state,
+&#125;</code></pre>
     </div>
     <h2>Reactive Subscriptions</h2>
     <div class="code-block">
       <pre><code>// Watch a specific slice of state
-        context.state.select(state =&gt; state.count).subscribe(count =&gt; &#123;
-        console.log('Count changed:', count);
-        &#125;);
-        // Watch all state changes
-        context.state.subscribe(state =&gt; &#123;
-        console.log('State updated:', state);
-      &#125;);</code></pre>
+context.state.select(state =&gt; state.count).subscribe(count =&gt; &#123;
+    console.log('Count changed:', count);
+&#125;);
+// Watch all state changes
+context.state.subscribe(state =&gt; &#123;
+    console.log('State updated:', state);
+&#125;);</code></pre>
     </div>
     <h2>Configuration Options</h2>
     <p>
@@ -2109,6 +2211,108 @@
 }
 
 <!-- Notifications -->
+@if (currentTopic === "services") {
+  <div>
+    <h1>Services (DI)</h1>
+    <p>
+      Each terminal has a service container where the CLI and its modules
+      register services by token and look them up with
+      <code>context.services</code>. Modules declare services in
+      <code>services</code>; they can also register them at runtime with
+      <code>context.services.set()</code>.
+    </p>
+    <h2>Typed Tokens</h2>
+    <p>
+      Create tokens with <code>createCliToken</code>, so lookups are typed
+      without a type argument. At runtime a token is its string, and plain
+      string tokens keep working.
+    </p>
+    <div class="code-block">
+      <pre><code>export interface ITodoStore &#123; list(): string[] &#125;
+export const ITodoStore_TOKEN = createCliToken&lt;ITodoStore&gt;('todo-store');
+
+const myModule: ICliModule = &#123;
+    apiVersion: 2,
+    name: 'todo',
+    services: [
+        &#123; provide: ITodoStore_TOKEN, useClass: TodoStore, deps: [ICliHttpClient_TOKEN] &#125;,
+    ],
+    async onInit(context) &#123;
+        const store = context.services.getRequired(ITodoStore_TOKEN); // ITodoStore
+    &#125;,
+&#125;;</code></pre>
+    </div>
+    <p>
+      The built-in tokens (<code>ICliEventBus_TOKEN</code>,
+      <code>ICliKeyValueStore_TOKEN</code>,
+      <code>ICliAuthorizationService_TOKEN</code>, …) are typed.
+    </p>
+    <h2>Providers</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Provider</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>useValue</code></td>
+          <td>Register an existing value</td>
+        </tr>
+        <tr>
+          <td><code>useClass</code> / <code>useFactory</code> + <code>deps</code></td>
+          <td>
+            Created on the first <code>get</code>, with <code>deps</code>
+            resolved then: dependencies only have to be registered by the time
+            the service is used. Dependency cycles are reported.
+          </td>
+        </tr>
+        <tr>
+          <td><code>multi: true</code></td>
+          <td>Collect several providers; <code>getAll(token)</code> returns all</td>
+        </tr>
+        <tr>
+          <td><code>transient: true</code></td>
+          <td>Create a new instance on every <code>get</code></td>
+        </tr>
+        <tr>
+          <td><code>sealed: true</code></td>
+          <td>The token cannot be overridden or removed</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Overriding and Removing</h2>
+    <p>
+      Registering a token again overrides it. <code>remove(token, provider)</code>
+      removes one registration, making the previous one active again;
+      <code>remove(token)</code> removes them all.
+    </p>
+    <div class="code-block">
+      <pre><code>const mine = &#123; provide: ICliHttpClient_TOKEN, useValue: tracingClient &#125;;
+context.services.set(mine);
+// ...
+context.services.remove?.(ICliHttpClient_TOKEN, mine); // the default client is back</code></pre>
+    </div>
+    <h2>Lifecycle</h2>
+    <ul>
+      <li>
+        When a module is unloaded (<code>pkg remove</code>, or before
+        <code>pkg update</code> loads the new version), its commands, guards and
+        permissions are removed, its <code>onDestroy</code> runs, and then the
+        services it declared are removed. Services a module registers itself
+        at runtime should be removed in its <code>onDestroy</code>.
+      </li>
+      <li>
+        When the terminal is destroyed, services the container created
+        (<code>useClass</code> / <code>useFactory</code>) that have a
+        <code>dispose()</code> method are disposed. Values registered with
+        <code>useValue</code> belong to whoever registered them.
+      </li>
+    </ul>
+  </div>
+}
+
 @if (currentTopic === "event-bus") {
   <div>
     <h1>Event Bus</h1>

@@ -460,6 +460,10 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         commandContext.writer = capturingWriter;
 
         try {
+            // The command's saved state is loaded before it first runs
+            // (done once per store; later calls return at once)
+            await commandContext.state.initialize();
+
             const hooks = processor.hooks ?? [];
 
             for (const hook of hooks.filter((h) => h.when === 'before')) {

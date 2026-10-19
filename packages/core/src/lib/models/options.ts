@@ -223,7 +223,52 @@ export type CliStateConfiguration = {
      * @remarks If the store identifier is not set, the processor command name is used
      */
     storeName?: string;
+
+    /**
+     * Save the state after every change, so `persist()` does not have to be
+     * called. Changes made in the same tick are saved together.
+     * @default false
+     */
+    autoPersist?: boolean;
+
+    /**
+     * Version of the state's shape. When the saved state has an older
+     * version, `migrate` converts it while it is loaded. Saved state without
+     * a version counts as version 0.
+     */
+    version?: number;
+
+    /**
+     * Convert saved state of version `fromVersion` to the current
+     * {@link version}. The result is merged over `initialState`.
+     */
+    migrate?: (state: CliState, fromVersion: number) => CliState;
+
+    /**
+     * Apply changes saved by other tabs and terminals of the same browser.
+     * @default true
+     */
+    syncAcrossTabs?: boolean;
+
+    /**
+     * Where the state lives:
+     * - `'global'`: saved in the browser and shared by every terminal and tab
+     *   (each save merges the keys it changed, so terminals changing
+     *   different keys never overwrite each other).
+     * - `'session'`: this terminal only, in memory; never saved or shared.
+     * @default 'global'
+     */
+    scope?: CliStateScope;
 };
+
+/** See {@link CliStateConfiguration.scope}. */
+export type CliStateScope = 'global' | 'session';
+
+/** Options of a state store (see {@link CliStateConfiguration}). */
+export type CliStateStoreOptions = Pick<
+    CliStateConfiguration,
+    'autoPersist' | 'version' | 'migrate' | 'syncAcrossTabs' | 'scope'
+>;
 
 export type CliState = Record<string, any>;
 

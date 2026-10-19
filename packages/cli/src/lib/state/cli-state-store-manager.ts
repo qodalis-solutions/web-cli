@@ -1,4 +1,6 @@
 import {
+    CliState,
+    CliStateStoreOptions,
     ICliCommandProcessor,
     ICliCommandProcessorRegistry,
     ICliServiceProvider,
@@ -11,39 +13,74 @@ export interface ICliStateStoreManager {
     getStateStore(
         name: string,
         defaultState?: Record<string, any>,
+        options?: CliStateStoreOptions,
     ): ICliStateStore;
     getStoreEntries(): { name: string; state: Record<string, any> }[];
 }
 
+/** Channel the stores of all tabs and terminals share saved state on. */
+export const CLI_STATE_SYNC_CHANNEL = 'qodalis-cli-state';
+
+interface CliStateSyncMessage {
+    key: string;
+    state: CliState;
+}
+
 export class CliStateStoreManager implements ICliStateStoreManager {
-    private stores = new Map<string, ICliStateStore>();
+    private stores = new Map<string, CliStateStore>();
+
+    private channel?: BroadcastChannel;
 
     constructor(
         private readonly services: ICliServiceProvider,
         private readonly registry: ICliCommandProcessorRegistry,
     ) {}
 
+    /**
+     * Get (or create) the store `name`. Defaults and options passed for a
+     * store that already exists are added to it: a store read early (e.g.
+     * by the boot report) still gets its command's initial state.
+     */
     public getStateStore(
         name: string,
         defaultState?: Record<string, any>,
+        options?: CliStateStoreOptions,
     ): ICliStateStore {
-        if (!this.stores.has(name)) {
-            this.stores.set(
+        let store = this.stores.get(name);
+        if (!store) {
+            store = new CliStateStore(
+                this.services,
                 name,
-                new CliStateStore(this.services, name, defaultState ?? {}),
+                defaultState ?? {},
+                options,
             );
+            store.onPersisted = (key, state) => this.publish(key, state);
+            this.stores.set(name, store);
+            this.listen();
+        } else {
+            if (defaultState) store.applyDefaults(defaultState);
+            if (options) store.setOptions(options);
         }
-        return this.stores.get(name)!;
+        return store;
     }
 
     public getProcessorStateStore(
         processor: ICliCommandProcessor,
     ): ICliStateStore {
         const rootProcessor = this.registry.getRootProcessor(processor);
+        const config = rootProcessor.stateConfiguration;
         return this.getStateStore(
-            rootProcessor.stateConfiguration?.storeName ||
-                rootProcessor.command,
-            rootProcessor.stateConfiguration?.initialState,
+            config?.storeName || rootProcessor.command,
+            config?.initialState,
+            config
+                ? {
+                      autoPersist: config.autoPersist,
+                      version: config.version,
+                      migrate: config.migrate,
+                      syncAcrossTabs: config.syncAcrossTabs,
+                      scope: config.scope,
+                  }
+                : undefined,
         );
     }
 
@@ -63,11 +100,38 @@ export class CliStateStoreManager implements ICliStateStoreManager {
      * Called during engine teardown.
      */
     dispose(): void {
-        this.stores.forEach((store) => {
-            if ((store as CliStateStore).dispose) {
-                (store as CliStateStore).dispose();
-            }
-        });
+        this.stores.forEach((store) => store.dispose());
         this.stores.clear();
+        this.channel?.close();
+        this.channel = undefined;
+    }
+
+    /** Tell other tabs and terminals that a store was saved. */
+    private publish(key: string, state: CliState): void {
+        const store = [...this.stores.values()].find((s) => s.key === key);
+        if (!this.channel || !store?.syncAcrossTabs) return;
+        try {
+            this.channel.postMessage({ key, state } as CliStateSyncMessage);
+        } catch {
+            // State that cannot be cloned is still saved, just not shared
+        }
+    }
+
+    private listen(): void {
+        if (this.channel || typeof BroadcastChannel === 'undefined') return;
+        try {
+            this.channel = new BroadcastChannel(CLI_STATE_SYNC_CHANNEL);
+        } catch {
+            return;
+        }
+        this.channel.onmessage = (event: MessageEvent<CliStateSyncMessage>) => {
+            const { key, state } = event.data ?? ({} as CliStateSyncMessage);
+            if (!key || !state || typeof state !== 'object') return;
+            for (const store of this.stores.values()) {
+                if (store.key === key && store.syncAcrossTabs) {
+                    store.applySaved(state);
+                }
+            }
+        };
     }
 }

@@ -15,6 +15,14 @@ export class CliPermissionRegistry implements ICliPermissionRegistry {
         }
     }
 
+    unregister(module: string): void {
+        for (const [key, def] of this.definitions) {
+            if (def.module === module) {
+                this.definitions.delete(key);
+            }
+        }
+    }
+
     list(): CliPermissionDefinition[] {
         return [...this.definitions.values()].sort((a, b) => a.name.localeCompare(b.name));
     }

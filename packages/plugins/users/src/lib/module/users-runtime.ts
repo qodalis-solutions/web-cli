@@ -15,6 +15,7 @@ import {
     ICliUserEventService_TOKEN,
     ICliUserSessionService_TOKEN,
     ICliUsersStoreService_TOKEN,
+    CliProvider,
 } from '@qodalis/cli-core';
 import { Subscription } from 'rxjs';
 import {
@@ -85,6 +86,8 @@ export async function createUsersRuntime(
     context: ICliExecutionContext,
     config: CliUsersModuleConfig,
 ): Promise<CliUsersRuntime> {
+    /** Services registered below, removed when the plugin is destroyed. */
+    const registered: CliProvider[] = [];
     const kv = context.services.getRequired<ICliKeyValueStore>(
         ICliKeyValueStore_TOKEN,
     );
@@ -143,11 +146,13 @@ export async function createUsersRuntime(
                 }
             },
         };
-        context.services.set({
+        const tokenProviderRegistration: CliProvider = {
             provide: ICliServerAuthTokenProvider_TOKEN,
             useValue: tokenProvider,
             multi: true,
-        });
+        };
+        context.services.set(tokenProviderRegistration);
+        registered.push(tokenProviderRegistration);
 
         // Any 401 (except a failed login) means the stored token is no longer valid.
         // Only a request made with the current token says so: ending the previous
@@ -241,7 +246,7 @@ export async function createUsersRuntime(
     );
     const authorization = new CliUsersAuthorizationService(session);
 
-    context.services.set([
+    const provided: CliProvider[] = [
         { provide: CliUsersModuleConfig_TOKEN, useValue: config },
         { provide: ICliUserEventService_TOKEN, useValue: events },
         { provide: ICliUserSessionService_TOKEN, useValue: session },
@@ -256,7 +261,9 @@ export async function createUsersRuntime(
             provide: ICliPermissionService_TOKEN,
             useValue: new CliDefaultPermissionService(authorization),
         },
-    ]);
+    ];
+    context.services.set(provided);
+    registered.push(...provided);
 
     const runtime: CliUsersRuntime = {
         config,
@@ -275,7 +282,14 @@ export async function createUsersRuntime(
         serverName,
         terminate: async () => {},
         subscriptions: [],
-        disposers: [],
+        // When the plugin is unloaded, the services it registered go with it
+        disposers: [
+            () => {
+                for (const provider of registered) {
+                    context.services.remove?.(provider.provide, provider);
+                }
+            },
+        ],
     };
     const published = publishUserEvents(events.events$, context.events);
     if (published) runtime.subscriptions.push(published);

@@ -231,7 +231,13 @@ export const usersModule: ICliUsersModule = {
         }
     },
 
-    async onDestroy() {
+    async onDestroy(context) {
+        // The deny-all placeholder from onInit goes too: once the runtime's
+        // authorization service is removed it would become active again
+        context?.services.remove?.(
+            ICliAuthorizationService_TOKEN,
+            denyAllAuthorization,
+        );
         const runtime = this._runtime;
         if (!runtime) return;
         runtime.subscriptions.forEach((s) => s.unsubscribe());

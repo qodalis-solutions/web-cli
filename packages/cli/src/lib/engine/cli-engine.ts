@@ -469,21 +469,29 @@ export class CliEngine {
                 { dispose?: () => void } | undefined
         )?.dispose?.();
 
-        // 2. Call onDestroy on all registered modules
+        // 2. Call onDestroy on all registered modules, then dispose the
+        //    services the container created (once those hooks are done)
         if (this.bootService && this.executionContext) {
+            const context = this.executionContext;
             const modules = this.bootService.getModuleRegistry().getAll();
+            const destroyed: Promise<unknown>[] = [];
             for (const module of modules) {
-                if (module.onDestroy) {
-                    try {
-                        module.onDestroy(this.executionContext);
-                    } catch (e) {
-                        this.executionContext.logger.error(
-                            `Error in onDestroy for module "${module.name}":`,
-                            e,
-                        );
-                    }
+                if (!module.onDestroy) continue;
+                const report = (e: unknown) =>
+                    context.logger.error(
+                        `Error in onDestroy for module "${module.name}":`,
+                        e,
+                    );
+                try {
+                    destroyed.push(
+                        Promise.resolve(module.onDestroy(context)).catch(report),
+                    );
+                } catch (e) {
+                    report(e);
                 }
             }
+            const services = context.services as { dispose?: () => void };
+            void Promise.all(destroyed).then(() => services.dispose?.());
         }
 
         if (this.resizeListener) {

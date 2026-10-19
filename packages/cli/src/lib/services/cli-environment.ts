@@ -1,3 +1,4 @@
+import { createCliToken } from '@qodalis/cli-core';
 /**
  * Global environment variable store for the CLI session.
  *
@@ -22,7 +23,8 @@ export interface ICliEnvironment {
     has(name: string): boolean;
 }
 
-export const ICliEnvironment_TOKEN = 'cli-environment';
+export const ICliEnvironment_TOKEN =
+    createCliToken<ICliEnvironment>('cli-environment');
 
 /** What one user (or the signed-out session, key '') changed: values set and defaults removed. */
 export interface CliEnvironmentProfile {

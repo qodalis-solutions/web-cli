@@ -1,6 +1,13 @@
-import { ICliModule, ICliCommandProcessor } from '@qodalis/cli-core';
+import {
+    ICliModule,
+    ICliCommandProcessor,
+    ICliCommandGuard_TOKEN,
+    ICliPermissionRegistry_TOKEN,
+} from '@qodalis/cli-core';
 import { CliBoot } from '../lib/services/cli-boot';
 import { CliKeyValueStore_TOKEN } from '../lib/tokens';
+import { CliServiceContainer } from '../lib/services/cli-service-container';
+import { CliPermissionRegistry } from '../lib/services/cli-permission-registry';
 
 // ---------------------------------------------------------------------------
 // Minimal mocks — only the parts topologicalSort and bootModule need
@@ -608,6 +615,104 @@ describe('CliBoot', () => {
 
             expect(removed).toEqual(['demo']);
             expect(bootCount).toBe(2);
+        });
+    });
+
+    describe('unloadModule cleanup', () => {
+        let container: CliServiceContainer;
+        let permissions: CliPermissionRegistry;
+        let context: any;
+
+        const flush = () => new Promise<void>((r) => setTimeout(r, 0));
+
+        beforeEach(() => {
+            container = new CliServiceContainer();
+            permissions = new CliPermissionRegistry();
+            container.set([
+                { provide: CliKeyValueStore_TOKEN, useValue: {} },
+                { provide: ICliPermissionRegistry_TOKEN, useValue: permissions },
+                { provide: 'logger', useValue: 'core' },
+            ]);
+            boot = new CliBoot(registry, container);
+            context = createMockContext(createMockWriter());
+            (boot as any).context = context;
+        });
+
+        const pluginModule = (version: string, destroyed?: string[]): ICliModule => {
+            const guard = { name: `guard-${version}`, canActivate: () => true };
+            return {
+                name: '@qodalis/cli-plugin',
+                apiVersion: 2,
+                version,
+                services: [
+                    { provide: 'plugin-service', useValue: version },
+                    { provide: 'logger', useValue: `plugin-${version}` },
+                ],
+                guards: [guard],
+                permissions: [{ name: 'plugin:run', description: 'Run' }],
+                processors: [],
+                onDestroy: async (ctx) => {
+                    destroyed?.push(
+                        `${version}:${ctx.services ? 'ctx' : ''}:${container.get('plugin-service')}`,
+                    );
+                },
+            };
+        };
+
+        it('removes services, guards and permissions and calls onDestroy', async () => {
+            const destroyed: string[] = [];
+            const module = pluginModule('1', destroyed);
+            await (boot as any).bootModule(module, context);
+            expect(container.get('plugin-service')).toBe('1');
+            expect(container.get('logger')).toBe('plugin-1');
+            expect(container.getAll(ICliCommandGuard_TOKEN).length).toBe(1);
+            expect(permissions.get('plugin:run')).toBeDefined();
+
+            (boot as any).unloadModule(module);
+            // Guards and permissions go at once
+            expect(container.getAll(ICliCommandGuard_TOKEN)).toEqual([]);
+            expect(permissions.get('plugin:run')).toBeUndefined();
+            await flush();
+
+            // onDestroy ran while its services were still there
+            expect(destroyed).toEqual(['1:ctx:1']);
+            expect(container.has('plugin-service')).toBeFalse();
+            // The overridden service is the core one again
+            expect(container.get('logger')).toBe('core');
+        });
+
+        it('keeps the services of a newer version registered meanwhile', async () => {
+            const v1 = pluginModule('1');
+            const v2 = pluginModule('2');
+            await (boot as any).bootModule(v1, context);
+
+            (boot as any).unloadModule(v1);
+            await (boot as any).bootModule(v2, context);
+            await flush();
+
+            expect(container.get('plugin-service')).toBe('2');
+            expect(container.get('logger')).toBe('plugin-2');
+            expect(
+                container.getAll<any>(ICliCommandGuard_TOKEN).map((g) => g.name),
+            ).toEqual(['guard-2']);
+            expect(permissions.get('plugin:run')).toBeDefined();
+        });
+
+        it('still removes the services when onDestroy fails', async () => {
+            const errors: unknown[] = [];
+            context.logger.error = (...args: unknown[]) => errors.push(args);
+            const module: ICliModule = {
+                ...pluginModule('1'),
+                onDestroy: async () => {
+                    throw new Error('boom');
+                },
+            };
+            await (boot as any).bootModule(module, context);
+            (boot as any).unloadModule(module);
+            await flush();
+
+            expect(errors.length).toBe(1);
+            expect(container.has('plugin-service')).toBeFalse();
         });
     });
 

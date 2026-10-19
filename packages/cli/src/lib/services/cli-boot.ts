@@ -17,9 +17,11 @@ import {
     CliEventType,
     ICliEventBus,
     ICliEventBus_TOKEN,
+    CliProvider,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION as CLI_VERSION, API_VERSION } from '../version';
-import { CliKeyValueStore_TOKEN } from '../tokens';
+import { CliKeyValueStore_TOKEN, CliStateStoreManager_TOKEN } from '../tokens';
+import { ICliStateStoreManager } from '../state/cli-state-store-manager';
 import { CliExecutionContext } from '../context/cli-execution-context';
 import { CliCommandExecutionContext } from '../context/cli-command-execution-context';
 import { CliBootLog } from './cli-boot-log';
@@ -31,6 +33,10 @@ export class CliBoot {
     private readonly moduleRegistry: CliModuleRegistry;
     private readonly bootedModules = new Set<string>();
     private readonly initializedProcessors = new Set<ICliCommandProcessor>();
+    /** Services and guards each module registered, removed when it is unloaded. */
+    private readonly moduleProviders = new Map<string, CliProvider[]>();
+    /** Context modules were booted with (passed to `onDestroy` on unload). */
+    private context?: CliExecutionContext;
     /** Boot report of the startup boot. */
     private bootLogRef?: CliBootLog;
 
@@ -82,6 +88,7 @@ export class CliBoot {
         context: CliExecutionContext,
         modules: ICliModule[],
     ): Promise<void> {
+        this.context = context;
         // Wire module registry warnings through the context logger
         this.moduleRegistry.onWarn = (msg) => context.logger.warn(msg);
 
@@ -210,19 +217,20 @@ export class CliBoot {
         module: ICliModule,
         context: CliExecutionContext,
     ): void {
-        if (module.services && module.services.length > 0) {
-            this.services.set(module.services);
-        }
+        const providers: CliProvider[] = [...(module.services ?? [])];
 
         // Guards are multi-providers: the executor runs them before every command
-        if (module.guards && module.guards.length > 0) {
-            this.services.set(
-                module.guards.map((guard) => ({
-                    provide: ICliCommandGuard_TOKEN,
-                    useValue: guard,
-                    multi: true,
-                })),
-            );
+        for (const guard of module.guards ?? []) {
+            providers.push({
+                provide: ICliCommandGuard_TOKEN,
+                useValue: guard,
+                multi: true,
+            });
+        }
+
+        if (providers.length > 0) {
+            this.services.set(providers);
+            this.moduleProviders.set(module.name, providers);
         }
 
         if (module.permissions && module.permissions.length > 0) {
@@ -340,6 +348,13 @@ export class CliBoot {
         this.bootLog?.ok(`Set up ${module.name}${detail}`, durationMs);
     }
 
+    /**
+     * Unload a module (`pkg remove`, or before `pkg update` boots the new
+     * version): its commands, guards and permissions are removed at once,
+     * then `onDestroy` runs, then its services are removed (so `onDestroy`
+     * can still use them). Services are removed by registration, so a newer
+     * version registered meanwhile keeps its own.
+     */
     private unloadModule(module: ICliModule): void {
         this.emitEvent('module:unloaded', { name: module.name }, module.name);
         for (const processor of module.processors ?? []) {
@@ -347,6 +362,47 @@ export class CliBoot {
             this.initializedProcessors.delete(processor);
         }
         this.bootedModules.delete(module.name);
+
+        const providers = this.moduleProviders.get(module.name) ?? [];
+        this.moduleProviders.delete(module.name);
+        const guards = providers.filter(
+            (p) => p.provide === ICliCommandGuard_TOKEN,
+        );
+        const services = providers.filter(
+            (p) => p.provide !== ICliCommandGuard_TOKEN,
+        );
+        this.removeProviders(guards);
+        this.services
+            .get<ICliPermissionRegistry>(ICliPermissionRegistry_TOKEN)
+            ?.unregister?.(module.name);
+
+        const context = this.context;
+        let destroyed: Promise<unknown> = Promise.resolve();
+        if (module.onDestroy && context) {
+            const report = (e: unknown) =>
+                context.logger.error(
+                    `Error in onDestroy for module "${module.name}":`,
+                    e,
+                );
+            try {
+                destroyed = Promise.resolve(module.onDestroy(context)).catch(
+                    report,
+                );
+            } catch (e) {
+                report(e);
+            }
+        }
+        void destroyed.then(() => this.removeProviders(services));
+    }
+
+    private removeProviders(providers: CliProvider[]): void {
+        for (const provider of providers) {
+            try {
+                this.services.remove?.(provider.provide, provider);
+            } catch {
+                // sealed meanwhile: keep it
+            }
+        }
     }
 
     /** Publish on the event bus; never lets the bus break booting. */
@@ -552,6 +608,13 @@ export class CliBoot {
                     await processorContext.state.initialize();
 
                     await p.initialize(processorContext);
+                } else if (p.stateConfiguration) {
+                    // Load saved state for commands without `initialize`
+                    // too, so readers (completion, other modules) see it
+                    await this.services
+                        .get<ICliStateStoreManager>(CliStateStoreManager_TOKEN)
+                        ?.getProcessorStateStore(p)
+                        .initialize();
                 }
 
                 this.initializedProcessors.add(p);

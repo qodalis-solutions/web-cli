@@ -1,3 +1,4 @@
+import { createCliToken } from '../models/services';
 import { Observable } from 'rxjs';
 
 /**
@@ -188,4 +189,4 @@ export type CustomEventType<K extends string> = K extends CliEventType
     : K;
 
 /** Service token of the terminal's {@link ICliEventBus}. */
-export const ICliEventBus_TOKEN = 'cli-event-bus';
+export const ICliEventBus_TOKEN = createCliToken<ICliEventBus>('cli-event-bus');

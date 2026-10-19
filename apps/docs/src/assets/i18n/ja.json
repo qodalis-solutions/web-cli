@@ -92,6 +92,7 @@
   "sidebar.http-client": "HTTP Client",
   "sidebar.background-services": "Background Services",
   "sidebar.state-management": "State Management",
+  "sidebar.services": "Services (DI)",
   "sidebar.event-bus": "Event Bus",
   "sidebar.notifications": "Notifications",
   "sidebar.command-guards": "Command Guards",
