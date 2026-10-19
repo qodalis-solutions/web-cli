@@ -3,7 +3,7 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## v2.0.0-beta.18
 
 ### Repository
 
