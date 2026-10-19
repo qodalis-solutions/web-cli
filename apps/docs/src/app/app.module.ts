@@ -1,4 +1,4 @@
-import { NgModule, provideZoneChangeDetection } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
@@ -29,8 +29,7 @@ export function HttpLoaderFactory(http: HttpClient) {
             },
         }),
     ],
-    // Angular 21 is zoneless by default; the docs keep zone.js change detection.
-    providers: [provideZoneChangeDetection()],
+    providers: [],
     bootstrap: [AppComponent],
 })
 export class AppModule {}

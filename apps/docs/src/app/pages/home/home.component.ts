@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject } from '@angular/core';
 import { CliLogLevel, CliOptions, ICliModule } from '@qodalis/cli-core';
 import { usersModule } from '@qodalis/cli-users';
 import { guidModule } from '@qodalis/cli-guid';
@@ -77,6 +77,8 @@ export type Framework = 'angular' | 'react' | 'vue' | 'vanilla';
     styleUrls: ['./home.component.sass'],
 })
 export class HomeComponent {
+    private readonly cdr = inject(ChangeDetectorRef);
+
     @ViewChild('terminalSection') terminalSection!: ElementRef;
 
     modules: ICliModule[] = [
@@ -242,7 +244,10 @@ await engine.start();`,
     copyInstall(): void {
         navigator.clipboard.writeText(this.installCommand);
         this.copied = true;
-        setTimeout(() => (this.copied = false), 2000);
+        setTimeout(() => {
+            this.copied = false;
+            this.cdr.markForCheck();
+        }, 2000);
     }
 
     private toPluginInfo(p: PluginData): PluginInfo {

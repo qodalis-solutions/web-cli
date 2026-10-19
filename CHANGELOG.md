@@ -16,14 +16,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Angular (`@qodalis/angular-cli`)
 
-- **Requires Angular 21 or later** (was 16.2). The package is now built with Angular 21; Angular 19 is out of support and its security fixes (XSS sanitization bypasses, `HttpTransferCache` leaks, i18n XSS) only ship for 20.3+, 21.2+ and 22.x.
-- The panel works in zoneless apps, the Angular 21 default, as well as with zone.js. Its templates use the built-in `@if`/`@for` control flow.
+- **Requires Angular 22 or later** (was 16.2). The package is built with Angular 22.2; Angular 19 is out of support and its security fixes (XSS sanitization bypasses, `HttpTransferCache` leaks, i18n XSS, router DoS) only ship for 20.3+, 21.2+ and 22.x.
+- The panel works in zoneless apps, Angular's default since v21, as well as with zone.js. Its templates use the built-in `@if`/`@for` control flow.
 
 ### Security and tooling
 
-- Patched every open Dependabot alert: the lockfile was regenerated, Electron moved from 35 to 44 (`@qodalis/electron-cli` and the desktop demo), Vite to 7.3.7, TypeScript to 5.9, TypeDoc to 0.28, and a few transitive pins (`esbuild` under tsup, `undici` under Nx, `uuid` under sockjs) are overridden to their patched releases. Two stale npm lockfiles were removed.
+- Patched every open Dependabot alert: the lockfile was regenerated, Electron moved from 35 to 44 (`@qodalis/electron-cli` and the desktop demo), Vite to 7.3.7, and `undici` under Nx and `uuid` under sockjs are overridden to their patched releases. Two stale npm lockfiles were removed.
+- TypeScript 6.0, tsup 9 and TypeDoc 0.28 across the monorepo. tsconfig no longer uses the options TypeScript 6 deprecates (`baseUrl`, `downlevelIteration`, `node10` resolution): path mappings are relative and modules resolve with `bundler`.
+- The Angular demo and the docs site run zoneless and no longer load zone.js.
 - `nx serve demo-angular` and `nx serve docs` work again: an open-ended `path-to-regexp` override pulled version 8 into Express 4 (`pathRegexp is not a function`).
-- TypeScript resolves modules with `bundler` resolution, which Angular 21's package entry points need.
+- Plugins created with `create-cli-plugin` point `umd`/`unpkg` at `umd/index.global.js`, the file the build actually writes (was `umd/index.js`).
 
 ### Panel (`@qodalis/cli`, `@qodalis/react-cli`, `@qodalis/vue-cli`, `@qodalis/angular-cli`)
 

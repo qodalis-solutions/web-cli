@@ -48,8 +48,8 @@
     "@vitejs/plugin-react": "^5.1.1",
     "concurrently": "^9.1.2",
     "electron": "^44.9.0",
-    "tsup": "^8.0.0",
-    "typescript": "~5.9.3",
+    "tsup": "^9.0.0",
+    "typescript": "~6.0.3",
     "vite": "^7.3.7",
     "wait-on": "^8.0.0"
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CliOptions, ICliModule } from '@qodalis/cli-core';
 import { PLUGINS, PluginData } from '../../../../data/plugins';
@@ -75,11 +75,14 @@ export class PluginDetailComponent implements OnInit {
     tryItModules: ICliModule[] = [];
     tryItOptions: CliOptions = {};
 
-    constructor(private route: ActivatedRoute) {}
+    constructor(
+        private route: ActivatedRoute,
+        private cdr: ChangeDetectorRef,
+    ) {}
 
     ngOnInit(): void {
         this.route.params.subscribe((params) => {
-            // Briefly clear the plugin so *ngIf="plugin" destroys the entire
+            // Briefly clear the plugin so @if (plugin) destroys the entire
             // template.  This forces Prism-highlighted code blocks AND the
             // <cli> terminal to be recreated with the new plugin's data.
             this.plugin = undefined;
@@ -93,6 +96,8 @@ export class PluginDetailComponent implements OnInit {
                         .filter(Boolean);
                     this.tryItModules = mod ? [mod, ...deps] : [];
                 }
+                // The app is zoneless: a timer does not trigger change detection.
+                this.cdr.markForCheck();
             });
         });
     }
