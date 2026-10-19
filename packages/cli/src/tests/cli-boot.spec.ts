@@ -307,14 +307,12 @@ describe('CliBoot', () => {
                 processors: [],
             };
 
-            await (boot as any).initializeProcessorsInternal(
-                context,
-                [processor],
-            );
-            await (boot as any).initializeProcessorsInternal(
-                context,
-                [processor],
-            );
+            await (boot as any).initializeProcessorsInternal(context, [
+                processor,
+            ]);
+            await (boot as any).initializeProcessorsInternal(context, [
+                processor,
+            ]);
 
             expect(initCount).toBe(1);
         });
@@ -338,10 +336,7 @@ describe('CliBoot', () => {
                 processors: [child],
             };
 
-            await (boot as any).initializeProcessorsInternal(
-                context,
-                [parent],
-            );
+            await (boot as any).initializeProcessorsInternal(context, [parent]);
 
             expect(initialized).toEqual(['parent', 'child']);
         });
@@ -358,10 +353,7 @@ describe('CliBoot', () => {
                 processors: [child],
             };
 
-            await (boot as any).initializeProcessorsInternal(
-                context,
-                [parent],
-            );
+            await (boot as any).initializeProcessorsInternal(context, [parent]);
 
             expect(child.parent).toBe(parent);
         });
@@ -380,10 +372,9 @@ describe('CliBoot', () => {
             };
 
             // Should not throw
-            await (boot as any).initializeProcessorsInternal(
-                context,
-                [badProcessor],
-            );
+            await (boot as any).initializeProcessorsInternal(context, [
+                badProcessor,
+            ]);
 
             expect(logged.length).toBeGreaterThan(0);
             expect(logged[0][0]).toContain('Error initializing processor');
@@ -511,7 +502,8 @@ describe('CliBoot', () => {
 
         it('should register module guards as multi-providers', async () => {
             const registered: any[] = [];
-            services.set = (defs: any) => registered.push(...(Array.isArray(defs) ? defs : [defs]));
+            services.set = (defs: any) =>
+                registered.push(...(Array.isArray(defs) ? defs : [defs]));
             const guardA = { name: 'a', canActivate: () => true };
             const guardB = { name: 'b', canActivate: () => true };
 
@@ -537,11 +529,54 @@ describe('CliBoot', () => {
             services.set = (defs: any) => registered.push(defs);
 
             await (boot as any).bootModule(
-                { name: 'plain', apiVersion: 2, version: '1.0.0', description: 'test', processors: [] },
+                {
+                    name: 'plain',
+                    apiVersion: 2,
+                    version: '1.0.0',
+                    description: 'test',
+                    processors: [],
+                },
                 context,
             );
 
             expect(registered).toEqual([]);
+        });
+    });
+
+    describe('module setup spinner', () => {
+        const setupModule = (): ICliModule => ({
+            name: 'needs-setup',
+            apiVersion: 2,
+            processors: [],
+            onSetup: async () => true,
+        });
+
+        it('does not start a spinner for a module booted after startup', async () => {
+            const context = createMockContext(createMockWriter());
+            const spinner = {
+                isRunning: false,
+                show: jasmine.createSpy('show'),
+                hide: () => {},
+            };
+            context.spinner = spinner;
+
+            await (boot as any).bootModule(setupModule(), context);
+
+            expect(spinner.show).not.toHaveBeenCalled();
+        });
+
+        it('restores the boot spinner after setup during startup', async () => {
+            const context = createMockContext(createMockWriter());
+            const spinner = {
+                isRunning: true,
+                show: jasmine.createSpy('show'),
+                hide: () => {},
+            };
+            context.spinner = spinner;
+
+            await (boot as any).bootModule(setupModule(), context);
+
+            expect(spinner.show).toHaveBeenCalled();
         });
     });
 

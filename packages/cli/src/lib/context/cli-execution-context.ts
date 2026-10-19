@@ -40,7 +40,10 @@ import { CliCommandHistory } from '../services/cli-command-history';
 import { CliExecutionProcess } from './cli-execution-process';
 import { CliStateStoreManager } from '../state/cli-state-store-manager';
 import { CliInputReader } from '../services/cli-input-reader';
-import { BrowserFilePickerProvider, NoopFilePickerProvider } from '../services/file-picker';
+import {
+    BrowserFilePickerProvider,
+    NoopFilePickerProvider,
+} from '../services/file-picker';
 import { CliCompletionEngine } from '../completion/cli-completion-engine';
 import {
     CliLineBuffer,
@@ -62,10 +65,7 @@ export interface CliExecutionContextDeps {
 }
 
 export class CliExecutionContext
-    implements
-        ICliExecutionContext,
-        InputModeHost,
-        CommandLineModeHost
+    implements ICliExecutionContext, InputModeHost, CommandLineModeHost
 {
     public userSession?: ICliUserSession;
 
@@ -171,9 +171,10 @@ export class CliExecutionContext
         this.clipboard = new CliClipboard(this);
         this.process = new CliExecutionProcess(this);
 
-        this.filePickerProvider = typeof document !== 'undefined'
-            ? new BrowserFilePickerProvider()
-            : new NoopFilePickerProvider();
+        this.filePickerProvider =
+            typeof document !== 'undefined'
+                ? new BrowserFilePickerProvider()
+                : new NoopFilePickerProvider();
 
         this.reader = new CliInputReader(this);
 
@@ -231,6 +232,15 @@ export class CliExecutionContext
         this.pushMode(commandLineMode);
 
         this.terminal.onData(async (data) => {
+            // A decorative animation (the welcome greeting) must not swallow
+            // what the user types: stop it and handle the key normally.
+            if (
+                this.textAnimator.isRunning &&
+                !this.progressBar.isRunning &&
+                !this.spinner.isRunning
+            ) {
+                this.textAnimator.cancel?.();
+            }
             if (this.isProgressRunning()) {
                 return;
             }
@@ -261,12 +271,29 @@ export class CliExecutionContext
                 if (!termEl.contains(document.activeElement)) return;
                 if (event.ctrlKey && !event.altKey && !event.metaKey) {
                     const key = event.key.toLowerCase();
-                    if (['f', 's', 'q', 'o', 'k', 'u', 'g', 'r', 'n', 'h'].includes(key)) {
+                    if (
+                        [
+                            'f',
+                            's',
+                            'q',
+                            'o',
+                            'k',
+                            'u',
+                            'g',
+                            'r',
+                            'n',
+                            'h',
+                        ].includes(key)
+                    ) {
                         event.preventDefault();
                     }
                 }
             };
-            window.addEventListener('keydown', this.windowKeydownListener, true);
+            window.addEventListener(
+                'keydown',
+                this.windowKeydownListener,
+                true,
+            );
         }
     }
 
@@ -416,7 +443,10 @@ export class CliExecutionContext
         return !!this.contextProcessor?.onData;
     }
 
-    public enterFullScreenMode(processor: ICliCommandProcessor, options?: CliFullScreenOptions): void {
+    public enterFullScreenMode(
+        processor: ICliCommandProcessor,
+        options?: CliFullScreenOptions,
+    ): void {
         this.fullScreenManager.enter(
             processor,
             this.setContextProcessor,
@@ -442,10 +472,7 @@ export class CliExecutionContext
         return this.timerManager.createInterval(callback, ms);
     }
 
-    public createTimeout(
-        callback: () => void,
-        ms: number,
-    ): ICliManagedTimer {
+    public createTimeout(callback: () => void, ms: number): ICliManagedTimer {
         return this.timerManager.createTimeout(callback, ms);
     }
 
@@ -484,9 +511,10 @@ export class CliExecutionContext
         const hideUserName = usersConfig?.hideUserName ?? false;
 
         // Signed out while an auth module is loaded: say so in the prompt
-        const anonymousName = usersConfig && !this.userSession
-            ? (usersConfig.anonymousName ?? 'anonymous') || undefined
-            : undefined;
+        const anonymousName =
+            usersConfig && !this.userSession
+                ? (usersConfig.anonymousName ?? 'anonymous') || undefined
+                : undefined;
 
         return {
             userName: this.userSession?.displayName,
@@ -519,13 +547,19 @@ export class CliExecutionContext
             this.contextProcessor.onDispose(this);
         }
 
-        (this.backgroundServices as CliBackgroundServiceRegistry).destroyAll().catch(() => {});
+        (this.backgroundServices as CliBackgroundServiceRegistry)
+            .destroyAll()
+            .catch(() => {});
 
         this.timerManager.clearAll();
         this.fullScreenManager.dispose();
 
         if (this.windowKeydownListener) {
-            window.removeEventListener('keydown', this.windowKeydownListener, true);
+            window.removeEventListener(
+                'keydown',
+                this.windowKeydownListener,
+                true,
+            );
             this.windowKeydownListener = undefined;
         }
 

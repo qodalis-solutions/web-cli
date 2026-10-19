@@ -459,8 +459,10 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     } catch (e: any) {
                         if (signal.aborted) return;
                         progressBar.complete();
+                        // Browsers report a registry 404 as a network error, so
+                        // "not found" and "unreachable" look the same here.
                         writer.writeError(
-                            e?.toString() || 'Failed to fetch versions',
+                            `Package ${name} not found, or the registry is unreachable`,
                         );
                     }
                 });

@@ -13,12 +13,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - **Typing ahead works.** Keys typed while a command is still running are held and replayed at the next prompt, in order, including Enter. They used to be echoed into the command's output and appended to the line just submitted (`/$ echo hi` then `help` showed `/$ echo hihelp`). Ctrl+C and Esc discard them, and they are dropped when the command takes over the terminal (games, `nano`).
 - **Up arrow recalls the command you just ran.** After running a command, Up skipped it and showed the one before (and did nothing after the very first command).
+- **Typing right after the page loads works.** Keys typed while the welcome greeting animated (about 3 seconds) were silently dropped; typing now stops the greeting and is handled normally (`ICliTextAnimator.cancel()`).
+- **Installing a plugin with a setup step no longer freezes the terminal.** After `pkg add users` finished its account setup, a spinner kept running and blocked all input; the boot spinner is now restored only when it was showing.
 - **Sub-command aliases receive their value.** `pkg rm guid` (and any aliased sub-command that takes a value) failed with "Value required" because only the full command name was stripped from the input.
 - **`pkg` command:**
   - `pkg remove` really unloads the plugin's commands, and `pkg update` loads the new version without a page reload. Both used to keep the old commands until the page was reloaded. Modules can now be unregistered through `CliModuleRegistry.unregister()` / `onModuleUnregister()`.
   - New aliases: `pkg rm` / `pkg uninstall`, `pkg install`, `pkg list`. `pkg add guid@<version>` installs a specific version.
   - `pkg check`, `pkg update` and `pkg browse` compare versions with semver including prerelease tags, so `2.0.0-beta.9` is older than `2.0.0-beta.18` and a newer installed version is never offered as an "update". `pkg update` with no name prints an updated / up-to-date / failed summary instead of always "All packages updated".
   - `pkg browse` probes all 40 official plugins (was 12) in parallel; `pkg check` checks packages in parallel; `pkg versions` uses the configured registry sources (e.g. Verdaccio) instead of always npmjs.org.
+  - `pkg browse` no longer lists server packages (`@qodalis/cli-server-*`, the dashboard, the core library), which cannot be installed in the browser. Removing a plugin with protected commands (the users plugin) says that they disappear after a reload. Clearer errors for removing an uninstalled package and for unknown packages in `pkg versions`.
   - Extra spaces between names no longer produce an empty package name; help text columns are aligned. The processor is split into an installer, a search module and help helpers.
 
 ### Angular (`@qodalis/angular-cli`)

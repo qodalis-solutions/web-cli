@@ -82,11 +82,14 @@ export class CliBoot {
         // 4. Filter out modules that do not meet the required API version
         const compatible = modules.filter((module) => {
             const modApiVersion = module.apiVersion;
-            if (typeof modApiVersion !== 'number' || modApiVersion < API_VERSION) {
+            if (
+                typeof modApiVersion !== 'number' ||
+                modApiVersion < API_VERSION
+            ) {
                 context.writer.writeWarning(
                     `Plugin "${module.name}" targets API version ${modApiVersion ?? 'unknown'}, ` +
-                    `but this runtime requires API version ${API_VERSION}. Skipping. ` +
-                    `See https://qodalis.com/docs/upgrade-v2`,
+                        `but this runtime requires API version ${API_VERSION}. Skipping. ` +
+                        `See https://qodalis.com/docs/upgrade-v2`,
                 );
                 return false;
             }
@@ -155,7 +158,9 @@ export class CliBoot {
 
         // Auto-register module translations (before onInit so modules can override)
         if (module.translations) {
-            for (const [locale, translations] of Object.entries(module.translations)) {
+            for (const [locale, translations] of Object.entries(
+                module.translations,
+            )) {
                 context.translator.addTranslations(locale, translations);
             }
         }
@@ -184,6 +189,10 @@ export class CliBoot {
             }>(setupKey);
 
             if (!setupState?.installed) {
+                // Hide the boot spinner while the setup prompts run, and bring it
+                // back only if it was showing (a module installed later with
+                // `pkg add` boots without one; showing it would block input).
+                const spinnerWasRunning = !!context.spinner?.isRunning;
                 try {
                     context.spinner?.hide();
                     const success = await module.onSetup(context);
@@ -199,7 +208,9 @@ export class CliBoot {
                         e,
                     );
                 } finally {
-                    context.spinner?.show();
+                    if (spinnerWasRunning) {
+                        context.spinner?.show();
+                    }
                 }
             }
         }
@@ -260,10 +271,23 @@ export class CliBoot {
             description: 'Core CLI services and utilities',
             processors: [...builtinProcessors],
             permissions: [
-                { name: 'system:packages', description: 'Install, update and remove packages (pkg)' },
-                { name: 'system:services', description: 'Start and stop background services' },
-                { name: 'system:eval', description: 'Evaluate JavaScript (eval, also requires allowEval)' },
-                { name: 'shell:execute', description: 'Open a remote shell on a server (ssh)' },
+                {
+                    name: 'system:packages',
+                    description: 'Install, update and remove packages (pkg)',
+                },
+                {
+                    name: 'system:services',
+                    description: 'Start and stop background services',
+                },
+                {
+                    name: 'system:eval',
+                    description:
+                        'Evaluate JavaScript (eval, also requires allowEval)',
+                },
+                {
+                    name: 'shell:execute',
+                    description: 'Open a remote shell on a server (ssh)',
+                },
             ],
         };
     }

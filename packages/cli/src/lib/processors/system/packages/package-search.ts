@@ -17,6 +17,23 @@ export interface PackageRegistryDocument {
     'dist-tags'?: Record<string, string>;
 }
 
+/** Packages under the prefix that are not browser plugins (core library, servers, dashboard). */
+export function isWebPlugin(
+    pkg: { name?: string; keywords?: string[] } | undefined,
+    prefix: string,
+): boolean {
+    if (!pkg?.name?.startsWith(prefix)) return false;
+    const shortName = pkg.name.slice(prefix.length);
+    if (shortName === 'core' || pkg.keywords?.includes('cli-server')) {
+        return false;
+    }
+    // server-logs and server-jobs are web plugins; other server-* packages are not
+    return (
+        !shortName.startsWith('server-') ||
+        KNOWN_PLUGIN_SHORT_NAMES.includes(shortName)
+    );
+}
+
 const FALLBACK_REGISTRY = { name: 'npm', url: 'https://registry.npmjs.org/' };
 
 /**
@@ -59,11 +76,7 @@ export async function collectAvailablePackages(
             );
             const data = JSON.parse(response.content || '{}');
             for (const { package: pkg } of data.objects || []) {
-                if (
-                    !pkg?.name?.startsWith(prefix) ||
-                    pkg.name === `${prefix}core`
-                )
-                    continue;
+                if (!isWebPlugin(pkg, prefix)) continue;
                 merge({
                     name: pkg.name,
                     shortName: pkg.name.slice(prefix.length),

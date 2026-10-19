@@ -2,6 +2,7 @@ import { ScriptLoaderService } from '../lib/services/script-loader';
 import {
     collectAvailablePackages,
     fetchRegistryDocument,
+    isWebPlugin,
 } from '../lib/processors/system/packages/package-search';
 import { resolveBundlePath } from '../lib/processors/system/packages/package-installer';
 
@@ -86,6 +87,26 @@ describe('pkg package-search', () => {
                 () => {},
             );
             expect(result).toEqual([]);
+        });
+    });
+
+    describe('isWebPlugin', () => {
+        it('excludes the core library, servers and the dashboard', () => {
+            const is = (name: string, keywords?: string[]) =>
+                isWebPlugin({ name, keywords }, PREFIX);
+            expect(is('@qodalis/cli-guid')).toBeTrue();
+            expect(is('@qodalis/cli-server-logs')).toBeTrue();
+            expect(is('@qodalis/cli-server-jobs')).toBeTrue();
+            expect(is('@qodalis/cli-core')).toBeFalse();
+            expect(is('@qodalis/cli-server-dashboard')).toBeFalse();
+            expect(is('@qodalis/cli-server-node', ['cli-server'])).toBeFalse();
+            expect(
+                is('@qodalis/cli-server-plugin-weather', [
+                    'cli-server',
+                    'plugin',
+                ]),
+            ).toBeFalse();
+            expect(is('unrelated')).toBeFalse();
         });
     });
 

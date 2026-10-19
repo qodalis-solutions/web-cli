@@ -209,15 +209,30 @@ export class CliPackageInstaller {
     /** Remove an installed package and its commands. */
     async remove(name: string, context: ICliExecutionContext): Promise<void> {
         const { progressBar, writer } = context;
+
+        if (!(await this.manager.hasPackage(name))) {
+            writer.writeError(`Package ${name} is not installed`);
+            return;
+        }
+
         progressBar.show();
 
         try {
             const pkg = await this.manager.removePackage(name);
-            this.unload(pkg.name);
+            const stillLoaded = this.unload(pkg.name);
             progressBar.complete();
             writer.writeSuccess(
                 `Package ${pkg.name}@${pkg.version} removed successfully`,
             );
+            if (stillLoaded.length > 0) {
+                // Sealed commands (e.g. the users plugin's login/whoami) cannot be
+                // unregistered at runtime; they are gone after a reload.
+                writer.writeInfo(
+                    stillLoaded.length === 1
+                        ? `Reload the page to finish removing it: ${stillLoaded[0]} is protected and stays until then`
+                        : `Reload the page to finish removing it: ${stillLoaded.length} of its commands are protected and stay until then`,
+                );
+            }
         } catch (e) {
             progressBar.complete();
             writer.writeError(e?.toString() || 'Unknown error');
@@ -227,17 +242,26 @@ export class CliPackageInstaller {
     /**
      * Remove a loaded package's commands. Bundles register through the module
      * registry; the window global is a fallback for legacy UMD bundles.
+     * Returns the commands that could not be removed (sealed processors).
      */
-    unload(packageName: string): void {
-        if (this.moduleRegistry?.has(packageName)) {
-            this.moduleRegistry.unregister(packageName);
-            return;
-        }
+    unload(packageName: string): string[] {
+        const module = this.moduleRegistry?.getModule(packageName);
         const legacy = (window as any)[packageName] as
             ICliUmdModule | undefined;
-        legacy?.processors?.forEach((processor) =>
-            this.registry?.unregisterProcessor(processor),
-        );
+        const processors = module?.processors ?? legacy?.processors ?? [];
+
+        if (module) {
+            this.moduleRegistry!.unregister(packageName);
+        } else {
+            processors.forEach((processor) =>
+                this.registry?.unregisterProcessor(processor),
+            );
+        }
+
+        const registered = this.registry?.processors ?? [];
+        return processors
+            .filter((p) => registered.includes(p))
+            .map((p) => p.command);
     }
 
     /**
