@@ -300,7 +300,9 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             globalParams.forEach((param) => {
-                this.writeParameter(param, context, isNarrow(context));
+                // --help, --version, --context: translated by the language packs
+                const description = t.t(`cli.help.global_${param.name}`, param.description);
+                this.writeParameter({ ...param, description }, context, isNarrow(context));
             });
         }
 
