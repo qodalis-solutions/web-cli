@@ -44,12 +44,22 @@ export class ServerVersionNegotiator {
     static async discover(
         baseUrl: string,
         headers?: CliHeadersProvider,
+        options?: {
+            /** Rethrow when the server cannot be reached (instead of `null`, "no discovery") */
+            rethrowNetworkErrors?: boolean;
+        },
     ): Promise<{ apiVersion: number; basePath: string } | null> {
+        let response: Response;
         try {
             const resolved = resolveHeaders(headers);
-            const response = await fetch(`${baseUrl}${VERSIONS_ENDPOINT}`, {
+            response = await fetch(`${baseUrl}${VERSIONS_ENDPOINT}`, {
                 headers: Object.keys(resolved).length > 0 ? resolved : undefined,
             });
+        } catch (e) {
+            if (options?.rethrowNetworkErrors) throw e;
+            return null;
+        }
+        try {
             if (!response.ok) return null;
 
             const info: ServerVersionInfo = await response.json();

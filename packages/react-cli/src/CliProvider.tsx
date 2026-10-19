@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { ICliCommandProcessor, ICliModule } from '@qodalis/cli-core';
-import { CliEngineOptions } from '@qodalis/cli';
+import { CliEngineOptions, resolveCliHostConfig } from '@qodalis/cli';
 import { CliContext } from './CliContext';
 import { useCliConfig } from './CliConfigContext';
 import { useCliEngine } from './useCliEngine';
@@ -24,12 +24,7 @@ export function CliProvider({
 }: CliProviderProps): React.JSX.Element {
     const config = useCliConfig();
     const containerRef = useRef<HTMLDivElement>(null);
-    const engine = useCliEngine(containerRef, {
-        modules: modules ?? config.modules,
-        processors: processors ?? config.processors,
-        options: options ?? config.options,
-        services: services ?? config.services,
-    });
+    const engine = useCliEngine(containerRef, resolveCliHostConfig({ modules, processors, options, services }, config));
 
     return (
         <CliContext.Provider value={{ engine }}>

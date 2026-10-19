@@ -1,8 +1,12 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -17,6 +21,23 @@ export class CliStatCommandProcessor implements ICliCommandProcessor {
     metadata = { icon: '📊', module: 'file management' };
 
     parameters = [];
+
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.stat.help.show_details_about_files', 'Show details about files or directories: full path, size, type, permissions, owner, group, and when it was created and last modified.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['stat <path...>', t.t('cli.stat.help.show_details_each_path', 'Show details for each path')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['stat notes.txt', t.t('cli.stat.help.details_one_file', 'Details of one file')],
+            ['stat ~/docs notes.txt', t.t('cli.stat.help.several_paths_once', 'Several paths at once')],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,
@@ -62,6 +83,6 @@ export class CliStatCommandProcessor implements ICliCommandProcessor {
 
     private parsePaths(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
+        return splitArgs(raw).filter(Boolean);
     }
 }

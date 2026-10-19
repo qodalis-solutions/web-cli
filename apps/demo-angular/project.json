@@ -12,7 +12,6 @@
         "outputPath": "dist/demo-angular",
         "index": "apps/demo-angular/src/index.html",
         "main": "apps/demo-angular/src/main.ts",
-        "polyfills": ["zone.js"],
         "tsConfig": "apps/demo-angular/tsconfig.app.json",
         "inlineStyleLanguage": "sass",
         "assets": [

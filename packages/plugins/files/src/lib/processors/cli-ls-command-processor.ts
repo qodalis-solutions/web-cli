@@ -11,6 +11,7 @@ import {
     IFileNode,
 } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { splitArgs } from '../utils/split-args';
 
 export class CliLsCommandProcessor implements ICliCommandProcessor {
     command = 'ls';
@@ -35,6 +36,13 @@ export class CliLsCommandProcessor implements ICliCommandProcessor {
             required: false,
             type: 'boolean' as const,
         },
+        {
+            name: 'human-readable',
+            aliases: ['h'],
+            description: 'With -l, print sizes like 1.5K and 2M',
+            required: false,
+            type: 'boolean' as const,
+        },
     ];
 
     async processCommand(
@@ -44,41 +52,61 @@ export class CliLsCommandProcessor implements ICliCommandProcessor {
         const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
-        const targetPath = command.value || fs.getCurrentDirectory();
+        const paths = splitArgs(command.value || '');
         const showAll = command.args['all'] || command.args['a'];
         const longFormat = command.args['long'] || command.args['l'];
+        this.humanReadable = !!(command.args['human-readable'] || command.args['h']);
+        const targets = paths.length > 0 ? paths : [fs.getCurrentDirectory()];
+        // Down a pipe or into `$(...)`: one name per line, as a shell's ls
+        const piped: string[] = [];
 
-        try {
-            const entries = fs.listDirectory(targetPath);
-            const filtered = showAll
-                ? entries
-                : entries.filter((e) => !e.name.startsWith('.'));
+        targets.forEach((targetPath, index) => {
+            try {
+                const node = fs.getNode(targetPath);
+                const entries =
+                    node && node.type !== 'directory'
+                        ? [{ ...node, name: targetPath }]
+                        : fs.listDirectory(targetPath);
+                const filtered = showAll
+                    ? entries
+                    : entries.filter((e) => !e.name.startsWith('.'));
 
-            if (filtered.length === 0) {
-                return;
-            }
-
-            filtered.sort((a, b) => {
-                if (a.type !== b.type) {
-                    return a.type === 'directory' ? -1 : 1;
+                if (targets.length > 1) {
+                    if (index > 0) context.writer.writeln();
+                    context.writer.writeln(`${targetPath}:`);
                 }
-                return a.name.localeCompare(b.name);
-            });
 
-            if (longFormat) {
-                this.writeLongFormat(filtered, context);
-            } else {
-                this.writeShortFormat(filtered, context);
+                if (filtered.length === 0) {
+                    return;
+                }
+
+                filtered.sort((a, b) => {
+                    if (a.type !== b.type) {
+                        return a.type === 'directory' ? -1 : 1;
+                    }
+                    return a.name.localeCompare(b.name);
+                });
+
+                if (longFormat) {
+                    this.writeLongFormat(filtered, context);
+                } else {
+                    this.writeShortFormat(filtered, context);
+                    piped.push(...filtered.map((e) => e.name));
+                }
+            } catch (e: any) {
+                context.writer.writeError(e.message);
             }
-        } catch (e: any) {
-            context.writer.writeError(e.message);
+        });
+
+        if (!longFormat && piped.length > 0) {
+            context.process.output(piped.join('\n'));
         }
     }
 
     writeDescription(context: ICliExecutionContext): void {
         context.writer.writeln(this.description!);
         context.writer.writeln();
-        context.writer.writeln('Usage: ls [path] [--all] [--long]');
+        context.writer.writeln('Usage: ls [path...] [-a|--all] [-l|--long] [-h|--human-readable]');
     }
 
     private writeLongFormat(
@@ -93,7 +121,12 @@ export class CliLsCommandProcessor implements ICliCommandProcessor {
                 (entry.type === 'directory' ? 'rwxr-xr-x' : 'rw-r--r--');
             const owner = entry.ownership?.uid || '-';
             const group = entry.ownership?.gid || '-';
-            const size = entry.type === 'file' ? entry.size.toString() : '-';
+            const size =
+                entry.type !== 'file'
+                    ? '-'
+                    : this.humanReadable
+                      ? this.formatSize(entry.size)
+                      : entry.size.toString();
             const date = new Date(entry.modifiedAt);
             const dateStr = date.toLocaleDateString('en-US', {
                 month: 'short',
@@ -110,6 +143,20 @@ export class CliLsCommandProcessor implements ICliCommandProcessor {
                 `${typeChar}${perms}  ${owner.padEnd(8)} ${group.padEnd(8)} ${size.padStart(6)}  ${dateStr}  ${name}`,
             );
         }
+    }
+
+    private humanReadable = false;
+
+    private formatSize(bytes: number): string {
+        const units = ['K', 'M', 'G', 'T'];
+        let size = bytes;
+        let unit = '';
+        for (const next of units) {
+            if (size < 1024) break;
+            size /= 1024;
+            unit = next;
+        }
+        return unit ? `${size < 10 ? size.toFixed(1) : Math.round(size)}${unit}` : String(bytes);
     }
 
     private writeShortFormat(

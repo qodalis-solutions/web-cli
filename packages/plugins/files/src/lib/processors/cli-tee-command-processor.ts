@@ -1,15 +1,20 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { pipedText } from '../utils/lines';
 
 export class CliTeeCommandProcessor implements ICliCommandProcessor {
     command = 'tee';
-    description = 'Read from a file and write to output files and stdout';
+    description = 'Copy piped input to files and to the output';
     author = DefaultLibraryAuthor;
     version = LIBRARY_VERSION;
     acceptsRawInput = true;
@@ -26,6 +31,28 @@ export class CliTeeCommandProcessor implements ICliCommandProcessor {
         },
     ];
 
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.tee.help.pass_piped_input_through', 'Pass piped input through unchanged and save a copy of it to every file named, overwriting them or appending with -a. Like Unix tee, it reads only piped input: to copy a file, pipe it in with cat.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['<command> | tee <file...>', t.t('cli.tee.help.show_piped_output_save', 'Show piped output and save it')],
+            ['<command> | tee -a <file>', t.t('cli.tee.help.append_instead_overwriting', 'Append instead of overwriting')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['cat notes.txt | tee copy.txt', t.t('cli.tee.help.show_save_copy', 'Show and save a copy')],
+            ['echo done | tee -a log.txt', t.t('cli.tee.help.add_line_log', 'Add a line to a log')],
+            [
+                'cat source.txt | tee a.txt b.txt',
+                t.t('cli.tee.help.copy_source_txt_txt', 'Copy source.txt into a.txt and b.txt'),
+            ],
+        ]);
+    }
+
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
@@ -34,94 +61,38 @@ export class CliTeeCommandProcessor implements ICliCommandProcessor {
             IFileSystemService_TOKEN,
         );
         const append = command.args['append'] || command.args['a'] || false;
-        const parsed = this.parseArgs(command);
 
-        let content: string;
-
-        if (command.data != null) {
-            // Piped mode: all positional args are output files
-            content =
-                typeof command.data === 'string'
-                    ? command.data
-                    : JSON.stringify(command.data);
-            const outputFiles = this.getAllPaths(command);
-
-            // Write to stdout
-            context.writer.writeln(content);
-
-            // Write to each output file
-            for (const outFile of outputFiles) {
-                if (append && fs.exists(outFile)) {
-                    fs.writeFile(outFile, content, true);
-                } else {
-                    fs.writeFile(outFile, content);
-                }
-            }
-            await fs.persist();
-        } else {
-            // File mode: last arg is input, rest are output
-            if (parsed.outputFiles.length === 0 && !parsed.inputFile) {
-                context.writer.writeError('tee: missing operand');
-                return;
-            }
-
-            if (!parsed.inputFile) {
-                context.writer.writeError('tee: missing input file');
-                return;
-            }
-
-            if (parsed.outputFiles.length === 0) {
-                context.writer.writeError('tee: missing output file');
-                return;
-            }
-
-            if (!fs.exists(parsed.inputFile)) {
-                context.writer.writeError(
-                    `tee: ${parsed.inputFile}: No such file or directory`,
-                );
-                return;
-            }
-
-            content = fs.readFile(parsed.inputFile) || '';
-
-            // Write to stdout
-            context.writer.writeln(content);
-
-            // Write to each output file
-            for (const outFile of parsed.outputFiles) {
-                if (append && fs.exists(outFile)) {
-                    fs.writeFile(outFile, content, true);
-                } else {
-                    fs.writeFile(outFile, content);
-                }
-            }
-
-            await fs.persist();
+        if (command.data == null) {
+            // Unix tee copies standard input; it never reads a file operand
+            context.writer.writeError(
+                "tee: no input: tee copies piped input to files and the output; use 'cat file | tee out.txt'",
+            );
+            context.process.exit(1, { silent: true });
+            return;
         }
+
+        // As Unix tee: the input goes unchanged to the output and to every
+        // file named (overwritten, or appended with -a)
+        const content = pipedText(command.data);
+        context.writer.writeln(content);
+
+        // Files get the text as a line, like a `>` redirect
+        const fileText =
+            content === '' || content.endsWith('\n') ? content : content + '\n';
+        let changed = false;
+        for (const outFile of this.getAllPaths(command)) {
+            try {
+                fs.writeFile(outFile, fileText, append);
+                changed = true;
+            } catch (e: any) {
+                context.writer.writeError(`tee: ${e.message}`);
+            }
+        }
+        if (changed) await fs.persist();
     }
 
     private getAllPaths(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
-    }
-
-    private parseArgs(command: CliProcessCommand): {
-        outputFiles: string[];
-        inputFile: string | null;
-    } {
-        const raw = command.value || '';
-        const paths = raw.split(/\s+/).filter(Boolean);
-
-        // Last path is input file, rest are output files
-        if (paths.length < 2) {
-            return {
-                outputFiles: [],
-                inputFile: paths[0] || null,
-            };
-        }
-
-        const inputFile = paths[paths.length - 1];
-        const outputFiles = paths.slice(0, paths.length - 1);
-        return { outputFiles, inputFile };
+        return splitArgs(raw).filter(Boolean);
     }
 }

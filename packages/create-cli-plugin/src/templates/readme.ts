@@ -29,6 +29,6 @@ ${fence}
 
 Builds two outputs:
 - **Module** (CJS + ESM): \`dist/public-api.js\` and \`dist/public-api.mjs\`
-- **IIFE bundle**: \`dist/umd/index.js\` (for browser runtime loading)
+- **IIFE bundle**: \`dist/umd/index.global.js\` (for browser runtime loading)
 `;
 }

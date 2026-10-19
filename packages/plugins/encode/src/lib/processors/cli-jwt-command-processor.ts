@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliJwtCommandProcessor implements ICliCommandProcessor {
@@ -33,7 +34,7 @@ export class CliJwtCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const token = (command.value ||
+                    const token = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const { writer } = context;

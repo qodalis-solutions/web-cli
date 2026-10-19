@@ -82,4 +82,10 @@ export interface ICliTextAnimator extends ICliProgressBar {
      * @returns A promise that resolves when the animation completes
      */
     showText: (text: string, options?: CliTextAnimatorOptions) => Promise<void>;
+
+    /**
+     * Stop the running animation, erase what it wrote and resolve the
+     * `showText` promise. Optional for backward compatibility.
+     */
+    cancel?: () => void;
 }

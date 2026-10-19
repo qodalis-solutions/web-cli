@@ -7,10 +7,10 @@ export default defineConfig({
     resolve: {
         preserveSymlinks: false,
         alias: {
-            '@qodalis/cli-core': path.resolve(__dirname, '../../dist/core'),
-            '@qodalis/cli': path.resolve(__dirname, '../../dist/cli'),
+            '@qodalis/cli-core': path.resolve(import.meta.dirname, '../../dist/core'),
+            '@qodalis/cli': path.resolve(import.meta.dirname, '../../dist/cli'),
             '@qodalis/react-cli': path.resolve(
-                __dirname,
+                import.meta.dirname,
                 '../../packages/react-cli',
             ),
         },

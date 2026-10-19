@@ -85,6 +85,64 @@ describe('CliCommandProcessorRegistry', () => {
     });
 
     describe('Extension / Merging', () => {
+        it('unregistering an extension removes only the sub-commands it added', () => {
+            const original = createProcessor('server');
+            original.metadata = { sealed: true };
+            original.processors = [
+                { command: 'list', description: 'List', async processCommand() {} },
+            ];
+            const logs = createProcessor('server');
+            logs.extendsProcessor = true;
+            logs.processors = [
+                { command: 'logs', description: 'Logs', async processCommand() {} },
+            ];
+            const jobs = createProcessor('server');
+            jobs.extendsProcessor = true;
+            jobs.processors = [
+                { command: 'jobs', description: 'Jobs', async processCommand() {} },
+            ];
+            registry.registerProcessor(original);
+            registry.registerProcessor(logs);
+            registry.registerProcessor(jobs);
+
+            registry.unregisterProcessor(logs);
+
+            const found = registry.findProcessor('server', []);
+            expect(found).toBe(original);
+            expect(found?.processors?.map((p) => p.command)).toEqual(['list', 'jobs']);
+
+            // Registered again (pkg update): merged again
+            registry.registerProcessor(logs);
+            expect(found?.processors?.map((p) => p.command)).toEqual(['list', 'jobs', 'logs']);
+        });
+
+        it('unregistering an extension never removes an unsealed command it extended', () => {
+            const original = createProcessor('notes');
+            const extension = createProcessor('notes');
+            extension.extendsProcessor = true;
+            extension.processors = [
+                { command: 'export', description: 'Export', async processCommand() {} },
+            ];
+            registry.registerProcessor(original);
+            registry.registerProcessor(extension);
+
+            registry.unregisterProcessor(extension);
+            expect(registry.findProcessor('notes', [])).toBe(original);
+            expect(original.processors).toEqual([]);
+
+            // An extension that merged nothing is a no-op too
+            registry.unregisterProcessor(extension);
+            expect(registry.findProcessor('notes', [])).toBe(original);
+        });
+
+        it('an extension registered without a command to extend is removed normally', () => {
+            const extension = createProcessor('standalone');
+            extension.extendsProcessor = true;
+            registry.registerProcessor(extension);
+            registry.unregisterProcessor(extension);
+            expect(registry.findProcessor('standalone', [])).toBeUndefined();
+        });
+
         it('should merge sub-processors into the existing processor', () => {
             const original = createProcessor('server');
             original.processors = [

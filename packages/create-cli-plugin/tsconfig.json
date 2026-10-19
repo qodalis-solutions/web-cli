@@ -5,8 +5,9 @@
         "declaration": true,
         "declarationMap": true,
         "rootDir": "src",
-        "module": "CommonJS",
-        "moduleResolution": "node"
+        "module": "node16",
+        "moduleResolution": "node16",
+        "types": ["node"]
     },
     "include": ["src/**/*"],
     "exclude": ["**/*.spec.ts"]

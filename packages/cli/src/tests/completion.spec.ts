@@ -481,3 +481,38 @@ describe('CliThemeNameCompletionProvider', () => {
         expect(result).toEqual([]);
     });
 });
+
+describe('CliCompletionEngine with quoted words', () => {
+    it('passes an open quoted word as the token and replaces it whole', async () => {
+        const engine = new CliCompletionEngine();
+        let seen: any;
+        engine.setProviders([
+            {
+                priority: 1,
+                getCompletions: (ctx: any) => {
+                    seen = ctx;
+                    return ctx.tokenIndex === 1 ? ['"my notes.txt"'] : [];
+                },
+            },
+        ]);
+        const input = 'cat "my no';
+        const result = await engine.complete(input, input.length);
+        expect(seen.token).toBe('"my no');
+        expect(seen.tokenStart).toBe(4);
+        expect(seen.tokenIndex).toBe(1);
+        expect(result.action).toBe('complete');
+        expect(result.replacement).toBe('"my notes.txt"');
+        expect(result.tokenStart).toBe(4);
+        expect(result.token).toBe('"my no');
+    });
+
+    it('starts a new token after a closed quoted word and a space', async () => {
+        const engine = new CliCompletionEngine();
+        let seen: any;
+        engine.setProviders([{ priority: 1, getCompletions: (ctx: any) => ((seen = ctx), []) }]);
+        await engine.complete('cp "a b.txt" ', 13);
+        expect(seen.token).toBe('');
+        expect(seen.tokenIndex).toBe(2);
+        expect(seen.tokens).toEqual(['cp', '"a b.txt"']);
+    });
+});

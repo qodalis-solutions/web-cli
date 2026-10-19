@@ -4,6 +4,35 @@ import { CapturingTerminalWriter } from '../services/capturing-terminal-writer';
 const FS_TOKEN = 'cli-file-system-service';
 
 /**
+ * Output as file text: whole lines, as in a Unix shell, so that
+ * `echo a > f; echo b >> f` gives two lines rather than `ab`.
+ */
+/** A redirect target without its quotes: `> "my dir/f.txt"`. */
+function targetPath(filePath: string): string {
+    const path = filePath.trim();
+    return path.length > 1 &&
+        ((path.startsWith('"') && path.endsWith('"')) ||
+            (path.startsWith("'") && path.endsWith("'")))
+        ? path.slice(1, -1)
+        : path;
+}
+
+/**
+ * `> notes/x.txt: No such file or directory`: the redirect and its target,
+ * not the file system call that failed (`touch: /notes: ...`).
+ */
+function redirectError(operator: string, filePath: string, e: unknown): string {
+    const message = String((e as Error)?.message ?? e);
+    const reason = message.includes(': ') ? message.slice(message.lastIndexOf(': ') + 2) : message;
+    return `${operator} ${targetPath(filePath)}: ${reason}`;
+}
+
+function asFileText(output: unknown): string {
+    const text = typeof output === 'string' ? output : JSON.stringify(output);
+    return text === '' || text.endsWith('\n') ? text : text + '\n';
+}
+
+/**
  * Write stdout data to a file (overwrite mode).
  */
 export async function writeOutputToFile(
@@ -24,9 +53,8 @@ export async function writeOutputToFile(
     }
 
     try {
-        const resolved = fs.resolvePath(filePath.trim());
-        const content =
-            typeof output === 'string' ? output : JSON.stringify(output);
+        const resolved = fs.resolvePath(targetPath(filePath));
+        const content = asFileText(output);
         if (fs.exists(resolved)) {
             fs.writeFile(resolved, content); // overwrite (no append flag)
         } else {
@@ -34,7 +62,7 @@ export async function writeOutputToFile(
         }
         await fs.persist();
     } catch (e: any) {
-        context.writer.writeError(`> failed: ${e.message || e}`);
+        context.writer.writeError(redirectError('>', filePath, e));
     }
 }
 
@@ -59,9 +87,8 @@ export async function appendOutputToFile(
     }
 
     try {
-        const resolved = fs.resolvePath(filePath.trim());
-        const content =
-            typeof output === 'string' ? output : JSON.stringify(output);
+        const resolved = fs.resolvePath(targetPath(filePath));
+        const content = asFileText(output);
         if (fs.exists(resolved)) {
             fs.writeFile(resolved, content, true); // append
         } else {
@@ -69,7 +96,7 @@ export async function appendOutputToFile(
         }
         await fs.persist();
     } catch (e: any) {
-        context.writer.writeError(`>> failed: ${e.message || e}`);
+        context.writer.writeError(redirectError('>>', filePath, e));
     }
 }
 
@@ -93,7 +120,7 @@ export async function writeStderrToFile(
     }
 
     try {
-        const resolved = fs.resolvePath(filePath.trim());
+        const resolved = fs.resolvePath(targetPath(filePath));
         if (fs.exists(resolved)) {
             fs.writeFile(resolved, stderr);
         } else {
@@ -101,7 +128,7 @@ export async function writeStderrToFile(
         }
         await fs.persist();
     } catch (e: any) {
-        context.writer.writeError(`2> failed: ${e.message || e}`);
+        context.writer.writeError(redirectError('2>', filePath, e));
     }
 }
 
@@ -125,7 +152,7 @@ export async function appendStderrToFile(
     }
 
     try {
-        const resolved = fs.resolvePath(filePath.trim());
+        const resolved = fs.resolvePath(targetPath(filePath));
         if (fs.exists(resolved)) {
             fs.writeFile(resolved, stderr, true); // append
         } else {
@@ -133,6 +160,6 @@ export async function appendStderrToFile(
         }
         await fs.persist();
     } catch (e: any) {
-        context.writer.writeError(`2>> failed: ${e.message || e}`);
+        context.writer.writeError(redirectError('2>>', filePath, e));
     }
 }

@@ -1,1910 +1,2964 @@
-<nav class="page-toc" *ngIf="toc.length > 1">
-    <span class="toc-label">{{ 'docs.core-concepts.toc-label' | translate }}</span>
-    <a
-        *ngFor="let entry of toc"
+@if (toc.length > 1) {
+  <nav class="page-toc">
+    <span class="toc-label">{{
+      "docs.core-concepts.toc-label" | translate
+    }}</span>
+    @for (entry of toc; track entry) {
+      <a
         class="toc-link"
         (click)="scrollTo(entry.id); $event.preventDefault()"
         href="#"
-    >{{ entry.label }}</a>
-</nav>
+        >{{ entry.label }}</a
+      >
+    }
+  </nav>
+}
 
 <!-- Command Processors -->
-<div *ngIf="currentTopic === 'command-processors'">
-    <h1>{{ 'docs.core-concepts.command-processors.title' | translate }}</h1>
+@if (currentTopic === "command-line") {
+  <div>
+    <h1>{{ "docs.core-concepts.command-line.title" | translate }}</h1>
     <p>
-        {{ 'docs.core-concepts.command-processors.intro' | translate }}
+      {{ "docs.core-concepts.command-line.intro" | translate }}
     </p>
 
-    <h2>{{ 'docs.core-concepts.command-processors.interface-title' | translate }}</h2>
-    <p>{{ 'docs.core-concepts.command-processors.interface-desc' | translate }}</p>
+    <h2>{{ "docs.core-concepts.command-line.words-title" | translate }}</h2>
+    <p>
+      {{ "docs.core-concepts.command-line.words-desc" | translate }}
+    </p>
+    <div class="code-block">
+      <pre><code>cat "my notes.txt"            # one argument: my notes.txt
+grep "two words" notes.txt     # the pattern is: two words
+echo "a --b"                   # prints a --b (no flag b)
+echo "a" "b"                   # prints a b
+echo it's fine                 # a quote without a pair is text
+cat my\ notes.txt              # a backslash keeps the next character: my notes.txt
+echo "say \"hi\""              # say "hi"</code></pre>
+    </div>
+    <p [innerHTML]="'docs.core-concepts.command-line.quotes-escape' | translate"></p>
+    <p [innerHTML]="'docs.core-concepts.command-line.flag-value-quotes' | translate"></p>
+
+    <h2>{{ "docs.core-concepts.command-line.flags-title" | translate }}</h2>
     <table>
-        <thead>
-            <tr>
-                <th>{{ 'docs.core-concepts.command-processors.th-field' | translate }}</th>
-                <th>{{ 'docs.core-concepts.command-processors.th-type' | translate }}</th>
-                <th>{{ 'docs.core-concepts.command-processors.th-description' | translate }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>command</code></td>
-                <td><code>string</code></td>
-                <td>{{ 'docs.core-concepts.command-processors.field-command' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>description</code></td>
-                <td><code>string</code></td>
-                <td>{{ 'docs.core-concepts.command-processors.field-description' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>parameters</code></td>
-                <td><code>ICliCommandParameterDescriptor[]</code></td>
-                <td>{{ 'docs.core-concepts.command-processors.field-parameters' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>processors</code></td>
-                <td><code>ICliCommandProcessor[]</code></td>
-                <td>{{ 'docs.core-concepts.command-processors.field-processors' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>extendsProcessor</code></td>
-                <td><code>boolean</code></td>
-                <td>{{ 'docs.core-concepts.command-processors.field-extends' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>aliases</code></td>
-                <td><code>string[]</code></td>
-                <td>Alternative names for the command (e.g., <code>['h', '?']</code> for <code>help</code>)</td>
-            </tr>
-            <tr>
-                <td><code>author</code></td>
-                <td><code>ICliCommandAuthor</code></td>
-                <td>Author info — <code>&#123; name: string, email: string &#125;</code></td>
-            </tr>
-            <tr>
-                <td><code>version</code></td>
-                <td><code>string</code></td>
-                <td>Semver version string (default: <code>'1.0.0'</code>)</td>
-            </tr>
-            <tr>
-                <td><code>acceptsRawInput</code></td>
-                <td><code>boolean</code></td>
-                <td>When true, text after the command name is captured as <code>command.value</code> instead of being parsed as sub-commands</td>
-            </tr>
-            <tr>
-                <td><code>valueRequired</code></td>
-                <td><code>boolean</code></td>
-                <td>Requires positional value, piped data, or named arguments. Also enables raw input capture.</td>
-            </tr>
-            <tr>
-                <td><code>metadata</code></td>
-                <td><code>CliProcessorMetadata</code></td>
-                <td>Additional metadata: <code>sealed</code>, <code>hidden</code>, <code>icon</code>, <code>requireServer</code>, <code>requiredCoreVersion</code>, <code>requiredCliVersion</code></td>
-            </tr>
-            <tr>
-                <td><code>hooks</code></td>
-                <td><code>ICliProcessorHook[]</code></td>
-                <td>Before/after execution hooks</td>
-            </tr>
-            <tr>
-                <td><code>stateConfiguration</code></td>
-                <td><code>CliStateConfiguration</code></td>
-                <td>Persistent state — <code>&#123; initialState, storeName? &#125;</code>. See <a routerLink="/docs/core-concepts/state-management">State Management</a>.</td>
-            </tr>
-            <tr>
-                <td><code>configurationOptions</code></td>
-                <td><code>ICliConfigurationOption[]</code></td>
-                <td>Settings exposed via the <code>configure</code> command. Each option has <code>key</code>, <code>label</code>, <code>type</code>, <code>defaultValue</code>.</td>
-            </tr>
-            <tr>
-                <td><code>originalProcessor</code></td>
-                <td><code>ICliCommandProcessor?</code></td>
-                <td>Set automatically when <code>extendsProcessor</code> is true — reference to the wrapped processor.</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr><th>{{ "docs.core-concepts.command-line.th-form" | translate }}</th><th>{{ "docs.core-concepts.command-line.th-example" | translate }}</th><th>{{ "docs.core-concepts.command-line.th-meaning" | translate }}</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>{{ "docs.core-concepts.command-line.flag-long" | translate }}</td><td><code>--lines 5</code>, <code>--lines=5</code></td><td [innerHTML]="'docs.core-concepts.command-line.flag-long-desc' | translate"></td></tr>
+        <tr><td>{{ "docs.core-concepts.command-line.flag-short" | translate }}</td><td><code>-n 5</code>, <code>-n5</code></td><td>{{ "docs.core-concepts.command-line.flag-short-desc" | translate }}</td></tr>
+        <tr><td>{{ "docs.core-concepts.command-line.flag-combined" | translate }}</td><td><code>rm -rf dir</code>, <code>ls -la</code></td><td [innerHTML]="'docs.core-concepts.command-line.flag-combined-desc' | translate"></td></tr>
+        <tr><td>{{ "docs.core-concepts.command-line.flag-boolean" | translate }}</td><td><code>--force</code>, <code>--force=false</code></td><td>{{ "docs.core-concepts.command-line.flag-boolean-desc" | translate }}</td></tr>
+        <tr><td>{{ "docs.core-concepts.command-line.flag-dash" | translate }}</td><td><code>paste - b.txt</code></td><td>{{ "docs.core-concepts.command-line.flag-dash-desc" | translate }}</td></tr>
+      </tbody>
+    </table>
+    <p>
+      {{ "docs.core-concepts.command-line.flags-combine-note" | translate }}
+    </p>
+
+    <h2>{{ "docs.core-concepts.command-line.pipes-title" | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-line.pipes-desc' | translate"></p>
+    <div class="code-block">
+      <pre><code>cat app.log | grep error | wc -l
+server list | grep node
+echo hello > greeting.txt     # write (replace) a file, nothing is shown
+echo again >> greeting.txt    # add to the end
+build 2> errors.txt           # errors to a file (2>> to add)</code></pre>
+    </div>
+    <p [innerHTML]="'docs.core-concepts.command-line.redirects-desc' | translate"></p>
+
+    <h2>{{ "docs.core-concepts.command-line.several-title" | translate }}</h2>
+    <table>
+      <thead>
+        <tr><th>{{ "docs.core-concepts.command-line.th-operator" | translate }}</th><th>{{ "docs.core-concepts.command-line.th-runs-next" | translate }}</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>a &amp;&amp; b</code></td><td [innerHTML]="'docs.core-concepts.command-line.op-and' | translate"></td></tr>
+        <tr><td><code>a || b</code></td><td [innerHTML]="'docs.core-concepts.command-line.op-or' | translate"></td></tr>
+        <tr><td><code>a ; b</code></td><td>{{ "docs.core-concepts.command-line.op-always" | translate }}</td></tr>
+      </tbody>
     </table>
 
+    <h2>{{ "docs.core-concepts.command-line.variables-title" | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-line.variables-desc' | translate"></p>
+    <table>
+      <thead>
+        <tr><th>{{ "docs.core-concepts.command-line.th-set-with" | translate }}</th><th>{{ "docs.core-concepts.command-line.th-where" | translate }}</th><th>{{ "docs.core-concepts.command-line.th-saved" | translate }}</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>NAME=value</code></td><td>{{ "docs.core-concepts.command-line.var-terminal-where" | translate }}</td><td>{{ "docs.core-concepts.command-line.var-terminal-saved" | translate }}</td></tr>
+        <tr><td><code>export NAME=value</code></td><td>{{ "docs.core-concepts.command-line.var-user-where" | translate }}</td><td>{{ "docs.core-concepts.command-line.var-saved-yes" | translate }}</td></tr>
+        <tr><td><code>export --global NAME=value</code></td><td>{{ "docs.core-concepts.command-line.var-global-where" | translate }}</td><td>{{ "docs.core-concepts.command-line.var-saved-yes" | translate }}</td></tr>
+      </tbody>
+    </table>
+    <p [innerHTML]="'docs.core-concepts.command-line.variables-precedence' | translate"></p>
+    <p [innerHTML]="'docs.core-concepts.command-line.variables-permissions' | translate"></p>
+    <div class="code-block">
+      <pre><code>GREETING=Hello                    # this terminal
+echo "$GREETING, world"           # Hello, world
+echo '$GREETING'                  # $GREETING
+export EDITOR=nano                # saved for me
+export --global API_URL=https://api.example.com
+export API_URL=http://localhost   # mine wins for me
+env                               # API_URL=http://localhost  # user</code></pre>
+    </div>
+
+    <h2>{{ "docs.core-concepts.command-line.substitution-title" | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-line.substitution-desc' | translate"></p>
+    <div class="code-block">
+      <pre><code>echo "Today is $(date)"
+COUNT=$(cat app.log | grep error | wc -l)
+echo "$COUNT errors"
+cd $(dirname $(find . --name main.ts))</code></pre>
+    </div>
+
+    <h2>{{ "docs.core-concepts.command-line.wildcards-title" | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-line.wildcards-desc' | translate"></p>
+    <div class="code-block">
+      <pre><code>rm *.log               # every .log file here
+cat docs/*.md          # in a folder
+ls file?.txt [ab]*     # one character, or names starting with a or b
+ls */                  # folders only
+cat **/*.md            # at any depth (not inside . folders)
+grep "*" notes.txt     # quoted: the text *</code></pre>
+    </div>
+    <p [innerHTML]="'docs.core-concepts.command-line.braces-desc' | translate"></p>
+
+    <h2>{{ "docs.core-concepts.command-line.scripts-title" | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-line.scripts-desc' | translate"></p>
+    <div class="code-block">
+      <pre><code># backup.sh
+mkdir -p backup
+for f in *.md; do
+  if [ -f "backup/$f" ]; then
+    echo "skip $f"
+    continue
+  fi
+  cp "$f" backup/
+done
+if grep -q TODO notes.md; then echo "notes have TODOs"; fi
+for n in &#123;1..3&#125;; do echo "tick $n"; done
+until [ -f ready.txt ]; do touch ready.txt; done</code></pre>
+    </div>
+    <p [innerHTML]="'docs.core-concepts.command-line.scripts-prompt' | translate"></p>
+    <div class="code-block">
+      <pre><code>for f in *.log; do wc -l "$f"; done
+if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
+    </div>
+    <p [innerHTML]="'docs.core-concepts.command-line.scripts-unsupported' | translate"></p>
+
+    <h2>{{ "docs.core-concepts.command-line.completion-title" | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-line.completion-desc' | translate"></p>
+  </div>
+}
+
+@if (currentTopic === "command-processors") {
+  <div>
+    <h1>{{ "docs.core-concepts.command-processors.title" | translate }}</h1>
+    <p>
+      {{ "docs.core-concepts.command-processors.intro" | translate }}
+    </p>
+    <h2>
+      {{ "docs.core-concepts.command-processors.interface-title" | translate }}
+    </h2>
+    <p>
+      {{ "docs.core-concepts.command-processors.interface-desc" | translate }}
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>
+            {{ "docs.core-concepts.command-processors.th-field" | translate }}
+          </th>
+          <th>
+            {{ "docs.core-concepts.command-processors.th-type" | translate }}
+          </th>
+          <th>
+            {{
+              "docs.core-concepts.command-processors.th-description" | translate
+            }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>command</code></td>
+          <td><code>string</code></td>
+          <td>
+            {{
+              "docs.core-concepts.command-processors.field-command" | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>description</code></td>
+          <td><code>string</code></td>
+          <td>
+            {{
+              "docs.core-concepts.command-processors.field-description"
+                | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>parameters</code></td>
+          <td><code>ICliCommandParameterDescriptor[]</code></td>
+          <td>
+            {{
+              "docs.core-concepts.command-processors.field-parameters"
+                | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>processors</code></td>
+          <td><code>ICliCommandProcessor[]</code></td>
+          <td>
+            {{
+              "docs.core-concepts.command-processors.field-processors"
+                | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>extendsProcessor</code></td>
+          <td><code>boolean</code></td>
+          <td>
+            {{
+              "docs.core-concepts.command-processors.field-extends" | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>aliases</code></td>
+          <td><code>string[]</code></td>
+          <td>
+            Alternative names for the command (e.g., <code>['h', '?']</code> for
+            <code>help</code>)
+          </td>
+        </tr>
+        <tr>
+          <td><code>author</code></td>
+          <td><code>ICliCommandAuthor</code></td>
+          <td>
+            Author info — <code>&#123; name: string, email: string &#125;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>version</code></td>
+          <td><code>string</code></td>
+          <td>Semver version string (default: <code>'1.0.0'</code>)</td>
+        </tr>
+        <tr>
+          <td><code>acceptsRawInput</code></td>
+          <td><code>boolean</code></td>
+          <td>
+            When true, text after the command name is captured as
+            <code>command.value</code> instead of being parsed as sub-commands
+          </td>
+        </tr>
+        <tr>
+          <td><code>valueRequired</code></td>
+          <td><code>boolean</code></td>
+          <td>
+            Requires positional value, piped data, or named arguments. Also
+            enables raw input capture.
+          </td>
+        </tr>
+        <tr>
+          <td><code>metadata</code></td>
+          <td><code>CliProcessorMetadata</code></td>
+          <td>
+            Additional metadata: <code>sealed</code>, <code>hidden</code>,
+            <code>icon</code>, <code>requireServer</code>,
+            <code>requiredCoreVersion</code>, <code>requiredCliVersion</code>,
+            <code>literalInput</code> (the whole line goes to the command as typed)
+          </td>
+        </tr>
+        <tr>
+          <td><code>hooks</code></td>
+          <td><code>ICliProcessorHook[]</code></td>
+          <td>Before/after execution hooks</td>
+        </tr>
+        <tr>
+          <td><code>stateConfiguration</code></td>
+          <td><code>CliStateConfiguration</code></td>
+          <td>
+            Persistent state —
+            <code>&#123; initialState, storeName? &#125;</code>. See
+            <a routerLink="/docs/core-concepts/state-management"
+              >State Management</a
+            >.
+          </td>
+        </tr>
+        <tr>
+          <td><code>configurationOptions</code></td>
+          <td><code>ICliConfigurationOption[]</code></td>
+          <td>
+            Settings exposed via the <code>configure</code> command. Each option
+            has <code>key</code>, <code>label</code>, <code>type</code>,
+            <code>defaultValue</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>originalProcessor</code></td>
+          <td><code>ICliCommandProcessor?</code></td>
+          <td>
+            Set automatically when <code>extendsProcessor</code> is true —
+            reference to the wrapped processor.
+          </td>
+        </tr>
+      </tbody>
+    </table>
     <h2>Lifecycle Methods</h2>
     <table>
-        <thead>
-            <tr>
-                <th>Method</th>
-                <th>When Called</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>initialize(context)</code></td>
-                <td>During module boot</td>
-                <td>One-time setup — load state, set up subscriptions</td>
-            </tr>
-            <tr>
-                <td><code>validateBeforeExecution(command, context)</code></td>
-                <td>Before <code>processCommand</code></td>
-                <td>Return <code>&#123; valid: false, message &#125;</code> to prevent execution</td>
-            </tr>
-            <tr>
-                <td><code>processCommand(command, context)</code></td>
-                <td>On command execution</td>
-                <td>Main command handler (required)</td>
-            </tr>
-            <tr>
-                <td><code>writeDescription(context)</code></td>
-                <td>When <code>help &lt;command&gt;</code> is run</td>
-                <td>Custom help text (overrides auto-generated help)</td>
-            </tr>
-            <tr>
-                <td><code>onData(data, context)</code></td>
-                <td>Full-screen mode — on each keypress</td>
-                <td>Handle raw terminal input (escape sequences, control chars, text)</td>
-            </tr>
-            <tr>
-                <td><code>onResize(cols, rows, context)</code></td>
-                <td>Full-screen mode — on terminal resize</td>
-                <td>Adapt rendering to new dimensions</td>
-            </tr>
-            <tr>
-                <td><code>onDispose(context)</code></td>
-                <td>Full-screen exit or CLI destroy</td>
-                <td>Clean up resources (managed timers are auto-cleared)</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>When Called</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>initialize(context)</code></td>
+          <td>During module boot</td>
+          <td>One-time setup — load state, set up subscriptions</td>
+        </tr>
+        <tr>
+          <td><code>validateBeforeExecution(command, context)</code></td>
+          <td>Before <code>processCommand</code></td>
+          <td>
+            Return <code>&#123; valid: false, message &#125;</code> to prevent
+            execution
+          </td>
+        </tr>
+        <tr>
+          <td><code>processCommand(command, context)</code></td>
+          <td>On command execution</td>
+          <td>Main command handler (required)</td>
+        </tr>
+        <tr>
+          <td><code>writeDescription(context)</code></td>
+          <td>When <code>help &lt;command&gt;</code> is run</td>
+          <td>Custom help text (overrides auto-generated help)</td>
+        </tr>
+        <tr>
+          <td><code>onData(data, context)</code></td>
+          <td>Full-screen mode — on each keypress</td>
+          <td>
+            Handle raw terminal input (escape sequences, control chars, text)
+          </td>
+        </tr>
+        <tr>
+          <td><code>onResize(cols, rows, context)</code></td>
+          <td>Full-screen mode — on terminal resize</td>
+          <td>Adapt rendering to new dimensions</td>
+        </tr>
+        <tr>
+          <td><code>onDispose(context)</code></td>
+          <td>Full-screen exit or CLI destroy</td>
+          <td>Clean up resources (managed timers are auto-cleared)</td>
+        </tr>
+      </tbody>
     </table>
-
-    <h2>{{ 'docs.core-concepts.command-processors.process-command-title' | translate }}</h2>
+    <h2>
+      {{
+        "docs.core-concepts.command-processors.process-command-title"
+          | translate
+      }}
+    </h2>
     <p>
-        {{ 'docs.core-concepts.command-processors.process-command-desc' | translate }}
+      {{
+        "docs.core-concepts.command-processors.process-command-desc" | translate
+      }}
     </p>
-
-    <h2>{{ 'docs.core-concepts.command-processors.example-title' | translate }}</h2>
+    <h2>
+      {{ "docs.core-concepts.command-processors.example-title" | translate }}
+    </h2>
     <div class="code-block">
-        <span class="code-label">greet-processor.ts</span>
-        <pre><code>export class GreetProcessor implements ICliCommandProcessor &#123;
-    command = 'greet';
-    description = 'Say hello';
-
-    parameters = [
+      <span class="code-label">greet-processor.ts</span>
+      <pre><code>export class GreetProcessor implements ICliCommandProcessor &#123;
+        command = 'greet';
+        description = 'Say hello';
+        parameters = [
         &#123;
-            name: 'name',
-            description: 'Name to greet',
-            required: false,
+        name: 'name',
+        description: 'Name to greet',
+        required: false,
         &#125;,
-    ];
-
-    async processCommand(
+        ];
+        async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
-    ): Promise&lt;void&gt; &#123;
-        const name = command.args[0] || 'World';
+        ): Promise&lt;void&gt; &#123;
+        const name = command.positionals?.[0] || 'World';
         context.writer.writeln(`Hello, $&#123;name&#125;!`);
-    &#125;
-&#125;</code></pre>
+        &#125;
+      &#125;</code></pre>
     </div>
-
-    <h2>{{ 'docs.core-concepts.command-processors.sub-commands-title' | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-processors.arguments-desc' | translate"></p>
+    <h2>
+      {{
+        "docs.core-concepts.command-processors.sub-commands-title" | translate
+      }}
+    </h2>
     <p>
-        {{ 'docs.core-concepts.command-processors.sub-commands-desc' | translate }}
+      {{
+        "docs.core-concepts.command-processors.sub-commands-desc" | translate
+      }}
     </p>
-
     <div class="code-block">
-        <span class="code-label">nested-processor.ts</span>
-        <pre><code>export class GitProcessor implements ICliCommandProcessor &#123;
-    command = 'git';
-    description = 'Git commands';
-
-    processors = [
+      <span class="code-label">nested-processor.ts</span>
+      <pre><code>export class GitProcessor implements ICliCommandProcessor &#123;
+        command = 'git';
+        description = 'Git commands';
+        processors = [
         new GitCommitProcessor(),
         new GitPushProcessor(),
-    ];
-&#125;</code></pre>
+        ];
+      &#125;</code></pre>
     </div>
-
-    <h2>{{ 'docs.core-concepts.command-processors.extending-title' | translate }}</h2>
+    <h2>
+      {{ "docs.core-concepts.command-processors.extending-title" | translate }}
+    </h2>
     <p>
-        {{ 'docs.core-concepts.command-processors.extending-desc' | translate }}
+      {{ "docs.core-concepts.command-processors.extending-desc" | translate }}
     </p>
-
     <div class="code-block">
-        <span class="code-label">extend-processor.ts</span>
-        <pre><code>export class GitStashProcessor implements ICliCommandProcessor &#123;
-    command = 'stash';
-    description = 'Stash changes';
-    extendsProcessor = 'git'; // Adds 'stash' as a sub-command of 'git'
-
-    async processCommand(
+      <span class="code-label">extend-processor.ts</span>
+      <pre><code>export class GitStashProcessor implements ICliCommandProcessor &#123;
+        command = 'stash';
+        description = 'Stash changes';
+        extendsProcessor = 'git'; // Adds 'stash' as a sub-command of 'git'
+        async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
-    ): Promise&lt;void&gt; &#123;
+        ): Promise&lt;void&gt; &#123;
         context.writer.writeln('Changes stashed.');
-    &#125;
-&#125;</code></pre>
+        &#125;
+      &#125;</code></pre>
     </div>
-</div>
+  </div>
+}
 
 <!-- Execution Context -->
-<div *ngIf="currentTopic === 'execution-context'">
-    <h1>{{ 'docs.core-concepts.execution-context.title' | translate }}</h1>
+@if (currentTopic === "execution-context") {
+  <div>
+    <h1>{{ "docs.core-concepts.execution-context.title" | translate }}</h1>
     <p>
-        {{ 'docs.core-concepts.execution-context.intro' | translate }}
+      {{ "docs.core-concepts.execution-context.intro" | translate }}
     </p>
-
-    <h2>{{ 'docs.core-concepts.execution-context.properties-title' | translate }}</h2>
+    <h2>
+      {{ "docs.core-concepts.execution-context.properties-title" | translate }}
+    </h2>
     <table>
-        <thead>
-            <tr>
-                <th>{{ 'docs.core-concepts.execution-context.th-property' | translate }}</th>
-                <th>{{ 'docs.core-concepts.execution-context.th-type' | translate }}</th>
-                <th>{{ 'docs.core-concepts.execution-context.th-description' | translate }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>writer</code></td>
-                <td><code>ICliTerminalWriter</code></td>
-                <td>{{ 'docs.core-concepts.execution-context.writer-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>spinner</code></td>
-                <td><code>ICliSpinner</code></td>
-                <td>{{ 'docs.core-concepts.execution-context.spinner-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>progressBar</code></td>
-                <td><code>ICliProgressBar</code></td>
-                <td>{{ 'docs.core-concepts.execution-context.progress-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>inputReader</code></td>
-                <td><code>ICliInputReader</code></td>
-                <td>{{ 'docs.core-concepts.execution-context.input-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>stateStore</code></td>
-                <td><code>ICliStateStore</code></td>
-                <td>{{ 'docs.core-concepts.execution-context.state-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>clipboard</code></td>
-                <td><code>ICliClipboard</code></td>
-                <td>{{ 'docs.core-concepts.execution-context.clipboard-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>abortSignal</code></td>
-                <td><code>AbortSignal</code></td>
-                <td>{{ 'docs.core-concepts.execution-context.abort-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>options</code></td>
-                <td><code>CliOptions</code></td>
-                <td>{{ 'docs.core-concepts.execution-context.options-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>notifier</code></td>
-                <td><code>ICliNotifier</code></td>
-                <td>{{ 'docs.core-concepts.execution-context.notifier-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>http</code></td>
-                <td><code>ICliHttpClient</code></td>
-                <td>{{ 'docs.core-concepts.execution-context.http-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>services</code></td>
-                <td><code>ICliServiceProvider</code></td>
-                <td>{{ 'docs.core-concepts.execution-context.services-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>reader</code></td>
-                <td><code>ICliInputReader</code></td>
-                <td>Interactive input prompts — <code>readLine</code>, <code>readPassword</code>, <code>readConfirm</code>, <code>readSelect</code>, <code>readMultiSelect</code>, <code>readNumber</code>, <code>readDate</code>, <code>readFile</code>. See <a routerLink="/docs/core-concepts/input-reader">Input Reader</a>.</td>
-            </tr>
-            <tr>
-                <td><code>executor</code></td>
-                <td><code>ICliCommandExecutorService</code></td>
-                <td>Programmatic command execution. Call <code>executor.showHelp()</code> or use <code>submitCommand()</code> to run commands.</td>
-            </tr>
-            <tr>
-                <td><code>backgroundServices</code></td>
-                <td><code>ICliBackgroundServiceRegistry</code></td>
-                <td>Register and manage background daemons and jobs. See <a routerLink="/docs/core-concepts/background-services">Background Services</a>.</td>
-            </tr>
-            <tr>
-                <td><code>terminal</code></td>
-                <td><code>Terminal</code></td>
-                <td>Raw xterm.js <code>Terminal</code> instance for direct terminal access (<code>cols</code>, <code>rows</code>, etc.).</td>
-            </tr>
-            <tr>
-                <td><code>userSession</code></td>
-                <td><code>ICliUserSession?</code></td>
-                <td>Current logged-in user information (requires the users module).</td>
-            </tr>
-            <tr>
-                <td><code>textAnimator</code></td>
-                <td><code>ICliTextAnimator?</code></td>
-                <td>Animated text effects (typing, bouncing, etc.).</td>
-            </tr>
-            <tr>
-                <td><code>onAbort</code></td>
-                <td><code>Subject&lt;void&gt;</code></td>
-                <td>RxJS Subject that emits when the command is cancelled (Ctrl+C).</td>
-            </tr>
-            <tr>
-                <td><code>signal</code></td>
-                <td><code>AbortSignal?</code></td>
-                <td>Standard <code>AbortSignal</code> that fires on Ctrl+C. Pass to fetch/timers for cooperative cancellation.</td>
-            </tr>
-            <tr>
-                <td><code>process</code></td>
-                <td><code>ICliExecutionProcess</code></td>
-                <td>Execution process handle — call <code>process.output()</code> to set the command's output value for piping.</td>
-            </tr>
-            <tr>
-                <td><code>logger</code></td>
-                <td><code>ICliLogger</code></td>
-                <td>Structured logging — <code>logger.debug()</code>, <code>logger.info()</code>, <code>logger.warn()</code>, <code>logger.error()</code>.</td>
-            </tr>
-            <tr>
-                <td><code>translator</code></td>
-                <td><code>ICliTranslationService</code></td>
-                <td>i18n string resolution — <code>translator.t(key, defaultValue, params?)</code>. See Language Packs.</td>
-            </tr>
-            <tr>
-                <td><code>submitCommand(cmd)</code></td>
-                <td><code>(string) =&gt; Promise&lt;void&gt;</code></td>
-                <td>Execute a command programmatically — adds to history and shows a prompt afterwards.</td>
-            </tr>
-            <tr>
-                <td><code>enterFullScreenMode(processor, options?)</code></td>
-                <td><code>Function</code></td>
-                <td>Switch to alternate screen buffer for TUI apps. Set <code>&#123; showCursor: true &#125;</code> for REPL-style interfaces.</td>
-            </tr>
-            <tr>
-                <td><code>exitFullScreenMode()</code></td>
-                <td><code>Function</code></td>
-                <td>Restore normal terminal mode, re-display the prompt.</td>
-            </tr>
-            <tr>
-                <td><code>createInterval(fn, ms)</code></td>
-                <td><code>ICliManagedInterval</code></td>
-                <td>Managed interval — auto-cleared when full-screen exits or CLI is destroyed. Has <code>clear()</code> and <code>setDelay(ms)</code>.</td>
-            </tr>
-            <tr>
-                <td><code>createTimeout(fn, ms)</code></td>
-                <td><code>ICliManagedTimer</code></td>
-                <td>Managed timeout — auto-cleared on cleanup. Has <code>clear()</code>.</td>
-            </tr>
-            <tr>
-                <td><code>showPrompt(options?)</code></td>
-                <td><code>Function</code></td>
-                <td>Print the prompt. Options: <code>reset</code>, <code>newLine</code>, <code>keepCurrentLine</code>.</td>
-            </tr>
-            <tr>
-                <td><code>promptPathProvider</code></td>
-                <td><code>() =&gt; string | null</code></td>
-                <td>Set this to customize the path shown in the prompt (e.g., current working directory).</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>
+            {{ "docs.core-concepts.execution-context.th-property" | translate }}
+          </th>
+          <th>
+            {{ "docs.core-concepts.execution-context.th-type" | translate }}
+          </th>
+          <th>
+            {{
+              "docs.core-concepts.execution-context.th-description" | translate
+            }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>writer</code></td>
+          <td><code>ICliTerminalWriter</code></td>
+          <td>
+            {{ "docs.core-concepts.execution-context.writer-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>spinner</code></td>
+          <td><code>ICliSpinner</code></td>
+          <td>
+            {{
+              "docs.core-concepts.execution-context.spinner-desc" | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>progressBar</code></td>
+          <td><code>ICliProgressBar</code></td>
+          <td>
+            {{
+              "docs.core-concepts.execution-context.progress-desc" | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>inputReader</code></td>
+          <td><code>ICliInputReader</code></td>
+          <td>
+            {{ "docs.core-concepts.execution-context.input-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>stateStore</code></td>
+          <td><code>ICliStateStore</code></td>
+          <td>
+            {{ "docs.core-concepts.execution-context.state-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>clipboard</code></td>
+          <td><code>ICliClipboard</code></td>
+          <td>
+            {{
+              "docs.core-concepts.execution-context.clipboard-desc" | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>abortSignal</code></td>
+          <td><code>AbortSignal</code></td>
+          <td>
+            {{ "docs.core-concepts.execution-context.abort-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>options</code></td>
+          <td><code>CliOptions</code></td>
+          <td>
+            {{
+              "docs.core-concepts.execution-context.options-desc" | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>notifier</code></td>
+          <td><code>ICliNotifier</code></td>
+          <td>
+            {{
+              "docs.core-concepts.execution-context.notifier-desc" | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>http</code></td>
+          <td><code>ICliHttpClient</code></td>
+          <td>
+            {{ "docs.core-concepts.execution-context.http-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>services</code></td>
+          <td><code>ICliServiceProvider</code></td>
+          <td>
+            {{
+              "docs.core-concepts.execution-context.services-desc" | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>reader</code></td>
+          <td><code>ICliInputReader</code></td>
+          <td>
+            Interactive input prompts — <code>readLine</code>,
+            <code>readPassword</code>, <code>readConfirm</code>,
+            <code>readSelect</code>, <code>readMultiSelect</code>,
+            <code>readNumber</code>, <code>readDate</code>,
+            <code>readFile</code>. See
+            <a routerLink="/docs/core-concepts/input-reader">Input Reader</a>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>executor</code></td>
+          <td><code>ICliCommandExecutorService</code></td>
+          <td>
+            Programmatic command execution. Call
+            <code>executor.showHelp()</code> or use
+            <code>submitCommand()</code> to run commands.
+          </td>
+        </tr>
+        <tr>
+          <td><code>backgroundServices</code></td>
+          <td><code>ICliBackgroundServiceRegistry</code></td>
+          <td>
+            Register and manage background daemons and jobs. See
+            <a routerLink="/docs/core-concepts/background-services"
+              >Background Services</a
+            >.
+          </td>
+        </tr>
+        <tr>
+          <td><code>terminal</code></td>
+          <td><code>Terminal</code></td>
+          <td>
+            Raw xterm.js <code>Terminal</code> instance for direct terminal
+            access (<code>cols</code>, <code>rows</code>, etc.).
+          </td>
+        </tr>
+        <tr>
+          <td><code>userSession</code></td>
+          <td><code>ICliUserSession?</code></td>
+          <td>
+            Current logged-in user information (requires the users module).
+          </td>
+        </tr>
+        <tr>
+          <td><code>textAnimator</code></td>
+          <td><code>ICliTextAnimator?</code></td>
+          <td>Animated text effects (typing, bouncing, etc.).</td>
+        </tr>
+        <tr>
+          <td><code>onAbort</code></td>
+          <td><code>Subject&lt;void&gt;</code></td>
+          <td>
+            RxJS Subject that emits when the command is cancelled (Ctrl+C).
+          </td>
+        </tr>
+        <tr>
+          <td><code>signal</code></td>
+          <td><code>AbortSignal?</code></td>
+          <td>
+            Standard <code>AbortSignal</code> that fires on Ctrl+C. Pass to
+            fetch/timers for cooperative cancellation.
+          </td>
+        </tr>
+        <tr>
+          <td><code>process</code></td>
+          <td><code>ICliExecutionProcess</code></td>
+          <td>
+            Execution process handle — call <code>process.output()</code> to set
+            the command's output value for piping.
+          </td>
+        </tr>
+        <tr>
+          <td><code>logger</code></td>
+          <td><code>ICliLogger</code></td>
+          <td>
+            Structured logging — <code>logger.debug()</code>,
+            <code>logger.info()</code>, <code>logger.warn()</code>,
+            <code>logger.error()</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>translator</code></td>
+          <td><code>ICliTranslationService</code></td>
+          <td>
+            i18n string resolution —
+            <code>translator.t(key, defaultValue, params?)</code>. See Language
+            Packs.
+          </td>
+        </tr>
+        <tr>
+          <td><code>submitCommand(cmd)</code></td>
+          <td><code>(string) =&gt; Promise&lt;void&gt;</code></td>
+          <td>
+            Execute a command programmatically — adds to history and shows a
+            prompt afterwards.
+          </td>
+        </tr>
+        <tr>
+          <td><code>enterFullScreenMode(processor, options?)</code></td>
+          <td><code>Function</code></td>
+          <td>
+            Switch to alternate screen buffer for TUI apps. Set
+            <code>&#123; showCursor: true &#125;</code> for REPL-style
+            interfaces.
+          </td>
+        </tr>
+        <tr>
+          <td><code>exitFullScreenMode()</code></td>
+          <td><code>Function</code></td>
+          <td>Restore normal terminal mode, re-display the prompt.</td>
+        </tr>
+        <tr>
+          <td><code>createInterval(fn, ms)</code></td>
+          <td><code>ICliManagedInterval</code></td>
+          <td>
+            Managed interval — auto-cleared when full-screen exits or CLI is
+            destroyed. Has <code>clear()</code> and <code>setDelay(ms)</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>createTimeout(fn, ms)</code></td>
+          <td><code>ICliManagedTimer</code></td>
+          <td>
+            Managed timeout — auto-cleared on cleanup. Has <code>clear()</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>showPrompt(options?)</code></td>
+          <td><code>Function</code></td>
+          <td>
+            Print the prompt. Options: <code>reset</code>, <code>newLine</code>,
+            <code>keepCurrentLine</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>promptPathProvider</code></td>
+          <td><code>() =&gt; string | null</code></td>
+          <td>
+            Set this to customize the path shown in the prompt (e.g., current
+            working directory).
+          </td>
+        </tr>
+      </tbody>
     </table>
-
-    <h2>{{ 'docs.core-concepts.execution-context.writing-title' | translate }}</h2>
+    <h2>
+      {{ "docs.core-concepts.execution-context.writing-title" | translate }}
+    </h2>
     <p>
-        {{ 'docs.core-concepts.execution-context.writing-desc' | translate }}
+      {{ "docs.core-concepts.execution-context.writing-desc" | translate }}
     </p>
     <div class="code-block">
-        <span class="code-label">writer-examples.ts</span>
-        <pre><code>// Write a line of text
-context.writer.writeln('Hello, World!');
-
-// Write styled HTML output
-context.writer.writeHtml('&lt;span style="color: green"&gt;Success!&lt;/span&gt;');
-
-// Write a warning or error
-context.writer.writeError('Something went wrong');
-context.writer.writeWarning('This is deprecated');</code></pre>
+      <span class="code-label">writer-examples.ts</span>
+      <pre><code>// Write a line of text
+        context.writer.writeln('Hello, World!');
+        // Write styled HTML output
+        context.writer.writeHtml('&lt;span style="color: green"&gt;Success!&lt;/span&gt;');
+        // Write a warning or error
+        context.writer.writeError('Something went wrong');
+      context.writer.writeWarning('This is deprecated');</code></pre>
     </div>
-
-    <h2>{{ 'docs.core-concepts.execution-context.spinner-title' | translate }}</h2>
+    <h2>
+      {{ "docs.core-concepts.execution-context.spinner-title" | translate }}
+    </h2>
     <div class="code-block">
-        <span class="code-label">spinner-example.ts</span>
-        <pre><code>// Show a spinner while loading
-context.spinner.show('Loading data...');
-const data = await fetchData();
-context.spinner.hide();
-
-// Show a progress bar
-context.progressBar.show(&#123; total: 100 &#125;);
-for (let i = 0; i &lt;= 100; i++) &#123;
-    context.progressBar.update(i);
-&#125;
-context.progressBar.hide();</code></pre>
+      <span class="code-label">spinner-example.ts</span>
+      <pre><code>// Show a spinner while loading
+        context.spinner.show('Loading data...');
+        const data = await fetchData();
+        context.spinner.hide();
+        // Show a progress bar
+        context.progressBar.show(&#123; total: 100 &#125;);
+        for (let i = 0; i &lt;= 100; i++) &#123;
+        context.progressBar.update(i);
+        &#125;
+      context.progressBar.hide();</code></pre>
     </div>
-
-    <h2>{{ 'docs.core-concepts.execution-context.fullscreen-title' | translate }}</h2>
+    <h2>
+      {{ "docs.core-concepts.execution-context.fullscreen-title" | translate }}
+    </h2>
     <p>
-        {{ 'docs.core-concepts.execution-context.fullscreen-desc' | translate }}
+      {{ "docs.core-concepts.execution-context.fullscreen-desc" | translate }}
     </p>
     <div class="code-block">
-        <span class="code-label">fullscreen-example.ts</span>
-        <pre><code>// Enter full-screen mode
-context.enterFullScreenMode();
-
-// Render your full-screen UI...
-
-// Exit when done
-context.exitFullScreenMode();</code></pre>
+      <span class="code-label">fullscreen-example.ts</span>
+      <pre><code>// Enter full-screen mode
+        context.enterFullScreenMode();
+        // Render your full-screen UI...
+        // Exit when done
+      context.exitFullScreenMode();</code></pre>
     </div>
-
-    <h2>{{ 'docs.core-concepts.execution-context.abort-title' | translate }}</h2>
+    <h2>
+      {{ "docs.core-concepts.execution-context.abort-title" | translate }}
+    </h2>
     <p>
-        {{ 'docs.core-concepts.execution-context.abort-desc2' | translate }}
+      {{ "docs.core-concepts.execution-context.abort-desc2" | translate }}
     </p>
     <div class="code-block">
-        <span class="code-label">abort-example.ts</span>
-        <pre><code>while (!context.abortSignal.aborted) &#123;
-    // Do work...
-    await sleep(100);
-&#125;
-context.writer.writeln('Operation cancelled.');</code></pre>
+      <span class="code-label">abort-example.ts</span>
+      <pre><code>while (!context.abortSignal.aborted) &#123;
+        // Do work...
+        await sleep(100);
+        &#125;
+      context.writer.writeln('Operation cancelled.');</code></pre>
     </div>
-</div>
+  </div>
+}
 
 <!-- Theming -->
-<div *ngIf="currentTopic === 'theming'">
-    <h1>{{ 'docs.core-concepts.theming.title' | translate }}</h1>
+@if (currentTopic === "theming") {
+  <div>
+    <h1>{{ "docs.core-concepts.theming.title" | translate }}</h1>
     <p>
-        {{ 'docs.core-concepts.theming.intro' | translate }}
+      {{ "docs.core-concepts.theming.intro" | translate }}
     </p>
-
-    <h2>{{ 'docs.core-concepts.theming.built-in-title' | translate }}</h2>
-    <p>{{ 'docs.core-concepts.theming.built-in-desc' | translate }}</p>
-
-    <h3>{{ 'docs.core-concepts.theming.dark-themes' | translate }}</h3>
+    <h2>{{ "docs.core-concepts.theming.built-in-title" | translate }}</h2>
+    <p>{{ "docs.core-concepts.theming.built-in-desc" | translate }}</p>
+    <h3>{{ "docs.core-concepts.theming.dark-themes" | translate }}</h3>
     <table>
-        <thead>
-            <tr>
-                <th>{{ 'docs.core-concepts.theming.th-theme' | translate }}</th>
-                <th>{{ 'docs.core-concepts.theming.th-description' | translate }}</th>
-                <th>{{ 'docs.core-concepts.theming.th-tags' | translate }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><span class="command-badge">default</span></td>
-                <td>Dark indigo theme with soft pastels</td>
-                <td>built-in</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">classic</span></td>
-                <td>Classic Windows terminal palette</td>
-                <td>built-in</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">dracula</span></td>
-                <td>Popular dark theme with vibrant colors</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">monokai</span></td>
-                <td>Classic code editor dark theme</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">solarizedDark</span></td>
-                <td>Ethan Schoonover's precision dark palette</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">gruvboxDark</span></td>
-                <td>Retro groove dark color scheme</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">nord</span></td>
-                <td>Arctic, north-bluish clean palette</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">oneDark</span></td>
-                <td>Atom's iconic dark theme</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">material</span></td>
-                <td>Material Design inspired dark theme</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">tokyoNight</span></td>
-                <td>Cool blue-purple dark theme</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">catppuccinMocha</span></td>
-                <td>Soothing pastel dark theme (warmest)</td>
-                <td>popular, pastel</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">catppuccinFrappe</span></td>
-                <td>Soothing pastel mid-dark theme</td>
-                <td>popular, pastel</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">rosePine</span></td>
-                <td>All natural pine, faux fur, and a bit of soho vibes</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">kanagawa</span></td>
-                <td>Dark theme inspired by Katsushika Hokusai</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">everforestDark</span></td>
-                <td>Comfortable green-tinted dark theme</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">ayuDark</span></td>
-                <td>Simple, bright and elegant dark theme</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">cyberpunk</span></td>
-                <td>Neon-lit cyberpunk aesthetic</td>
-                <td>retro, fun</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">retroGreen</span></td>
-                <td>Classic green phosphor CRT monitor</td>
-                <td>retro, fun</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">retroAmber</span></td>
-                <td>Warm amber CRT monitor</td>
-                <td>retro, fun</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">matrix</span></td>
-                <td>Enter the Matrix - green on black</td>
-                <td>retro, fun</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">synthwave</span></td>
-                <td>80s synthwave purple/pink aesthetic</td>
-                <td>retro, fun</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">highContrastDark</span></td>
-                <td>Maximum contrast dark theme</td>
-                <td>accessibility</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>{{ "docs.core-concepts.theming.th-theme" | translate }}</th>
+          <th>{{ "docs.core-concepts.theming.th-description" | translate }}</th>
+          <th>{{ "docs.core-concepts.theming.th-tags" | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="command-badge">default</span></td>
+          <td>Dark indigo theme with soft pastels</td>
+          <td>built-in</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">classic</span></td>
+          <td>Classic Windows terminal palette</td>
+          <td>built-in</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">dracula</span></td>
+          <td>Popular dark theme with vibrant colors</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">monokai</span></td>
+          <td>Classic code editor dark theme</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">solarizedDark</span></td>
+          <td>Ethan Schoonover's precision dark palette</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">gruvboxDark</span></td>
+          <td>Retro groove dark color scheme</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">nord</span></td>
+          <td>Arctic, north-bluish clean palette</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">oneDark</span></td>
+          <td>Atom's iconic dark theme</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">material</span></td>
+          <td>Material Design inspired dark theme</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">tokyoNight</span></td>
+          <td>Cool blue-purple dark theme</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">catppuccinMocha</span></td>
+          <td>Soothing pastel dark theme (warmest)</td>
+          <td>popular, pastel</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">catppuccinFrappe</span></td>
+          <td>Soothing pastel mid-dark theme</td>
+          <td>popular, pastel</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">rosePine</span></td>
+          <td>All natural pine, faux fur, and a bit of soho vibes</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">kanagawa</span></td>
+          <td>Dark theme inspired by Katsushika Hokusai</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">everforestDark</span></td>
+          <td>Comfortable green-tinted dark theme</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">ayuDark</span></td>
+          <td>Simple, bright and elegant dark theme</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">cyberpunk</span></td>
+          <td>Neon-lit cyberpunk aesthetic</td>
+          <td>retro, fun</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">retroGreen</span></td>
+          <td>Classic green phosphor CRT monitor</td>
+          <td>retro, fun</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">retroAmber</span></td>
+          <td>Warm amber CRT monitor</td>
+          <td>retro, fun</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">matrix</span></td>
+          <td>Enter the Matrix - green on black</td>
+          <td>retro, fun</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">synthwave</span></td>
+          <td>80s synthwave purple/pink aesthetic</td>
+          <td>retro, fun</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">highContrastDark</span></td>
+          <td>Maximum contrast dark theme</td>
+          <td>accessibility</td>
+        </tr>
+      </tbody>
     </table>
-
-    <h3>{{ 'docs.core-concepts.theming.light-themes' | translate }}</h3>
+    <h3>{{ "docs.core-concepts.theming.light-themes" | translate }}</h3>
     <table>
-        <thead>
-            <tr>
-                <th>{{ 'docs.core-concepts.theming.th-theme' | translate }}</th>
-                <th>{{ 'docs.core-concepts.theming.th-description' | translate }}</th>
-                <th>{{ 'docs.core-concepts.theming.th-tags' | translate }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><span class="command-badge">solarizedLight</span></td>
-                <td>Ethan Schoonover's precision light palette</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">gruvboxLight</span></td>
-                <td>Retro groove light color scheme</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">catppuccinLatte</span></td>
-                <td>Soothing pastel light theme</td>
-                <td>popular, pastel</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">rosePineDawn</span></td>
-                <td>Rose Pine light variant</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">everforestLight</span></td>
-                <td>Comfortable green-tinted light theme</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">githubLight</span></td>
-                <td>GitHub's clean light interface theme</td>
-                <td>popular</td>
-            </tr>
-            <tr>
-                <td><span class="command-badge">highContrastLight</span></td>
-                <td>High contrast light theme for accessibility</td>
-                <td>accessibility</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>{{ "docs.core-concepts.theming.th-theme" | translate }}</th>
+          <th>{{ "docs.core-concepts.theming.th-description" | translate }}</th>
+          <th>{{ "docs.core-concepts.theming.th-tags" | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="command-badge">solarizedLight</span></td>
+          <td>Ethan Schoonover's precision light palette</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">gruvboxLight</span></td>
+          <td>Retro groove light color scheme</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">catppuccinLatte</span></td>
+          <td>Soothing pastel light theme</td>
+          <td>popular, pastel</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">rosePineDawn</span></td>
+          <td>Rose Pine light variant</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">everforestLight</span></td>
+          <td>Comfortable green-tinted light theme</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">githubLight</span></td>
+          <td>GitHub's clean light interface theme</td>
+          <td>popular</td>
+        </tr>
+        <tr>
+          <td><span class="command-badge">highContrastLight</span></td>
+          <td>High contrast light theme for accessibility</td>
+          <td>accessibility</td>
+        </tr>
+      </tbody>
     </table>
-
-    <h2>{{ 'docs.core-concepts.theming.switching-title' | translate }}</h2>
-    <p>{{ 'docs.core-concepts.theming.switching-desc' | translate }}</p>
+    <h2>{{ "docs.core-concepts.theming.switching-title" | translate }}</h2>
+    <p>{{ "docs.core-concepts.theming.switching-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">Terminal</span>
-        <pre><code>theme apply dracula
-theme list
-theme current</code></pre>
+      <span class="code-label">Terminal</span>
+      <pre><code>theme apply dracula
+        theme list
+      theme current</code></pre>
     </div>
-
-    <h2>{{ 'docs.core-concepts.theming.css-title' | translate }}</h2>
+    <h2>{{ "docs.core-concepts.theming.css-title" | translate }}</h2>
     <p>
-        {{ 'docs.core-concepts.theming.css-desc' | translate }}
+      {{ "docs.core-concepts.theming.css-desc" | translate }}
     </p>
     <div class="code-block">
-        <span class="code-label">custom-theme.css</span>
-        <pre><code>:root &#123;
-    --cli-background: #1e1e2e;
-    --cli-foreground: #cdd6f4;
-    --cli-cursor-color: #f5e0dc;
-    --cli-selection-background: #585b70;
-    --cli-black: #45475a;
-    --cli-red: #f38ba8;
-    --cli-green: #a6e3a1;
-    --cli-yellow: #f9e2af;
-    --cli-blue: #89b4fa;
-    --cli-magenta: #f5c2e7;
-    --cli-cyan: #94e2d5;
-    --cli-white: #bac2de;
-&#125;</code></pre>
+      <span class="code-label">custom-theme.css</span>
+      <pre><code>:root &#123;
+        --cli-background: #1e1e2e;
+        --cli-foreground: #cdd6f4;
+        --cli-cursor-color: #f5e0dc;
+        --cli-selection-background: #585b70;
+        --cli-black: #45475a;
+        --cli-red: #f38ba8;
+        --cli-green: #a6e3a1;
+        --cli-yellow: #f9e2af;
+        --cli-blue: #89b4fa;
+        --cli-magenta: #f5c2e7;
+        --cli-cyan: #94e2d5;
+        --cli-white: #bac2de;
+      &#125;</code></pre>
     </div>
-
-    <h2>{{ 'docs.core-concepts.theming.custom-title' | translate }}</h2>
+    <h2>{{ "docs.core-concepts.theming.custom-title" | translate }}</h2>
     <p>
-        {{ 'docs.core-concepts.theming.custom-desc' | translate }}
+      {{ "docs.core-concepts.theming.custom-desc" | translate }}
     </p>
     <div class="code-block">
-        <span class="code-label">my-theme.sass</span>
-        <pre><code>.cli-theme-custom
-    --cli-background: #0d1117
-    --cli-foreground: #c9d1d9
-    --cli-cursor-color: #58a6ff
-    --cli-selection-background: #264f78
-    --cli-green: #3fb950
-    --cli-red: #f85149
-    --cli-yellow: #d29922
-    --cli-blue: #58a6ff</code></pre>
+      <span class="code-label">my-theme.sass</span>
+      <pre><code>.cli-theme-custom
+        --cli-background: #0d1117
+        --cli-foreground: #c9d1d9
+        --cli-cursor-color: #58a6ff
+        --cli-selection-background: #264f78
+        --cli-green: #3fb950
+        --cli-red: #f85149
+        --cli-yellow: #d29922
+      --cli-blue: #58a6ff</code></pre>
     </div>
-
-    <h2>{{ 'docs.core-concepts.theming.try-it' | translate }}</h2>
+    <h2>{{ "docs.core-concepts.theming.try-it" | translate }}</h2>
     <p>
-        {{ 'docs.core-concepts.theming.try-it-desc' | translate }}
+      {{ "docs.core-concepts.theming.try-it-desc" | translate }}
     </p>
     <div class="try-it-terminal">
-        <div class="try-it-chrome">
-            <span class="chrome-dot red"></span>
-            <span class="chrome-dot yellow"></span>
-            <span class="chrome-dot green"></span>
-            <span class="chrome-title">theme playground</span>
-        </div>
-        <div class="try-it-body">
-            <cli [options]="tryItOptions" [modules]="tryItModules" height="260px" />
-        </div>
+      <div class="try-it-chrome">
+        <span class="chrome-dot red"></span>
+        <span class="chrome-dot yellow"></span>
+        <span class="chrome-dot green"></span>
+        <span class="chrome-title">theme playground</span>
+      </div>
+      <div class="try-it-body">
+        <cli [options]="tryItOptions" [modules]="tryItModules" height="260px" />
+      </div>
     </div>
-</div>
+  </div>
+}
 
 <!-- Tabs & Panes -->
-<div *ngIf="currentTopic === 'tabs-and-panes'">
-    <h1>{{ 'docs.core-concepts.tabs-panes.title' | translate }}</h1>
+@if (currentTopic === "tabs-and-panes") {
+  <div>
+    <h1>{{ "docs.core-concepts.tabs-panes.title" | translate }}</h1>
     <p>
-        {{ 'docs.core-concepts.tabs-panes.intro' | translate }}
+      {{ "docs.core-concepts.tabs-panes.intro" | translate }}
     </p>
-
-    <h2>{{ 'docs.core-concepts.tabs-panes.tab-mgmt' | translate }}</h2>
+    <h2>{{ "docs.core-concepts.tabs-panes.tab-mgmt" | translate }}</h2>
     <p>
-        {{ 'docs.core-concepts.tabs-panes.tab-mgmt-desc' | translate }}
-    </p>
-    <table>
-        <thead>
-            <tr>
-                <th>{{ 'docs.core-concepts.tabs-panes.th-action' | translate }}</th>
-                <th>{{ 'docs.core-concepts.tabs-panes.th-how' | translate }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>{{ 'docs.core-concepts.tabs-panes.new-tab' | translate }}</td>
-                <td>{{ 'docs.core-concepts.tabs-panes.new-tab-how' | translate }}</td>
-            </tr>
-            <tr>
-                <td>{{ 'docs.core-concepts.tabs-panes.rename-tab' | translate }}</td>
-                <td>{{ 'docs.core-concepts.tabs-panes.rename-tab-how' | translate }}</td>
-            </tr>
-            <tr>
-                <td>{{ 'docs.core-concepts.tabs-panes.close-tab' | translate }}</td>
-                <td>{{ 'docs.core-concepts.tabs-panes.close-tab-how' | translate }}</td>
-            </tr>
-            <tr>
-                <td>{{ 'docs.core-concepts.tabs-panes.duplicate-tab' | translate }}</td>
-                <td>{{ 'docs.core-concepts.tabs-panes.duplicate-tab-how' | translate }}</td>
-            </tr>
-            <tr>
-                <td>{{ 'docs.core-concepts.tabs-panes.close-others' | translate }}</td>
-                <td>{{ 'docs.core-concepts.tabs-panes.close-others-how' | translate }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h2>{{ 'docs.core-concepts.tabs-panes.split-title' | translate }}</h2>
-    <p>
-        {{ 'docs.core-concepts.tabs-panes.split-desc' | translate }}
+      {{ "docs.core-concepts.tabs-panes.tab-mgmt-desc" | translate }}
     </p>
     <table>
-        <thead>
-            <tr>
-                <th>{{ 'docs.core-concepts.tabs-panes.th-action' | translate }}</th>
-                <th>{{ 'docs.core-concepts.tabs-panes.th-how' | translate }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>{{ 'docs.core-concepts.tabs-panes.split-right' | translate }}</td>
-                <td>{{ 'docs.core-concepts.tabs-panes.split-right-how' | translate }}</td>
-            </tr>
-            <tr>
-                <td>{{ 'docs.core-concepts.tabs-panes.resize' | translate }}</td>
-                <td>{{ 'docs.core-concepts.tabs-panes.resize-how' | translate }}</td>
-            </tr>
-            <tr>
-                <td>{{ 'docs.core-concepts.tabs-panes.focus' | translate }}</td>
-                <td>{{ 'docs.core-concepts.tabs-panes.focus-how' | translate }}</td>
-            </tr>
-            <tr>
-                <td>{{ 'docs.core-concepts.tabs-panes.close-pane' | translate }}</td>
-                <td>{{ 'docs.core-concepts.tabs-panes.close-pane-how' | translate }}</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>{{ "docs.core-concepts.tabs-panes.th-action" | translate }}</th>
+          <th>{{ "docs.core-concepts.tabs-panes.th-how" | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ "docs.core-concepts.tabs-panes.new-tab" | translate }}</td>
+          <td>{{ "docs.core-concepts.tabs-panes.new-tab-how" | translate }}</td>
+        </tr>
+        <tr>
+          <td>{{ "docs.core-concepts.tabs-panes.rename-tab" | translate }}</td>
+          <td>
+            {{ "docs.core-concepts.tabs-panes.rename-tab-how" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td>{{ "docs.core-concepts.tabs-panes.close-tab" | translate }}</td>
+          <td>
+            {{ "docs.core-concepts.tabs-panes.close-tab-how" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            {{ "docs.core-concepts.tabs-panes.duplicate-tab" | translate }}
+          </td>
+          <td>
+            {{ "docs.core-concepts.tabs-panes.duplicate-tab-how" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            {{ "docs.core-concepts.tabs-panes.close-others" | translate }}
+          </td>
+          <td>
+            {{ "docs.core-concepts.tabs-panes.close-others-how" | translate }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>{{ "docs.core-concepts.tabs-panes.split-title" | translate }}</h2>
+    <p>
+      {{ "docs.core-concepts.tabs-panes.split-desc" | translate }}
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>{{ "docs.core-concepts.tabs-panes.th-action" | translate }}</th>
+          <th>{{ "docs.core-concepts.tabs-panes.th-how" | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ "docs.core-concepts.tabs-panes.split-right" | translate }}</td>
+          <td>
+            {{ "docs.core-concepts.tabs-panes.split-right-how" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td>{{ "docs.core-concepts.tabs-panes.resize" | translate }}</td>
+          <td>{{ "docs.core-concepts.tabs-panes.resize-how" | translate }}</td>
+        </tr>
+        <tr>
+          <td>{{ "docs.core-concepts.tabs-panes.focus" | translate }}</td>
+          <td>{{ "docs.core-concepts.tabs-panes.focus-how" | translate }}</td>
+        </tr>
+        <tr>
+          <td>{{ "docs.core-concepts.tabs-panes.close-pane" | translate }}</td>
+          <td>
+            {{ "docs.core-concepts.tabs-panes.close-pane-how" | translate }}
+          </td>
+        </tr>
+      </tbody>
     </table>
     <p>
-        {{ 'docs.core-concepts.tabs-panes.pane-widths' | translate }}
+      {{ "docs.core-concepts.tabs-panes.pane-widths" | translate }}
     </p>
-
-    <h2>{{ 'docs.core-concepts.tabs-panes.positions-title' | translate }}</h2>
+    <h2>{{ "docs.core-concepts.tabs-panes.positions-title" | translate }}</h2>
     <p>
-        {{ 'docs.core-concepts.tabs-panes.positions-desc' | translate }}
+      {{ "docs.core-concepts.tabs-panes.positions-desc" | translate }}
     </p>
     <div class="command-badges" style="margin-bottom: 24px">
-        <code class="command-badge">bottom</code>
-        <code class="command-badge">right</code>
-        <code class="command-badge">top</code>
-        <code class="command-badge">left</code>
+      <code class="command-badge">bottom</code>
+      <code class="command-badge">right</code>
+      <code class="command-badge">top</code>
+      <code class="command-badge">left</code>
     </div>
-    <p>{{ 'docs.core-concepts.tabs-panes.positions-persist' | translate }}</p>
-
-    <h2>{{ 'docs.core-concepts.tabs-panes.config-title' | translate }}</h2>
+    <p>{{ "docs.core-concepts.tabs-panes.positions-persist" | translate }}</p>
+    <h2>{{ "docs.core-concepts.tabs-panes.config-title" | translate }}</h2>
     <p>
-        {{ 'docs.core-concepts.tabs-panes.config-desc' | translate }}
+      {{ "docs.core-concepts.tabs-panes.config-desc" | translate }}
     </p>
     <table>
-        <thead>
-            <tr>
-                <th>{{ 'docs.core-concepts.tabs-panes.th-option' | translate }}</th>
-                <th>{{ 'docs.core-concepts.tabs-panes.th-type' | translate }}</th>
-                <th>{{ 'docs.core-concepts.tabs-panes.th-default' | translate }}</th>
-                <th>{{ 'docs.core-concepts.tabs-panes.th-description' | translate }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>isCollapsed</code></td>
-                <td><code>boolean</code></td>
-                <td><code>true</code></td>
-                <td>{{ 'docs.core-concepts.tabs-panes.collapsed-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>position</code></td>
-                <td><code>string</code></td>
-                <td><code>'bottom'</code></td>
-                <td>{{ 'docs.core-concepts.tabs-panes.position-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>closable</code></td>
-                <td><code>boolean</code></td>
-                <td><code>true</code></td>
-                <td>{{ 'docs.core-concepts.tabs-panes.closable-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>resizable</code></td>
-                <td><code>boolean</code></td>
-                <td><code>true</code></td>
-                <td>{{ 'docs.core-concepts.tabs-panes.resizable-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>syncTheme</code></td>
-                <td><code>boolean</code></td>
-                <td><code>false</code></td>
-                <td>{{ 'docs.core-concepts.tabs-panes.sync-desc' | translate }}</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>{{ "docs.core-concepts.tabs-panes.th-option" | translate }}</th>
+          <th>{{ "docs.core-concepts.tabs-panes.th-type" | translate }}</th>
+          <th>{{ "docs.core-concepts.tabs-panes.th-default" | translate }}</th>
+          <th>
+            {{ "docs.core-concepts.tabs-panes.th-description" | translate }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>isCollapsed</code></td>
+          <td><code>boolean</code></td>
+          <td><code>true</code></td>
+          <td>
+            {{ "docs.core-concepts.tabs-panes.collapsed-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>position</code></td>
+          <td><code>string</code></td>
+          <td><code>'bottom'</code></td>
+          <td>
+            {{ "docs.core-concepts.tabs-panes.position-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>closable</code></td>
+          <td><code>boolean</code></td>
+          <td><code>true</code></td>
+          <td>
+            {{ "docs.core-concepts.tabs-panes.closable-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>resizable</code></td>
+          <td><code>boolean</code></td>
+          <td><code>true</code></td>
+          <td>
+            {{ "docs.core-concepts.tabs-panes.resizable-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>syncTheme</code></td>
+          <td><code>boolean</code></td>
+          <td><code>false</code></td>
+          <td>{{ "docs.core-concepts.tabs-panes.sync-desc" | translate }}</td>
+        </tr>
+      </tbody>
     </table>
-
-    <h2>{{ 'docs.core-concepts.tabs-panes.usage-title' | translate }}</h2>
+    <h2>{{ "docs.core-concepts.tabs-panes.usage-title" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">Angular</span>
-        <pre><code>&lt;cli-panel
-    [options]="{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}"
-    [modules]="modules"
-&gt;&lt;/cli-panel&gt;</code></pre>
+      <span class="code-label">Angular</span>
+      <pre><code>&lt;cli-panel
+        [options]="{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}"
+        [modules]="modules"
+      &gt;&lt;/cli-panel&gt;</code></pre>
     </div>
     <div class="code-block">
-        <span class="code-label">React</span>
-        <pre><code>&lt;CliPanel
-    options={{ '{' }}{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}{{ '}' }}
-    modules={{ '{' }}modules{{ '}' }}
-/&gt;</code></pre>
+      <span class="code-label">React</span>
+      <pre><code>&lt;CliPanel
+        options={{ '{' }}{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}{{ '}' }}
+        modules={{ '{' }}modules{{ '}' }}
+      /&gt;</code></pre>
     </div>
     <div class="code-block">
-        <span class="code-label">Vue</span>
-        <pre><code>&lt;CliPanel
-    :options="{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}"
-    :modules="modules"
-/&gt;</code></pre>
+      <span class="code-label">Vue</span>
+      <pre><code>&lt;CliPanel
+        :options="{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}"
+        :modules="modules"
+      /&gt;</code></pre>
     </div>
-
-    <h2>{{ 'docs.core-concepts.tabs-panes.state-title' | translate }}</h2>
+    <h2>{{ "docs.core-concepts.tabs-panes.state-title" | translate }}</h2>
     <p>
-        {{ 'docs.core-concepts.tabs-panes.state-desc' | translate }}
+      {{ "docs.core-concepts.tabs-panes.state-desc" | translate }}
     </p>
     <ul>
-        <li>{{ 'docs.core-concepts.tabs-panes.state-output' | translate }}</li>
-        <li>{{ 'docs.core-concepts.tabs-panes.state-history' | translate }}</li>
-        <li>{{ 'docs.core-concepts.tabs-panes.state-stores' | translate }}</li>
+      <li>{{ "docs.core-concepts.tabs-panes.state-output" | translate }}</li>
+      <li>{{ "docs.core-concepts.tabs-panes.state-history" | translate }}</li>
+      <li>{{ "docs.core-concepts.tabs-panes.state-stores" | translate }}</li>
     </ul>
-</div>
+  </div>
+}
 
 <!-- Input Reader -->
-<div *ngIf="currentTopic === 'input-reader'">
-    <h1>{{ 'docs.core-concepts.input-reader.title' | translate }}</h1>
+@if (currentTopic === "input-reader") {
+  <div>
+    <h1>{{ "docs.core-concepts.input-reader.title" | translate }}</h1>
     <p>
-        {{ 'docs.core-concepts.input-reader.intro' | translate }}
+      {{ "docs.core-concepts.input-reader.intro" | translate }}
     </p>
-
-    <h2>{{ 'docs.core-concepts.input-reader.methods-title' | translate }}</h2>
+    <h2>{{ "docs.core-concepts.input-reader.methods-title" | translate }}</h2>
     <table>
-        <thead>
-            <tr>
-                <th>{{ 'docs.core-concepts.input-reader.th-method' | translate }}</th>
-                <th>{{ 'docs.core-concepts.input-reader.th-description' | translate }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>readLine(prompt, options?)</code></td>
-                <td>{{ 'docs.core-concepts.input-reader.readline-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>readPassword(prompt)</code></td>
-                <td>{{ 'docs.core-concepts.input-reader.readpassword-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>readConfirm(prompt, default?)</code></td>
-                <td>{{ 'docs.core-concepts.input-reader.readconfirm-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>readNumber(prompt, options?)</code></td>
-                <td>{{ 'docs.core-concepts.input-reader.readnumber-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>readSelect(prompt, options, config?)</code></td>
-                <td>{{ 'docs.core-concepts.input-reader.readselect-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>readSelectInline(prompt, options)</code></td>
-                <td>{{ 'docs.core-concepts.input-reader.readselectinline-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>readMultiSelect(prompt, options, config?)</code></td>
-                <td>{{ 'docs.core-concepts.input-reader.readmultiselect-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>readDate(prompt, options?)</code></td>
-                <td>{{ 'docs.core-concepts.input-reader.readdate-desc' | translate }}</td>
-            </tr>
-            <tr>
-                <td><code>readFile(prompt, options?)</code></td>
-                <td>{{ 'docs.core-concepts.input-reader.readfile-desc' | translate }}</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>{{ "docs.core-concepts.input-reader.th-method" | translate }}</th>
+          <th>
+            {{ "docs.core-concepts.input-reader.th-description" | translate }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>readLine(prompt, options?)</code></td>
+          <td>
+            {{ "docs.core-concepts.input-reader.readline-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>readPassword(prompt)</code></td>
+          <td>
+            {{
+              "docs.core-concepts.input-reader.readpassword-desc" | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>readConfirm(prompt, default?)</code></td>
+          <td>
+            {{ "docs.core-concepts.input-reader.readconfirm-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>readNumber(prompt, options?)</code></td>
+          <td>
+            {{ "docs.core-concepts.input-reader.readnumber-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>readSelect(prompt, options, config?)</code></td>
+          <td>
+            {{ "docs.core-concepts.input-reader.readselect-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>readSelectInline(prompt, options)</code></td>
+          <td>
+            {{
+              "docs.core-concepts.input-reader.readselectinline-desc"
+                | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>readMultiSelect(prompt, options, config?)</code></td>
+          <td>
+            {{
+              "docs.core-concepts.input-reader.readmultiselect-desc" | translate
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>readDate(prompt, options?)</code></td>
+          <td>
+            {{ "docs.core-concepts.input-reader.readdate-desc" | translate }}
+          </td>
+        </tr>
+        <tr>
+          <td><code>readFile(prompt, options?)</code></td>
+          <td>
+            {{ "docs.core-concepts.input-reader.readfile-desc" | translate }}
+          </td>
+        </tr>
+      </tbody>
     </table>
-
-    <h2>{{ 'docs.core-concepts.input-reader.examples-title' | translate }}</h2>
-
-    <h3>{{ 'docs.core-concepts.input-reader.reading-text' | translate }}</h3>
+    <h2>{{ "docs.core-concepts.input-reader.examples-title" | translate }}</h2>
+    <h3>{{ "docs.core-concepts.input-reader.reading-text" | translate }}</h3>
     <div class="code-block">
-        <span class="code-label">readLine</span>
-        <pre><code>// Simple text input
-const name = await reader.readLine('What is your name?');
-
-// With placeholder, default, and validation
-const email = await reader.readLine('Email:', &#123;
-    placeholder: 'user&#64;example.com',
-    default: 'admin&#64;example.com',
-    validate: (v) =&gt; !v.includes('&#64;') ? 'Must be a valid email' : null,
-&#125;);</code></pre>
+      <span class="code-label">readLine</span>
+      <pre><code>// Simple text input
+        const name = await reader.readLine('What is your name?');
+        // With placeholder, default, and validation
+        const email = await reader.readLine('Email:', &#123;
+        placeholder: 'user&#64;example.com',
+        default: 'admin&#64;example.com',
+        validate: (v) =&gt; !v.includes('&#64;') ? 'Must be a valid email' : null,
+      &#125;);</code></pre>
     </div>
-
-    <h3>{{ 'docs.core-concepts.input-reader.reading-password' | translate }}</h3>
+    <h3>
+      {{ "docs.core-concepts.input-reader.reading-password" | translate }}
+    </h3>
     <div class="code-block">
-        <span class="code-label">readPassword</span>
-        <pre><code>const password = await reader.readPassword('Enter password:');
-// Input is masked with asterisks</code></pre>
+      <span class="code-label">readPassword</span>
+      <pre><code>const password = await reader.readPassword('Enter password:');
+      // Input is masked with asterisks</code></pre>
     </div>
-
-    <h3>{{ 'docs.core-concepts.input-reader.confirmation' | translate }}</h3>
+    <h3>{{ "docs.core-concepts.input-reader.confirmation" | translate }}</h3>
     <div class="code-block">
-        <span class="code-label">readConfirm</span>
-        <pre><code>// Default is false (y/N), pass true for (Y/n)
-const confirmed = await reader.readConfirm('Delete all files?', true);
-if (confirmed) &#123;
-    writer.writeln('Deleting...');
-&#125;</code></pre>
+      <span class="code-label">readConfirm</span>
+      <pre><code>// Default is false (y/N), pass true for (Y/n)
+        const confirmed = await reader.readConfirm('Delete all files?', true);
+        if (confirmed) &#123;
+        writer.writeln('Deleting...');
+      &#125;</code></pre>
     </div>
-
-    <h3>{{ 'docs.core-concepts.input-reader.reading-number' | translate }}</h3>
+    <h3>{{ "docs.core-concepts.input-reader.reading-number" | translate }}</h3>
     <div class="code-block">
-        <span class="code-label">readNumber</span>
-        <pre><code>const count = await reader.readNumber('How many items?', &#123;
-    min: 1,
-    max: 100,
-    default: 10,
-&#125;);</code></pre>
+      <span class="code-label">readNumber</span>
+      <pre><code>const count = await reader.readNumber('How many items?', &#123;
+        min: 1,
+        max: 100,
+        default: 10,
+      &#125;);</code></pre>
     </div>
-
-    <h3>{{ 'docs.core-concepts.input-reader.selection' | translate }}</h3>
+    <h3>{{ "docs.core-concepts.input-reader.selection" | translate }}</h3>
     <div class="code-block">
-        <span class="code-label">readSelect</span>
-        <pre><code>// With descriptions, groups, disabled options, and search
-const framework = await reader.readSelect('Pick a framework:', [
-    &#123; label: 'React', value: 'react', description: 'UI library', group: 'Frontend' &#125;,
-    &#123; label: 'Vue', value: 'vue', description: 'Progressive framework', group: 'Frontend' &#125;,
-    &#123; label: 'Express', value: 'express', description: 'Node.js framework', group: 'Backend' &#125;,
-    &#123; label: 'Legacy', value: 'legacy', description: 'Deprecated', disabled: true &#125;,
-], &#123; searchable: true, default: 'react' &#125;);</code></pre>
+      <span class="code-label">readSelect</span>
+      <pre><code>// With descriptions, groups, disabled options, and search
+        const framework = await reader.readSelect('Pick a framework:', [
+        &#123; label: 'React', value: 'react', description: 'UI library', group: 'Frontend' &#125;,
+        &#123; label: 'Vue', value: 'vue', description: 'Progressive framework', group: 'Frontend' &#125;,
+        &#123; label: 'Express', value: 'express', description: 'Node.js framework', group: 'Backend' &#125;,
+        &#123; label: 'Legacy', value: 'legacy', description: 'Deprecated', disabled: true &#125;,
+      ], &#123; searchable: true, default: 'react' &#125;);</code></pre>
     </div>
-
-    <h3>{{ 'docs.core-concepts.input-reader.inline-select' | translate }}</h3>
+    <h3>{{ "docs.core-concepts.input-reader.inline-select" | translate }}</h3>
     <div class="code-block">
-        <span class="code-label">readSelectInline</span>
-        <pre><code>// Compact horizontal picker with overflow handling
-const size = await reader.readSelectInline('Size:', [
-    &#123; label: 'Small', value: 'sm' &#125;,
-    &#123; label: 'Medium', value: 'md' &#125;,
-    &#123; label: 'Large', value: 'lg' &#125;,
-]);</code></pre>
+      <span class="code-label">readSelectInline</span>
+      <pre><code>// Compact horizontal picker with overflow handling
+        const size = await reader.readSelectInline('Size:', [
+        &#123; label: 'Small', value: 'sm' &#125;,
+        &#123; label: 'Medium', value: 'md' &#125;,
+        &#123; label: 'Large', value: 'lg' &#125;,
+      ]);</code></pre>
     </div>
-
-    <h3>{{ 'docs.core-concepts.input-reader.multi-select' | translate }}</h3>
+    <h3>{{ "docs.core-concepts.input-reader.multi-select" | translate }}</h3>
     <div class="code-block">
-        <span class="code-label">readMultiSelect</span>
-        <pre><code>// With pre-checked items, search, and select-all (press 'a')
-const toppings = await reader.readMultiSelect('Choose toppings:', [
-    &#123; label: 'Cheese', value: 'cheese', checked: true &#125;,
-    &#123; label: 'Pepperoni', value: 'pepperoni' &#125;,
-    &#123; label: 'Pineapple', value: 'pineapple', description: 'Controversial!' &#125;,
-], &#123; searchable: true &#125;);</code></pre>
+      <span class="code-label">readMultiSelect</span>
+      <pre><code>// With pre-checked items, search, and select-all (press 'a')
+        const toppings = await reader.readMultiSelect('Choose toppings:', [
+        &#123; label: 'Cheese', value: 'cheese', checked: true &#125;,
+        &#123; label: 'Pepperoni', value: 'pepperoni' &#125;,
+        &#123; label: 'Pineapple', value: 'pineapple', description: 'Controversial!' &#125;,
+      ], &#123; searchable: true &#125;);</code></pre>
     </div>
-
-    <h3>{{ 'docs.core-concepts.input-reader.reading-date' | translate }}</h3>
+    <h3>{{ "docs.core-concepts.input-reader.reading-date" | translate }}</h3>
     <div class="code-block">
-        <span class="code-label">readDate</span>
-        <pre><code>const date = await reader.readDate('Start date:', &#123;
-    format: 'YYYY-MM-DD',
-    min: '2024-01-01',
-    max: '2030-12-31',
-&#125;);</code></pre>
+      <span class="code-label">readDate</span>
+      <pre><code>const date = await reader.readDate('Start date:', &#123;
+        format: 'YYYY-MM-DD',
+        min: '2024-01-01',
+        max: '2030-12-31',
+      &#125;);</code></pre>
     </div>
-
-    <h3>{{ 'docs.core-concepts.input-reader.reading-file' | translate }}</h3>
+    <h3>{{ "docs.core-concepts.input-reader.reading-file" | translate }}</h3>
     <div class="code-block">
-        <span class="code-label">readFile</span>
-        <pre><code>const files = await reader.readFile('Select files:', &#123;
-    accept: '.json,.txt,.yaml',
-    multiple: true,
-&#125;);
-if (files) &#123;
-    for (const file of files) &#123;
+      <span class="code-label">readFile</span>
+      <pre><code>const files = await reader.readFile('Select files:', &#123;
+        accept: '.json,.txt,.yaml',
+        multiple: true,
+        &#125;);
+        if (files) &#123;
+        for (const file of files) &#123;
         writer.writeln(`$&#123;file.name&#125; ($&#123;file.size&#125; bytes)`);
-    &#125;
-&#125;</code></pre>
+        &#125;
+      &#125;</code></pre>
     </div>
-
-    <h2>{{ 'docs.core-concepts.input-reader.cancellation-title' | translate }}</h2>
-    <p>{{ 'docs.core-concepts.input-reader.cancellation-desc' | translate }}</p>
+    <h2>
+      {{ "docs.core-concepts.input-reader.cancellation-title" | translate }}
+    </h2>
+    <p>{{ "docs.core-concepts.input-reader.cancellation-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">handling-cancel.ts</span>
-        <pre><code>const result = await reader.readLine('Enter value:');
-if (result === null) &#123;
-    writer.writeWarning('Input cancelled.');
-    return;
-&#125;</code></pre>
+      <span class="code-label">handling-cancel.ts</span>
+      <pre><code>const result = await reader.readLine('Enter value:');
+        if (result === null) &#123;
+        writer.writeWarning('Input cancelled.');
+        return;
+      &#125;</code></pre>
     </div>
-
-    <h2>{{ 'docs.core-concepts.input-reader.try-it' | translate }}</h2>
+    <h2>{{ "docs.core-concepts.input-reader.try-it" | translate }}</h2>
     <p>
-        {{ 'docs.core-concepts.input-reader.try-it-desc' | translate }}
+      {{ "docs.core-concepts.input-reader.try-it-desc" | translate }}
     </p>
     <div class="try-it-terminal">
-        <div class="try-it-chrome">
-            <span class="chrome-dot red"></span>
-            <span class="chrome-dot yellow"></span>
-            <span class="chrome-dot green"></span>
-            <span class="chrome-title">input reader playground</span>
-        </div>
-        <div class="try-it-body">
-            <cli [options]="tryItOptions" [modules]="tryItModules" height="260px" />
-        </div>
+      <div class="try-it-chrome">
+        <span class="chrome-dot red"></span>
+        <span class="chrome-dot yellow"></span>
+        <span class="chrome-dot green"></span>
+        <span class="chrome-title">input reader playground</span>
+      </div>
+      <div class="try-it-body">
+        <cli [options]="tryItOptions" [modules]="tryItModules" height="260px" />
+      </div>
     </div>
-</div>
+  </div>
+}
 
 <!-- Writer API -->
-<div *ngIf="currentTopic === 'writer-api'">
+@if (currentTopic === "writer-api") {
+  <div>
     <h1>Writer API</h1>
     <p>
-        The <code>ICliTerminalWriter</code> interface provides 16 methods for rich terminal output.
-        Access it via <code>context.writer</code> in any command processor.
+      The <code>ICliTerminalWriter</code> interface provides 16 methods for rich
+      terminal output. Access it via <code>context.writer</code> in any command
+      processor.
     </p>
-
     <h2>Basic Output</h2>
     <table>
-        <thead>
-            <tr><th>Method</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>write(text)</code></td><td>Write text without a trailing newline</td></tr>
-            <tr><td><code>writeln(text?)</code></td><td>Write text followed by a newline (empty line if no argument)</td></tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>write(text)</code></td>
+          <td>Write text without a trailing newline</td>
+        </tr>
+        <tr>
+          <td><code>writeln(text?)</code></td>
+          <td>Write text followed by a newline (empty line if no argument)</td>
+        </tr>
+      </tbody>
     </table>
-
     <h2>Styled Messages</h2>
     <p>Each method writes a message with a colored prefix icon.</p>
     <table>
-        <thead>
-            <tr><th>Method</th><th>Style</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>writeSuccess(message)</code></td><td>Green ✓</td><td>Success messages</td></tr>
-            <tr><td><code>writeInfo(message)</code></td><td>Blue ℹ</td><td>Informational messages</td></tr>
-            <tr><td><code>writeWarning(message)</code></td><td>Yellow ⚠</td><td>Warning messages</td></tr>
-            <tr><td><code>writeError(message)</code></td><td>Red ✗</td><td>Error messages</td></tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Style</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>writeSuccess(message)</code></td>
+          <td>Green ✓</td>
+          <td>Success messages</td>
+        </tr>
+        <tr>
+          <td><code>writeInfo(message)</code></td>
+          <td>Blue ℹ</td>
+          <td>Informational messages</td>
+        </tr>
+        <tr>
+          <td><code>writeWarning(message)</code></td>
+          <td>Yellow ⚠</td>
+          <td>Warning messages</td>
+        </tr>
+        <tr>
+          <td><code>writeError(message)</code></td>
+          <td>Red ✗</td>
+          <td>Error messages</td>
+        </tr>
+      </tbody>
     </table>
-
     <h2>Color Wrapping</h2>
-    <p>Wrap text in ANSI color codes. Returns the wrapped string (does not write to terminal).</p>
+    <p>
+      Wrap text in ANSI color codes. Returns the wrapped string (does not write
+      to terminal).
+    </p>
     <table>
-        <thead>
-            <tr><th>Method</th><th>Parameters</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>wrapInColor(text, color)</code></td>
-                <td><code>text: string, color: CliForegroundColor</code></td>
-                <td>Wrap text in a foreground color (Red, Green, Yellow, Blue, Magenta, Cyan, White, Black)</td>
-            </tr>
-            <tr>
-                <td><code>wrapInBackgroundColor(text, color)</code></td>
-                <td><code>text: string, color: CliBackgroundColor</code></td>
-                <td>Wrap text in a background color</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Parameters</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>wrapInColor(text, color)</code></td>
+          <td><code>text: string, color: CliForegroundColor</code></td>
+          <td>
+            Wrap text in a foreground color (Red, Green, Yellow, Blue, Magenta,
+            Cyan, White, Black)
+          </td>
+        </tr>
+        <tr>
+          <td><code>wrapInBackgroundColor(text, color)</code></td>
+          <td><code>text: string, color: CliBackgroundColor</code></td>
+          <td>Wrap text in a background color</td>
+        </tr>
+      </tbody>
     </table>
     <div class="code-block">
-        <pre><code>const colored = writer.wrapInColor('Hello', CliForegroundColor.Cyan);
-writer.writeln(colored);</code></pre>
+      <pre><code>const colored = writer.wrapInColor('Hello', CliForegroundColor.Cyan);
+      writer.writeln(colored);</code></pre>
     </div>
-
     <h2>Data Display</h2>
     <table>
-        <thead>
-            <tr><th>Method</th><th>Parameters</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>writeJson(json)</code></td>
-                <td><code>json: any</code></td>
-                <td>Pretty-print a JSON object with syntax highlighting</td>
-            </tr>
-            <tr>
-                <td><code>writeTable(headers, rows, options?)</code></td>
-                <td><code>headers: string[], rows: string[][], options?: &#123; fullWidth?: boolean &#125;</code></td>
-                <td>Render a formatted table. Set <code>fullWidth: true</code> to expand columns to terminal width.</td>
-            </tr>
-            <tr>
-                <td><code>writeObjectsAsTable(objects)</code></td>
-                <td><code>objects: any[]</code></td>
-                <td>Auto-infer columns from object keys and render as a table</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Parameters</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>writeJson(json)</code></td>
+          <td><code>json: any</code></td>
+          <td>Pretty-print a JSON object with syntax highlighting</td>
+        </tr>
+        <tr>
+          <td><code>writeTable(headers, rows, options?)</code></td>
+          <td>
+            <code
+              >headers: string[], rows: string[][], options?: &#123; fullWidth?:
+              boolean &#125;</code
+            >
+          </td>
+          <td>
+            Render a formatted table. Set <code>fullWidth: true</code> to expand
+            columns to terminal width.
+          </td>
+        </tr>
+        <tr>
+          <td><code>writeObjectsAsTable(objects)</code></td>
+          <td><code>objects: any[]</code></td>
+          <td>Auto-infer columns from object keys and render as a table</td>
+        </tr>
+      </tbody>
     </table>
     <div class="code-block">
-        <pre><code>// Table with headers and rows
-writer.writeTable(
-    ['Name', 'Role', 'Status'],
-    [
+      <pre><code>// Table with headers and rows
+        writer.writeTable(
+        ['Name', 'Role', 'Status'],
+        [
         ['Alice', 'Admin', 'Active'],
         ['Bob', 'User', 'Inactive'],
-    ],
-    &#123; fullWidth: true &#125;,
-);
-
-// Auto-table from object array
-writer.writeObjectsAsTable([
-    &#123; id: 1, name: 'Alice', role: 'admin' &#125;,
-    &#123; id: 2, name: 'Bob', role: 'user' &#125;,
-]);</code></pre>
+        ],
+        &#123; fullWidth: true &#125;,
+        );
+        // Auto-table from object array
+        writer.writeObjectsAsTable([
+        &#123; id: 1, name: 'Alice', role: 'admin' &#125;,
+        &#123; id: 2, name: 'Bob', role: 'user' &#125;,
+      ]);</code></pre>
     </div>
-
     <h2>Layout & Formatting</h2>
     <table>
-        <thead>
-            <tr><th>Method</th><th>Parameters</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>writeDivider(options?)</code></td>
-                <td><code>&#123; color?: CliForegroundColor, length?: number, char?: string &#125;</code></td>
-                <td>Horizontal rule. Default: <code>─</code> repeated to terminal width.</td>
-            </tr>
-            <tr>
-                <td><code>writeList(items, options?)</code></td>
-                <td><code>items: string[], &#123; ordered?: boolean, prefix?: string, color?: CliForegroundColor &#125;</code></td>
-                <td>Bulleted, numbered, or custom-prefix list</td>
-            </tr>
-            <tr>
-                <td><code>writeKeyValue(entries, options?)</code></td>
-                <td><code>entries: Record&lt;string, string&gt; | [string, string][], &#123; separator?: string, keyColor?: CliForegroundColor &#125;</code></td>
-                <td>Aligned key-value pairs. Default separator: <code> : </code></td>
-            </tr>
-            <tr>
-                <td><code>writeColumns(items, options?)</code></td>
-                <td><code>items: string[], &#123; columns?: number, padding?: number &#125;</code></td>
-                <td>Multi-column layout</td>
-            </tr>
-            <tr>
-                <td><code>writeLink(text, url)</code></td>
-                <td><code>text: string, url: string</code></td>
-                <td>Clickable hyperlink (OSC 8). Falls back to <code>text (url)</code> in unsupported terminals.</td>
-            </tr>
-            <tr>
-                <td><code>writeBox(content, options?)</code></td>
-                <td><code>content: string | string[], &#123; title?: string, borderColor?: CliForegroundColor, padding?: number &#125;</code></td>
-                <td>Bordered box for callouts and notices</td>
-            </tr>
-            <tr>
-                <td><code>writeIndented(text, level?)</code></td>
-                <td><code>text: string, level?: number</code></td>
-                <td>Indented text (2 spaces per level, default level: 1)</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Parameters</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>writeDivider(options?)</code></td>
+          <td>
+            <code
+              >&#123; color?: CliForegroundColor, length?: number, char?: string
+              &#125;</code
+            >
+          </td>
+          <td>
+            Horizontal rule. Default: <code>─</code> repeated to terminal width.
+          </td>
+        </tr>
+        <tr>
+          <td><code>writeList(items, options?)</code></td>
+          <td>
+            <code
+              >items: string[], &#123; ordered?: boolean, prefix?: string,
+              color?: CliForegroundColor &#125;</code
+            >
+          </td>
+          <td>Bulleted, numbered, or custom-prefix list</td>
+        </tr>
+        <tr>
+          <td><code>writeKeyValue(entries, options?)</code></td>
+          <td>
+            <code
+              >entries: Record&lt;string, string&gt; | [string, string][],
+              &#123; separator?: string, keyColor?: CliForegroundColor
+              &#125;</code
+            >
+          </td>
+          <td>Aligned key-value pairs. Default separator: <code> : </code></td>
+        </tr>
+        <tr>
+          <td><code>writeColumns(items, options?)</code></td>
+          <td>
+            <code
+              >items: string[], &#123; columns?: number, padding?: number
+              &#125;</code
+            >
+          </td>
+          <td>Multi-column layout</td>
+        </tr>
+        <tr>
+          <td><code>writeLink(text, url)</code></td>
+          <td><code>text: string, url: string</code></td>
+          <td>
+            Clickable hyperlink (OSC 8). Falls back to
+            <code>text (url)</code> in unsupported terminals.
+          </td>
+        </tr>
+        <tr>
+          <td><code>writeBox(content, options?)</code></td>
+          <td>
+            <code
+              >content: string | string[], &#123; title?: string, borderColor?:
+              CliForegroundColor, padding?: number &#125;</code
+            >
+          </td>
+          <td>Bordered box for callouts and notices</td>
+        </tr>
+        <tr>
+          <td><code>writeIndented(text, level?)</code></td>
+          <td><code>text: string, level?: number</code></td>
+          <td>Indented text (2 spaces per level, default level: 1)</td>
+        </tr>
+      </tbody>
     </table>
     <div class="code-block">
-        <pre><code>// Key-value pairs
-writer.writeKeyValue(&#123;
-    'Name': 'Qodalis CLI',
-    'Version': '2.0.0',
-    'License': 'MIT',
-&#125;);
-
-// Bordered box
-writer.writeBox(['Multi-line content', 'inside a box'], &#123;
-    title: 'Notice',
-    borderColor: CliForegroundColor.Yellow,
-    padding: 1,
-&#125;);
-
-// Columns
-writer.writeColumns(
-    ['help', 'clear', 'theme', 'version', 'history', 'alias'],
-    &#123; columns: 3, padding: 4 &#125;,
-);</code></pre>
+      <pre><code>// Key-value pairs
+        writer.writeKeyValue(&#123;
+        'Name': 'Qodalis CLI',
+        'Version': '2.0.0',
+        'License': 'MIT',
+        &#125;);
+        // Bordered box
+        writer.writeBox(['Multi-line content', 'inside a box'], &#123;
+        title: 'Notice',
+        borderColor: CliForegroundColor.Yellow,
+        padding: 1,
+        &#125;);
+        // Columns
+        writer.writeColumns(
+        ['help', 'clear', 'theme', 'version', 'history', 'alias'],
+        &#123; columns: 3, padding: 4 &#125;,
+      );</code></pre>
     </div>
-
     <h2>File Output</h2>
     <table>
-        <thead>
-            <tr><th>Method</th><th>Parameters</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>writeToFile(fileName, content)</code></td>
-                <td><code>fileName: string, content: string</code></td>
-                <td>Triggers a browser file download with the given content</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Parameters</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>writeToFile(fileName, content)</code></td>
+          <td><code>fileName: string, content: string</code></td>
+          <td>Triggers a browser file download with the given content</td>
+        </tr>
+      </tbody>
     </table>
     <div class="code-block">
-        <pre><code>writer.writeToFile('report.json', JSON.stringify(data, null, 2));</code></pre>
+      <pre><code>writer.writeToFile('report.json', JSON.stringify(data, null, 2));</code></pre>
     </div>
-
     <h2>Try It</h2>
-    <p>Open the terminal below and use the built-in <code>help</code> command to see output formatting in action.</p>
+    <p>
+      Open the terminal below and use the built-in <code>help</code> command to
+      see output formatting in action.
+    </p>
     <div class="try-it-terminal">
-        <div class="try-it-chrome">
-            <span class="chrome-dot red"></span>
-            <span class="chrome-dot yellow"></span>
-            <span class="chrome-dot green"></span>
-            <span class="chrome-title">writer api playground</span>
-        </div>
-        <div class="try-it-body">
-            <cli [options]="tryItOptions" [modules]="tryItModules" height="280px" />
-        </div>
+      <div class="try-it-chrome">
+        <span class="chrome-dot red"></span>
+        <span class="chrome-dot yellow"></span>
+        <span class="chrome-dot green"></span>
+        <span class="chrome-title">writer api playground</span>
+      </div>
+      <div class="try-it-body">
+        <cli [options]="tryItOptions" [modules]="tryItModules" height="280px" />
+      </div>
     </div>
-</div>
+  </div>
+}
 
 <!-- HTTP Client -->
-<div *ngIf="currentTopic === 'http-client'">
+@if (currentTopic === "http-client") {
+  <div>
     <h1>HTTP Client</h1>
     <p>
-        The <code>ICliHttpClient</code> interface provides typed HTTP methods with automatic abort signal integration.
-        When the user presses Ctrl+C, in-flight requests are automatically cancelled.
-        Access it via <code>context.http</code>.
+      The <code>ICliHttpClient</code> interface provides typed HTTP methods with
+      automatic abort signal integration. When the user presses Ctrl+C,
+      in-flight requests are automatically cancelled. Access it via
+      <code>context.http</code>.
     </p>
-
     <h2>Methods</h2>
     <table>
-        <thead>
-            <tr><th>Method</th><th>Signature</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>get</code></td>
-                <td><code>get&lt;T&gt;(url, options?): Promise&lt;T&gt;</code></td>
-                <td>GET request, returns parsed JSON</td>
-            </tr>
-            <tr>
-                <td><code>post</code></td>
-                <td><code>post&lt;T&gt;(url, body?, options?): Promise&lt;T&gt;</code></td>
-                <td>POST request, auto-serializes body as JSON</td>
-            </tr>
-            <tr>
-                <td><code>put</code></td>
-                <td><code>put&lt;T&gt;(url, body?, options?): Promise&lt;T&gt;</code></td>
-                <td>PUT request, auto-serializes body as JSON</td>
-            </tr>
-            <tr>
-                <td><code>patch</code></td>
-                <td><code>patch&lt;T&gt;(url, body?, options?): Promise&lt;T&gt;</code></td>
-                <td>PATCH request, auto-serializes body as JSON</td>
-            </tr>
-            <tr>
-                <td><code>delete</code></td>
-                <td><code>delete&lt;T&gt;(url, options?): Promise&lt;T&gt;</code></td>
-                <td>DELETE request, returns parsed JSON</td>
-            </tr>
-            <tr>
-                <td><code>head</code></td>
-                <td><code>head(url, options?): Promise&lt;Response&gt;</code></td>
-                <td>HEAD request, returns raw Response</td>
-            </tr>
-            <tr>
-                <td><code>options</code></td>
-                <td><code>options&lt;T&gt;(url, options?): Promise&lt;T&gt;</code></td>
-                <td>OPTIONS request</td>
-            </tr>
-            <tr>
-                <td><code>fetch</code></td>
-                <td><code>fetch(url, init?): Promise&lt;Response&gt;</code></td>
-                <td>Raw fetch for streaming, headers, or status inspection</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Signature</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>get</code></td>
+          <td><code>get&lt;T&gt;(url, options?): Promise&lt;T&gt;</code></td>
+          <td>GET request, returns parsed JSON</td>
+        </tr>
+        <tr>
+          <td><code>post</code></td>
+          <td>
+            <code>post&lt;T&gt;(url, body?, options?): Promise&lt;T&gt;</code>
+          </td>
+          <td>POST request, auto-serializes body as JSON</td>
+        </tr>
+        <tr>
+          <td><code>put</code></td>
+          <td>
+            <code>put&lt;T&gt;(url, body?, options?): Promise&lt;T&gt;</code>
+          </td>
+          <td>PUT request, auto-serializes body as JSON</td>
+        </tr>
+        <tr>
+          <td><code>patch</code></td>
+          <td>
+            <code>patch&lt;T&gt;(url, body?, options?): Promise&lt;T&gt;</code>
+          </td>
+          <td>PATCH request, auto-serializes body as JSON</td>
+        </tr>
+        <tr>
+          <td><code>delete</code></td>
+          <td><code>delete&lt;T&gt;(url, options?): Promise&lt;T&gt;</code></td>
+          <td>DELETE request, returns parsed JSON</td>
+        </tr>
+        <tr>
+          <td><code>head</code></td>
+          <td><code>head(url, options?): Promise&lt;Response&gt;</code></td>
+          <td>HEAD request, returns raw Response</td>
+        </tr>
+        <tr>
+          <td><code>options</code></td>
+          <td>
+            <code>options&lt;T&gt;(url, options?): Promise&lt;T&gt;</code>
+          </td>
+          <td>OPTIONS request</td>
+        </tr>
+        <tr>
+          <td><code>fetch</code></td>
+          <td><code>fetch(url, init?): Promise&lt;Response&gt;</code></td>
+          <td>Raw fetch for streaming, headers, or status inspection</td>
+        </tr>
+      </tbody>
     </table>
-
     <h2>Request Options</h2>
     <p>All convenience methods accept <code>CliHttpRequestOptions</code>:</p>
     <table>
-        <thead>
-            <tr><th>Option</th><th>Type</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>timeout</code></td>
-                <td><code>number</code></td>
-                <td>Request timeout in milliseconds. Automatically aborts the request after this duration.</td>
-            </tr>
-            <tr>
-                <td><code>headers</code></td>
-                <td><code>HeadersInit</code></td>
-                <td>Custom request headers</td>
-            </tr>
-            <tr>
-                <td><code>signal</code></td>
-                <td><code>AbortSignal</code></td>
-                <td>Additional abort signal (merged with the command's signal)</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Option</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>timeout</code></td>
+          <td><code>number</code></td>
+          <td>
+            Request timeout in milliseconds. Automatically aborts the request
+            after this duration.
+          </td>
+        </tr>
+        <tr>
+          <td><code>headers</code></td>
+          <td><code>HeadersInit</code></td>
+          <td>Custom request headers</td>
+        </tr>
+        <tr>
+          <td><code>signal</code></td>
+          <td><code>AbortSignal</code></td>
+          <td>Additional abort signal (merged with the command's signal)</td>
+        </tr>
+      </tbody>
     </table>
-
     <h2>Examples</h2>
     <div class="code-block">
-        <pre><code>// Typed GET request
-const users = await context.http.get&lt;User[]&gt;('https://api.example.com/users');
-
-// POST with auto-serialized JSON body
-const result = await context.http.post&lt;Todo&gt;(
-    'https://api.example.com/todos',
-    &#123; title: 'New task', completed: false &#125;,
-);
-
-// Request with timeout
-const data = await context.http.get('https://api.example.com/slow', &#123;
-    timeout: 5000, // abort after 5 seconds
-&#125;);
-
-// Raw fetch for streaming
-const response = await context.http.fetch('https://example.com/large-file');
-const reader = response.body?.getReader();
-
-// Error handling with abort detection
-try &#123;
-    const data = await context.http.get(url);
-    context.writer.writeJson(data);
-&#125; catch (error: any) &#123;
-    if (error.name === 'AbortError') &#123;
+      <pre><code>// Typed GET request
+        const users = await context.http.get&lt;User[]&gt;('https://api.example.com/users');
+        // POST with auto-serialized JSON body
+        const result = await context.http.post&lt;Todo&gt;(
+        'https://api.example.com/todos',
+        &#123; title: 'New task', completed: false &#125;,
+        );
+        // Request with timeout
+        const data = await context.http.get('https://api.example.com/slow', &#123;
+        timeout: 5000, // abort after 5 seconds
+        &#125;);
+        // Raw fetch for streaming
+        const response = await context.http.fetch('https://example.com/large-file');
+        const reader = response.body?.getReader();
+        // Error handling with abort detection
+        try &#123;
+        const data = await context.http.get(url);
+        context.writer.writeJson(data);
+        &#125; catch (error: any) &#123;
+        if (error.name === 'AbortError') &#123;
         context.writer.writeWarning('Request cancelled.');
-    &#125; else &#123;
+        &#125; else &#123;
         context.writer.writeError(error.message);
-    &#125;
-&#125;</code></pre>
+        &#125;
+      &#125;</code></pre>
     </div>
-
     <h2>Auto-Abort Behavior</h2>
     <p>
-        The HTTP client automatically merges the command's <code>AbortSignal</code>.
-        When the user presses <strong>Ctrl+C</strong>, all pending requests from the current command
-        are cancelled immediately. The <code>fetch</code> call rejects with an <code>AbortError</code>.
+      The HTTP client automatically merges the command's
+      <code>AbortSignal</code>. When the user presses <strong>Ctrl+C</strong>,
+      all pending requests from the current command are cancelled immediately.
+      The <code>fetch</code> call rejects with an <code>AbortError</code>.
     </p>
     <p>
-        If you provide a <code>timeout</code>, a separate <code>AbortSignal</code> is created
-        and merged with the command signal — whichever fires first wins.
+      If you provide a <code>timeout</code>, a separate
+      <code>AbortSignal</code> is created and merged with the command signal —
+      whichever fires first wins.
     </p>
-</div>
+  </div>
+}
 
 <!-- Background Services -->
-<div *ngIf="currentTopic === 'background-services'">
+@if (currentTopic === "background-services") {
+  <div>
     <h1>Background Services</h1>
     <p>
-        Background services run independently of the command lifecycle. They are scoped to the CLI session
-        and destroyed when the engine shuts down. Access the registry via <code>context.backgroundServices</code>.
+      Background services run independently of the command lifecycle. They are
+      scoped to the CLI session and destroyed when the engine shuts down. Access
+      the registry via <code>context.backgroundServices</code>.
     </p>
-
     <h2>Service Types</h2>
     <table>
-        <thead>
-            <tr><th>Type</th><th>Lifecycle</th><th>Use Case</th></tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>'daemon'</code></td>
-                <td>Long-running — <code>onStart</code> blocks until stopped</td>
-                <td>Polling, WebSocket connections, event loops</td>
-            </tr>
-            <tr>
-                <td><code>'job'</code></td>
-                <td>Run-to-completion — <code>onStart</code> resolves when done</td>
-                <td>Data import, one-time setup, batch processing</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Lifecycle</th>
+          <th>Use Case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>'daemon'</code></td>
+          <td>Long-running — <code>onStart</code> blocks until stopped</td>
+          <td>Polling, WebSocket connections, event loops</td>
+        </tr>
+        <tr>
+          <td><code>'job'</code></td>
+          <td>Run-to-completion — <code>onStart</code> resolves when done</td>
+          <td>Data import, one-time setup, batch processing</td>
+        </tr>
+      </tbody>
     </table>
-
     <h2>ICliBackgroundService Interface</h2>
     <table>
-        <thead>
-            <tr><th>Field</th><th>Type</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>name</code></td><td><code>string</code></td><td>Unique service identifier</td></tr>
-            <tr><td><code>description</code></td><td><code>string?</code></td><td>Human-readable description</td></tr>
-            <tr><td><code>type</code></td><td><code>'daemon' | 'job'</code></td><td>Service lifecycle type</td></tr>
-            <tr><td><code>workerCompatible</code></td><td><code>boolean?</code></td><td>Whether the service can run in a Web Worker</td></tr>
-            <tr><td><code>workerFactory</code></td><td><code>() =&gt; Worker</code></td><td>Factory that creates the Worker instance (when <code>workerCompatible</code>)</td></tr>
-            <tr><td><code>onStart(ctx)</code></td><td><code>(ICliServiceContext) =&gt; Promise&lt;void&gt;</code></td><td>Called when the service starts</td></tr>
-            <tr><td><code>onStop(ctx)</code></td><td><code>(ICliServiceContext) =&gt; Promise&lt;void&gt;</code></td><td>Called for graceful shutdown</td></tr>
-            <tr><td><code>onError(error, ctx)</code></td><td><code>(Error, ICliServiceContext) =&gt; void</code></td><td>Called on unrecoverable error</td></tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>name</code></td>
+          <td><code>string</code></td>
+          <td>Unique service identifier</td>
+        </tr>
+        <tr>
+          <td><code>description</code></td>
+          <td><code>string?</code></td>
+          <td>Human-readable description</td>
+        </tr>
+        <tr>
+          <td><code>type</code></td>
+          <td><code>'daemon' | 'job'</code></td>
+          <td>Service lifecycle type</td>
+        </tr>
+        <tr>
+          <td><code>workerCompatible</code></td>
+          <td><code>boolean?</code></td>
+          <td>Whether the service can run in a Web Worker</td>
+        </tr>
+        <tr>
+          <td><code>workerFactory</code></td>
+          <td><code>() =&gt; Worker</code></td>
+          <td>
+            Factory that creates the Worker instance (when
+            <code>workerCompatible</code>)
+          </td>
+        </tr>
+        <tr>
+          <td><code>onStart(ctx)</code></td>
+          <td><code>(ICliServiceContext) =&gt; Promise&lt;void&gt;</code></td>
+          <td>Called when the service starts</td>
+        </tr>
+        <tr>
+          <td><code>onStop(ctx)</code></td>
+          <td><code>(ICliServiceContext) =&gt; Promise&lt;void&gt;</code></td>
+          <td>Called for graceful shutdown</td>
+        </tr>
+        <tr>
+          <td><code>onError(error, ctx)</code></td>
+          <td><code>(Error, ICliServiceContext) =&gt; void</code></td>
+          <td>Called on unrecoverable error</td>
+        </tr>
+      </tbody>
     </table>
-
     <h2>Service Context</h2>
-    <p>Each service receives its own <code>ICliServiceContext</code> with an independent abort signal:</p>
+    <p>
+      Each service receives its own <code>ICliServiceContext</code> with an
+      independent abort signal:
+    </p>
     <table>
-        <thead>
-            <tr><th>Property</th><th>Type</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>signal</code></td><td><code>AbortSignal</code></td><td>Scoped to this service — fires when <code>stop()</code> is called</td></tr>
-            <tr><td><code>emit(event)</code></td><td><code>(ICliServiceEvent) =&gt; void</code></td><td>Emit an event for listeners</td></tr>
-            <tr><td><code>log(message, level?)</code></td><td><code>(string, 'info' | 'warn' | 'error') =&gt; void</code></td><td>Log to the service's private buffer</td></tr>
-            <tr><td><code>createInterval(fn, ms)</code></td><td><code>ICliManagedInterval</code></td><td>Managed interval — auto-cleared on stop</td></tr>
-            <tr><td><code>createTimeout(fn, ms)</code></td><td><code>ICliManagedTimer</code></td><td>Managed timeout — auto-cleared on stop</td></tr>
-            <tr><td><code>state</code></td><td><code>ICliStateStore</code></td><td>Shared state store</td></tr>
-            <tr><td><code>services</code></td><td><code>ICliServiceProvider</code></td><td>Shared service container</td></tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>signal</code></td>
+          <td><code>AbortSignal</code></td>
+          <td>
+            Scoped to this service — fires when <code>stop()</code> is called
+          </td>
+        </tr>
+        <tr>
+          <td><code>emit(event)</code></td>
+          <td><code>(ICliServiceEvent) =&gt; void</code></td>
+          <td>Emit an event for listeners</td>
+        </tr>
+        <tr>
+          <td><code>log(message, level?)</code></td>
+          <td><code>(string, 'info' | 'warn' | 'error') =&gt; void</code></td>
+          <td>Log to the service's private buffer</td>
+        </tr>
+        <tr>
+          <td><code>createInterval(fn, ms)</code></td>
+          <td><code>ICliManagedInterval</code></td>
+          <td>Managed interval — auto-cleared on stop</td>
+        </tr>
+        <tr>
+          <td><code>createTimeout(fn, ms)</code></td>
+          <td><code>ICliManagedTimer</code></td>
+          <td>Managed timeout — auto-cleared on stop</td>
+        </tr>
+        <tr>
+          <td><code>state</code></td>
+          <td><code>ICliStateStore</code></td>
+          <td>Shared state store</td>
+        </tr>
+        <tr>
+          <td><code>services</code></td>
+          <td><code>ICliServiceProvider</code></td>
+          <td>Shared service container</td>
+        </tr>
+      </tbody>
     </table>
-
     <h2>Registry API</h2>
     <table>
-        <thead>
-            <tr><th>Method</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>register(service)</code></td><td>Register a service definition</td></tr>
-            <tr><td><code>start(name)</code></td><td>Start a registered service</td></tr>
-            <tr><td><code>stop(name)</code></td><td>Stop a running service</td></tr>
-            <tr><td><code>restart(name)</code></td><td>Stop and re-start a service</td></tr>
-            <tr><td><code>startJob(name, task, options?)</code></td><td>Run a one-shot job inline (no prior registration needed)</td></tr>
-            <tr><td><code>getStatus(name)</code></td><td>Get status snapshot (<code>ICliBackgroundServiceInfo</code>)</td></tr>
-            <tr><td><code>list()</code></td><td>List all registered services</td></tr>
-            <tr><td><code>getLogs(name, limit?)</code></td><td>Read log entries for a service</td></tr>
-            <tr><td><code>on(handler, filter?)</code></td><td>Subscribe to service events. Returns unsubscribe function.</td></tr>
-            <tr><td><code>destroyAll()</code></td><td>Stop all services and clean up</td></tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>register(service)</code></td>
+          <td>Register a service definition</td>
+        </tr>
+        <tr>
+          <td><code>start(name)</code></td>
+          <td>Start a registered service</td>
+        </tr>
+        <tr>
+          <td><code>stop(name)</code></td>
+          <td>Stop a running service</td>
+        </tr>
+        <tr>
+          <td><code>restart(name)</code></td>
+          <td>Stop and re-start a service</td>
+        </tr>
+        <tr>
+          <td><code>startJob(name, task, options?)</code></td>
+          <td>Run a one-shot job inline (no prior registration needed)</td>
+        </tr>
+        <tr>
+          <td><code>getStatus(name)</code></td>
+          <td>Get status snapshot (<code>ICliBackgroundServiceInfo</code>)</td>
+        </tr>
+        <tr>
+          <td><code>list()</code></td>
+          <td>List all registered services</td>
+        </tr>
+        <tr>
+          <td><code>getLogs(name, limit?)</code></td>
+          <td>Read log entries for a service</td>
+        </tr>
+        <tr>
+          <td><code>on(handler, filter?)</code></td>
+          <td>Subscribe to service events. Returns unsubscribe function.</td>
+        </tr>
+        <tr>
+          <td><code>destroyAll()</code></td>
+          <td>Stop all services and clean up</td>
+        </tr>
+      </tbody>
     </table>
-
     <h2>Example: Daemon Service</h2>
     <div class="code-block">
-        <pre><code>context.backgroundServices.register(&#123;
-    name: 'heartbeat',
-    description: 'Logs a heartbeat every 10 seconds',
-    type: 'daemon',
-    async onStart(ctx) &#123;
+      <pre><code>context.backgroundServices.register(&#123;
+        name: 'heartbeat',
+        description: 'Logs a heartbeat every 10 seconds',
+        type: 'daemon',
+        async onStart(ctx) &#123;
         ctx.log('Heartbeat started');
         ctx.createInterval(() =&gt; &#123;
-            ctx.log('Heartbeat: ' + new Date().toLocaleTimeString());
-            ctx.emit(&#123; source: 'heartbeat', type: 'tick' &#125;);
+        ctx.log('Heartbeat: ' + new Date().toLocaleTimeString());
+        ctx.emit(&#123; source: 'heartbeat', type: 'tick' &#125;);
         &#125;, 10000);
-    &#125;,
-    async onStop(ctx) &#123;
+        &#125;,
+        async onStop(ctx) &#123;
         ctx.log('Heartbeat stopped');
-    &#125;,
-&#125;);
-
-await context.backgroundServices.start('heartbeat');</code></pre>
+        &#125;,
+        &#125;);
+      await context.backgroundServices.start('heartbeat');</code></pre>
     </div>
-
     <h2>Example: One-Shot Job</h2>
     <div class="code-block">
-        <pre><code>await context.backgroundServices.startJob('init-data', async (ctx) =&gt; &#123;
-    ctx.log('Loading data...');
-    await fetchData();
-    ctx.log('Done!');
-&#125;);</code></pre>
+      <pre><code>await context.backgroundServices.startJob('init-data', async (ctx) =&gt; &#123;
+        ctx.log('Loading data...');
+        await fetchData();
+        ctx.log('Done!');
+      &#125;);</code></pre>
     </div>
-
     <h2>Example: Web Worker Service</h2>
     <div class="code-block">
-        <pre><code>context.backgroundServices.register(&#123;
-    name: 'ticker',
-    type: 'daemon',
-    workerCompatible: true,
-    workerFactory: () =&gt;
+      <pre><code>context.backgroundServices.register(&#123;
+        name: 'ticker',
+        type: 'daemon',
+        workerCompatible: true,
+        workerFactory: () =&gt;
         new Worker(new URL('./workers/ticker.worker.ts', import.meta.url), &#123;
-            type: 'module',
+        type: 'module',
         &#125;),
-    // Main-thread fallback
-    async onStart(ctx) &#123;
+        // Main-thread fallback
+        async onStart(ctx) &#123;
         ctx.createInterval(() =&gt; ctx.log('Tick'), 5000);
-    &#125;,
-&#125;);</code></pre>
+        &#125;,
+      &#125;);</code></pre>
     </div>
-
     <h2>Built-in Commands</h2>
     <p>The CLI provides built-in commands to manage services at runtime:</p>
     <table>
-        <thead>
-            <tr><th>Command</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>services</code></td><td>List all services with status</td></tr>
-            <tr><td><code>services start &lt;name&gt;</code></td><td>Start a service</td></tr>
-            <tr><td><code>services stop &lt;name&gt;</code></td><td>Stop a service</td></tr>
-            <tr><td><code>services logs &lt;name&gt;</code></td><td>View service log buffer</td></tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>services</code></td>
+          <td>List all services with status</td>
+        </tr>
+        <tr>
+          <td><code>services start &lt;name&gt;</code></td>
+          <td>Start a service</td>
+        </tr>
+        <tr>
+          <td><code>services stop &lt;name&gt;</code></td>
+          <td>Stop a service</td>
+        </tr>
+        <tr>
+          <td><code>services logs &lt;name&gt;</code></td>
+          <td>View service log buffer</td>
+        </tr>
+      </tbody>
     </table>
-</div>
+  </div>
+}
 
 <!-- State Management -->
-<div *ngIf="currentTopic === 'state-management'">
+@if (currentTopic === "state-management") {
+  <div>
     <h1>State Management</h1>
     <p>
-        The <code>ICliStateStore</code> provides reactive, persistent state scoped to each command processor.
-        State is automatically persisted to <code>localStorage</code> and restored on boot.
-        Access it via <code>context.state</code>.
+      The <code>ICliStateStore</code> holds reactive state scoped to each
+      command processor, saved in the browser (IndexedDB) and restored the next
+      time the terminal starts. Access it with <code>context.state</code>.
     </p>
-
     <h2>Declaring State</h2>
-    <p>Define initial state on your command processor using <code>stateConfiguration</code>:</p>
+    <p>
+      Define initial state on your command processor using
+      <code>stateConfiguration</code>:
+    </p>
     <div class="code-block">
-        <pre><code>const myProcessor: ICliCommandProcessor = &#123;
+      <pre><code>const myProcessor: ICliCommandProcessor = &#123;
     command: 'counter',
     description: 'Persistent counter',
     stateConfiguration: &#123;
         initialState: &#123; count: 0, lastAction: 'none' &#125;,
-        storeName: 'my-counter', // optional custom key (defaults to command name)
+        storeName: 'my-counter', // optional (defaults to the command name)
+        autoPersist: true,       // save after every change
     &#125;,
     // ...
 &#125;;</code></pre>
     </div>
-
+    <table>
+      <thead>
+        <tr>
+          <th>Option</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>initialState</code></td>
+          <td>(required)</td>
+          <td>
+            The state before anything is saved. Saved state is merged over it,
+            so keys you add in a later version are present for existing users.
+          </td>
+        </tr>
+        <tr>
+          <td><code>storeName</code></td>
+          <td>command name</td>
+          <td>Key of the store; commands using the same name share it.</td>
+        </tr>
+        <tr>
+          <td><code>autoPersist</code></td>
+          <td><code>false</code></td>
+          <td>
+            Save after every change (changes made in the same tick are saved
+            together). Without it, call <code>persist()</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>scope</code></td>
+          <td><code>'global'</code></td>
+          <td>
+            <code>'global'</code>: saved and shared by every terminal and tab of
+            the browser. <code>'user'</code>: saved separately for each
+            signed-in user (shared while nobody is signed in), and switched when
+            the user changes. <code>'session'</code>: this terminal only, in
+            memory, never saved.
+          </td>
+        </tr>
+        <tr>
+          <td><code>syncAcrossTabs</code></td>
+          <td><code>true</code></td>
+          <td>Apply changes saved by other tabs and terminals right away.</td>
+        </tr>
+        <tr>
+          <td><code>version</code>, <code>migrate</code></td>
+          <td>—</td>
+          <td>Convert saved state when its shape changes (see below).</td>
+        </tr>
+      </tbody>
+    </table>
     <h2>State Store API</h2>
     <table>
-        <thead>
-            <tr><th>Method</th><th>Signature</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>getState()</code></td>
-                <td><code>getState&lt;T&gt;(): T</code></td>
-                <td>Get a shallow copy of the current state. Mutating the returned object has no effect.</td>
-            </tr>
-            <tr>
-                <td><code>updateState(partial)</code></td>
-                <td><code>updateState(Partial&lt;CliState&gt;): void</code></td>
-                <td>Shallow-merge new values. Only provided keys are updated. Triggers subscribers and persists.</td>
-            </tr>
-            <tr>
-                <td><code>select(selector)</code></td>
-                <td><code>select&lt;K&gt;((state) =&gt; K): Observable&lt;K&gt;</code></td>
-                <td>Reactive slice — emits only when the selected value changes</td>
-            </tr>
-            <tr>
-                <td><code>subscribe(callback)</code></td>
-                <td><code>subscribe((state) =&gt; void): Subscription</code></td>
-                <td>Listen to all state changes</td>
-            </tr>
-            <tr>
-                <td><code>reset()</code></td>
-                <td><code>reset(): void</code></td>
-                <td>Restore state to <code>initialState</code></td>
-            </tr>
-            <tr>
-                <td><code>persist()</code></td>
-                <td><code>persist(): Promise&lt;void&gt;</code></td>
-                <td>Manually flush state to storage</td>
-            </tr>
-            <tr>
-                <td><code>initialize()</code></td>
-                <td><code>initialize(): Promise&lt;void&gt;</code></td>
-                <td>Load state from storage (called automatically on boot)</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Signature</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>getState()</code></td>
+          <td><code>getState&lt;T&gt;(): T</code></td>
+          <td>
+            A shallow copy of the current state. Change state with
+            <code>updateState</code>, not by mutating the result.
+          </td>
+        </tr>
+        <tr>
+          <td><code>updateState(partial)</code></td>
+          <td><code>updateState(Partial&lt;CliState&gt;): void</code></td>
+          <td>
+            Shallow-merge new values (only the provided keys change) and notify
+            subscribers. Saved with <code>persist()</code>, or automatically
+            with <code>autoPersist</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>update(change)</code></td>
+          <td>
+            <code>update((state) =&gt; Partial&lt;CliState&gt;): Promise&lt;void&gt;</code>
+          </td>
+          <td>
+            Read, change and save in one step, under the cross-tab lock:
+            <code>change</code> receives the latest saved state, so two
+            terminals changing the same key (adding to one list) both keep
+            their change.
+          </td>
+        </tr>
+        <tr>
+          <td><code>select(selector)</code></td>
+          <td>
+            <code>select&lt;K&gt;((state) =&gt; K): Observable&lt;K&gt;</code>
+          </td>
+          <td>Reactive slice — emits only when the selected value changes</td>
+        </tr>
+        <tr>
+          <td><code>subscribe(callback)</code></td>
+          <td><code>subscribe((state) =&gt; void): Subscription</code></td>
+          <td>Listen to all state changes</td>
+        </tr>
+        <tr>
+          <td><code>reset()</code></td>
+          <td><code>reset(): void</code></td>
+          <td>Restore state to <code>initialState</code></td>
+        </tr>
+        <tr>
+          <td><code>persist()</code></td>
+          <td><code>persist(): Promise&lt;void&gt;</code></td>
+          <td>Save the state (does nothing when no storage is available)</td>
+        </tr>
+        <tr>
+          <td><code>initialize()</code></td>
+          <td><code>initialize(): Promise&lt;void&gt;</code></td>
+          <td>
+            Load the saved state, once. Done for you before the command first
+            runs; later calls keep the changes made since.
+          </td>
+        </tr>
+        <tr>
+          <td><code>reload()</code></td>
+          <td><code>reload(): Promise&lt;void&gt;</code></td>
+          <td>Read the saved state again, replacing the current state</td>
+        </tr>
+      </tbody>
     </table>
-
     <h2>Example: Counter with Persistent State</h2>
     <div class="code-block">
-        <pre><code>async processCommand(command, context) &#123;
+      <pre><code>async processCommand(command, context) &#123;
     const state = context.state.getState&lt;&#123; count: number &#125;&gt;();
-
-    // Read
     context.writer.writeInfo('Current count: ' + state.count);
 
-    // Update (shallow merge)
     context.state.updateState(&#123; count: state.count + 1 &#125;);
-
-    // Reset
-    // context.state.reset();
+    await context.state.persist(); // not needed with autoPersist
 &#125;</code></pre>
     </div>
-
+    <h2>Several Terminals and Tabs</h2>
+    <p>
+      A global store has one saved state for the whole browser: every terminal
+      (panel tabs, split panes) and every browser tab reads and writes the same
+      data. Saving is safe when several of them change it:
+    </p>
+    <ul>
+      <li>
+        A save writes the top-level keys this terminal changed, merged into
+        what is saved, under a lock shared by all tabs. Two terminals changing
+        different keys never overwrite each other.
+      </li>
+      <li>
+        Other terminals apply the saved change right away, so the next change
+        they make starts from it. Keys they changed and have not saved yet are
+        kept.
+      </li>
+      <li
+        [innerHTML]="
+          'docs.core-concepts.state-management.update-latest' | translate
+        "
+      ></li>
+    </ul>
+    <div class="code-block">
+      <pre><code>// Two tabs adding a todo at the same time both keep theirs
+await context.state.update((state) =&gt; (&#123;
+    todos: [...state['todos'], &#123; id: Date.now(), text &#125;],
+&#125;));</code></pre>
+    </div>
+    <p
+      [innerHTML]="'docs.core-concepts.state-management.scopes-desc' | translate"
+    ></p>
+    <h2>Migrating Saved State</h2>
+    <p>
+      When the shape of your state changes, raise <code>version</code> and
+      convert older saved state in <code>migrate</code>. Saved state without a
+      version counts as version 0. The converted state is saved again.
+    </p>
+    <div class="code-block">
+      <pre><code>stateConfiguration: &#123;
+    initialState: &#123; todos: [] &#125;,
+    version: 1,
+    migrate: (state, fromVersion) =&gt;
+        fromVersion &lt; 1
+            ? &#123; todos: state.items.map((text) =&gt; (&#123; text, done: false &#125;)) &#125;
+            : state,
+&#125;</code></pre>
+    </div>
     <h2>Reactive Subscriptions</h2>
     <div class="code-block">
-        <pre><code>// Watch a specific slice of state
+      <pre><code>// Watch a specific slice of state
 context.state.select(state =&gt; state.count).subscribe(count =&gt; &#123;
     console.log('Count changed:', count);
 &#125;);
-
 // Watch all state changes
 context.state.subscribe(state =&gt; &#123;
     console.log('State updated:', state);
 &#125;);</code></pre>
     </div>
-
     <h2>Configuration Options</h2>
     <p>
-        Use <code>configurationOptions</code> on your processor to expose settings via the built-in
-        <code>configure</code> command. Users can view and change settings interactively.
+      Use <code>configurationOptions</code> on your processor to expose settings
+      via the built-in <code>configure</code> command. Users can view and change
+      settings interactively.
     </p>
     <div class="code-block">
-        <pre><code>const myProcessor: ICliCommandProcessor = &#123;
-    command: 'weather',
-    configurationOptions: [
+      <pre><code>const myProcessor: ICliCommandProcessor = &#123;
+        command: 'weather',
+        configurationOptions: [
         &#123;
-            key: 'unit',
-            label: 'Temperature Unit',
-            description: 'Celsius or Fahrenheit',
-            type: 'select',
-            defaultValue: 'celsius',
-            options: [
-                &#123; label: 'Celsius', value: 'celsius' &#125;,
-                &#123; label: 'Fahrenheit', value: 'fahrenheit' &#125;,
-            ],
+        key: 'unit',
+        label: 'Temperature Unit',
+        description: 'Celsius or Fahrenheit',
+        type: 'select',
+        defaultValue: 'celsius',
+        options: [
+        &#123; label: 'Celsius', value: 'celsius' &#125;,
+        &#123; label: 'Fahrenheit', value: 'fahrenheit' &#125;,
+        ],
         &#125;,
-    ],
-    // ...
-&#125;;</code></pre>
+        ],
+        // ...
+      &#125;;</code></pre>
     </div>
     <p>Users can then run:</p>
     <table>
-        <thead>
-            <tr><th>Command</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>configure</code></td><td>Interactive configuration menu</td></tr>
-            <tr><td><code>configure get weather.unit</code></td><td>Get a specific setting</td></tr>
-            <tr><td><code>configure set weather.unit fahrenheit</code></td><td>Set a specific setting</td></tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>configure</code></td>
+          <td>Interactive configuration menu</td>
+        </tr>
+        <tr>
+          <td><code>configure get weather.unit</code></td>
+          <td>Get a specific setting</td>
+        </tr>
+        <tr>
+          <td><code>configure set weather.unit fahrenheit</code></td>
+          <td>Set a specific setting</td>
+        </tr>
+      </tbody>
     </table>
-</div>
+  </div>
+}
 
 <!-- Notifications -->
-<div *ngIf="currentTopic === 'notifications'">
-    <h1>Notifications</h1>
+@if (currentTopic === "services") {
+  <div>
+    <h1>Services (DI)</h1>
     <p>
-        The <code>ICliNotifier</code> service displays status messages in the panel header bar.
-        Notifications are automatically cleared when the command finishes.
-        Access it via <code>context.notifier</code>.
+      Each terminal has a service container where the CLI and its modules
+      register services by token and look them up with
+      <code>context.services</code>. Modules declare services in
+      <code>services</code>; they can also register them at runtime with
+      <code>context.services.set()</code>.
     </p>
-
-    <h2>Methods</h2>
-    <table>
-        <thead>
-            <tr><th>Method</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>info(message)</code></td><td>Display an informational notification (blue)</td></tr>
-            <tr><td><code>success(message)</code></td><td>Display a success notification (green)</td></tr>
-            <tr><td><code>warn(message)</code></td><td>Display a warning notification (yellow)</td></tr>
-            <tr><td><code>error(message)</code></td><td>Display an error notification (red)</td></tr>
-            <tr><td><code>clear()</code></td><td>Clear the current notification</td></tr>
-        </tbody>
-    </table>
-
-    <h2>Properties</h2>
-    <table>
-        <thead>
-            <tr><th>Property</th><th>Type</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>current</code></td>
-                <td><code>CliNotification | undefined</code></td>
-                <td>The currently displayed notification (if any)</td>
-            </tr>
-            <tr>
-                <td><code>change$</code></td>
-                <td><code>Observable&lt;CliNotification | undefined&gt;</code></td>
-                <td>Observable that emits on notification changes — useful for custom UI integration</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h2>Example</h2>
-    <div class="code-block">
-        <pre><code>async processCommand(command, context) &#123;
-    // Show progress
-    context.notifier.info('Downloading 0%...');
-
-    for (let i = 0; i &lt;= 100; i += 10) &#123;
-        await new Promise(r =&gt; setTimeout(r, 200));
-        context.notifier.info('Downloading ' + i + '%...');
-    &#125;
-
-    // Show completion
-    context.notifier.success('Download complete!');
-
-    // Notification auto-clears when processCommand resolves.
-    // To clear manually:
-    // context.notifier.clear();
-&#125;</code></pre>
-    </div>
-
-    <h2>Observing Changes</h2>
-    <div class="code-block">
-        <pre><code>// React to notification changes (e.g., for custom UI)
-context.notifier.change$.subscribe(notification =&gt; &#123;
-    if (notification) &#123;
-        console.log(`[$&#123;notification.severity&#125;] $&#123;notification.message&#125;`);
-    &#125;
-&#125;);</code></pre>
-    </div>
-</div>
-
-<!-- Command Guards -->
-<div *ngIf="currentTopic === 'command-guards'">
-    <h1>Command Guards</h1>
+    <h2>Typed Tokens</h2>
     <p>
-        A command guard is a global check that runs before <strong>every</strong> command, across all processors
-        and modules, and can block it. Use guards for cross-cutting policies such as authentication, permission
-        checks, feature flags, maintenance windows or rate limiting, instead of repeating the check in each processor.
-    </p>
-    <p>
-        Guards are opt-in. With no guard registered every command runs as before. Guards differ from
-        <a routerLink="/docs/core-concepts/command-processors">processor hooks</a>: hooks belong to a single processor,
-        while guards are registered once and apply to every command.
-    </p>
-
-    <h2>The ICliCommandGuard Interface</h2>
-    <div class="code-block">
-        <pre><code>interface ICliCommandGuard &#123;
-    /** Unique name, shown in diagnostics when the guard throws */
-    name: string;
-
-    /** Execution order; lower runs first. Defaults to 0 */
-    priority?: number;
-
-    /** Optional filter: return false to skip this guard for the command */
-    appliesTo?(
-        processor: ICliCommandProcessor,
-        command: CliProcessCommand,
-        context: ICliExecutionContext,
-    ): boolean | Promise&lt;boolean&gt;;
-
-    /** Decide whether the command may run */
-    canActivate(
-        command: CliProcessCommand,
-        processor: ICliCommandProcessor,
-        context: ICliExecutionContext,
-    ): CliCommandGuardResult | Promise&lt;CliCommandGuardResult&gt;;
-&#125;
-
-const ICliCommandGuard_TOKEN = 'cli-command-guard';</code></pre>
-    </div>
-
-    <h2>Return Values</h2>
-    <table>
-        <thead>
-            <tr><th>canActivate returns</th><th>Effect</th></tr>
-        </thead>
-        <tbody>
-            <tr><td><code>true</code> or nothing</td><td>The command is allowed; the next guard runs</td></tr>
-            <tr><td><code>false</code></td><td>Blocked with <code>&lt;command&gt;: permission denied</code></td></tr>
-            <tr><td>a non-empty string</td><td>Blocked; the string is printed as the error</td></tr>
-            <tr><td><code>&#123; allowed, message &#125;</code></td><td>Explicit form; <code>message</code> is printed when <code>allowed</code> is false</td></tr>
-            <tr><td>throws / rejects</td><td>Blocked with <code>&lt;command&gt;: blocked by guard '&lt;name&gt;' (&lt;error&gt;)</code> (fails closed)</td></tr>
-        </tbody>
-    </table>
-    <p>A blocked command prints the message as an error and exits with code <code>-1</code>.</p>
-
-    <h2>Execution Order</h2>
-    <ol>
-        <li>The input is parsed and the processor (or sub-processor) is resolved.</li>
-        <li>Global parameters such as <code>--help</code> are handled. Help is never guarded.</li>
-        <li>The positional value is extracted into <code>command.value</code>.</li>
-        <li><strong>Guards run</strong>, sorted by ascending <code>priority</code>. For each guard, <code>appliesTo</code> is
-            evaluated first (if defined), then <code>canActivate</code>. The first guard that blocks stops the chain.</li>
-        <li>Required values and parameters are validated, processor hooks run, then <code>processCommand</code>.</li>
-    </ol>
-
-    <h2>Accessing the Context</h2>
-    <p>
-        Both <code>appliesTo</code> and <code>canActivate</code> receive the execution context of the command about to run.
-        A guard can use it to decide <em>what</em> should be guarded and <em>whether</em> it may run:
-    </p>
-    <ul>
-        <li><code>context.services.get(token)</code> / <code>getRequired(token)</code> resolve any registered service, for example a policy, permission or feature-flag service from another module.</li>
-        <li><code>context.userSession</code> gives the signed-in user and their groups, when a users module is loaded.</li>
-        <li><code>processor.metadata</code> carries declarative flags such as <code>requireAuth</code> and <code>requiredGroups</code>.</li>
-        <li><code>command.value</code> and <code>command.args</code> hold the parsed input.</li>
-        <li><code>context.reader</code> can prompt the user, e.g. for a confirmation guard.</li>
-    </ul>
-    <p>Return a message to report a denial rather than writing to the terminal yourself, so output stays consistent.</p>
-
-    <h2>Registering Guards from a Module</h2>
-    <p>
-        Add guards to a module's <code>guards</code> array. When the module boots, each guard is registered as a
-        multi-provider under <code>ICliCommandGuard_TOKEN</code>. Several modules can contribute guards and all of them run.
+      Create tokens with <code>createCliToken</code>, so lookups are typed
+      without a type argument. At runtime a token is its string, and plain
+      string tokens keep working.
     </p>
     <div class="code-block">
-        <pre><code>import &#123; ICliCommandGuard, ICliModule &#125; from '&#64;qodalis/cli-core';
+      <pre><code>export interface ITodoStore &#123; list(): string[] &#125;
+export const ITodoStore_TOKEN = createCliToken&lt;ITodoStore&gt;('todo-store');
 
-const maintenanceGuard: ICliCommandGuard = &#123;
-    name: 'maintenance',
-    priority: -50,
-    appliesTo: (processor) =&gt; processor.metadata?.module === 'billing',
-    canActivate: (_command, processor, context) =&gt; &#123;
-        const status = context.services.get&lt;MaintenanceStatus&gt;(MaintenanceStatus_TOKEN);
-        return status?.active
-            ? `$&#123;processor.command&#125;: billing is in maintenance until $&#123;status.until&#125;`
-            : true;
-    &#125;,
-&#125;;
-
-export const billingModule: ICliModule = &#123;
+const myModule: ICliModule = &#123;
     apiVersion: 2,
-    name: 'billing',
-    processors: [new InvoiceProcessor()],
-    services: [&#123; provide: MaintenanceStatus_TOKEN, useValue: &#123; active: false &#125; &#125;],
-    guards: [maintenanceGuard],
+    name: 'todo',
+    services: [
+        &#123; provide: ITodoStore_TOKEN, useClass: TodoStore, deps: [ICliHttpClient_TOKEN] &#125;,
+    ],
+    async onInit(context) &#123;
+        const store = context.services.getRequired(ITodoStore_TOKEN); // ITodoStore
+    &#125;,
 &#125;;</code></pre>
     </div>
-    <p>Guards can also be registered at runtime, for example from a module's <code>onInit</code>:</p>
+    <p
+      [innerHTML]="'docs.core-concepts.services.typed-tokens-builtin' | translate"
+    ></p>
+    <h2>Providers</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Provider</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>useValue</code></td>
+          <td>Register an existing value</td>
+        </tr>
+        <tr>
+          <td><code>useClass</code> / <code>useFactory</code> + <code>deps</code></td>
+          <td>
+            Created on the first <code>get</code>, with <code>deps</code>
+            resolved then: dependencies only have to be registered by the time
+            the service is used. Dependency cycles are reported.
+          </td>
+        </tr>
+        <tr>
+          <td><code>multi: true</code></td>
+          <td>Collect several providers; <code>getAll(token)</code> returns all</td>
+        </tr>
+        <tr>
+          <td><code>transient: true</code></td>
+          <td>Create a new instance on every <code>get</code></td>
+        </tr>
+        <tr>
+          <td><code>sealed: true</code></td>
+          <td>The token cannot be overridden or removed</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Overriding and Removing</h2>
+    <p>
+      Registering a token again overrides it. <code>remove(token, provider)</code>
+      removes one registration, making the previous one active again;
+      <code>remove(token)</code> removes them all.
+    </p>
     <div class="code-block">
-        <pre><code>context.services.set(&#123; provide: ICliCommandGuard_TOKEN, useValue: myGuard, multi: true &#125;);</code></pre>
+      <pre><code>const mine = &#123; provide: ICliHttpClient_TOKEN, useValue: tracingClient &#125;;
+context.services.set(mine);
+// ...
+context.services.remove?.(ICliHttpClient_TOKEN, mine); // the default client is back</code></pre>
+    </div>
+    <h2>Lifecycle</h2>
+    <ul>
+      <li>
+        When a module is unloaded (<code>pkg remove</code>, or before
+        <code>pkg update</code> loads the new version), its commands, guards and
+        permissions are removed, its <code>onDestroy</code> runs, and then the
+        services it declared are removed. Services a module registers itself
+        at runtime should be removed in its <code>onDestroy</code>.
+      </li>
+      <li>
+        When the terminal is destroyed, services the container created
+        (<code>useClass</code> / <code>useFactory</code>) that have a
+        <code>dispose()</code> method are disposed. Values registered with
+        <code>useValue</code> belong to whoever registered them.
+      </li>
+    </ul>
+  </div>
+}
+
+@if (currentTopic === "event-bus") {
+  <div>
+    <h1>Event Bus</h1>
+    <p>
+      Every terminal has an event bus where the system, modules and commands
+      publish and subscribe to events. Use it to react to something happening
+      elsewhere (a package installed, a server connecting, a user signing in)
+      without depending on the code that does it. Access it with
+      <code>context.events</code>, or from the service container with
+      <code>ICliEventBus_TOKEN</code>.
+    </p>
+
+    <h2>Subscribing</h2>
+    <p>
+      <code>on(pattern, handler)</code> returns a function that unsubscribes.
+      A pattern is an exact type, a namespace wildcard such as
+      <code>package:*</code>, or <code>*</code> for every event.
+    </p>
+    <div class="code-block">
+      <pre><code>const myModule: ICliModule = &#123;
+  apiVersion: 2,
+  name: 'my-plugin',
+  async onInit(context) &#123;
+    // Typed: the payload type comes from CliEventMap
+    context.events?.on('package:installed', (e) =&gt;
+      context.writer.writeInfo(`Installed $&#123;e.data.name&#125;@$&#123;e.data.version&#125;`));
+
+    // A whole namespace; the payload is unknown
+    context.events?.on('server:*', (e) =&gt; console.log(e.type, e.data));
+
+    // Only the next one
+    context.events?.once('boot:completed', (e) =&gt;
+      console.log(`Booted in $&#123;e.data.durationMs&#125; ms`));
+  &#125;,
+&#125;;</code></pre>
+    </div>
+    <p>
+      Handlers run synchronously in the order they subscribed. A handler that
+      throws is logged and does not affect other handlers or the code that
+      emitted the event. <code>events$(pattern)</code> returns the same events
+      as an RxJS observable.
+    </p>
+
+    <h2>Emitting your own events</h2>
+    <p>
+      Name events <code>namespace:name</code>, using your plugin name as the
+      namespace. Declare their payloads once with declaration merging, so
+      emitters and listeners are type-checked:
+    </p>
+    <div class="code-block">
+      <pre><code>declare module '@qodalis/cli-core' &#123;
+  interface CliEventMap &#123;
+    'todo:added': &#123; id: number; text: string &#125;;
+  &#125;
+&#125;
+
+context.events?.emit('todo:added', &#123; id: 1, text: 'Buy milk' &#125;, &#123; source: 'todo' &#125;);
+context.events?.on('todo:added', (e) =&gt; e.data.text); // typed</code></pre>
+    </div>
+    <p>
+      Without a declaration, pass the payload type explicitly, or leave it out:
+    </p>
+    <div class="code-block">
+      <pre><code>context.events?.on&lt;&#123; id: number &#125;&gt;('todo:done', (e) =&gt; e.data.id);
+context.events?.emit('todo:refresh');</code></pre>
     </div>
 
-    <h2>Example: Policy Resolved from a Service</h2>
-    <p>The guard below asks a service which commands are behind a feature flag, and whether the current user may use them.</p>
+    <h2>Built-in events</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>Payload</th>
+          <th>When</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>boot:completed</code></td><td><code>durationMs, modules, commands</code></td><td>Boot finished and the terminal accepts input</td></tr>
+        <tr><td><code>command:executed</code></td><td><code>command, exitCode, durationMs</code></td><td>A command line finished (typed or <code>engine.execute</code>)</td></tr>
+        <tr><td><code>module:loaded</code> / <code>module:unloaded</code></td><td><code>name, version, commands</code></td><td>A plugin was booted or unloaded</td></tr>
+        <tr><td><code>package:installed</code> / <code>package:updated</code> / <code>package:removed</code></td><td><code>name, version, previousVersion</code></td><td><code>pkg add</code>, <code>pkg update</code>, <code>pkg remove</code></td></tr>
+        <tr><td><code>server:connected</code> / <code>server:unavailable</code> / <code>server:disconnected</code></td><td><code>name, url, commands, reconnected</code></td><td>Server connection changes</td></tr>
+        <tr><td><code>server:event</code></td><td><code>server, type, data</code></td><td>An event pushed by a server over its event socket</td></tr>
+        <tr><td><code>service:started</code>, <code>service:stopped</code>, <code>service:failed</code>, …</td><td><code>name, …</code></td><td>Background service lifecycle</td></tr>
+        <tr><td><code>service:event</code></td><td><code>service, type, data</code></td><td>A custom event from a background service (<code>context.emit</code>)</td></tr>
+        <tr><td><code>config:changed</code> / <code>config:reset</code></td><td><code>category, key, value</code></td><td>A setting changed with <code>configure</code></td></tr>
+        <tr><td><code>session:changed</code></td><td><code>user</code></td><td>The signed-in user changed</td></tr>
+        <tr><td><code>user:login</code>, <code>user:logout</code>, …</td><td><code>ICliUserEvent</code></td><td>Published by the users plugin for each user event</td></tr>
+      </tbody>
+    </table>
+
+    <h2>History and persistence</h2>
+    <p>
+      Events live in memory: each terminal has its own bus for its lifetime,
+      and nothing is written to storage. Events describe something that just
+      happened; replaying them after a reload would make plugins react twice.
+      Data that must survive a reload belongs in a
+      <a routerLink="/docs/core-concepts/state-management">state store</a>.
+      The bus keeps the last 200 events, available with
+      <code>history(pattern?, limit?)</code>, for example to catch up on
+      what happened before a plugin loaded.
+    </p>
+
+    <h2>The events command</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>events watch [pattern]</code></td><td>Print events as they happen, until Ctrl+C</td></tr>
+        <tr><td><code>events log [pattern] [-n N]</code></td><td>Show recent events</td></tr>
+        <tr><td><code>events emit &lt;type&gt; [json]</code></td><td>Emit an event, e.g. to test a plugin (needs <code>system:events</code> when the users plugin is loaded)</td></tr>
+      </tbody>
+    </table>
+
+    <h2>When to use it</h2>
+    <ul>
+      <li>React to the system: refresh a view when a server reconnects, update a cache after <code>pkg update</code>.</li>
+      <li>Let plugins cooperate without importing each other: one emits <code>todo:added</code>, another listens.</li>
+      <li>Keep using a direct call when one piece of code needs an answer from another; events are fire-and-forget notifications.</li>
+    </ul>
+  </div>
+}
+@if (currentTopic === "notifications") {
+  <div>
+    <h1>Notifications</h1>
+    <p>
+      The <code>ICliNotifier</code> service displays status messages in the
+      panel header bar. Notifications are automatically cleared when the command
+      finishes. Access it via <code>context.notifier</code>.
+    </p>
+    <h2>Methods</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>info(message)</code></td>
+          <td>Display an informational notification (blue)</td>
+        </tr>
+        <tr>
+          <td><code>success(message)</code></td>
+          <td>Display a success notification (green)</td>
+        </tr>
+        <tr>
+          <td><code>warn(message)</code></td>
+          <td>Display a warning notification (yellow)</td>
+        </tr>
+        <tr>
+          <td><code>error(message)</code></td>
+          <td>Display an error notification (red)</td>
+        </tr>
+        <tr>
+          <td><code>clear()</code></td>
+          <td>Clear the current notification</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Properties</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>current</code></td>
+          <td><code>CliNotification | undefined</code></td>
+          <td>The currently displayed notification (if any)</td>
+        </tr>
+        <tr>
+          <td><code>change$</code></td>
+          <td><code>Observable&lt;CliNotification | undefined&gt;</code></td>
+          <td>
+            Observable that emits on notification changes — useful for custom UI
+            integration
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Example</h2>
     <div class="code-block">
-        <pre><code>const featureFlagGuard: ICliCommandGuard = &#123;
-    name: 'feature-flags',
-    appliesTo: (processor, _command, context) =&gt;
+      <pre><code>async processCommand(command, context) &#123;
+        // Show progress
+        context.notifier.info('Downloading 0%...');
+        for (let i = 0; i &lt;= 100; i += 10) &#123;
+        await new Promise(r =&gt; setTimeout(r, 200));
+        context.notifier.info('Downloading ' + i + '%...');
+        &#125;
+        // Show completion
+        context.notifier.success('Download complete!');
+        // Notification auto-clears when processCommand resolves.
+        // To clear manually:
+        // context.notifier.clear();
+      &#125;</code></pre>
+    </div>
+    <h2>Observing Changes</h2>
+    <div class="code-block">
+      <pre><code>// React to notification changes (e.g., for custom UI)
+        context.notifier.change$.subscribe(notification =&gt; &#123;
+        if (notification) &#123;
+        console.log(`[$&#123;notification.severity&#125;] $&#123;notification.message&#125;`);
+        &#125;
+      &#125;);</code></pre>
+    </div>
+  </div>
+}
+
+<!-- Command Guards -->
+@if (currentTopic === "command-guards") {
+  <div>
+    <h1>Command Guards</h1>
+    <p>
+      A command guard is a global check that runs before
+      <strong>every</strong> command, across all processors and modules, and can
+      block it. Use guards for cross-cutting policies such as authentication,
+      permission checks, feature flags, maintenance windows or rate limiting,
+      instead of repeating the check in each processor.
+    </p>
+    <p>
+      Guards are opt-in. With no guard registered every command runs as before.
+      Guards differ from
+      <a routerLink="/docs/core-concepts/command-processors">processor hooks</a
+      >: hooks belong to a single processor, while guards are registered once
+      and apply to every command.
+    </p>
+    <h2>The ICliCommandGuard Interface</h2>
+    <div class="code-block">
+      <pre><code>interface ICliCommandGuard &#123;
+        /** Unique name, shown in diagnostics when the guard throws */
+        name: string;
+        /** Execution order; lower runs first. Defaults to 0 */
+        priority?: number;
+        /** Optional filter: return false to skip this guard for the command */
+        appliesTo?(
+        processor: ICliCommandProcessor,
+        command: CliProcessCommand,
+        context: ICliExecutionContext,
+        ): boolean | Promise&lt;boolean&gt;;
+        /** Decide whether the command may run */
+        canActivate(
+        command: CliProcessCommand,
+        processor: ICliCommandProcessor,
+        context: ICliExecutionContext,
+        ): CliCommandGuardResult | Promise&lt;CliCommandGuardResult&gt;;
+        &#125;
+      const ICliCommandGuard_TOKEN = 'cli-command-guard';</code></pre>
+    </div>
+    <h2>Return Values</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>canActivate returns</th>
+          <th>Effect</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>true</code> or nothing</td>
+          <td>The command is allowed; the next guard runs</td>
+        </tr>
+        <tr>
+          <td><code>false</code></td>
+          <td>Blocked with <code>&lt;command&gt;: permission denied</code></td>
+        </tr>
+        <tr>
+          <td>a non-empty string</td>
+          <td>Blocked; the string is printed as the error</td>
+        </tr>
+        <tr>
+          <td><code>&#123; allowed, message &#125;</code></td>
+          <td>
+            Explicit form; <code>message</code> is printed when
+            <code>allowed</code> is false
+          </td>
+        </tr>
+        <tr>
+          <td>throws / rejects</td>
+          <td>
+            Blocked with
+            <code
+              >&lt;command&gt;: blocked by guard '&lt;name&gt;'
+              (&lt;error&gt;)</code
+            >
+            (fails closed)
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      A blocked command prints the message as an error and exits with code
+      <code>-1</code>.
+    </p>
+    <h2>Execution Order</h2>
+    <ol>
+      <li>
+        The input is parsed and the processor (or sub-processor) is resolved.
+      </li>
+      <li>
+        Global parameters such as <code>--help</code> are handled. Help is never
+        guarded.
+      </li>
+      <li>
+        The positional value is extracted into <code>command.value</code>.
+      </li>
+      <li>
+        <strong>Guards run</strong>, sorted by ascending <code>priority</code>.
+        For each guard, <code>appliesTo</code> is evaluated first (if defined),
+        then <code>canActivate</code>. The first guard that blocks stops the
+        chain.
+      </li>
+      <li>
+        Required values and parameters are validated, processor hooks run, then
+        <code>processCommand</code>.
+      </li>
+    </ol>
+    <h2>Accessing the Context</h2>
+    <p>
+      Both <code>appliesTo</code> and <code>canActivate</code> receive the
+      execution context of the command about to run. A guard can use it to
+      decide <em>what</em> should be guarded and <em>whether</em> it may run:
+    </p>
+    <ul>
+      <li>
+        <code>context.services.get(token)</code> /
+        <code>getRequired(token)</code> resolve any registered service, for
+        example a policy, permission or feature-flag service from another
+        module.
+      </li>
+      <li>
+        <code>context.userSession</code> gives the signed-in user and their
+        groups, when a users module is loaded.
+      </li>
+      <li>
+        <code>processor.metadata</code> carries declarative flags such as
+        <code>requireAuth</code> and <code>requiredGroups</code>.
+      </li>
+      <li>
+        <code>command.positionals</code>, <code>command.args</code> and
+        <code>command.value</code> hold the parsed input.
+      </li>
+      <li>
+        <code>context.reader</code> can prompt the user, e.g. for a confirmation
+        guard.
+      </li>
+    </ul>
+    <p>
+      Return a message to report a denial rather than writing to the terminal
+      yourself, so output stays consistent.
+    </p>
+    <h2>Registering Guards from a Module</h2>
+    <p>
+      Add guards to a module's <code>guards</code> array. When the module boots,
+      each guard is registered as a multi-provider under
+      <code>ICliCommandGuard_TOKEN</code>. Several modules can contribute guards
+      and all of them run.
+    </p>
+    <div class="code-block">
+      <pre><code>import &#123; ICliCommandGuard, ICliModule &#125; from '&#64;qodalis/cli-core';
+        const maintenanceGuard: ICliCommandGuard = &#123;
+        name: 'maintenance',
+        priority: -50,
+        appliesTo: (processor) =&gt; processor.metadata?.module === 'billing',
+        canActivate: (_command, processor, context) =&gt; &#123;
+        const status = context.services.get&lt;MaintenanceStatus&gt;(MaintenanceStatus_TOKEN);
+        return status?.active
+        ? `$&#123;processor.command&#125;: billing is in maintenance until $&#123;status.until&#125;`
+        : true;
+        &#125;,
+        &#125;;
+        export const billingModule: ICliModule = &#123;
+        apiVersion: 2,
+        name: 'billing',
+        processors: [new InvoiceProcessor()],
+        services: [&#123; provide: MaintenanceStatus_TOKEN, useValue: &#123; active: false &#125; &#125;],
+        guards: [maintenanceGuard],
+      &#125;;</code></pre>
+    </div>
+    <p>
+      Guards can also be registered at runtime, for example from a module's
+      <code>onInit</code>:
+    </p>
+    <div class="code-block">
+      <pre><code>context.services.set(&#123; provide: ICliCommandGuard_TOKEN, useValue: myGuard, multi: true &#125;);</code></pre>
+    </div>
+    <h2>Example: Policy Resolved from a Service</h2>
+    <p>
+      The guard below asks a service which commands are behind a feature flag,
+      and whether the current user may use them.
+    </p>
+    <div class="code-block">
+      <pre><code>const featureFlagGuard: ICliCommandGuard = &#123;
+        name: 'feature-flags',
+        appliesTo: (processor, _command, context) =&gt;
         context.services.get&lt;FeatureFlags&gt;(FeatureFlags_TOKEN)?.isFlagged(processor.command) ?? false,
-    canActivate: async (_command, processor, context) =&gt; &#123;
+        canActivate: async (_command, processor, context) =&gt; &#123;
         const flags = context.services.getRequired&lt;FeatureFlags&gt;(FeatureFlags_TOKEN);
         const enabled = await flags.isEnabled(processor.command, context.userSession?.user);
         return enabled ? true : `$&#123;processor.command&#125;: not available for your account`;
-    &#125;,
-&#125;;</code></pre>
+        &#125;,
+      &#125;;</code></pre>
     </div>
-
     <h2>Authentication and Permissions</h2>
     <p>
-        Processors declare access requirements in their metadata. Three guards built into the engine
-        (<code>access:require-auth</code>, <code>access:required-groups</code>, <code>access:required-permissions</code>)
-        enforce them as soon as an auth module registers an <code>ICliAuthorizationService</code>; until then the
-        flags are informational.
+      Processors declare access requirements in their metadata. Three guards
+      built into the engine (<code>access:require-auth</code>,
+      <code>access:required-groups</code>,
+      <code>access:required-permissions</code>) enforce them as soon as an auth
+      module registers an <code>ICliAuthorizationService</code>; until then the
+      flags are informational.
     </p>
     <div class="code-block">
-        <pre><code>const deployProcessor: ICliCommandProcessor = &#123;
-    command: 'deploy',
-    description: 'Deploy the app',
-    metadata: &#123;
+      <pre><code>const deployProcessor: ICliCommandProcessor = &#123;
+        command: 'deploy',
+        description: 'Deploy the app',
+        metadata: &#123;
         requireAuth: true,                    // must be signed in
         requiredGroups: ['ops', 'release'],   // member of at least one
         requiredPermissions: ['deploy:run'],  // holds all of these
-    &#125;,
-    async processCommand(command, context) &#123; /* ... */ &#125;,
-&#125;;
-
-export const deployModule: ICliModule = &#123;
-    apiVersion: 2,
-    name: 'deploy',
-    processors: [deployProcessor],
-    // Declared permissions appear in `perms --list` and can be granted to groups
-    permissions: [&#123; name: 'deploy:run', description: 'Run deployments' &#125;],
-&#125;;</code></pre>
+        &#125;,
+        async processCommand(command, context) &#123; /* ... */ &#125;,
+        &#125;;
+        export const deployModule: ICliModule = &#123;
+        apiVersion: 2,
+        name: 'deploy',
+        processors: [deployProcessor],
+        // Declared permissions appear in `perms --list` and can be granted to groups
+        permissions: [&#123; name: 'deploy:run', description: 'Run deployments' &#125;],
+      &#125;;</code></pre>
     </div>
     <table>
-        <thead>
-            <tr><th>Setup</th><th>Behaviour of the access metadata</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>No auth module</td><td>Ignored; every command runs</td></tr>
-            <tr><td><code>&#64;qodalis/cli-users</code> (local, server, embedded or custom backend)</td><td>Enforced, using the signed-in user's groups (roles) and effective permissions</td></tr>
-            <tr><td>Your own auth module</td><td>Enforced once it registers an <code>ICliAuthorizationService</code></td></tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Setup</th>
+          <th>Behaviour of the access metadata</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>No auth module</td>
+          <td>Ignored; every command runs</td>
+        </tr>
+        <tr>
+          <td>
+            <code>&#64;qodalis/cli-users</code> (local, server, embedded or
+            custom backend)
+          </td>
+          <td>
+            Enforced, using the signed-in user's groups (roles) and effective
+            permissions
+          </td>
+        </tr>
+        <tr>
+          <td>Your own auth module</td>
+          <td>
+            Enforced once it registers an <code>ICliAuthorizationService</code>
+          </td>
+        </tr>
+      </tbody>
     </table>
-
     <h2>Checking Permissions in Code</h2>
     <p>
-        The generic helpers in <code>&#64;qodalis/cli-core</code> work with any auth module and allow everything when none is loaded:
+      The generic helpers in <code>&#64;qodalis/cli-core</code> work with any
+      auth module and allow everything when none is loaded:
     </p>
     <div class="code-block">
-        <pre><code>import &#123; cliAuthorize, cliCanAccess, CliAccessDeniedError &#125; from '&#64;qodalis/cli-core';
-
-if (!cliAuthorize(context, 'deploy:rollback')) &#123;
-    throw new CliAccessDeniedError('deploy: rollback not permitted');  // printed as a plain error
-&#125;
-
-// rwx check on a resource you own (files, records, ...)
-const allowed = cliCanAccess(context, &#123; ownership: &#123; uid: 'alice', gid: 'dev' &#125;, permissions: 'rw-r-----' &#125;, 'write');</code></pre>
+      <pre><code>import &#123; cliAuthorize, cliCanAccess, CliAccessDeniedError &#125; from '&#64;qodalis/cli-core';
+        if (!cliAuthorize(context, 'deploy:rollback')) &#123;
+        throw new CliAccessDeniedError('deploy: rollback not permitted');  // printed as a plain error
+        &#125;
+        // rwx check on a resource you own (files, records, ...)
+      const allowed = cliCanAccess(context, &#123; ownership: &#123; uid: 'alice', gid: 'dev' &#125;, permissions: 'rw-r-----' &#125;, 'write');</code></pre>
     </div>
     <p>
-        Permissions are <code>resource:action</code> strings with <code>*</code> wildcards (<code>deploy:*</code>, <code>*</code>).
-        The files module uses <code>cliCanAccess</code> for rwx checks on the virtual file system.
+      Permissions are <code>resource:action</code> strings with
+      <code>*</code> wildcards (<code>deploy:*</code>, <code>*</code>). The
+      files module uses <code>cliCanAccess</code> for rwx checks on the virtual
+      file system.
     </p>
     <p>
-        Client-side checks improve the experience but are not a security boundary. When commands call a server,
-        the server must still authorize each request.
+      Client-side checks improve the experience but are not a security boundary.
+      When commands call a server, the server must still authorize each request.
     </p>
-</div>
+  </div>
+}

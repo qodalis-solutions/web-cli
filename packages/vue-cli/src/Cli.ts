@@ -8,7 +8,7 @@ import {
     inject,
 } from 'vue';
 import { ICliCommandProcessor, ICliModule, CliEngineSnapshot } from '@qodalis/cli-core';
-import { CliEngine, CliEngineOptions } from '@qodalis/cli';
+import { CliEngine, CliEngineOptions, createCliEngine, resolveCliHostConfig } from '@qodalis/cli';
 import { CliInjectionKey } from './cliInjection';
 import { CliConfigKey } from './CliConfigProvider';
 
@@ -69,36 +69,13 @@ export const Cli = defineComponent({
             return () => null;
         }
 
-        // Merge: local props override config context
-        const modules = props.modules ?? config?.modules;
-        const processors = props.processors ?? config?.processors;
-        const options = props.options ?? config?.options;
-        const services = props.services ?? config?.services;
+        // Local props override the config context.
+        const hostConfig = resolveCliHostConfig(props, config);
 
         onMounted(async () => {
             if (!containerRef.value) return;
 
-            const engineOptions = props.snapshot
-                ? { ...options, snapshot: props.snapshot }
-                : options;
-            engine = new CliEngine(containerRef.value, engineOptions);
-
-            engine.registerService('cli-framework', 'Vue');
-
-            if (services) {
-                for (const [token, value] of Object.entries(services)) {
-                    engine.registerService(token, value);
-                }
-            }
-
-            if (modules) {
-                engine.registerModules(modules);
-            }
-
-            if (processors) {
-                engine.registerProcessors(processors);
-            }
-
+            engine = createCliEngine(containerRef.value, { ...hostConfig, snapshot: props.snapshot, framework: 'Vue' });
             await engine.start();
             emit('ready', engine);
         });

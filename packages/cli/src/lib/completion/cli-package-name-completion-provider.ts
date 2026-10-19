@@ -13,7 +13,9 @@ import { CliPackageManagerService_TOKEN } from '../tokens';
 const INSTALLED_PKG_SUBCOMMANDS = new Set([
     'remove',
     'rm',
+    'uninstall',
     'update',
+    'versions',
 ]);
 
 /**

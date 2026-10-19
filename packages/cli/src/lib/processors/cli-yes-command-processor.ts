@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliYesCommandProcessor implements ICliCommandProcessor {
@@ -35,7 +36,7 @@ export class CliYesCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const text = (command.value || 'y') as string;
+        const text = joinShellWords(command.value ?? '') || 'y';
         const count = Math.min(
             parseInt(command.args['count'] || command.args['n']) || 20,
             1000,

@@ -23,9 +23,19 @@ export type CliProcessCommand = {
     rawCommand: string;
 
     /**
-     * The value of the command
+     * The value of the command: the text after the command (and sub-command)
+     * words, flags removed, as typed (quotes included). Prefer `positionals`
+     * to read arguments.
      */
     value?: string;
+
+    /**
+     * The positional arguments, split like a shell: quotes removed
+     * (`"my file.txt"` is one argument), backslash escapes applied, flags
+     * excluded. `cat "a b.txt" c.txt` has `['a b.txt', 'c.txt']`. Set by the
+     * engine for every command; empty when there are none.
+     */
+    positionals?: string[];
 
     /**
      * The arguments that were entered

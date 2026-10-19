@@ -7,6 +7,7 @@ import {
     ICliConfigurationOption,
     ICliExecutionContext,
     getPluginConfigValue,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import {
     generateGUID,
@@ -197,7 +198,7 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const input = command.value!;
+                    const input = joinShellWords(command.value ?? '');
                     const strict = command.args['strict'];
                     const isValid = strict
                         ? validateGUID(input)
@@ -267,7 +268,7 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const input = command.value!;
+                    const input = joinShellWords(command.value ?? '');
 
                     const clean = input.replace(/[-{}()urn:uuid ]/g, '');
                     if (!/^[0-9a-fA-F]{32}$/.test(clean)) {
@@ -336,7 +337,7 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const input = command.value!;
+                    const input = joinShellWords(command.value ?? '');
                     const { writer } = context;
 
                     if (!validateAnyGUID(input)) {
@@ -453,8 +454,7 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const raw = (command.value || '').trim();
-                    const parts = raw.split(/\s+/);
+                    const parts = command.positionals ?? [];
 
                     if (parts.length !== 2) {
                         context.writer.writeError(
@@ -468,8 +468,8 @@ export class CliGuidCommandProcessor implements ICliCommandProcessor {
                     }
 
                     const [a, b] = parts;
-                    const cleanA = a.replace(/[-{}()urn:uuid ]/g, '').toLowerCase();
-                    const cleanB = b.replace(/[-{}()urn:uuid ]/g, '').toLowerCase();
+                    const cleanA = a.replace(/^urn:uuid:/i, '').replace(/[-{}() ]/g, '').toLowerCase();
+                    const cleanB = b.replace(/^urn:uuid:/i, '').replace(/[-{}() ]/g, '').toLowerCase();
 
                     if (
                         !/^[0-9a-f]{32}$/.test(cleanA) ||

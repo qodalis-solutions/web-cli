@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import * as _ from 'lodash';
 import { LIBRARY_VERSION } from '../version';
@@ -33,7 +34,7 @@ function stringTransform(
             cmd: CliProcessCommand,
             context: ICliExecutionContext,
         ) => {
-            const text = (cmd.value || cmd.data || '') as string;
+            const text = (joinShellWords(cmd.value ?? '') || cmd.data || '') as string;
             const result = transform(text);
             context.writer.writeln(
                 `${context.writer.wrapInColor('Result: ', CliForegroundColor.Yellow)}${result}`,
@@ -247,7 +248,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const count = Math.min(
@@ -308,7 +309,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const find =
@@ -373,7 +374,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const length =
@@ -435,7 +436,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const length = parseInt(
@@ -509,7 +510,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const delimiter =
@@ -553,7 +554,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const words: string[] = lodash.words(text);
@@ -594,7 +595,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     context.writer.writeln(
@@ -622,7 +623,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const { writer } = context;
@@ -685,7 +686,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const find =
@@ -730,7 +731,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const find =
@@ -773,7 +774,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const find =

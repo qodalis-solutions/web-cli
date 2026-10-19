@@ -221,11 +221,10 @@ describe('CommandParser', () => {
         expect(result.commandName).toBe('MyCommand SubCmd');
     });
 
-    it('should ignore a standalone dash', () => {
-        // a bare `-` matches the non-flag alternative but starts with `-`
-        // so it is filtered out — neither a flag nor a command part
+    it('should keep a standalone dash as an operand', () => {
+        // a bare `-` means stdin (`paste - file`): a word, not a flag
         const result = parser.parse('test -');
-        expect(result.commandName).toBe('test');
+        expect(result.commandName).toBe('test -');
         expect(result.args.length).toBe(0);
     });
 
@@ -1271,5 +1270,96 @@ describe('CapturingTerminalWriter stderr capture', () => {
 
         expect(capturing.getCapturedData()).toBe('stdout');
         expect(capturing.getCapturedStderr()).toBe('stderr');
+    });
+});
+
+describe('quoted words and combined short flags', () => {
+    const parser = new CommandParser();
+    const params: any[] = [
+        { name: 'recursive', aliases: ['r'], type: 'boolean', description: '', required: false },
+        { name: 'force', aliases: ['f'], type: 'boolean', description: '', required: false },
+        { name: 'lines', aliases: ['n'], type: 'number', description: '', required: false },
+        { name: 'name', type: 'string', description: '', required: false },
+    ];
+
+    it('keeps a quoted word with spaces as one word', () => {
+        const out = parser.parse('grep "hello world" notes.txt');
+        expect(out.commandName).toBe('grep "hello world" notes.txt');
+        expect(out.tokens.filter((t) => t.kind === 'word').length).toBe(3);
+    });
+
+    it('does not read flags inside quotes', () => {
+        const out = parser.parse('echo "a --b c"');
+        expect(out.args).toEqual([]);
+        expect(out.commandName).toBe('echo "a --b c"');
+    });
+
+    it('keeps spacing inside quotes and treats a lone apostrophe as text', () => {
+        expect(parser.parse('echo "a   b"').commandName).toBe('echo "a   b"');
+        expect(parser.parse("echo it's fine").commandName).toBe("echo it's fine");
+    });
+
+    it('strips quotes from a space-separated flag value', () => {
+        const { tokens } = parser.parse('find --name "my file.txt"');
+        const { args, commandParts } = reconcileArgs(tokens, params);
+        expect(args).toEqual([{ name: 'name', value: 'my file.txt' }]);
+        expect(commandParts).toEqual(['find']);
+    });
+
+    it('expands -rf into -r -f', () => {
+        const { tokens } = parser.parse('rm -rf dir');
+        const { args, commandParts } = reconcileArgs(tokens, params);
+        expect(args).toEqual([
+            { name: 'r', value: true },
+            { name: 'f', value: true },
+        ]);
+        expect(commandParts).toEqual(['rm', 'dir']);
+    });
+
+    it('gives the next word to a final non-boolean letter (-rn 5)', () => {
+        const { tokens } = parser.parse('x -rn 5 file');
+        const { args, commandParts } = reconcileArgs(tokens, params);
+        expect(args).toEqual([
+            { name: 'r', value: true },
+            { name: 'n', value: 5 },
+        ]);
+        expect(commandParts).toEqual(['x', 'file']);
+    });
+
+    it('leaves unknown letters and double-dash names alone', () => {
+        expect(reconcileArgs(parser.parse('x -rz').tokens, params).args).toEqual([
+            { name: 'rz', value: true },
+        ]);
+        expect(reconcileArgs(parser.parse('x --rf').tokens, params).args).toEqual([
+            { name: 'rf', value: true },
+        ]);
+    });
+});
+
+describe('lone dash and stuck short values', () => {
+    const parser = new CommandParser();
+    const params: any[] = [
+        { name: 'lines', aliases: ['n'], type: 'number', description: '', required: false },
+        { name: 'fields', aliases: ['f'], type: 'string', description: '', required: false },
+        { name: 'quiet', aliases: ['q'], type: 'boolean', description: '', required: false },
+    ];
+
+    it('keeps a lone - as an operand', () => {
+        expect(parser.parse('paste - b.txt').commandName).toBe('paste - b.txt');
+    });
+
+    it('reads -n5 and -f1,3 as values', () => {
+        expect(reconcileArgs(parser.parse('head -n5 f').tokens, params).args).toEqual([
+            { name: 'n', value: 5 },
+        ]);
+        expect(reconcileArgs(parser.parse('cut -f1,3 f').tokens, params).args).toEqual([
+            { name: 'f', value: '1,3' },
+        ]);
+    });
+
+    it('does not split a boolean letter with a suffix', () => {
+        expect(reconcileArgs(parser.parse('x -q5').tokens, params).args).toEqual([
+            { name: 'q5', value: true },
+        ]);
     });
 });

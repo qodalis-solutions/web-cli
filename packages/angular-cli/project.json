@@ -21,15 +21,6 @@
       "defaultConfiguration": "production",
       "inputs": ["production", "sharedGlobals"],
       "outputs": ["{workspaceRoot}/dist/angular-cli"]
-    },
-    "lint": {
-      "executor": "@angular-eslint/builder:lint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/angular-cli/**/*.ts",
-          "packages/angular-cli/**/*.html"
-        ]
-      }
     }
   }
 }

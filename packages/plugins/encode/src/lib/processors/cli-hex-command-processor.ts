@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliHexCommandProcessor implements ICliCommandProcessor {
@@ -33,7 +34,7 @@ export class CliHexCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const hex = Array.from(new TextEncoder().encode(text))
@@ -62,7 +63,7 @@ export class CliHexCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const hexStr = (command.value ||
+                    const hexStr = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     try {
@@ -114,7 +115,7 @@ export class CliHexCommandProcessor implements ICliCommandProcessor {
                     context: ICliExecutionContext,
                 ) => {
                     const { writer } = context;
-                    const input = (command.value || '') as string;
+                    const input = (joinShellWords(command.value ?? '') || '') as string;
                     const fromBase = parseInt(command.args['from']) || 10;
                     const toBase = parseInt(command.args['to']) || 16;
 

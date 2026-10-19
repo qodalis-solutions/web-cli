@@ -9,6 +9,7 @@ import {
     ICliConfigurationOption,
     ICliExecutionContext,
     getPluginConfigValue,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 import {
@@ -62,8 +63,6 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
 
     private todos: TodoItem[] = [];
 
-    private nextId = 1;
-
     getTodos(): TodoItem[] {
         return this.todos;
     }
@@ -80,26 +79,26 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln(this.description!);
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.todo.description', this.description!));
         writer.writeln();
-        writer.writeln(writer.wrapInColor('Commands:', CliForegroundColor.Yellow));
-        writer.writeln(`  ${writer.wrapInColor('todo ls', CliForegroundColor.Cyan)}                    List all tasks`);
-        writer.writeln(`  ${writer.wrapInColor('todo ls --pending', CliForegroundColor.Cyan)}          List pending tasks only`);
-        writer.writeln(`  ${writer.wrapInColor('todo ls --completed', CliForegroundColor.Cyan)}        List completed tasks only`);
-        writer.writeln(`  ${writer.wrapInColor('todo ls --overdue', CliForegroundColor.Cyan)}          List overdue tasks only`);
-        writer.writeln(`  ${writer.wrapInColor('todo add <text>', CliForegroundColor.Cyan)}            Add a new task`);
-        writer.writeln(`  ${writer.wrapInColor('todo add <text> --due <date>', CliForegroundColor.Cyan)}  Add with due date`);
-        writer.writeln(`  ${writer.wrapInColor('todo edit <id> <new text>', CliForegroundColor.Cyan)}  Edit a task`);
-        writer.writeln(`  ${writer.wrapInColor('todo done <id>', CliForegroundColor.Cyan)}             Mark a task as done`);
-        writer.writeln(`  ${writer.wrapInColor('todo toggle <id>', CliForegroundColor.Cyan)}           Toggle done/undone`);
-        writer.writeln(`  ${writer.wrapInColor('todo rm <id>', CliForegroundColor.Cyan)}               Remove a task`);
-        writer.writeln(`  ${writer.wrapInColor('todo rm --all', CliForegroundColor.Cyan)}              Remove all tasks`);
+        writer.writeln(writer.wrapInColor(t.t('cli.todo.help.commands', 'Commands:'), CliForegroundColor.Yellow));
+        writer.writeln(`  ${writer.wrapInColor('todo ls', CliForegroundColor.Cyan)}                    ${t.t('cli.todo.help.list_all', 'List all tasks')}`);
+        writer.writeln(`  ${writer.wrapInColor('todo ls --pending', CliForegroundColor.Cyan)}          ${t.t('cli.todo.help.list_pending', 'List pending tasks only')}`);
+        writer.writeln(`  ${writer.wrapInColor('todo ls --completed', CliForegroundColor.Cyan)}        ${t.t('cli.todo.help.list_completed', 'List completed tasks only')}`);
+        writer.writeln(`  ${writer.wrapInColor('todo ls --overdue', CliForegroundColor.Cyan)}          ${t.t('cli.todo.help.list_overdue', 'List overdue tasks only')}`);
+        writer.writeln(`  ${writer.wrapInColor('todo add <text>', CliForegroundColor.Cyan)}            ${t.t('cli.todo.help.add', 'Add a new task')}`);
+        writer.writeln(`  ${writer.wrapInColor('todo add <text> --due <date>', CliForegroundColor.Cyan)}  ${t.t('cli.todo.help.add_due', 'Add with due date')}`);
+        writer.writeln(`  ${writer.wrapInColor('todo edit <id> <new text>', CliForegroundColor.Cyan)}  ${t.t('cli.todo.help.edit', 'Edit a task')}`);
+        writer.writeln(`  ${writer.wrapInColor('todo done <id>', CliForegroundColor.Cyan)}             ${t.t('cli.todo.help.done', 'Mark a task as done')}`);
+        writer.writeln(`  ${writer.wrapInColor('todo toggle <id>', CliForegroundColor.Cyan)}           ${t.t('cli.todo.help.toggle', 'Toggle done/undone')}`);
+        writer.writeln(`  ${writer.wrapInColor('todo rm <id>', CliForegroundColor.Cyan)}               ${t.t('cli.todo.help.remove', 'Remove a task')}`);
+        writer.writeln(`  ${writer.wrapInColor('todo rm --all', CliForegroundColor.Cyan)}              ${t.t('cli.todo.help.remove_all', 'Remove all tasks')}`);
         writer.writeln();
-        writer.writeln(writer.wrapInColor('Due date formats:', CliForegroundColor.Yellow));
+        writer.writeln(writer.wrapInColor(t.t('cli.todo.help.due_formats', 'Due date formats:'), CliForegroundColor.Yellow));
         writer.writeln(`  today, tomorrow, monday..sunday, next week, next month, YYYY-MM-DD`);
         writer.writeln();
-        writer.writeln(writer.wrapInColor('Examples:', CliForegroundColor.Yellow));
+        writer.writeln(writer.wrapInColor(t.t('cli.common.examples', 'Examples:'), CliForegroundColor.Yellow));
         writer.writeln(`  todo add Buy groceries --due tomorrow`);
         writer.writeln(`  todo ls --pending`);
         writer.writeln(`  todo edit 3 Buy organic groceries`);
@@ -112,10 +111,6 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
             .select<TodoItem[]>((x) => x['todos'])
             .subscribe((todos) => {
                 this.todos = (todos || []).map(migrateTodoItem);
-                this.nextId =
-                    this.todos.length > 0
-                        ? Math.max(...this.todos.map((t) => t.id)) + 1
-                        : 1;
             });
     }
 
@@ -226,7 +221,7 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                     },
                 ],
                 processCommand: async (command, context) => {
-                    const text = command.value;
+                    const text = joinShellWords(command.value ?? '');
                     if (!text) {
                         context.writer.writeError('Please provide a task description.');
                         return;
@@ -245,16 +240,19 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         dueDate = parsed;
                     }
 
-                    const newItem: TodoItem = {
-                        id: this.nextId++,
-                        text,
-                        completed: false,
-                        createdAt: new Date().toISOString(),
-                        dueDate,
-                    };
-
-                    this.todos.push(newItem);
-                    await this.saveToStorage(context);
+                    // The id comes from the latest saved list: two tabs
+                    // adding at once never get the same id
+                    let newItem!: TodoItem;
+                    await this.changeTodos(context, (todos) => {
+                        newItem = {
+                            id: nextIdOf(todos),
+                            text,
+                            completed: false,
+                            createdAt: new Date().toISOString(),
+                            dueDate,
+                        };
+                        todos.push(newItem);
+                    });
 
                     let msg = `Added: "${text}"`;
                     if (dueDate) {
@@ -280,11 +278,8 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                     },
                 ],
                 processCommand: async (command, context) => {
-                    const raw = command.value || '';
-                    const spaceIndex = raw.indexOf(' ');
-
-                    const idStr = spaceIndex === -1 ? raw : raw.substring(0, spaceIndex);
-                    const newText = spaceIndex === -1 ? undefined : raw.substring(spaceIndex + 1).trim();
+                    const [idStr = '', ...words] = command.positionals ?? [];
+                    const newText = words.length ? words.join(' ') : undefined;
 
                     const id = parseInt(idStr, 10);
                     if (isNaN(id)) {
@@ -299,36 +294,37 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                     }
 
                     const dueArg = command.args['due'];
-                    let changed = false;
+                    const edit: Partial<TodoItem> = {};
 
                     if (newText) {
-                        todo.text = newText;
-                        changed = true;
+                        edit.text = newText;
                     }
 
                     if (dueArg) {
                         if (dueArg === 'none') {
-                            todo.dueDate = undefined;
-                            changed = true;
+                            edit.dueDate = undefined;
                         } else {
                             const parsed = parseDueDate(dueArg);
                             if (!parsed) {
                                 context.writer.writeError(`Invalid due date: "${dueArg}".`);
                                 return;
                             }
-                            todo.dueDate = parsed;
-                            changed = true;
+                            edit.dueDate = parsed;
                         }
                     }
 
-                    if (!changed) {
+                    if (Object.keys(edit).length === 0) {
                         context.writer.writeError('Nothing to update. Provide new text or --due.');
                         return;
                     }
 
-                    await this.saveToStorage(context);
+                    let updated: TodoItem | undefined;
+                    await this.changeTodos(context, (todos) => {
+                        const item = todos.find((t) => t.id === id);
+                        if (item) updated = Object.assign(item, edit);
+                    });
                     context.writer.writeSuccess(`Updated task #${id}.`);
-                    context.process.output(todo);
+                    context.process.output(updated ?? { ...todo, ...edit });
                 },
             },
 
@@ -340,7 +336,7 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                 acceptsRawInput: true,
                 valueRequired: true,
                 processCommand: async (command, context) => {
-                    const id = parseInt(command.value || '', 10);
+                    const id = parseInt(command.positionals?.[0] ?? '', 10);
                     if (isNaN(id)) {
                         context.writer.writeError('Please provide a valid task ID.');
                         return;
@@ -357,11 +353,16 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         return;
                     }
 
-                    todo.completed = true;
-                    todo.completedAt = new Date().toISOString();
-                    await this.saveToStorage(context);
+                    const completedAt = new Date().toISOString();
+                    await this.changeTodos(context, (todos) => {
+                        const item = todos.find((t) => t.id === id);
+                        if (item) {
+                            item.completed = true;
+                            item.completedAt = completedAt;
+                        }
+                    });
                     context.writer.writeSuccess(`Done: "${todo.text}"`);
-                    context.process.output(todo);
+                    context.process.output({ ...todo, completed: true, completedAt });
                 },
             },
 
@@ -372,7 +373,7 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                 acceptsRawInput: true,
                 valueRequired: true,
                 processCommand: async (command, context) => {
-                    const id = parseInt(command.value || '', 10);
+                    const id = parseInt(command.positionals?.[0] ?? '', 10);
                     if (isNaN(id)) {
                         context.writer.writeError('Please provide a valid task ID.');
                         return;
@@ -384,13 +385,19 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         return;
                     }
 
-                    todo.completed = !todo.completed;
-                    todo.completedAt = todo.completed ? new Date().toISOString() : undefined;
-                    await this.saveToStorage(context);
+                    const completed = !todo.completed;
+                    const completedAt = completed ? new Date().toISOString() : undefined;
+                    await this.changeTodos(context, (todos) => {
+                        const item = todos.find((t) => t.id === id);
+                        if (item) {
+                            item.completed = completed;
+                            item.completedAt = completedAt;
+                        }
+                    });
 
-                    const status = todo.completed ? 'done' : 'reopened';
+                    const status = completed ? 'done' : 'reopened';
                     context.writer.writeSuccess(`Task #${id} marked as ${status}.`);
-                    context.process.output(todo);
+                    context.process.output({ ...todo, completed, completedAt });
                 },
             },
 
@@ -427,13 +434,12 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                             return;
                         }
 
-                        this.todos = [];
-                        await this.saveToStorage(context);
+                        await this.changeTodos(context, () => []);
                         context.writer.writeSuccess('Removed all tasks.');
                         return;
                     }
 
-                    const id = parseInt(command.value!, 10);
+                    const id = parseInt(command.positionals?.[0] ?? '', 10);
                     if (isNaN(id)) {
                         context.writer.writeError('Please provide a valid task ID.');
                         return;
@@ -457,8 +463,10 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
                         }
                     }
 
-                    const removed = this.todos.splice(index, 1)[0];
-                    await this.saveToStorage(context);
+                    const removed = this.todos[index];
+                    await this.changeTodos(context, (todos) =>
+                        todos.filter((t) => t.id !== id),
+                    );
                     context.writer.writeSuccess(`Removed: "${removed.text}"`);
                 },
             },
@@ -475,9 +483,26 @@ export class CliTodoCommandProcessor implements ICliCommandProcessor {
         }
     }
 
-    private async saveToStorage(context: ICliExecutionContext): Promise<void> {
-        context.state.updateState({ todos: this.todos });
-        await context.state.persist();
+    /**
+     * Change the list and save it, atomically: `change` gets the latest saved
+     * list (another tab may have changed it) to edit in place, or returns a
+     * new one.
+     */
+    private async changeTodos(
+        context: ICliExecutionContext,
+        change: (todos: TodoItem[]) => TodoItem[] | void,
+    ): Promise<void> {
+        await context.state.update((state) => {
+            const todos = ((state['todos'] as TodoItem[] | undefined) ?? []).map(
+                (t) => ({ ...migrateTodoItem(t) }),
+            );
+            return { todos: change(todos) ?? todos };
+        });
         localStorage.removeItem('todo-items');
     }
+}
+
+/** The id for a new task: one more than the highest. */
+function nextIdOf(todos: TodoItem[]): number {
+    return todos.length > 0 ? Math.max(...todos.map((t) => t.id)) + 1 : 1;
 }

@@ -3,6 +3,7 @@
  */
 
 export * from './lib/processors';
+export { publishUserEvents } from './lib/events';
 export * from './lib/services';
 export * from './lib/backend';
 export * from './lib/models/users-module-config';
@@ -230,7 +231,13 @@ export const usersModule: ICliUsersModule = {
         }
     },
 
-    async onDestroy() {
+    async onDestroy(context) {
+        // The deny-all placeholder from onInit goes too: once the runtime's
+        // authorization service is removed it would become active again
+        context?.services.remove?.(
+            ICliAuthorizationService_TOKEN,
+            denyAllAuthorization,
+        );
         const runtime = this._runtime;
         if (!runtime) return;
         runtime.subscriptions.forEach((s) => s.unsubscribe());

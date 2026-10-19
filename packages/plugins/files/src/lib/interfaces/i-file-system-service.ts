@@ -1,7 +1,8 @@
-import { CliAccessAction, ICliOwnership } from '@qodalis/cli-core';
+import { CliAccessAction, ICliOwnership, createCliToken } from '@qodalis/cli-core';
 import { IFileNode } from './i-file-node';
 
-export const IFileSystemService_TOKEN = 'cli-file-system-service';
+export const IFileSystemService_TOKEN =
+    createCliToken<IFileSystemService>('cli-file-system-service');
 
 /**
  * Decides whether the current principal may act on a node. Set by the files

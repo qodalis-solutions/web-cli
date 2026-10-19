@@ -6,8 +6,10 @@ export { CliTerminalSpinner } from './progress-bars/cli-terminal-spinner';
 export { CliTerminalProgressBar } from './progress-bars/cli-terminal-progress-bar';
 export { CliTerminalTextAnimator } from './progress-bars/cli-terminal-text-animator';
 export { CliCommandHistory } from './cli-command-history';
-export { welcomeModule, CliWelcomeMessageConfig } from './cli-welcome-message';
+export { welcomeModule, greetingModule, CliWelcomeMessageConfig } from './cli-welcome-message';
 export { CliBoot } from './cli-boot';
+export { CliBootLog } from './cli-boot-log';
+export type { CliBootLogOptions } from './cli-boot-log';
 export { ScriptLoaderService, CdnSourceName } from './script-loader';
 export { CliPackageManagerService } from './cli-package-manager';
 export { CliDefaultPingServerService } from './defaults';
@@ -20,6 +22,10 @@ export {
     CliEnvironment,
     CliEnvironmentProfile,
     CliEnvironmentSnapshot,
+    CliEnvironmentScope,
+    CliEnvironmentSource,
+    CliEnvironmentChange,
+    applyEnvironmentChange,
 } from './cli-environment';
 export { CliDragDropService } from './cli-drag-drop.service';
 export { CliHttpClient } from './cli-http-client';

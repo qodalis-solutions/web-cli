@@ -1,11 +1,16 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { pipedText, splitLines } from '../utils/lines';
 
 export class CliPasteCommandProcessor implements ICliCommandProcessor {
     command = 'paste';
@@ -34,6 +39,26 @@ export class CliPasteCommandProcessor implements ICliCommandProcessor {
         },
     ];
 
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.paste.help.join_files_side_side', 'Join files side by side: line 1 of each file goes on one output line, separated by a tab, then line 2, and so on. With -s, each file is joined onto a single line instead. Piped input is read as the file - (or as the only input when no file is named); -d takes a list of delimiters used in turn.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['paste <file1> <file2...>', t.t('cli.paste.help.merge_files_line_line', 'Merge files line by line')],
+            ['paste -s <file>', t.t('cli.paste.help.join_all_lines_file', 'Join all lines of a file into one')],
+            ['<command> | paste - <file>', t.t('cli.paste.help.merge_piped_input_file', 'Merge piped input with a file')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['paste names.txt ages.txt', t.t('cli.paste.help.two_columns_tab_separated', 'Two columns, tab separated')],
+            ['paste -d , a.txt b.txt', t.t('cli.paste.help.merge_comma_separated', 'Merge as comma-separated')],
+            ['paste -s -d , list.txt', t.t('cli.paste.help.turn_list_one_csv', 'Turn a list into one CSV line')],
+        ]);
+    }
+
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
@@ -42,24 +67,30 @@ export class CliPasteCommandProcessor implements ICliCommandProcessor {
             IFileSystemService_TOKEN,
         );
 
-        const delimiter = command.args['d'] || command.args['delimiters'] || '\t';
+        const delimiterArg =
+            command.args['d'] ?? command.args['delimiters'] ?? '\t';
+        const delimiters = this.parseDelimiters(String(delimiterArg));
         const serial = !!command.args['s'] || !!command.args['serial'];
 
         const paths = this.parsePaths(command);
+        const hasStdin = command.data != null;
 
         if (paths.length === 0) {
-            context.writer.writeError('paste: missing file operand');
-            return;
+            if (!hasStdin) {
+                context.writer.writeError('paste: missing file operand');
+                return;
+            }
+            // Piped input alone is the single input file
+            paths.push('-');
         }
 
-        if (!serial && paths.length < 2) {
-            context.writer.writeError('paste: missing file operand');
-            return;
-        }
-
-        // Read all files
+        // Read all inputs ('-' is the piped input)
         const fileLines: string[][] = [];
         for (const path of paths) {
+            if (path === '-' && hasStdin) {
+                fileLines.push(splitLines(pipedText(command.data)));
+                continue;
+            }
             try {
                 if (fs.isDirectory(path)) {
                     context.writer.writeError(
@@ -74,23 +105,25 @@ export class CliPasteCommandProcessor implements ICliCommandProcessor {
                     );
                     return;
                 }
-                let lines = content.split('\n');
-                // Remove trailing empty line from trailing newline
-                if (lines.length > 0 && lines[lines.length - 1] === '') {
-                    lines.pop();
-                }
-                fileLines.push(lines);
+                fileLines.push(splitLines(content));
             } catch (e: any) {
                 context.writer.writeError(`paste: ${e.message}`);
                 return;
             }
         }
 
+        const join = (parts: string[]): string =>
+            parts.reduce(
+                (line, part, i) =>
+                    i === 0
+                        ? part
+                        : line + delimiters[(i - 1) % delimiters.length] + part,
+                '',
+            );
+
         if (serial) {
             // Serial mode: each file's lines joined on one output line
-            const output = fileLines.map((lines) =>
-                lines.join(delimiter),
-            );
+            const output = fileLines.map((lines) => join(lines));
             context.writer.writeln(output.join('\n'));
         } else {
             // Parallel mode: zip lines from all files
@@ -99,15 +132,47 @@ export class CliPasteCommandProcessor implements ICliCommandProcessor {
             );
             const output: string[] = [];
             for (let i = 0; i < maxLines; i++) {
-                const parts = fileLines.map((lines) => lines[i] || '');
-                output.push(parts.join(delimiter));
+                output.push(join(fileLines.map((lines) => lines[i] ?? '')));
             }
             context.writer.writeln(output.join('\n'));
         }
     }
 
+    /** `-d` list: each character in turn, with \t, \n, \\ and \0 (empty) escapes. */
+    private parseDelimiters(list: string): string[] {
+        const result: string[] = [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i] === '\\' && i + 1 < list.length) {
+                const next = list[++i];
+                result.push(
+                    next === 't' ? '\t' : next === 'n' ? '\n' : next === '0' ? '' : next,
+                );
+            } else {
+                result.push(list[i]);
+            }
+        }
+        return result.length > 0 ? result : ['\t'];
+    }
+
+    /**
+     * The file operands. The engine drops a lone `-` from the value, so with
+     * piped input they are read from the raw command line to keep it.
+     */
     private parsePaths(command: CliProcessCommand): string[] {
-        const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
+        const fromValue = splitArgs(command.value || '').filter(Boolean);
+        if (command.data == null || !command.rawCommand) return fromValue;
+
+        const words = splitArgs(command.rawCommand).slice(1);
+        if (!words.includes('-')) return fromValue;
+        const result: string[] = [];
+        for (let i = 0; i < words.length; i++) {
+            const word = words[i];
+            if (word === '-' || !word.startsWith('-')) {
+                result.push(word);
+            } else if (/^(-d|--delimiters)$/.test(word)) {
+                i++; // its value
+            }
+        }
+        return result;
     }
 }

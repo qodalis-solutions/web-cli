@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliClipboardCommandProcessor implements ICliCommandProcessor {
@@ -35,7 +36,7 @@ export class CliClipboardCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     try {

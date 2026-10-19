@@ -1,11 +1,16 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { pipedText, splitLines } from '../utils/lines';
 
 export class CliHeadCommandProcessor implements ICliCommandProcessor {
     command = 'head';
@@ -26,6 +31,26 @@ export class CliHeadCommandProcessor implements ICliCommandProcessor {
         },
     ];
 
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.head.help.print_first_lines_file', 'Print the first lines of a file, 10 by default. Works on piped input too. With several files, each one gets a ==> name <== header.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['head <file>', t.t('cli.head.help.first_10_lines', 'First 10 lines')],
+            ['head -n <count> <file>', t.t('cli.head.help.first_lines', 'First <count> lines')],
+            ['<command> | head', t.t('cli.head.help.first_lines_piped_input', 'First lines of piped input')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['head notes.txt', t.t('cli.head.help.show_start_file', 'Show the start of a file')],
+            ['head -n 3 a.txt b.txt', t.t('cli.head.help.first_3_lines_each', 'First 3 lines of each file')],
+            ['cat app.log | head -n 20', t.t('cli.head.help.first_20_lines_log', 'First 20 lines of the log')],
+        ]);
+    }
+
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
@@ -33,19 +58,22 @@ export class CliHeadCommandProcessor implements ICliCommandProcessor {
         const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
-        const count = parseInt(
-            command.args['lines'] || command.args['n'] || '10',
-            10,
-        );
+        // `-n 5`, `--lines 5`, or the short form `-5`
+        const countArg =
+            command.args['lines'] ??
+            command.args['n'] ??
+            Object.keys(command.args).find((k) => /^\d+$/.test(k));
+        const parsedCount = parseInt(String(countArg ?? '10'), 10);
+        const count = isNaN(parsedCount) ? 10 : Math.abs(parsedCount);
         const paths = this.parsePaths(command);
 
         if (paths.length === 0) {
             if (command.data != null) {
-                const content = typeof command.data === 'string'
-                    ? command.data : JSON.stringify(command.data);
-                const lines = content.split('\n');
+                const lines = splitLines(pipedText(command.data));
                 const selected = lines.slice(0, count);
-                context.writer.writeln(selected.join('\n'));
+                if (selected.length > 0) {
+                    context.writer.writeln(selected.join('\n'));
+                }
                 return;
             }
             context.writer.writeError('head: missing file operand');
@@ -67,9 +95,11 @@ export class CliHeadCommandProcessor implements ICliCommandProcessor {
                     context.writer.writeln(`==> ${path} <==`);
                 }
 
-                const lines = content.split('\n');
+                const lines = splitLines(content);
                 const selected = lines.slice(0, count);
-                context.writer.writeln(selected.join('\n'));
+                if (selected.length > 0) {
+                    context.writer.writeln(selected.join('\n'));
+                }
             } catch (e: any) {
                 context.writer.writeError(`head: ${e.message}`);
             }
@@ -78,6 +108,6 @@ export class CliHeadCommandProcessor implements ICliCommandProcessor {
 
     private parsePaths(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
+        return splitArgs(raw).filter(Boolean);
     }
 }

@@ -5,6 +5,7 @@ import {
     CliBackgroundColor,
     CliForegroundColor,
     ICliCommandProcessor,
+    ICliCommandChildProcessor,
     ICliExecutionContext,
     ICliExecutionProcess,
     ICliServiceProvider,
@@ -35,6 +36,7 @@ import { CliTranslationService } from '../services/cli-translation-service';
 import { CliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
 import { CliHttpClient } from '../services/cli-http-client';
 import { CliNotifier } from '../services/cli-notifier';
+import { cliScriptRunner, ICliScriptRunner_TOKEN } from '../executor/cli-script-runner';
 
 /**
  * Result of executing a command through the test harness.
@@ -78,8 +80,11 @@ export class CliTestHarness {
     readonly registry: CliCommandProcessorRegistry;
     readonly executor: CliCommandExecutor;
     readonly services: CliServiceContainer;
+    /** Shared by every command: add a language pack and switch locale to test translations. */
+    readonly translator = new CliTranslationService();
 
     private readonly stateStoreManager: CliStateStoreManager;
+    private readonly initialized = new Set<ICliCommandProcessor>();
     private readonly processRegistry: CliProcessRegistry;
 
     /** Current user session — set via setUserSession() */
@@ -128,6 +133,12 @@ export class CliTestHarness {
             useValue: new CliEnvironment(),
         });
 
+        // Shell-style script runner (`sh` / `source`)
+        this.services.set({
+            provide: ICliScriptRunner_TOKEN,
+            useValue: cliScriptRunner,
+        });
+
         // Same access infrastructure as the engine: permission registry and the
         // access-metadata guards (inactive until an authorization service exists)
         this.services.set({
@@ -160,7 +171,8 @@ export class CliTestHarness {
 
     /**
      * Register a command processor. If the processor has an `initialize()`
-     * method, it will be called with a context wired to the harness services.
+     * method, it is called (with the processor's own state store, as in the
+     * engine) before the first `execute()`, or by `initializeProcessors()`.
      */
     registerProcessor(processor: ICliCommandProcessor): void {
         this.registry.registerProcessor(processor);
@@ -180,10 +192,27 @@ export class CliTestHarness {
      * Call this after registering all services and processors.
      */
     async initializeProcessors(): Promise<void> {
-        const ctx = this.createContext(createTestWriter());
-        for (const p of this.registry.processors) {
+        await this.initializeTree(this.registry.processors);
+    }
+
+    /** As the engine's boot: link sub-commands to their parent, then initialize. */
+    private async initializeTree(
+        processors: ICliCommandProcessor[],
+        parent?: ICliCommandProcessor,
+    ): Promise<void> {
+        for (const p of processors) {
+            if (this.initialized.has(p)) continue;
+            this.initialized.add(p);
+            (p as ICliCommandChildProcessor).parent = parent;
             if (p.initialize) {
+                const ctx = this.createContext(createTestWriter());
+                // Its own store (the root command's), as during execution
+                ctx.state = this.stateStoreManager.getProcessorStateStore(p);
+                await ctx.state.initialize();
                 await p.initialize(ctx);
+            }
+            if (p.processors?.length) {
+                await this.initializeTree(p.processors, p);
             }
         }
     }
@@ -209,6 +238,8 @@ export class CliTestHarness {
      * Returns captured stdout, stderr, exit code, and pipeline data.
      */
     async execute(command: string): Promise<CliTestResult> {
+        // Processors registered since the last call are set up first
+        await this.initializeProcessors();
         const writer = createTestWriter();
         const context = this.createContext(writer);
 
@@ -234,7 +265,7 @@ export class CliTestHarness {
         const context: ICliExecutionHost = {
             writer,
             services: this.services,
-            translator: new CliTranslationService(),
+            translator: this.translator,
             spinner: createNoopSpinner(),
             progressBar: createNoopProgressBar(),
             textAnimator: createNoopTextAnimator(),

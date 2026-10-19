@@ -7,7 +7,6 @@ import { ICliFilePickerProvider, CliFilePickerOptions, CliFileResult } from '@qo
 export class NoopFilePickerProvider implements ICliFilePickerProvider {
     readonly isSupported = false;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async pickFiles(_options?: CliFilePickerOptions): Promise<CliFileResult[] | null> {
         return null;
     }

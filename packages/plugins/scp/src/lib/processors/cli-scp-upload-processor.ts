@@ -62,8 +62,8 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
             remotePath = String(args['remote-path']);
         } else {
             // Fall back to positional
-            const value = command.value?.trim();
-            if (!value) {
+            const parts = command.positionals ?? [];
+            if (parts.length === 0) {
                 context.writer.writeError(
                     useLocalPicker
                         ? 'Usage: scp upload --local <server> <remote-path>'
@@ -71,7 +71,6 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
                 );
                 return;
             }
-            const parts = value.split(/\s+/);
             if (useLocalPicker) {
                 if (parts.length < 2) {
                     context.writer.writeError('Usage: scp upload --local <server> <remote-path>');

@@ -1,8 +1,12 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileNode } from '../interfaces/i-file-node';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
@@ -25,6 +29,32 @@ export class CliChownCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.chown.help.change_owner_group_files', 'Change the owner and/or group of files. Give user, user:group, user: (owner only) or :group (group only).'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            [
+                'chown <user>[:<group>] <file...>',
+                t.t('cli.chown.help.change_owner_group_if', 'Change owner, and group if given'),
+            ],
+            ['chown :<group> <file>', t.t('cli.chown.help.change_only_group', 'Change only the group')],
+            [
+                'chown -R <user> <dir>',
+                t.t('cli.chown.help.apply_directory_everything', 'Apply to a directory and everything in it'),
+            ],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['chown alice notes.txt', t.t('cli.chown.help.make_alice_owner', 'Make alice the owner')],
+            ['chown alice:staff report.txt', t.t('cli.chown.help.set_owner_group', 'Set owner and group')],
+            ['chown -R bob ~/shared', t.t('cli.chown.help.give_bob_whole_directory', 'Give bob a whole directory')],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,
@@ -73,7 +103,7 @@ export class CliChownCommandProcessor implements ICliCommandProcessor {
         paths: string[];
     } {
         const raw = command.value || '';
-        const tokens = raw.split(/\s+/).filter(Boolean);
+        const tokens = splitArgs(raw).filter(Boolean);
         const recursive = command.args['R'] || false;
         const ownerSpec = tokens.length > 0 ? tokens[0] : null;
         const paths = tokens.slice(1);

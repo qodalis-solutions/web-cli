@@ -337,10 +337,13 @@ describe('CliPasteCommandProcessor', () => {
         expect(writer.written.some(l => l.includes('missing file operand'))).toBe(true);
     });
 
-    it('should error when only one file given without -s', async () => {
+    it('should print a single file as is without -s', async () => {
         const cmd = makeCommand('paste /home/user/file1.txt');
         await processor.processCommand(cmd, ctx);
-        expect(writer.written.some(l => l.includes('missing file operand'))).toBe(true);
+        expect(writer.written.some(l => l.includes('missing file operand'))).toBe(false);
+        expect(writer.written.join('\n')).toBe(
+            fs.readFile('/home/user/file1.txt')!.replace(/\n$/, ''),
+        );
     });
 
     it('should error on nonexistent file', async () => {

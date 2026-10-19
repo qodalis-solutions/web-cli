@@ -77,7 +77,7 @@ export class CliHistoryCommandProcessor implements ICliCommandProcessor {
                 const commandHistory = context.services.getRequired<CliCommandHistory>(
                     CliCommandHistory_TOKEN,
                 );
-                const query = (cmd.value ?? '').trim();
+                const query = (cmd.positionals ?? []).join(' ');
                 const limit = (cmd.args?.['n'] as number) ?? 0;
 
                 const matches = commandHistory.search(query);

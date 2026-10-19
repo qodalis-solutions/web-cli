@@ -1,3 +1,4 @@
+import { createCliToken } from '@qodalis/cli-core';
 import {
     CliServerConfig,
     ICliBackgroundServiceRegistry,
@@ -5,6 +6,7 @@ import {
     ICliCommandProcessorRegistry,
     ICliLogger,
     ICliServerAuthService,
+    ICliEventBus,
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
 import { CliServerProxyProcessor } from './cli-server-proxy-processor';
@@ -13,7 +15,8 @@ import {
     DefaultServerProvider,
 } from './cli-server-multi-proxy-processor';
 
-export const CliServerManager_TOKEN = 'cli-server-manager';
+export const CliServerManager_TOKEN =
+    createCliToken<CliServerManager>('cli-server-manager');
 
 export class CliServerManager implements DefaultServerProvider {
     readonly connections = new Map<string, CliServerConnection>();
@@ -27,6 +30,7 @@ export class CliServerManager implements DefaultServerProvider {
     constructor(
         private readonly registry: ICliCommandProcessorRegistry,
         private readonly authService?: ICliServerAuthService,
+        private readonly events?: ICliEventBus,
     ) {}
 
     get defaultServer(): string | null {
@@ -34,7 +38,10 @@ export class CliServerManager implements DefaultServerProvider {
     }
 
     preferredServer(): string | null {
-        if (this._defaultServer && this.connections.get(this._defaultServer)?.connected) {
+        if (
+            this._defaultServer &&
+            this.connections.get(this._defaultServer)?.connected
+        ) {
             return this._defaultServer;
         }
         for (const [name, connection] of this.connections) {
@@ -66,7 +73,12 @@ export class CliServerManager implements DefaultServerProvider {
         for (const config of servers) {
             if (config.enabled === false) continue;
 
-            const connection = new CliServerConnection(config, backgroundServices, cliLogger, this.authService);
+            const connection = new CliServerConnection(
+                config,
+                backgroundServices,
+                cliLogger,
+                this.authService,
+            );
             this.connections.set(config.name, connection);
 
             connection.onDisconnect = () => {
@@ -77,6 +89,7 @@ export class CliServerManager implements DefaultServerProvider {
                 logger?.info(
                     `Server '${config.name}' reconnected (${connection.commands.length} commands, API v${connection.apiVersion}).`,
                 );
+                this.emitConnected(connection, true);
                 this.registerProxyProcessors(connection, config.name);
                 this.unregisterBareAliases();
                 this.registerBareAliases();
@@ -89,10 +102,15 @@ export class CliServerManager implements DefaultServerProvider {
                     `Connected to server '${config.name}' (${connection.commands.length} commands)`,
                 );
                 this.registerProxyProcessors(connection, config.name);
+                this.emitConnected(connection, false);
             } else {
                 logger?.warn(
                     `Could not connect to server '${config.name}' at ${config.url}. Commands from this server will not be available.`,
                 );
+                this.events?.emit('server:unavailable', {
+                    name: config.name,
+                    url: config.url,
+                });
             }
         }
 
@@ -118,6 +136,7 @@ export class CliServerManager implements DefaultServerProvider {
             this._logger?.info(
                 `Server '${name}' reconnected (${connection.commands.length} commands, API v${connection.apiVersion}).`,
             );
+            this.emitConnected(connection, true);
             this.registerProxyProcessors(connection, name);
             this.unregisterBareAliases();
             this.registerBareAliases();
@@ -129,6 +148,7 @@ export class CliServerManager implements DefaultServerProvider {
             this.registerProxyProcessors(connection, name);
             this.unregisterBareAliases();
             this.registerBareAliases();
+            this.emitConnected(connection, true);
             return { success: true, commandCount: connection.commands.length };
         }
 
@@ -139,7 +159,20 @@ export class CliServerManager implements DefaultServerProvider {
         return this.connections.get(name);
     }
 
+    private emitConnected(
+        connection: CliServerConnection,
+        reconnected: boolean,
+    ): void {
+        this.events?.emit('server:connected', {
+            name: connection.config.name,
+            url: connection.config.url,
+            commands: connection.commands.length,
+            reconnected,
+        });
+    }
+
     private handleDisconnect(name: string): void {
+        this.events?.emit('server:disconnected', { name });
         this._logger?.warn(
             `Server '${name}' disconnected. Its commands are no longer available. Starting health check...`,
         );

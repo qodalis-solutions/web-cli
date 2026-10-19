@@ -13,11 +13,18 @@ import {
     initializeBrowserEnvironment,
     LIBRARY_VERSION as CORE_VERSION,
     satisfiesVersionRange,
+    CliEventMap,
+    CliEventType,
+    ICliEventBus,
+    ICliEventBus_TOKEN,
+    CliProvider,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION as CLI_VERSION, API_VERSION } from '../version';
-import { CliKeyValueStore_TOKEN } from '../tokens';
+import { CliKeyValueStore_TOKEN, CliStateStoreManager_TOKEN } from '../tokens';
+import { ICliStateStoreManager } from '../state/cli-state-store-manager';
 import { CliExecutionContext } from '../context/cli-execution-context';
 import { CliCommandExecutionContext } from '../context/cli-command-execution-context';
+import { CliBootLog } from './cli-boot-log';
 import { builtinProcessors } from '../processors';
 
 export class CliBoot {
@@ -26,6 +33,19 @@ export class CliBoot {
     private readonly moduleRegistry: CliModuleRegistry;
     private readonly bootedModules = new Set<string>();
     private readonly initializedProcessors = new Set<ICliCommandProcessor>();
+    /** Services and guards each module registered, removed when it is unloaded. */
+    private readonly moduleProviders = new Map<string, CliProvider[]>();
+    /** Context modules were booted with (passed to `onDestroy` on unload). */
+    private context?: CliExecutionContext;
+    /** Boot report of the startup boot. */
+    private bootLogRef?: CliBootLog;
+
+    /** The boot report while startup is still in progress, else `undefined`. */
+    private get bootLog(): CliBootLog | undefined {
+        return this.bootLogRef && !this.bootLogRef.isFinished
+            ? this.bootLogRef
+            : undefined;
+    }
 
     constructor(
         private readonly registry: ICliCommandProcessorRegistry,
@@ -44,8 +64,12 @@ export class CliBoot {
     public async boot(
         context: CliExecutionContext,
         modules: ICliModule[],
+        bootLog?: CliBootLog,
     ): Promise<void> {
-        context.spinner?.show(CliIcon.Rocket + '  Booting...');
+        // The boot log replaces the spinner when it is enabled
+        if (!bootLog?.enabled) {
+            context.spinner?.show(CliIcon.Rocket + '  Booting...');
+        }
 
         if (this.initialized || this.initializing) {
             await this.bootShared(context);
@@ -54,7 +78,17 @@ export class CliBoot {
         }
 
         this.initializing = true;
+        // Kept until the report finishes: plugins loaded from scripts boot
+        // after this pass returns (the engine waits for them).
+        this.bootLogRef = bootLog;
+        await this.bootAll(context, modules);
+    }
 
+    private async bootAll(
+        context: CliExecutionContext,
+        modules: ICliModule[],
+    ): Promise<void> {
+        this.context = context;
         // Wire module registry warnings through the context logger
         this.moduleRegistry.onWarn = (msg) => context.logger.warn(msg);
 
@@ -69,18 +103,31 @@ export class CliBoot {
             await this.bootModule(module, context);
         });
 
+        // Unloading a module (e.g. `pkg remove`) removes its commands and lets a
+        // later registration of the same name (e.g. `pkg update`) boot again.
+        this.moduleRegistry.onModuleUnregister((module: ICliModule) => {
+            this.unloadModule(module);
+        });
+
         // 3. Boot core module first (implicit dependency for all others)
         const coreModule = this.buildCoreModule();
+        this.bootLog?.addSteps(1);
+        this.bootLog?.setCurrent(`Setting up ${coreModule.name}`);
         await this.bootModule(coreModule, context);
+        this.bootLog?.completeStep();
 
         // 4. Filter out modules that do not meet the required API version
         const compatible = modules.filter((module) => {
             const modApiVersion = module.apiVersion;
-            if (typeof modApiVersion !== 'number' || modApiVersion < API_VERSION) {
-                context.writer.writeWarning(
+            if (
+                typeof modApiVersion !== 'number' ||
+                modApiVersion < API_VERSION
+            ) {
+                this.warn(
+                    context,
                     `Plugin "${module.name}" targets API version ${modApiVersion ?? 'unknown'}, ` +
-                    `but this runtime requires API version ${API_VERSION}. Skipping. ` +
-                    `See https://qodalis.com/docs/upgrade-v2`,
+                        `but this runtime requires API version ${API_VERSION}. Skipping. ` +
+                        `See https://qodalis.com/docs/upgrade-v2`,
                 );
                 return false;
             }
@@ -91,8 +138,11 @@ export class CliBoot {
         const sorted = this.topologicalSort(compatible, context);
 
         // 6. Boot each module in order
+        this.bootLog?.addSteps(sorted.length);
         for (const module of sorted) {
+            this.bootLog?.setCurrent(`Setting up ${module.name}`);
             await this.bootModule(module, context);
+            this.bootLog?.completeStep();
         }
 
         await this.bootShared(context);
@@ -102,117 +152,290 @@ export class CliBoot {
         this.initialized = true;
     }
 
+    /**
+     * Boot one module: declarations (services, guards, permissions,
+     * translations), lifecycle (`onInit`, first-run `onSetup`), then its
+     * commands. Modules already booted or with missing dependencies are skipped.
+     */
     private async bootModule(
         module: ICliModule,
         context: CliExecutionContext,
     ): Promise<void> {
-        // Skip if already booted
         if (this.bootedModules.has(module.name)) {
             return;
         }
-
-        // Check dependencies are satisfied
-        for (const dep of module.dependencies ?? []) {
-            if (!this.bootedModules.has(dep)) {
-                context.writer.writeWarning(
-                    `Module "${module.name}" requires "${dep}" which is not loaded. Skipping.`,
-                );
-                return;
-            }
+        if (!this.dependenciesLoaded(module, context)) {
+            return;
         }
 
         context.logger.info(`Booting module: ${module.name}`);
+        const startedAt = Date.now();
 
-        // Register services into the shared container
-        if (module.services && module.services.length > 0) {
-            this.services.set(module.services);
+        this.registerDeclarations(module, context);
+        await this.runOnInit(module, context);
+        await this.runFirstSetup(module, context);
+        const commandCount = await this.registerCommands(module, context);
+
+        this.bootedModules.add(module.name);
+        this.reportModule(module, commandCount, Date.now() - startedAt);
+        this.emitEvent(
+            'module:loaded',
+            {
+                name: module.name,
+                version: module.version,
+                commands: commandCount,
+            },
+            module.name,
+        );
+
+        // Track in module registry for introspection (without triggering boot handlers)
+        if (!this.moduleRegistry.has(module.name)) {
+            this.moduleRegistry.track(module);
+        }
+    }
+
+    // ── Module boot phases ──
+
+    private dependenciesLoaded(
+        module: ICliModule,
+        context: CliExecutionContext,
+    ): boolean {
+        for (const dep of module.dependencies ?? []) {
+            if (!this.bootedModules.has(dep)) {
+                this.warn(
+                    context,
+                    `Module "${module.name}" requires "${dep}" which is not loaded. Skipping.`,
+                );
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Services, guards, permissions and translations the module declares. */
+    private registerDeclarations(
+        module: ICliModule,
+        context: CliExecutionContext,
+    ): void {
+        const providers: CliProvider[] = [...(module.services ?? [])];
+
+        // Guards are multi-providers: the executor runs them before every command
+        for (const guard of module.guards ?? []) {
+            providers.push({
+                provide: ICliCommandGuard_TOKEN,
+                useValue: guard,
+                multi: true,
+            });
         }
 
-        // Register module guards as multi-providers so the executor runs them
-        // before every command
-        if (module.guards && module.guards.length > 0) {
-            this.services.set(
-                module.guards.map((guard) => ({
-                    provide: ICliCommandGuard_TOKEN,
-                    useValue: guard,
-                    multi: true,
-                })),
-            );
+        if (providers.length > 0) {
+            this.services.set(providers);
+            this.moduleProviders.set(module.name, providers);
         }
 
-        // Register the permissions the module declares
         if (module.permissions && module.permissions.length > 0) {
             this.services
                 .get<ICliPermissionRegistry>(ICliPermissionRegistry_TOKEN)
                 ?.register(module.permissions, module.name);
         }
 
-        // Auto-register module translations (before onInit so modules can override)
+        // Before onInit so modules can override them
         if (module.translations) {
-            for (const [locale, translations] of Object.entries(module.translations)) {
+            for (const [locale, translations] of Object.entries(
+                module.translations,
+            )) {
                 context.translator.addTranslations(locale, translations);
             }
         }
+    }
 
-        // Module lifecycle: onInit (before processors)
-        if (module.onInit) {
-            try {
-                await module.onInit(context);
-            } catch (e) {
+    /** `onInit` runs before the module's commands are registered. */
+    private async runOnInit(
+        module: ICliModule,
+        context: CliExecutionContext,
+    ): Promise<void> {
+        if (!module.onInit) return;
+        try {
+            await module.onInit(context);
+        } catch (e) {
+            context.logger.error(
+                `Error in onInit for module "${module.name}":`,
+                e,
+            );
+        }
+    }
+
+    /** `onSetup` runs once per browser (first-run flow), until it succeeds. */
+    private async runFirstSetup(
+        module: ICliModule,
+        context: CliExecutionContext,
+    ): Promise<void> {
+        if (!module.onSetup) return;
+
+        const kvStore = context.services.getRequired<ICliKeyValueStore>(
+            CliKeyValueStore_TOKEN,
+        );
+        const setupKey = `cli-module-setup:${module.name}`;
+        const setupState = await kvStore.get<{
+            installed: boolean;
+            installedAt: number;
+        }>(setupKey);
+        if (setupState?.installed) return;
+
+        // Hide the boot spinner while the setup prompts run, and bring it
+        // back only if it was showing (a module installed later with
+        // `pkg add` boots without one; showing it would block input).
+        const spinnerWasRunning = !!context.spinner?.isRunning;
+        this.bootLog?.suspend();
+        try {
+            context.spinner?.hide();
+            const success = await module.onSetup(context);
+            if (success) {
+                await kvStore.set(setupKey, {
+                    installed: true,
+                    installedAt: Date.now(),
+                });
+            }
+        } catch (e) {
+            context.logger.error(
+                `Setup failed for module "${module.name}":`,
+                e,
+            );
+        } finally {
+            if (spinnerWasRunning) {
+                context.spinner?.show();
+            }
+            this.bootLog?.resume();
+        }
+    }
+
+    /** Register and initialize the module's commands; returns how many. */
+    private async registerCommands(
+        module: ICliModule,
+        context: CliExecutionContext,
+    ): Promise<number> {
+        if (!module.processors || module.processors.length === 0) return 0;
+
+        const filtered = this.filterByVersion(module.processors, context);
+        for (const processor of filtered) {
+            this.registry.registerProcessor(processor);
+        }
+        await this.initializeProcessorsInternal(context, filtered);
+        this.adoptMergedSubProcessors(filtered);
+        return filtered.length;
+    }
+
+    /** One boot-log line per module that does something at boot. */
+    private reportModule(
+        module: ICliModule,
+        commandCount: number,
+        durationMs: number,
+    ): void {
+        if (
+            commandCount === 0 &&
+            !module.onInit &&
+            !module.onSetup &&
+            !module.translations
+        ) {
+            return;
+        }
+        const detail =
+            commandCount > 0
+                ? ` · ${commandCount} command${commandCount === 1 ? '' : 's'}`
+                : module.translations
+                  ? ' · translations'
+                  : '';
+        this.bootLog?.ok(`Set up ${module.name}${detail}`, durationMs);
+    }
+
+    /**
+     * Unload a module (`pkg remove`, or before `pkg update` boots the new
+     * version): its commands, guards and permissions are removed at once,
+     * then `onDestroy` runs, then its services are removed (so `onDestroy`
+     * can still use them). Services are removed by registration, so a newer
+     * version registered meanwhile keeps its own.
+     */
+    private unloadModule(module: ICliModule): void {
+        this.emitEvent('module:unloaded', { name: module.name }, module.name);
+        for (const processor of module.processors ?? []) {
+            this.registry.unregisterProcessor(processor);
+            this.initializedProcessors.delete(processor);
+        }
+        this.bootedModules.delete(module.name);
+
+        const providers = this.moduleProviders.get(module.name) ?? [];
+        this.moduleProviders.delete(module.name);
+        const guards = providers.filter(
+            (p) => p.provide === ICliCommandGuard_TOKEN,
+        );
+        const services = providers.filter(
+            (p) => p.provide !== ICliCommandGuard_TOKEN,
+        );
+        this.removeProviders(guards);
+        this.services
+            .get<ICliPermissionRegistry>(ICliPermissionRegistry_TOKEN)
+            ?.unregister?.(module.name);
+
+        const context = this.context;
+        let destroyed: Promise<unknown> = Promise.resolve();
+        if (module.onDestroy && context) {
+            const report = (e: unknown) =>
                 context.logger.error(
-                    `Error in onInit for module "${module.name}":`,
+                    `Error in onDestroy for module "${module.name}":`,
                     e,
                 );
+            try {
+                destroyed = Promise.resolve(module.onDestroy(context)).catch(
+                    report,
+                );
+            } catch (e) {
+                report(e);
             }
         }
+        void destroyed.then(() => this.removeProviders(services));
+    }
 
-        // Module lifecycle: onSetup (first-run setup flow)
-        if (module.onSetup) {
-            const kvStore = context.services.getRequired<ICliKeyValueStore>(
-                CliKeyValueStore_TOKEN,
-            );
-            const setupKey = `cli-module-setup:${module.name}`;
-            const setupState = await kvStore.get<{
-                installed: boolean;
-                installedAt: number;
-            }>(setupKey);
-
-            if (!setupState?.installed) {
-                try {
-                    context.spinner?.hide();
-                    const success = await module.onSetup(context);
-                    if (success) {
-                        await kvStore.set(setupKey, {
-                            installed: true,
-                            installedAt: Date.now(),
-                        });
-                    }
-                } catch (e) {
-                    context.logger.error(
-                        `Setup failed for module "${module.name}":`,
-                        e,
-                    );
-                } finally {
-                    context.spinner?.show();
-                }
+    private removeProviders(providers: CliProvider[]): void {
+        for (const provider of providers) {
+            try {
+                this.services.remove?.(provider.provide, provider);
+            } catch {
+                // sealed meanwhile: keep it
             }
         }
+    }
 
-        // Register and initialize processors
-        if (module.processors && module.processors.length > 0) {
-            const filtered = this.filterByVersion(module.processors, context);
-            for (const processor of filtered) {
-                this.registry.registerProcessor(processor);
+    /** Publish on the event bus; never lets the bus break booting. */
+    private emitEvent<K extends CliEventType>(
+        type: K,
+        data: CliEventMap[K],
+        source: string,
+    ): void {
+        try {
+            const bus = this.services.get<ICliEventBus>(ICliEventBus_TOKEN);
+            if (typeof bus?.emit === 'function') {
+                bus.emit(type, data, { source });
             }
-            await this.initializeProcessorsInternal(context, filtered);
-            this.adoptMergedSubProcessors(filtered);
+        } catch {
+            // no bus in this container
         }
+    }
 
-        this.bootedModules.add(module.name);
+    /** Boot warning: into the boot log when it is shown, else the terminal. */
+    private warn(context: CliExecutionContext, message: string): void {
+        if (this.bootLog?.enabled) {
+            this.bootLog.warn(message);
+        } else {
+            context.writer.writeWarning(message);
+        }
+    }
 
-        // Track in module registry for introspection (without triggering boot handlers)
-        if (!this.moduleRegistry.has(module.name)) {
-            this.moduleRegistry.track(module);
+    /** Boot error: into the boot log when it is shown, else the terminal. */
+    private fail(context: CliExecutionContext, message: string): void {
+        if (this.bootLog?.enabled) {
+            this.bootLog.error(message);
+        } else {
+            context.writer.writeError(message);
         }
     }
 
@@ -246,10 +469,31 @@ export class CliBoot {
             description: 'Core CLI services and utilities',
             processors: [...builtinProcessors],
             permissions: [
-                { name: 'system:packages', description: 'Install, update and remove packages (pkg)' },
-                { name: 'system:services', description: 'Start and stop background services' },
-                { name: 'system:eval', description: 'Evaluate JavaScript (eval, also requires allowEval)' },
-                { name: 'shell:execute', description: 'Open a remote shell on a server (ssh)' },
+                {
+                    name: 'system:packages',
+                    description: 'Install, update and remove packages (pkg)',
+                },
+                {
+                    name: 'system:services',
+                    description: 'Start and stop background services',
+                },
+                {
+                    name: 'system:events',
+                    description: 'Emit events on the event bus (events emit)',
+                },
+                {
+                    name: 'system:env:global',
+                    description: 'Set and remove shared environment variables (export --global)',
+                },
+                {
+                    name: 'system:eval',
+                    description:
+                        'Evaluate JavaScript (eval, also requires allowEval)',
+                },
+                {
+                    name: 'shell:execute',
+                    description: 'Open a remote shell on a server (ssh)',
+                },
             ],
         };
     }
@@ -272,7 +516,8 @@ export class CliBoot {
         const visit = (name: string): void => {
             if (visited.has(name)) return;
             if (visiting.has(name)) {
-                context.writer.writeError(
+                this.fail(
+                    context,
                     `Circular dependency detected involving module "${name}". Aborting module loading.`,
                 );
                 return;
@@ -284,7 +529,8 @@ export class CliBoot {
             visiting.add(name);
             for (const dep of mod.dependencies ?? []) {
                 if (!moduleMap.has(dep) && !this.bootedModules.has(dep)) {
-                    context.writer.writeWarning(
+                    this.warn(
+                        context,
                         `Module "${name}" depends on "${dep}" which is not loaded. Skipping "${name}".`,
                     );
                     visiting.delete(name);
@@ -314,7 +560,8 @@ export class CliBoot {
                 meta?.requiredCoreVersion &&
                 !satisfiesVersionRange(CORE_VERSION, meta.requiredCoreVersion)
             ) {
-                context.writer.writeWarning(
+                this.warn(
+                    context,
                     `Plugin "${p.command}" requires cli-core ${meta.requiredCoreVersion} but ${CORE_VERSION} is installed. Skipping.`,
                 );
                 return false;
@@ -323,7 +570,8 @@ export class CliBoot {
                 meta?.requiredCliVersion &&
                 !satisfiesVersionRange(CLI_VERSION, meta.requiredCliVersion)
             ) {
-                context.writer.writeWarning(
+                this.warn(
+                    context,
                     `Plugin "${p.command}" requires cli ${meta.requiredCliVersion} but ${CLI_VERSION} is installed. Skipping.`,
                 );
                 return false;
@@ -364,6 +612,13 @@ export class CliBoot {
                     await processorContext.state.initialize();
 
                     await p.initialize(processorContext);
+                } else if (p.stateConfiguration) {
+                    // Load saved state for commands without `initialize`
+                    // too, so readers (completion, other modules) see it
+                    await this.services
+                        .get<ICliStateStoreManager>(CliStateStoreManager_TOKEN)
+                        ?.getProcessorStateStore(p)
+                        .initialize();
                 }
 
                 this.initializedProcessors.add(p);

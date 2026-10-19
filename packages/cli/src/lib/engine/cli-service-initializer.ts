@@ -1,7 +1,13 @@
-import { cliAccessMetadataGuards, ICliCommandGuard_TOKEN, ICliPermissionRegistry_TOKEN } from '@qodalis/cli-core';
+import {
+    cliAccessMetadataGuards,
+    ICliCommandGuard_TOKEN,
+    ICliPermissionRegistry_TOKEN,
+} from '@qodalis/cli-core';
 import { CliPermissionRegistry } from '../services/cli-permission-registry';
+import { CliEventBus } from '../services/cli-event-bus';
 import {
     CliProvider,
+    ICliEventBus_TOKEN,
     ICliDragDropService_TOKEN,
     ICliTranslationService_TOKEN,
 } from '@qodalis/cli-core';
@@ -16,9 +22,7 @@ import { CliCommandProcessorRegistry } from '../registry/cli-command-processor-r
 import { CliServiceContainer } from '../services/cli-service-container';
 import { CliLogger } from '../services/cli-logger';
 import { CliCommandHistory } from '../services/cli-command-history';
-import {
-    CliStateStoreManager,
-} from '../state/cli-state-store-manager';
+import { CliStateStoreManager } from '../state/cli-state-store-manager';
 import { CliKeyValueStore } from '../storage/cli-key-value-store';
 import {
     CliCommandHistory_TOKEN,
@@ -39,6 +43,7 @@ import {
 } from '../services/cli-process-registry';
 import { CliDragDropService } from '../services/cli-drag-drop.service';
 import { CliTranslationService } from '../services/cli-translation-service';
+import { cliScriptRunner, ICliScriptRunner_TOKEN } from '../executor/cli-script-runner';
 
 export interface InitializeServicesOptions {
     registry: CliCommandProcessorRegistry;
@@ -48,6 +53,7 @@ export interface InitializeServicesOptions {
 
 export interface InitializeServicesResult {
     services: CliServiceContainer;
+    events: CliEventBus;
     logger: CliLogger;
     commandHistory: CliCommandHistory;
     stateStoreManager: CliStateStoreManager;
@@ -76,7 +82,9 @@ export async function initializeServices(
     const commandHistory = new CliCommandHistory(store);
     await commandHistory.initialize();
 
-    services.set([{ provide: CliKeyValueStore_TOKEN, useValue: store, sealed: true }]);
+    services.set([
+        { provide: CliKeyValueStore_TOKEN, useValue: store, sealed: true },
+    ]);
 
     const stateStoreManager = new CliStateStoreManager(services, registry);
     const processRegistry = new CliProcessRegistry();
@@ -87,8 +95,16 @@ export async function initializeServices(
             useValue: stateStoreManager,
             sealed: true,
         },
-        { provide: CliProcessorsRegistry_TOKEN, useValue: registry, sealed: true },
-        { provide: CliCommandHistory_TOKEN, useValue: commandHistory, sealed: true },
+        {
+            provide: CliProcessorsRegistry_TOKEN,
+            useValue: registry,
+            sealed: true,
+        },
+        {
+            provide: CliCommandHistory_TOKEN,
+            useValue: commandHistory,
+            sealed: true,
+        },
         {
             provide: CliProcessRegistry_TOKEN,
             useValue: processRegistry,
@@ -121,7 +137,11 @@ export async function initializeServices(
     syntaxRegistry.register(new MarkdownHighlighter());
     syntaxRegistry.register(new YamlHighlighter());
     services.set([
-        { provide: SyntaxHighlighterRegistry_TOKEN, useValue: syntaxRegistry, sealed: true },
+        {
+            provide: SyntaxHighlighterRegistry_TOKEN,
+            useValue: syntaxRegistry,
+            sealed: true,
+        },
     ]);
 
     if (!pendingTokens.has(ICliEnvironment_TOKEN)) {
@@ -133,6 +153,11 @@ export async function initializeServices(
             },
         ]);
     }
+
+    // Shell-style script runner, used by `sh` / `source` (files plugin)
+    services.set([
+        { provide: ICliScriptRunner_TOKEN, useValue: cliScriptRunner, sealed: true },
+    ]);
 
     services.set([
         {
@@ -162,11 +187,26 @@ export async function initializeServices(
 
     const translator = new CliTranslationService();
     services.set([
-        { provide: ICliTranslationService_TOKEN, useValue: translator, sealed: true },
+        {
+            provide: ICliTranslationService_TOKEN,
+            useValue: translator,
+            sealed: true,
+        },
     ]);
+
+    // The terminal's event bus (in memory, one per terminal)
+    const events = new CliEventBus((error, event) =>
+        logger.error(`Event handler for "${event.type}" failed:`, error),
+    );
+    services.set([
+        { provide: ICliEventBus_TOKEN, useValue: events, sealed: true },
+    ]);
+    // `scope: 'user'` stores follow the signed-in user
+    stateStoreManager.followUser(events);
 
     return {
         services,
+        events,
         logger,
         commandHistory,
         stateStoreManager,

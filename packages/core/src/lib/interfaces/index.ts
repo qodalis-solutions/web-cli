@@ -34,6 +34,7 @@ export * from './users';
 export * from './engine-snapshot';
 
 export * from './background-service';
+export * from './event-bus';
 
 export * from './worker-protocol';
 

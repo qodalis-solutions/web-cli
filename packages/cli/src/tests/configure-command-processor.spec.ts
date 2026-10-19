@@ -114,6 +114,9 @@ function createStubStateStore(
         },
         persist: async () => {},
         initialize: async () => {},
+        update: async (change: (s: any) => any) => {
+            Object.assign(state, change(state));
+        },
     } as ICliStateStore;
 }
 

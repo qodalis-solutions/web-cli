@@ -95,7 +95,7 @@ export function formatResponseBody(body: string, pretty: boolean): string {
 }
 
 export function rewriteUrlToProxy(originalUrl: string): string {
-    const match = originalUrl.match(/^(https?):\/\/([^\/]+)(\/.*)?$/i);
+    const match = originalUrl.match(/^(https?):\/\/([^/]+)(\/.*)?$/i);
     if (!match) {
         throw new Error(`Invalid URL: ${originalUrl}`);
     }

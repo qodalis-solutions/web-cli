@@ -566,3 +566,24 @@ describe('CliUserSessionService', () => {
         expect(session.getToken()).toBe('B');
     });
 });
+
+describe('usersModule unload', () => {
+    it('removes the services it registered, the deny-all placeholder included', async () => {
+        const f = fakeContext(new MemoryKv());
+        const services: CliServiceContainer = f.ctx.services;
+        const own = { allowed: true } as unknown as ICliAuthorizationService;
+        services.set({ provide: ICliAuthorizationService_TOKEN, useValue: own });
+
+        const m = await boot({ server: 'node' }, f);
+        expect(services.get(ICliAuthorizationService_TOKEN)).not.toBe(own);
+        expect(services.getAll(ICliServerAuthTokenProvider_TOKEN).length).toBe(1);
+
+        await m.onDestroy(f.ctx);
+
+        // The host's own authorization service is active again: neither the
+        // runtime's nor the deny-all one is left behind
+        expect(services.get(ICliAuthorizationService_TOKEN)).toBe(own);
+        expect(services.getAll(ICliServerAuthTokenProvider_TOKEN)).toEqual([]);
+        expect(services.has('cli-user-session-service')).toBeFalse();
+    });
+});

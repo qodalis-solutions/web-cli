@@ -1,5 +1,6 @@
 import { ICliCommandProcessor, ICliExecutionContext } from '../interfaces';
 import { CliForegroundColor, CliProcessCommand } from '../models';
+import { joinShellWords } from './shell-words';
 
 export class ObjectDescriber {
     static describe(
@@ -88,9 +89,15 @@ export class ObjectDescriber {
                         }
                     }
 
-                    if (supportsDynamicArgs && command.value) {
+                    // The text as a shell reads it: quotes removed
+                    const value =
+                        command.value === undefined
+                            ? undefined
+                            : joinShellWords(command.value);
+
+                    if (supportsDynamicArgs && value) {
                         const delimiter = command.args['delimiter'] || ',';
-                        argsToCallF.push(...command.value.split(delimiter));
+                        argsToCallF.push(...value.split(delimiter));
                     }
 
                     if (debug) {
@@ -103,7 +110,7 @@ export class ObjectDescriber {
                     const result =
                         supportsDynamicArgs && args.length === 0
                             ? funcValue(...argsToCallF)
-                            : funcValue(command.value, ...argsToCallF);
+                            : funcValue(value, ...argsToCallF);
 
                     context.writer.write(
                         context.writer.wrapInColor(

@@ -1,6 +1,43 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliEngineSnapshot, derivePanelThemeStyles, loadPanelPosition, savePanelPosition, CliPanelPosition, ICliPanelRef, CliPanelState, CliNotification } from '@qodalis/cli-core';
-import { CliEngineOptions, CliEngine } from '@qodalis/cli';
+import React, { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react';
+import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, ICliPanelRef } from '@qodalis/cli-core';
+import {
+    CliEngine,
+    CliEngineOptions,
+    CliPanelController,
+    CliPanelSnapshot,
+    CLOSE_GLYPH,
+    CLOSE_ICON,
+    HIDE_ICON,
+    HIDE_TAB_TERMINAL_ICON,
+    MAXIMIZE_ICON,
+    PANEL_LABELS,
+    RESTORE_ICON,
+    SvgIcon,
+    TERMINAL_ICON,
+    collapseChevronIcon,
+    contextMenuItems,
+    contextMenuStyle,
+    glowLineClass,
+    handleRenameKey,
+    hideTabChevronIcon,
+    joinClasses,
+    mergeCliOptions,
+    openStatusDropdown,
+    paneClass,
+    paneStyle,
+    panelTabClass,
+    panelTabDotClass,
+    panelWrapperClass,
+    panelWrapperStyle,
+    panesContainerClass,
+    panesContainerWidth,
+    positionIcon,
+    positionOptions,
+    resolveCliHostConfig,
+    runContextMenuAction,
+    statusIndicators,
+    svgAttrs,
+} from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliContext } from './CliContext';
 import { useCliConfig } from './CliConfigContext';
@@ -39,1181 +76,387 @@ export interface CliPanelProps {
     onPaneClosed?: (event: { paneId: number }) => void;
 }
 
-interface TerminalPane {
-    id: number;
-    widthPercent: number;
-    snapshot?: CliEngineSnapshot;
-}
+/* ─── Icons ──────────────────────────────────────────────── */
 
-interface TerminalTab {
-    id: number;
-    title: string;
-    isEditing: boolean;
-    panes: TerminalPane[];
-}
-
-interface TabContextMenu {
-    visible: boolean;
-    x: number;
-    y: number;
-    tabId: number;
-}
-
-const MIN_PANE_WIDTH_PERCENT = 10;
-
-/* ─── SVG icons ──────────────────────────────────────────── */
-
-const TerminalIcon = () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="4 17 10 11 4 5" />
-        <line x1="12" y1="19" x2="20" y2="19" />
-    </svg>
-);
-
-const MaximizeIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="15 3 21 3 21 9" />
-        <polyline points="9 21 3 21 3 15" />
-        <line x1="21" y1="3" x2="14" y2="10" />
-        <line x1="3" y1="21" x2="10" y2="14" />
-    </svg>
-);
-
-const RestoreIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="4 14 10 14 10 20" />
-        <polyline points="20 10 14 10 14 4" />
-        <line x1="14" y1="10" x2="21" y2="3" />
-        <line x1="3" y1="21" x2="10" y2="14" />
-    </svg>
-);
-
-const CloseIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-);
-
-const HideIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="5" y1="18" x2="19" y2="18" />
-        <polyline points="9 14 12 17 15 14" />
-    </svg>
-);
-
-function CollapseChevron({ position, isCollapsed }: { position: string; isCollapsed: boolean }) {
-    let points: string;
-    switch (position) {
-        case 'top':
-            points = isCollapsed ? '6 9 12 15 18 9' : '18 15 12 9 6 15';
-            break;
-        case 'left':
-            points = isCollapsed ? '9 18 15 12 9 6' : '15 6 9 12 15 18';
-            break;
-        case 'right':
-            points = isCollapsed ? '15 6 9 12 15 18' : '9 18 15 12 9 6';
-            break;
-        default: // bottom
-            points = isCollapsed ? '18 15 12 9 6 15' : '6 9 12 15 18 9';
-            break;
+/** SVG attribute names in React's camelCase spelling. */
+function reactSvgProps(attrs: Record<string, string>): Record<string, string> {
+    const props: Record<string, string> = {};
+    for (const [key, value] of Object.entries(attrs)) {
+        props[key.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())] = value;
     }
+    return props;
+}
+
+function Icon({ icon, className }: { icon: SvgIcon; className?: string }) {
     return (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points={points} />
+        <svg className={className} {...reactSvgProps(svgAttrs(icon))}>
+            {icon.shapes.map((shape, i) => React.createElement(shape.tag, { key: i, ...reactSvgProps(shape.attrs) }))}
         </svg>
     );
 }
 
-function HideTabChevron({ position }: { position: string }) {
-    let points: string;
-    switch (position) {
-        case 'top': points = '6 9 12 15 18 9'; break;
-        case 'left': points = '9 18 15 12 9 6'; break;
-        case 'right': points = '15 6 9 12 15 18'; break;
-        default: points = '18 15 12 9 6 15'; break; // bottom: up
+/** Focus a freshly mounted rename input and select its text. */
+const focusAndSelect = (input: HTMLInputElement | null) => {
+    if (input && document.activeElement !== input) {
+        input.focus();
+        input.select();
     }
-    return (
-        <svg className="cli-panel-hide-tab-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points={points} />
-        </svg>
-    );
-}
+};
 
-function PositionIcon({ position, size = 20 }: { position: string; size?: number }) {
-    let fillRect: React.ReactElement;
-    switch (position) {
-        case 'top':
-            fillRect = <rect x="4" y="4" width="16" height="5" rx="1" fill="currentColor" stroke="none" opacity="0.5" />;
-            break;
-        case 'left':
-            fillRect = <rect x="4" y="4" width="5" height="16" rx="1" fill="currentColor" stroke="none" opacity="0.5" />;
-            break;
-        case 'right':
-            fillRect = <rect x="15" y="4" width="5" height="16" rx="1" fill="currentColor" stroke="none" opacity="0.5" />;
-            break;
-        default: // bottom
-            fillRect = <rect x="4" y="15" width="16" height="5" rx="1" fill="currentColor" stroke="none" opacity="0.5" />;
-            break;
-    }
-    return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            {fillRect}
-        </svg>
-    );
-}
+const asStyle = (style: Record<string, string>) => style as React.CSSProperties;
 
 /* ─── Component ──────────────────────────────────────────── */
 
-export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>(
-    function CliPanel(props, ref) {
-        const { options: optionsProp, modules: modulesProp, processors: processorsProp, services: servicesProp, onClose, style, className } = props;
-        const config = useCliConfig();
-        const options = optionsProp
-            ? { ...(config.options as CliPanelOptions | undefined), ...optionsProp }
-            : config.options as CliPanelOptions | undefined;
-        const modules = modulesProp ?? config.modules;
-        const processors = processorsProp ?? config.processors;
-        const services = servicesProp ?? config.services;
-
-        /* ─── Hybrid controlled/uncontrolled state ────────── */
-
-        const [internalPosition, setInternalPosition] = useState<CliPanelPosition>(
-            () => loadPanelPosition() ?? options?.position ?? 'bottom'
-        );
-        const [internalCollapsed, setInternalCollapsed] = useState(options?.isCollapsed ?? true);
-        const [internalHidden, setInternalHidden] = useState(options?.isHidden ?? false);
-        const [internalMaximized, setInternalMaximized] = useState(false);
-        const [internalHeight, setInternalHeight] = useState(600);
-        const [internalWidth, setInternalWidth] = useState(400);
-        const [internalActiveTabId, setInternalActiveTabId] = useState(0);
-
-        // Resolved values: controlled props override internal state
-        const position = props.position !== undefined ? props.position : internalPosition;
-        const collapsed = props.collapsed !== undefined ? props.collapsed : internalCollapsed;
-        const hidden = props.hidden !== undefined ? props.hidden : internalHidden;
-        const maximized = props.maximized !== undefined ? props.maximized : internalMaximized;
-        const panelHeight = props.height !== undefined ? props.height : internalHeight;
-        const panelWidth = props.width !== undefined ? props.width : internalWidth;
-        const activeTabId = props.activeTabId !== undefined ? props.activeTabId : internalActiveTabId;
-
-        // Update helpers that sync internal state + call callbacks
-        const updateCollapsed = useCallback((value: boolean) => {
-            setInternalCollapsed(value);
-            props.onCollapsedChange?.(value);
-        }, [props.onCollapsedChange]);
-
-        const updateHidden = useCallback((value: boolean) => {
-            setInternalHidden(value);
-            props.onHiddenChange?.(value);
-        }, [props.onHiddenChange]);
-
-        const updateMaximized = useCallback((value: boolean) => {
-            setInternalMaximized(value);
-            props.onMaximizedChange?.(value);
-        }, [props.onMaximizedChange]);
-
-        const updateHeight = useCallback((value: number) => {
-            setInternalHeight(value);
-            props.onHeightChange?.(value);
-        }, [props.onHeightChange]);
-
-        const updateWidth = useCallback((value: number) => {
-            setInternalWidth(value);
-            props.onWidthChange?.(value);
-        }, [props.onWidthChange]);
-
-        const updateActiveTabId = useCallback((value: number) => {
-            setInternalActiveTabId(value);
-            props.onActiveTabIdChange?.(value);
-        }, [props.onActiveTabIdChange]);
-
-        const updatePosition = useCallback((value: CliPanelPosition) => {
-            setInternalPosition(value);
-            savePanelPosition(value);
-            props.onPositionChange?.(value);
-        }, [props.onPositionChange]);
-
-        const closable = options?.closable ?? true;
-        const resizable = options?.resizable ?? true;
-        const isHorizontal = position === 'left' || position === 'right';
-        const hideable = options?.hideable ?? true;
-        const hideAlignment = options?.hideAlignment ?? 'center';
-        const syncTheme = options?.syncTheme ?? false;
-
-        const [visible, setVisible] = useState(true);
-        const [initialized, setInitialized] = useState(false);
-        const preHideCollapsedRef = useRef(true);
-        const [themeStyles, setThemeStyles] = useState<Record<string, string>>({});
-        const wrapperRef = useRef<HTMLDivElement>(null);
-
-        const [tabs, setTabs] = useState<TerminalTab[]>([]);
-        const [activePaneId, setActivePaneId] = useState(0);
-        const nextIdRef = useRef({ tab: 1, pane: 1 });
-
-        const [contextMenu, setContextMenu] = useState<TabContextMenu>({ visible: false, x: 0, y: 0, tabId: 0 });
-        const engineMapRef = useRef<Map<number, CliEngine>>(new Map());
-
-        // Refs to avoid stale closures in functional updaters
-        const activeTabIdRef = useRef(activeTabId);
-        activeTabIdRef.current = activeTabId;
-        const activePaneIdRef = useRef(activePaneId);
-        activePaneIdRef.current = activePaneId;
-
-        // Pane resize state
-        const [paneResizing, setPaneResizing] = useState(false);
-        const paneResizeRef = useRef({ tabId: 0, dividerIndex: 0, startX: 0, startWidths: [] as number[], containerWidth: 0 });
-
-        // Panel resize state
-        const [panelResizing, setPanelResizing] = useState(false);
-        const panelResizeRef = useRef({ startY: 0, startHeight: 0, startX: 0, startWidth: 0 });
-        const prevHeightRef = useRef(600);
-        const prevWidthRef = useRef(400);
-
-        // Status bar state
-        const [statusExecutionState, setStatusExecutionState] = useState<'idle' | 'running'>('idle');
-        const [statusLastCommand, setStatusLastCommand] = useState<{ name: string; success: boolean } | null>(null);
-        const [statusServiceCount, setStatusServiceCount] = useState({ running: 0, total: 0 });
-        const [statusServiceDetails, setStatusServiceDetails] = useState<Array<{ name: string; status: string; description?: string }>>([]);
-        const [statusServerState, setStatusServerState] = useState<'connected' | 'disconnected' | 'none'>('none');
-        const [statusServerDetails, setStatusServerDetails] = useState<Array<{ name: string; url: string; connected: boolean; apiVersion?: string; commandCount?: number }>>([]);
-        const [statusUptime, setStatusUptime] = useState(0);
-        const [notification, setNotification] = useState<CliNotification | null>(null);
-        const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
-        const [serversDropdownOpen, setServersDropdownOpen] = useState(false);
-        const servicesDropdownRef = useRef<HTMLSpanElement>(null);
-        const serversDropdownRef = useRef<HTMLSpanElement>(null);
-
-        // Terminal height is handled via CSS flex layout (height: 100% default in Cli)
-
-        /* ─── Pane helpers ────────────────────────────────── */
-
-        const normalizePanes = useCallback((panes: TerminalPane[]) => {
-            const total = panes.reduce((s, p) => s + p.widthPercent, 0);
-            if (total === 0) return;
-            const scale = 100 / total;
-            panes.forEach(p => { p.widthPercent *= scale; });
-        }, []);
-
-        /* ─── Tab management ─────────────────────────────── */
-
-        const addTab = useCallback((title?: string): number => {
-            const tabId = nextIdRef.current.tab++;
-            const paneId = nextIdRef.current.pane++;
-            const pane: TerminalPane = { id: paneId, widthPercent: 100 };
-            const tab: TerminalTab = { id: tabId, title: title ?? `Terminal ${tabId}`, isEditing: false, panes: [pane] };
-            setTabs(prev => [...prev, tab]);
-            updateActiveTabId(tabId);
-            setActivePaneId(paneId);
-            props.onTabAdded?.({ tabId });
-            return tabId;
-        }, [updateActiveTabId, props.onTabAdded]);
-
-        const toggle = useCallback(() => {
-            if (collapsed) {
-                updateCollapsed(false);
-                if (!initialized) {
-                    setInitialized(true);
-                    addTab();
-                }
-            } else {
-                updateCollapsed(true);
-            }
-        }, [collapsed, initialized, updateCollapsed, addTab]);
-
-        const closeTab = useCallback((id: number) => {
-            setTabs(prev => {
-                const tab = prev.find(t => t.id === id);
-                if (tab) {
-                    tab.panes.forEach(p => {
-                        engineMapRef.current.get(p.id)?.destroy();
-                        engineMapRef.current.delete(p.id);
-                    });
-                }
-                const next = prev.filter(t => t.id !== id);
-                if (next.length === 0) {
-                    setInitialized(false);
-                    updateCollapsed(true);
-                    return [];
-                }
-                if (activeTabIdRef.current === id) {
-                    const oldIdx = prev.findIndex(t => t.id === id);
-                    const newIdx = Math.min(oldIdx, next.length - 1);
-                    updateActiveTabId(next[newIdx].id);
-                }
-                return next;
-            });
-            props.onTabClosed?.({ tabId: id });
-        }, [updateCollapsed, updateActiveTabId, props.onTabClosed]);
-
-        const selectTab = useCallback((id: number) => {
-            updateActiveTabId(id);
-            setTabs(prev => {
-                const tab = prev.find(t => t.id === id);
-                if (tab && tab.panes.length > 0) {
-                    setActivePaneId(tab.panes[0].id);
-                }
-                return prev;
-            });
-        }, [updateActiveTabId]);
-
-        /* ─── Rename ─────────────────────────────────────── */
-
-        const renameTab = useCallback((tabId: number, title: string) => {
-            setTabs(prev => prev.map(t => (t.id === tabId ? { ...t, title } : t)));
-        }, []);
-
-        const startRename = useCallback((tabId: number) => {
-            setTabs(prev => prev.map(t => ({ ...t, isEditing: t.id === tabId })));
-        }, []);
-
-        const commitRename = useCallback((tabId: number, value: string) => {
-            const trimmed = value.trim();
-            setTabs(prev => prev.map(t =>
-                t.id === tabId ? { ...t, title: trimmed || t.title, isEditing: false } : t,
-            ));
-        }, []);
-
-        /* ─── Split / close pane ─────────────────────────── */
-
-        const splitPane = useCallback((tabId?: number): number => {
-            const targetTabId = tabId ?? activeTabIdRef.current;
-            const paneId = nextIdRef.current.pane++;
-            setTabs(prev => prev.map(t => {
-                if (t.id !== targetTabId) return t;
-                const newPanes = [...t.panes.map(p => ({ ...p })), { id: paneId, widthPercent: 0 }];
-                const evenWidth = 100 / newPanes.length;
-                newPanes.forEach(p => { p.widthPercent = evenWidth; });
-                normalizePanes(newPanes);
-                return { ...t, panes: newPanes };
-            }));
-            setActivePaneId(paneId);
-            props.onPaneSplit?.({ paneId, tabId: targetTabId });
-            return paneId;
-        }, [normalizePanes, props.onPaneSplit]);
-
-        const closePane = useCallback((paneId: number) => {
-            setTabs(prev => {
-                for (let i = 0; i < prev.length; i++) {
-                    const tab = prev[i];
-                    const idx = tab.panes.findIndex(p => p.id === paneId);
-                    if (idx === -1) continue;
-
-                    if (tab.panes.length <= 1) {
-                        setTimeout(() => closeTab(tab.id), 0);
-                        return prev;
-                    }
-
-                    const newPanes = tab.panes.filter(p => p.id !== paneId);
-                    normalizePanes(newPanes);
-                    const newTabs = [...prev];
-                    newTabs[i] = { ...tab, panes: newPanes };
-
-                    engineMapRef.current.get(paneId)?.destroy();
-                    engineMapRef.current.delete(paneId);
-
-                    if (activePaneIdRef.current === paneId) {
-                        setActivePaneId(newPanes[Math.min(idx, newPanes.length - 1)].id);
-                    }
-
-                    props.onPaneClosed?.({ paneId });
-                    return newTabs;
-                }
-                return prev;
-            });
-        }, [closeTab, normalizePanes, props.onPaneClosed]);
-
-        /* ─── Context menu ───────────────────────────────── */
-
-        const closeContextMenu = useCallback(() => {
-            setContextMenu(prev => ({ ...prev, visible: false }));
-        }, []);
-
-        useEffect(() => {
-            if (!contextMenu.visible) return;
-            const handler = () => closeContextMenu();
-            document.addEventListener('click', handler);
-            return () => document.removeEventListener('click', handler);
-        }, [contextMenu.visible, closeContextMenu]);
-
-        /* ─── Panel resize ───────────────────────────────── */
-
-        const onPanelResizeStart = useCallback((e: React.MouseEvent) => {
-            if (!resizable) return;
-            e.preventDefault();
-            if (collapsed) {
-                toggle();
-            }
-            setPanelResizing(true);
-            panelResizeRef.current = {
-                startY: e.clientY,
-                startHeight: panelHeight,
-                startX: e.clientX,
-                startWidth: panelWidth,
-            };
-        }, [collapsed, toggle, panelHeight, panelWidth, resizable]);
-
-        useEffect(() => {
-            if (!panelResizing) return;
-            const onMove = (e: MouseEvent) => {
-                if (isHorizontal) {
-                    const deltaX = position === 'left'
-                        ? e.clientX - panelResizeRef.current.startX
-                        : panelResizeRef.current.startX - e.clientX;
-                    let next = Math.max(100, panelResizeRef.current.startWidth + deltaX);
-                    if (next > window.innerWidth) next = window.innerWidth;
-                    updateWidth(next);
-                } else {
-                    const deltaY = position === 'top'
-                        ? e.clientY - panelResizeRef.current.startY
-                        : panelResizeRef.current.startY - e.clientY;
-                    let next = Math.max(100, panelResizeRef.current.startHeight + deltaY);
-                    if (next > window.innerHeight) next = window.innerHeight;
-                    updateHeight(next);
-                }
-            };
-            const onUp = () => setPanelResizing(false);
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onUp);
-            return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
-        }, [panelResizing, isHorizontal, position, updateWidth, updateHeight]);
-
-        /* ─── Pane resize ────────────────────────────────── */
-
-        const onPaneResizeStart = useCallback((e: React.MouseEvent, tabId: number, dividerIndex: number) => {
-            e.preventDefault();
-            const tab = tabs.find(t => t.id === tabId);
-            if (!tab) return;
-            setPaneResizing(true);
-            const container = (e.target as HTMLElement).closest('.cli-panel-panes-container');
-            paneResizeRef.current = {
-                tabId,
-                dividerIndex,
-                startX: e.clientX,
-                startWidths: tab.panes.map(p => p.widthPercent),
-                containerWidth: container ? container.clientWidth : 1,
-            };
-        }, [tabs]);
-
-        useEffect(() => {
-            if (!paneResizing) return;
-            const onMove = (e: MouseEvent) => {
-                const ref = paneResizeRef.current;
-                const deltaX = e.clientX - ref.startX;
-                const deltaPct = (deltaX / ref.containerWidth) * 100;
-                const i = ref.dividerIndex;
-
-                let leftWidth = ref.startWidths[i] + deltaPct;
-                let rightWidth = ref.startWidths[i + 1] - deltaPct;
-
-                if (leftWidth < MIN_PANE_WIDTH_PERCENT) {
-                    leftWidth = MIN_PANE_WIDTH_PERCENT;
-                    rightWidth = ref.startWidths[i] + ref.startWidths[i + 1] - MIN_PANE_WIDTH_PERCENT;
-                }
-                if (rightWidth < MIN_PANE_WIDTH_PERCENT) {
-                    rightWidth = MIN_PANE_WIDTH_PERCENT;
-                    leftWidth = ref.startWidths[i] + ref.startWidths[i + 1] - MIN_PANE_WIDTH_PERCENT;
-                }
-
-                setTabs(prev => {
-                    const next = prev.map(t => ({ ...t, panes: t.panes.map(p => ({ ...p })) }));
-                    const tab = next.find(t => t.id === ref.tabId);
-                    if (tab) {
-                        tab.panes[i].widthPercent = leftWidth;
-                        tab.panes[i + 1].widthPercent = rightWidth;
-                    }
-                    return next;
-                });
-            };
-            const onUp = () => {
-                setPaneResizing(false);
-                document.body.classList.remove('cli-pane-resizing');
-            };
-            document.body.classList.add('cli-pane-resizing');
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onUp);
-            return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
-        }, [paneResizing]);
-
-        /* ─── Theme sync ──────────────────────────────────── */
-
-        useEffect(() => {
-            if (!syncTheme || !initialized) return;
-
-            const syncFromEngine = () => {
-                const engine = engineMapRef.current.values().next().value;
-                if (!engine) return;
-                const theme = engine.getTerminal().options.theme;
-                if (theme) setThemeStyles(derivePanelThemeStyles(theme));
-            };
-
-            // Initial sync after terminals render
-            const timer = setTimeout(() => {
-                syncFromEngine();
-
-                const container = wrapperRef.current?.querySelector('.terminal-container');
-                if (!container) return;
-
-                const observer = new MutationObserver(syncFromEngine);
-                observer.observe(container, { attributes: true, attributeFilter: ['style'] });
-
-                return () => observer.disconnect();
-            }, 200);
-
-            return () => clearTimeout(timer);
-        }, [syncTheme, initialized]);
-
-        /* ─── Status polling ──────────────────────────────── */
-
-        useEffect(() => {
-            if (!initialized) return;
-            const pollExec = setInterval(() => {
-                // Find the first engine in the active tab
-                const tab = tabs.find(t => t.id === activeTabIdRef.current);
-                if (!tab) return;
-                const engine = engineMapRef.current.get(tab.panes[0]?.id);
-                if (!engine) return;
-                const context = engine.getContext();
-                if (!context) return;
-
-                // Execution state
-                const running = !!(context as any).isExecuting || !!(context as any).contextProcessor;
-                setStatusExecutionState(running ? 'running' : 'idle');
-
-                // Last command
-                const result = (context as any).lastCommandResult;
-                setStatusLastCommand(result ? { name: result.command, success: result.success } : null);
-
-                // Notification
-                const notif = context.notifier?.current;
-                setNotification(notif || null);
-            }, 300);
-
-            const pollGlobal = setInterval(() => {
-                const tab = tabs.find(t => t.id === activeTabIdRef.current);
-                if (!tab) return;
-                const engine = engineMapRef.current.get(tab.panes[0]?.id);
-                if (!engine) return;
-                const context = engine.getContext();
-                if (!context) return;
-
-                // Background services
-                try {
-                    const services = context.backgroundServices?.list() ?? [];
-                    setStatusServiceCount({ running: services.filter((s: any) => s.status === 'running').length, total: services.length });
-                    setStatusServiceDetails(services.map((s: any) => ({ name: s.name, status: s.status, description: s.description })));
-                } catch { /* not available */ }
-
-                // Server connection
-                try {
-                    let serverManager: any;
-                    try {
-                        serverManager = context.services?.get?.('cli-server-manager');
-                    } catch { /* token not registered yet */ }
-                    const details: Array<{ name: string; url: string; connected: boolean; apiVersion?: string; commandCount?: number }> = [];
-                    if (serverManager?.connections?.size > 0) {
-                        let anyConnected = false;
-                        for (const [name, conn] of serverManager.connections) {
-                            if ((conn as any).connected) anyConnected = true;
-                            details.push({
-                                name,
-                                url: (conn as any).config?.url ?? '',
-                                connected: !!(conn as any).connected,
-                                apiVersion: (conn as any).connected ? (conn as any).apiVersion : undefined,
-                                commandCount: (conn as any).connected ? (conn as any).commands?.length : undefined,
-                            });
-                        }
-                        setStatusServerState(anyConnected ? 'connected' : 'disconnected');
-                    } else {
-                        // Fall back to configured servers from engine options
-                        const configuredServers = (engine as any).options?.servers;
-                        if (Array.isArray(configuredServers) && configuredServers.length > 0) {
-                            for (const srv of configuredServers) {
-                                if (srv.enabled === false) continue;
-                                details.push({
-                                    name: srv.name,
-                                    url: srv.url ?? '',
-                                    connected: false,
-                                });
-                            }
-                            setStatusServerState('disconnected');
-                        } else {
-                            setStatusServerState('none');
-                        }
-                    }
-                    setStatusServerDetails(details);
-                } catch { /* not available */ }
-
-                // Uptime
-                setStatusUptime(engine.startedAt ? Date.now() - engine.startedAt : 0);
-            }, 2000);
-
-            return () => { clearInterval(pollExec); clearInterval(pollGlobal); };
-        }, [initialized, tabs]);
-
-        /* ─── Maximize ───────────────────────────────────── */
-
-        const toggleMaximize = useCallback(() => {
-            const nextMaximized = !maximized;
-            if (nextMaximized) {
-                if (isHorizontal) {
-                    prevWidthRef.current = panelWidth;
-                    updateWidth(window.innerWidth);
-                } else {
-                    prevHeightRef.current = panelHeight;
-                    updateHeight(window.innerHeight);
-                }
-            } else {
-                if (isHorizontal) {
-                    updateWidth(prevWidthRef.current);
-                } else {
-                    updateHeight(prevHeightRef.current);
-                }
-            }
-            updateMaximized(nextMaximized);
-        }, [maximized, panelHeight, panelWidth, isHorizontal, updateMaximized, updateWidth, updateHeight]);
-
-        /* ─── Close handler ──────────────────────────────── */
-
-        const handleClose = useCallback(() => {
-            setVisible(false);
-            onClose?.();
-        }, [onClose]);
-
-        const handleHide = useCallback(() => {
-            preHideCollapsedRef.current = collapsed;
-            updateHidden(true);
-        }, [collapsed, updateHidden]);
-
-        const handleUnhide = useCallback(() => {
-            updateHidden(false);
-            updateCollapsed(preHideCollapsedRef.current);
-        }, [updateHidden, updateCollapsed]);
-
-        const [positionDropdownOpen, setPositionDropdownOpen] = useState(false);
-
-        const closePositionDropdown = useCallback(() => setPositionDropdownOpen(false), []);
-
-        useEffect(() => {
-            if (!positionDropdownOpen) return;
-            document.addEventListener('click', closePositionDropdown);
-            return () => document.removeEventListener('click', closePositionDropdown);
-        }, [positionDropdownOpen, closePositionDropdown]);
-
-        useEffect(() => {
-            if (!servicesDropdownOpen && !serversDropdownOpen) return;
-            const handler = () => { setServicesDropdownOpen(false); setServersDropdownOpen(false); };
-            document.addEventListener('click', handler);
-            return () => document.removeEventListener('click', handler);
-        }, [servicesDropdownOpen, serversDropdownOpen]);
-
-        const handlePositionButtonClick = useCallback((e: React.MouseEvent) => {
-            e.stopPropagation();
-            setPositionDropdownOpen(prev => !prev);
-        }, []);
-
-        const selectPosition = useCallback((pos: CliPanelPosition) => {
-            setPositionDropdownOpen(false);
-            updatePosition(pos);
-        }, [updatePosition]);
-
-        /* ─── Engine / state accessors ───────────────────── */
-
-        const getEngine = useCallback((paneId?: number): CliEngine | undefined => {
-            const targetId = paneId ?? activePaneIdRef.current;
-            return engineMapRef.current.get(targetId);
-        }, []);
-
-        const getState = useCallback((): CliPanelState => ({
-            collapsed, hidden, maximized, position,
-            height: panelHeight, width: panelWidth,
-            activeTabId, activePaneId,
-            tabs: tabs.map(t => ({
-                id: t.id, title: t.title,
-                panes: t.panes.map(p => ({ id: p.id, widthPercent: p.widthPercent })),
-            })),
-        }), [collapsed, hidden, maximized, position, panelHeight, panelWidth, activeTabId, activePaneId, tabs]);
-
-        /* ─── Imperative handle ──────────────────────────── */
-
-        React.useImperativeHandle(ref, () => ({
-            open: () => {
-                if (!visible) { setVisible(true); }
-                if (hidden) { updateHidden(false); }
-                if (collapsed) {
-                    updateCollapsed(false);
-                    if (!initialized) { setInitialized(true); addTab(); }
-                }
-            },
-            collapse: () => { if (!collapsed) updateCollapsed(true); },
-            toggleCollapse: () => {
-                if (collapsed) {
-                    updateCollapsed(false);
-                    if (!initialized) { setInitialized(true); addTab(); }
-                } else { updateCollapsed(true); }
-            },
-            hide: () => { if (!hidden) updateHidden(true); },
-            unhide: () => { if (hidden) updateHidden(false); },
-            toggleHide: () => { updateHidden(!hidden); },
-            close: handleClose,
-            maximize: () => { if (!maximized) updateMaximized(true); },
-            restore: () => { if (maximized) updateMaximized(false); },
-            toggleMaximize: () => { updateMaximized(!maximized); },
-            resize: (dims) => {
-                if (dims.height !== undefined) updateHeight(dims.height);
-                if (dims.width !== undefined) updateWidth(dims.width);
-            },
-            setPosition: updatePosition,
-            addTab, closeTab, selectTab, renameTab, splitPane, closePane, getEngine, getState,
-        }), [collapsed, hidden, maximized, initialized, updateCollapsed, updateHidden, updateMaximized,
-            updateHeight, updateWidth, updatePosition, handleClose, addTab, closeTab, selectTab,
-            renameTab, splitPane, closePane, getEngine, getState]);
-
-        /* ─── Render ─────────────────────────────────────── */
-
-        const formattedUptime = (() => {
-            const mins = Math.floor(statusUptime / 60000);
-            if (mins < 60) return `${mins}m`;
-            const hrs = Math.floor(mins / 60);
-            return `${hrs}h${mins % 60}m`;
-        })();
-
-        if (!visible) return null;
-
-        const wrapperStyle: React.CSSProperties = {
-            ...(isHorizontal ? { width: `${panelWidth}px` } : { height: `${panelHeight}px` }),
-            ...(hidden ? { display: 'none' } : {}),
-            ...themeStyles,
-            ...style,
-        } as React.CSSProperties;
-
-        return (
-            <>
-                {/* Hide tab (shown when panel is hidden) */}
-                {hidden && (
-                    <button
-                        className="cli-panel-hide-tab"
-                        data-position={position}
-                        data-hide-align={hideAlignment}
-                        style={themeStyles as React.CSSProperties}
-                        title="Show CLI"
-                        onClick={handleUnhide}
-                    >
-                        <svg className="cli-panel-hide-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="4 17 10 11 4 5" />
-                            <line x1="12" y1="19" x2="20" y2="19" />
-                        </svg>
-                        <span className="cli-panel-hide-tab-label">CLI</span>
-                        <HideTabChevron position={position} />
-                    </button>
-                )}
-                <div
-                    ref={wrapperRef}
-                    className={`cli-panel-wrapper ${collapsed ? 'collapsed' : ''} ${maximized ? 'maximized' : ''} ${panelResizing ? 'resizing' : ''} ${className ?? ''}`}
-                    style={wrapperStyle}
-                    data-position={position}
-                    data-resizable={String(resizable)}
-                    data-closable={String(closable)}
-                    data-hideable={String(hideable)}
+export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>(function CliPanel(props, ref) {
+    const config = useCliConfig();
+    const options = mergeCliOptions<CliPanelOptions>(props.options, config.options);
+    const { modules, processors, services } = resolveCliHostConfig(props, config);
+
+    const [controller] = useState(
+        () =>
+            new CliPanelController({
+                config: options,
+                controlled: {
+                    collapsed: props.collapsed,
+                    hidden: props.hidden,
+                    maximized: props.maximized,
+                    activeTabId: props.activeTabId,
+                    position: props.position,
+                    height: props.height,
+                    width: props.width,
+                },
+            }),
+    );
+    const s = useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+    const [rootElement, setRootElement] = useState<HTMLDivElement | null>(null);
+
+    // Keep the controller in sync with props before the browser paints.
+    useLayoutEffect(() => {
+        controller.setCallbacks({
+            onCollapsedChange: props.onCollapsedChange,
+            onHiddenChange: props.onHiddenChange,
+            onMaximizedChange: props.onMaximizedChange,
+            onActiveTabIdChange: props.onActiveTabIdChange,
+            onPositionChange: props.onPositionChange,
+            onHeightChange: props.onHeightChange,
+            onWidthChange: props.onWidthChange,
+            onClose: props.onClose,
+            onTabAdded: props.onTabAdded,
+            onTabClosed: props.onTabClosed,
+            onPaneSplit: props.onPaneSplit,
+            onPaneClosed: props.onPaneClosed,
+        });
+        controller.setControlled({
+            collapsed: props.collapsed,
+            hidden: props.hidden,
+            maximized: props.maximized,
+            activeTabId: props.activeTabId,
+            position: props.position,
+            height: props.height,
+            width: props.width,
+        });
+        controller.setOptions(options);
+    });
+
+    useEffect(() => controller.setRootElement(rootElement), [controller, rootElement]);
+    useEffect(() => () => controller.destroy(), [controller]);
+    React.useImperativeHandle(ref, () => controller, [controller]);
+
+    if (!s.visible) return null;
+
+    return (
+        <>
+            {s.hidden && (
+                <button
+                    className="cli-panel-hide-tab"
+                    data-position={s.position}
+                    data-hide-align={s.hideAlignment}
+                    style={asStyle(s.themeStyles)}
+                    title={PANEL_LABELS.showCli}
+                    onClick={() => controller.unhide()}
                 >
-                    {/* Header */}
-                    <div className="cli-panel-header">
-                        <div className="cli-panel-resize-bar" onMouseDown={onPanelResizeStart}>
-                            <div className="cli-panel-resize-grip" />
-                        </div>
-                        <div className="cli-panel-header-content">
-                            <p className="cli-panel-title">
-                                <span className="cli-panel-title-icon"><TerminalIcon /></span>
-                                CLI
-                            </p>
-                            {/* Status indicators (bottom/top positions only) */}
-                            {(position === 'bottom' || position === 'top') && (
-                                <div className="cli-panel-status-indicators">
-                                    {/* Execution state */}
-                                    <span className={`cli-panel-status-item${statusExecutionState === 'running' ? ' status-running' : ''}`}>
-                                        <span className={`cli-panel-status-dot ${statusExecutionState === 'running' ? 'dot-running' : 'dot-idle'}`} />
-                                        <span className="cli-panel-status-label">{statusExecutionState}</span>
-                                    </span>
-
-                                    {/* Background services */}
-                                    {statusServiceCount.total > 0 && (
-                                        <span
-                                            ref={servicesDropdownRef}
-                                            className="cli-panel-status-item status-clickable"
-                                            onClick={e => { e.stopPropagation(); setServicesDropdownOpen(prev => !prev); setServersDropdownOpen(false); }}
-                                        >
-                                            <span className="cli-panel-status-icon">&#9881;</span>
-                                            <span className="cli-panel-status-label">{statusServiceCount.running}/{statusServiceCount.total} services</span>
-                                        </span>
-                                    )}
-
-                                    {/* Last command */}
-                                    {statusLastCommand && (
-                                        <span className="cli-panel-status-item">
-                                            <span className={`cli-panel-status-icon ${statusLastCommand.success ? 'status-success' : 'status-error'}`}>
-                                                {statusLastCommand.success ? '\u2713' : '\u2717'}
-                                            </span>
-                                            <span className="cli-panel-status-label">{statusLastCommand.name}</span>
-                                        </span>
-                                    )}
-
-                                    {/* Server connection */}
-                                    {statusServerState !== 'none' && (
-                                        <span
-                                            ref={serversDropdownRef}
-                                            className="cli-panel-status-item status-clickable"
-                                            onClick={e => { e.stopPropagation(); setServersDropdownOpen(prev => !prev); setServicesDropdownOpen(false); }}
-                                        >
-                                            <span className={`cli-panel-status-dot ${statusServerState === 'connected' ? 'dot-idle' : 'dot-error'}`} />
-                                            <span className="cli-panel-status-label">{statusServerDetails.filter(s => s.connected).length}/{statusServerDetails.length} servers</span>
-                                        </span>
-                                    )}
-
-                                    {/* Uptime */}
-                                    {statusUptime > 0 && (
-                                        <span className="cli-panel-status-item status-muted">
-                                            <span className="cli-panel-status-icon">&uarr;</span>
-                                            <span className="cli-panel-status-label">{formattedUptime}</span>
-                                        </span>
-                                    )}
-
-                                    {/* Custom notification */}
-                                    {notification && (
-                                        <span className={`cli-panel-status-item status-text level-${notification.level}`}>
-                                            <span className="cli-panel-status-label">{notification.message}</span>
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-                            {/* Compact status indicators (left/right positions — CSS controls visibility).
-                                Only these own the dropdown anchor refs there: in top/bottom the hidden
-                                copies would win the ref and the dropdowns would open at 0,0 */}
-                            <div className="cli-panel-status-indicators-compact">
-                                {/* Execution state */}
-                                <span className="cli-panel-status-compact-item" title={statusExecutionState}>
-                                    <span className={`cli-panel-status-dot ${statusExecutionState === 'running' ? 'dot-running' : 'dot-idle'}`} />
-                                </span>
-
-                                {/* Background services */}
-                                {statusServiceCount.total > 0 && (
-                                    <span
-                                        ref={position === 'left' || position === 'right' ? servicesDropdownRef : undefined}
-                                        className="cli-panel-status-compact-item status-clickable"
-                                        title={`${statusServiceCount.running}/${statusServiceCount.total} services`}
-                                        onClick={e => { e.stopPropagation(); setServicesDropdownOpen(prev => !prev); setServersDropdownOpen(false); }}
+                    <Icon icon={HIDE_TAB_TERMINAL_ICON} className="cli-panel-hide-tab-icon" />
+                    <span className="cli-panel-hide-tab-label">{PANEL_LABELS.title}</span>
+                    <Icon icon={hideTabChevronIcon(s.position)} className="cli-panel-hide-tab-arrow" />
+                </button>
+            )}
+            <div
+                ref={setRootElement}
+                className={panelWrapperClass(s, props.className)}
+                style={{ ...asStyle(panelWrapperStyle(s)), ...props.style }}
+                data-position={s.position}
+                data-resizable={String(s.resizable)}
+                data-closable={String(s.closable)}
+                data-hideable={String(s.hideable)}
+            >
+                <PanelHeader controller={controller} s={s} />
+                {s.initialized && (
+                    <div className="cli-panel-content" style={s.collapsed ? { display: 'none' } : undefined}>
+                        <div className="cli-panel-tabs">
+                            <ul className="cli-panel-tab-list">
+                                {s.tabs.map((tab) => (
+                                    <li
+                                        key={tab.id}
+                                        className={panelTabClass(s, tab)}
+                                        onClick={() => controller.selectTab(tab.id)}
+                                        onDoubleClick={() => controller.startRename(tab.id)}
+                                        onContextMenu={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            controller.openContextMenu(tab.id, e.clientX, e.clientY);
+                                        }}
                                     >
-                                        <span className="cli-panel-status-icon">&#9881;</span>
-                                    </span>
-                                )}
-
-                                {/* Last command */}
-                                {statusLastCommand && (
-                                    <span className="cli-panel-status-compact-item" title={`${statusLastCommand.success ? '✓' : '✗'} ${statusLastCommand.name}`}>
-                                        <span className={`cli-panel-status-icon ${statusLastCommand.success ? 'status-success' : 'status-error'}`}>
-                                            {statusLastCommand.success ? '\u2713' : '\u2717'}
-                                        </span>
-                                    </span>
-                                )}
-
-                                {/* Server connection */}
-                                {statusServerState !== 'none' && (
-                                    <span
-                                        ref={position === 'left' || position === 'right' ? serversDropdownRef : undefined}
-                                        className="cli-panel-status-compact-item status-clickable"
-                                        title={`${statusServerDetails.filter(s => s.connected).length}/${statusServerDetails.length} servers`}
-                                        onClick={e => { e.stopPropagation(); setServersDropdownOpen(prev => !prev); setServicesDropdownOpen(false); }}
-                                    >
-                                        <span className={`cli-panel-status-dot ${statusServerState === 'connected' ? 'dot-idle' : 'dot-error'}`} />
-                                    </span>
-                                )}
-
-                                {/* Uptime */}
-                                {statusUptime > 0 && (
-                                    <span className="cli-panel-status-compact-item status-muted" title={formattedUptime}>
-                                        <span className="cli-panel-status-icon">&uarr;</span>
-                                    </span>
-                                )}
-
-                                {/* Notification */}
-                                {notification && (
-                                    <span className="cli-panel-status-compact-item" title={notification.message}>
-                                        <span className={`cli-panel-status-compact-dot level-${notification.level}`} />
-                                    </span>
-                                )}
-                            </div>
-                            <div className="cli-panel-action-buttons">
-                                <div className="cli-panel-btn-position-wrapper" onClick={e => e.stopPropagation()}>
-                                    <button className="cli-panel-btn cli-panel-btn-position" title="Move panel" onClick={handlePositionButtonClick}>
-                                        <PositionIcon position={position} />
-                                    </button>
-                                    {positionDropdownOpen && (
-                                        <div className="cli-panel-position-dropdown">
-                                            {(['bottom', 'top', 'left', 'right'] as CliPanelPosition[]).map(pos => (
+                                        {tab.isEditing ? (
+                                            <input
+                                                className="cli-panel-tab-rename-input"
+                                                type="text"
+                                                defaultValue={tab.title}
+                                                ref={focusAndSelect}
+                                                onKeyDown={(e) => handleRenameKey(controller, tab.id, e.key, e.currentTarget.value)}
+                                                onBlur={(e) => controller.commitRename(tab.id, e.target.value)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                onDoubleClick={(e) => e.stopPropagation()}
+                                            />
+                                        ) : (
+                                            <>
+                                                <span className={panelTabDotClass(s, tab)} />
+                                                <span className="cli-panel-tab-title">{tab.title}</span>
                                                 <button
-                                                    key={pos}
-                                                    className={`cli-panel-position-dropdown-item${position === pos ? ' active' : ''}`}
-                                                    onClick={() => selectPosition(pos)}
-                                                >
-                                                    <PositionIcon position={pos} size={16} />
-                                                    {pos.charAt(0).toUpperCase() + pos.slice(1)}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                                {hideable && (
-                                    <button className="cli-panel-btn cli-panel-btn-hide" title="Hide" onClick={handleHide}>
-                                        <HideIcon />
-                                    </button>
-                                )}
-                                <button className="cli-panel-btn" title={maximized ? 'Restore' : 'Maximize'} disabled={collapsed} onClick={toggleMaximize}>
-                                    {maximized ? <RestoreIcon /> : <MaximizeIcon />}
-                                </button>
-                                <button className="cli-panel-btn" title={collapsed ? 'Expand' : 'Collapse'} onClick={toggle}>
-                                    <CollapseChevron position={position} isCollapsed={collapsed} />
-                                </button>
-                                {closable && (
-                                    <button className="cli-panel-btn cli-panel-btn-close" title="Close" onClick={handleClose}>
-                                        <CloseIcon />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                        {/* Ambient glow line */}
-                        <div className={`cli-panel-glow-line${statusExecutionState === 'running' ? ' glow-active' : ''}`} />
-                    </div>
-
-                    {/* Content (kept in DOM to preserve terminal state) */}
-                    {initialized && (
-                        <div className="cli-panel-content" style={collapsed ? { display: 'none' } : undefined}>
-                            {/* Tab bar */}
-                            <div className="cli-panel-tabs">
-                                <ul className="cli-panel-tab-list">
-                                    {tabs.map(tab => (
-                                        <li
-                                            key={tab.id}
-                                            className={`cli-panel-tab ${tab.id === activeTabId ? 'active' : ''}`}
-                                            onClick={() => selectTab(tab.id)}
-                                            onDoubleClick={() => startRename(tab.id)}
-                                            onContextMenu={e => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                setContextMenu({ visible: true, x: e.clientX, y: e.clientY, tabId: tab.id });
-                                            }}
-                                        >
-                                            {tab.isEditing ? (
-                                                <input
-                                                    className="cli-panel-tab-rename-input"
-                                                    type="text"
-                                                    defaultValue={tab.title}
-                                                    autoFocus
-                                                    onKeyDown={e => {
-                                                        if (e.key === 'Enter') commitRename(tab.id, (e.target as HTMLInputElement).value);
-                                                        else if (e.key === 'Escape') setTabs(prev => prev.map(t => ({ ...t, isEditing: false })));
+                                                    className="cli-panel-tab-close-btn"
+                                                    title={PANEL_LABELS.closeTab}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        controller.closeTab(tab.id);
                                                     }}
-                                                    onBlur={e => commitRename(tab.id, e.target.value)}
-                                                    onClick={e => e.stopPropagation()}
-                                                    onDoubleClick={e => e.stopPropagation()}
-                                                />
-                                            ) : (
-                                                <>
-                                                    <span className={`cli-panel-tab-dot ${(() => {
-                                                        // Only compute for active tab since we poll only the active engine
-                                                        if (tab.id !== activeTabId) return 'dot-idle';
-                                                        if (statusExecutionState === 'running') return 'dot-running';
-                                                        if (statusLastCommand && !statusLastCommand.success) return 'dot-error';
-                                                        return 'dot-idle';
-                                                    })()}`} />
-                                                    <span className="cli-panel-tab-title">{tab.title}</span>
-                                                    <button
-                                                        className="cli-panel-tab-close-btn"
-                                                        title="Close tab"
-                                                        onClick={e => { e.stopPropagation(); closeTab(tab.id); }}
-                                                    >&times;</button>
-                                                </>
-                                            )}
-                                        </li>
-                                    ))}
-                                </ul>
-                                <button className="cli-panel-add-tab" title="New terminal" onClick={() => addTab()}>+</button>
-                            </div>
+                                                >
+                                                    {CLOSE_GLYPH}
+                                                </button>
+                                            </>
+                                        )}
+                                    </li>
+                                ))}
+                            </ul>
+                            <button className="cli-panel-add-tab" title={PANEL_LABELS.newTerminal} onClick={() => controller.addTab()}>
+                                +
+                            </button>
+                        </div>
 
-                            {/* Terminal instances */}
-                            <div className="cli-panel-instances">
-                                {tabs.map(tab => (
-                                    <div key={tab.id} className="cli-panel-instance" style={{ display: tab.id === activeTabId ? undefined : 'none' }}>
-                                        <div className={`cli-panel-panes-container ${paneResizing ? 'resizing' : ''}`}>
-                                            {tab.panes.map((pane, i) => (
-                                                <React.Fragment key={pane.id}>
-                                                    {i > 0 && (
-                                                        <div className="cli-panel-pane-divider" onMouseDown={e => onPaneResizeStart(e, tab.id, i - 1)}>
-                                                            <div className="cli-panel-pane-divider-grip" />
-                                                        </div>
-                                                    )}
+                        <div className="cli-panel-instances">
+                            {s.tabs.map((tab) => (
+                                <div key={tab.id} className="cli-panel-instance" style={{ display: tab.id === s.activeTabId ? undefined : 'none' }}>
+                                    <div className={panesContainerClass(s)}>
+                                        {tab.panes.map((pane, i) => (
+                                            <React.Fragment key={pane.id}>
+                                                {i > 0 && (
                                                     <div
-                                                        className={`cli-panel-pane ${pane.id === activePaneId && tab.id === activeTabId ? 'active-pane' : ''}`}
-                                                        style={{ flex: `${pane.widthPercent} 1 0` }}
-                                                        onClick={() => { setActivePaneId(pane.id); updateActiveTabId(tab.id); }}
+                                                        className="cli-panel-pane-divider"
+                                                        onMouseDown={(e) => {
+                                                            e.preventDefault();
+                                                            controller.startPaneResize(tab.id, i - 1, e.clientX, panesContainerWidth(e.target));
+                                                        }}
                                                     >
-                                                        {tab.panes.length > 1 && (
-                                                            <button
-                                                                className="cli-panel-pane-close-btn"
-                                                                onClick={e => { e.stopPropagation(); closePane(pane.id); }}
-                                                                title="Close pane"
-                                                            >&times;</button>
-                                                        )}
-                                                        <CliContext.Provider value={{ engine: null }}>
-                                                            <Cli
-                                                                options={options}
-                                                                modules={modules}
-                                                                processors={processors}
-                                                                services={services}
-                                                                snapshot={pane.snapshot}
-                                                                onReady={(engine) => engineMapRef.current.set(pane.id, engine)}
-                                                            />
-                                                        </CliContext.Provider>
+                                                        <div className="cli-panel-pane-divider-grip" />
                                                     </div>
-                                                </React.Fragment>
-                                            ))}
-                                        </div>
+                                                )}
+                                                <div
+                                                    className={paneClass(s, tab.id, pane.id)}
+                                                    style={paneStyle(pane.widthPercent)}
+                                                    onClick={() => controller.activatePane(tab.id, pane.id)}
+                                                >
+                                                    {tab.panes.length > 1 && (
+                                                        <button
+                                                            className="cli-panel-pane-close-btn"
+                                                            title={PANEL_LABELS.closePane}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                controller.closePane(pane.id);
+                                                            }}
+                                                        >
+                                                            {CLOSE_GLYPH}
+                                                        </button>
+                                                    )}
+                                                    <CliContext.Provider value={{ engine: null }}>
+                                                        <Cli
+                                                            options={options}
+                                                            modules={modules}
+                                                            processors={processors}
+                                                            services={services}
+                                                            snapshot={pane.snapshot}
+                                                            onReady={(engine) => controller.registerEngine(tab.id, pane.id, engine)}
+                                                        />
+                                                    </CliContext.Provider>
+                                                </div>
+                                            </React.Fragment>
+                                        ))}
                                     </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {s.contextMenu.visible && (
+                <div className="cli-panel-context-menu" style={asStyle(contextMenuStyle(s))} onClick={(e) => e.stopPropagation()}>
+                    {contextMenuItems(s).map((item) => (
+                        <React.Fragment key={item.action}>
+                            {item.separatorBefore && <div className="cli-panel-context-menu-separator" />}
+                            <button
+                                className={joinClasses('cli-panel-context-menu-item', item.destructive && 'destructive')}
+                                disabled={item.disabled}
+                                onClick={() => runContextMenuAction(controller, item.action)}
+                            >
+                                {item.label}
+                            </button>
+                        </React.Fragment>
+                    ))}
+                </div>
+            )}
+
+            <StatusDropdown s={s} />
+        </>
+    );
+});
+
+/* ─── Services / servers dropdown ────────────────────────── */
+
+function StatusDropdown({ s }: { s: CliPanelSnapshot }) {
+    const dropdown = openStatusDropdown(s);
+    if (!dropdown) return null;
+    return (
+        <div className="cli-panel-services-dropdown" style={asStyle(dropdown.style)} onClick={(e) => e.stopPropagation()}>
+            <div className="cli-panel-services-dropdown-header">{dropdown.header}</div>
+            <div className="cli-panel-services-dropdown-list">
+                {dropdown.rows.map((row) => (
+                    <div key={row.key} className="cli-panel-services-dropdown-item">
+                        <span className={row.dotClass} />
+                        <div className="cli-panel-svc-info">
+                            <span className="cli-panel-svc-name">{row.name}</span>
+                            {row.description && <span className="cli-panel-svc-desc">{row.description}</span>}
+                        </div>
+                        {dropdown.kind === 'servers' ? (
+                            <div className="cli-panel-srv-meta">
+                                <span className="cli-panel-svc-status">{row.status}</span>
+                                {row.meta.map((m) => (
+                                    <span key={m} className="cli-panel-svc-desc">
+                                        {m}
+                                    </span>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <span className="cli-panel-svc-status">{row.status}</span>
+                        )}
+                    </div>
+                ))}
+            </div>
+            {dropdown.rows.length === 0 && <div className="cli-panel-services-dropdown-empty">{dropdown.emptyText}</div>}
+        </div>
+    );
+}
+
+/* ─── Header ─────────────────────────────────────────────── */
+
+function PanelHeader({ controller, s }: { controller: CliPanelController; s: CliPanelSnapshot }) {
+    const indicators = statusIndicators(s);
+    const openDropdown = (e: React.MouseEvent, dropdown?: 'services' | 'servers') => {
+        if (!dropdown) return;
+        e.stopPropagation();
+        if (dropdown === 'services') controller.toggleServicesDropdown(e.currentTarget);
+        else controller.toggleServersDropdown(e.currentTarget);
+    };
+
+    return (
+        <div className="cli-panel-header">
+            <div
+                className="cli-panel-resize-bar"
+                onMouseDown={(e) => {
+                    if (!s.resizable) return;
+                    e.preventDefault();
+                    controller.startPanelResize(e.clientX, e.clientY);
+                }}
+            >
+                <div className="cli-panel-resize-grip" />
+            </div>
+            <div className="cli-panel-header-content">
+                <p className="cli-panel-title">
+                    <span className="cli-panel-title-icon">
+                        <Icon icon={TERMINAL_ICON} />
+                    </span>
+                    {PANEL_LABELS.title}
+                </p>
+
+                {s.showStatusIndicators && (
+                    <div className="cli-panel-status-indicators">
+                        {indicators.map((item) => (
+                            <span
+                                key={item.key}
+                                className={joinClasses('cli-panel-status-item', item.itemClass)}
+                                onClick={item.dropdown ? (e) => openDropdown(e, item.dropdown) : undefined}
+                            >
+                                {item.dotClass && <span className={`cli-panel-status-dot ${item.dotClass}`} />}
+                                {item.icon && <span className={joinClasses('cli-panel-status-icon', item.iconClass)}>{item.icon}</span>}
+                                <span className="cli-panel-status-label">{item.label}</span>
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                {/* Compact indicators for left/right positions (CSS controls visibility). */}
+                <div className="cli-panel-status-indicators-compact">
+                    {indicators.map((item) => (
+                        <span
+                            key={item.key}
+                            className={joinClasses('cli-panel-status-compact-item', item.compactClass)}
+                            title={item.title}
+                            onClick={item.dropdown ? (e) => openDropdown(e, item.dropdown) : undefined}
+                        >
+                            {item.compactDotClass && <span className={item.compactDotClass} />}
+                            {item.dotClass && <span className={`cli-panel-status-dot ${item.dotClass}`} />}
+                            {item.icon && <span className={joinClasses('cli-panel-status-icon', item.iconClass)}>{item.icon}</span>}
+                        </span>
+                    ))}
                 </div>
 
-                {/* Context menu */}
-                {contextMenu.visible && (
-                    <div
-                        className="cli-panel-context-menu"
-                        style={{ left: contextMenu.x, top: contextMenu.y }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <button className="cli-panel-context-menu-item" onClick={() => { closeContextMenu(); startRename(contextMenu.tabId); }}>Rename</button>
-                        <button className="cli-panel-context-menu-item" onClick={() => {
-                            closeContextMenu();
-                            const tab = tabs.find(t => t.id === contextMenu.tabId);
-                            if (!tab) return;
-
-                            const sourceEngine = engineMapRef.current.get(tab.panes[0]?.id);
-                            const snapshot = sourceEngine?.snapshot();
-
-                            const paneId = nextIdRef.current.pane++;
-                            const tabId = nextIdRef.current.tab++;
-                            const pane: TerminalPane = { id: paneId, widthPercent: 100, snapshot };
-                            const newTab: TerminalTab = { id: tabId, title: `${tab.title} (copy)`, isEditing: false, panes: [pane] };
-                            const idx = tabs.indexOf(tab);
-                            setTabs(prev => { const next = [...prev]; next.splice(idx + 1, 0, newTab); return next; });
-                            updateActiveTabId(tabId);
-                            setActivePaneId(paneId);
-                            props.onTabAdded?.({ tabId });
-                        }}>Duplicate</button>
-                        <button className="cli-panel-context-menu-item" onClick={() => { closeContextMenu(); splitPane(contextMenu.tabId); }}>Split Right</button>
-                        <div className="cli-panel-context-menu-separator" />
-                        <button className="cli-panel-context-menu-item" onClick={() => { closeContextMenu(); closeTab(contextMenu.tabId); }}>Close</button>
-                        <button className="cli-panel-context-menu-item" disabled={tabs.length <= 1} onClick={() => { closeContextMenu(); setTabs(prev => prev.filter(t => t.id === contextMenu.tabId)); updateActiveTabId(contextMenu.tabId); }}>Close Others</button>
-                        <button className="cli-panel-context-menu-item" onClick={() => {
-                            const id = contextMenu.tabId;
-                            closeContextMenu();
-                            setTabs(prev => {
-                                const idx = prev.findIndex(t => t.id === id);
-                                if (idx === -1) return prev;
-                                return prev.slice(0, idx + 1);
-                            });
-                        }}>Close to the Right</button>
-                        <div className="cli-panel-context-menu-separator" />
-                        <button className="cli-panel-context-menu-item destructive" onClick={() => { closeContextMenu(); setTabs([]); setInitialized(false); updateCollapsed(true); }}>Close All</button>
-                    </div>
-                )}
-
-                {/* Services dropdown */}
-                {servicesDropdownOpen && statusServiceCount.total > 0 && (
-                    <div
-                        className="cli-panel-services-dropdown"
-                        style={(() => {
-                            const el = servicesDropdownRef.current;
-                            if (!el) return {};
-                            const rect = el.getBoundingClientRect();
-                            const base = { position: 'fixed' as const, zIndex: 1100 };
-                            switch (position) {
-                                case 'top':
-                                    return { ...base, top: rect.bottom + 4, left: rect.left };
-                                case 'left':
-                                    return { ...base, top: rect.top, left: rect.right + 4 };
-                                case 'right':
-                                    return { ...base, top: rect.top, right: window.innerWidth - rect.left + 4 };
-                                default:
-                                    return { ...base, bottom: window.innerHeight - rect.top + 4, left: rect.left };
-                            }
-                        })()}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <div className="cli-panel-services-dropdown-header">Background Services</div>
-                        <div className="cli-panel-services-dropdown-list">
-                            {statusServiceDetails.map((svc, i) => (
-                                <div key={i} className="cli-panel-services-dropdown-item">
-                                    <span className={`cli-panel-svc-dot ${svc.status === 'running' ? 'svc-running' : 'svc-stopped'}`} />
-                                    <div className="cli-panel-svc-info">
-                                        <span className="cli-panel-svc-name">{svc.name}</span>
-                                        {svc.description && <span className="cli-panel-svc-desc">{svc.description}</span>}
-                                    </div>
-                                    <span className="cli-panel-svc-status">{svc.status}</span>
-                                </div>
-                            ))}
-                        </div>
-                        {statusServiceDetails.length === 0 && (
-                            <div className="cli-panel-services-dropdown-empty">No services registered</div>
+                <div className="cli-panel-action-buttons">
+                    <div className="cli-panel-btn-position-wrapper" onClick={(e) => e.stopPropagation()}>
+                        <button className="cli-panel-btn cli-panel-btn-position" title={PANEL_LABELS.movePanel} onClick={() => controller.togglePositionDropdown()}>
+                            <Icon icon={positionIcon(s.position)} />
+                        </button>
+                        {s.positionDropdownOpen && (
+                            <div className="cli-panel-position-dropdown">
+                                {positionOptions(s).map((opt) => (
+                                    <button key={opt.position} className={opt.className} onClick={() => controller.setPosition(opt.position)}>
+                                        <Icon icon={positionIcon(opt.position, 16)} />
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
                         )}
                     </div>
-                )}
-
-                {/* Servers dropdown */}
-                {serversDropdownOpen && statusServerState !== 'none' && (
-                    <div
-                        className="cli-panel-services-dropdown"
-                        style={(() => {
-                            const el = serversDropdownRef.current;
-                            if (!el) return {};
-                            const rect = el.getBoundingClientRect();
-                            const base = { position: 'fixed' as const, zIndex: 1100 };
-                            switch (position) {
-                                case 'top':
-                                    return { ...base, top: rect.bottom + 4, left: rect.left };
-                                case 'left':
-                                    return { ...base, top: rect.top, left: rect.right + 4 };
-                                case 'right':
-                                    return { ...base, top: rect.top, right: window.innerWidth - rect.left + 4 };
-                                default:
-                                    return { ...base, bottom: window.innerHeight - rect.top + 4, left: rect.left };
-                            }
-                        })()}
-                        onClick={e => e.stopPropagation()}
+                    {s.hideable && (
+                        <button className="cli-panel-btn cli-panel-btn-hide" title={PANEL_LABELS.hide} onClick={() => controller.hide()}>
+                            <Icon icon={HIDE_ICON} />
+                        </button>
+                    )}
+                    <button
+                        className="cli-panel-btn"
+                        title={s.maximized ? PANEL_LABELS.restore : PANEL_LABELS.maximize}
+                        disabled={s.collapsed}
+                        onClick={() => controller.toggleMaximize()}
                     >
-                        <div className="cli-panel-services-dropdown-header">Server Connections</div>
-                        <div className="cli-panel-services-dropdown-list">
-                            {statusServerDetails.map((srv, i) => (
-                                <div key={i} className="cli-panel-services-dropdown-item">
-                                    <span className={`cli-panel-svc-dot ${srv.connected ? 'svc-running' : 'svc-stopped'}`} />
-                                    <div className="cli-panel-svc-info">
-                                        <span className="cli-panel-svc-name">{srv.name}</span>
-                                        {srv.url && <span className="cli-panel-svc-desc">{srv.url}</span>}
-                                    </div>
-                                    <div className="cli-panel-srv-meta">
-                                        <span className="cli-panel-svc-status">{srv.connected ? 'connected' : 'disconnected'}</span>
-                                        {srv.apiVersion && <span className="cli-panel-svc-desc">v{srv.apiVersion}</span>}
-                                        {srv.commandCount && <span className="cli-panel-svc-desc">{srv.commandCount} cmds</span>}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        {statusServerDetails.length === 0 && (
-                            <div className="cli-panel-services-dropdown-empty">No servers configured</div>
-                        )}
-                    </div>
-                )}
-            </>
-        );
-    }
-);
+                        <Icon icon={s.maximized ? RESTORE_ICON : MAXIMIZE_ICON} />
+                    </button>
+                    <button className="cli-panel-btn" title={s.collapsed ? PANEL_LABELS.expand : PANEL_LABELS.collapse} onClick={() => controller.toggle()}>
+                        <Icon icon={collapseChevronIcon(s.position, s.collapsed)} />
+                    </button>
+                    {s.closable && (
+                        <button className="cli-panel-btn cli-panel-btn-close" title={PANEL_LABELS.close} onClick={() => controller.close()}>
+                            <Icon icon={CLOSE_ICON} />
+                        </button>
+                    )}
+                </div>
+            </div>
+            <div className={glowLineClass(s)} />
+        </div>
+    );
+}

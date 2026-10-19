@@ -1,3 +1,4 @@
+import { Subject } from 'rxjs';
 import { CliLogsCommandProcessor } from '../lib/processors/cli-logs-command-processor';
 
 describe('CliLogsCommandProcessor', () => {
@@ -238,6 +239,7 @@ describe('CliLogsCommandProcessor', () => {
             writer: { writeError: (m: string) => errors.push(m), writeSuccess() {}, writeln() {}, writeInfo() {} },
             notifier: { info() {} },
             signal: new AbortController().signal,
+            onAbort: new Subject<void>(),
             process: { exit() {} },
         });
 

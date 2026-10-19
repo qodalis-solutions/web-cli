@@ -1,3 +1,4 @@
+import { skip } from 'rxjs/operators';
 import {
     ICliCommandProcessor,
     ICliExecutionContext,
@@ -8,6 +9,9 @@ import {
     CliStateConfiguration,
     DefaultLibraryAuthor,
     CliForegroundColor,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { defaultFontSize } from '../engine/cli-terminal-setup';
 
@@ -62,7 +66,7 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
             // Explicit range validation here (instead of relying solely on setFontSize's clamp)
             // so we can surface a clear error message to the user for out-of-range input.
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const n = parseInt(cmd.value ?? '', 10);
+                const n = parseInt(cmd.positionals?.[0] ?? '', 10);
                 if (isNaN(n) || n < MIN_FONT_SIZE || n > MAX_FONT_SIZE) {
                     context.writer.writeError(
                         `Font size must be between ${MIN_FONT_SIZE} and ${MAX_FONT_SIZE}`,
@@ -83,6 +87,16 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
         if (state?.fontSize != null && context.terminal?.options) {
             context.terminal.options.fontSize = state.fontSize;
         }
+
+        // A size set in another tab or terminal is applied here too
+        context.state
+            .select((s) => (s as FontSizeState).fontSize ?? null)
+            .pipe(skip(1))
+            .subscribe((fontSize) => {
+                if (!context.terminal?.options) return;
+                context.terminal.options.fontSize =
+                    fontSize ?? this.hostFontSize ?? context.terminal.options.fontSize;
+            });
     }
 
     async processCommand(_: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
@@ -102,6 +116,31 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
         context.writer.writeln(
             `  ${context.writer.wrapInColor('font-size reset', CliForegroundColor.Cyan)}      Reset to default (${this.getDefault()}px)`,
         );
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t(
+                'cli.font-size.help.intro',
+                'Make the terminal text bigger or smaller, from {min}px to {max}px. The size you pick is saved and restored the next time the terminal opens; reset goes back to the size the page started with.',
+                { min: MIN_FONT_SIZE, max: MAX_FONT_SIZE },
+            ),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['font-size', t.t('cli.font-size.help.show_current_size', 'Show the current size')],
+            ['font-size increase|decrease', t.t('cli.font-size.help.bigger_smaller_by', 'Bigger or smaller by {step}px', { step: STEP })],
+            ['font-size set <n>', t.t('cli.font-size.help.exact_size', 'Exact size in pixels ({min}-{max})', { min: MIN_FONT_SIZE, max: MAX_FONT_SIZE })],
+            ['font-size reset', t.t('cli.font-size.help.back_default_size', 'Back to the default size')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['font-size set 16', t.t('cli.font-size.help.use_16px_text', 'Use 16px text')],
+            ['fontsize increase', t.t('cli.font-size.help.grow_by', 'Grow by {step}px', { step: STEP })],
+            ['font-size reset', t.t('cli.font-size.help.forget_saved_size', 'Forget the saved size')],
+        ]);
     }
 
     private getCurrent(context: ICliExecutionContext): number {

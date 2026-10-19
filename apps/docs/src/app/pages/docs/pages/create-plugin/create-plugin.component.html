@@ -135,7 +135,7 @@ export class WeatherProcessor implements ICliCommandProcessor &#123;
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise&lt;void&gt; &#123;
-        const city = command.args[0];
+        const city = command.positionals?.[0];
         if (!city) &#123;
             context.writer.writeError('Please provide a city name.');
             return;
@@ -202,7 +202,7 @@ export class WeatherProcessor implements ICliCommandProcessor &#123;
 <ul>
     <li><code>dist/index.js</code> — {{ 'docs.create-plugin.build-cjs' | translate }}</li>
     <li><code>dist/index.mjs</code> — {{ 'docs.create-plugin.build-esm' | translate }}</li>
-    <li><code>dist/umd/index.js</code> — {{ 'docs.create-plugin.build-iife' | translate }}</li>
+    <li><code>dist/umd/index.global.js</code> — {{ 'docs.create-plugin.build-iife' | translate }}</li>
     <li><code>dist/index.d.ts</code> — {{ 'docs.create-plugin.build-dts' | translate }}</li>
 </ul>
 

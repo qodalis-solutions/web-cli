@@ -21,6 +21,7 @@ import { stringModule } from '@qodalis/cli-string';
 import { passwordGeneratorModule } from '@qodalis/cli-password-generator';
 import { qrModule } from '@qodalis/cli-qr';
 import { todoModule } from '@qodalis/cli-todo';
+import { markdownModule } from '@qodalis/cli-markdown';
 
 // Import a custom inline processor
 import { GreetCommandProcessor } from './processors/greet-command-processor.ts';
@@ -51,6 +52,7 @@ const modules: ICliModule[] = [
     passwordGeneratorModule,
     qrModule,
     todoModule,
+    markdownModule,
     customModule,
 ];
 

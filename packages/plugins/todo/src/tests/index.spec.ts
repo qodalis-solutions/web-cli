@@ -349,3 +349,33 @@ describe('CliTodoCommandProcessor', () => {
         });
     });
 });
+
+describe('todo through the engine', () => {
+    it('stores quoted text without its quotes, flags inside quotes included', async () => {
+        const { CliTestHarness } = await import('@qodalis/cli');
+        const harness = new CliTestHarness();
+        harness.registerProcessors([new CliTodoCommandProcessor()]);
+        const first = await harness.execute('todo add "buy milk --urgent"');
+        const second = await harness.execute("todo add 'call Bob'");
+        expect(first.output).toContain('Added: "buy milk --urgent"');
+        expect(first.output).not.toContain('""');
+        expect(second.output).toContain('Added: "call Bob"');
+        const list = await harness.execute('todo ls');
+        expect(list.output).toContain('buy milk --urgent');
+        expect(list.output).toContain('call Bob');
+    });
+
+    it('edits with quoted text and takes a quoted id', async () => {
+        const { CliTestHarness } = await import('@qodalis/cli');
+        const harness = new CliTestHarness();
+        harness.registerProcessors([new CliTodoCommandProcessor()]);
+        await harness.execute('todo add first');
+        await harness.execute(`todo edit 1 "buy  milk"`);
+        const list = await harness.execute('todo ls');
+        expect(list.output).toContain('buy  milk');
+        expect(list.output).not.toContain('"buy');
+
+        const done = await harness.execute('todo done "1"');
+        expect(done.stderr).toEqual([]);
+    });
+});
