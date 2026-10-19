@@ -1,5 +1,6 @@
 import {
     AfterViewInit,
+    ChangeDetectorRef,
     Component,
     ElementRef,
     EventEmitter,
@@ -151,6 +152,7 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     constructor(
         private readonly elementRef: ElementRef<HTMLElement>,
         private readonly zone: NgZone,
+        private readonly changeDetector: ChangeDetectorRef,
     ) {}
 
     ngOnInit(): void {
@@ -174,7 +176,13 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         });
         this.render(this.controller.getSnapshot());
         // Status polling runs outside Angular; only real changes re-enter the zone.
-        this.unsubscribe = this.controller.subscribe(() => this.zone.run(() => this.render(this.controller.getSnapshot())));
+        // markForCheck also schedules change detection in zoneless apps.
+        this.unsubscribe = this.controller.subscribe(() =>
+            this.zone.run(() => {
+                this.render(this.controller.getSnapshot());
+                this.changeDetector.markForCheck();
+            }),
+        );
     }
 
     ngOnChanges(): void {

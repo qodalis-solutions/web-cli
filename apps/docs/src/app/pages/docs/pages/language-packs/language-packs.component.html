@@ -1,71 +1,77 @@
-<h1>{{ 'docs.language-packs.title' | translate }}</h1>
-<p>{{ 'docs.language-packs.intro' | translate }}</p>
+<h1>{{ "docs.language-packs.title" | translate }}</h1>
+<p>{{ "docs.language-packs.intro" | translate }}</p>
 
-<h2>{{ 'docs.language-packs.available' | translate }}</h2>
+<h2>{{ "docs.language-packs.available" | translate }}</h2>
 <table>
-    <thead>
-        <tr>
-            <th>{{ 'docs.language-packs.th-language' | translate }}</th>
-            <th>{{ 'docs.language-packs.th-package' | translate }}</th>
-            <th>{{ 'docs.language-packs.th-install' | translate }}</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let pack of languagePacks">
-            <td>{{ pack.name }}</td>
-            <td><code>{{ pack.npmPackage }}</code></td>
-            <td><code>npm install {{ pack.npmPackage }}</code></td>
-        </tr>
-    </tbody>
+  <thead>
+    <tr>
+      <th>{{ "docs.language-packs.th-language" | translate }}</th>
+      <th>{{ "docs.language-packs.th-package" | translate }}</th>
+      <th>{{ "docs.language-packs.th-install" | translate }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (pack of languagePacks; track pack) {
+      <tr>
+        <td>{{ pack.name }}</td>
+        <td>
+          <code>{{ pack.npmPackage }}</code>
+        </td>
+        <td>
+          <code>npm install {{ pack.npmPackage }}</code>
+        </td>
+      </tr>
+    }
+  </tbody>
 </table>
 
-<h2>{{ 'docs.language-packs.usage' | translate }}</h2>
-<p>{{ 'docs.language-packs.usage-desc' | translate }}</p>
+<h2>{{ "docs.language-packs.usage" | translate }}</h2>
+<p>{{ "docs.language-packs.usage-desc" | translate }}</p>
 
 <div class="code-block">
-    <span class="code-label">npm</span>
-    <pre><code>npm install &#64;qodalis/cli-lang-es</code></pre>
+  <span class="code-label">npm</span>
+  <pre><code>npm install &#64;qodalis/cli-lang-es</code></pre>
 </div>
 
 <div class="code-block">
-    <span class="code-label">Import and use</span>
-    <pre><code>import &#123; langEsModule &#125; from '&#64;qodalis/cli-lang-es';
+  <span class="code-label">Import and use</span>
+  <pre><code>import &#123; langEsModule &#125; from '&#64;qodalis/cli-lang-es';
 
-// Angular: &lt;cli [modules]="[langEsModule]" /&gt;
-// React:   &lt;Cli modules=&#123;[langEsModule]&#125; /&gt;
-// Vue:     &lt;Cli :modules="[langEsModule]" /&gt;</code></pre>
+    // Angular: &lt;cli [modules]="[langEsModule]" /&gt;
+    // React:   &lt;Cli modules=&#123;[langEsModule]&#125; /&gt;
+  // Vue:     &lt;Cli :modules="[langEsModule]" /&gt;</code></pre>
 </div>
 
-<p>{{ 'docs.language-packs.runtime-desc' | translate }}</p>
+<p>{{ "docs.language-packs.runtime-desc" | translate }}</p>
 <div class="code-block">
-    <span class="code-label">Terminal</span>
-    <pre><code>pkg add &#64;qodalis/cli-lang-es</code></pre>
+  <span class="code-label">Terminal</span>
+  <pre><code>pkg add &#64;qodalis/cli-lang-es</code></pre>
 </div>
 
-<h2>{{ 'docs.language-packs.creating-title' | translate }}</h2>
-<p>{{ 'docs.language-packs.creating-desc' | translate }}</p>
+<h2>{{ "docs.language-packs.creating-title" | translate }}</h2>
+<p>{{ "docs.language-packs.creating-desc" | translate }}</p>
 
-<h3>{{ 'docs.language-packs.how-title' | translate }}</h3>
+<h3>{{ "docs.language-packs.how-title" | translate }}</h3>
 <ul>
-    <li>{{ 'docs.language-packs.how-1' | translate }}</li>
-    <li>{{ 'docs.language-packs.how-2' | translate }}</li>
-    <li>{{ 'docs.language-packs.how-3' | translate }}</li>
+  <li>{{ "docs.language-packs.how-1" | translate }}</li>
+  <li>{{ "docs.language-packs.how-2" | translate }}</li>
+  <li>{{ "docs.language-packs.how-3" | translate }}</li>
 </ul>
 
 <div class="code-block">
-    <span class="code-label">lang-pack-example.ts</span>
-    <pre><code>export class SpanishLanguageProcessor implements ICliCommandProcessor &#123;
+  <span class="code-label">lang-pack-example.ts</span>
+  <pre><code>export class SpanishLanguageProcessor implements ICliCommandProcessor &#123;
     command = '__lang_es__';
     description = 'Spanish language pack';
 
     onInit(context: ICliExecutionContext): void &#123;
-        const translator = context.translationService;
-        translator.addTranslations('es', &#123;
-            'cli.help.description': 'Muestra la ayuda',
-            'cli.clear.description': 'Limpia la terminal',
-            'cli.version.description': 'Muestra la version',
-            // ... more translations
-        &#125;);
+    const translator = context.translationService;
+    translator.addTranslations('es', &#123;
+    'cli.help.description': 'Muestra la ayuda',
+    'cli.clear.description': 'Limpia la terminal',
+    'cli.version.description': 'Muestra la version',
+    // ... more translations
+    &#125;);
     &#125;
-&#125;</code></pre>
+  &#125;</code></pre>
 </div>

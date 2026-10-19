@@ -27,16 +27,8 @@ overrides:
   'node-forge': '>=1.4.0'
   'picomatch@>=4.0.0': '>=4.0.4'
   'path-to-regexp@<1.0.0': '^0.1.13'
-  # Security patches for versions pinned by the Angular 19 tool chain (same major only).
-  'piscina@>=4.0.0 <5.0.0': '^4.9.4'
-  'http-proxy-middleware@>=3.0.0 <4.0.0': '^3.0.7'
-  'postcss@>=8.0.0 <9.0.0': '^8.5.23'
-  'undici@>=7.0.0 <8.0.0': '^7.29.1'
-  '@angular/build>vite': '^6.4.3'
-  'webpack-dev-middleware@>=7.0.0 <8.0.0': '^7.4.6'
-  'webpack-dev-server@>=5.0.0 <6.0.0': '^5.2.6'
-  '@babel/core@>=7.0.0 <8.0.0': '^7.29.6'
-  '@angular/build>esbuild': '^0.28.1'
-  '@angular-devkit/build-angular>esbuild': '^0.28.1'
   # tsup 8 pins esbuild 0.27, which has no patched release; tsup 9 uses 0.28.
   'tsup>esbuild': '^0.28.2'
+  # nx 23.3 pins undici 7.29.0; sockjs (webpack-dev-server) still asks for uuid 8. Both are patched in-range.
+  'nx>undici': '^7.29.1'
+  'sockjs>uuid': '^11.1.1'

@@ -14,10 +14,21 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Typing ahead works.** Keys typed while a command is still running are held and replayed at the next prompt, in order, including Enter. They used to be echoed into the command's output and appended to the line just submitted (`/$ echo hi` then `help` showed `/$ echo hihelp`). Ctrl+C and Esc discard them, and they are dropped when the command takes over the terminal (games, `nano`).
 - **Up arrow recalls the command you just ran.** After running a command, Up skipped it and showed the one before (and did nothing after the very first command).
 
+### Angular (`@qodalis/angular-cli`)
+
+- **Requires Angular 21 or later** (was 16.2). The package is now built with Angular 21; Angular 19 is out of support and its security fixes (XSS sanitization bypasses, `HttpTransferCache` leaks, i18n XSS) only ship for 20.3+, 21.2+ and 22.x.
+- The panel works in zoneless apps, the Angular 21 default, as well as with zone.js. Its templates use the built-in `@if`/`@for` control flow.
+
+### Security and tooling
+
+- Patched every open Dependabot alert: the lockfile was regenerated, Electron moved from 35 to 44 (`@qodalis/electron-cli` and the desktop demo), Vite to 7.3.7, TypeScript to 5.9, TypeDoc to 0.28, and a few transitive pins (`esbuild` under tsup, `undici` under Nx, `uuid` under sockjs) are overridden to their patched releases. Two stale npm lockfiles were removed.
+- `nx serve demo-angular` and `nx serve docs` work again: an open-ended `path-to-regexp` override pulled version 8 into Express 4 (`pathRegexp is not a function`).
+- TypeScript resolves modules with `bundler` resolution, which Angular 21's package entry points need.
+
 ### Panel (`@qodalis/cli`, `@qodalis/react-cli`, `@qodalis/vue-cli`, `@qodalis/angular-cli`)
 
 - **One panel implementation for all three frameworks.** Tabs, split panes, collapse/hide/maximize, position, drag resizing, menus, theme sync and the status bar now live in a framework-agnostic `CliPanelController` in `@qodalis/cli`, with shared icons, class names, labels and status/dropdown models. The React, Vue and Angular `CliPanel` components only render it, with unchanged props, events and `ICliPanelRef` methods.
-- **Same features everywhere.** Angular gains the server-connections dropdown; React and Vue gain Escape to close menus or cancel a rename, and select the tab title when renaming. Tab dots show each tab's own activity in every framework (React and Vue only tracked the active tab).
+- **Same features everywhere.** Angular gains the server-connections dropdown; React and Vue gain Escape to close menus or cancel a rename, and select the tab title when renaming. Double-clicking a tab to rename it no longer loses focus to the terminal. Tab dots show each tab's own activity in every framework (React and Vue only tracked the active tab).
 - **Angular uses the shared `cli-panel.css`.** The private `collapsable-content` component and its stylesheets are gone; the panel uses the same `cli-panel-*` classes as React and Vue. Apps already load the stylesheet through `@qodalis/angular-cli/src/assets/styles.css`.
 - `createCliEngine()`, `resolveCliHostConfig()` and `mergeCliOptions()` in `@qodalis/cli` replace the engine set-up each wrapper repeated (framework service, services, modules, processors, snapshot). Angular now registers its modules before its processors, like React and Vue.
 

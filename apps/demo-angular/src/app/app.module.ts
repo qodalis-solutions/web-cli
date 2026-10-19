@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, provideZoneChangeDetection } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 import {
@@ -126,6 +126,8 @@ setDemoUsersDefault({ mode: 'server', server: 'node' });
     declarations: [AppComponent],
     imports: [BrowserModule, CliModule],
     providers: [
+        // Angular 21 is zoneless by default; this app keeps zone.js change detection.
+        provideZoneChangeDetection(),
         resolveCliProviders(),
         resolveCliModuleProvider(guidModule),
         resolveCliModuleProvider(regexModule),

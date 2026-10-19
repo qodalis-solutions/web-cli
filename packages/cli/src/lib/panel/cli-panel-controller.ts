@@ -783,7 +783,12 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     }
 
     private focusPane(paneId: number): void {
-        setTimeout(() => this.engines.get(paneId)?.focus(), 0);
+        setTimeout(() => {
+            // A double-click on a tab starts a rename after the click that
+            // scheduled this focus; don't steal focus from the rename input.
+            if (this.snapshot.tabs.some((t) => t.isEditing)) return;
+            this.engines.get(paneId)?.focus();
+        }, 0);
     }
 
     private anchorStyle(anchor?: Element | null): Record<string, string> {

@@ -1,47 +1,62 @@
-<h1>{{ 'docs.built-in-commands.title' | translate }}</h1>
-<p>{{ 'docs.built-in-commands.intro' | translate:{ count: totalCount, categories: commandCategories.length } }}</p>
+<h1>{{ "docs.built-in-commands.title" | translate }}</h1>
+<p>
+  {{
+    "docs.built-in-commands.intro"
+      | translate: { count: totalCount, categories: commandCategories.length }
+  }}
+</p>
 
-<div *ngFor="let cat of commandCategories" class="command-category">
+@for (cat of commandCategories; track cat) {
+  <div class="command-category">
     <h2>{{ cat.label }}</h2>
     <table>
-        <thead>
-            <tr>
-                <th>{{ 'docs.built-in-commands.th-command' | translate }}</th>
-                <th>{{ 'docs.built-in-commands.th-description' | translate }}</th>
-                <th>{{ 'docs.built-in-commands.th-aliases' | translate }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let cmd of cat.commands">
-                <td><code>{{ cmd.command }}</code></td>
-                <td>{{ cmd.description }}</td>
-                <td><span *ngIf="cmd.aliases" class="command-aliases">{{ cmd.aliases }}</span></td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>{{ "docs.built-in-commands.th-command" | translate }}</th>
+          <th>{{ "docs.built-in-commands.th-description" | translate }}</th>
+          <th>{{ "docs.built-in-commands.th-aliases" | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (cmd of cat.commands; track cmd) {
+          <tr>
+            <td>
+              <code>{{ cmd.command }}</code>
+            </td>
+            <td>{{ cmd.description }}</td>
+            <td>
+              @if (cmd.aliases) {
+                <span class="command-aliases">{{ cmd.aliases }}</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
     </table>
-</div>
+  </div>
+}
 
-<h2>{{ 'docs.built-in-commands.env-title' | translate }}</h2>
-<p>{{ 'docs.built-in-commands.env-desc' | translate }}</p>
+<h2>{{ "docs.built-in-commands.env-title" | translate }}</h2>
+<p>{{ "docs.built-in-commands.env-desc" | translate }}</p>
 <div class="code-block">
-    <span class="code-label">Terminal</span>
-    <pre><code>export EDITOR=nano GREETING="hello world"
-echo $GREETING from $USER in ~
-printenv EDITOR
-unset GREETING
-env</code></pre>
+  <span class="code-label">Terminal</span>
+  <pre><code>export EDITOR=nano GREETING="hello world"
+    echo $GREETING from $USER in ~
+    printenv EDITOR
+    unset GREETING
+  env</code></pre>
 </div>
 
-<h2>{{ 'docs.built-in-commands.try-it' | translate }}</h2>
-<p>{{ 'docs.built-in-commands.try-it-desc' | translate }}</p>
+<h2>{{ "docs.built-in-commands.try-it" | translate }}</h2>
+<p>{{ "docs.built-in-commands.try-it-desc" | translate }}</p>
 <div class="try-it-terminal">
-    <div class="try-it-chrome">
-        <span class="chrome-dot red"></span>
-        <span class="chrome-dot yellow"></span>
-        <span class="chrome-dot green"></span>
-        <span class="chrome-title">command playground</span>
-    </div>
-    <div class="try-it-body">
-        <cli [options]="tryItOptions" [modules]="tryItModules" height="280px" />
-    </div>
+  <div class="try-it-chrome">
+    <span class="chrome-dot red"></span>
+    <span class="chrome-dot yellow"></span>
+    <span class="chrome-dot green"></span>
+    <span class="chrome-title">command playground</span>
+  </div>
+  <div class="try-it-body">
+    <cli [options]="tryItOptions" [modules]="tryItModules" height="280px" />
+  </div>
 </div>

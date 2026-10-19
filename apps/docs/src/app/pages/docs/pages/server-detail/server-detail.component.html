@@ -1,315 +1,277 @@
 <!-- Node.js -->
-<div *ngIf="server === 'node'">
-    <h1>{{ 'docs.server-detail.node.title' | translate }}</h1>
-    <p>{{ 'docs.server-detail.node.intro' | translate }}</p>
-
-    <h2>{{ 'docs.server-detail.node.installation' | translate }}</h2>
+@if (server === "node") {
+  <div>
+    <h1>{{ "docs.server-detail.node.title" | translate }}</h1>
+    <p>{{ "docs.server-detail.node.intro" | translate }}</p>
+    <h2>{{ "docs.server-detail.node.installation" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">npm</span>
-        <pre><code>npm install &#64;qodalis/cli-server</code></pre>
+      <span class="code-label">npm</span>
+      <pre><code>npm install &#64;qodalis/cli-server</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.node.basic-setup' | translate }}</h2>
+    <h2>{{ "docs.server-detail.node.basic-setup" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">server.ts</span>
-        <pre><code>import &#123; createCliServer &#125; from '&#64;qodalis/cli-server';
-
-const &#123; app, builder, mountPlugin &#125; = createCliServer();
-builder.addProcessor(new MyProcessor());
-app.listen(8047);</code></pre>
+      <span class="code-label">server.ts</span>
+      <pre><code>import &#123; createCliServer &#125; from '&#64;qodalis/cli-server';
+        const &#123; app, builder, mountPlugin &#125; = createCliServer();
+        builder.addProcessor(new MyProcessor());
+      app.listen(8047);</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.node.adding-processors' | translate }}</h2>
-    <p>{{ 'docs.server-detail.node.adding-processors-desc' | translate }}</p>
+    <h2>{{ "docs.server-detail.node.adding-processors" | translate }}</h2>
+    <p>{{ "docs.server-detail.node.adding-processors-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">processors.ts</span>
-        <pre><code>builder.addProcessor(new EchoProcessor());
-builder.addProcessor(new HashProcessor());
-
-// Or register an entire module
-builder.addModule(new WeatherModule());</code></pre>
+      <span class="code-label">processors.ts</span>
+      <pre><code>builder.addProcessor(new EchoProcessor());
+        builder.addProcessor(new HashProcessor());
+        // Or register an entire module
+      builder.addModule(new WeatherModule());</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.node.docker' | translate }}</h2>
+    <h2>{{ "docs.server-detail.node.docker" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">shell</span>
-        <pre><code>docker compose up cli-server-node</code></pre>
+      <span class="code-label">shell</span>
+      <pre><code>docker compose up cli-server-node</code></pre>
     </div>
-    <p>{{ 'docs.server-detail.node.docker-port' | translate }}</p>
-
-    <h2>{{ 'docs.server-detail.node.background-jobs' | translate }}</h2>
-    <p>{{ 'docs.server-detail.node.background-jobs-desc' | translate }}</p>
+    <p>{{ "docs.server-detail.node.docker-port" | translate }}</p>
+    <h2>{{ "docs.server-detail.node.background-jobs" | translate }}</h2>
+    <p>{{ "docs.server-detail.node.background-jobs-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">npm</span>
-        <pre><code>npm install &#64;qodalis/cli-server-plugin-jobs</code></pre>
+      <span class="code-label">npm</span>
+      <pre><code>npm install &#64;qodalis/cli-server-plugin-jobs</code></pre>
     </div>
     <div class="code-block">
-        <span class="code-label">server.ts</span>
-        <pre><code>import &#123; CliJobsBuilder &#125; from '&#64;qodalis/cli-server-plugin-jobs';
-
-const jobsPlugin = new CliJobsBuilder()
-    .addJob(new HealthCheckJob(), &#123;
+      <span class="code-label">server.ts</span>
+      <pre><code>import &#123; CliJobsBuilder &#125; from '&#64;qodalis/cli-server-plugin-jobs';
+        const jobsPlugin = new CliJobsBuilder()
+        .addJob(new HealthCheckJob(), &#123;
         name: 'health-check',
         description: 'Periodic health check',
         interval: '30s',
-    &#125;)
-    .build((msg) =&gt; eventSocketManager.broadcastMessage(msg));
-
-mountPlugin(jobsPlugin);
-await jobsPlugin.scheduler.start();</code></pre>
+        &#125;)
+        .build((msg) =&gt; eventSocketManager.broadcastMessage(msg));
+        mountPlugin(jobsPlugin);
+      await jobsPlugin.scheduler.start();</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.node.sse-streaming' | translate }}</h2>
-    <p>{{ 'docs.server-detail.node.sse-streaming-desc' | translate }}</p>
+    <h2>{{ "docs.server-detail.node.sse-streaming" | translate }}</h2>
+    <p>{{ "docs.server-detail.node.sse-streaming-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">server.ts</span>
-        <pre><code>// Streaming is enabled by default on /api/v1/qcli/execute/stream
-// Processors implementing ICliStreamCommandProcessor
-// emit output chunks via SSE as they execute.
-// The frontend prefers SSE streaming with automatic
-// fallback to the legacy POST endpoint.</code></pre>
+      <span class="code-label">server.ts</span>
+      <pre><code>// Streaming is enabled by default on /api/v1/qcli/execute/stream
+        // Processors implementing ICliStreamCommandProcessor
+        // emit output chunks via SSE as they execute.
+        // The frontend prefers SSE streaming with automatic
+      // fallback to the legacy POST endpoint.</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.node.admin-dashboard' | translate }}</h2>
-    <p>{{ 'docs.server-detail.node.admin-dashboard-desc' | translate }}</p>
+    <h2>{{ "docs.server-detail.node.admin-dashboard" | translate }}</h2>
+    <p>{{ "docs.server-detail.node.admin-dashboard-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">npm</span>
-        <pre><code>npm install &#64;qodalis/cli-server-plugin-admin</code></pre>
+      <span class="code-label">npm</span>
+      <pre><code>npm install &#64;qodalis/cli-server-plugin-admin</code></pre>
     </div>
     <div class="code-block">
-        <span class="code-label">server.ts</span>
-        <pre><code>import &#123; CliAdminBuilder &#125; from '&#64;qodalis/cli-server-plugin-admin';
-
-const adminPlugin = new CliAdminBuilder()
-    .build(&#123; registry, eventSocketManager &#125;);
-
-mountPlugin(adminPlugin);</code></pre>
+      <span class="code-label">server.ts</span>
+      <pre><code>import &#123; CliAdminBuilder &#125; from '&#64;qodalis/cli-server-plugin-admin';
+        const adminPlugin = new CliAdminBuilder()
+        .build(&#123; registry, eventSocketManager &#125;);
+      mountPlugin(adminPlugin);</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.node.connecting' | translate }}</h2>
+    <h2>{{ "docs.server-detail.node.connecting" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">app.component.ts</span>
-        <pre><code>import &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
-
-const options: CliOptions = &#123;
-    servers: [
+      <span class="code-label">app.component.ts</span>
+      <pre><code>import &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
+        const options: CliOptions = &#123;
+        servers: [
         &#123; name: 'node', url: 'http://localhost:8047' &#125;,
-    ],
-&#125;;
-
-// Angular: &lt;cli [options]="options"&gt;&lt;/cli&gt;
-// React:   &lt;Cli options=&#123;options&#125; /&gt;
-// Vue:     &lt;Cli :options="options" /&gt;</code></pre>
+        ],
+        &#125;;
+        // Angular: &lt;cli [options]="options"&gt;&lt;/cli&gt;
+        // React:   &lt;Cli options=&#123;options&#125; /&gt;
+      // Vue:     &lt;Cli :options="options" /&gt;</code></pre>
     </div>
-</div>
+  </div>
+}
 
 <!-- Python -->
-<div *ngIf="server === 'python'">
-    <h1>{{ 'docs.server-detail.python.title' | translate }}</h1>
-    <p>{{ 'docs.server-detail.python.intro' | translate }}</p>
-
-    <h2>{{ 'docs.server-detail.python.installation' | translate }}</h2>
+@if (server === "python") {
+  <div>
+    <h1>{{ "docs.server-detail.python.title" | translate }}</h1>
+    <p>{{ "docs.server-detail.python.intro" | translate }}</p>
+    <h2>{{ "docs.server-detail.python.installation" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">pip</span>
-        <pre><code>pip install qodalis-cli-server</code></pre>
+      <span class="code-label">pip</span>
+      <pre><code>pip install qodalis-cli-server</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.python.basic-setup' | translate }}</h2>
+    <h2>{{ "docs.server-detail.python.basic-setup" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">server.py</span>
-        <pre><code>from qodalis_cli import create_cli_server
-
-result = create_cli_server()
-builder = result.builder
-builder.add_processor(MyProcessor())</code></pre>
+      <span class="code-label">server.py</span>
+      <pre><code>from qodalis_cli import create_cli_server
+        result = create_cli_server()
+        builder = result.builder
+      builder.add_processor(MyProcessor())</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.python.adding-processors' | translate }}</h2>
-    <p>{{ 'docs.server-detail.python.adding-processors-desc' | translate }}</p>
+    <h2>{{ "docs.server-detail.python.adding-processors" | translate }}</h2>
+    <p>{{ "docs.server-detail.python.adding-processors-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">processors.py</span>
-        <pre><code>builder.add_processor(EchoProcessor())
-builder.add_processor(HashProcessor())
-
-# Or register an entire module
-builder.add_module(WeatherModule())</code></pre>
+      <span class="code-label">processors.py</span>
+      <pre><code>builder.add_processor(EchoProcessor())
+        builder.add_processor(HashProcessor())
+        # Or register an entire module
+      builder.add_module(WeatherModule())</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.python.docker' | translate }}</h2>
+    <h2>{{ "docs.server-detail.python.docker" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">shell</span>
-        <pre><code>docker compose up cli-server-python</code></pre>
+      <span class="code-label">shell</span>
+      <pre><code>docker compose up cli-server-python</code></pre>
     </div>
-    <p>{{ 'docs.server-detail.python.docker-port' | translate }}</p>
-
-    <h2>{{ 'docs.server-detail.python.background-jobs' | translate }}</h2>
-    <p>{{ 'docs.server-detail.python.background-jobs-desc' | translate }}</p>
+    <p>{{ "docs.server-detail.python.docker-port" | translate }}</p>
+    <h2>{{ "docs.server-detail.python.background-jobs" | translate }}</h2>
+    <p>{{ "docs.server-detail.python.background-jobs-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">pip</span>
-        <pre><code>pip install qodalis-cli-jobs</code></pre>
+      <span class="code-label">pip</span>
+      <pre><code>pip install qodalis-cli-jobs</code></pre>
     </div>
     <div class="code-block">
-        <span class="code-label">server.py</span>
-        <pre><code>from qodalis_cli_jobs import CliJobsBuilder
-from qodalis_cli_server_abstractions.jobs import CliJobOptions
-
-jobs_plugin = (
-    CliJobsBuilder()
-    .add_job(
+      <span class="code-label">server.py</span>
+      <pre><code>from qodalis_cli_jobs import CliJobsBuilder
+        from qodalis_cli_server_abstractions.jobs import CliJobOptions
+        jobs_plugin = (
+        CliJobsBuilder()
+        .add_job(
         HealthCheckJob(),
         CliJobOptions(
-            name="health-check",
-            description="Periodic health check",
-            interval="30s",
+        name="health-check",
+        description="Periodic health check",
+        interval="30s",
         ),
-    )
-    .build(broadcast_fn=event_socket_manager.broadcast_message)
-)
-
-result.mount_plugin(jobs_plugin)
-await jobs_plugin.scheduler.start()</code></pre>
+        )
+        .build(broadcast_fn=event_socket_manager.broadcast_message)
+        )
+        result.mount_plugin(jobs_plugin)
+      await jobs_plugin.scheduler.start()</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.python.sse-streaming' | translate }}</h2>
-    <p>{{ 'docs.server-detail.python.sse-streaming-desc' | translate }}</p>
+    <h2>{{ "docs.server-detail.python.sse-streaming" | translate }}</h2>
+    <p>{{ "docs.server-detail.python.sse-streaming-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">server.py</span>
-        <pre><code># Streaming is enabled by default on /api/v1/qcli/execute/stream
-# Processors implementing handle_stream_async emit output
-# chunks via SSE using FastAPI StreamingResponse.
-# The frontend prefers SSE streaming with automatic
-# fallback to the legacy POST endpoint.</code></pre>
+      <span class="code-label">server.py</span>
+      <pre><code># Streaming is enabled by default on /api/v1/qcli/execute/stream
+        # Processors implementing handle_stream_async emit output
+        # chunks via SSE using FastAPI StreamingResponse.
+        # The frontend prefers SSE streaming with automatic
+      # fallback to the legacy POST endpoint.</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.python.connecting' | translate }}</h2>
+    <h2>{{ "docs.server-detail.python.connecting" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">app.component.ts</span>
-        <pre><code>import &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
-
-const options: CliOptions = &#123;
-    servers: [
+      <span class="code-label">app.component.ts</span>
+      <pre><code>import &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
+        const options: CliOptions = &#123;
+        servers: [
         &#123; name: 'python', url: 'http://localhost:8048' &#125;,
-    ],
-&#125;;
-
-// Angular: &lt;cli [options]="options"&gt;&lt;/cli&gt;
-// React:   &lt;Cli options=&#123;options&#125; /&gt;
-// Vue:     &lt;Cli :options="options" /&gt;</code></pre>
+        ],
+        &#125;;
+        // Angular: &lt;cli [options]="options"&gt;&lt;/cli&gt;
+        // React:   &lt;Cli options=&#123;options&#125; /&gt;
+      // Vue:     &lt;Cli :options="options" /&gt;</code></pre>
     </div>
-</div>
+  </div>
+}
 
 <!-- .NET -->
-<div *ngIf="server === 'dotnet'">
-    <h1>{{ 'docs.server-detail.dotnet.title' | translate }}</h1>
-    <p>{{ 'docs.server-detail.dotnet.intro' | translate }}</p>
-
-    <h2>{{ 'docs.server-detail.dotnet.installation' | translate }}</h2>
+@if (server === "dotnet") {
+  <div>
+    <h1>{{ "docs.server-detail.dotnet.title" | translate }}</h1>
+    <p>{{ "docs.server-detail.dotnet.intro" | translate }}</p>
+    <h2>{{ "docs.server-detail.dotnet.installation" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">NuGet</span>
-        <pre><code>dotnet add package Qodalis.Cli</code></pre>
+      <span class="code-label">NuGet</span>
+      <pre><code>dotnet add package Qodalis.Cli</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.dotnet.basic-setup' | translate }}</h2>
+    <h2>{{ "docs.server-detail.dotnet.basic-setup" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">Program.cs</span>
-        <pre><code>var builder = WebApplication.CreateBuilder(args);
-
-// Add CLI services
-builder.Services.AddCli();
-
-var app = builder.Build();
-
-// Enable CLI middleware
-app.UseCli();
-
-app.Run();</code></pre>
+      <span class="code-label">Program.cs</span>
+      <pre><code>var builder = WebApplication.CreateBuilder(args);
+        // Add CLI services
+        builder.Services.AddCli();
+        var app = builder.Build();
+        // Enable CLI middleware
+        app.UseCli();
+      app.Run();</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.dotnet.adding-processors' | translate }}</h2>
-    <p>{{ 'docs.server-detail.dotnet.adding-processors-desc' | translate }}</p>
+    <h2>{{ "docs.server-detail.dotnet.adding-processors" | translate }}</h2>
+    <p>{{ "docs.server-detail.dotnet.adding-processors-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">Program.cs</span>
-        <pre><code>builder.Services.AddCli(options =&gt; &#123;
-    options.AddProcessor&lt;EchoProcessor&gt;();
-    options.AddProcessor&lt;HashProcessor&gt;();
-    options.AddModule&lt;WeatherModule&gt;();
-&#125;);</code></pre>
+      <span class="code-label">Program.cs</span>
+      <pre><code>builder.Services.AddCli(options =&gt; &#123;
+        options.AddProcessor&lt;EchoProcessor&gt;();
+        options.AddProcessor&lt;HashProcessor&gt;();
+        options.AddModule&lt;WeatherModule&gt;();
+      &#125;);</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.dotnet.docker' | translate }}</h2>
+    <h2>{{ "docs.server-detail.dotnet.docker" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">shell</span>
-        <pre><code>docker compose up cli-server-dotnet</code></pre>
+      <span class="code-label">shell</span>
+      <pre><code>docker compose up cli-server-dotnet</code></pre>
     </div>
-    <p>{{ 'docs.server-detail.dotnet.docker-port' | translate }}</p>
-
-    <h2>{{ 'docs.server-detail.dotnet.background-jobs' | translate }}</h2>
-    <p>{{ 'docs.server-detail.dotnet.background-jobs-desc' | translate }}</p>
+    <p>{{ "docs.server-detail.dotnet.docker-port" | translate }}</p>
+    <h2>{{ "docs.server-detail.dotnet.background-jobs" | translate }}</h2>
+    <p>{{ "docs.server-detail.dotnet.background-jobs-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">NuGet</span>
-        <pre><code>dotnet add package Qodalis.Cli.Plugin.Jobs</code></pre>
+      <span class="code-label">NuGet</span>
+      <pre><code>dotnet add package Qodalis.Cli.Plugin.Jobs</code></pre>
     </div>
     <div class="code-block">
-        <span class="code-label">Program.cs</span>
-        <pre><code>builder.Services.AddCli(cli =&gt; &#123;
-    cli.AddJob&lt;HealthCheckJob&gt;(o =&gt; &#123;
+      <span class="code-label">Program.cs</span>
+      <pre><code>builder.Services.AddCli(cli =&gt; &#123;
+        cli.AddJob&lt;HealthCheckJob&gt;(o =&gt; &#123;
         o.Name = "health-check";
         o.Description = "Periodic health check";
         o.Interval = TimeSpan.FromSeconds(30);
-    &#125;);
-&#125;);</code></pre>
+        &#125;);
+      &#125;);</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.dotnet.sse-streaming' | translate }}</h2>
-    <p>{{ 'docs.server-detail.dotnet.sse-streaming-desc' | translate }}</p>
+    <h2>{{ "docs.server-detail.dotnet.sse-streaming" | translate }}</h2>
+    <p>{{ "docs.server-detail.dotnet.sse-streaming-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">Program.cs</span>
-        <pre><code>// Streaming is enabled by default on /api/v1/qcli/execute/stream
-// Processors implementing ICliStreamCommandProcessor emit
-// output chunks via SSE. The frontend prefers SSE streaming
-// with automatic fallback to the legacy POST endpoint.</code></pre>
+      <span class="code-label">Program.cs</span>
+      <pre><code>// Streaming is enabled by default on /api/v1/qcli/execute/stream
+        // Processors implementing ICliStreamCommandProcessor emit
+        // output chunks via SSE. The frontend prefers SSE streaming
+      // with automatic fallback to the legacy POST endpoint.</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.dotnet.admin-dashboard' | translate }}</h2>
-    <p>{{ 'docs.server-detail.dotnet.admin-dashboard-desc' | translate }}</p>
+    <h2>{{ "docs.server-detail.dotnet.admin-dashboard" | translate }}</h2>
+    <p>{{ "docs.server-detail.dotnet.admin-dashboard-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">NuGet</span>
-        <pre><code>dotnet add package Qodalis.Cli.Plugin.Admin</code></pre>
+      <span class="code-label">NuGet</span>
+      <pre><code>dotnet add package Qodalis.Cli.Plugin.Admin</code></pre>
     </div>
     <div class="code-block">
-        <span class="code-label">Program.cs</span>
-        <pre><code>builder.Services.AddCli(cli =&gt; &#123;
-    cli.AddAdmin();
-&#125;);</code></pre>
+      <span class="code-label">Program.cs</span>
+      <pre><code>builder.Services.AddCli(cli =&gt; &#123;
+        cli.AddAdmin();
+      &#125;);</code></pre>
     </div>
-
-    <h2>{{ 'docs.server-detail.dotnet.aws-plugin' | translate }}</h2>
-    <p>{{ 'docs.server-detail.dotnet.aws-plugin-desc' | translate }}</p>
+    <h2>{{ "docs.server-detail.dotnet.aws-plugin" | translate }}</h2>
+    <p>{{ "docs.server-detail.dotnet.aws-plugin-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">NuGet</span>
-        <pre><code>dotnet add package Qodalis.Cli.Plugin.Aws</code></pre>
+      <span class="code-label">NuGet</span>
+      <pre><code>dotnet add package Qodalis.Cli.Plugin.Aws</code></pre>
     </div>
     <div class="code-block">
-        <span class="code-label">Program.cs</span>
-        <pre><code>builder.Services.AddCli(cli =&gt; &#123;
-    cli.AddModule&lt;AwsModule&gt;();
-&#125;);</code></pre>
+      <span class="code-label">Program.cs</span>
+      <pre><code>builder.Services.AddCli(cli =&gt; &#123;
+        cli.AddModule&lt;AwsModule&gt;();
+      &#125;);</code></pre>
     </div>
-    <p>{{ 'docs.server-detail.dotnet.aws-services' | translate }}</p>
-
-    <h2>{{ 'docs.server-detail.dotnet.connecting' | translate }}</h2>
+    <p>{{ "docs.server-detail.dotnet.aws-services" | translate }}</p>
+    <h2>{{ "docs.server-detail.dotnet.connecting" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">app.component.ts</span>
-        <pre><code>import &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
-
-const options: CliOptions = &#123;
-    servers: [
+      <span class="code-label">app.component.ts</span>
+      <pre><code>import &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
+        const options: CliOptions = &#123;
+        servers: [
         &#123; name: 'dotnet', url: 'http://localhost:8046' &#125;,
-    ],
-&#125;;
-
-// Angular: &lt;cli [options]="options"&gt;&lt;/cli&gt;
-// React:   &lt;Cli options=&#123;options&#125; /&gt;
-// Vue:     &lt;Cli :options="options" /&gt;</code></pre>
+        ],
+        &#125;;
+        // Angular: &lt;cli [options]="options"&gt;&lt;/cli&gt;
+        // React:   &lt;Cli options=&#123;options&#125; /&gt;
+      // Vue:     &lt;Cli :options="options" /&gt;</code></pre>
     </div>
-</div>
+  </div>
+}

@@ -1,19 +1,22 @@
-<ng-container *ngIf="s.visible">
+@if (s.visible) {
   <!-- Hide tab (shown when the panel is hidden) -->
-  <button
-    *ngIf="s.hidden"
-    class="cli-panel-hide-tab"
-    [attr.data-position]="s.position"
-    [attr.data-hide-align]="s.hideAlignment"
-    [ngStyle]="s.themeStyles"
-    [title]="labels.showCli"
-    (click)="controller.unhide()"
-  >
-    <cli-panel-icon [icon]="hideTabIcon" svgClass="cli-panel-hide-tab-icon" />
-    <span class="cli-panel-hide-tab-label">{{ labels.title }}</span>
-    <cli-panel-icon [icon]="view.hideTabArrowIcon" svgClass="cli-panel-hide-tab-arrow" />
-  </button>
-
+  @if (s.hidden) {
+    <button
+      class="cli-panel-hide-tab"
+      [attr.data-position]="s.position"
+      [attr.data-hide-align]="s.hideAlignment"
+      [ngStyle]="s.themeStyles"
+      [title]="labels.showCli"
+      (click)="controller.unhide()"
+    >
+      <cli-panel-icon [icon]="hideTabIcon" svgClass="cli-panel-hide-tab-icon" />
+      <span class="cli-panel-hide-tab-label">{{ labels.title }}</span>
+      <cli-panel-icon
+        [icon]="view.hideTabArrowIcon"
+        svgClass="cli-panel-hide-tab-arrow"
+      />
+    </button>
+  }
   <!-- Panel (kept in the DOM while hidden to preserve terminal state) -->
   <div
     [class]="view.wrapperClass"
@@ -24,43 +27,70 @@
     [attr.data-hideable]="s.hideable"
   >
     <div class="cli-panel-header">
-      <div class="cli-panel-resize-bar" (mousedown)="onPanelResizeStart($event)">
+      <div
+        class="cli-panel-resize-bar"
+        (mousedown)="onPanelResizeStart($event)"
+      >
         <div class="cli-panel-resize-grip"></div>
       </div>
       <div class="cli-panel-header-content">
         <p class="cli-panel-title">
-          <span class="cli-panel-title-icon"><cli-panel-icon [icon]="terminalIcon" /></span>
+          <span class="cli-panel-title-icon"
+            ><cli-panel-icon [icon]="terminalIcon"
+          /></span>
           {{ labels.title }}
         </p>
-
-        <div class="cli-panel-status-indicators" *ngIf="s.showStatusIndicators">
-          <span
-            *ngFor="let item of view.indicators; trackBy: trackByKey"
-            [class]="'cli-panel-status-item ' + item.itemClass"
-            (click)="onIndicatorClick($event, item)"
-          >
-            <span *ngIf="item.dotClass" [class]="'cli-panel-status-dot ' + item.dotClass"></span>
-            <span *ngIf="item.icon" [class]="'cli-panel-status-icon ' + (item.iconClass || '')">{{ item.icon }}</span>
-            <span class="cli-panel-status-label">{{ item.label }}</span>
-          </span>
-        </div>
-
+        @if (s.showStatusIndicators) {
+          <div class="cli-panel-status-indicators">
+            @for (item of view.indicators; track trackByKey($index, item)) {
+              <span
+                [class]="'cli-panel-status-item ' + item.itemClass"
+                (click)="onIndicatorClick($event, item)"
+              >
+                @if (item.dotClass) {
+                  <span
+                    [class]="'cli-panel-status-dot ' + item.dotClass"
+                  ></span>
+                }
+                @if (item.icon) {
+                  <span
+                    [class]="'cli-panel-status-icon ' + (item.iconClass || '')"
+                    >{{ item.icon }}</span
+                  >
+                }
+                <span class="cli-panel-status-label">{{ item.label }}</span>
+              </span>
+            }
+          </div>
+        }
         <!-- Compact indicators for left/right positions (CSS controls visibility) -->
         <div class="cli-panel-status-indicators-compact">
-          <span
-            *ngFor="let item of view.indicators; trackBy: trackByKey"
-            [class]="'cli-panel-status-compact-item ' + item.compactClass"
-            [title]="item.title"
-            (click)="onIndicatorClick($event, item)"
-          >
-            <span *ngIf="item.compactDotClass" [class]="item.compactDotClass"></span>
-            <span *ngIf="item.dotClass" [class]="'cli-panel-status-dot ' + item.dotClass"></span>
-            <span *ngIf="item.icon" [class]="'cli-panel-status-icon ' + (item.iconClass || '')">{{ item.icon }}</span>
-          </span>
+          @for (item of view.indicators; track trackByKey($index, item)) {
+            <span
+              [class]="'cli-panel-status-compact-item ' + item.compactClass"
+              [title]="item.title"
+              (click)="onIndicatorClick($event, item)"
+            >
+              @if (item.compactDotClass) {
+                <span [class]="item.compactDotClass"></span>
+              }
+              @if (item.dotClass) {
+                <span [class]="'cli-panel-status-dot ' + item.dotClass"></span>
+              }
+              @if (item.icon) {
+                <span
+                  [class]="'cli-panel-status-icon ' + (item.iconClass || '')"
+                  >{{ item.icon }}</span
+                >
+              }
+            </span>
+          }
         </div>
-
         <div class="cli-panel-action-buttons">
-          <div class="cli-panel-btn-position-wrapper" (click)="$event.stopPropagation()">
+          <div
+            class="cli-panel-btn-position-wrapper"
+            (click)="$event.stopPropagation()"
+          >
             <button
               class="cli-panel-btn cli-panel-btn-position"
               [title]="labels.movePanel"
@@ -68,25 +98,32 @@
             >
               <cli-panel-icon [icon]="view.positionIcon" />
             </button>
-            <div class="cli-panel-position-dropdown" *ngIf="s.positionDropdownOpen">
-              <button
-                *ngFor="let opt of view.positionOptions; trackBy: trackByKey"
-                [class]="opt.className"
-                (click)="controller.setPosition(opt.position)"
-              >
-                <cli-panel-icon [icon]="opt.icon" />
-                {{ opt.label }}
-              </button>
-            </div>
+            @if (s.positionDropdownOpen) {
+              <div class="cli-panel-position-dropdown">
+                @for (
+                  opt of view.positionOptions;
+                  track trackByKey($index, opt)
+                ) {
+                  <button
+                    [class]="opt.className"
+                    (click)="controller.setPosition(opt.position)"
+                  >
+                    <cli-panel-icon [icon]="opt.icon" />
+                    {{ opt.label }}
+                  </button>
+                }
+              </div>
+            }
           </div>
-          <button
-            *ngIf="s.hideable"
-            class="cli-panel-btn cli-panel-btn-hide"
-            [title]="labels.hide"
-            (click)="controller.hide()"
-          >
-            <cli-panel-icon [icon]="hideIcon" />
-          </button>
+          @if (s.hideable) {
+            <button
+              class="cli-panel-btn cli-panel-btn-hide"
+              [title]="labels.hide"
+              (click)="controller.hide()"
+            >
+              <cli-panel-icon [icon]="hideIcon" />
+            </button>
+          }
           <button
             class="cli-panel-btn"
             [title]="s.maximized ? labels.restore : labels.maximize"
@@ -102,137 +139,182 @@
           >
             <cli-panel-icon [icon]="view.collapseIcon" />
           </button>
-          <button
-            *ngIf="s.closable"
-            class="cli-panel-btn cli-panel-btn-close"
-            [title]="labels.close"
-            (click)="controller.close()"
-          >
-            <cli-panel-icon [icon]="closeIcon" />
-          </button>
+          @if (s.closable) {
+            <button
+              class="cli-panel-btn cli-panel-btn-close"
+              [title]="labels.close"
+              (click)="controller.close()"
+            >
+              <cli-panel-icon [icon]="closeIcon" />
+            </button>
+          }
         </div>
       </div>
       <div [class]="view.glowLineClass"></div>
     </div>
-
-    <div class="cli-panel-content" *ngIf="s.initialized" [style.display]="s.collapsed ? 'none' : null">
-      <div class="cli-panel-tabs">
-        <ul class="cli-panel-tab-list">
-          <li
-            *ngFor="let tab of s.tabs; trackBy: trackByTabId"
-            [class]="tabClass(tab)"
-            (click)="controller.selectTab(tab.id)"
-            (dblclick)="controller.startRename(tab.id)"
-            (contextmenu)="onTabContextMenu($event, tab)"
-          >
-            <input
-              *ngIf="tab.isEditing"
-              #renameInput
-              class="cli-panel-tab-rename-input"
-              type="text"
-              [value]="tab.title"
-              (keydown)="onRenameKeydown($event, tab)"
-              (blur)="onRenameBlur($event, tab)"
-              (click)="$event.stopPropagation()"
-              (dblclick)="$event.stopPropagation()"
-            />
-            <ng-container *ngIf="!tab.isEditing">
-              <span [class]="tabDotClass(tab)"></span>
-              <span class="cli-panel-tab-title">{{ tab.title }}</span>
-              <button
-                class="cli-panel-tab-close-btn"
-                [title]="labels.closeTab"
-                (click)="controller.closeTab(tab.id); $event.stopPropagation()"
-              >
-                {{ closeGlyph }}
-              </button>
-            </ng-container>
-          </li>
-        </ul>
-        <button class="cli-panel-add-tab" [title]="labels.newTerminal" (click)="controller.addTab()">+</button>
-      </div>
-
-      <div class="cli-panel-instances">
-        <div
-          *ngFor="let tab of s.tabs; trackBy: trackByTabId"
-          class="cli-panel-instance"
-          [style.display]="tab.id === s.activeTabId ? null : 'none'"
-        >
-          <div [class]="view.panesContainerClass">
-            <ng-container *ngFor="let pane of tab.panes; let i = index; trackBy: trackByPaneId">
-              <div *ngIf="i > 0" class="cli-panel-pane-divider" (mousedown)="onPaneResizeStart($event, tab.id, i - 1)">
-                <div class="cli-panel-pane-divider-grip"></div>
-              </div>
-              <div
-                [class]="paneClass(tab.id, pane.id)"
-                [style.flex]="pane.widthPercent + ' 1 0'"
-                (click)="controller.activatePane(tab.id, pane.id)"
-              >
-                <button
-                  *ngIf="tab.panes.length > 1"
-                  class="cli-panel-pane-close-btn"
-                  [title]="labels.closePane"
-                  (click)="controller.closePane(pane.id); $event.stopPropagation()"
-                >
-                  {{ closeGlyph }}
-                </button>
-                <cli
-                  [options]="options"
-                  height="100%"
-                  [modules]="modules"
-                  [processors]="processors"
-                  [snapshot]="pane.snapshot"
-                  (engineReady)="onPaneEngineReady(tab.id, pane.id, $event)"
-                />
-              </div>
-            </ng-container>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Menus are rendered outside the panel to escape its transform/overflow clipping -->
-  <div
-    class="cli-panel-context-menu"
-    *ngIf="s.contextMenu.visible"
-    [ngStyle]="view.contextMenuStyle"
-    (click)="$event.stopPropagation()"
-  >
-    <ng-container *ngFor="let item of view.contextMenuItems; trackBy: trackByKey">
-      <div *ngIf="item.separatorBefore" class="cli-panel-context-menu-separator"></div>
-      <button
-        class="cli-panel-context-menu-item"
-        [class.destructive]="item.destructive"
-        [disabled]="item.disabled"
-        (click)="onContextMenuAction(item.action)"
+    @if (s.initialized) {
+      <div
+        class="cli-panel-content"
+        [style.display]="s.collapsed ? 'none' : null"
       >
-        {{ item.label }}
-      </button>
-    </ng-container>
-  </div>
-
-  <div
-    class="cli-panel-services-dropdown"
-    *ngIf="view.statusDropdown as dropdown"
-    [ngStyle]="dropdown.style"
-    (click)="$event.stopPropagation()"
-  >
-    <div class="cli-panel-services-dropdown-header">{{ dropdown.header }}</div>
-    <div class="cli-panel-services-dropdown-list">
-      <div class="cli-panel-services-dropdown-item" *ngFor="let row of dropdown.rows; trackBy: trackByKey">
-        <span [class]="row.dotClass"></span>
-        <div class="cli-panel-svc-info">
-          <span class="cli-panel-svc-name">{{ row.name }}</span>
-          <span class="cli-panel-svc-desc" *ngIf="row.description">{{ row.description }}</span>
+        <div class="cli-panel-tabs">
+          <ul class="cli-panel-tab-list">
+            @for (tab of s.tabs; track trackByTabId($index, tab)) {
+              <li
+                [class]="tabClass(tab)"
+                (click)="controller.selectTab(tab.id)"
+                (dblclick)="controller.startRename(tab.id)"
+                (contextmenu)="onTabContextMenu($event, tab)"
+              >
+                @if (tab.isEditing) {
+                  <input
+                    #renameInput
+                    class="cli-panel-tab-rename-input"
+                    type="text"
+                    [value]="tab.title"
+                    (keydown)="onRenameKeydown($event, tab)"
+                    (blur)="onRenameBlur($event, tab)"
+                    (click)="$event.stopPropagation()"
+                    (dblclick)="$event.stopPropagation()"
+                  />
+                }
+                @if (!tab.isEditing) {
+                  <span [class]="tabDotClass(tab)"></span>
+                  <span class="cli-panel-tab-title">{{ tab.title }}</span>
+                  <button
+                    class="cli-panel-tab-close-btn"
+                    [title]="labels.closeTab"
+                    (click)="
+                      controller.closeTab(tab.id); $event.stopPropagation()
+                    "
+                  >
+                    {{ closeGlyph }}
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+          <button
+            class="cli-panel-add-tab"
+            [title]="labels.newTerminal"
+            (click)="controller.addTab()"
+          >
+            +
+          </button>
         </div>
-        <div class="cli-panel-srv-meta" *ngIf="dropdown.kind === 'servers'; else plainStatus">
-          <span class="cli-panel-svc-status">{{ row.status }}</span>
-          <span class="cli-panel-svc-desc" *ngFor="let m of row.meta">{{ m }}</span>
+        <div class="cli-panel-instances">
+          @for (tab of s.tabs; track trackByTabId($index, tab)) {
+            <div
+              class="cli-panel-instance"
+              [style.display]="tab.id === s.activeTabId ? null : 'none'"
+            >
+              <div [class]="view.panesContainerClass">
+                @for (
+                  pane of tab.panes;
+                  track trackByPaneId(i, pane);
+                  let i = $index
+                ) {
+                  @if (i > 0) {
+                    <div
+                      class="cli-panel-pane-divider"
+                      (mousedown)="onPaneResizeStart($event, tab.id, i - 1)"
+                    >
+                      <div class="cli-panel-pane-divider-grip"></div>
+                    </div>
+                  }
+                  <div
+                    [class]="paneClass(tab.id, pane.id)"
+                    [style.flex]="pane.widthPercent + ' 1 0'"
+                    (click)="controller.activatePane(tab.id, pane.id)"
+                  >
+                    @if (tab.panes.length > 1) {
+                      <button
+                        class="cli-panel-pane-close-btn"
+                        [title]="labels.closePane"
+                        (click)="
+                          controller.closePane(pane.id);
+                          $event.stopPropagation()
+                        "
+                      >
+                        {{ closeGlyph }}
+                      </button>
+                    }
+                    <cli
+                      [options]="options"
+                      height="100%"
+                      [modules]="modules"
+                      [processors]="processors"
+                      [snapshot]="pane.snapshot"
+                      (engineReady)="onPaneEngineReady(tab.id, pane.id, $event)"
+                    />
+                  </div>
+                }
+              </div>
+            </div>
+          }
         </div>
-        <ng-template #plainStatus><span class="cli-panel-svc-status">{{ row.status }}</span></ng-template>
       </div>
-    </div>
-    <div class="cli-panel-services-dropdown-empty" *ngIf="dropdown.rows.length === 0">{{ dropdown.emptyText }}</div>
+    }
   </div>
-</ng-container>
+  <!-- Menus are rendered outside the panel to escape its transform/overflow clipping -->
+  @if (s.contextMenu.visible) {
+    <div
+      class="cli-panel-context-menu"
+      [ngStyle]="view.contextMenuStyle"
+      (click)="$event.stopPropagation()"
+    >
+      @for (item of view.contextMenuItems; track trackByKey($index, item)) {
+        @if (item.separatorBefore) {
+          <div class="cli-panel-context-menu-separator"></div>
+        }
+        <button
+          class="cli-panel-context-menu-item"
+          [class.destructive]="item.destructive"
+          [disabled]="item.disabled"
+          (click)="onContextMenuAction(item.action)"
+        >
+          {{ item.label }}
+        </button>
+      }
+    </div>
+  }
+  @if (view.statusDropdown; as dropdown) {
+    <div
+      class="cli-panel-services-dropdown"
+      [ngStyle]="dropdown.style"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="cli-panel-services-dropdown-header">
+        {{ dropdown.header }}
+      </div>
+      <div class="cli-panel-services-dropdown-list">
+        @for (row of dropdown.rows; track trackByKey($index, row)) {
+          <div class="cli-panel-services-dropdown-item">
+            <span [class]="row.dotClass"></span>
+            <div class="cli-panel-svc-info">
+              <span class="cli-panel-svc-name">{{ row.name }}</span>
+              @if (row.description) {
+                <span class="cli-panel-svc-desc">{{ row.description }}</span>
+              }
+            </div>
+            @if (dropdown.kind === "servers") {
+              <div class="cli-panel-srv-meta">
+                <span class="cli-panel-svc-status">{{ row.status }}</span>
+                @for (m of row.meta; track m) {
+                  <span class="cli-panel-svc-desc">{{ m }}</span>
+                }
+              </div>
+            } @else {
+              <span class="cli-panel-svc-status">{{ row.status }}</span>
+            }
+          </div>
+        }
+      </div>
+      @if (dropdown.rows.length === 0) {
+        <div class="cli-panel-services-dropdown-empty">
+          {{ dropdown.emptyText }}
+        </div>
+      }
+    </div>
+  }
+}
