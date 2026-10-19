@@ -1,5 +1,5 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>ICliScriptRunOptions | Qodalis CLI - v2.0.0-beta.18</title><meta name="description" content="Documentation for Qodalis CLI"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
-<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">Qodalis CLI - v2.0.0-beta.18</a>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>ICliScriptRunOptions | Qodalis CLI - v2.0.0-beta.19</title><meta name="description" content="Documentation for Qodalis CLI"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">Qodalis CLI - v2.0.0-beta.19</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
 <div id="tsd-search-status" aria-live="polite" aria-atomic="true">
@@ -13,7 +13,7 @@
 <h1>Interface ICliScriptRunOptions</h1></div>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">ICliScriptRunOptions</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#executecommand">executeCommand</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">command</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">context</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliExecutionContext</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#maxloopiterations">maxLoopIterations</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#name">name</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#stoponerror">stopOnError</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/executor/cli-script-runner.ts#L30">packages/cli/src/lib/executor/cli-script-runner.ts:30</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/1be364dd38a1cf340b5460a717f98a90c1c7881f/packages/cli/src/lib/executor/cli-script-runner.ts#L30">packages/cli/src/lib/executor/cli-script-runner.ts:30</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -35,28 +35,28 @@
 <div class="tsd-comment tsd-typography"><p>Runs one command line. Default <code>context.executor.executeCommand</code>.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/executor/cli-script-runner.ts#L34">packages/cli/src/lib/executor/cli-script-runner.ts:34</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/1be364dd38a1cf340b5460a717f98a90c1c7881f/packages/cli/src/lib/executor/cli-script-runner.ts#L34">packages/cli/src/lib/executor/cli-script-runner.ts:34</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="maxloopiterations"><code class="tsd-tag">Optional</code><span>max<wbr/>Loop<wbr/>Iterations</span><a href="#maxloopiterations" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">maxLoopIterations</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
 <div class="tsd-comment tsd-typography"><p>Loop iterations allowed before a <code>while</code>/<code>until</code> is stopped. Default 10000.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/executor/cli-script-runner.ts#L36">packages/cli/src/lib/executor/cli-script-runner.ts:36</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/1be364dd38a1cf340b5460a717f98a90c1c7881f/packages/cli/src/lib/executor/cli-script-runner.ts#L36">packages/cli/src/lib/executor/cli-script-runner.ts:36</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="name"><code class="tsd-tag">Optional</code><span>name</span><a href="#name" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">name</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div>
 <div class="tsd-comment tsd-typography"><p>Prefix for error messages (<code>sh: line 4: ...</code>). Default <code>sh</code>.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/executor/cli-script-runner.ts#L32">packages/cli/src/lib/executor/cli-script-runner.ts:32</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/1be364dd38a1cf340b5460a717f98a90c1c7881f/packages/cli/src/lib/executor/cli-script-runner.ts#L32">packages/cli/src/lib/executor/cli-script-runner.ts:32</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="stoponerror"><code class="tsd-tag">Optional</code><span>stop<wbr/>On<wbr/>Error</span><a href="#stoponerror" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">stopOnError</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
 <div class="tsd-comment tsd-typography"><p>Stop at the first failing command (<code>set -e</code>). Default true; false for typed lines.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/735e7426535dd412d6ea7208fab24a1ee4349596/packages/cli/src/lib/executor/cli-script-runner.ts#L38">packages/cli/src/lib/executor/cli-script-runner.ts:38</a></li></ul></aside></section></section></details></div>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/1be364dd38a1cf340b5460a717f98a90c1c7881f/packages/cli/src/lib/executor/cli-script-runner.ts#L38">packages/cli/src/lib/executor/cli-script-runner.ts:38</a></li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -73,7 +73,7 @@
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
 <div><a href="#executecommand"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>execute<wbr/>Command</span></a><a href="#maxloopiterations"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>max<wbr/>Loop<wbr/>Iterations</span></a><a href="#name"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>name</span></a><a href="#stoponerror"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>stop<wbr/>On<wbr/>Error</span></a></div></details></div></details></div>
 <div class="site-menu">
-<nav class="tsd-navigation"><a href="../modules.html">Qodalis CLI - v2.0.0-beta.18</a>
+<nav class="tsd-navigation"><a href="../modules.html">Qodalis CLI - v2.0.0-beta.19</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">
 <li>Loading...</li></ul></nav></div></div></div><footer></footer>
 <div class="overlay"></div></body></html>
