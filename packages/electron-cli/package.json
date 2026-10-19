@@ -53,7 +53,7 @@
     "@qodalis/cli-core": "workspace:^"
   },
   "devDependencies": {
-    "electron": "^35.0.0",
+    "electron": "^44.9.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
