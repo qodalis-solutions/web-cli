@@ -29,10 +29,18 @@ export const ICliPingServerService_TOKEN = 'cli-ping-server-service';
 export const CliModuleRegistry_TOKEN = 'cli-module-registry';
 
 /**
+ * The live boot report (`CliBootLog`) while the CLI starts. Processors and
+ * modules can add steps and lines from `initialize`/`onInit`; it ignores
+ * entries once boot has finished.
+ */
+export const CliBootLog_TOKEN = 'cli-boot-log';
+
+/**
  * Framework-agnostic token for the CLI background service registry.
  * Used as a key in the service provider to retrieve the background service registry.
  */
-export const CliBackgroundServiceRegistry_TOKEN = 'cli-background-service-registry';
+export const CliBackgroundServiceRegistry_TOKEN =
+    'cli-background-service-registry';
 
 /**
  * Framework-agnostic token for the CLI package manager service.

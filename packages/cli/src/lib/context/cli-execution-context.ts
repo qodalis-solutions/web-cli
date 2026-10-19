@@ -131,6 +131,11 @@ export class CliExecutionContext
 
     private readonly modeStack: IInputMode[] = [];
 
+    /** Command-line input typed while booting; `null` when not holding. */
+    private heldInput: string[] | null = null;
+    private releaseHeldInputAtPrompt = false;
+    private _typedDuringBoot = false;
+
     private readonly stateStoreManager: CliStateStoreManager;
 
     private readonly timerManager = new CliTimerManager();
@@ -232,22 +237,14 @@ export class CliExecutionContext
         this.pushMode(commandLineMode);
 
         this.terminal.onData(async (data) => {
-            // A decorative animation (the welcome greeting) must not swallow
-            // what the user types: stop it and handle the key normally.
-            if (
-                this.textAnimator.isRunning &&
-                !this.progressBar.isRunning &&
-                !this.spinner.isRunning
-            ) {
-                this.textAnimator.cancel?.();
-            }
-            if (this.isProgressRunning()) {
+            // While booting, keep what the user types at the command line and
+            // replay it at the first prompt. Prompts shown during boot (module
+            // setup) push their own input mode and still read input directly.
+            if (this.heldInput && this.modeStack.length === 1) {
+                this.heldInput.push(data);
                 return;
             }
-            const mode = this.currentMode;
-            if (mode) {
-                await mode.handleInput(data);
-            }
+            await this.handleTerminalData(data);
         });
 
         this.terminal.onKey(async (_event) => {});
@@ -262,6 +259,82 @@ export class CliExecutionContext
             return true;
         });
 
+        this.initializeWindowListeners();
+    }
+
+    private async handleTerminalData(data: string): Promise<void> {
+        // A decorative animation (the welcome greeting) must not swallow
+        // what the user types: stop it and handle the key normally.
+        if (
+            this.textAnimator.isRunning &&
+            !this.progressBar.isRunning &&
+            !this.spinner.isRunning
+        ) {
+            this.textAnimator.cancel?.();
+        }
+        if (this.isProgressRunning()) {
+            return;
+        }
+        const mode = this.currentMode;
+        if (mode) {
+            await mode.handleInput(data);
+        }
+    }
+
+    private _isBooted = false;
+
+    /** `true` once boot has completed and the terminal is ready. */
+    get isBooted(): boolean {
+        return this._isBooted;
+    }
+
+    /** Called by the engine when boot has completed. */
+    markBooted(): void {
+        this._isBooted = true;
+    }
+
+    /** Start keeping command-line input instead of handling it (boot). */
+    holdInput(): void {
+        this.heldInput ??= [];
+    }
+
+    /**
+     * Stop holding input: what was typed is replayed at the next prompt, or
+     * right away when `immediately` is set (e.g. no prompt will be drawn).
+     */
+    releaseInput(immediately = false): void {
+        if (!this.heldInput) return;
+        if (immediately) {
+            this.replayHeldInput();
+        } else {
+            this.releaseHeldInputAtPrompt = true;
+        }
+    }
+
+    /** Whether a prompt (readLine, readSelect, ...) or full-screen mode owns the input. */
+    get isReadingInput(): boolean {
+        return this.modeStack.length > 1;
+    }
+
+    /** Whether keys were typed while input was held (boot). */
+    get typedDuringBoot(): boolean {
+        return this._typedDuringBoot || (this.heldInput?.length ?? 0) > 0;
+    }
+
+    private replayHeldInput(): void {
+        const queued = this.heldInput ?? [];
+        this.heldInput = null;
+        this.releaseHeldInputAtPrompt = false;
+        if (queued.length === 0) return;
+        this._typedDuringBoot = true;
+        void (async () => {
+            for (const data of queued) {
+                await this.handleTerminalData(data);
+            }
+        })();
+    }
+
+    private initializeWindowListeners(): void {
         // Window-level capture listener to intercept browser shortcuts that
         // conflict with terminal keybindings when the terminal has focus.
         // Note: Ctrl+W cannot be intercepted (browser closes tab before JS runs).
@@ -359,6 +432,10 @@ export class CliExecutionContext
         this.promptLength = this.lineRenderer.renderPrompt(
             this.getPromptOptions(),
         );
+
+        if (this.releaseHeldInputAtPrompt) {
+            this.replayHeldInput();
+        }
     }
 
     /**

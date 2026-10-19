@@ -76,29 +76,59 @@ export const welcomeModule: ICliWelcomeModule = {
 
         recordWelcomeMessageDisplay();
         context.showPrompt();
+        bannerShown.add(context);
+    },
+};
 
-        // Check if animated greeting is disabled via configure
-        let showGreeting = true;
-        const greetingStoreManager = context.services.get<ICliStateStoreManager>(
+/** Contexts that showed the welcome banner; the greeting follows only those. */
+const bannerShown = new WeakSet<object>();
+
+/**
+ * Animated, time-based greeting on the first prompt. Runs after every other
+ * module's `onAfterBoot` hook (setup and sign-in prompts come first), and
+ * only when the welcome banner was shown.
+ */
+export const greetingModule: ICliModule = {
+    apiVersion: 2,
+    name: '@qodalis/cli-greeting',
+    priority: Number.MAX_VALUE,
+
+    async onAfterBoot(context) {
+        if (!bannerShown.has(context)) return;
+
+        // Disabled with `configure set system.greeting false`
+        const storeManager = context.services.get<ICliStateStoreManager>(
             CliStateStoreManager_TOKEN,
         );
-        if (greetingStoreManager) {
-            const configureStore = greetingStoreManager.getStateStore(
+        if (storeManager) {
+            const configureStore = storeManager.getStateStore(
                 CLI_CONFIGURE_STORE_NAME,
             );
             await configureStore.initialize();
             const configState = configureStore.getState<Record<string, any>>();
             if (configState?.['system']?.['greeting'] === false) {
-                showGreeting = false;
+                return;
             }
         }
 
-        if (showGreeting) {
-            await context.textAnimator?.showText(getGreetingBasedOnTime(), {
-                speed: 60,
-                removeAfterTyping: true,
-            });
+        // Keys typed during boot are being replayed at the prompt, or a
+        // prompt is open: an animated greeting would write over them.
+        const host = context as {
+            typedDuringBoot?: boolean;
+            isReadingInput?: boolean;
+        };
+        if (
+            host.typedDuringBoot ||
+            host.isReadingInput ||
+            context.currentLine
+        ) {
+            return;
         }
+
+        await context.textAnimator?.showText(getGreetingBasedOnTime(), {
+            speed: 60,
+            removeAfterTyping: true,
+        });
     },
 };
 

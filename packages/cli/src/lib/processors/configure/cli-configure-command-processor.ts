@@ -55,9 +55,7 @@ const SYSTEM_OPTIONS: ICliConfigurationOption[] = [
         description: 'Display language for the CLI interface',
         type: 'select',
         defaultValue: 'en',
-        options: [
-            { label: 'English', value: 'en' },
-        ],
+        options: [{ label: 'English', value: 'en' }],
     },
     {
         key: 'cursorBlink',
@@ -86,7 +84,10 @@ const SYSTEM_OPTIONS: ICliConfigurationOption[] = [
         defaultValue: 1000,
         validator: (value: number) => {
             if (value < 0 || value > 100000) {
-                return { valid: false, message: 'Scrollback must be between 0 and 100,000' };
+                return {
+                    valid: false,
+                    message: 'Scrollback must be between 0 and 100,000',
+                };
             }
             return { valid: true };
         },
@@ -99,7 +100,10 @@ const SYSTEM_OPTIONS: ICliConfigurationOption[] = [
         defaultValue: defaultFontSize(),
         validator: (value: number) => {
             if (value < 8 || value > 40) {
-                return { valid: false, message: 'Font size must be between 8 and 40' };
+                return {
+                    valid: false,
+                    message: 'Font size must be between 8 and 40',
+                };
             }
             return { valid: true };
         },
@@ -119,7 +123,11 @@ const SYSTEM_OPTIONS: ICliConfigurationOption[] = [
         defaultValue: 0,
         validator: (value: number) => {
             if (value < 0 || value > 1000) {
-                return { valid: false, message: 'Smooth scroll duration must be between 0 and 1,000 ms' };
+                return {
+                    valid: false,
+                    message:
+                        'Smooth scroll duration must be between 0 and 1,000 ms',
+                };
             }
             return { valid: true };
         },
@@ -128,6 +136,14 @@ const SYSTEM_OPTIONS: ICliConfigurationOption[] = [
         key: 'greeting',
         label: 'Greeting',
         description: 'Show animated time-based greeting on startup',
+        type: 'boolean',
+        defaultValue: true,
+    },
+    {
+        key: 'bootLogs',
+        label: 'Boot Logs',
+        description:
+            'Show each startup step in the terminal while the CLI boots',
         type: 'boolean',
         defaultValue: true,
     },
@@ -181,9 +197,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const registry = context.services.getRequired<ICliCommandProcessorRegistry>(
-            CliProcessorsRegistry_TOKEN,
-        );
+        const registry =
+            context.services.getRequired<ICliCommandProcessorRegistry>(
+                CliProcessorsRegistry_TOKEN,
+            );
         const pluginCategories = resolveConfigurationCategories(registry);
         await this.showMainMenu(context, pluginCategories);
     }
@@ -200,7 +217,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         const { writer, translator: t } = context;
 
         writer.writeln(
-            t.t('cli.configure.long_description', 'Manage system and plugin configuration interactively or via subcommands'),
+            t.t(
+                'cli.configure.long_description',
+                'Manage system and plugin configuration interactively or via subcommands',
+            ),
         );
         writer.writeln();
         writer.writeln(t.t('cli.common.usage', 'Usage:'));
@@ -250,7 +270,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         const t = context.translator;
         while (true) {
             const menuOptions: { label: string; value: string }[] = [
-                { label: t.t('cli.configure.system', 'System'), value: 'system' },
+                {
+                    label: t.t('cli.configure.system', 'System'),
+                    value: 'system',
+                },
             ];
 
             for (const [category] of pluginCategories) {
@@ -260,7 +283,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 });
             }
 
-            menuOptions.push({ label: t.t('cli.configure.exit', 'Exit'), value: '__exit__' });
+            menuOptions.push({
+                label: t.t('cli.configure.exit', 'Exit'),
+                value: '__exit__',
+            });
 
             const selected = await context.reader.readSelect(
                 'Configuration categories:',
@@ -300,7 +326,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         // Dynamically populate language options from available locales
         if (stateKey === 'system') {
-            const langOption = options.find(o => o.key === 'language');
+            const langOption = options.find((o) => o.key === 'language');
             if (langOption) {
                 const translator = context.services.get<ICliTranslationService>(
                     ICliTranslationService_TOKEN,
@@ -308,7 +334,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 if (translator) {
                     const locales = translator.getAvailableLocales();
                     if (locales.length > 0) {
-                        langOption.options = locales.map(l => ({
+                        langOption.options = locales.map((l) => ({
                             label: this.getLanguageLabel(l),
                             value: l,
                         }));
@@ -331,7 +357,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 menuOptions.push({ label: display, value: opt.key });
             }
 
-            menuOptions.push({ label: context.translator.t('cli.configure.back', 'Back'), value: '__back__' });
+            menuOptions.push({
+                label: context.translator.t('cli.configure.back', 'Back'),
+                value: '__back__',
+            });
 
             const selected = await context.reader.readSelect(
                 `${label} settings:`,
@@ -426,7 +455,13 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         if (option.validator) {
             const result = option.validator(newValue);
             if (!result.valid) {
-                context.writer.writeError(result.message || context.translator.t('cli.configure.invalid_value', 'Invalid value'));
+                context.writer.writeError(
+                    result.message ||
+                        context.translator.t(
+                            'cli.configure.invalid_value',
+                            'Invalid value',
+                        ),
+                );
                 return;
             }
         }
@@ -435,7 +470,11 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         await context.state.persist();
 
         context.writer.writeSuccess(
-            context.translator.t('cli.configure.set_to', 'Set {label} to {value}', { label: option.label, value: String(newValue) }),
+            context.translator.t(
+                'cli.configure.set_to',
+                'Set {label} to {value}',
+                { label: option.label, value: String(newValue) },
+            ),
         );
     }
 
@@ -530,7 +569,9 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
             const terminal = onBoot
                 ? Object.fromEntries(
                       Object.entries(settings).filter(([key, value]) => {
-                          const option = SYSTEM_OPTIONS.find((o) => o.key === key);
+                          const option = SYSTEM_OPTIONS.find(
+                              (o) => o.key === key,
+                          );
                           return !option || value !== option.defaultValue;
                       }),
                   )
@@ -551,7 +592,8 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 context.terminal.options.fontFamily = terminal['fontFamily'];
             }
             if (terminal['smoothScrollDuration'] !== undefined) {
-                context.terminal.options.smoothScrollDuration = terminal['smoothScrollDuration'];
+                context.terminal.options.smoothScrollDuration =
+                    terminal['smoothScrollDuration'];
             }
         }
 
@@ -642,7 +684,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
                 if (dotIndex === -1) {
                     context.writer.writeError(
-                        context.translator.t('cli.configure.invalid_format_get', 'Invalid format. Use: configure get <category.key>'),
+                        context.translator.t(
+                            'cli.configure.invalid_format_get',
+                            'Invalid format. Use: configure get <category.key>',
+                        ),
                     );
                     return;
                 }
@@ -661,7 +706,11 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
                 if (!match) {
                     context.writer.writeError(
-                        context.translator.t('cli.configure.unknown_key', 'Unknown configuration key: {path}', { path }),
+                        context.translator.t(
+                            'cli.configure.unknown_key',
+                            'Unknown configuration key: {path}',
+                            { path },
+                        ),
                     );
                     return;
                 }
@@ -697,7 +746,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
                 if (spaceIndex === -1) {
                     context.writer.writeError(
-                        context.translator.t('cli.configure.invalid_format_set', 'Invalid format. Use: configure set <category.key> <value>'),
+                        context.translator.t(
+                            'cli.configure.invalid_format_set',
+                            'Invalid format. Use: configure set <category.key> <value>',
+                        ),
                     );
                     return;
                 }
@@ -708,7 +760,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
                 if (dotIndex === -1) {
                     context.writer.writeError(
-                        context.translator.t('cli.configure.invalid_format_set', 'Invalid format. Use: configure set <category.key> <value>'),
+                        context.translator.t(
+                            'cli.configure.invalid_format_set',
+                            'Invalid format. Use: configure set <category.key> <value>',
+                        ),
                     );
                     return;
                 }
@@ -727,13 +782,21 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
                 if (!match) {
                     context.writer.writeError(
-                        context.translator.t('cli.configure.unknown_key', 'Unknown configuration key: {path}', { path }),
+                        context.translator.t(
+                            'cli.configure.unknown_key',
+                            'Unknown configuration key: {path}',
+                            { path },
+                        ),
                     );
                     return;
                 }
 
                 // Coerce value based on type
-                const coerceResult = this.coerceValue(rawValue, match.option, context.translator);
+                const coerceResult = this.coerceValue(
+                    rawValue,
+                    match.option,
+                    context.translator,
+                );
                 if (coerceResult.error) {
                     context.writer.writeError(coerceResult.error);
                     return;
@@ -755,7 +818,11 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 await context.state.persist();
 
                 context.writer.writeSuccess(
-                    context.translator.t('cli.configure.set_success', 'Set {path} to {value}', { path, value: String(coerced) }),
+                    context.translator.t(
+                        'cli.configure.set_success',
+                        'Set {path} to {value}',
+                        { path, value: String(coerced) },
+                    ),
                 );
             },
         };
@@ -789,7 +856,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                         this.applySystemSettings(defaults, context);
                         await context.state.persist();
                         context.writer.writeSuccess(
-                            t.t('cli.configure.system_reset', 'System configuration reset to defaults'),
+                            t.t(
+                                'cli.configure.system_reset',
+                                'System configuration reset to defaults',
+                            ),
                         );
                     } else {
                         const registry =
@@ -802,7 +872,11 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
 
                         if (!cat) {
                             context.writer.writeError(
-                                t.t('cli.configure.unknown_category', 'Unknown category: {category}', { category }),
+                                t.t(
+                                    'cli.configure.unknown_category',
+                                    'Unknown category: {category}',
+                                    { category },
+                                ),
                             );
                             return;
                         }
@@ -823,18 +897,30 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                         });
                         await context.state.persist();
                         context.writer.writeSuccess(
-                            t.t('cli.configure.category_reset', 'Configuration for "{category}" reset to defaults', { category }),
+                            t.t(
+                                'cli.configure.category_reset',
+                                'Configuration for "{category}" reset to defaults',
+                                { category },
+                            ),
                         );
                     }
                 } else {
                     // Reset all
                     const confirmed = await context.reader.readConfirm(
-                        t.t('cli.configure.reset_confirm', 'Reset all configuration to defaults?'),
+                        t.t(
+                            'cli.configure.reset_confirm',
+                            'Reset all configuration to defaults?',
+                        ),
                         false,
                     );
 
                     if (!confirmed) {
-                        context.writer.writeInfo(t.t('cli.configure.reset_cancelled', 'Reset cancelled'));
+                        context.writer.writeInfo(
+                            t.t(
+                                'cli.configure.reset_cancelled',
+                                'Reset cancelled',
+                            ),
+                        );
                         return;
                     }
 
@@ -849,7 +935,10 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                     this.applySystemSettings(defaults, context);
 
                     context.writer.writeSuccess(
-                        t.t('cli.configure.all_reset', 'All configuration reset to defaults'),
+                        t.t(
+                            'cli.configure.all_reset',
+                            'All configuration reset to defaults',
+                        ),
                     );
                 }
             },
@@ -869,18 +958,28 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 if (isNaN(num)) {
                     return {
                         value: null,
-                        error: translator.t('cli.configure.invalid_number', 'Invalid number: {value}', { value: rawValue }),
+                        error: translator.t(
+                            'cli.configure.invalid_number',
+                            'Invalid number: {value}',
+                            { value: rawValue },
+                        ),
                     };
                 }
                 return { value: num };
             }
             case 'boolean': {
                 const lower = rawValue.toLowerCase();
-                if (['true', '1', 'yes'].includes(lower)) return { value: true };
-                if (['false', '0', 'no'].includes(lower)) return { value: false };
+                if (['true', '1', 'yes'].includes(lower))
+                    return { value: true };
+                if (['false', '0', 'no'].includes(lower))
+                    return { value: false };
                 return {
                     value: null,
-                    error: translator.t('cli.configure.invalid_boolean', 'Invalid boolean value: "{value}". Use true or false.', { value: rawValue }),
+                    error: translator.t(
+                        'cli.configure.invalid_boolean',
+                        'Invalid boolean value: "{value}". Use true or false.',
+                        { value: rawValue },
+                    ),
                 };
             }
             case 'select':
@@ -891,10 +990,16 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                             rawValue.toLowerCase(),
                     );
                     if (!match) {
-                        const validOptions = option.options.map((o) => o.value).join(', ');
+                        const validOptions = option.options
+                            .map((o) => o.value)
+                            .join(', ');
                         return {
                             value: null,
-                            error: translator.t('cli.configure.invalid_options', 'Invalid value. Valid options: {options}', { options: validOptions }),
+                            error: translator.t(
+                                'cli.configure.invalid_options',
+                                'Invalid value. Valid options: {options}',
+                                { options: validOptions },
+                            ),
                         };
                     }
                     return { value: match.value };

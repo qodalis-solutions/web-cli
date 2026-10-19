@@ -588,6 +588,27 @@ describe('CliModuleRegistry', () => {
         expect(called).toBeFalse();
     });
 
+    it('whenIdle waits for boots in progress, including nested ones', async () => {
+        const order: string[] = [];
+        registry.onModuleBoot(async (m) => {
+            await new Promise((r) => setTimeout(r, 20));
+            if (m.name === 'outer') {
+                // a plugin loading another one while booting
+                void registry.register(createModule('inner'));
+            }
+            order.push(m.name);
+        });
+
+        void registry.register(createModule('outer'));
+        await registry.whenIdle();
+
+        expect(order).toEqual(['outer', 'inner']);
+    });
+
+    it('whenIdle resolves right away when nothing is booting', async () => {
+        await expectAsync(registry.whenIdle()).toBeResolved();
+    });
+
     it('should boot a module again after it was unregistered', async () => {
         const booted: string[] = [];
         registry.onModuleBoot(async (m) => {

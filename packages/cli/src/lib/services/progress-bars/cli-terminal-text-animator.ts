@@ -53,11 +53,34 @@ export class CliTerminalTextAnimator implements ICliTextAnimator {
                 resolve();
             };
 
+            // Where the cursor should be after our last write. If something
+            // else writes meanwhile (a setup prompt, plugin output), the
+            // cursor moves and the animation stops without touching the line.
+            let expectedCursor: string | null = null;
+            const writeTracked = (data: string) => {
+                this.terminal.write(data, () => {
+                    expectedCursor = this.cursorPosition();
+                });
+            };
+            const interrupted = () =>
+                expectedCursor !== null &&
+                this.cursorPosition() !== expectedCursor;
+            const stopInterrupted = () => {
+                clearInterval(this.animationInterval!);
+                this.animationInterval = null;
+                this.visibleChars = 0;
+                this.finish?.();
+            };
+
             this.animationInterval = setInterval(() => {
+                if (interrupted()) {
+                    stopInterrupted();
+                    return;
+                }
                 if (isTyping) {
                     // Write text character by character with wave color
                     const ch = this.text[index];
-                    this.terminal.write(`${this.textColor}${ch}${RESET}`);
+                    writeTracked(`${this.textColor}${ch}${RESET}`);
                     index++;
                     this.visibleChars++;
 
@@ -72,6 +95,10 @@ export class CliTerminalTextAnimator implements ICliTextAnimator {
                     delay(1000).then(() => {
                         // Cancelled meanwhile (e.g. the user started typing)
                         if (done) return;
+                        if (interrupted()) {
+                            stopInterrupted();
+                            return;
+                        }
                         if (this.context) {
                             this.context.setCurrentLine(
                                 savedCurrentLine + this.text,
@@ -83,7 +110,7 @@ export class CliTerminalTextAnimator implements ICliTextAnimator {
                     });
                 } else {
                     // Erase text character by character
-                    this.terminal.write('\b \b');
+                    writeTracked('\b \b');
                     index--;
                     this.visibleChars = Math.max(0, this.visibleChars - 1);
 
@@ -96,6 +123,14 @@ export class CliTerminalTextAnimator implements ICliTextAnimator {
                 }
             }, speed || 100);
         });
+    }
+
+    /** Cursor position as `row:col`, or `null` when unavailable. */
+    private cursorPosition(): string | null {
+        const buffer = this.terminal.buffer?.active;
+        return buffer
+            ? `${buffer.baseY + buffer.cursorY}:${buffer.cursorX}`
+            : null;
     }
 
     /**

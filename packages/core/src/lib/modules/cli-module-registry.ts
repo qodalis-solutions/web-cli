@@ -14,6 +14,8 @@ export class CliModuleRegistry {
     private readonly bootHandlers: ((module: ICliModule) => Promise<void>)[] =
         [];
     private readonly unregisterHandlers: ((module: ICliModule) => void)[] = [];
+    /** Registrations whose boot handlers are still running. */
+    private readonly inFlight = new Set<Promise<void>>();
 
     /** Optional warning callback — set by the engine to route through ICliLogger */
     onWarn?: (message: string) => void;
@@ -30,7 +32,25 @@ export class CliModuleRegistry {
      * Modules whose `apiVersion` is below the runtime's `API_VERSION` are
      * skipped with a warning — this ensures only compatible frontend plugins load.
      */
-    async register(module: ICliModule): Promise<void> {
+    register(module: ICliModule): Promise<void> {
+        const registration = this.registerInternal(module);
+        this.inFlight.add(registration);
+        const done = () => this.inFlight.delete(registration);
+        registration.then(done, done);
+        return registration;
+    }
+
+    /**
+     * Resolve once every registration in progress (including ones started
+     * meanwhile, e.g. a plugin loading another) has finished booting.
+     */
+    async whenIdle(): Promise<void> {
+        while (this.inFlight.size > 0) {
+            await Promise.allSettled([...this.inFlight]);
+        }
+    }
+
+    private async registerInternal(module: ICliModule): Promise<void> {
         const modApiVersion = module.apiVersion;
         if (typeof modApiVersion !== 'number' || modApiVersion < API_VERSION) {
             const msg =

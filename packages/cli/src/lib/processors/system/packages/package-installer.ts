@@ -7,6 +7,8 @@ import {
     Package,
 } from '@qodalis/cli-core';
 import { ScriptLoaderService } from '../../../services/script-loader';
+import { CliBootLog } from '../../../services/cli-boot-log';
+import { CliBootLog_TOKEN } from '../../../tokens';
 import { CliPackageManagerService } from '../../../services/cli-package-manager';
 import { isNewerVersion, toFullPackageName } from './package-utils';
 
@@ -67,9 +69,31 @@ export class CliPackageInstaller {
 
     /** Inject every saved package (startup). */
     async loadInstalled(context: ICliExecutionContext): Promise<void> {
-        for (const pkg of await this.manager.getPackages()) {
-            await this.loadDependencies(pkg, context);
-            await this.injectFromUrl(pkg.url);
+        const packages = await this.manager.getPackages();
+        const bootLog = context.services.get<CliBootLog>(CliBootLog_TOKEN);
+        bootLog?.addSteps(packages.length);
+
+        for (const pkg of packages) {
+            bootLog?.setCurrent(`Loading ${pkg.name}@${pkg.version}`);
+            const startedAt = Date.now();
+            try {
+                await this.loadDependencies(pkg, context);
+                await this.injectFromUrl(pkg.url);
+                bootLog?.ok(
+                    `Loaded package ${pkg.name}@${pkg.version}`,
+                    Date.now() - startedAt,
+                );
+            } catch (e: any) {
+                // One broken package must not stop the others from loading
+                const message = `Could not load package ${pkg.name}@${pkg.version}: ${e?.message ?? e}`;
+                if (bootLog?.enabled) {
+                    bootLog.error(message);
+                } else {
+                    context.logger.error(message);
+                }
+            } finally {
+                bootLog?.completeStep();
+            }
         }
     }
 

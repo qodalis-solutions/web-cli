@@ -74,6 +74,12 @@ export interface ICliExecutionContext {
     progressBar: ICliPercentageProgressBar;
 
     /**
+     * `true` once the CLI has finished booting (modules set up, terminal
+     * ready). Optional for backward compatibility; `undefined` means unknown.
+     */
+    readonly isBooted?: boolean;
+
+    /**
      * A subject that emits when the command is aborted
      */
     onAbort: Subject<void>;
@@ -262,10 +268,7 @@ export interface ICliExecutionContext {
      * @param ms The interval delay in milliseconds
      * @returns A managed interval handle with clear() and setDelay() methods
      */
-    createInterval: (
-        callback: () => void,
-        ms: number,
-    ) => ICliManagedInterval;
+    createInterval: (callback: () => void, ms: number) => ICliManagedInterval;
 
     /**
      * Creates a managed timeout that is automatically cleared when full-screen

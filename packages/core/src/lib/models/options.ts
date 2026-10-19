@@ -38,9 +38,40 @@ export enum CliLogLevel {
 }
 
 /**
+ * How the CLI reports its startup.
+ */
+export interface CliBootOptions {
+    /**
+     * Report each boot step (terminal, services, servers, modules) in the
+     * terminal while the CLI starts. When `false`, a spinner is shown instead.
+     * Users can override it with `configure set system.bootLogs false`.
+     * @default true
+     */
+    showLogs?: boolean;
+
+    /**
+     * Keep the boot report on screen after startup instead of clearing it
+     * when the terminal is ready. Warnings and errors are kept either way.
+     * @default false
+     */
+    keepLogs?: boolean;
+
+    /**
+     * Steps taking at least this many milliseconds are highlighted as slow.
+     * @default 500
+     */
+    slowStepMs?: number;
+}
+
+/**
  * Options for the CLI
  */
 export type CliOptions = Record<string, any> & {
+    /**
+     * How the CLI reports its startup (boot log, spinner).
+     */
+    boot?: CliBootOptions;
+
     /**
      * Custom terminal options
      */
