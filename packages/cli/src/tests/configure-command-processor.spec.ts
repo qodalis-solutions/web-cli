@@ -11,6 +11,7 @@ import {
     CliBackgroundColor,
     CliProvider,
     ICliConfigurationOption,
+    ICliTranslationService_TOKEN,
 } from '@qodalis/cli-core';
 import { CliCommandProcessorRegistry } from '../lib/registry';
 import { CliExecutionProcess } from '../lib/context/cli-execution-process';
@@ -19,6 +20,7 @@ import {
     CliStateStoreManager_TOKEN,
 } from '../lib/tokens';
 import { CliConfigureCommandProcessor } from '../lib/processors/configure/cli-configure-command-processor';
+import { CliTranslationService } from '../lib/services/cli-translation-service';
 
 // ---------------------------------------------------------------------------
 // Test Fixtures
@@ -386,6 +388,30 @@ describe('CliConfigureCommandProcessor', () => {
 
             const output = writer.written.join('\n');
             expect(output).toContain('[success]');
+        });
+
+        it('should accept a language added after boot (pkg add of a language pack)', async () => {
+            const translations = new CliTranslationService();
+            const get = context.services.get.bind(context.services);
+            context.services.get = (<T>(token: any): T | undefined =>
+                token === ICliTranslationService_TOKEN
+                    ? (translations as unknown as T)
+                    : get<T>(token)) as typeof context.services.get;
+            const set = (value: string): CliProcessCommand => ({
+                command: 'set',
+                chainCommands: [],
+                rawCommand: `configure set system.language ${value}`,
+                value: `system.language ${value}`,
+                args: {},
+            });
+
+            await setProcessor.processCommand!(set('de'), context);
+            expect(writer.written.join('\n')).toContain('Invalid value');
+
+            translations.addTranslations('de', { 'cli.help.description': 'Hilfe' });
+            writer.written.length = 0;
+            await setProcessor.processCommand!(set('de'), context);
+            expect(writer.written.join('\n')).toContain('[success]');
         });
 
         it('should reject invalid select value', async () => {

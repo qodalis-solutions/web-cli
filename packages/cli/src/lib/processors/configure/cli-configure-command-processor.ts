@@ -326,23 +326,8 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         stateKey: string,
         options: ICliConfigurationOption[],
     ): Promise<void> {
-        // Dynamically populate language options from available locales
         if (stateKey === 'system') {
-            const langOption = options.find((o) => o.key === 'language');
-            if (langOption) {
-                const translator = context.services.get<ICliTranslationService>(
-                    ICliTranslationService_TOKEN,
-                );
-                if (translator) {
-                    const locales = translator.getAvailableLocales();
-                    if (locales.length > 0) {
-                        langOption.options = locales.map((l) => ({
-                            label: this.getLanguageLabel(l),
-                            value: l,
-                        }));
-                    }
-                }
-            }
+            this.refreshLanguageOptions(context);
         }
 
         while (true) {
@@ -525,9 +510,29 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
         return state?.plugins?.[stateKey]?.[key] ?? defaultValue;
     }
 
+    /**
+     * The language choices are the locales loaded so far: a language pack
+     * installed after boot (`pkg add @qodalis/cli-lang-de`) adds one.
+     */
+    private refreshLanguageOptions(context: ICliExecutionContext): void {
+        const langOption = SYSTEM_OPTIONS.find((o) => o.key === 'language');
+        const translator = context.services.get<ICliTranslationService>(
+            ICliTranslationService_TOKEN,
+        );
+        const locales = translator?.getAvailableLocales() ?? [];
+        if (langOption && locales.length > 0) {
+            langOption.options = locales.map((l) => ({
+                label: this.getLanguageLabel(l),
+                value: l,
+            }));
+        }
+    }
+
     private getAllOptions(
         registry: ICliCommandProcessorRegistry,
+        context: ICliExecutionContext,
     ): { stateKey: string; option: ICliConfigurationOption }[] {
+        this.refreshLanguageOptions(context);
         const result: { stateKey: string; option: ICliConfigurationOption }[] =
             [];
 
@@ -626,7 +631,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                     context.services.getRequired<ICliCommandProcessorRegistry>(
                         CliProcessorsRegistry_TOKEN,
                     );
-                const allOptions = this.getAllOptions(registry);
+                const allOptions = this.getAllOptions(registry, context);
 
                 let currentCategory = '';
                 const output: Record<string, Record<string, any>> = {};
@@ -707,7 +712,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                     context.services.getRequired<ICliCommandProcessorRegistry>(
                         CliProcessorsRegistry_TOKEN,
                     );
-                const allOptions = this.getAllOptions(registry);
+                const allOptions = this.getAllOptions(registry, context);
                 const match = allOptions.find(
                     (o) => o.stateKey === category && o.option.key === key,
                 );
@@ -783,7 +788,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                     context.services.getRequired<ICliCommandProcessorRegistry>(
                         CliProcessorsRegistry_TOKEN,
                     );
-                const allOptions = this.getAllOptions(registry);
+                const allOptions = this.getAllOptions(registry, context);
                 const match = allOptions.find(
                     (o) => o.stateKey === category && o.option.key === key,
                 );

@@ -3,6 +3,18 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.0.0-beta.19
+
+### CLI engine (`@qodalis/cli`)
+
+- **Switching to a language pack installed at runtime works.** After `pkg add @qodalis/cli-lang-de`, `configure set system.language de` was refused ("Valid options: en"): the language choices were only refreshed by the interactive `configure` menu. They now come from the loaded language packs on every `configure` command; the choice applies at once and is kept after a reload.
+- The descriptions of `--help`, `--version` and `--context` in help pages are translated (all 10 language packs).
+
+### Docs site
+
+- **Moving between plugin pages updates the page.** Going from one plugin to another (users → todo) changed the heading but kept the previous plugin's code blocks and try-it terminal. The browser tab title also follows in-app navigation (it kept the first page's title).
+- Language packs: how to install one in a running terminal and switch to it (`pkg add @qodalis/cli-lang-es`, `configure set system.language es`), on the Language Packs page and on each language pack's page.
+
 ## v2.0.0-beta.18
 
 ### Repository
