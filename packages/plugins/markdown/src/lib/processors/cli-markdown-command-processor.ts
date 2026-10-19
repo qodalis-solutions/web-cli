@@ -125,22 +125,23 @@ export class CliMarkdownCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Show Markdown formatted in the terminal: headings, bold and italic text, lists, quotes, code and links. Pass the text inline (quoted or not, \\n starts a new line) or pipe it from another command.',
+            t.t('cli.md.help.show_markdown_formatted_terminal', 'Show Markdown formatted in the terminal: headings, bold and italic text, lists, quotes, code and links. Pass the text inline (quoted or not, \\n starts a new line) or pipe it from another command.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['md "<markdown>"', 'Render inline text'],
-            ['md render "<markdown>"', 'Same, with the optional render verb (also preview, view)'],
-            ['<command> | md', 'Render the output of a command'],
+            ['md "<markdown>"', t.t('cli.md.help.render_inline_text', 'Render inline text')],
+            ['md render "<markdown>"', t.t('cli.md.help.same_optional_render_verb', 'Same, with the optional render verb (also preview, view)')],
+            ['<command> | md', t.t('cli.md.help.render_output_command', 'Render the output of a command')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['md "## Title"', 'A heading'],
-            ['md "# Title\\n- one\\n- two"', 'Several lines'],
-            ['echo "# Hello" | md', 'Piped text'],
-            ['markdown view "**bold** and *italic*"', 'Same, using aliases'],
+            ['md "## Title"', t.t('cli.md.help.heading', 'A heading')],
+            ['md "# Title\\n- one\\n- two"', t.t('cli.md.help.several_lines', 'Several lines')],
+            ['echo "# Hello" | md', t.t('cli.md.help.piped_text', 'Piped text')],
+            ['markdown view "**bold** and *italic*"', t.t('cli.md.help.same_using_aliases', 'Same, using aliases')],
         ]);
     }
 }

@@ -3,6 +3,8 @@
  * prerelease-aware version comparison.
  */
 
+import { splitShellWords } from '@qodalis/cli-core';
+
 /** Short names of the official plugins, probed on file sources by `pkg browse`. */
 export const KNOWN_PLUGIN_SHORT_NAMES: readonly string[] = [
     '2048',
@@ -47,9 +49,9 @@ export const KNOWN_PLUGIN_SHORT_NAMES: readonly string[] = [
     'yesno',
 ];
 
-/** Split a raw `pkg add a b  c` value into package names, ignoring extra whitespace. */
+/** Split a raw `pkg add a b  c` value into package names, like a shell (quotes removed). */
 export function splitPackageArgs(value: string | undefined): string[] {
-    return (value ?? '').split(/\s+/).filter(Boolean);
+    return splitShellWords(value ?? '');
 }
 
 export interface PackageSpec {

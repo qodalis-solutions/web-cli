@@ -1,4 +1,4 @@
-import { CliTestHarness } from '@qodalis/cli';
+import { CliTestHarness, CliTestCommandProcessor, CliTrueCommandProcessor, CliFalseCommandProcessor } from '@qodalis/cli';
 import { IndexedDbFileSystemService } from '../lib/services';
 import { IFileSystemService_TOKEN } from '../lib/interfaces';
 import { CliEchoCommandProcessor as FilesEchoProcessor } from '../lib/processors/cli-echo-command-processor';
@@ -103,6 +103,9 @@ function setupHarness(): { harness: CliTestHarness; fs: IndexedDbFileSystemServi
         new CliPasteCommandProcessor(),
         new CliXargsCommandProcessor(),
         new CliShCommandProcessor(),
+        new CliTestCommandProcessor(),
+        new CliTrueCommandProcessor(),
+        new CliFalseCommandProcessor(),
     ]);
 
     return { harness, fs };
@@ -161,6 +164,58 @@ describe('Files plugin integration: single commands', () => {
         const result = await harness.execute('echo x > /nope/f.txt');
         expect(result.stderr.join('\n')).toContain('> /nope/f.txt: ');
         expect(result.stderr.join('\n')).not.toContain('touch');
+    });
+
+    it('grep exits 0 on a match, 1 without, 2 on errors; -q prints nothing', async () => {
+        expect((await harness.execute('grep Hello /home/user/hello.txt')).exitCode ?? 0).toBe(0);
+        expect((await harness.execute('grep nothing-here /home/user/hello.txt')).exitCode).toBe(1);
+        expect((await harness.execute('grep x /home/user/missing.txt')).exitCode).toBe(2);
+        const quiet = await harness.execute('grep -q Hello /home/user/hello.txt');
+        expect(quiet.output).toBe('');
+        expect(quiet.exitCode ?? 0).toBe(0);
+        const chained = await harness.execute('grep -q nope /home/user/hello.txt && echo found || echo missing');
+        expect(chained.output).toContain('missing');
+    });
+
+    it('grep works as a script condition', async () => {
+        fs.createFile('/home/user/check.sh', 'if grep -q Goodbye hello.txt; then\necho yes\nelse\necho no\nfi\n');
+        const result = await harness.execute('sh check.sh');
+        expect(result.output).toContain('yes');
+        expect(result.output).not.toContain('no');
+    });
+
+    it('xargs passes its input as data: no wildcards, variables or substitutions', async () => {
+        const star = await harness.execute("echo '*' | xargs echo");
+        expect(String(star.data ?? star.output)).toContain('*');
+        expect(fs.exists('/home/user/hello.txt')).toBe(true);
+        await harness.execute("echo '$(rm -r /home/user/docs)' | xargs echo");
+        expect(fs.exists('/home/user/docs/readme.md')).toBe(true);
+        fs.createFile('/home/user/junk.txt', 'x');
+        await harness.execute("echo junk.txt | xargs rm");
+        expect(fs.exists('/home/user/junk.txt')).toBe(false);
+    });
+
+    it('mv into the directory a file is already in keeps every file', async () => {
+        fs.createFile('/home/user/a1.txt', 'a');
+        fs.createFile('/home/user/a2.txt', 'b');
+        const result = await harness.execute('mv a1.txt .');
+        expect(result.stderr.join('\n')).toContain('same file');
+        expect(fs.readFile('/home/user/a1.txt')).toBe('a');
+        expect(fs.readFile('/home/user/a2.txt')).toBe('b');
+        await harness.execute('mv docs/readme.md docs');
+        expect(fs.exists('/home/user/docs/readme.md')).toBe(true);
+        expect(fs.exists('/home/user/docs/notes.txt')).toBe(true);
+    });
+
+    it('echo prints an escaped > instead of writing a file', async () => {
+        const result = await harness.execute('echo a \\> b.txt');
+        expect(result.output).toContain('a > b.txt');
+        expect(fs.exists('/home/user/b.txt')).toBe(false);
+    });
+
+    it('ls passes one name per line down a pipe', async () => {
+        const result = await harness.execute('ls /home/user/docs | wc -l');
+        expect(String(result.data ?? result.output).trim()).toBe('2');
     });
 
     it('cut accepts a plain field number', async () => {
@@ -764,6 +819,101 @@ describe('Files plugin integration: script execution', () => {
         const result = await harness.execute('sh /home/user/operators.sh');
         expect(result.output).toContain('first');
         expect(result.output).toContain('second');
+    });
+});
+
+describe('Files plugin integration: script control flow', () => {
+    let harness: CliTestHarness;
+    let fs: IndexedDbFileSystemService;
+
+    beforeEach(() => {
+        ({ harness, fs } = setupHarness());
+    });
+
+    it('sh runs if / elif / else with test on files', async () => {
+        fs.createFile(
+            '/home/user/if.sh',
+            [
+                'if [ -f hello.txt ]; then',
+                '    echo has-hello',
+                'fi',
+                'if [ -d hello.txt ]; then echo bad; elif [ -d docs ]; then echo has-docs; else echo bad; fi',
+                'if [ -e nothing.txt ]; then',
+                '    echo bad',
+                'else',
+                '    echo no-nothing',
+                'fi',
+                'if grep Goodbye hello.txt; then echo found; fi',
+            ].join('\n'),
+        );
+        const result = await harness.execute('sh /home/user/if.sh');
+        expect(result.stderr).toEqual([]);
+        expect(result.output).toContain('has-hello');
+        expect(result.output).toContain('has-docs');
+        expect(result.output).toContain('no-nothing');
+        expect(result.output).toContain('found');
+        expect(result.output).not.toContain('bad');
+    });
+
+    it('sh runs a for loop over words and wildcards', async () => {
+        fs.createFile(
+            '/home/user/for.sh',
+            [
+                'mkdir -p out',
+                'for name in alpha beta; do',
+                '    echo $name > out/$name.txt',
+                'done',
+                'for f in out/*.txt; do echo file:$f; done',
+            ].join('\n'),
+        );
+        const result = await harness.execute('sh /home/user/for.sh');
+        expect(result.stderr).toEqual([]);
+        expect(fs.readFile('/home/user/out/alpha.txt')).toContain('alpha');
+        expect(fs.readFile('/home/user/out/beta.txt')).toContain('beta');
+        expect(result.output).toContain('file:out/alpha.txt');
+        expect(result.output).toContain('file:out/beta.txt');
+    });
+
+    it('sh runs a while loop until a file appears, with break and continue', async () => {
+        fs.createFile(
+            '/home/user/while.sh',
+            [
+                'while [ ! -f stop.txt ]; do',
+                '    echo looping',
+                '    touch stop.txt',
+                'done',
+                'while true; do',
+                '    if [ -f stop.txt ]; then break; fi',
+                'done',
+                'for i in 1 2 3; do',
+                '    if [ $i -eq 2 ]; then continue; fi',
+                '    echo i=$i',
+                'done',
+                'echo finished',
+            ].join('\n'),
+        );
+        const result = await harness.execute('sh /home/user/while.sh');
+        expect(result.stderr).toEqual([]);
+        expect(result.stdout.filter((l) => l === 'looping').length).toBe(1);
+        expect(result.output).toContain('i=1');
+        expect(result.output).not.toContain('i=2');
+        expect(result.output).toContain('i=3');
+        expect(result.output).toContain('finished');
+    });
+
+    it('./script runs control flow too', async () => {
+        fs.createFile('/home/user/run.sh', 'for x in a b; do if [ $x = b ]; then echo got-$x; fi; done\n');
+        fs.chmod('/home/user/run.sh', 'rwxr-xr-x');
+        const result = await harness.execute('./run.sh');
+        expect(result.output).toContain('got-b');
+        expect(result.output).not.toContain('got-a');
+    });
+
+    it('sh reports an unbalanced block with its line number', async () => {
+        fs.createFile('/home/user/bad.sh', 'echo start\nfor x in a; do\n    echo $x\n');
+        const result = await harness.execute('sh /home/user/bad.sh');
+        expect(result.output).not.toContain('start');
+        expect(result.stderr.some((l) => l.includes("sh: line 3: syntax error: expected 'done'"))).toBe(true);
     });
 });
 

@@ -8,6 +8,7 @@ import {
     ICliCommandProcessor,
     ICliCommandProcessorRegistry,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import { CliProcessorsRegistry_TOKEN } from '../tokens';
 import {
@@ -73,44 +74,53 @@ export class CliServerCommandProcessor implements ICliCommandProcessor {
         _command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
+        const t = context.translator;
         const manager = serverManagerOf(context);
         if (!manager) return;
         writeServerTable(context, manager);
         context.writer.writeln();
-        writeHint(context, 'help server', 'to see everything you can do');
+        writeHint(context, 'help server', t.t('cli.server.help.see_everything_you_can', 'to see everything you can do'));
     }
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         const { writer } = context;
         writeWrapped(
             context,
-            'Connect the terminal to remote CLI servers (.NET, Node.js, Python) and run their commands.',
+            t.t('cli.server.help.connect_terminal_remote_cli', 'Connect the terminal to remote CLI servers (.NET, Node.js, Python) and run their commands.'),
         );
         writer.writeln();
         writeWrapped(
             context,
-            `Each server's commands are available by name (${writer.wrapInColor('echo hi', CliForegroundColor.Cyan)}) and with the server as prefix (${writer.wrapInColor('node:echo hi', CliForegroundColor.Cyan)}). When several servers have the same command, the default server runs it; without one you are asked which server to use. A local command with the same name wins: use the prefixed name. A server that goes down is retried every 30 seconds, and its commands come back when it does.`,
+            t.t(
+                'cli.server.help.by_name_or_prefix',
+                "Each server's commands are available by name ({byName}) and with the server as prefix ({prefixed}). When several servers have the same command, the default server runs it; without one you are asked which server to use. A local command with the same name wins: use the prefixed name. A server that goes down is retried every 30 seconds, and its commands come back when it does.",
+                {
+                    byName: writer.wrapInColor('echo hi', CliForegroundColor.Cyan),
+                    prefixed: writer.wrapInColor('node:echo hi', CliForegroundColor.Cyan),
+                },
+            ),
         );
         writer.writeln();
         writeUsage(context, [
-            ['server', 'Overview of the servers'],
-            ['server list|ls', 'Servers with status, version and commands'],
-            ['server status|ping [name]', 'Check servers are reachable (all, or one in detail)'],
-            ['server commands|cmds [name]', 'Commands each server provides'],
-            ['server reconnect|rc [name]', 'Connect again (unreachable servers, or one)'],
-            ['server default|use [name]', 'Show or set the server for shared commands'],
-            ['ssh [name] [command]', 'Open a shell on a server, or run one command'],
+            ['server', t.t('cli.server.help.overview_servers', 'Overview of the servers')],
+            ['server list|ls', t.t('cli.server.help.servers_status_version_commands', 'Servers with status, version and commands')],
+            ['server status|ping [name]', t.t('cli.server.help.check_servers_reachable_all', 'Check servers are reachable (all, or one in detail)')],
+            ['server commands|cmds [name]', t.t('cli.server.help.commands_each_server_provides', 'Commands each server provides')],
+            ['server reconnect|rc [name]', t.t('cli.server.help.connect_again_unreachable_servers', 'Connect again (unreachable servers, or one)')],
+            ['server default|use [name]', t.t('cli.server.help.show_set_server_shared', 'Show or set the server for shared commands')],
+            ['ssh [name] [command]', t.t('cli.server.help.open_shell_server_run', 'Open a shell on a server, or run one command')],
         ]);
         writer.writeln();
         writeExamples(context, [
-            ['server status node', 'Ping node and show its details'],
-            ['server commands node', 'What node can do'],
-            ['node:echo hello', 'Run echo on node explicitly'],
-            ['server use node', 'Shared commands run on node'],
-            ['server rc', 'Retry every unreachable server'],
+            ['server status node', t.t('cli.server.help.ping_node_show_details', 'Ping node and show its details')],
+            ['server commands node', t.t('cli.server.help.what_node_can_do', 'What node can do')],
+            ['node:echo hello', t.t('cli.server.help.run_echo_node_explicitly', 'Run echo on node explicitly')],
+            ['server use node', t.t('cli.server.help.shared_commands_run_node', 'Shared commands run on node')],
+            ['server rc', t.t('cli.server.help.retry_every_unreachable_server', 'Retry every unreachable server')],
         ]);
         writer.writeln();
-        writer.writeln(`🔗 Aliases: ${writer.wrapInColor('servers', CliForegroundColor.Magenta)}, ${writer.wrapInColor('srv', CliForegroundColor.Magenta)}`);
+        writer.writeln(`🔗 ${t.t('cli.help.aliases', 'Aliases:')} ${writer.wrapInColor('servers', CliForegroundColor.Magenta)}, ${writer.wrapInColor('srv', CliForegroundColor.Magenta)}`);
     }
 }
 
@@ -131,9 +141,10 @@ class ServerListProcessor implements ICliCommandChildProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'List the configured servers: connection status, URL, server and API version, number of commands and shell access.',
+            t.t('cli.server.list.help.list_configured_servers_connection', 'List the configured servers: connection status, URL, server and API version, number of commands and shell access.'),
         );
         context.writer.writeln();
         writeUsage(context, [['server list', ''], ['server ls', '']]);
@@ -144,6 +155,7 @@ function writeServerTable(
     context: ICliExecutionContext,
     manager: CliServerManager,
 ): void {
+    const t = context.translator;
     const { writer } = context;
     if (manager.connections.size === 0) {
         writer.writeInfo('No servers configured.');
@@ -180,7 +192,7 @@ function writeServerTable(
         writeHint(
             context,
             'server status <name>',
-            'to see why a server is unreachable, server reconnect to retry',
+            t.t('cli.server.list.help.see_why_server_unreachable', 'to see why a server is unreachable, server reconnect to retry'),
         );
     }
 }
@@ -200,7 +212,7 @@ class ServerStatusProcessor implements ICliCommandChildProcessor {
     ): Promise<void> {
         const manager = serverManagerOf(context);
         if (!manager) return;
-        const name = command.value?.trim();
+        const name = joinShellWords(command.value ?? '');
 
         if (!name) {
             await this.statusOfAll(context, manager);
@@ -216,6 +228,7 @@ class ServerStatusProcessor implements ICliCommandChildProcessor {
         context: ICliExecutionContext,
         manager: CliServerManager,
     ): Promise<void> {
+        const t = context.translator;
         const { writer } = context;
         if (manager.connections.size === 0) {
             writer.writeInfo('No servers configured.');
@@ -254,7 +267,7 @@ class ServerStatusProcessor implements ICliCommandChildProcessor {
 
         if (results.some((r) => !r.reachable)) {
             writer.writeln();
-            writeHint(context, 'server status <name>', 'for details on a server');
+            writeHint(context, 'server status <name>', t.t('cli.server.status.help.details_server', 'for details on a server'));
         }
     }
 
@@ -264,6 +277,7 @@ class ServerStatusProcessor implements ICliCommandChildProcessor {
         name: string,
         connection: CliServerConnection,
     ): Promise<void> {
+        const t = context.translator;
         const { writer } = context;
         context.spinner?.show(`Pinging ${name}...`);
         const { reachable, ms } = await pingServer(connection);
@@ -308,28 +322,29 @@ class ServerStatusProcessor implements ICliCommandChildProcessor {
                 writeWrapped(context, check, 2);
             }
             writer.writeln();
-            writeHint(context, `server reconnect ${name}`, 'to try again');
+            writeHint(context, `server reconnect ${name}`, t.t('cli.server.status.help.try_again', 'to try again'));
         } else if (!connection.connected) {
-            writeHint(context, `server reconnect ${name}`, 'to load its commands');
+            writeHint(context, `server reconnect ${name}`, t.t('cli.server.status.help.load_commands', 'to load its commands'));
         } else {
-            writeHint(context, `server commands ${name}`, 'to see its commands');
+            writeHint(context, `server commands ${name}`, t.t('cli.server.status.help.see_commands', 'to see its commands'));
         }
     }
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Ping the servers. Without a name, every server is checked at once with its round-trip time; with a name, that server is shown in detail (versions, OS, shell, streaming) with hints when it cannot be reached.',
+            t.t('cli.server.status.help.ping_servers_without_name', 'Ping the servers. Without a name, every server is checked at once with its round-trip time; with a name, that server is shown in detail (versions, OS, shell, streaming) with hints when it cannot be reached.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['server status', 'Check every server'],
-            ['server status <name>', 'Details of one server'],
+            ['server status', t.t('cli.server.status.help.check_every_server', 'Check every server')],
+            ['server status <name>', t.t('cli.server.status.help.details_one_server', 'Details of one server')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['server ping', 'Same as server status'],
-            ['server info node', 'Details of node'],
+            ['server ping', t.t('cli.server.status.help.same_server_status', 'Same as server status')],
+            ['server info node', t.t('cli.server.status.help.details_node', 'Details of node')],
         ]);
     }
 }
@@ -349,7 +364,7 @@ class ServerCommandsProcessor implements ICliCommandChildProcessor {
     ): Promise<void> {
         const manager = serverManagerOf(context);
         if (!manager) return;
-        const name = command.value?.trim();
+        const name = joinShellWords(command.value ?? '');
 
         let servers: [string, CliServerConnection][];
         if (name) {
@@ -389,14 +404,14 @@ class ServerCommandsProcessor implements ICliCommandChildProcessor {
         if (shared) {
             writeWrapped(
                 context,
-                `${writer.wrapInColor('◆', CliForegroundColor.Yellow)} on several servers: runs on the default server (server use <name>), or asks`,
+                `${writer.wrapInColor('◆', CliForegroundColor.Yellow)} ${context.translator.t('cli.server.commands.help.shared_marker', 'on several servers: runs on the default server (server use <name>), or asks')}`,
                 2,
             );
         }
         if (local) {
             writeWrapped(
                 context,
-                `${writer.wrapInColor('◇', CliForegroundColor.Magenta)} a local command has the same name: run it with the server prefix`,
+                `${writer.wrapInColor('◇', CliForegroundColor.Magenta)} ${context.translator.t('cli.server.commands.help.local_marker', 'a local command has the same name: run it with the server prefix')}`,
                 2,
             );
         }
@@ -464,18 +479,23 @@ class ServerCommandsProcessor implements ICliCommandChildProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         const { writer } = context;
         writeWrapped(
             context,
-            `List the commands a server provides (all servers, or one). Run them by name, or with the server as prefix: ${writer.wrapInColor('node:echo', CliForegroundColor.Cyan)} always runs on node, also when another server or a local command is called echo.`,
+            t.t(
+                'cli.server.commands.help.intro',
+                'List the commands a server provides (all servers, or one). Run them by name, or with the server as prefix: {example} always runs on node, also when another server or a local command is called echo.',
+                { example: writer.wrapInColor('node:echo', CliForegroundColor.Cyan) },
+            ),
         );
         writer.writeln();
         writeUsage(context, [
-            ['server commands', 'Commands of every server'],
-            ['server commands <name>', 'Commands of one server'],
+            ['server commands', t.t('cli.server.commands.help.commands_every_server', 'Commands of every server')],
+            ['server commands <name>', t.t('cli.server.commands.help.commands_one_server', 'Commands of one server')],
         ]);
         writer.writeln();
-        writeExamples(context, [['server cmds node', 'What node can do']]);
+        writeExamples(context, [['server cmds node', t.t('cli.server.commands.help.what_node_can_do', 'What node can do')]]);
     }
 }
 
@@ -501,10 +521,11 @@ class ServerReconnectProcessor implements ICliCommandChildProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
+        const t = context.translator;
         const manager = serverManagerOf(context);
         if (!manager) return;
         const { writer } = context;
-        const name = command.value?.trim();
+        const name = joinShellWords(command.value ?? '');
 
         let names: string[];
         if (name) {
@@ -523,7 +544,7 @@ class ServerReconnectProcessor implements ICliCommandChildProcessor {
             }
             if (names.length === 0) {
                 writer.writeSuccess('All servers are connected.');
-                writeHint(context, 'server reconnect --all', 'to reconnect them anyway');
+                writeHint(context, 'server reconnect --all', t.t('cli.server.reconnect.help.reconnect_them_anyway', 'to reconnect them anyway'));
                 return;
             }
         }
@@ -547,26 +568,27 @@ class ServerReconnectProcessor implements ICliCommandChildProcessor {
 
         if (failed > 0) {
             writer.writeln();
-            writeHint(context, 'server status <name>', 'to see why');
+            writeHint(context, 'server status <name>', t.t('cli.server.reconnect.help.see_why', 'to see why'));
             context.process.exit(1, { silent: true });
         }
     }
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Connect to servers again and reload their commands, e.g. after a server was restarted or updated. Without a name, every unreachable server is retried.',
+            t.t('cli.server.reconnect.help.connect_servers_again_reload', 'Connect to servers again and reload their commands, e.g. after a server was restarted or updated. Without a name, every unreachable server is retried.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['server reconnect', 'Retry the unreachable servers'],
-            ['server reconnect <name>', 'Reconnect one server'],
-            ['server reconnect --all', 'Reconnect every server'],
+            ['server reconnect', t.t('cli.server.reconnect.help.retry_unreachable_servers', 'Retry the unreachable servers')],
+            ['server reconnect <name>', t.t('cli.server.reconnect.help.reconnect_one_server', 'Reconnect one server')],
+            ['server reconnect --all', t.t('cli.server.reconnect.help.reconnect_every_server', 'Reconnect every server')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['server rc', 'Same as server reconnect'],
-            ['server connect node', 'Reload the commands of node'],
+            ['server rc', t.t('cli.server.reconnect.help.same_server_reconnect', 'Same as server reconnect')],
+            ['server connect node', t.t('cli.server.reconnect.help.reload_commands_node', 'Reload the commands of node')],
         ]);
     }
 }
@@ -606,7 +628,7 @@ class ServerDefaultProcessor implements ICliCommandChildProcessor {
             return;
         }
 
-        const name = command.value?.trim();
+        const name = joinShellWords(command.value ?? '');
         if (!name) {
             this.writeCurrent(context, manager);
             return;
@@ -651,22 +673,25 @@ class ServerDefaultProcessor implements ICliCommandChildProcessor {
         writeHint(
             context,
             current ? 'server default --clear' : 'server use <name>',
-            current ? 'to remove it' : 'to set one',
+            current
+                ? context.translator.t('cli.server.default.help.to_remove', 'to remove it')
+                : context.translator.t('cli.server.default.help.to_set_one', 'to set one'),
         );
     }
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'The default server runs commands that several servers have (otherwise you are asked which one) and commands that need one server, like server logs. It is remembered across reloads.',
+            t.t('cli.server.default.help.default_server_runs_commands', 'The default server runs commands that several servers have (otherwise you are asked which one) and commands that need one server, like server logs. It is remembered across reloads.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['server default', 'Show the default server'],
-            ['server default <name>', 'Set it'],
-            ['server default --clear', 'Remove it'],
+            ['server default', t.t('cli.server.default.help.show_default_server', 'Show the default server')],
+            ['server default <name>', t.t('cli.server.default.help.set', 'Set it')],
+            ['server default --clear', t.t('cli.server.default.help.remove', 'Remove it')],
         ]);
         context.writer.writeln();
-        writeExamples(context, [['server use node', 'Same as server default node']]);
+        writeExamples(context, [['server use node', t.t('cli.server.default.help.same_server_default_node', 'Same as server default node')]]);
     }
 }

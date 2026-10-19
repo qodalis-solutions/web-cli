@@ -118,12 +118,23 @@ export class CliExportCommandProcessor implements ICliCommandProcessor {
         apply(store.getState<EnvironmentState>());
         // Each change is applied to the latest saved state, under the cross-tab
         // lock: two tabs (or two users) changing variables keep both changes
+        // While this terminal's own changes are being saved, the store can
+        // emit a state without the later ones (`export A=1 B=2`): apply the
+        // saved state once they are all written
+        let saving = 0;
         env.onChange = (change) => {
-            void store.update((state) =>
-                applyEnvironmentChange(state as EnvironmentState, change),
-            );
+            saving++;
+            void store
+                .update((state) =>
+                    applyEnvironmentChange(state as EnvironmentState, change),
+                )
+                .finally(() => {
+                    if (--saving === 0) apply(store.getState<EnvironmentState>());
+                });
         };
-        store.subscribe((state) => apply(state as EnvironmentState));
+        store.subscribe((state) => {
+            if (saving === 0) apply(state as EnvironmentState);
+        });
     }
 
     async processCommand(

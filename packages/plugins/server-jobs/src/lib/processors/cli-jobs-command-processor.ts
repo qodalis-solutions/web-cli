@@ -14,6 +14,7 @@ import {
     writeExamples,
     writeUsage,
     writeWrapped,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import { CliJobsService } from '../services/cli-jobs-service';
 import { JobDto, JobExecutionDto, UpdateJobRequest } from '../models';
@@ -226,22 +227,23 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             description: 'Manage background jobs on connected servers',
             author: DefaultLibraryAuthor,
             writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
                 writeWrapped(
                     context,
-                    'See and control the background jobs that run on connected servers: list them, run one now, pause or stop it, read its history and logs, change its settings, or watch events live. A job is picked by name (any case) or ID and looked up on every connected server; actions apply to each server that has the job, and --server limits a command to one server.',
+                    t.t('cli.server.jobs.help.see_control_background_jobs', 'See and control the background jobs that run on connected servers: list them, run one now, pause or stop it, read its history and logs, change its settings, or watch events live. A job is picked by name (any case) or ID and looked up on every connected server; actions apply to each server that has the job, and --server limits a command to one server.'),
                 );
                 context.writer.writeln();
                 writeUsage(context, [
-                    ['server jobs', 'Same as server jobs list'],
+                    ['server jobs', t.t('cli.server.jobs.help.same_server_jobs_list', 'Same as server jobs list')],
                     ['server jobs <action> <name|id>', 'info, trigger, pause, resume, stop, cancel, history, logs, edit'],
-                    ['server jobs watch', 'Live job events'],
+                    ['server jobs watch', t.t('cli.server.jobs.help.live_job_events', 'Live job events')],
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
-                    ['server jobs', 'All jobs'],
-                    ['server jobs trigger cleanup', 'Run the cleanup job now'],
-                    ['server jobs history cleanup --status failed', 'Its failed runs'],
-                    ['server jobs logs cleanup --server node', 'Last run output, on node'],
+                    ['server jobs', t.t('cli.server.jobs.help.all_jobs', 'All jobs')],
+                    ['server jobs trigger cleanup', t.t('cli.server.jobs.help.run_cleanup_job_now', 'Run the cleanup job now')],
+                    ['server jobs history cleanup --status failed', t.t('cli.server.jobs.help.failed_runs', 'Its failed runs')],
+                    ['server jobs logs cleanup --server node', t.t('cli.server.jobs.help.last_run_output_node', 'Last run output, on node')],
                 ]);
             },
             metadata: {
@@ -255,19 +257,20 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             command: 'list',
             description: 'List all jobs across connected servers',
             writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
                 writeWrapped(
                     context,
-                    'List the jobs of every connected server: group, status, schedule, last and next run, and how long the last run took. With several servers, each gets its own table.',
+                    t.t('cli.server.jobs.list.help.list_jobs_every_connected', 'List the jobs of every connected server: group, status, schedule, last and next run, and how long the last run took. With several servers, each gets its own table.'),
                 );
                 context.writer.writeln();
                 writeUsage(context, [
-                    ['server jobs list', 'Jobs on all connected servers'],
-                    ['server jobs ls --group <name>', 'Only one group'],
+                    ['server jobs list', t.t('cli.server.jobs.list.help.jobs_all_connected_servers', 'Jobs on all connected servers')],
+                    ['server jobs ls --group <name>', t.t('cli.server.jobs.list.help.only_one_group', 'Only one group')],
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
-                    ['server jobs ls --server node', 'Jobs on the node server'],
-                    ['server jobs list --group reports', 'Jobs in the reports group'],
+                    ['server jobs ls --server node', t.t('cli.server.jobs.list.help.jobs_node_server', 'Jobs on the node server')],
+                    ['server jobs list --group reports', t.t('cli.server.jobs.list.help.jobs_reports_group', 'Jobs in the reports group')],
                 ]);
             },
             aliases: ['ls'],
@@ -292,9 +295,10 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             command: 'info',
             description: 'Show detailed information about a job',
             writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
                 writeWrapped(
                     context,
-                    'Show everything about one job: schedule, retries, timeout, overlap policy, the execution running now and the result of the last run. The job is found by name (any case) or ID.',
+                    t.t('cli.server.jobs.info.help.show_everything_about_one', 'Show everything about one job: schedule, retries, timeout, overlap policy, the execution running now and the result of the last run. The job is found by name (any case) or ID.'),
                 );
                 context.writer.writeln();
                 writeUsage(context, [
@@ -302,7 +306,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
-                    ['server jobs info cleanup', 'Details of the cleanup job'],
+                    ['server jobs info cleanup', t.t('cli.server.jobs.info.help.details_cleanup_job', 'Details of the cleanup job')],
                 ]);
             },
             valueRequired: true,
@@ -319,9 +323,10 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             command: 'trigger',
             description: 'Trigger immediate execution of a job',
             writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
                 writeWrapped(
                     context,
-                    'Run a job now, without waiting for its next scheduled time. Its schedule does not change.',
+                    t.t('cli.server.jobs.trigger.help.run_job_now_without', 'Run a job now, without waiting for its next scheduled time. Its schedule does not change.'),
                 );
                 context.writer.writeln();
                 writeUsage(context, [
@@ -329,8 +334,8 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
-                    ['server jobs trigger cleanup', 'Run cleanup now'],
-                    ['server jobs logs cleanup', 'Then read its output'],
+                    ['server jobs trigger cleanup', t.t('cli.server.jobs.trigger.help.run_cleanup_now', 'Run cleanup now')],
+                    ['server jobs logs cleanup', t.t('cli.server.jobs.trigger.help.then_read_output', 'Then read its output')],
                 ]);
             },
             valueRequired: true,
@@ -347,9 +352,10 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             command: 'pause',
             description: 'Pause scheduled execution of a job',
             writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
                 writeWrapped(
                     context,
-                    'Stop running a job on its schedule until it is resumed. Use cancel or stop for a run that is already in progress.',
+                    t.t('cli.server.jobs.pause.help.stop_running_job_schedule', 'Stop running a job on its schedule until it is resumed. Use cancel or stop for a run that is already in progress.'),
                 );
                 context.writer.writeln();
                 writeUsage(context, [
@@ -357,8 +363,8 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
-                    ['server jobs pause cleanup', 'Hold cleanup'],
-                    ['server jobs resume cleanup', 'Put it back on schedule'],
+                    ['server jobs pause cleanup', t.t('cli.server.jobs.pause.help.hold_cleanup', 'Hold cleanup')],
+                    ['server jobs resume cleanup', t.t('cli.server.jobs.pause.help.put_back_schedule', 'Put it back on schedule')],
                 ]);
             },
             valueRequired: true,
@@ -375,9 +381,10 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             command: 'resume',
             description: 'Resume a paused job',
             writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
                 writeWrapped(
                     context,
-                    'Put a paused job back on its schedule.',
+                    t.t('cli.server.jobs.resume.help.put_paused_job_back', 'Put a paused job back on its schedule.'),
                 );
                 context.writer.writeln();
                 writeUsage(context, [
@@ -385,7 +392,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
-                    ['server jobs resume cleanup', 'Run cleanup on schedule again'],
+                    ['server jobs resume cleanup', t.t('cli.server.jobs.resume.help.run_cleanup_schedule_again', 'Run cleanup on schedule again')],
                 ]);
             },
             valueRequired: true,
@@ -402,9 +409,10 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             command: 'stop',
             description: 'Stop a job and cancel current execution if running',
             writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
                 writeWrapped(
                     context,
-                    'Take a job off its schedule and cancel the run in progress, if there is one.',
+                    t.t('cli.server.jobs.stop.help.take_job_off_schedule', 'Take a job off its schedule and cancel the run in progress, if there is one.'),
                 );
                 context.writer.writeln();
                 writeUsage(context, [
@@ -412,7 +420,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
-                    ['server jobs stop cleanup', 'Stop cleanup completely'],
+                    ['server jobs stop cleanup', t.t('cli.server.jobs.stop.help.stop_cleanup_completely', 'Stop cleanup completely')],
                 ]);
             },
             valueRequired: true,
@@ -429,9 +437,10 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             command: 'cancel',
             description: 'Cancel the current execution of a job',
             writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
                 writeWrapped(
                     context,
-                    'Cancel the run in progress of a job. The job stays on its schedule and runs again at the next time.',
+                    t.t('cli.server.jobs.cancel.help.cancel_run_progress_job', 'Cancel the run in progress of a job. The job stays on its schedule and runs again at the next time.'),
                 );
                 context.writer.writeln();
                 writeUsage(context, [
@@ -439,7 +448,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
-                    ['server jobs cancel cleanup', 'Abort the current cleanup run'],
+                    ['server jobs cancel cleanup', t.t('cli.server.jobs.cancel.help.abort_current_cleanup_run', 'Abort the current cleanup run')],
                 ]);
             },
             valueRequired: true,
@@ -456,19 +465,20 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             command: 'history',
             description: 'Show execution history for a job',
             writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
                 writeWrapped(
                     context,
-                    'List the past runs of a job: status, start time, duration, retry attempt and the start of the error message. Use the short ID with logs --exec to read the output of one run.',
+                    t.t('cli.server.jobs.history.help.list_past_runs_job', 'List the past runs of a job: status, start time, duration, retry attempt and the start of the error message. Use the short ID with logs --exec to read the output of one run.'),
                 );
                 context.writer.writeln();
                 writeUsage(context, [
-                    ['server jobs history <name|id>', 'The last 20 runs'],
-                    ['server jobs history <name|id> --limit <n> --offset <n>', 'Page through older runs'],
+                    ['server jobs history <name|id>', t.t('cli.server.jobs.history.help.last_20_runs', 'The last 20 runs')],
+                    ['server jobs history <name|id> --limit <n> --offset <n>', t.t('cli.server.jobs.history.help.page_through_older_runs', 'Page through older runs')],
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
-                    ['server jobs history cleanup --status failed', 'Only failed runs'],
-                    ['server jobs history cleanup --limit 5', 'The last 5 runs'],
+                    ['server jobs history cleanup --status failed', t.t('cli.server.jobs.history.help.only_failed_runs', 'Only failed runs')],
+                    ['server jobs history cleanup --limit 5', t.t('cli.server.jobs.history.help.last_5_runs', 'The last 5 runs')],
                 ]);
             },
             valueRequired: true,
@@ -507,18 +517,19 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             command: 'logs',
             description: 'Show logs from the latest or a specific execution',
             writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
                 writeWrapped(
                     context,
-                    'Print the log entries of the latest run of a job, or of one run picked by its execution ID (from history).',
+                    t.t('cli.server.jobs.logs.help.print_log_entries_latest', 'Print the log entries of the latest run of a job, or of one run picked by its execution ID (from history).'),
                 );
                 context.writer.writeln();
                 writeUsage(context, [
-                    ['server jobs logs <name|id>', 'Logs of the latest run'],
-                    ['server jobs logs <name|id> --exec <id>', 'Logs of one run'],
+                    ['server jobs logs <name|id>', t.t('cli.server.jobs.logs.help.logs_latest_run', 'Logs of the latest run')],
+                    ['server jobs logs <name|id> --exec <id>', t.t('cli.server.jobs.logs.help.logs_one_run', 'Logs of one run')],
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
-                    ['server jobs logs cleanup', 'What the last cleanup run printed'],
+                    ['server jobs logs cleanup', t.t('cli.server.jobs.logs.help.what_last_cleanup_run', 'What the last cleanup run printed')],
                 ]);
             },
             valueRequired: true,
@@ -543,9 +554,10 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             command: 'edit',
             description: 'Interactively edit job settings',
             writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
                 writeWrapped(
                     context,
-                    'Change a job step by step: description, group, cron schedule or interval, max retries, timeout and overlap policy (skip, queue or cancel). Press Enter to keep a value and Ctrl+C or Escape to cancel; nothing changes until you confirm. A job on several servers needs --server.',
+                    t.t('cli.server.jobs.edit.help.change_job_step_step', 'Change a job step by step: description, group, cron schedule or interval, max retries, timeout and overlap policy (skip, queue or cancel). Press Enter to keep a value and Ctrl+C or Escape to cancel; nothing changes until you confirm. A job on several servers needs --server.'),
                 );
                 context.writer.writeln();
                 writeUsage(context, [
@@ -553,7 +565,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
-                    ['server jobs edit cleanup', 'Edit cleanup on the server that has it'],
+                    ['server jobs edit cleanup', t.t('cli.server.jobs.edit.help.edit_cleanup_server_has', 'Edit cleanup on the server that has it')],
                 ]);
             },
             valueRequired: true,
@@ -570,17 +582,18 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             command: 'watch',
             description: 'Live view of job events via WebSocket',
             writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
                 writeWrapped(
                     context,
-                    'Follow job events as they happen (started, completed, failed and so on) on every connected server, one line per event. Press Ctrl+C to stop.',
+                    t.t('cli.server.jobs.watch.help.follow_job_events_they', 'Follow job events as they happen (started, completed, failed and so on) on every connected server, one line per event. Press Ctrl+C to stop.'),
                 );
                 context.writer.writeln();
                 writeUsage(context, [
-                    ['server jobs watch', 'Events from all connected servers'],
+                    ['server jobs watch', t.t('cli.server.jobs.watch.help.events_all_connected_servers', 'Events from all connected servers')],
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
-                    ['server jobs watch --server node', 'Only events from node'],
+                    ['server jobs watch --server node', t.t('cli.server.jobs.watch.help.only_events_node', 'Only events from node')],
                 ]);
             },
             parameters: [serverParam],
@@ -685,7 +698,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         cmd: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const nameOrId = (cmd.value ?? '').trim();
+        const nameOrId = joinShellWords(cmd.value ?? '');
         if (!nameOrId) {
             context.writer.writeError('Usage: server jobs info <id|name>');
             return;
@@ -752,7 +765,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
         action: 'trigger' | 'pause' | 'resume' | 'stop' | 'cancel',
     ): Promise<void> {
-        const nameOrId = (cmd.value ?? '').trim();
+        const nameOrId = joinShellWords(cmd.value ?? '');
         if (!nameOrId) {
             context.writer.writeError(`Usage: server jobs ${action} <id|name>`);
             return;
@@ -810,7 +823,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         cmd: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const nameOrId = (cmd.value ?? '').trim();
+        const nameOrId = joinShellWords(cmd.value ?? '');
         if (!nameOrId) {
             context.writer.writeError('Usage: server jobs history <id|name>');
             return;
@@ -882,7 +895,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         cmd: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const nameOrId = (cmd.value ?? '').trim();
+        const nameOrId = joinShellWords(cmd.value ?? '');
         if (!nameOrId) {
             context.writer.writeError('Usage: server jobs logs <id|name>');
             return;
@@ -963,7 +976,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         cmd: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const nameOrId = (cmd.value ?? '').trim();
+        const nameOrId = joinShellWords(cmd.value ?? '');
         if (!nameOrId) {
             context.writer.writeError('Usage: server jobs edit <id|name>');
             return;

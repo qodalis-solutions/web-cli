@@ -17,9 +17,10 @@ export type { CliHelpRow as HelpRow } from '@qodalis/cli-core';
 
 /** Message shown by commands that need at least one installed package. */
 export function writeNoPackages(context: ICliExecutionContext): void {
+    const t = context.translator;
     context.writer.writeInfo('📦 No packages installed');
     context.writer.writeln();
-    writeHint(context, 'pkg add <name>', 'to install a package');
+    writeHint(context, 'pkg add <name>', t.t('cli.pkg.help.install_package_2', 'to install a package'));
 }
 
 /** Current download source and its fallbacks. */

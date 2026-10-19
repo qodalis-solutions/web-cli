@@ -49,6 +49,22 @@ export class CommandParser {
         for (let i = 0; i < input.length; i++) {
             const ch = input[i];
 
+            // A backslash keeps the next character literal (`a\|b`, `\"`)
+            if (ch === '\\' && !inSingleQuote && i + 1 < input.length) {
+                current += ch + input[++i];
+                continue;
+            }
+
+            // `$(...)` and backtick substitutions are one piece, operators included
+            if (!inSingleQuote && ((ch === '$' && input[i + 1] === '(') || ch === '`')) {
+                const end = substitutionEnd(input, i);
+                if (end !== -1) {
+                    current += input.slice(i, end + 1);
+                    i = end;
+                    continue;
+                }
+            }
+
             // Toggle quote state
             if (ch === "'" && !inDoubleQuote) {
                 inSingleQuote = !inSingleQuote;
@@ -161,7 +177,7 @@ export class CommandParser {
         // contain quoted parts with spaces (`"hello world"`), kept as one
         // word with its quotes; a lone quote is an ordinary character.
         const regex =
-            /(?:(--?)([a-zA-Z0-9-_][^\s="']*)(?:=("[^"]*"|'[^']*'|[^\s]+))?)|(?:(?:"[^"]*"|'[^']*'|[^\s"']|["'](?![^"']*["']))+)/g;
+            /(?:(--?)([a-zA-Z0-9-_][^\s="'\\]*)(?:=("(?:[^"\\]|\\.)*"|'[^']*'|[^\s]+))?)|(?:(?:\\.|"(?:[^"\\]|\\.)*"|'[^']*'|[^\s"'\\]|["'\\](?![^"']*["']))+)/g;
 
         const matches = Array.from(command.matchAll(regex));
 
@@ -222,4 +238,37 @@ export class CommandParser {
         if (value === 'true' || value === 'false') return value === 'true';
         return value;
     }
+}
+
+/**
+ * Index of the character closing a `$(...)` or `...` substitution that
+ * starts at `start`, or -1 when it is not closed. Nested `$(...)` and
+ * quotes inside are skipped.
+ */
+export function substitutionEnd(input: string, start: number): number {
+    if (input[start] === '`') {
+        for (let i = start + 1; i < input.length; i++) {
+            if (input[i] === '\\') i++;
+            else if (input[i] === '`') return i;
+        }
+        return -1;
+    }
+    let depth = 0;
+    let quote: string | null = null;
+    for (let i = start + 1; i < input.length; i++) {
+        const ch = input[i];
+        if (ch === '\\' && quote !== "'") {
+            i++;
+        } else if (quote) {
+            if (ch === quote) quote = null;
+        } else if (ch === '"' || ch === "'") {
+            quote = ch;
+        } else if (ch === '(') {
+            depth++;
+        } else if (ch === ')') {
+            depth--;
+            if (depth === 0) return i;
+        }
+    }
+    return -1;
 }

@@ -46,23 +46,24 @@ export class CliWcCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Count lines, words and characters in files or piped input. With several files, a total line is printed at the end.',
+            t.t('cli.wc.help.count_lines_words_characters', 'Count lines, words and characters in files or piped input. With several files, a total line is printed at the end.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['wc <file...>', 'Lines, words and characters'],
-            ['wc -l <file>', 'Only the line count'],
-            ['<command> | wc', 'Count piped input'],
+            ['wc <file...>', t.t('cli.wc.help.lines_words_characters', 'Lines, words and characters')],
+            ['wc -l <file>', t.t('cli.wc.help.only_line_count', 'Only the line count')],
+            ['<command> | wc', t.t('cli.wc.help.count_piped_input', 'Count piped input')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['wc notes.txt', 'All three counts'],
-            ['wc -l a.txt b.txt', 'Line counts with a total'],
+            ['wc notes.txt', t.t('cli.wc.help.all_three_counts', 'All three counts')],
+            ['wc -l a.txt b.txt', t.t('cli.wc.help.line_counts_total', 'Line counts with a total')],
             [
                 'cat app.log | grep error | wc -l',
-                'How many lines mention error',
+                t.t('cli.wc.help.how_many_lines_mention', 'How many lines mention error'),
             ],
         ]);
     }

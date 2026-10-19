@@ -6,4 +6,6 @@ export {
 } from './global-parameters';
 export * from './cli-io-redirect-handler';
 export * from './cli-script-executor';
+export * from './cli-script-runner';
 export * from './cli-glob-expander';
+export * from './cli-command-substitution';

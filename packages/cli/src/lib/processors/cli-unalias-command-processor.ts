@@ -53,7 +53,7 @@ export class CliUnAliasCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         const { writer } = context;
 
-        const aliasToRemove = command.value!;
+        const aliasToRemove = command.positionals?.[0] ?? '';
 
         const state = context.state.getState() as CliAliasState;
         const owner = aliasOwner(context);

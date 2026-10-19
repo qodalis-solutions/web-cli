@@ -17,57 +17,46 @@
 <!-- Command Processors -->
 @if (currentTopic === "command-line") {
   <div>
-    <h1>Command Line</h1>
+    <h1>{{ "docs.core-concepts.command-line.title" | translate }}</h1>
     <p>
-      The terminal reads a line the way a Unix shell does: words separated by
-      spaces, quotes to keep spaces in a word, flags, pipes, redirects,
-      variables and wildcards. The rules below apply to every command,
-      built-in or from a plugin.
+      {{ "docs.core-concepts.command-line.intro" | translate }}
     </p>
 
-    <h2>Words and Quotes</h2>
+    <h2>{{ "docs.core-concepts.command-line.words-title" | translate }}</h2>
     <p>
-      Spaces separate the arguments. Double or single quotes keep a word with
-      spaces together, and anything inside them is text, flags included.
+      {{ "docs.core-concepts.command-line.words-desc" | translate }}
     </p>
     <div class="code-block">
       <pre><code>cat "my notes.txt"            # one argument: my notes.txt
 grep "two words" notes.txt     # the pattern is: two words
 echo "a --b"                   # prints a --b (no flag b)
 echo "a" "b"                   # prints a b
-echo it's fine                 # a quote without a pair is text</code></pre>
+echo it's fine                 # a quote without a pair is text
+cat my\ notes.txt              # a backslash keeps the next character: my notes.txt
+echo "say \"hi\""              # say "hi"</code></pre>
     </div>
-    <p>
-      A value given after a flag loses its quotes:
-      <code>find --name "my file.txt"</code> searches for
-      <code>my file.txt</code>.
-    </p>
+    <p [innerHTML]="'docs.core-concepts.command-line.quotes-escape' | translate"></p>
+    <p [innerHTML]="'docs.core-concepts.command-line.flag-value-quotes' | translate"></p>
 
-    <h2>Flags</h2>
+    <h2>{{ "docs.core-concepts.command-line.flags-title" | translate }}</h2>
     <table>
       <thead>
-        <tr><th>Form</th><th>Example</th><th>Meaning</th></tr>
+        <tr><th>{{ "docs.core-concepts.command-line.th-form" | translate }}</th><th>{{ "docs.core-concepts.command-line.th-example" | translate }}</th><th>{{ "docs.core-concepts.command-line.th-meaning" | translate }}</th></tr>
       </thead>
       <tbody>
-        <tr><td>Long</td><td><code>--lines 5</code>, <code>--lines=5</code></td><td>A value after a space or <code>=</code></td></tr>
-        <tr><td>Short</td><td><code>-n 5</code>, <code>-n5</code></td><td>The value can follow the letter directly</td></tr>
-        <tr><td>Combined</td><td><code>rm -rf dir</code>, <code>ls -la</code></td><td>Several short on/off flags in one; the last may take a value (<code>-rn 5</code>)</td></tr>
-        <tr><td>Boolean</td><td><code>--force</code>, <code>--force=false</code></td><td>On when present</td></tr>
-        <tr><td>Lone dash</td><td><code>paste - b.txt</code></td><td>An argument (piped input), not a flag</td></tr>
+        <tr><td>{{ "docs.core-concepts.command-line.flag-long" | translate }}</td><td><code>--lines 5</code>, <code>--lines=5</code></td><td [innerHTML]="'docs.core-concepts.command-line.flag-long-desc' | translate"></td></tr>
+        <tr><td>{{ "docs.core-concepts.command-line.flag-short" | translate }}</td><td><code>-n 5</code>, <code>-n5</code></td><td>{{ "docs.core-concepts.command-line.flag-short-desc" | translate }}</td></tr>
+        <tr><td>{{ "docs.core-concepts.command-line.flag-combined" | translate }}</td><td><code>rm -rf dir</code>, <code>ls -la</code></td><td [innerHTML]="'docs.core-concepts.command-line.flag-combined-desc' | translate"></td></tr>
+        <tr><td>{{ "docs.core-concepts.command-line.flag-boolean" | translate }}</td><td><code>--force</code>, <code>--force=false</code></td><td>{{ "docs.core-concepts.command-line.flag-boolean-desc" | translate }}</td></tr>
+        <tr><td>{{ "docs.core-concepts.command-line.flag-dash" | translate }}</td><td><code>paste - b.txt</code></td><td>{{ "docs.core-concepts.command-line.flag-dash-desc" | translate }}</td></tr>
       </tbody>
     </table>
     <p>
-      Letters are combined only when each one is a flag of the command, so a
-      command's own multi-letter flags keep working.
+      {{ "docs.core-concepts.command-line.flags-combine-note" | translate }}
     </p>
 
-    <h2>Pipes and Redirects</h2>
-    <p>
-      <code>|</code> passes a command's output to the next one; only the last
-      command's output is shown. Errors and warnings of every command are
-      shown. Output written as a table or list reaches the next command as
-      text lines, structured output (JSON) as data.
-    </p>
+    <h2>{{ "docs.core-concepts.command-line.pipes-title" | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-line.pipes-desc' | translate"></p>
     <div class="code-block">
       <pre><code>cat app.log | grep error | wc -l
 server list | grep node
@@ -75,58 +64,34 @@ echo hello > greeting.txt     # write (replace) a file, nothing is shown
 echo again >> greeting.txt    # add to the end
 build 2> errors.txt           # errors to a file (2>> to add)</code></pre>
     </div>
-    <p>
-      Redirects write whole lines and need the files plugin
-      (<code>&#64;qodalis/cli-files</code>). The target can be quoted:
-      <code>&gt; "my dir/out.txt"</code>.
-    </p>
+    <p [innerHTML]="'docs.core-concepts.command-line.redirects-desc' | translate"></p>
 
-    <h2>Running Several Commands</h2>
+    <h2>{{ "docs.core-concepts.command-line.several-title" | translate }}</h2>
     <table>
       <thead>
-        <tr><th>Operator</th><th>Runs the next command</th></tr>
+        <tr><th>{{ "docs.core-concepts.command-line.th-operator" | translate }}</th><th>{{ "docs.core-concepts.command-line.th-runs-next" | translate }}</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>a &amp;&amp; b</code></td><td>Only if <code>a</code> succeeded</td></tr>
-        <tr><td><code>a || b</code></td><td>Only if <code>a</code> failed</td></tr>
-        <tr><td><code>a ; b</code></td><td>Always</td></tr>
+        <tr><td><code>a &amp;&amp; b</code></td><td [innerHTML]="'docs.core-concepts.command-line.op-and' | translate"></td></tr>
+        <tr><td><code>a || b</code></td><td [innerHTML]="'docs.core-concepts.command-line.op-or' | translate"></td></tr>
+        <tr><td><code>a ; b</code></td><td>{{ "docs.core-concepts.command-line.op-always" | translate }}</td></tr>
       </tbody>
     </table>
 
-    <h2>Variables</h2>
-    <p>
-      <code>$NAME</code> and <code>$&#123;NAME&#125;</code> are replaced by
-      their value, <code>$?</code> by the exit code of the last command, and a
-      leading <code>~</code> by the home directory. Inside single quotes
-      nothing is replaced; inside double quotes it is. A variable lives in one
-      of three places:
-    </p>
+    <h2>{{ "docs.core-concepts.command-line.variables-title" | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-line.variables-desc' | translate"></p>
     <table>
       <thead>
-        <tr><th>Set with</th><th>Where</th><th>Saved</th></tr>
+        <tr><th>{{ "docs.core-concepts.command-line.th-set-with" | translate }}</th><th>{{ "docs.core-concepts.command-line.th-where" | translate }}</th><th>{{ "docs.core-concepts.command-line.th-saved" | translate }}</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>NAME=value</code></td><td>This terminal only</td><td>No, gone when the terminal closes</td></tr>
-        <tr><td><code>export NAME=value</code></td><td>The signed-in user (one set while nobody is signed in)</td><td>Yes</td></tr>
-        <tr><td><code>export --global NAME=value</code></td><td>Every user</td><td>Yes</td></tr>
+        <tr><td><code>NAME=value</code></td><td>{{ "docs.core-concepts.command-line.var-terminal-where" | translate }}</td><td>{{ "docs.core-concepts.command-line.var-terminal-saved" | translate }}</td></tr>
+        <tr><td><code>export NAME=value</code></td><td>{{ "docs.core-concepts.command-line.var-user-where" | translate }}</td><td>{{ "docs.core-concepts.command-line.var-saved-yes" | translate }}</td></tr>
+        <tr><td><code>export --global NAME=value</code></td><td>{{ "docs.core-concepts.command-line.var-global-where" | translate }}</td><td>{{ "docs.core-concepts.command-line.var-saved-yes" | translate }}</td></tr>
       </tbody>
     </table>
-    <p>
-      The terminal's value wins over the user's, which wins over the shared
-      one, which wins over the built-in ones (<code>HOME</code>,
-      <code>USER</code>, <code>PWD</code>, <code>SHELL</code>, …).
-      <code>export NAME</code> saves the value a variable has in this
-      terminal. <code>unset NAME</code> removes it for this terminal and the
-      user (a shared value is then hidden for this user);
-      <code>unset --global NAME</code> removes the shared value.
-      <code>env</code> lists the variables with where each comes from.
-    </p>
-    <p>
-      With the users plugin, changing shared variables needs the
-      <code>system:env:global</code> permission (administrators have it).
-      Saved changes reach other tabs right away, and two tabs changing
-      variables at the same time both keep their change.
-    </p>
+    <p [innerHTML]="'docs.core-concepts.command-line.variables-precedence' | translate"></p>
+    <p [innerHTML]="'docs.core-concepts.command-line.variables-permissions' | translate"></p>
     <div class="code-block">
       <pre><code>GREETING=Hello                    # this terminal
 echo "$GREETING, world"           # Hello, world
@@ -137,29 +102,47 @@ export API_URL=http://localhost   # mine wins for me
 env                               # API_URL=http://localhost  # user</code></pre>
     </div>
 
-    <h2>Wildcards</h2>
-    <p>
-      With the files plugin, unquoted arguments with <code>*</code>,
-      <code>?</code> or <code>[...]</code> become the matching paths, sorted.
-      Names starting with <code>.</code> match only a pattern that starts
-      with <code>.</code>; a pattern that matches nothing is passed as typed;
-      a quoted pattern is never expanded.
-    </p>
+    <h2>{{ "docs.core-concepts.command-line.substitution-title" | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-line.substitution-desc' | translate"></p>
+    <div class="code-block">
+      <pre><code>echo "Today is $(date)"
+COUNT=$(cat app.log | grep error | wc -l)
+echo "$COUNT errors"
+cd $(dirname $(find . --name main.ts))</code></pre>
+    </div>
+
+    <h2>{{ "docs.core-concepts.command-line.wildcards-title" | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-line.wildcards-desc' | translate"></p>
     <div class="code-block">
       <pre><code>rm *.log               # every .log file here
 cat docs/*.md          # in a folder
 ls file?.txt [ab]*     # one character, or names starting with a or b
 ls */                  # folders only
+cat **/*.md            # at any depth (not inside . folders)
 grep "*" notes.txt     # quoted: the text *</code></pre>
     </div>
+    <p [innerHTML]="'docs.core-concepts.command-line.braces-desc' | translate"></p>
 
-    <h2>Tab Completion</h2>
-    <p>
-      Tab completes commands, sub-commands, flags and, with the files plugin,
-      paths. Names with spaces are completed in quotes
-      (<code>cat my</code> + Tab gives <code>cat "my notes.txt"</code>), also
-      inside a quote you started. Press Tab twice to list the choices.
-    </p>
+    <h2>{{ "docs.core-concepts.command-line.scripts-title" | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-line.scripts-desc' | translate"></p>
+    <div class="code-block">
+      <pre><code># backup.sh
+mkdir -p backup
+for f in *.md; do
+  if [ -f "backup/$f" ]; then
+    echo "skip $f"
+    continue
+  fi
+  cp "$f" backup/
+done
+if grep -q TODO notes.md; then echo "notes have TODOs"; fi
+for n in &#123;1..3&#125;; do echo "tick $n"; done
+until [ -f ready.txt ]; do touch ready.txt; done</code></pre>
+    </div>
+    <p [innerHTML]="'docs.core-concepts.command-line.scripts-unsupported' | translate"></p>
+
+    <h2>{{ "docs.core-concepts.command-line.completion-title" | translate }}</h2>
+    <p [innerHTML]="'docs.core-concepts.command-line.completion-desc' | translate"></p>
   </div>
 }
 
@@ -2283,12 +2266,11 @@ grep "*" notes.txt     # quoted: the text *</code></pre>
         they make starts from it. Keys they changed and have not saved yet are
         kept.
       </li>
-      <li>
-        For the same key, the last <code>persist()</code> wins. To change a
-        value based on what it is now (append to a list, increment a counter),
-        use <code>update()</code>: it reads the latest saved state under the
-        lock, so no terminal's change is lost.
-      </li>
+      <li
+        [innerHTML]="
+          'docs.core-concepts.state-management.update-latest' | translate
+        "
+      ></li>
     </ul>
     <div class="code-block">
       <pre><code>// Two tabs adding a todo at the same time both keep theirs
@@ -2296,13 +2278,9 @@ await context.state.update((state) =&gt; (&#123;
     todos: [...state['todos'], &#123; id: Date.now(), text &#125;],
 &#125;));</code></pre>
     </div>
-    <p>
-      State that only makes sense for one terminal (a cursor, a game in
-      progress) belongs in a <code>scope: 'session'</code> store: it is never
-      saved or shared. Personal data (preferences, notes) can use
-      <code>scope: 'user'</code>: with the users plugin, each user signed in to
-      the terminal gets their own saved state, loaded when they sign in.
-    </p>
+    <p
+      [innerHTML]="'docs.core-concepts.state-management.scopes-desc' | translate"
+    ></p>
     <h2>Migrating Saved State</h2>
     <p>
       When the shape of your state changes, raise <code>version</code> and
@@ -2413,14 +2391,9 @@ const myModule: ICliModule = &#123;
     &#125;,
 &#125;;</code></pre>
     </div>
-    <p>
-      The built-in tokens (<code>ICliEventBus_TOKEN</code>,
-      <code>ICliKeyValueStore_TOKEN</code>,
-      <code>ICliAuthorizationService_TOKEN</code>, …) are typed, and so are
-      the tokens plugins export, such as <code>IFileSystemService_TOKEN</code>
-      (files), <code>IScpTransferService_TOKEN</code> (scp) and
-      <code>CliApiTokensService_TOKEN</code> (users).
-    </p>
+    <p
+      [innerHTML]="'docs.core-concepts.services.typed-tokens-builtin' | translate"
+    ></p>
     <h2>Providers</h2>
     <table>
       <thead>

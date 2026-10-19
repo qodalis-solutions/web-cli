@@ -20,20 +20,21 @@ export class CliBasenameCommandProcessor implements ICliCommandProcessor {
     metadata = { icon: '📛', module: 'file management' };
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Print the last part of a path, the file or directory name, without the directories in front. If a suffix is given, it is removed from the end too.',
+            t.t('cli.basename.help.print_last_part_path', 'Print the last part of a path, the file or directory name, without the directories in front. If a suffix is given, it is removed from the end too.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['basename <path>', 'Name without the directories'],
-            ['basename <path> <suffix>', 'Also remove a trailing suffix'],
+            ['basename <path>', t.t('cli.basename.help.name_without_directories', 'Name without the directories')],
+            ['basename <path> <suffix>', t.t('cli.basename.help.also_remove_trailing_suffix', 'Also remove a trailing suffix')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['basename /home/user/notes.txt', 'Prints notes.txt'],
-            ['basename /home/user/notes.txt .txt', 'Prints notes'],
-            ['basename /home/user/', 'Prints user'],
+            ['basename /home/user/notes.txt', t.t('cli.basename.help.prints_notes_txt', 'Prints notes.txt')],
+            ['basename /home/user/notes.txt .txt', t.t('cli.basename.help.prints_notes', 'Prints notes')],
+            ['basename /home/user/', t.t('cli.basename.help.prints_user', 'Prints user')],
         ]);
     }
 

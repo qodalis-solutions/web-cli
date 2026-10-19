@@ -38,21 +38,22 @@ export class CliRmCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Delete a file. Directories are only removed with -r, which deletes everything inside them. Deleted files cannot be recovered.',
+            t.t('cli.rm.help.delete_file_directories_only', 'Delete a file. Directories are only removed with -r, which deletes everything inside them. Deleted files cannot be recovered.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['rm <file...>', 'Delete one or more files'],
-            ['rm -r <dir>', 'Delete a directory and its contents'],
-            ['rm -f <file>', 'Delete without an error if it is missing'],
+            ['rm <file...>', t.t('cli.rm.help.delete_one_more_files', 'Delete one or more files')],
+            ['rm -r <dir>', t.t('cli.rm.help.delete_directory_contents', 'Delete a directory and its contents')],
+            ['rm -f <file>', t.t('cli.rm.help.delete_without_error_if', 'Delete without an error if it is missing')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['rm notes.bak', 'Delete one file'],
-            ['rm -r old-project', 'Delete a whole directory'],
-            ['rm -f maybe.txt', 'Quiet if the file does not exist'],
+            ['rm notes.bak', t.t('cli.rm.help.delete_one_file', 'Delete one file')],
+            ['rm -r old-project', t.t('cli.rm.help.delete_whole_directory', 'Delete a whole directory')],
+            ['rm -f maybe.txt', t.t('cli.rm.help.quiet_if_file_does', 'Quiet if the file does not exist')],
         ]);
     }
 

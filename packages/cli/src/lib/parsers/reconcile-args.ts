@@ -1,4 +1,4 @@
-import { ICliCommandParameterDescriptor } from '@qodalis/cli-core';
+import { ICliCommandParameterDescriptor, splitShellWords } from '@qodalis/cli-core';
 import { ParsedArg, ParsedToken } from './command-parser';
 
 /**
@@ -120,13 +120,9 @@ function expandShortFlags(
         : undefined;
 }
 
-/** `"a b"` or `'a b'` without its quotes. */
+/** A value as one shell word: `"a b"` -> `a b`, `my\\ file` -> `my file`. */
 function unquote(value: string): string {
-    return value.length > 1 &&
-        ((value.startsWith('"') && value.endsWith('"')) ||
-            (value.startsWith("'") && value.endsWith("'")))
-        ? value.slice(1, -1)
-        : value;
+    return splitShellWords(value).join(' ');
 }
 
 function parseValue(value: string): string | number | boolean {

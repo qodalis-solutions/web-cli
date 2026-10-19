@@ -32,21 +32,22 @@ export class CliHeadCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Print the first lines of a file, 10 by default. Works on piped input too. With several files, each one gets a ==> name <== header.',
+            t.t('cli.head.help.print_first_lines_file', 'Print the first lines of a file, 10 by default. Works on piped input too. With several files, each one gets a ==> name <== header.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['head <file>', 'First 10 lines'],
-            ['head -n <count> <file>', 'First <count> lines'],
-            ['<command> | head', 'First lines of piped input'],
+            ['head <file>', t.t('cli.head.help.first_10_lines', 'First 10 lines')],
+            ['head -n <count> <file>', t.t('cli.head.help.first_lines', 'First <count> lines')],
+            ['<command> | head', t.t('cli.head.help.first_lines_piped_input', 'First lines of piped input')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['head notes.txt', 'Show the start of a file'],
-            ['head -n 3 a.txt b.txt', 'First 3 lines of each file'],
-            ['cat app.log | head -n 20', 'First 20 lines of the log'],
+            ['head notes.txt', t.t('cli.head.help.show_start_file', 'Show the start of a file')],
+            ['head -n 3 a.txt b.txt', t.t('cli.head.help.first_3_lines_each', 'First 3 lines of each file')],
+            ['cat app.log | head -n 20', t.t('cli.head.help.first_20_lines_log', 'First 20 lines of the log')],
         ]);
     }
 

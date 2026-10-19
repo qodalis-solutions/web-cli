@@ -32,21 +32,22 @@ export class CliTailCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Print the last lines of a file, 10 by default. Works on piped input too. With several files, each one gets a ==> name <== header.',
+            t.t('cli.tail.help.print_last_lines_file', 'Print the last lines of a file, 10 by default. Works on piped input too. With several files, each one gets a ==> name <== header.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['tail <file>', 'Last 10 lines'],
-            ['tail -n <count> <file>', 'Last <count> lines'],
-            ['<command> | tail', 'Last lines of piped input'],
+            ['tail <file>', t.t('cli.tail.help.last_10_lines', 'Last 10 lines')],
+            ['tail -n <count> <file>', t.t('cli.tail.help.last_lines', 'Last <count> lines')],
+            ['<command> | tail', t.t('cli.tail.help.last_lines_piped_input', 'Last lines of piped input')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['tail app.log', 'Show the end of a log'],
-            ['tail -n 5 notes.txt', 'Last 5 lines'],
-            ['cat app.log | tail -n 20', 'Last 20 lines of the log'],
+            ['tail app.log', t.t('cli.tail.help.show_end_log', 'Show the end of a log')],
+            ['tail -n 5 notes.txt', t.t('cli.tail.help.last_5_lines', 'Last 5 lines')],
+            ['cat app.log | tail -n 20', t.t('cli.tail.help.last_20_lines_log', 'Last 20 lines of the log')],
         ]);
     }
 

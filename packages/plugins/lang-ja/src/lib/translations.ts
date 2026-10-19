@@ -4,6 +4,7 @@
 export const jaTranslations: Record<string, string> = {
     'cli.common.usage': '使い方：',
     'cli.common.examples': '例：',
+    'cli.common.use_hint': '{command}{action}',
     'cli.help.description': 'コマンドのヘルプを表示します',
     'cli.help.long_description': 'コマンドのヘルプ情報を表示します',
     'cli.help.shortcuts': 'ショートカット',
@@ -49,9 +50,18 @@ export const jaTranslations: Record<string, string> = {
     'cli.configure.all_reset': 'すべての設定をデフォルトにリセットしました',
     'cli.configure.invalid_number': '無効な数値: {value}',
     'cli.configure.invalid_options': '無効な値です。有効なオプション: {options}',
+    'cli.configure.invalid_boolean': '無効なブール値: "{value}"。true または false を指定してください。',
     'cli.echo.description': '指定されたテキストを出力します',
     'cli.echo.long_description': '指定されたテキストをターミナルに出力します',
     'cli.echo.piping_note': 'パイプによるテキストとJSONオブジェクトの出力をサポート',
+    'cli.echo.help.print_text_terminal_add':
+        'ターミナルにテキストを表示します。> file を付けるとファイルに保存（上書き）、>> file を付けると末尾に追加します。',
+    'cli.echo.help.print_text': 'テキストを表示',
+    'cli.echo.help.write_text_file': 'テキストをファイルに書き込む',
+    'cli.echo.help.append_text_file': 'テキストをファイルに追記',
+    'cli.echo.help.print_greeting': '挨拶を表示',
+    'cli.echo.help.create_replace_notes_txt': 'notes.txt を作成または置換',
+    'cli.echo.help.add_line': '1 行を追加',
     'cli.clear.description': 'ターミナルをクリア',
     'cli.clear.long_description': 'ターミナル画面の全内容をクリアします',
     'cli.clear.shortcut': 'ショートカット：',
@@ -61,6 +71,7 @@ export const jaTranslations: Record<string, string> = {
     'cli.uname.cli_versions': 'CLIのコアとライブラリのバージョン',
     'cli.uname.browser_info': 'ブラウザ名、バージョン、ユーザーエージェント、言語、プラットフォーム',
     'cli.uname.os': 'オペレーティングシステム',
+    'cli.uname.description': 'システムとブラウザーの詳細情報を表示',
     'cli.hash.description': 'テキストのハッシュダイジェストを生成',
     'cli.hash.long_description': 'Web Crypto APIを使用して暗号学的ハッシュダイジェストを生成',
     'cli.cal.description': 'カレンダーを表示',
@@ -71,6 +82,7 @@ export const jaTranslations: Record<string, string> = {
     'cli.time.description': '現在のローカル時刻とUTCを表示',
     'cli.time.long_description': '現在のローカル時刻とUTCを表示',
     'cli.time.show_current': '現在のローカル時刻とUTCを表示',
+    'cli.time.now.description': '現在の時刻を表示',
     'cli.uptime.description': 'セッションの稼働時間を表示',
     'cli.uptime.long_description': '現在のターミナルセッションの経過時間を表示します',
     'cli.convert.description': '単位間の変換（長さ、重さ、温度、データ）',
@@ -89,6 +101,9 @@ export const jaTranslations: Record<string, string> = {
     'cli.lorem.gen_words': '単語を生成',
     'cli.lorem.gen_sentences': '文を生成',
     'cli.lorem.gen_paragraphs': '段落を生成',
+    'cli.lorem.words.description': '指定した数の単語を生成',
+    'cli.lorem.sentences.description': '指定した数の文を生成',
+    'cli.lorem.paragraphs.description': '指定した数の段落を生成',
     'cli.alias.description': 'コマンドエイリアスを管理',
     'cli.alias.long_description': 'よく使うコマンドのエイリアスショートカットを作成',
     'cli.alias.create_new': '新しいエイリアスを作成',
@@ -108,6 +123,9 @@ export const jaTranslations: Record<string, string> = {
     'cli.history.clear': 'すべての履歴をクリア',
     'cli.history.arrow_hint': '矢印キー{keys}で履歴をナビゲート',
     'cli.history.prefix_hint': 'プレフィックスを入力して{key}を押すと、プレフィックスで履歴を検索',
+    'cli.history.description': '現在のセッションのコマンド履歴を表示',
+    'cli.history.clear.description': 'コマンド履歴を消去',
+    'cli.history.search.description': 'パターンでコマンド履歴を検索',
     'cli.theme.description': 'テーマを操作',
     'cli.theme.long_description': 'テーマと色でターミナルの外観をカスタマイズ',
     'cli.hex.description': '16進数のエンコード/デコードと基数変換',
@@ -116,6 +134,10 @@ export const jaTranslations: Record<string, string> = {
     'cli.hex.hex_to_text': '16進数からテキスト',
     'cli.hex.base_conversion': '基数変換',
     'cli.feedback.long_description': 'バグの報告、機能のリクエスト、新しいコマンドの提案 — 対話的またはインラインで。',
+    'cli.feedback.report-bug.description': 'GitHub でバグを報告',
+    'cli.feedback.request-feature.description': 'GitHub で新機能をリクエスト',
+    'cli.feedback.request-command.description': 'GitHub で新しいコマンドをリクエスト',
+    'cli.feedback.description': 'バグの報告や機能のリクエストを行う',
     'cli.jwt.description': 'JWTトークンのデコードと検査',
     'cli.jwt.long_description': 'JSON Web Token (JWT) のデコードと検査',
     'cli.jwt.decode_display': 'JWTの内容をデコードして表示',
@@ -130,12 +152,20 @@ export const jaTranslations: Record<string, string> = {
     'cli.services.restart_desc': 'サービスを再起動',
     'cli.services.logs_desc': 'サービスログを表示',
     'cli.services.info_desc': 'サービスの詳細',
+    'cli.services.list.description': '登録済みのすべてのバックグラウンドサービスを一覧表示',
+    'cli.services.start.description': 'バックグラウンドサービスを開始',
+    'cli.services.stop.description': '実行中のバックグラウンドサービスを停止',
+    'cli.services.restart.description': 'バックグラウンドサービスを再起動',
+    'cli.services.logs.description': 'バックグラウンドサービスのログを表示',
+    'cli.services.info.description': 'サービスの詳細情報を表示',
     'cli.yes.description': '文字列を連続的に繰り返す',
     'cli.yes.long_description': '文字列を連続的に繰り返す',
     'cli.clipboard.description': 'クリップボードにコピーまたは貼り付け',
     'cli.clipboard.long_description': 'システムクリップボードにテキストをコピーまたは貼り付け',
     'cli.clipboard.copy_desc': 'テキストをクリップボードにコピー',
     'cli.clipboard.paste_desc': 'クリップボードから貼り付け',
+    'cli.clipboard.copy.description': 'テキストをクリップボードにコピー',
+    'cli.clipboard.paste.description': 'クリップボードからテキストを貼り付け',
     'cli.hotkeys.description': 'ホットキー情報を表示',
     'cli.hotkeys.long_description': '利用可能なすべてのキーボードショートカットとホットキーを表示',
     'cli.export.description': '環境変数を設定',
@@ -143,8 +173,15 @@ export const jaTranslations: Record<string, string> = {
     'cli.export.show_all': 'すべての変数を表示',
     'cli.export.set_var': '変数を設定',
     'cli.export.set_spaces': 'スペース付きで設定',
+    'cli.export.set_many': '複数の変数を一度に設定',
+    'cli.export.set_global': 'すべてのユーザーに設定',
+    'cli.export.set_session': 'このターミナルのみ、保存されない',
+    'cli.export.scopes':
+        '変数は $VAR または ${VAR} の形で使用します。このターミナルで設定した値は保存済みの個人の値より優先され、個人の値は共有の値より優先されます。env で各値の取得元を確認できます',
     'cli.unset.description': '環境変数を削除',
     'cli.unset.long_description': '環境変数を削除',
+    'cli.unset.own': 'このターミナルとユーザー自身の値を削除（共有の値は自分には非表示になります）',
+    'cli.unset.global': '共有の値を削除',
     'cli.env.description': '環境変数を表示',
     'cli.env.long_description': '環境変数を表示',
     'cli.env.show_all': 'すべての変数を表示',
@@ -159,6 +196,9 @@ export const jaTranslations: Record<string, string> = {
     'cli.json.format_desc': 'インデント付きでJSONをフォーマット',
     'cli.json.minify_desc': '空白を除去',
     'cli.json.validate_desc': '有効なJSONかどうか確認',
+    'cli.json.format.description': 'JSON をインデント付きで整形',
+    'cli.json.minify.description': '空白を削除して JSON を圧縮',
+    'cli.json.validate.description': '文字列が有効な JSON か検証',
     'cli.base64.description': 'Base64文字列のエンコードまたはデコード',
     'cli.base64.long_description': 'Base64文字列のエンコードとデコード',
     'cli.base64.utf8_note': 'UTF-8テキストエンコーディングをサポート',
@@ -169,6 +209,9 @@ export const jaTranslations: Record<string, string> = {
     'cli.timestamp.current': '現在のUnixタイムスタンプ',
     'cli.timestamp.to_date': 'タイムスタンプから日付',
     'cli.timestamp.from_date': '日付からタイムスタンプ',
+    'cli.timestamp.now.description': '現在の Unix タイムスタンプを表示',
+    'cli.timestamp.to-date.description': 'Unix タイムスタンプを日付に変換',
+    'cli.timestamp.from-date.description': '日付の文字列を Unix タイムスタンプに変換',
     'cli.screen.description': '画面とターミナルの情報を表示',
     'cli.screen.long_description': '画面、ビューポート、ターミナルのサイズを表示',
     'cli.screen.shows': '表示：解像度、色深度、ピクセル比、ウィンドウサイズ、ターミナルサイズ',
@@ -179,6 +222,11 @@ export const jaTranslations: Record<string, string> = {
     'cli.random.uuid_desc': 'ランダムなUUID v4',
     'cli.random.coin_desc': 'コイントス',
     'cli.random.dice_desc': 'サイコロを振る',
+    'cli.random.number.description': 'ランダムな数値を生成',
+    'cli.random.string.description': 'ランダムな文字列を生成',
+    'cli.random.uuid.description': 'ランダムな UUID v4 を生成',
+    'cli.random.coin.description': 'コインを投げる',
+    'cli.random.dice.description': 'サイコロを振る',
     'cli.ping.description': 'ホストにICMP風のpingを送信',
     'cli.ping.long_description': 'ホストにHTTPベースのICMP風pingを送信し、往復統計を表示',
     'cli.ping.ctrl_c': 'Ctrl+Cで停止して統計を表示。',
@@ -194,6 +242,15 @@ export const jaTranslations: Record<string, string> = {
     'cli.debug.processors': '登録済みの全プロセッサ',
     'cli.debug.modules': '読み込み済みの全モジュール',
     'cli.debug.state': 'ステートストアを検査',
+    'cli.debug.processors.description': '登録済みのすべてのコマンドプロセッサを一覧表示',
+    'cli.debug.modules.description': '読み込み済みのすべての CLI モジュールを一覧表示',
+    'cli.debug.state.description': 'すべてのステートストアとその値を確認',
+    'cli.debug.services.description': 'DI コンテナーに登録済みのすべてのサービスを一覧表示',
+    'cli.debug.environment.description': 'ブラウザー、ターミナル、フレームワークの情報を表示',
+    'cli.debug.history.description': 'コマンド履歴の統計を表示',
+    'cli.debug.health.description': 'システムの状態を確認: ストレージ、接続、プロセッサの状態',
+    'cli.debug.export.description': 'すべてのデバッグ情報を JSON でエクスポート',
+    'cli.debug.servers.description': '設定済みのサーバーとその接続状態を一覧表示',
     'cli.packages.description': 'CLIのパッケージを管理',
 
     // ── Servers and events ───────────────────────────────────────────
@@ -203,9 +260,707 @@ export const jaTranslations: Record<string, string> = {
     'cli.server.commands.description': '各サーバーのコマンドを表示',
     'cli.server.reconnect.description': 'サーバーに再接続してコマンドを再読み込み',
     'cli.server.default.description': '共通コマンドを実行するサーバーを表示または設定',
+    'cli.server.jobs.description': '接続中のサーバーのバックグラウンドジョブを管理',
+    'cli.server.jobs.list.description': '接続中のすべてのサーバーのジョブを一覧表示',
+    'cli.server.jobs.info.description': 'ジョブの詳細情報を表示',
+    'cli.server.jobs.trigger.description': 'ジョブを即時実行',
+    'cli.server.jobs.pause.description': 'ジョブのスケジュール実行を一時停止',
+    'cli.server.jobs.resume.description': '一時停止中のジョブを再開',
+    'cli.server.jobs.stop.description': 'ジョブを停止し、実行中なら現在の実行をキャンセル',
+    'cli.server.jobs.cancel.description': 'ジョブの現在の実行をキャンセル',
+    'cli.server.jobs.history.description': 'ジョブの実行履歴を表示',
+    'cli.server.jobs.logs.description': '最新または特定の実行のログを表示',
+    'cli.server.jobs.edit.description': 'ジョブの設定を対話式に編集',
+    'cli.server.jobs.watch.description': 'WebSocket 経由でジョブイベントをライブ表示',
+    'cli.server.help.see_everything_you_can': 'でできることをすべて表示',
+    'cli.server.help.connect_terminal_remote_cli':
+        'ターミナルをリモート CLI サーバー（.NET、Node.js、Python）に接続し、そのコマンドを実行します。',
+    'cli.server.help.by_name_or_prefix':
+        '各サーバーのコマンドは名前（{byName}）と、サーバーをプレフィックスにした形（{prefixed}）の両方で使えます。複数のサーバーに同じコマンドがある場合は既定のサーバーで実行され、既定がなければ使用するサーバーを尋ねられます。同名のローカルコマンドが優先されるので、その場合はプレフィックス付きの名前を使ってください。停止したサーバーは 30 秒ごとに再試行され、復旧するとそのコマンドも使えるようになります。',
+    'cli.server.help.overview_servers': 'サーバーの概要',
+    'cli.server.help.servers_status_version_commands': '状態、バージョン、コマンド付きのサーバー一覧',
+    'cli.server.help.check_servers_reachable_all': 'サーバーに接続できるか確認（すべて、または 1 台を詳細に）',
+    'cli.server.help.commands_each_server_provides': '各サーバーが提供するコマンド',
+    'cli.server.help.connect_again_unreachable_servers': '再接続（接続できないサーバー、または 1 台）',
+    'cli.server.help.show_set_server_shared': '共通コマンドを実行するサーバーを表示または設定',
+    'cli.server.help.open_shell_server_run': 'サーバーでシェルを開く、または 1 つのコマンドを実行',
+    'cli.server.help.ping_node_show_details': 'node に ping して詳細を表示',
+    'cli.server.help.what_node_can_do': 'node でできること',
+    'cli.server.help.run_echo_node_explicitly': 'echo を node で明示的に実行',
+    'cli.server.help.shared_commands_run_node': '共通コマンドは node で実行される',
+    'cli.server.help.retry_every_unreachable_server': '接続できないすべてのサーバーを再試行',
+    'cli.server.list.help.list_configured_servers_connection':
+        '設定済みのサーバーを一覧表示します。接続状態、URL、サーバーと API のバージョン、コマンド数、シェルの利用可否が表示されます。',
+    'cli.server.list.help.see_why_server_unreachable': 'で接続できない理由を確認、server reconnect で再試行',
+    'cli.server.status.help.details_server': 'でサーバーの詳細を表示',
+    'cli.server.status.help.try_again': 'で再試行',
+    'cli.server.status.help.load_commands': 'でコマンドを読み込む',
+    'cli.server.status.help.see_commands': 'でコマンドを表示',
+    'cli.server.status.help.ping_servers_without_name':
+        'サーバーに ping します。名前を省略するとすべてのサーバーが往復時間付きで一度に確認され、名前を指定するとそのサーバーの詳細（バージョン、OS、シェル、ストリーミング）が表示され、接続できない場合はヒントも表示されます。',
+    'cli.server.status.help.check_every_server': 'すべてのサーバーを確認',
+    'cli.server.status.help.details_one_server': '1 台のサーバーの詳細',
+    'cli.server.status.help.same_server_status': 'server status と同じ',
+    'cli.server.status.help.details_node': 'node の詳細',
+    'cli.server.commands.help.shared_marker':
+        '複数のサーバーにあり、既定のサーバーで実行されます（server use <name>）。または実行時に確認します',
+    'cli.server.commands.help.local_marker': '同名のローカルコマンドがあります。サーバーのプレフィックス付きで実行してください',
+    'cli.server.commands.help.intro':
+        'サーバーが提供するコマンドを一覧表示します（すべてのサーバー、または 1 台）。名前で、またはサーバーをプレフィックスにして実行できます。{example} は、別のサーバーやローカルコマンドが echo という名前でも、常に node で実行されます。',
+    'cli.server.commands.help.commands_every_server': 'すべてのサーバーのコマンド',
+    'cli.server.commands.help.commands_one_server': '1 台のサーバーのコマンド',
+    'cli.server.commands.help.what_node_can_do': 'node でできること',
+    'cli.server.reconnect.help.reconnect_them_anyway': 'で強制的に再接続',
+    'cli.server.reconnect.help.see_why': 'で理由を確認',
+    'cli.server.reconnect.help.connect_servers_again_reload':
+        'サーバーに再接続してコマンドを再読み込みします。たとえばサーバーの再起動や更新の後に使います。名前を省略すると、接続できないすべてのサーバーが再試行されます。',
+    'cli.server.reconnect.help.retry_unreachable_servers': '接続できないサーバーを再試行',
+    'cli.server.reconnect.help.reconnect_one_server': '1 台のサーバーに再接続',
+    'cli.server.reconnect.help.reconnect_every_server': 'すべてのサーバーに再接続',
+    'cli.server.reconnect.help.same_server_reconnect': 'server reconnect と同じ',
+    'cli.server.reconnect.help.reload_commands_node': 'node のコマンドを再読み込み',
+    'cli.server.default.help.to_remove': 'で削除',
+    'cli.server.default.help.to_set_one': 'で設定',
+    'cli.server.default.help.default_server_runs_commands':
+        '既定のサーバーは、複数のサーバーにあるコマンド（それ以外は使用するサーバーを尋ねられます）と、server logs のように 1 台のサーバーを必要とするコマンドを実行します。設定はリロード後も保持されます。',
+    'cli.server.default.help.show_default_server': '既定のサーバーを表示',
+    'cli.server.default.help.set': '設定する',
+    'cli.server.default.help.remove': '削除する',
+    'cli.server.default.help.same_server_default_node': 'server default node と同じ',
+    'cli.server.jobs.help.see_control_background_jobs':
+        '接続中のサーバーで動作するバックグラウンドジョブを確認・操作します。一覧表示、即時実行、一時停止や停止、履歴とログの確認、設定変更、イベントのライブ監視ができます。ジョブは名前（大文字小文字は問わない）または ID で指定され、接続中のすべてのサーバーから検索されます。操作はそのジョブを持つ各サーバーに適用され、--server でコマンドを 1 台に限定できます。',
+    'cli.server.jobs.help.same_server_jobs_list': 'server jobs list と同じ',
+    'cli.server.jobs.help.live_job_events': 'ジョブイベントのライブ表示',
+    'cli.server.jobs.help.all_jobs': 'すべてのジョブ',
+    'cli.server.jobs.help.run_cleanup_job_now': 'cleanup ジョブを今すぐ実行',
+    'cli.server.jobs.help.failed_runs': '失敗した実行',
+    'cli.server.jobs.help.last_run_output_node': 'node での最後の実行の出力',
+    'cli.server.jobs.list.help.list_jobs_every_connected':
+        '接続中のすべてのサーバーのジョブを一覧表示します。グループ、状態、スケジュール、前回と次回の実行、前回の実行にかかった時間が表示されます。複数のサーバーがある場合は、サーバーごとに表が表示されます。',
+    'cli.server.jobs.list.help.jobs_all_connected_servers': '接続中のすべてのサーバーのジョブ',
+    'cli.server.jobs.list.help.only_one_group': '1 つのグループのみ',
+    'cli.server.jobs.list.help.jobs_node_server': 'node サーバーのジョブ',
+    'cli.server.jobs.list.help.jobs_reports_group': 'reports グループのジョブ',
+    'cli.server.jobs.info.help.show_everything_about_one':
+        '1 つのジョブのすべてを表示します。スケジュール、再試行、タイムアウト、重複ポリシー、現在実行中の処理、前回の実行結果が表示されます。ジョブは名前（大文字小文字は問わない）または ID で検索されます。',
+    'cli.server.jobs.info.help.details_cleanup_job': 'cleanup ジョブの詳細',
+    'cli.server.jobs.trigger.help.run_job_now_without':
+        '次回のスケジュール時刻を待たずに、ジョブを今すぐ実行します。スケジュールは変更されません。',
+    'cli.server.jobs.trigger.help.run_cleanup_now': 'cleanup を今すぐ実行',
+    'cli.server.jobs.trigger.help.then_read_output': 'その後、出力を読む',
+    'cli.server.jobs.pause.help.stop_running_job_schedule':
+        '再開されるまで、ジョブのスケジュール実行を停止します。すでに実行中の処理には cancel または stop を使います。',
+    'cli.server.jobs.pause.help.hold_cleanup': 'cleanup を保留',
+    'cli.server.jobs.pause.help.put_back_schedule': 'スケジュールに戻す',
+    'cli.server.jobs.resume.help.put_paused_job_back': '一時停止中のジョブをスケジュールに戻します。',
+    'cli.server.jobs.resume.help.run_cleanup_schedule_again': 'cleanup のスケジュール実行を再開',
+    'cli.server.jobs.stop.help.take_job_off_schedule': 'ジョブをスケジュールから外し、実行中の処理があればキャンセルします。',
+    'cli.server.jobs.stop.help.stop_cleanup_completely': 'cleanup を完全に停止',
+    'cli.server.jobs.cancel.help.cancel_run_progress_job':
+        'ジョブの実行中の処理をキャンセルします。ジョブはスケジュールに残り、次の時刻に再び実行されます。',
+    'cli.server.jobs.cancel.help.abort_current_cleanup_run': '現在の cleanup の実行を中止',
+    'cli.server.jobs.history.help.list_past_runs_job':
+        'ジョブの過去の実行を一覧表示します。状態、開始時刻、所要時間、再試行回数、エラーメッセージの冒頭が表示されます。1 回の実行の出力を読むには、短い ID を logs --exec で使います。',
+    'cli.server.jobs.history.help.last_20_runs': '最新の 20 回の実行',
+    'cli.server.jobs.history.help.page_through_older_runs': '古い実行をページ送りで表示',
+    'cli.server.jobs.history.help.only_failed_runs': '失敗した実行のみ',
+    'cli.server.jobs.history.help.last_5_runs': '最新の 5 回の実行',
+    'cli.server.jobs.logs.help.print_log_entries_latest':
+        'ジョブの最新の実行、または実行 ID（history で確認）で選んだ 1 回の実行のログエントリを表示します。',
+    'cli.server.jobs.logs.help.logs_latest_run': '最新の実行のログ',
+    'cli.server.jobs.logs.help.logs_one_run': '1 回の実行のログ',
+    'cli.server.jobs.logs.help.what_last_cleanup_run': 'cleanup の前回の実行で出力された内容',
+    'cli.server.jobs.edit.help.change_job_step_step':
+        'ジョブを順を追って変更します。説明、グループ、cron スケジュールまたは間隔、最大再試行回数、タイムアウト、重複ポリシー（skip、queue、cancel）が対象です。Enter で値を保持し、Ctrl+C または Escape でキャンセルします。確定するまで何も変更されません。複数のサーバーにあるジョブには --server が必要です。',
+    'cli.server.jobs.edit.help.edit_cleanup_server_has': 'cleanup をそれを持つサーバーで編集',
+    'cli.server.jobs.watch.help.follow_job_events_they':
+        'ジョブイベント（開始、完了、失敗など）を、接続中のすべてのサーバーで発生順に 1 イベント 1 行で表示します。Ctrl+C で停止します。',
+    'cli.server.jobs.watch.help.events_all_connected_servers': '接続中のすべてのサーバーのイベント',
+    'cli.server.jobs.watch.help.only_events_node': 'node のイベントのみ',
     'cli.ssh.description': 'サーバーでリモートシェルセッションを開く',
+    'cli.ssh.help.open_interactive_shell_server':
+        'このターミナル内でサーバーの対話型シェルを開くか、そこで 1 つのコマンドを実行して出力を表示します。シェルを有効にしているサーバーのみ使用でき、users プラグインを使う場合は shell:execute 権限が必要です。名前を省略すると、シェルを使えるサーバーが 1 台ならそれ、そうでなければ既定のサーバー、それもなければ選択を尋ねます。',
+    'cli.ssh.help.shell_default_only_server': '既定（または唯一）のサーバーでシェルを開く',
+    'cli.ssh.help.shell_server_exit_ctrl': 'サーバーでシェルを開く（終了は exit または Ctrl+D）',
+    'cli.ssh.help.run_one_command_print': '1 つのコマンドを実行して出力を表示',
+    'cli.ssh.help.same_ssh': 'ssh <name> と同じ',
+    'cli.ssh.help.interactive_shell_node': 'node の対話型シェル',
+    'cli.ssh.help.one_command_node': 'node で 1 つのコマンドを実行',
+    'cli.ssh.help.same_ssh_2': 'ssh と同じ',
     'cli.events.description': 'イベントバスのイベントを監視、一覧表示、送信',
     'cli.events.watch.description': '発生したイベントを表示（Ctrl+C で停止）',
     'cli.events.log.description': '最近のイベントを表示（メモリ内のみ、保存されません）',
     'cli.events.emit.description': 'イベントを送信: events emit <type> [json]',
+    'cli.events.watch.help.intro': 'イベントを発生順に表示（Ctrl+C で終了）',
+    'cli.events.watch.help.every_event': 'すべてのイベント',
+    'cli.events.watch.help.namespace': '名前空間',
+    'cli.events.watch.help.one_type': '1 つの種類',
+    'cli.events.log.help.intro': '最新のイベントを古い順に表示',
+    'cli.events.log.help.last_20': '最新の 20 件',
+    'cli.events.log.help.last_50_server': 'サーバーイベントの最新 50 件',
+    'cli.events.emit.help.intro': 'イベントを発行（例: イベントを待ち受けるプラグインのテスト用）',
+    'cli.events.help.commands': 'コマンド:',
+    'cli.events.help.print_live': 'イベントをリアルタイムで表示',
+    'cli.events.help.recent': '最近のイベント',
+    'cli.events.help.emit': 'イベントを発行',
+    'cli.events.help.patterns': 'パターン: 完全一致の種類（package:installed）、名前空間（package:*）、すべてを表す *。',
+    'cli.events.help.in_memory': 'イベントはこのターミナルのメモリ内にのみ保持され、永続化されません。',
+
+    // ── Capture ──────────────────────────────────────────────────────
+    'cli.capture.description': 'ターミナルの出力をダウンロード可能なファイルにエクスポート',
+    'cli.capture.help.save_what_terminal_including':
+        'スクロールバックを含むターミナルの内容をファイルとして保存し、ブラウザでダウンロードします。HTML はテーマの背景色と文字色を保持し、txt はプレーンテキストです。行ごとの色は保持されません',
+    'cli.capture.help.everything_terminal_html': 'terminal-<timestamp>.html として全体を保存',
+    'cli.capture.help.plain_text_file': 'プレーンテキストファイル',
+    'cli.capture.help.only_last_n_lines': '最後の n 行のみ',
+    'cli.capture.help.downloads_session_txt': 'session.txt をダウンロード',
+    'cli.capture.help.last_50_lines_html': '最後の 50 行を HTML で保存',
+    'cli.capture.help.same_capture': 'capture と同じ',
+
+    // ── Diff ─────────────────────────────────────────────────────────
+    'cli.diff.description': 'ファイルを行単位で比較',
+    'cli.diff.help.compare_two_texts_line':
+        '2 つのテキストを行単位で比較します。追加された行は緑で + 付き、削除された行は赤で - 付きで表示され、各変更の前後には文脈として変更のない行が数行表示されます',
+    'cli.diff.help.compare_two_texts': '2 つのテキストを比較',
+    'cli.diff.help.only_changed_lines': '変更された行のみ',
+    'cli.diff.help.one_line_changed': '1 行が変更された場合',
+    'cli.diff.help.prints_no_differences_found': 'No differences found と出力',
+    'cli.diff.help.compare_two_files_line':
+        '2 つのファイルを行単位で比較し、変更点を表示します。< （または -）で始まる行は最初のファイルのみ、> （または +）で始まる行は 2 つ目のファイルのみにあります。',
+    'cli.diff.help.show_differences': '差分を表示',
+    'cli.diff.help.unified_format_context': '文脈付きの unified 形式',
+    'cli.diff.help.what_changed_between_versions': 'バージョン間の変更内容',
+    'cli.diff.help.review_edits_git_style': 'git 形式で編集内容を確認',
+    'cli.diff.help.ignore_upper_lower_case': '大文字と小文字を区別しない',
+
+    // ── Font Size ────────────────────────────────────────────────────
+    'cli.font-size.description': 'ターミナルのフォントサイズを調整',
+    'cli.font-size.reset.description': 'フォントサイズを既定に戻す',
+    'cli.font-size.set.description': 'フォントサイズを指定した値に設定',
+    'cli.font-size.help.intro':
+        'ターミナルの文字を {min}px から {max}px の範囲で拡大または縮小します。選んだサイズは保存され、次にターミナルを開いたときに復元されます。reset でページ開始時のサイズに戻ります',
+    'cli.font-size.help.show_current_size': '現在のサイズを表示',
+    'cli.font-size.help.bigger_smaller_by': '{step}px 単位で拡大または縮小',
+    'cli.font-size.help.exact_size': 'ピクセル単位のサイズ指定（{min}-{max}）',
+    'cli.font-size.help.back_default_size': '既定のサイズに戻す',
+    'cli.font-size.help.use_16px_text': '16px の文字を使用',
+    'cli.font-size.help.grow_by': '{step}px 拡大',
+    'cli.font-size.help.forget_saved_size': '保存したサイズを破棄',
+
+    // ── Snippet ──────────────────────────────────────────────────────
+    'cli.snippet.description': 'パラメーター付きのコマンドテンプレートを保存して再利用',
+    'cli.snippet.list.description': '保存済みスニペットの一覧',
+    'cli.snippet.save.description': '新しいスニペットを保存: snippet save <name> "<template>"',
+    'cli.snippet.show.description': 'スニペットのテンプレートを表示: snippet show <name>',
+    'cli.snippet.delete.description': 'スニペットを削除: snippet delete <name>',
+    'cli.snippet.run.description': '変数の値を指定してスニペットを実行: snippet run <name> var1=val1 var2=val2',
+    'cli.snippet.help.save_command_lines_you':
+        'よく使うコマンドラインを名前付きテンプレートとして保存し、実行時に {{placeholders}} を埋めます。スニペットはブラウザに保存され、すべてのターミナルとタブで共有されます',
+    'cli.snippet.help.save_replace_snippet': 'スニペットを保存（または置換）',
+    'cli.snippet.help.fill_placeholders_run': 'プレースホルダーを埋めて実行',
+    'cli.snippet.help.all_saved_snippets': '保存済みスニペットの一覧',
+    'cli.snippet.help.print_snippet': 'スニペットを表示',
+    'cli.snippet.help.delete_snippet_rm_remove': 'スニペットを削除（rm、remove）',
+    'cli.snippet.help.template_placeholder': 'プレースホルダー付きのテンプレート',
+    'cli.snippet.help.runs_echo_hello_ada': '実行内容: echo Hello Ada',
+    'cli.snippet.help.quote_values_spaces': '空白を含む値は引用符で囲む',
+
+    // ── Test ─────────────────────────────────────────────────────────
+    'cli.test.description': '条件を評価（真なら終了ステータス 0）',
+    'cli.test.help.expressions': '式:',
+    'cli.test.help.empty_not_empty': '空 / 空でない',
+    'cli.test.help.equal_not_equal': '等しい / 等しくない',
+    'cli.test.help.integer_comparison': '整数の比較',
+    'cli.test.help.exists_file_directory': '存在する / ファイル / ディレクトリ',
+
+    // ── Kill ─────────────────────────────────────────────────────────
+    'cli.kill.description': 'PID を指定して実行中のプロセスを終了',
+    'cli.kill.help.stop_running_process_pid':
+        'ps で表示される PID を指定して実行中のプロセスを停止します。コマンドはキャンセルされ、バックグラウンドサービスは停止されます。実行中のプロセスのみ停止でき、その後は終了コード -9 の killed として表示されます',
+    'cli.kill.help.stop_process_pid': 'その PID のプロセスを停止',
+    'cli.kill.help.find_pid': 'PID を調べる',
+    'cli.kill.help.stop_process_3': 'プロセス 3 を停止',
+
+    // ── Pkg ──────────────────────────────────────────────────────────
+    'cli.pkg.description': 'CLI のパッケージを管理',
+    'cli.pkg.ls.description': 'CLI のすべてのパッケージを一覧表示',
+    'cli.pkg.browse.description': '設定済みのすべてのソースから利用可能なパッケージを一覧表示',
+    'cli.pkg.add.description': 'CLI にパッケージを追加（例: pkg add guid）',
+    'cli.pkg.remove.description': 'CLI からパッケージを削除',
+    'cli.pkg.versions.description': 'パッケージの公開済みバージョンをすべて表示',
+    'cli.pkg.check.description': 'インストール済みパッケージの更新を確認',
+    'cli.pkg.update.description': 'CLI のパッケージを最新バージョンに更新、またはすべてのパッケージを更新',
+    'cli.pkg.source.description': 'ダウンロード用のパッケージソースを取得または設定',
+    'cli.pkg.source.get.description': '現在の CDN ソースを表示',
+    'cli.pkg.source.set.description': '優先するパッケージソースを設定（名前を省略すると対話式）',
+    'cli.pkg.help.list_installed_packages': 'インストール済みパッケージの一覧',
+    'cli.pkg.help.browse_all_available_packages': '利用可能なすべてのパッケージを参照',
+    'cli.pkg.help.install_package': 'パッケージをインストール',
+    'cli.pkg.help.remove_package': 'パッケージを削除',
+    'cli.pkg.help.show_all_published_versions': '公開されているすべてのバージョンを表示',
+    'cli.pkg.help.check_available_updates': '利用可能な更新を確認',
+    'cli.pkg.help.update_one_all_packages': '1 つまたはすべてのパッケージを更新',
+    'cli.pkg.help.get_set_package_source': 'パッケージソースを取得または設定',
+    'cli.pkg.help.install_qodalis_cli_guid': '@qodalis/cli-guid をインストール',
+    'cli.pkg.help.install_multiple_packages': '複数のパッケージをインストール',
+    'cli.pkg.help.update_all_packages': 'すべてのパッケージを更新',
+    'cli.pkg.browse.help.install_package': 'でパッケージをインストール',
+    'cli.pkg.add.help.short_name': '短縮名',
+    'cli.pkg.add.help.full_name': '完全な名前',
+    'cli.pkg.add.help.multiple_packages': '複数のパッケージ',
+    'cli.pkg.add.help.specific_version': '特定のバージョン',
+    'cli.pkg.remove.help.remove_one_package': '1 つのパッケージを削除',
+    'cli.pkg.remove.help.remove_multiple': '複数を削除',
+    'cli.pkg.remove.help.short_alias': '短縮エイリアス',
+    'cli.pkg.versions.help.short_name': '短縮名',
+    'cli.pkg.versions.help.full_name': '完全な名前',
+    'cli.pkg.check.help.apply_updates': 'で更新を適用',
+    'cli.pkg.update.help.update_latest': '最新版に更新',
+    'cli.pkg.update.help.update_specific_version': '特定のバージョンに更新',
+    'cli.pkg.update.help.update_all_packages': 'すべてのパッケージを更新',
+    'cli.pkg.update.help.install_specific_version': '特定のバージョンをインストール',
+    'cli.pkg.source.help.change': 'で変更',
+    'cli.pkg.source.help.show_current_source': '現在のソースを表示',
+    'cli.pkg.source.help.set_preferred_source': '優先ソースを設定',
+    'cli.pkg.help.install_package_2': 'でパッケージをインストール',
+
+    // ── Ps ───────────────────────────────────────────────────────────
+    'cli.ps.description': '実行中および最近のプロセスを一覧表示',
+    'cli.ps.help.list_processes_terminal_commands':
+        'このターミナルのプロセスを一覧表示します。コマンド、バックグラウンドサービス、デーモン、ジョブが対象で、実行中のものに加えて最近終了・失敗・killed になったもの（最新 50 件）が、終了コードと開始からの経過時間とともに表示されます',
+    'cli.ps.help.all_processes_oldest_first': 'すべてのプロセスを古い順に表示',
+    'cli.ps.help.what_running_now': '現在実行中のもの',
+    'cli.ps.help.stop_process_12_pid': 'PID 列の 12 のプロセスを停止',
+
+    // ── Cron ─────────────────────────────────────────────────────────
+    'cli.cron.description': 'コマンドを一定の間隔で繰り返し実行するようスケジュール',
+    'cli.cron.add.description': 'cron ジョブを追加: cron add <name> <interval> <command>',
+    'cli.cron.list.description': 'すべての cron ジョブを一覧表示',
+    'cli.cron.remove.description': 'cron ジョブを削除: cron remove <name>',
+    'cli.cron.enable.description': '一時停止中の cron ジョブを有効化',
+    'cli.cron.disable.description': 'cron ジョブを削除せずに一時停止',
+    'cli.cron.help.run_command_again_again':
+        'ターミナルが開いている間、コマンドを一定の間隔で繰り返し実行します。ジョブは保存され、ターミナルの起動時に再び開始され、削除せずに一時停止もできます。',
+    'cli.cron.help.add_job': 'ジョブを追加',
+    'cli.cron.help.jobs_interval_status_run': '間隔、状態、実行回数付きのジョブ一覧（ls）',
+    'cli.cron.help.pause_job': 'ジョブを一時停止',
+    'cli.cron.help.resume_paused_job': '一時停止中のジョブを再開',
+    'cli.cron.help.remove_job_rm_delete': 'ジョブを削除（rm、delete）',
+    'cli.cron.help.intervals_seconds_30_hours': '間隔: 秒数（30）、または時間・分・秒（1h、5m、1h30m、90s）。最短 10 秒。',
+    'cli.cron.help.every_5_minutes': '5 分ごと',
+    'cli.cron.help.every_hour_half': '1 時間半ごと',
+    'cli.cron.help.pause': '一時停止する',
+
+    // ── Binary ───────────────────────────────────────────────────────
+    'cli.binary.long_description': 'バイナリ文字列のエンコードとデコード',
+    'cli.binary.utf8_note': 'UTF-8 テキストのエンコードに対応',
+    'cli.binary.encode_desc': 'テキストからバイナリへ',
+    'cli.binary.decode_desc': 'バイナリからテキストへ',
+
+    // ── Morse ────────────────────────────────────────────────────────
+    'cli.morse.long_description': 'モールス信号のエンコードとデコード',
+    'cli.morse.note': '文字、数字、一般的な句読点に対応',
+    'cli.morse.encode_desc': 'テキストからモールス信号へ',
+    'cli.morse.decode_desc': 'モールス信号からテキストへ',
+
+    // ── Rot ──────────────────────────────────────────────────────────
+    'cli.rot.long_description': 'テキストに ROT（ローテーション）暗号を適用',
+    'cli.rot.note': '既定は ROT13（自己逆変換: 2 回適用すると元に戻ります）',
+    'cli.rot.default_desc': 'ROT13 を適用',
+    'cli.rot.shift_desc': 'ROT-N を適用',
+
+    // ── Awk ──────────────────────────────────────────────────────────
+    'cli.awk.description': 'パターンのスキャンとテキスト処理',
+    'cli.awk.help.process_text_records_fields':
+        'テキストをレコードとフィールドとして処理します。各行はフィールド $1、$2、... に分割され（$0 は行全体）、各ルールは一致した行で { action } を実行します。BEGIN と END ブロック、/regex/ やフィールド比較のパターン、print、変数、NR と NF に対応します。プログラムは引用符で囲んでください。単純なものは引用符なしでも動作します（awk {print $1} file）。',
+    'cli.awk.help.run_program_over_file': 'ファイルに対してプログラムを実行',
+    'cli.awk.help.split_fields_instead_spaces': '空白の代わりに <sep> でフィールドを分割',
+    'cli.awk.help.run_program_over_piped': 'パイプ入力に対してプログラムを実行',
+    'cli.awk.help.print_first_column': '最初の列を表示',
+    'cli.awk.help.second_column_csv': 'CSV の 2 列目',
+    'cli.awk.help.filter_rows_field': 'フィールドで行を絞り込む',
+    'cli.awk.help.sum_second_column': '2 列目を合計',
+
+    // ── Basename ─────────────────────────────────────────────────────
+    'cli.basename.description': 'パスからディレクトリ部分を取り除く',
+    'cli.basename.help.print_last_part_path':
+        'パスの最後の部分、つまり手前のディレクトリを除いたファイル名またはディレクトリ名を表示します。サフィックスを指定すると、それも末尾から取り除かれます。',
+    'cli.basename.help.name_without_directories': 'ディレクトリを除いた名前',
+    'cli.basename.help.also_remove_trailing_suffix': '末尾のサフィックスも削除',
+    'cli.basename.help.prints_notes_txt': 'notes.txt を出力',
+    'cli.basename.help.prints_notes': 'notes を出力',
+    'cli.basename.help.prints_user': 'user を出力',
+
+    // ── Cat ──────────────────────────────────────────────────────────
+    'cli.cat.description': 'ファイルの内容を表示',
+    'cli.cat.help.print_contents_one_more':
+        '1 つ以上のファイルの内容を順に連結して表示します。パイプ入力も扱えます。出力を他のコマンドにパイプして、検索、並べ替え、集計ができます。',
+    'cli.cat.help.print_files_one_after': 'ファイルを順に表示',
+    'cli.cat.help.send_file_another_command': 'ファイルを別のコマンドに渡す',
+    'cli.cat.help.show_whole_file': 'ファイル全体を表示',
+    'cli.cat.help.show_only_lines_error': 'error を含む行のみ表示',
+    'cli.cat.help.print_lines_sorted': '行を並べ替えて表示',
+
+    // ── Cd ───────────────────────────────────────────────────────────
+    'cli.cd.description': '現在の作業ディレクトリを変更',
+    'cli.cd.help.change_current_directory_without':
+        '現在のディレクトリを変更します。パスを省略するとホームディレクトリに移動します。パスは絶対パス（/...）、現在地からの相対パス、またはホームを表す ~ から始められます。',
+    'cli.cd.help.go_home_directory': 'ホームディレクトリに移動',
+    'cli.cd.help.go_directory': 'ディレクトリに入る',
+    'cli.cd.help.go_up_one_level': '1 つ上の階層へ移動',
+    'cli.cd.help.go_docs_home': 'ホーム内の docs に移動',
+    'cli.cd.help.go_sibling_directory': '隣のディレクトリに移動',
+    'cli.cd.help.go_root': 'ルートに移動',
+
+    // ── Chmod ────────────────────────────────────────────────────────
+    'cli.chmod.description': 'ファイルの権限を変更',
+    'cli.chmod.help.change_who_can_read':
+        'ファイルを読み取り (r)、書き込み (w)、実行 (x) できる対象を変更します。755 のような 8 進数のモード、または記号形式（対象: u ユーザー、g グループ、o その他、a すべて、続けて追加は +、削除は -、設定は =、そして権限）を指定します。',
+    'cli.chmod.help.set_permissions': '権限を設定',
+    'cli.chmod.help.apply_directory_everything': 'ディレクトリとその中のすべてに適用',
+    'cli.chmod.help.rw_r_r_owner': 'rw-r--r--: 所有者は書き込み、その他は読み取り',
+    'cli.chmod.help.let_owner_execute': '所有者に実行を許可',
+    'cli.chmod.help.take_away_write_group': 'グループとその他の書き込みを禁止',
+    'cli.chmod.help.set_whole_directory_tree': 'ディレクトリツリー全体を設定',
+
+    // ── Chown ────────────────────────────────────────────────────────
+    'cli.chown.description': 'ファイルの所有者とグループを変更',
+    'cli.chown.help.change_owner_group_files':
+        'ファイルの所有者とグループ、またはそのどちらかを変更します。user、user:group、user:（所有者のみ）、:group（グループのみ）の形で指定します。',
+    'cli.chown.help.change_owner_group_if': '所有者を変更（指定があればグループも）',
+    'cli.chown.help.change_only_group': 'グループのみ変更',
+    'cli.chown.help.apply_directory_everything': 'ディレクトリとその中のすべてに適用',
+    'cli.chown.help.make_alice_owner': 'alice を所有者にする',
+    'cli.chown.help.set_owner_group': '所有者とグループを設定',
+    'cli.chown.help.give_bob_whole_directory': 'bob にディレクトリ全体を渡す',
+
+    // ── Cp ───────────────────────────────────────────────────────────
+    'cli.cp.description': 'ファイルとディレクトリをコピー',
+    'cli.cp.help.copy_file_new_path':
+        'ファイルを新しいパスにコピーするか、既存のディレクトリの中にコピーします。ディレクトリのコピーには -r が必要で、中身すべてがコピーされます。コピー先に同名のファイルがある場合は置き換えられます。',
+    'cli.cp.help.copy_file_new_name': 'ファイルを新しい名前でコピー',
+    'cli.cp.help.copy_files_directory': 'ファイルをディレクトリにコピー',
+    'cli.cp.help.copy_directory_contents': 'ディレクトリとその内容をコピー',
+    'cli.cp.help.make_backup_copy': 'バックアップコピーを作成',
+    'cli.cp.help.copy_docs': '~/docs にコピー',
+    'cli.cp.help.duplicate_whole_directory': 'ディレクトリ全体を複製',
+
+    // ── Cut ──────────────────────────────────────────────────────────
+    'cli.cut.description': 'ファイルの各行から列またはフィールドを抽出',
+    'cli.cut.help.print_selected_parts_each':
+        '各行の選択した部分を表示します。区切り文字で分割したフィールド（-f、既定はタブ）または文字位置（-c）を指定します。リストは 1,3、2-4、3- のように、単独の数字、範囲、またはその両方で指定できます。',
+    'cli.cut.help.select_fields': 'フィールドを選択',
+    'cli.cut.help.select_character_positions': '文字位置を選択',
+    'cli.cut.help.cut_piped_input': 'パイプ入力を切り出す',
+    'cli.cut.help.first_third_csv_column': 'CSV の 1 列目と 3 列目',
+    'cli.cut.help.first_10_characters_each': '各行の最初の 10 文字',
+    'cli.cut.help.first_two_fields_split': ': で分割した最初の 2 つのフィールド',
+
+    // ── Dirname ──────────────────────────────────────────────────────
+    'cli.dirname.description': 'パスから最後の要素を取り除く',
+    'cli.dirname.help.print_directory_part_path':
+        'パスのディレクトリ部分、つまり最後の / より前をすべて表示します。/ を含まない名前だけの場合は . （現在のディレクトリ）になります。',
+    'cli.dirname.help.path_without_last_part': '最後の部分を除いたパス',
+    'cli.dirname.help.prints_home_user': '/home/user を出力',
+    'cli.dirname.help.prints': '. を出力',
+    'cli.dirname.help.prints_2': '/ を出力',
+
+    // ── Du ───────────────────────────────────────────────────────────
+    'cli.du.description': 'ファイルの使用容量を見積もる',
+    'cli.du.help.show_how_much_space':
+        'ファイルとディレクトリの使用容量をバイト単位で表示します。ディレクトリの場合は、すべてのサブディレクトリが合計サイズ付きで一覧表示されます。合計のみは -s、深さの制限は -d を使います。',
+    'cli.du.help.sizes_path_default_current': 'パス（既定は現在のディレクトリ）とそのサブディレクトリのサイズ',
+    'cli.du.help.only_total': '合計のみ',
+    'cli.du.help.only_levels_deep': '<n> 階層の深さまで',
+    'cli.du.help.size_each_directory_docs': '~/docs の各ディレクトリのサイズ',
+    'cli.du.help.total_home_k_m': 'ホームの合計を K/M/G で表示',
+    'cli.du.help.size_each_top_level': '最上位の各フォルダーのサイズ',
+
+    // ── Find ─────────────────────────────────────────────────────────
+    'cli.find.description': '名前または種類でファイルとディレクトリを検索',
+    'cli.find.help.list_files_directories_under':
+        'パス以下（既定は現在のディレクトリ）のファイルとディレクトリを、すべてのサブディレクトリを検索して一覧表示します。開始パス自体が最初に表示されます。名前はグロブパターン（* と ?。--name は大文字小文字を区別し、--iname は区別しない）で、または種類で絞り込めます。',
+    'cli.find.help.list_everything_under_path': 'パス以下のすべてを一覧表示',
+    'cli.find.help.match_names_against_glob': 'グロブに一致する名前',
+    'cli.find.help.same_ignoring_case': '同上（大文字小文字を区別しない）',
+    'cli.find.help.only_files_f_directories': 'ファイル (f) またはディレクトリ (d) のみ',
+    'cli.find.help.list_everything_docs': '~/docs のすべてを一覧表示',
+    'cli.find.help.find_all_txt_files': 'すべての .txt ファイルを検索',
+    'cli.find.help.directories_near_top': '上位のディレクトリ',
+    'cli.find.help.delete_all_tmp_files': 'すべての .tmp ファイルを削除',
+
+    // ── Grep ─────────────────────────────────────────────────────────
+    'cli.grep.description': 'ファイルの内容からパターンを検索',
+    'cli.grep.help.print_lines_match_pattern':
+        'パターンに一致する行を表示します。パターンは正規表現で、一致箇所は強調表示され、入力にはファイル、ディレクトリ（-r を使用）、またはパイプされたテキストを指定できます。',
+    'cli.grep.help.search_one_more_files': '1 つ以上のファイルを検索',
+    'cli.grep.help.search_every_file_under': 'ディレクトリ以下のすべてのファイルを検索',
+    'cli.grep.help.filter_piped_input': 'パイプ入力を絞り込む',
+    'cli.grep.help.case_insensitive_search': '大文字小文字を区別しない検索',
+    'cli.grep.help.find_todos_line_numbers': '行番号付きで TODO を検索',
+    'cli.grep.help.hide_comment_lines': 'コメント行を非表示',
+    'cli.grep.help.count_matching_lines': '一致する行数を数える',
+
+    // ── Head ─────────────────────────────────────────────────────────
+    'cli.head.description': 'ファイルの先頭の行を表示',
+    'cli.head.help.print_first_lines_file':
+        'ファイルの先頭の行を表示します（既定は 10 行）。パイプ入力にも使えます。複数のファイルを指定すると、それぞれに ==> name <== の見出しが付きます。',
+    'cli.head.help.first_10_lines': '最初の 10 行',
+    'cli.head.help.first_lines': '最初の <count> 行',
+    'cli.head.help.first_lines_piped_input': 'パイプ入力の最初の行',
+    'cli.head.help.show_start_file': 'ファイルの先頭を表示',
+    'cli.head.help.first_3_lines_each': '各ファイルの最初の 3 行',
+    'cli.head.help.first_20_lines_log': 'ログの最初の 20 行',
+
+    // ── Ln ───────────────────────────────────────────────────────────
+    'cli.ln.description': 'シンボリックリンクを作成',
+    'cli.ln.help.create_symbolic_link_new':
+        'シンボリックリンクを作成します。別のファイルやディレクトリを指す新しいパスです。シンボリックリンク (-s) のみ対応しており、リンク先がまだ存在しなくても構いません。',
+    'cli.ln.help.create_pointing': '<target> を指す <link> を作成',
+    'cli.ln.help.shortcut_file': 'ファイルへのショートカット',
+    'cli.ln.help.shortcut_directory': 'ディレクトリへのショートカット',
+
+    // ── Mkdir ────────────────────────────────────────────────────────
+    'cli.mkdir.description': 'ディレクトリを作成',
+    'cli.mkdir.help.create_new_directory_p': '新しいディレクトリを作成します。-p を付けると、存在しない親ディレクトリも作成されます。',
+    'cli.mkdir.help.create_one_more_directories': '1 つ以上のディレクトリを作成',
+    'cli.mkdir.help.create_directory_missing_parents': 'ディレクトリと存在しない親ディレクトリを作成',
+    'cli.mkdir.help.create_projects_current_directory': '現在のディレクトリに projects を作成',
+    'cli.mkdir.help.create_whole_path_once': 'パス全体を一度に作成',
+
+    // ── Mv ───────────────────────────────────────────────────────────
+    'cli.mv.description': 'ファイルとディレクトリを移動または名前変更',
+    'cli.mv.help.move_rename_file_directory':
+        'ファイルまたはディレクトリを移動または名前変更します。移動先が既存のディレクトリの場合は、その中に移動され、そうでなければ名前が変更されます。移動先に同名のファイルがある場合は置き換えられます。',
+    'cli.mv.help.rename_file_directory': 'ファイルまたはディレクトリの名前を変更',
+    'cli.mv.help.move_them_directory': 'ディレクトリに移動',
+    'cli.mv.help.rename_file': 'ファイルの名前を変更',
+    'cli.mv.help.move_docs': '~/docs に移動',
+    'cli.mv.help.rename_directory': 'ディレクトリの名前を変更',
+
+    // ── Paste ────────────────────────────────────────────────────────
+    'cli.paste.description': 'ファイルの行を横に並べて結合',
+    'cli.paste.help.join_files_side_side':
+        'ファイルを横に並べて結合します。各ファイルの 1 行目が 1 つの出力行にタブ区切りで入り、続いて 2 行目、というように結合されます。-s を付けると、各ファイルが 1 行にまとめられます。パイプ入力はファイル - として（ファイル名がない場合は唯一の入力として）読み取られ、-d は順番に使う区切り文字のリストを受け取ります。',
+    'cli.paste.help.merge_files_line_line': 'ファイルを行ごとに結合',
+    'cli.paste.help.join_all_lines_file': 'ファイルのすべての行を 1 行に結合',
+    'cli.paste.help.merge_piped_input_file': 'パイプ入力をファイルと結合',
+    'cli.paste.help.two_columns_tab_separated': 'タブ区切りの 2 列',
+    'cli.paste.help.merge_comma_separated': 'カンマ区切りで結合',
+    'cli.paste.help.turn_list_one_csv': 'リストを 1 行の CSV に変換',
+
+    // ── Pwd ──────────────────────────────────────────────────────────
+    'cli.pwd.description': '現在の作業ディレクトリを表示',
+    'cli.pwd.help.print_full_path_directory': '現在いるディレクトリの完全なパスを表示します。他のコマンドの相対パスはここが起点になります。',
+    'cli.pwd.help.show_current_directory': '現在のディレクトリを表示',
+    'cli.pwd.help.example_home_user': '例: /home/user',
+    'cli.pwd.help.prints_home_user_docs': '/home/user/docs を出力',
+
+    // ── Rm ───────────────────────────────────────────────────────────
+    'cli.rm.description': 'ファイルまたはディレクトリを削除',
+    'cli.rm.help.delete_file_directories_only':
+        'ファイルを削除します。ディレクトリは -r を付けた場合のみ削除され、中身もすべて削除されます。削除したファイルは復元できません。',
+    'cli.rm.help.delete_one_more_files': '1 つ以上のファイルを削除',
+    'cli.rm.help.delete_directory_contents': 'ディレクトリとその内容を削除',
+    'cli.rm.help.delete_without_error_if': '存在しなくてもエラーにせず削除',
+    'cli.rm.help.delete_one_file': '1 つのファイルを削除',
+    'cli.rm.help.delete_whole_directory': 'ディレクトリ全体を削除',
+    'cli.rm.help.quiet_if_file_does': 'ファイルが存在しなくても何も表示しない',
+
+    // ── Rmdir ────────────────────────────────────────────────────────
+    'cli.rmdir.description': '空のディレクトリを削除',
+    'cli.rmdir.help.remove_empty_directory_refuses':
+        '空のディレクトリを削除します。ファイルが残っているディレクトリは削除されません。その場合は rm -r を使います。',
+    'cli.rmdir.help.remove_empty_directories': '空のディレクトリを削除',
+    'cli.rmdir.help.remove_directory_current_one': '現在のディレクトリ内のディレクトリを削除',
+    'cli.rmdir.help.remove_full_path': '完全なパスで削除',
+
+    // ── Sed ──────────────────────────────────────────────────────────
+    'cli.sed.description': 'テキストの絞り込みと変換を行うストリームエディター',
+    'cli.sed.help.edit_text_line_line':
+        'スクリプトで行単位にテキストを編集します。置換 (s/old/new/)、削除 (d)、表示 (p)、終了 (q) が使え、行番号、範囲（1,5、3,$、/start/,/end/）、または /regex/ に一致する行に限定することもできます。アドレスの後の ! で条件を反転し、; でコマンドを区切ります。置換文字列では & （一致した部分）と \\1 から \\9（グループ。\\(...\\) と書くか、-E を付けた場合は (...)）が使えます。ファイルまたはパイプ入力を読み取って結果を表示し、-i を付けるとファイルを書き換えます。',
+    'cli.sed.help.print_edited_file': '編集後のファイルを表示',
+    'cli.sed.help.save_edits_file': '編集内容をファイルに保存',
+    'cli.sed.help.print_only_selected_lines': '選択した行のみ表示',
+    'cli.sed.help.edit_piped_input': 'パイプ入力を編集',
+    'cli.sed.help.replace_every_cat_dog': 'すべての cat を dog に置換',
+    'cli.sed.help.edit_file_place': 'ファイルをその場で編集',
+    'cli.sed.help.drop_comment_lines': 'コメント行を削除',
+    'cli.sed.help.print_lines_1_5': '1 行目から 5 行目を表示',
+    'cli.sed.help.swap_two_words': '2 つの単語を入れ替える',
+
+    // ── Sh ───────────────────────────────────────────────────────────
+    'cli.sh.description': 'スクリプトファイルを実行',
+    'cli.sh.help.requires_execute': '（実行権限が必要）',
+    'cli.sh.help.script_syntax': 'スクリプトの構文:',
+    'cli.sh.help.comments': '# で始まる行はコメント',
+    'cli.sh.help.several_commands': '1 行に複数のコマンド',
+    'cli.sh.help.assignment': '変数の代入',
+    'cli.sh.help.substitution': '変数の展開',
+    'cli.sh.help.stop_on_error': 'エラーで停止（既定）',
+    'cli.sh.help.continue_on_errors': 'エラーがあっても続行',
+    'cli.sh.help.exit': 'ステータス n でスクリプトを終了',
+    'cli.sh.help.control_flow': '制御フロー:',
+    'cli.sh.help.until': '（until cmd: 逆の動作）',
+    'cli.sh.help.break_continue': 'ループを抜ける / スキップ',
+    'cli.sh.help.negate': '終了ステータスを反転',
+    'cli.sh.help.conditions': '条件はコマンドです:',
+    'cli.sh.help.conditions_status': '（ステータス 0 = 真。help test を参照）。while/until のループは 10000 回の繰り返しで',
+    'cli.sh.help.conditions_loops': '停止し、Ctrl+C でスクリプトを停止します。',
+    'cli.sh.help.example_script': 'スクリプトの例:',
+
+    // ── Sort ─────────────────────────────────────────────────────────
+    'cli.sort.description': 'テキストファイルの行を並べ替え',
+    'cli.sort.help.sort_lines_file_piped':
+        'ファイルまたはパイプ入力の行を並べ替えます。既定はアルファベット順で、数値順、逆順、フィールド指定、重複の除去もできます。複数のファイルは 1 つのリストにまとめて並べ替えられます。',
+    'cli.sort.help.sort_lines_alphabetically': '行をアルファベット順に並べ替え',
+    'cli.sort.help.sort_field_split': 'フィールド <n> で並べ替え（<sep> で分割）',
+    'cli.sort.help.sort_piped_input': 'パイプ入力を並べ替え',
+    'cli.sort.help.z': 'A から Z',
+    'cli.sort.help.largest_number_first': '大きい数値から順に',
+    'cli.sort.help.sort_csv_second_column': 'CSV を 2 列目で並べ替え',
+    'cli.sort.help.sorted_without_duplicates': '重複を除いて並べ替え',
+
+    // ── Stat ─────────────────────────────────────────────────────────
+    'cli.stat.description': 'ファイル/ディレクトリのメタデータを表示',
+    'cli.stat.help.show_details_about_files':
+        'ファイルまたはディレクトリの詳細を表示します。完全なパス、サイズ、種類、権限、所有者、グループ、作成日時、最終更新日時が表示されます。',
+    'cli.stat.help.show_details_each_path': '各パスの詳細を表示',
+    'cli.stat.help.details_one_file': '1 つのファイルの詳細',
+    'cli.stat.help.several_paths_once': '複数のパスを一度に',
+
+    // ── Tac ──────────────────────────────────────────────────────────
+    'cli.tac.description': 'ファイルを行の逆順で表示',
+    'cli.tac.help.print_file_lines_reverse': 'ファイルの行を逆順（最後の行から）に表示します。パイプ入力にも使えます。',
+    'cli.tac.help.print_file_bottom_top': 'ファイルを下から上に表示',
+    'cli.tac.help.reverse_piped_input': 'パイプ入力を逆順にする',
+    'cli.tac.help.newest_log_lines_first': '新しいログ行から順に',
+    'cli.tac.help.reverse_list': 'リストを逆順にする',
+
+    // ── Tail ─────────────────────────────────────────────────────────
+    'cli.tail.description': 'ファイルの末尾の行を表示',
+    'cli.tail.help.print_last_lines_file':
+        'ファイルの末尾の行を表示します（既定は 10 行）。パイプ入力にも使えます。複数のファイルを指定すると、それぞれに ==> name <== の見出しが付きます。',
+    'cli.tail.help.last_10_lines': '最後の 10 行',
+    'cli.tail.help.last_lines': '最後の <count> 行',
+    'cli.tail.help.last_lines_piped_input': 'パイプ入力の最後の行',
+    'cli.tail.help.show_end_log': 'ログの末尾を表示',
+    'cli.tail.help.last_5_lines': '最後の 5 行',
+    'cli.tail.help.last_20_lines_log': 'ログの最後の 20 行',
+
+    // ── Tee ──────────────────────────────────────────────────────────
+    'cli.tee.description': 'パイプ入力をファイルと出力にコピー',
+    'cli.tee.help.pass_piped_input_through':
+        'パイプ入力をそのまま通し、指定したすべてのファイルにそのコピーを保存します（上書き、-a で追記）。Unix の tee と同様、パイプ入力のみを読み取ります。ファイルをコピーするには cat でパイプしてください。',
+    'cli.tee.help.show_piped_output_save': 'パイプ出力を表示して保存',
+    'cli.tee.help.append_instead_overwriting': '上書きせず追記',
+    'cli.tee.help.show_save_copy': '表示してコピーを保存',
+    'cli.tee.help.add_line_log': 'ログに 1 行を追加',
+    'cli.tee.help.copy_source_txt_txt': 'source.txt を a.txt と b.txt にコピー',
+
+    // ── Touch ────────────────────────────────────────────────────────
+    'cli.touch.description': '空のファイルを作成、またはタイムスタンプを更新',
+    'cli.touch.help.create_empty_file_update':
+        '空のファイルを作成するか、既存のファイルの更新日時を更新します。親ディレクトリはあらかじめ存在している必要があります。',
+    'cli.touch.help.create_files_refresh_their': 'ファイルを作成、またはタイムスタンプを更新',
+    'cli.touch.help.create_empty_notes_txt': '空の notes.txt を作成',
+    'cli.touch.help.create_file_docs': '~/docs にファイルを作成',
+
+    // ── Tr ───────────────────────────────────────────────────────────
+    'cli.tr.description': 'パイプ入力の文字を変換または削除',
+    'cli.tr.help.translate_characters_set1_matching':
+        'SET1 の文字を SET2 の対応する文字に変換し、削除 (-d) し、または連続する繰り返しを 1 つにまとめます (-s)。セットには a-z のような範囲や、[:upper:]、[:lower:]、[:digit:]、[:alpha:]、[:alnum:]、[:space:] のようなクラスが使えます。エスケープ \\n、\\t、\\\\ に対応しています。Unix の tr と同様、パイプ入力のみを読み取り、ファイル引数は取りません。ファイルを変換するには cat でパイプしてください。',
+    'cli.tr.help.replace_characters': '文字を置換',
+    'cli.tr.help.delete_characters': '文字を削除',
+    'cli.tr.help.squeeze_repeated_characters': '連続する文字をまとめる',
+    'cli.tr.help.convert_file_upper_case': 'ファイルを大文字に変換',
+    'cli.tr.help.upper_case_piped_text': 'パイプされたテキストを大文字にする',
+    'cli.tr.help.remove_all_digits': 'すべての数字を削除',
+    'cli.tr.help.collapse_runs_spaces': '連続する空白をまとめる',
+
+    // ── Tree ─────────────────────────────────────────────────────────
+    'cli.tree.description': 'ディレクトリツリーの構造を表示',
+    'cli.tree.help.draw_directory_everything_below':
+        'ディレクトリとその下のすべてをツリー状に描画します。ディレクトリが先に表示され、最後にディレクトリとファイルの数が表示されます。既定は現在のディレクトリです。',
+    'cli.tree.help.show_whole_tree': 'ツリー全体を表示',
+    'cli.tree.help.only_levels_deep': '<n> 階層の深さまで',
+    'cli.tree.help.tree_current_directory': '現在のディレクトリのツリー',
+    'cli.tree.help.tree_docs': '~/docs のツリー',
+    'cli.tree.help.top_two_levels_only': '上位 2 階層のみ',
+
+    // ── Uniq ─────────────────────────────────────────────────────────
+    'cli.uniq.description': 'ファイルの隣り合う重複行を除去',
+    'cli.uniq.help.collapse_repeated_lines_next':
+        '隣り合う重複行を 1 行にまとめます。マージされるのは隣り合う重複のみなので、すべて検出するには先に入力を並べ替えてください。',
+    'cli.uniq.help.drop_adjacent_duplicate_lines': '隣り合う重複行を除去',
+    'cli.uniq.help.filter_piped_input': 'パイプ入力を絞り込む',
+    'cli.uniq.help.collapse_repeated_lines': '重複行をまとめる',
+    'cli.uniq.help.count_how_often_each': '各行の出現回数を数える',
+    'cli.uniq.help.show_only_duplicated_lines': '重複した行のみ表示',
+
+    // ── Wc ───────────────────────────────────────────────────────────
+    'cli.wc.description': '行数、単語数、文字数を表示',
+    'cli.wc.help.count_lines_words_characters':
+        'ファイルまたはパイプ入力の行数、単語数、文字数を数えます。複数のファイルを指定すると、最後に合計行が表示されます。',
+    'cli.wc.help.lines_words_characters': '行数、単語数、文字数',
+    'cli.wc.help.only_line_count': '行数のみ',
+    'cli.wc.help.count_piped_input': 'パイプ入力を数える',
+    'cli.wc.help.all_three_counts': '3 つの数をすべて表示',
+    'cli.wc.help.line_counts_total': '合計付きの行数',
+    'cli.wc.help.how_many_lines_mention': 'error を含む行の数',
+
+    // ── Xargs ────────────────────────────────────────────────────────
+    'cli.xargs.description': 'ファイルの入力からコマンドを組み立てて実行',
+    'cli.xargs.help.run_command_arguments_taken':
+        '空白または改行で区切られた入力から引数を取ってコマンドを実行します。既定ではすべてが 1 つのコマンドに追加され、-n はバッチ単位で、-I は 1 行ごとにプレースホルダーを置き換えて実行します。xargs のオプションはコマンドの前に置き、その後ろはフラグも含めてすべてコマンドのものになります。入力はパイプされたテキスト、パイプがない場合は最後に指定したファイルです。',
+    'cli.xargs.help.append_input_lines': '入力行を <cmd> に追加',
+    'cli.xargs.help.run_once_per_line': '1 行ごとに <cmd> を実行',
+    'cli.xargs.help.read_arguments_file': 'ファイルから引数を読み取る',
+    'cli.xargs.help.delete_every_tmp_file': 'すべての .tmp ファイルを削除',
+    'cli.xargs.help.copy_each_listed_file': '一覧のファイルをそれぞれコピー',
+    'cli.xargs.help.one_mkdir_per_line': '1 行ごとに mkdir を実行',
+    'cli.xargs.help.inner_command_keeps_flags': '内側のコマンドはフラグをそのまま保持',
+
+    // ── Markdown ─────────────────────────────────────────────────────
+    'cli.md.description': 'ターミナルで Markdown をレンダリング',
+    'cli.md.help.show_markdown_formatted_terminal':
+        'Markdown をターミナルに整形して表示します。見出し、太字と斜体、リスト、引用、コード、リンクに対応しています。テキストはそのまま渡す（引用符あり・なしどちらも可、\\n で改行）か、他のコマンドからパイプします。',
+    'cli.md.help.render_inline_text': 'テキストをその場でレンダリング',
+    'cli.md.help.same_optional_render_verb': '同上（省略可能な render 動詞付き。preview、view も可）',
+    'cli.md.help.render_output_command': 'コマンドの出力をレンダリング',
+    'cli.md.help.heading': '見出し',
+    'cli.md.help.several_lines': '複数行',
+    'cli.md.help.piped_text': 'パイプされたテキスト',
+    'cli.md.help.same_using_aliases': '同上（エイリアスを使用）',
+
+    // ── Todo ─────────────────────────────────────────────────────────
+    'cli.todo.description': 'ターミナルからタスクを管理します。TODO 項目の追加、一覧表示、編集、完了、削除ができます。',
+    'cli.todo.ls.description': 'TODO 項目を一覧表示',
+    'cli.todo.add.description': '新しいタスクを追加',
+    'cli.todo.edit.description': 'タスクのテキストまたは期限を編集',
+    'cli.todo.done.description': 'タスクを完了にする',
+    'cli.todo.toggle.description': 'タスクの完了 / 未完了を切り替え',
+    'cli.todo.rm.description': 'ID でタスクを削除',
+    'cli.todo.help.commands': 'コマンド:',
+    'cli.todo.help.list_all': 'すべてのタスクを一覧表示',
+    'cli.todo.help.list_pending': '未完了のタスクのみ一覧表示',
+    'cli.todo.help.list_completed': '完了したタスクのみ一覧表示',
+    'cli.todo.help.list_overdue': '期限切れのタスクのみ一覧表示',
+    'cli.todo.help.add': '新しいタスクを追加',
+    'cli.todo.help.add_due': '期限付きで追加',
+    'cli.todo.help.edit': 'タスクを編集',
+    'cli.todo.help.done': 'タスクを完了にする',
+    'cli.todo.help.toggle': '完了 / 未完了を切り替え',
+    'cli.todo.help.remove': 'タスクを削除',
+    'cli.todo.help.remove_all': 'すべてのタスクを削除',
+    'cli.todo.help.due_formats': '期限の形式:',
+
+    // ── True ─────────────────────────────────────────────────────────
+    'cli.true.description': '何もせず成功する（終了ステータス 0）',
+
+    // ── False ────────────────────────────────────────────────────────
+    'cli.false.description': '何もせず失敗する（終了ステータス 1）',
+
+    // ── Htop ─────────────────────────────────────────────────────────
+    'cli.htop.description': '対話型のプロセスとサービスのモニター',
 };

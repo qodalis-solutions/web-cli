@@ -1,3 +1,4 @@
+import { CliTestHarness } from '@qodalis/cli';
 import { CliStringCommandProcessor } from '../lib/processors/cli-string-command-processor';
 
 describe('CliStringCommandProcessor', () => {
@@ -348,6 +349,32 @@ describe('CliStringCommandProcessor', () => {
     describe('writeDescription', () => {
         it('should have writeDescription defined as a function', () => {
             expect(typeof processor.writeDescription).toBe('function');
+        });
+    });
+
+    describe('quoted arguments', () => {
+        let harness: CliTestHarness;
+
+        beforeEach(() => {
+            harness = new CliTestHarness();
+            harness.registerProcessor(new CliStringCommandProcessor());
+        });
+
+        it('upper uses the text inside the quotes', async () => {
+            const result = await harness.execute('string upper "a b"');
+            expect(result.data).toBe('A B');
+        });
+
+        it('reverse keeps the spaces inside single quotes', async () => {
+            const result = await harness.execute("string reverse 'ab  cd'");
+            expect(result.data).toBe('dc  ba');
+        });
+
+        it('replace works on a quoted text', async () => {
+            const result = await harness.execute(
+                'string replace "hello world" --find=world --with="there you"',
+            );
+            expect(result.data).toBe('hello there you');
         });
     });
 });

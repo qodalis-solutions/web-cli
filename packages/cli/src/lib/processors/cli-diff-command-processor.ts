@@ -50,7 +50,7 @@ export class CliDiffCommandProcessor implements ICliCommandProcessor {
                   : JSON.stringify(command.data, null, 2);
         const a =
             (command.args['a'] as string | undefined) ??
-            (command.value || piped || '');
+            ((command.positionals ?? []).join(' ') || piped || '');
         const b = command.args['b'] as string | undefined;
         const rawContext = command.args?.['context'];
         const parsed = rawContext !== undefined ? parseInt(String(rawContext), 10) : NaN;
@@ -84,19 +84,20 @@ export class CliDiffCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Compare two texts line by line: added lines are shown in green with +, removed lines in red with -, with a few unchanged lines around each change for context.',
+            t.t('cli.diff.help.compare_two_texts_line', 'Compare two texts line by line: added lines are shown in green with +, removed lines in red with -, with a few unchanged lines around each change for context.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['diff --a "<text1>" --b "<text2>"', 'Compare two texts'],
-            ['diff --a "<text1>" --b "<text2>" --context 0', 'Only the changed lines'],
+            ['diff --a "<text1>" --b "<text2>"', t.t('cli.diff.help.compare_two_texts', 'Compare two texts')],
+            ['diff --a "<text1>" --b "<text2>" --context 0', t.t('cli.diff.help.only_changed_lines', 'Only the changed lines')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['diff --a "hello world" --b "hello there"', 'One line changed'],
-            ['diff --a "v1.2.0" --b "v1.2.0"', 'Prints: No differences found'],
+            ['diff --a "hello world" --b "hello there"', t.t('cli.diff.help.one_line_changed', 'One line changed')],
+            ['diff --a "v1.2.0" --b "v1.2.0"', t.t('cli.diff.help.prints_no_differences_found', 'Prints: No differences found')],
         ]);
     }
 }

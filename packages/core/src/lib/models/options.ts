@@ -155,6 +155,14 @@ export type CliProcessorMetadata = Record<string, any> & {
     sealed?: boolean;
 
     /**
+     * The command's text is code or other literal input (`eval`): the engine
+     * passes the whole line as typed, without operators (`|`, `;`, `&&`,
+     * `>`) or expansion of `$(...)`, `$VAR`, braces and wildcards, so
+     * `eval [1,2].map(x => x * 2)` keeps its `=>`, `*` and `${...}`.
+     */
+    literalInput?: boolean;
+
+    /**
      * If true, the processor requires the server to be running
      */
     requireServer?: boolean;

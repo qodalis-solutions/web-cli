@@ -298,23 +298,24 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         const { writer } = context;
         writeWrapped(
             context,
-            'Open an interactive shell on a server, in this terminal, or run one command there and print its output. Only servers that enable their shell can be used; with the users plugin you need the shell:execute permission. Without a name, ssh uses the only shell server, else the default server, else asks which one.',
+            t.t('cli.ssh.help.open_interactive_shell_server', 'Open an interactive shell on a server, in this terminal, or run one command there and print its output. Only servers that enable their shell can be used; with the users plugin you need the shell:execute permission. Without a name, ssh uses the only shell server, else the default server, else asks which one.'),
         );
         writer.writeln();
         writeUsage(context, [
-            ['ssh', 'Shell on the default (or only) server'],
-            ['ssh <name>', 'Shell on a server (exit or Ctrl+D to leave)'],
-            ['ssh <name> <command>', 'Run one command and print its output'],
-            ['ssh --server=<name>', 'Same as ssh <name>'],
+            ['ssh', t.t('cli.ssh.help.shell_default_only_server', 'Shell on the default (or only) server')],
+            ['ssh <name>', t.t('cli.ssh.help.shell_server_exit_ctrl', 'Shell on a server (exit or Ctrl+D to leave)')],
+            ['ssh <name> <command>', t.t('cli.ssh.help.run_one_command_print', 'Run one command and print its output')],
+            ['ssh --server=<name>', t.t('cli.ssh.help.same_ssh', 'Same as ssh <name>')],
         ]);
         writer.writeln();
         writeExamples(context, [
-            ['ssh node', 'Interactive shell on node'],
-            ['ssh node ls -la /tmp', 'One command on node'],
-            ['shell', 'Same as ssh'],
+            ['ssh node', t.t('cli.ssh.help.interactive_shell_node', 'Interactive shell on node')],
+            ['ssh node ls -la /tmp', t.t('cli.ssh.help.one_command_node', 'One command on node')],
+            ['shell', t.t('cli.ssh.help.same_ssh_2', 'Same as ssh')],
         ]);
     }
 

@@ -36,20 +36,21 @@ export class CliTreeCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Draw a directory and everything below it as a tree, directories first, followed by a count of directories and files. Defaults to the current directory.',
+            t.t('cli.tree.help.draw_directory_everything_below', 'Draw a directory and everything below it as a tree, directories first, followed by a count of directories and files. Defaults to the current directory.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['tree [dir]', 'Show the whole tree'],
-            ['tree -L <n> [dir]', 'Only <n> levels deep'],
+            ['tree [dir]', t.t('cli.tree.help.show_whole_tree', 'Show the whole tree')],
+            ['tree -L <n> [dir]', t.t('cli.tree.help.only_levels_deep', 'Only <n> levels deep')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['tree', 'Tree of the current directory'],
-            ['tree ~/docs', 'Tree of ~/docs'],
-            ['tree -L 2', 'Top two levels only'],
+            ['tree', t.t('cli.tree.help.tree_current_directory', 'Tree of the current directory')],
+            ['tree ~/docs', t.t('cli.tree.help.tree_docs', 'Tree of ~/docs')],
+            ['tree -L 2', t.t('cli.tree.help.top_two_levels_only', 'Top two levels only')],
         ]);
     }
 

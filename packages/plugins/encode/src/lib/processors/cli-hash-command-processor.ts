@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliHashCommandProcessor implements ICliCommandProcessor {
@@ -43,7 +44,7 @@ export class CliHashCommandProcessor implements ICliCommandProcessor {
                 cmd: CliProcessCommand,
                 context: ICliExecutionContext,
             ) => {
-                const text = (cmd.value || cmd.data || '') as string;
+                const text = (joinShellWords(cmd.value ?? '') || cmd.data || '') as string;
                 try {
                     const encoded = new TextEncoder().encode(text);
                     const hashBuffer = await crypto.subtle.digest(

@@ -212,3 +212,4 @@ export * from './access-guards';
 export * from './server-target';
 export * from './help-format';
 export * from './shell-words';
+export * from './raw-argument';

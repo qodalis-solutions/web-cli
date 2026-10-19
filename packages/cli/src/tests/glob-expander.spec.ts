@@ -49,7 +49,7 @@ describe('expandGlobs', () => {
     const expand = (cmd: string) => expandGlobs(cmd, context);
 
     it('expands * to sorted matches, quoting names with spaces, skipping dot files', () => {
-        expect(expand('rm *.txt')).toBe('rm a.txt b.txt "my notes.txt"');
+        expect(expand('rm *.txt')).toBe("rm a.txt b.txt 'my notes.txt'");
     });
 
     it('matches . files only with a leading dot', () => {

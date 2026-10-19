@@ -13,6 +13,8 @@ import {
     CliLogLevel,
     DefaultLibraryAuthor,
     resolveConfigurationCategories,
+    joinShellWords,
+    splitShellWords,
 } from '@qodalis/cli-core';
 
 import { CliProcessorsRegistry_TOKEN } from '../../tokens';
@@ -685,7 +687,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 command: CliProcessCommand,
                 context: ICliExecutionContext,
             ) => {
-                const path = command.value!;
+                const path = joinShellWords(command.value ?? '');
                 const dotIndex = path.indexOf('.');
 
                 if (dotIndex === -1) {
@@ -747,10 +749,11 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 command: CliProcessCommand,
                 context: ICliExecutionContext,
             ) => {
-                const raw = command.value!;
-                const spaceIndex = raw.indexOf(' ');
+                // `configure set <path> <value>`: the value may be quoted ("a b")
+                const [path = '', ...valueWords] =
+                    command.positionals ?? splitShellWords(command.value ?? '');
 
-                if (spaceIndex === -1) {
+                if (valueWords.length === 0) {
                     context.writer.writeError(
                         context.translator.t(
                             'cli.configure.invalid_format_set',
@@ -760,8 +763,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                     return;
                 }
 
-                const path = raw.substring(0, spaceIndex);
-                const rawValue = raw.substring(spaceIndex + 1).trim();
+                const rawValue = valueWords.join(' ');
                 const dotIndex = path.indexOf('.');
 
                 if (dotIndex === -1) {
@@ -845,7 +847,7 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                 context: ICliExecutionContext,
             ) => {
                 const t = context.translator;
-                const category = command.value?.trim();
+                const category = joinShellWords(command.value ?? '');
 
                 if (category) {
                     // Reset a specific category

@@ -109,7 +109,11 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             if (processor) {
-                this.writeProcessorDescription(processor, context);
+                this.writeProcessorDescription(
+                    processor,
+                    context,
+                    this.commandPath(registry, commandsToHelp) || processor.command,
+                );
             } else {
                 writer.writeError(t.t('cli.help.unknown_command', 'Unknown command: {command}', { command: commandsToHelp[0] }));
                 writer.writeln();
@@ -161,9 +165,35 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         );
     }
 
+    /**
+     * Canonical path of the command being described (`server.status` for
+     * `help srv ping`), so a sub-command's translation keys include its
+     * parents: `cli.server.status.description`.
+     */
+    private commandPath(
+        registry: ICliCommandProcessorRegistry,
+        words: string[],
+    ): string {
+        const path: string[] = [];
+        let candidates: ICliCommandProcessor[] | undefined = registry.processors;
+        for (const word of words) {
+            const lower = word.toLowerCase();
+            const match: ICliCommandProcessor | undefined = candidates?.find(
+                (p) =>
+                    p.command.toLowerCase() === lower ||
+                    p.aliases?.some((a) => a.toLowerCase() === lower),
+            );
+            if (!match) break;
+            path.push(match.command);
+            candidates = match.processors;
+        }
+        return path.join('.');
+    }
+
     private writeProcessorDescription(
         processor: ICliCommandProcessor,
         context: ICliExecutionContext,
+        keyPath: string,
     ) {
         const { writer } = context;
         const t = context.translator;
@@ -175,7 +205,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
         if (processor.description) {
             headerLines.push(
-                this.translateDescription(processor.description, processor.command, context),
+                this.translateDescription(processor.description, keyPath, context),
             );
         }
 
@@ -234,7 +264,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                     : '';
                 const subDesc = this.translateDescription(
                     sub.description,
-                    `${processor.command}.${sub.command}`,
+                    `${keyPath}.${sub.command}`,
                     context,
                 );
                 if (narrow) {

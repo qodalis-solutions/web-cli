@@ -43,6 +43,7 @@ import {
 } from '../services/cli-process-registry';
 import { CliDragDropService } from '../services/cli-drag-drop.service';
 import { CliTranslationService } from '../services/cli-translation-service';
+import { cliScriptRunner, ICliScriptRunner_TOKEN } from '../executor/cli-script-runner';
 
 export interface InitializeServicesOptions {
     registry: CliCommandProcessorRegistry;
@@ -152,6 +153,11 @@ export async function initializeServices(
             },
         ]);
     }
+
+    // Shell-style script runner, used by `sh` / `source` (files plugin)
+    services.set([
+        { provide: ICliScriptRunner_TOKEN, useValue: cliScriptRunner, sealed: true },
+    ]);
 
     services.set([
         {

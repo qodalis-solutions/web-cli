@@ -37,18 +37,19 @@ export class CliLnCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Create a symbolic link: a new path that points to another file or directory. Only symbolic links (-s) are supported, and the target does not need to exist yet.',
+            t.t('cli.ln.help.create_symbolic_link_new', 'Create a symbolic link: a new path that points to another file or directory. Only symbolic links (-s) are supported, and the target does not need to exist yet.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['ln -s <target> <link>', 'Create <link> pointing at <target>'],
+            ['ln -s <target> <link>', t.t('cli.ln.help.create_pointing', 'Create <link> pointing at <target>')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['ln -s ~/docs/notes.txt notes', 'Shortcut to a file'],
-            ['ln -s /var/log logs', 'Shortcut to a directory'],
+            ['ln -s ~/docs/notes.txt notes', t.t('cli.ln.help.shortcut_file', 'Shortcut to a file')],
+            ['ln -s /var/log logs', t.t('cli.ln.help.shortcut_directory', 'Shortcut to a directory')],
         ]);
     }
 

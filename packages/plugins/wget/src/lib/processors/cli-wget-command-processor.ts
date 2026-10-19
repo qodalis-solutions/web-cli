@@ -7,6 +7,7 @@ import {
     ICliFileTransferService,
     ICliFileTransferService_TOKEN,
     BrowserFileTransferService,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -63,7 +64,7 @@ export class CliWgetCommandCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const url = command.value?.trim();
+        const url = joinShellWords(command.value ?? '');
         if (!url) {
             context.writer.writeError('Usage: wget <url> [-o filename] [--header "Name: Value"]');
             context.process.exit(1);

@@ -66,7 +66,7 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
             // Explicit range validation here (instead of relying solely on setFontSize's clamp)
             // so we can surface a clear error message to the user for out-of-range input.
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const n = parseInt(cmd.value ?? '', 10);
+                const n = parseInt(cmd.positionals?.[0] ?? '', 10);
                 if (isNaN(n) || n < MIN_FONT_SIZE || n > MAX_FONT_SIZE) {
                     context.writer.writeError(
                         `Font size must be between ${MIN_FONT_SIZE} and ${MAX_FONT_SIZE}`,
@@ -119,22 +119,27 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            `Make the terminal text bigger or smaller, from ${MIN_FONT_SIZE}px to ${MAX_FONT_SIZE}px. The size you pick is saved and restored the next time the terminal opens; reset goes back to the size the page started with.`,
+            t.t(
+                'cli.font-size.help.intro',
+                'Make the terminal text bigger or smaller, from {min}px to {max}px. The size you pick is saved and restored the next time the terminal opens; reset goes back to the size the page started with.',
+                { min: MIN_FONT_SIZE, max: MAX_FONT_SIZE },
+            ),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['font-size', 'Show the current size'],
-            ['font-size increase|decrease', `Bigger or smaller by ${STEP}px`],
-            ['font-size set <n>', `Exact size in pixels (${MIN_FONT_SIZE}-${MAX_FONT_SIZE})`],
-            ['font-size reset', 'Back to the default size'],
+            ['font-size', t.t('cli.font-size.help.show_current_size', 'Show the current size')],
+            ['font-size increase|decrease', t.t('cli.font-size.help.bigger_smaller_by', 'Bigger or smaller by {step}px', { step: STEP })],
+            ['font-size set <n>', t.t('cli.font-size.help.exact_size', 'Exact size in pixels ({min}-{max})', { min: MIN_FONT_SIZE, max: MAX_FONT_SIZE })],
+            ['font-size reset', t.t('cli.font-size.help.back_default_size', 'Back to the default size')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['font-size set 16', 'Use 16px text'],
-            ['fontsize increase', `Grow by ${STEP}px`],
-            ['font-size reset', 'Forget the saved size'],
+            ['font-size set 16', t.t('cli.font-size.help.use_16px_text', 'Use 16px text')],
+            ['fontsize increase', t.t('cli.font-size.help.grow_by', 'Grow by {step}px', { step: STEP })],
+            ['font-size reset', t.t('cli.font-size.help.forget_saved_size', 'Forget the saved size')],
         ]);
     }
 

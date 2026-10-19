@@ -44,21 +44,22 @@ export class CliDuCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Show how much space files and directories use, in bytes. For a directory, every subdirectory is listed with its total size; use -s for just the total or -d to limit how deep it goes.',
+            t.t('cli.du.help.show_how_much_space', 'Show how much space files and directories use, in bytes. For a directory, every subdirectory is listed with its total size; use -s for just the total or -d to limit how deep it goes.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['du [path...]', 'Sizes of a path (default: the current directory) and its subdirectories'],
-            ['du -s <path>', 'Only the total'],
-            ['du -d <n> <path>', 'Only <n> levels deep'],
+            ['du [path...]', t.t('cli.du.help.sizes_path_default_current', 'Sizes of a path (default: the current directory) and its subdirectories')],
+            ['du -s <path>', t.t('cli.du.help.only_total', 'Only the total')],
+            ['du -d <n> <path>', t.t('cli.du.help.only_levels_deep', 'Only <n> levels deep')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['du ~/docs', 'Size of each directory in ~/docs'],
-            ['du -h -s ~', 'Total of your home in K/M/G'],
-            ['du -h -d 1 .', 'Size of each top-level folder'],
+            ['du ~/docs', t.t('cli.du.help.size_each_directory_docs', 'Size of each directory in ~/docs')],
+            ['du -h -s ~', t.t('cli.du.help.total_home_k_m', 'Total of your home in K/M/G')],
+            ['du -h -d 1 .', t.t('cli.du.help.size_each_top_level', 'Size of each top-level folder')],
         ]);
     }
 

@@ -39,20 +39,21 @@ export class CliDiffCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Compare two files line by line and show what changed: lines starting with < (or -) are only in the first file, lines starting with > (or +) only in the second.',
+            t.t('cli.diff.help.compare_two_files_line', 'Compare two files line by line and show what changed: lines starting with < (or -) are only in the first file, lines starting with > (or +) only in the second.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['diff <file1> <file2>', 'Show the differences'],
-            ['diff -u <file1> <file2>', 'Unified format with context'],
+            ['diff <file1> <file2>', t.t('cli.diff.help.show_differences', 'Show the differences')],
+            ['diff -u <file1> <file2>', t.t('cli.diff.help.unified_format_context', 'Unified format with context')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['diff old.txt new.txt', 'What changed between versions'],
-            ['diff -u config.bak config.txt', 'Review edits, git style'],
-            ['diff -i a.txt b.txt', 'Ignore upper/lower case'],
+            ['diff old.txt new.txt', t.t('cli.diff.help.what_changed_between_versions', 'What changed between versions')],
+            ['diff -u config.bak config.txt', t.t('cli.diff.help.review_edits_git_style', 'Review edits, git style')],
+            ['diff -i a.txt b.txt', t.t('cli.diff.help.ignore_upper_lower_case', 'Ignore upper/lower case')],
         ]);
     }
 

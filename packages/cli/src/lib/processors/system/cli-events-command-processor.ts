@@ -2,13 +2,31 @@ import {
     CliEvent,
     CliForegroundColor,
     CliProcessCommand,
+    cliAuthorize,
     CliProcessorMetadata,
+    CliUsersPermissions,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
+    unquoteRawArgument,
 } from '@qodalis/cli-core';
 
 const DATA_PREVIEW_LENGTH = 120;
+
+/**
+ * Namespaces of the system's own events: emitting them from the terminal
+ * could make the engine or plugins act on something that did not happen
+ * (`session:changed` switches whose saved state is used).
+ */
+const RESERVED_NAMESPACES = [
+    'boot', 'command', 'config', 'module', 'package', 'server', 'service', 'session', 'user',
+];
+
+/** `user:*` events carry account details: only for those who may read the audit log. */
+function canSee(event: CliEvent, context: ICliExecutionContext): boolean {
+    return !event.type.startsWith('user:') || cliAuthorize(context, CliUsersPermissions.AuditRead);
+}
 
 /** `14:03:21.512  package:installed  [pkg]  {"name":"@qodalis/cli-guid",...}` */
 function formatEvent(event: CliEvent, context: ICliExecutionContext): string {
@@ -67,15 +85,17 @@ export class CliEventsCommandProcessor implements ICliCommandProcessor {
             processCommand: async (command, context) => {
                 const bus = busOf(context);
                 if (!bus) return;
-                const pattern = command.value?.trim() || '*';
+                const pattern = joinShellWords(command.value ?? '') || '*';
 
                 context.writer.writeInfo(
                     `Watching ${context.writer.wrapInColor(pattern, CliForegroundColor.Cyan)} — press Ctrl+C to stop`,
                 );
                 await new Promise<void>((resolve) => {
-                    const off = bus.on(pattern, (event) =>
-                        context.writer.writeln(formatEvent(event, context)),
-                    );
+                    const off = bus.on(pattern, (event) => {
+                        if (canSee(event, context)) {
+                            context.writer.writeln(formatEvent(event, context));
+                        }
+                    });
                     const sub = context.onAbort.subscribe(() => {
                         off();
                         sub.unsubscribe();
@@ -84,18 +104,19 @@ export class CliEventsCommandProcessor implements ICliCommandProcessor {
                 });
             },
             writeDescription: (context) => {
+                const t = context.translator;
                 context.writer.writeln(
-                    'Print events as they happen, until Ctrl+C',
+                    t.t('cli.events.watch.help.intro', 'Print events as they happen, until Ctrl+C'),
                 );
                 context.writer.writeln();
                 context.writer.writeln(
-                    '  events watch                 Every event',
+                    `  events watch                 ${t.t('cli.events.watch.help.every_event', 'Every event')}`,
                 );
                 context.writer.writeln(
-                    '  events watch package:*       A namespace',
+                    `  events watch package:*       ${t.t('cli.events.watch.help.namespace', 'A namespace')}`,
                 );
                 context.writer.writeln(
-                    '  events watch boot:completed  One type',
+                    `  events watch boot:completed  ${t.t('cli.events.watch.help.one_type', 'One type')}`,
                 );
             },
         },
@@ -116,11 +137,14 @@ export class CliEventsCommandProcessor implements ICliCommandProcessor {
             processCommand: async (command, context) => {
                 const bus = busOf(context);
                 if (!bus) return;
-                const pattern = command.value?.trim() || '*';
+                const pattern = joinShellWords(command.value ?? '') || '*';
                 const limit = Number(
                     command.args['limit'] ?? command.args['n'] ?? 20,
                 );
-                const events = bus.history(pattern, limit > 0 ? limit : 20);
+                const events = bus
+                    .history(pattern)
+                    .filter((event) => canSee(event, context))
+                    .slice(-(limit > 0 ? limit : 20));
 
                 if (events.length === 0) {
                     context.writer.writeInfo(`No events matching ${pattern}`);
@@ -131,15 +155,16 @@ export class CliEventsCommandProcessor implements ICliCommandProcessor {
                 }
             },
             writeDescription: (context) => {
+                const t = context.translator;
                 context.writer.writeln(
-                    'Show the most recent events, oldest first',
+                    t.t('cli.events.log.help.intro', 'Show the most recent events, oldest first'),
                 );
                 context.writer.writeln();
                 context.writer.writeln(
-                    '  events log                   Last 20 events',
+                    `  events log                   ${t.t('cli.events.log.help.last_20', 'Last 20 events')}`,
                 );
                 context.writer.writeln(
-                    '  events log server:* -n 50    Last 50 server events',
+                    `  events log server:* -n 50    ${t.t('cli.events.log.help.last_50_server', 'Last 50 server events')}`,
                 );
             },
         },
@@ -155,10 +180,20 @@ export class CliEventsCommandProcessor implements ICliCommandProcessor {
             processCommand: async (command, context) => {
                 const bus = busOf(context);
                 if (!bus) return;
+                // The type, then a JSON or text payload (quotes around it removed)
                 const raw = command.value!.trim();
-                const space = raw.indexOf(' ');
-                const type = space === -1 ? raw : raw.slice(0, space);
-                const payload = space === -1 ? '' : raw.slice(space + 1).trim();
+                const space = raw.search(/\s/);
+                const type = command.positionals?.[0] ?? '';
+                const namespace = type.includes(':') ? type.slice(0, type.indexOf(':')) : '';
+                if (RESERVED_NAMESPACES.includes(namespace)) {
+                    context.writer.writeError(
+                        `events emit: '${type}' is a system event and cannot be emitted from the terminal`,
+                    );
+                    context.process.exit(1, { silent: true });
+                    return;
+                }
+                const payload =
+                    space === -1 ? '' : unquoteRawArgument(raw.slice(space + 1));
 
                 let data: unknown = undefined;
                 if (payload) {
@@ -175,7 +210,7 @@ export class CliEventsCommandProcessor implements ICliCommandProcessor {
             },
             writeDescription: (context) => {
                 context.writer.writeln(
-                    'Emit an event, e.g. to test a plugin that listens for it',
+                    context.translator.t('cli.events.emit.help.intro', 'Emit an event, e.g. to test a plugin that listens for it'),
                 );
                 context.writer.writeln();
                 context.writer.writeln(`  events emit todo:refresh`);
@@ -192,25 +227,25 @@ export class CliEventsCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln(this.description);
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.events.description', this.description));
         writer.writeln();
-        writer.writeln('📋 Commands:');
+        writer.writeln(`📋 ${t.t('cli.events.help.commands', 'Commands:')}`);
         writer.writeln(
-            `  ${writer.wrapInColor('events watch [pattern]', CliForegroundColor.Cyan)}       Print events live`,
+            `  ${writer.wrapInColor('events watch [pattern]', CliForegroundColor.Cyan)}       ${t.t('cli.events.help.print_live', 'Print events live')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('events log [pattern] [-n N]', CliForegroundColor.Cyan)}  Recent events`,
+            `  ${writer.wrapInColor('events log [pattern] [-n N]', CliForegroundColor.Cyan)}  ${t.t('cli.events.help.recent', 'Recent events')}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('events emit <type> [json]', CliForegroundColor.Cyan)}    Emit an event`,
+            `  ${writer.wrapInColor('events emit <type> [json]', CliForegroundColor.Cyan)}    ${t.t('cli.events.help.emit', 'Emit an event')}`,
         );
         writer.writeln();
         writer.writeln(
-            'Patterns: an exact type (package:installed), a namespace (package:*) or * for all.',
+            t.t('cli.events.help.patterns', 'Patterns: an exact type (package:installed), a namespace (package:*) or * for all.'),
         );
         writer.writeln(
-            'Events are kept in memory for this terminal only; nothing is persisted.',
+            t.t('cli.events.help.in_memory', 'Events are kept in memory for this terminal only; nothing is persisted.'),
         );
     }
 }

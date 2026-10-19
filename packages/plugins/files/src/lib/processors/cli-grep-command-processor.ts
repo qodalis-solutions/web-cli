@@ -56,6 +56,13 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
         {
+            name: 'quiet',
+            aliases: ['q'],
+            description: 'Print nothing; only the exit status tells whether a line matched',
+            required: false,
+            type: 'boolean' as const,
+        },
+        {
             name: 'files-with-matches',
             aliases: ['l'],
             description: 'Show only filenames containing matches',
@@ -93,22 +100,23 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Print the lines that match a pattern. The pattern is a regular expression, matches are highlighted, and the input can be files, directories (with -r) or piped text.',
+            t.t('cli.grep.help.print_lines_match_pattern', 'Print the lines that match a pattern. The pattern is a regular expression, matches are highlighted, and the input can be files, directories (with -r) or piped text.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['grep <pattern> <file...>', 'Search one or more files'],
-            ['grep -r <pattern> <dir>', 'Search every file under a directory'],
-            ['<command> | grep <pattern>', 'Filter piped input'],
+            ['grep <pattern> <file...>', t.t('cli.grep.help.search_one_more_files', 'Search one or more files')],
+            ['grep -r <pattern> <dir>', t.t('cli.grep.help.search_every_file_under', 'Search every file under a directory')],
+            ['<command> | grep <pattern>', t.t('cli.grep.help.filter_piped_input', 'Filter piped input')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['grep -i error app.log', 'Case-insensitive search'],
-            ['grep -r -n TODO src', 'Find TODOs with line numbers'],
-            ['grep -v ^# config.txt', 'Hide comment lines'],
-            ['cat app.log | grep -c ERROR', 'Count matching lines'],
+            ['grep -i error app.log', t.t('cli.grep.help.case_insensitive_search', 'Case-insensitive search')],
+            ['grep -r -n TODO src', t.t('cli.grep.help.find_todos_line_numbers', 'Find TODOs with line numbers')],
+            ['grep -v ^# config.txt', t.t('cli.grep.help.hide_comment_lines', 'Hide comment lines')],
+            ['cat app.log | grep -c ERROR', t.t('cli.grep.help.count_matching_lines', 'Count matching lines')],
         ]);
     }
 
@@ -140,12 +148,14 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
             command.args['word-regexp'] || command.args['w'] || false;
         const onlyMatching =
             command.args['only-matching'] || command.args['o'] || false;
+        const quiet = command.args['quiet'] || command.args['q'] || false;
 
         const { pattern, paths } = this.parseArgs(command);
         if (!pattern) {
             context.writer.writeError(
                 'grep: missing pattern. Usage: grep [options] <pattern> <file>',
             );
+            context.process.exit(2, { silent: true });
             return;
         }
         let regex: RegExp;
@@ -154,6 +164,7 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
             regex = new RegExp(source, ignoreCase ? 'gi' : 'g');
         } catch {
             context.writer.writeError(`grep: invalid pattern '${pattern}'`);
+            context.process.exit(2, { silent: true });
             return;
         }
         if (paths.length === 0) {
@@ -161,24 +172,28 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
                 const content = typeof command.data === 'string'
                     ? command.data
                     : JSON.stringify(command.data);
-                this.grepContent(content, null, regex, {
-                    ignoreCase, showLineNum, countOnly, filesOnly, invert, onlyMatching,
+                const found = this.grepContent(content, null, regex, {
+                    ignoreCase, showLineNum, countOnly, filesOnly, invert, onlyMatching, quiet,
                 }, context, false);
+                this.exitStatus(context, found, false);
                 return;
             }
             context.writer.writeError(
                 'grep: missing file operand. Usage: grep [options] <pattern> <file>',
             );
+            context.process.exit(2, { silent: true });
             return;
         }
 
         const filePaths: string[] = [];
+        let failed = false;
         for (const p of paths) {
             try {
                 if (!fs.exists(p)) {
                     context.writer.writeError(
                         `grep: ${p}: No such file or directory`,
                     );
+                    failed = true;
                     continue;
                 }
                 if (fs.isDirectory(p)) {
@@ -186,6 +201,7 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
                         context.writer.writeError(
                             `grep: ${p}: Is a directory`,
                         );
+                        failed = true;
                         continue;
                     }
                     this.collectFiles(fs, fs.resolvePath(p), fs.getNode(p)!, filePaths);
@@ -194,21 +210,34 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
                 }
             } catch (e: any) {
                 context.writer.writeError(`grep: ${e.message}`);
+                failed = true;
             }
         }
 
         const multiFile = filePaths.length > 1;
 
+        let found = 0;
         for (const filePath of filePaths) {
             try {
                 const content = fs.readFile(filePath) ?? '';
-                this.grepContent(content, filePath, regex, {
-                    ignoreCase, showLineNum, countOnly, filesOnly, invert, onlyMatching,
+                found += this.grepContent(content, filePath, regex, {
+                    ignoreCase, showLineNum, countOnly, filesOnly, invert, onlyMatching, quiet,
                 }, context, multiFile);
             } catch (e: any) {
                 context.writer.writeError(`grep: ${filePath}: ${e.message}`);
+                failed = true;
             }
         }
+        this.exitStatus(context, found, failed);
+    }
+
+    /**
+     * As Unix grep: 0 when a line matched, 1 when none did, 2 after an
+     * error (so `if grep -q ...` and `grep x f && ...` work).
+     */
+    private exitStatus(context: ICliExecutionContext, found: number, failed: boolean): void {
+        if (found > 0) return;
+        context.process.exit(failed ? 2 : 1, { silent: true });
     }
 
     private grepContent(
@@ -222,10 +251,11 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
             filesOnly: boolean;
             invert: boolean;
             onlyMatching: boolean;
+            quiet?: boolean;
         },
         context: ICliExecutionContext,
         multiFile: boolean,
-    ): void {
+    ): number {
         const lines = splitLines(content);
         let matchCount = 0;
         const matchingLines: { num: number; text: string }[] = [];
@@ -241,6 +271,8 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
                 matchingLines.push({ num: lineIdx + 1, text: line });
             }
         }
+
+        if (options.quiet) return matchCount;
 
         if (options.filesOnly) {
             if (matchCount > 0 && filePath) {
@@ -284,6 +316,7 @@ export class CliGrepCommandProcessor implements ICliCommandProcessor {
                 context.writer.writeln(parts.join(''));
             }
         }
+        return matchCount;
     }
 
     private parseArgs(

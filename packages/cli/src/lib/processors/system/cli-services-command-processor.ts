@@ -6,6 +6,7 @@ import {
     ICliBackgroundServiceInfo,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 /**
@@ -130,7 +131,7 @@ export class CliServicesCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const name = command.value as string;
+                    const name = joinShellWords(command.value ?? '');
                     try {
                         await context.backgroundServices.start(name);
                         context.writer.writeSuccess(
@@ -162,7 +163,7 @@ export class CliServicesCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const name = command.value as string;
+                    const name = joinShellWords(command.value ?? '');
                     try {
                         await context.backgroundServices.stop(name);
                         context.writer.writeSuccess(
@@ -194,7 +195,7 @@ export class CliServicesCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const name = command.value as string;
+                    const name = joinShellWords(command.value ?? '');
                     try {
                         await context.backgroundServices.restart(name);
                         context.writer.writeSuccess(
@@ -229,7 +230,7 @@ export class CliServicesCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const name = command.value as string;
+                    const name = joinShellWords(command.value ?? '');
                     const limit =
                         parseInt(command.args['limit'] || command.args['n']) ||
                         50;
@@ -297,7 +298,7 @@ export class CliServicesCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const name = command.value as string;
+                    const name = joinShellWords(command.value ?? '');
                     const { writer } = context;
 
                     const info = context.backgroundServices.getStatus(name);

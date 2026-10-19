@@ -14,21 +14,6 @@ import { browserStorageModule } from '@qodalis/cli-browser-storage';
 import { stringModule } from '@qodalis/cli-string';
 import { todoModule } from '@qodalis/cli-todo';
 import { accessDemoModule, demoUsersModules, setDemoUsersDefault } from './users-mode';
-
-import { langEsModule } from '@qodalis/cli-lang-es';
-import { langFrModule } from '@qodalis/cli-lang-fr';
-import { langDeModule } from '@qodalis/cli-lang-de';
-import { langPtModule } from '@qodalis/cli-lang-pt';
-import { langItModule } from '@qodalis/cli-lang-it';
-import { langJaModule } from '@qodalis/cli-lang-ja';
-import { langKoModule } from '@qodalis/cli-lang-ko';
-import { langZhModule } from '@qodalis/cli-lang-zh';
-import { langRuModule } from '@qodalis/cli-lang-ru';
-import { langRoModule } from '@qodalis/cli-lang-ro';
-import { jobsModule } from '@qodalis/cli-server-jobs';
-import { encodeModule } from '@qodalis/cli-encode';
-import { markdownModule } from '@qodalis/cli-markdown';
-import { dataExplorerModule } from '@qodalis/cli-data-explorer';
 import {
     ICliModule,
     ICliExecutionContext,
@@ -121,6 +106,8 @@ const backgroundServicesDemo: ICliModule = {
 setDemoUsersDefault({ mode: 'server', server: 'node' });
 
 // Demonstrates registering CLI modules via Angular DI (NgModule providers).
+// Only the core demo plugins are eager; the rest (games, file tools, translations)
+// are code-split in ./lazy-plugins.ts and passed through AppComponent's [modules].
 // These modules are injected into CliComponent via CliModule_TOKEN automatically.
 // Works with .configure() too — usersModule.configure() returns an ICliModule.
 @NgModule({
@@ -139,20 +126,6 @@ setDemoUsersDefault({ mode: 'server', server: 'node' });
         // see ./users-mode.ts. Every variant must keep the rest of the CLI working.
         ...demoUsersModules().map((m) => resolveCliModuleProvider(m)),
         resolveCliModuleProvider(accessDemoModule),
-        resolveCliModuleProvider(langEsModule),
-        resolveCliModuleProvider(langFrModule),
-        resolveCliModuleProvider(langDeModule),
-        resolveCliModuleProvider(langPtModule),
-        resolveCliModuleProvider(langItModule),
-        resolveCliModuleProvider(langJaModule),
-        resolveCliModuleProvider(langKoModule),
-        resolveCliModuleProvider(langZhModule),
-        resolveCliModuleProvider(langRuModule),
-        resolveCliModuleProvider(langRoModule),
-        resolveCliModuleProvider(jobsModule),
-        resolveCliModuleProvider(encodeModule),
-        resolveCliModuleProvider(markdownModule),
-        resolveCliModuleProvider(dataExplorerModule),
         resolveCliModuleProvider(backgroundServicesDemo),
     ],
     bootstrap: [AppComponent],

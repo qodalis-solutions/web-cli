@@ -8,6 +8,7 @@ export const frTranslations: Record<string, string> = {
     // ── Common ───────────────────────────────────────────────────────
     'cli.common.usage': 'Utilisation :',
     'cli.common.examples': 'Exemples :',
+    'cli.common.use_hint': 'Utilisez {command} {action}',
 
     // ── Help ─────────────────────────────────────────────────────────
     'cli.help.description': 'Affiche l\'aide d\'une commande',
@@ -59,11 +60,21 @@ export const frTranslations: Record<string, string> = {
     'cli.configure.all_reset': 'Toute la configuration réinitialisée aux valeurs par défaut',
     'cli.configure.invalid_number': 'Nombre non valide : {value}',
     'cli.configure.invalid_options': 'Valeur non valide. Options valides : {options}',
+    'cli.configure.invalid_boolean':
+        'Valeur booléenne non valide : "{value}". Utilisez true ou false.',
 
     // ── Echo ──────────────────────────────────────────────────────────
     'cli.echo.description': 'Affiche le texte spécifié',
     'cli.echo.long_description': 'Affiche le texte spécifié dans le terminal',
     'cli.echo.piping_note': 'Prend en charge la sortie de texte et d\'objets JSON via les tubes',
+    'cli.echo.help.print_text_terminal_add':
+        'Afficher du texte dans le terminal. Ajoutez > file pour l\'enregistrer dans un fichier (en le remplaçant) ou >> file pour l\'ajouter à la fin.',
+    'cli.echo.help.print_text': 'Afficher du texte',
+    'cli.echo.help.write_text_file': 'Écrire du texte dans un fichier',
+    'cli.echo.help.append_text_file': 'Ajouter du texte à la fin d\'un fichier',
+    'cli.echo.help.print_greeting': 'Afficher un message de bienvenue',
+    'cli.echo.help.create_replace_notes_txt': 'Créer ou remplacer notes.txt',
+    'cli.echo.help.add_line': 'Y ajouter une ligne',
 
     // ── Clear ─────────────────────────────────────────────────────────
     'cli.clear.description': 'Efface le terminal',
@@ -82,6 +93,7 @@ export const frTranslations: Record<string, string> = {
     'cli.uname.browser_info':
         'Nom du navigateur, version, agent utilisateur, langue et plateforme',
     'cli.uname.os': 'Système d\'exploitation',
+    'cli.uname.description': 'Affiche des informations détaillées sur le système et le navigateur',
 
     // ── Hash ──────────────────────────────────────────────────────────
     'cli.hash.description': 'Générer des empreintes de hachage de texte',
@@ -99,6 +111,7 @@ export const frTranslations: Record<string, string> = {
     'cli.time.description': 'Afficher l\'heure locale et UTC actuelle',
     'cli.time.long_description': 'Afficher l\'heure locale et UTC actuelle',
     'cli.time.show_current': 'Afficher l\'heure locale et UTC actuelle',
+    'cli.time.now.description': 'Afficher l\'heure actuelle',
 
     // ── Uptime ────────────────────────────────────────────────────────
     'cli.uptime.description': 'Afficher le temps d\'activité de la session',
@@ -129,6 +142,9 @@ export const frTranslations: Record<string, string> = {
     'cli.lorem.gen_words': 'Générer des mots',
     'cli.lorem.gen_sentences': 'Générer des phrases',
     'cli.lorem.gen_paragraphs': 'Générer des paragraphes',
+    'cli.lorem.words.description': 'Générer un nombre de mots',
+    'cli.lorem.sentences.description': 'Générer un nombre de phrases',
+    'cli.lorem.paragraphs.description': 'Générer un nombre de paragraphes',
 
     // ── Alias / Unalias ──────────────────────────────────────────────
     'cli.alias.description': 'Gérer les alias de commandes',
@@ -158,6 +174,9 @@ export const frTranslations: Record<string, string> = {
         'Utilisez les touches fléchées {keys} pour naviguer dans l\'historique',
     'cli.history.prefix_hint':
         'Tapez un préfixe puis {key} pour rechercher dans l\'historique par préfixe',
+    'cli.history.description': 'Affiche l\'historique des commandes de la session en cours',
+    'cli.history.clear.description': 'Efface l\'historique des commandes',
+    'cli.history.search.description': 'Rechercher un motif dans l\'historique des commandes',
 
     // ── Theme ─────────────────────────────────────────────────────────
     'cli.theme.description': 'Interagir avec le thème',
@@ -175,6 +194,11 @@ export const frTranslations: Record<string, string> = {
     // ── Feedback ──────────────────────────────────────────────────────
     'cli.feedback.long_description':
         'Signaler des bogues, demander des fonctionnalités ou suggérer de nouvelles commandes — de manière interactive ou en ligne.',
+    'cli.feedback.report-bug.description': 'Signale un bogue sur GitHub',
+    'cli.feedback.request-feature.description': 'Demande une nouvelle fonctionnalité sur GitHub',
+    'cli.feedback.request-command.description': 'Demande une nouvelle commande sur GitHub',
+    'cli.feedback.description':
+        'Permet aux utilisateurs de signaler des bogues ou de demander des fonctionnalités',
 
     // ── JWT ───────────────────────────────────────────────────────────
     'cli.jwt.description': 'Décoder et inspecter des jetons JWT',
@@ -196,6 +220,12 @@ export const frTranslations: Record<string, string> = {
     'cli.services.restart_desc': 'Redémarrer un service',
     'cli.services.logs_desc': 'Voir les journaux du service',
     'cli.services.info_desc': 'Détails du service',
+    'cli.services.list.description': 'Lister tous les services en arrière-plan enregistrés',
+    'cli.services.start.description': 'Démarrer un service en arrière-plan',
+    'cli.services.stop.description': 'Arrêter un service en arrière-plan en cours',
+    'cli.services.restart.description': 'Redémarrer un service en arrière-plan',
+    'cli.services.logs.description': 'Afficher les journaux d\'un service en arrière-plan',
+    'cli.services.info.description': 'Afficher les informations détaillées d\'un service',
 
     // ── Yes ───────────────────────────────────────────────────────────
     'cli.yes.description': 'Répéter une chaîne en continu',
@@ -207,6 +237,8 @@ export const frTranslations: Record<string, string> = {
         'Copier du texte dans le presse-papiers du système ou coller du texte depuis celui-ci',
     'cli.clipboard.copy_desc': 'Copier du texte dans le presse-papiers',
     'cli.clipboard.paste_desc': 'Coller depuis le presse-papiers',
+    'cli.clipboard.copy.description': 'Copier du texte dans le presse-papiers',
+    'cli.clipboard.paste.description': 'Coller du texte depuis le presse-papiers',
 
     // ── Hotkeys ───────────────────────────────────────────────────────
     'cli.hotkeys.description': 'Afficher les informations sur les raccourcis clavier',
@@ -219,8 +251,16 @@ export const frTranslations: Record<string, string> = {
     'cli.export.show_all': 'Afficher toutes les variables',
     'cli.export.set_var': 'Définir une variable',
     'cli.export.set_spaces': 'Définir avec des espaces',
+    'cli.export.set_many': 'Définir plusieurs variables à la fois',
+    'cli.export.set_global': 'Définir pour tous les utilisateurs',
+    'cli.export.set_session': 'Ce terminal uniquement, non enregistré',
+    'cli.export.scopes':
+        'Utilisez les variables sous la forme $VAR ou ${VAR}. Une valeur définie dans ce terminal l\'emporte sur votre valeur enregistrée, qui l\'emporte sur une valeur partagée. env indique l\'origine de chacune.',
     'cli.unset.description': 'Supprimer des variables d\'environnement',
     'cli.unset.long_description': 'Supprimer une variable d\'environnement',
+    'cli.unset.own':
+        'Supprimer pour ce terminal et pour vous (une valeur partagée est masquée pour vous)',
+    'cli.unset.global': 'Supprimer la valeur partagée',
     'cli.env.description': 'Afficher les variables d\'environnement',
     'cli.env.long_description': 'Afficher les variables d\'environnement',
     'cli.env.show_all': 'Afficher toutes les variables',
@@ -239,6 +279,9 @@ export const frTranslations: Record<string, string> = {
     'cli.json.format_desc': 'Formater le JSON avec indentation',
     'cli.json.minify_desc': 'Supprimer les espaces',
     'cli.json.validate_desc': 'Vérifier si le JSON est valide',
+    'cli.json.format.description': 'Mettre en forme du JSON avec indentation',
+    'cli.json.minify.description': 'Minifier du JSON en supprimant les espaces',
+    'cli.json.validate.description': 'Vérifier si une chaîne est du JSON valide',
 
     // ── Base64 ────────────────────────────────────────────────────────
     'cli.base64.description': 'Encoder ou décoder des chaînes Base64',
@@ -254,6 +297,9 @@ export const frTranslations: Record<string, string> = {
     'cli.timestamp.current': 'Horodatage Unix actuel',
     'cli.timestamp.to_date': 'Horodatage vers date',
     'cli.timestamp.from_date': 'Date vers horodatage',
+    'cli.timestamp.now.description': 'Afficher l\'horodatage Unix actuel',
+    'cli.timestamp.to-date.description': 'Convertir un horodatage Unix en date',
+    'cli.timestamp.from-date.description': 'Convertir une date en horodatage Unix',
 
     // ── Screen ────────────────────────────────────────────────────────
     'cli.screen.description': 'Afficher les informations sur l\'écran et le terminal',
@@ -270,6 +316,11 @@ export const frTranslations: Record<string, string> = {
     'cli.random.uuid_desc': 'UUID v4 aléatoire',
     'cli.random.coin_desc': 'Tirer à pile ou face',
     'cli.random.dice_desc': 'Lancer un dé',
+    'cli.random.number.description': 'Générer un nombre aléatoire',
+    'cli.random.string.description': 'Générer une chaîne aléatoire',
+    'cli.random.uuid.description': 'Générer un UUID v4 aléatoire',
+    'cli.random.coin.description': 'Lancer une pièce',
+    'cli.random.dice.description': 'Lancer un dé',
 
     // ── Ping ──────────────────────────────────────────────────────────
     'cli.ping.description': 'Envoyer des pings de type ICMP à un hôte',
@@ -294,6 +345,17 @@ export const frTranslations: Record<string, string> = {
     'cli.debug.processors': 'Tous les processeurs enregistrés',
     'cli.debug.modules': 'Tous les modules chargés',
     'cli.debug.state': 'Inspecter les magasins d\'état',
+    'cli.debug.processors.description': 'Lister tous les processeurs de commandes enregistrés',
+    'cli.debug.modules.description': 'Lister tous les modules CLI chargés',
+    'cli.debug.state.description': 'Inspecter tous les magasins d\'état et leurs valeurs',
+    'cli.debug.services.description': 'Lister tous les services enregistrés dans le conteneur DI',
+    'cli.debug.environment.description':
+        'Afficher les informations sur le navigateur, le terminal et le framework',
+    'cli.debug.history.description': 'Afficher les statistiques de l\'historique des commandes',
+    'cli.debug.health.description':
+        'Vérifier l\'état du système : stockage, connectivité, état des processeurs',
+    'cli.debug.export.description': 'Exporter toutes les informations de débogage en JSON',
+    'cli.debug.servers.description': 'Lister les serveurs configurés et leur état de connexion',
 
     // ── Packages ──────────────────────────────────────────────────────
     'cli.packages.description': 'Gérer les paquets dans le CLI',
@@ -305,9 +367,745 @@ export const frTranslations: Record<string, string> = {
     'cli.server.commands.description': 'Afficher les commandes de chaque serveur',
     'cli.server.reconnect.description': 'Se reconnecter aux serveurs et recharger leurs commandes',
     'cli.server.default.description': 'Afficher ou définir le serveur qui exécute les commandes partagées',
+    'cli.server.jobs.description': 'Gérer les tâches en arrière-plan sur les serveurs connectés',
+    'cli.server.jobs.list.description': 'Lister toutes les tâches des serveurs connectés',
+    'cli.server.jobs.info.description': 'Afficher les informations détaillées d\'une tâche',
+    'cli.server.jobs.trigger.description': 'Déclencher l\'exécution immédiate d\'une tâche',
+    'cli.server.jobs.pause.description': 'Suspendre l\'exécution planifiée d\'une tâche',
+    'cli.server.jobs.resume.description': 'Reprendre une tâche en pause',
+    'cli.server.jobs.stop.description':
+        'Arrêter une tâche et annuler l\'exécution en cours le cas échéant',
+    'cli.server.jobs.cancel.description': 'Annuler l\'exécution en cours d\'une tâche',
+    'cli.server.jobs.history.description': 'Afficher l\'historique d\'exécution d\'une tâche',
+    'cli.server.jobs.logs.description':
+        'Afficher les journaux de la dernière exécution ou d\'une exécution précise',
+    'cli.server.jobs.edit.description': 'Modifier interactivement les paramètres d\'une tâche',
+    'cli.server.jobs.watch.description': 'Vue en direct des événements des tâches via WebSocket',
+    'cli.server.help.see_everything_you_can': 'pour voir tout ce que vous pouvez faire',
+    'cli.server.help.connect_terminal_remote_cli':
+        'Connecter le terminal à des serveurs CLI distants (.NET, Node.js, Python) et exécuter leurs commandes.',
+    'cli.server.help.by_name_or_prefix':
+        'Les commandes de chaque serveur sont disponibles par leur nom ({byName}) et avec le serveur comme préfixe ({prefixed}). Quand plusieurs serveurs ont la même commande, le serveur par défaut l\'exécute ; sans serveur par défaut, on vous demande lequel utiliser. Une commande locale du même nom est prioritaire : utilisez le nom préfixé. Un serveur indisponible est réessayé toutes les 30 secondes, et ses commandes reviennent dès qu\'il répond.',
+    'cli.server.help.overview_servers': 'Vue d\'ensemble des serveurs',
+    'cli.server.help.servers_status_version_commands': 'Serveurs avec état, version et commandes',
+    'cli.server.help.check_servers_reachable_all':
+        'Vérifier que les serveurs sont joignables (tous, ou un en détail)',
+    'cli.server.help.commands_each_server_provides': 'Commandes fournies par chaque serveur',
+    'cli.server.help.connect_again_unreachable_servers':
+        'Se reconnecter (serveurs injoignables, ou un seul)',
+    'cli.server.help.show_set_server_shared':
+        'Afficher ou définir le serveur des commandes partagées',
+    'cli.server.help.open_shell_server_run':
+        'Ouvrir un shell sur un serveur, ou exécuter une commande',
+    'cli.server.help.ping_node_show_details': 'Ping de node et affichage de ses détails',
+    'cli.server.help.what_node_can_do': 'Ce que node peut faire',
+    'cli.server.help.run_echo_node_explicitly': 'Exécuter echo sur node explicitement',
+    'cli.server.help.shared_commands_run_node': 'Les commandes partagées s\'exécutent sur node',
+    'cli.server.help.retry_every_unreachable_server': 'Réessayer chaque serveur injoignable',
+    'cli.server.list.help.list_configured_servers_connection':
+        'Lister les serveurs configurés : état de connexion, URL, version du serveur et de l\'API, nombre de commandes et accès au shell.',
+    'cli.server.list.help.see_why_server_unreachable':
+        'pour voir pourquoi un serveur est injoignable, server reconnect pour réessayer',
+    'cli.server.status.help.details_server': 'pour les détails d\'un serveur',
+    'cli.server.status.help.try_again': 'pour réessayer',
+    'cli.server.status.help.load_commands': 'pour charger ses commandes',
+    'cli.server.status.help.see_commands': 'pour voir ses commandes',
+    'cli.server.status.help.ping_servers_without_name':
+        'Faire un ping des serveurs. Sans nom, chaque serveur est vérifié en une fois avec son temps de réponse ; avec un nom, ce serveur est affiché en détail (versions, OS, shell, streaming) avec des conseils s\'il est injoignable.',
+    'cli.server.status.help.check_every_server': 'Vérifier chaque serveur',
+    'cli.server.status.help.details_one_server': 'Détails d\'un serveur',
+    'cli.server.status.help.same_server_status': 'Identique à server status',
+    'cli.server.status.help.details_node': 'Détails de node',
+    'cli.server.commands.help.shared_marker':
+        'sur plusieurs serveurs : s\'exécute sur le serveur par défaut (server use <name>), ou demande',
+    'cli.server.commands.help.local_marker':
+        'une commande locale porte le même nom : exécutez-la avec le préfixe du serveur',
+    'cli.server.commands.help.intro':
+        'Lister les commandes fournies par un serveur (tous, ou un seul). Exécutez-les par leur nom, ou avec le serveur comme préfixe : {example} s\'exécute toujours sur node, même si un autre serveur ou une commande locale s\'appelle echo.',
+    'cli.server.commands.help.commands_every_server': 'Commandes de chaque serveur',
+    'cli.server.commands.help.commands_one_server': 'Commandes d\'un serveur',
+    'cli.server.commands.help.what_node_can_do': 'Ce que node peut faire',
+    'cli.server.reconnect.help.reconnect_them_anyway': 'pour les reconnecter quand même',
+    'cli.server.reconnect.help.see_why': 'pour voir pourquoi',
+    'cli.server.reconnect.help.connect_servers_again_reload':
+        'Se reconnecter aux serveurs et recharger leurs commandes, par ex. après le redémarrage ou la mise à jour d\'un serveur. Sans nom, chaque serveur injoignable est réessayé.',
+    'cli.server.reconnect.help.retry_unreachable_servers': 'Réessayer les serveurs injoignables',
+    'cli.server.reconnect.help.reconnect_one_server': 'Reconnecter un serveur',
+    'cli.server.reconnect.help.reconnect_every_server': 'Reconnecter chaque serveur',
+    'cli.server.reconnect.help.same_server_reconnect': 'Identique à server reconnect',
+    'cli.server.reconnect.help.reload_commands_node': 'Recharger les commandes de node',
+    'cli.server.default.help.to_remove': 'pour le supprimer',
+    'cli.server.default.help.to_set_one': 'pour en définir un',
+    'cli.server.default.help.default_server_runs_commands':
+        'Le serveur par défaut exécute les commandes que plusieurs serveurs possèdent (sinon on vous demande lequel) et les commandes qui nécessitent un serveur précis, comme server logs. Il est mémorisé d\'un rechargement à l\'autre.',
+    'cli.server.default.help.show_default_server': 'Afficher le serveur par défaut',
+    'cli.server.default.help.set': 'Le définir',
+    'cli.server.default.help.remove': 'Le supprimer',
+    'cli.server.default.help.same_server_default_node': 'Identique à server default node',
+    'cli.server.jobs.help.see_control_background_jobs':
+        'Voir et contrôler les tâches en arrière-plan exécutées sur les serveurs connectés : les lister, en lancer une maintenant, la mettre en pause ou l\'arrêter, lire son historique et ses journaux, modifier ses paramètres, ou suivre les événements en direct. Une tâche est choisie par nom (sans tenir compte de la casse) ou par ID et recherchée sur chaque serveur connecté ; les actions s\'appliquent à chaque serveur qui possède la tâche, et --server limite une commande à un seul serveur.',
+    'cli.server.jobs.help.same_server_jobs_list': 'Identique à server jobs list',
+    'cli.server.jobs.help.live_job_events': 'Événements des tâches en direct',
+    'cli.server.jobs.help.all_jobs': 'Toutes les tâches',
+    'cli.server.jobs.help.run_cleanup_job_now': 'Lancer la tâche cleanup maintenant',
+    'cli.server.jobs.help.failed_runs': 'Ses exécutions en échec',
+    'cli.server.jobs.help.last_run_output_node': 'Sortie de la dernière exécution, sur node',
+    'cli.server.jobs.list.help.list_jobs_every_connected':
+        'Lister les tâches de chaque serveur connecté : groupe, état, planification, dernière et prochaine exécution, et durée de la dernière exécution. Avec plusieurs serveurs, chacun a son propre tableau.',
+    'cli.server.jobs.list.help.jobs_all_connected_servers': 'Tâches de tous les serveurs connectés',
+    'cli.server.jobs.list.help.only_one_group': 'Un seul groupe',
+    'cli.server.jobs.list.help.jobs_node_server': 'Tâches du serveur node',
+    'cli.server.jobs.list.help.jobs_reports_group': 'Tâches du groupe reports',
+    'cli.server.jobs.info.help.show_everything_about_one':
+        'Afficher tout sur une tâche : planification, tentatives, délai d\'expiration, politique de chevauchement, l\'exécution en cours et le résultat de la dernière exécution. La tâche est trouvée par nom (sans tenir compte de la casse) ou par ID.',
+    'cli.server.jobs.info.help.details_cleanup_job': 'Détails de la tâche cleanup',
+    'cli.server.jobs.trigger.help.run_job_now_without':
+        'Lancer une tâche maintenant, sans attendre sa prochaine heure planifiée. Sa planification ne change pas.',
+    'cli.server.jobs.trigger.help.run_cleanup_now': 'Lancer cleanup maintenant',
+    'cli.server.jobs.trigger.help.then_read_output': 'Puis lire sa sortie',
+    'cli.server.jobs.pause.help.stop_running_job_schedule':
+        'Arrêter l\'exécution planifiée d\'une tâche jusqu\'à sa reprise. Utilisez cancel ou stop pour une exécution déjà en cours.',
+    'cli.server.jobs.pause.help.hold_cleanup': 'Suspendre cleanup',
+    'cli.server.jobs.pause.help.put_back_schedule': 'La remettre dans sa planification',
+    'cli.server.jobs.resume.help.put_paused_job_back':
+        'Remettre une tâche en pause dans sa planification.',
+    'cli.server.jobs.resume.help.run_cleanup_schedule_again':
+        'Relancer cleanup selon sa planification',
+    'cli.server.jobs.stop.help.take_job_off_schedule':
+        'Retirer une tâche de sa planification et annuler l\'exécution en cours, s\'il y en a une.',
+    'cli.server.jobs.stop.help.stop_cleanup_completely': 'Arrêter complètement cleanup',
+    'cli.server.jobs.cancel.help.cancel_run_progress_job':
+        'Annuler l\'exécution en cours d\'une tâche. La tâche reste dans sa planification et s\'exécutera de nouveau à la prochaine échéance.',
+    'cli.server.jobs.cancel.help.abort_current_cleanup_run':
+        'Interrompre l\'exécution de cleanup en cours',
+    'cli.server.jobs.history.help.list_past_runs_job':
+        'Lister les exécutions passées d\'une tâche : état, heure de début, durée, numéro de tentative et début du message d\'erreur. Utilisez l\'ID court avec logs --exec pour lire la sortie d\'une exécution.',
+    'cli.server.jobs.history.help.last_20_runs': 'Les 20 dernières exécutions',
+    'cli.server.jobs.history.help.page_through_older_runs':
+        'Parcourir les exécutions plus anciennes',
+    'cli.server.jobs.history.help.only_failed_runs': 'Seulement les exécutions en échec',
+    'cli.server.jobs.history.help.last_5_runs': 'Les 5 dernières exécutions',
+    'cli.server.jobs.logs.help.print_log_entries_latest':
+        'Afficher les entrées de journal de la dernière exécution d\'une tâche, ou d\'une exécution choisie par son ID d\'exécution (depuis history).',
+    'cli.server.jobs.logs.help.logs_latest_run': 'Journaux de la dernière exécution',
+    'cli.server.jobs.logs.help.logs_one_run': 'Journaux d\'une exécution',
+    'cli.server.jobs.logs.help.what_last_cleanup_run':
+        'Ce que la dernière exécution de cleanup a affiché',
+    'cli.server.jobs.edit.help.change_job_step_step':
+        'Modifier une tâche pas à pas : description, groupe, planification cron ou intervalle, nombre maximal de tentatives, délai d\'expiration et politique de chevauchement (skip, queue ou cancel). Appuyez sur Entrée pour conserver une valeur et sur Ctrl+C ou Échap pour annuler ; rien ne change avant votre confirmation. Une tâche présente sur plusieurs serveurs nécessite --server.',
+    'cli.server.jobs.edit.help.edit_cleanup_server_has':
+        'Modifier cleanup sur le serveur qui la possède',
+    'cli.server.jobs.watch.help.follow_job_events_they':
+        'Suivre les événements des tâches au fur et à mesure (démarrée, terminée, en échec, etc.) sur chaque serveur connecté, une ligne par événement. Appuyez sur Ctrl+C pour arrêter.',
+    'cli.server.jobs.watch.help.events_all_connected_servers':
+        'Événements de tous les serveurs connectés',
+    'cli.server.jobs.watch.help.only_events_node': 'Seulement les événements de node',
     'cli.ssh.description': 'Ouvrir une session shell distante sur un serveur',
+    'cli.ssh.help.open_interactive_shell_server':
+        'Ouvrir un shell interactif sur un serveur, dans ce terminal, ou y exécuter une commande et afficher sa sortie. Seuls les serveurs qui activent leur shell peuvent être utilisés ; avec le plugin users, il faut la permission shell:execute. Sans nom, ssh utilise l\'unique serveur avec shell, sinon le serveur par défaut, sinon demande lequel.',
+    'cli.ssh.help.shell_default_only_server': 'Shell sur le serveur par défaut (ou unique)',
+    'cli.ssh.help.shell_server_exit_ctrl': 'Shell sur un serveur (exit ou Ctrl+D pour quitter)',
+    'cli.ssh.help.run_one_command_print': 'Exécuter une commande et afficher sa sortie',
+    'cli.ssh.help.same_ssh': 'Identique à ssh <name>',
+    'cli.ssh.help.interactive_shell_node': 'Shell interactif sur node',
+    'cli.ssh.help.one_command_node': 'Une commande sur node',
+    'cli.ssh.help.same_ssh_2': 'Identique à ssh',
     'cli.events.description': 'Observer, lister et émettre des événements du bus d’événements',
     'cli.events.watch.description': 'Afficher les événements dès qu’ils se produisent (Ctrl+C pour arrêter)',
     'cli.events.log.description': 'Afficher les événements récents (en mémoire, non enregistrés)',
     'cli.events.emit.description': 'Émettre un événement : events emit <type> [json]',
+    'cli.events.watch.help.intro': 'Afficher les événements au fur et à mesure, jusqu\'à Ctrl+C',
+    'cli.events.watch.help.every_event': 'Tous les événements',
+    'cli.events.watch.help.namespace': 'Un espace de noms',
+    'cli.events.watch.help.one_type': 'Un seul type',
+    'cli.events.log.help.intro':
+        'Afficher les événements les plus récents, du plus ancien au plus récent',
+    'cli.events.log.help.last_20': 'Les 20 derniers événements',
+    'cli.events.log.help.last_50_server': 'Les 50 derniers événements du serveur',
+    'cli.events.emit.help.intro':
+        'Émettre un événement, par ex. pour tester un plugin qui l\'écoute',
+    'cli.events.help.commands': 'Commandes :',
+    'cli.events.help.print_live': 'Afficher les événements en direct',
+    'cli.events.help.recent': 'Événements récents',
+    'cli.events.help.emit': 'Émettre un événement',
+    'cli.events.help.patterns':
+        'Motifs : un type exact (package:installed), un espace de noms (package:*) ou * pour tout.',
+    'cli.events.help.in_memory':
+        'Les événements sont conservés en mémoire pour ce terminal uniquement ; rien n\'est enregistré durablement.',
+
+    // ── Capture ──────────────────────────────────────────────────────
+    'cli.capture.description': 'Exporter la sortie du terminal vers un fichier téléchargeable',
+    'cli.capture.help.save_what_terminal_including':
+        'Enregistrer le contenu du terminal, historique de défilement compris, dans un fichier téléchargé par votre navigateur. HTML conserve la couleur de fond et du texte du thème ; txt est du texte brut. Les couleurs de chaque ligne ne sont pas conservées.',
+    'cli.capture.help.everything_terminal_html': 'Tout dans terminal-<timestamp>.html',
+    'cli.capture.help.plain_text_file': 'Fichier texte brut',
+    'cli.capture.help.only_last_n_lines': 'Seulement les n dernières lignes',
+    'cli.capture.help.downloads_session_txt': 'Télécharge session.txt',
+    'cli.capture.help.last_50_lines_html': 'Les 50 dernières lignes en HTML',
+    'cli.capture.help.same_capture': 'Identique à capture',
+
+    // ── Diff ─────────────────────────────────────────────────────────
+    'cli.diff.description': 'Comparer des fichiers ligne par ligne',
+    'cli.diff.help.compare_two_texts_line':
+        'Comparer deux textes ligne par ligne : les lignes ajoutées sont en vert avec +, les lignes supprimées en rouge avec -, avec quelques lignes inchangées autour de chaque modification pour le contexte.',
+    'cli.diff.help.compare_two_texts': 'Comparer deux textes',
+    'cli.diff.help.only_changed_lines': 'Seulement les lignes modifiées',
+    'cli.diff.help.one_line_changed': 'Une ligne modifiée',
+    'cli.diff.help.prints_no_differences_found': 'Affiche : Aucune différence trouvée',
+    'cli.diff.help.compare_two_files_line':
+        'Comparer deux fichiers ligne par ligne et afficher ce qui a changé : les lignes commençant par < (ou -) sont seulement dans le premier fichier, celles commençant par > (ou +) seulement dans le second.',
+    'cli.diff.help.show_differences': 'Afficher les différences',
+    'cli.diff.help.unified_format_context': 'Format unifié avec contexte',
+    'cli.diff.help.what_changed_between_versions': 'Ce qui a changé entre deux versions',
+    'cli.diff.help.review_edits_git_style': 'Relire les modifications, style git',
+    'cli.diff.help.ignore_upper_lower_case': 'Ignorer la casse',
+
+    // ── Font Size ────────────────────────────────────────────────────
+    'cli.font-size.description': 'Ajuster la taille de police du terminal',
+    'cli.font-size.reset.description': 'Rétablir la taille de police par défaut',
+    'cli.font-size.set.description': 'Définir la taille de police à une valeur précise',
+    'cli.font-size.help.intro':
+        'Agrandir ou réduire le texte du terminal, de {min}px à {max}px. La taille choisie est enregistrée et restaurée à la prochaine ouverture du terminal ; reset revient à la taille de départ de la page.',
+    'cli.font-size.help.show_current_size': 'Afficher la taille actuelle',
+    'cli.font-size.help.bigger_smaller_by': 'Agrandir ou réduire de {step}px',
+    'cli.font-size.help.exact_size': 'Taille exacte en pixels ({min}-{max})',
+    'cli.font-size.help.back_default_size': 'Revenir à la taille par défaut',
+    'cli.font-size.help.use_16px_text': 'Utiliser un texte de 16px',
+    'cli.font-size.help.grow_by': 'Agrandir de {step}px',
+    'cli.font-size.help.forget_saved_size': 'Oublier la taille enregistrée',
+
+    // ── Snippet ──────────────────────────────────────────────────────
+    'cli.snippet.description': 'Enregistrer et réutiliser des modèles de commande paramétrés',
+    'cli.snippet.list.description': 'Lister tous les extraits enregistrés',
+    'cli.snippet.save.description':
+        'Enregistrer un nouvel extrait : snippet save <name> "<template>"',
+    'cli.snippet.show.description': 'Afficher le modèle d\'un extrait : snippet show <name>',
+    'cli.snippet.delete.description': 'Supprimer un extrait : snippet delete <name>',
+    'cli.snippet.run.description':
+        'Exécuter un extrait avec des valeurs de variables : snippet run <name> var1=val1 var2=val2',
+    'cli.snippet.help.save_command_lines_you':
+        'Enregistrer les lignes de commande que vous utilisez souvent sous forme de modèles nommés, dont les {{placeholders}} sont remplis à l\'exécution. Les extraits sont enregistrés dans le navigateur et partagés par tous vos terminaux et onglets.',
+    'cli.snippet.help.save_replace_snippet': 'Enregistrer (ou remplacer) un extrait',
+    'cli.snippet.help.fill_placeholders_run': 'Remplir les paramètres et l\'exécuter',
+    'cli.snippet.help.all_saved_snippets': 'Tous les extraits enregistrés',
+    'cli.snippet.help.print_snippet': 'Afficher un extrait',
+    'cli.snippet.help.delete_snippet_rm_remove': 'Supprimer un extrait (rm, remove)',
+    'cli.snippet.help.template_placeholder': 'Un modèle avec un paramètre',
+    'cli.snippet.help.runs_echo_hello_ada': 'Exécute : echo Hello Ada',
+    'cli.snippet.help.quote_values_spaces': 'Mettre entre guillemets les valeurs avec espaces',
+
+    // ── Test ─────────────────────────────────────────────────────────
+    'cli.test.description': 'Évaluer une condition (code de sortie 0 si vraie)',
+    'cli.test.help.expressions': 'Expressions :',
+    'cli.test.help.empty_not_empty': 'vide / non vide',
+    'cli.test.help.equal_not_equal': 'égal / différent',
+    'cli.test.help.integer_comparison': 'comparaison d\'entiers',
+    'cli.test.help.exists_file_directory': 'existe / fichier / répertoire',
+
+    // ── Kill ─────────────────────────────────────────────────────────
+    'cli.kill.description': 'Terminer un processus en cours par son PID',
+    'cli.kill.help.stop_running_process_pid':
+        'Arrêter un processus en cours par son PID, tel qu\'affiché par ps. Une commande est annulée, un service en arrière-plan est arrêté. Seuls les processus en cours peuvent être arrêtés ; ils apparaissent ensuite comme arrêtés avec le code de sortie -9.',
+    'cli.kill.help.stop_process_pid': 'Arrêter le processus portant ce PID',
+    'cli.kill.help.find_pid': 'Trouver le PID',
+    'cli.kill.help.stop_process_3': 'Arrêter le processus 3',
+
+    // ── Pkg ──────────────────────────────────────────────────────────
+    'cli.pkg.description': 'Gérer les paquets de la CLI',
+    'cli.pkg.ls.description': 'Lister tous les paquets de la CLI',
+    'cli.pkg.browse.description':
+        'Lister tous les paquets disponibles dans toutes les sources configurées',
+    'cli.pkg.add.description': 'Ajouter un paquet à la CLI, par ex. pkg add guid.',
+    'cli.pkg.remove.description': 'Supprimer un paquet de la CLI',
+    'cli.pkg.versions.description': 'Afficher toutes les versions publiées d\'un paquet',
+    'cli.pkg.check.description': 'Vérifier les mises à jour disponibles des paquets installés',
+    'cli.pkg.update.description':
+        'Mettre à jour un paquet de la CLI vers la dernière version, ou tous les paquets',
+    'cli.pkg.source.description':
+        'Obtenir ou définir la source des paquets pour les téléchargements',
+    'cli.pkg.source.get.description': 'Afficher la source CDN actuelle',
+    'cli.pkg.source.set.description':
+        'Définir la source de paquets préférée (interactif si aucun nom n\'est donné)',
+    'cli.pkg.help.list_installed_packages': 'Lister les paquets installés',
+    'cli.pkg.help.browse_all_available_packages': 'Parcourir tous les paquets disponibles',
+    'cli.pkg.help.install_package': 'Installer un paquet',
+    'cli.pkg.help.remove_package': 'Supprimer un paquet',
+    'cli.pkg.help.show_all_published_versions': 'Afficher toutes les versions publiées',
+    'cli.pkg.help.check_available_updates': 'Vérifier les mises à jour disponibles',
+    'cli.pkg.help.update_one_all_packages': 'Mettre à jour un ou tous les paquets',
+    'cli.pkg.help.get_set_package_source': 'Obtenir ou définir la source des paquets',
+    'cli.pkg.help.install_qodalis_cli_guid': 'Installer @qodalis/cli-guid',
+    'cli.pkg.help.install_multiple_packages': 'Installer plusieurs paquets',
+    'cli.pkg.help.update_all_packages': 'Mettre à jour tous les paquets',
+    'cli.pkg.browse.help.install_package': 'pour installer un paquet',
+    'cli.pkg.add.help.short_name': 'Nom court',
+    'cli.pkg.add.help.full_name': 'Nom complet',
+    'cli.pkg.add.help.multiple_packages': 'Plusieurs paquets',
+    'cli.pkg.add.help.specific_version': 'Version précise',
+    'cli.pkg.remove.help.remove_one_package': 'Supprimer un paquet',
+    'cli.pkg.remove.help.remove_multiple': 'Supprimer plusieurs paquets',
+    'cli.pkg.remove.help.short_alias': 'Alias court',
+    'cli.pkg.versions.help.short_name': 'Nom court',
+    'cli.pkg.versions.help.full_name': 'Nom complet',
+    'cli.pkg.check.help.apply_updates': 'pour appliquer les mises à jour',
+    'cli.pkg.update.help.update_latest': 'Mettre à jour vers la dernière version',
+    'cli.pkg.update.help.update_specific_version': 'Mettre à jour vers une version précise',
+    'cli.pkg.update.help.update_all_packages': 'Mettre à jour tous les paquets',
+    'cli.pkg.update.help.install_specific_version': 'Installer une version précise',
+    'cli.pkg.source.help.change': 'pour la modifier',
+    'cli.pkg.source.help.show_current_source': 'Afficher la source actuelle',
+    'cli.pkg.source.help.set_preferred_source': 'Définir la source préférée',
+    'cli.pkg.help.install_package_2': 'pour installer un paquet',
+
+    // ── Ps ───────────────────────────────────────────────────────────
+    'cli.ps.description': 'Lister les processus en cours et récents',
+    'cli.ps.help.list_processes_terminal_commands':
+        'Lister les processus de ce terminal : commandes, services en arrière-plan, démons et tâches. Les processus en cours sont affichés avec ceux récemment terminés, en échec ou arrêtés (les 50 derniers), avec leur code de sortie et leur ancienneté de démarrage.',
+    'cli.ps.help.all_processes_oldest_first': 'Tous les processus, du plus ancien au plus récent',
+    'cli.ps.help.what_running_now': 'Ce qui s\'exécute actuellement',
+    'cli.ps.help.stop_process_12_pid': 'Arrêter le processus 12 de la colonne PID',
+
+    // ── Cron ─────────────────────────────────────────────────────────
+    'cli.cron.description': 'Planifier l\'exécution de commandes à intervalle régulier',
+    'cli.cron.add.description': 'Ajouter une tâche cron : cron add <name> <interval> <command>',
+    'cli.cron.list.description': 'Lister toutes les tâches cron',
+    'cli.cron.remove.description': 'Supprimer une tâche cron : cron remove <name>',
+    'cli.cron.enable.description': 'Activer une tâche cron en pause',
+    'cli.cron.disable.description': 'Mettre une tâche cron en pause sans la supprimer',
+    'cli.cron.help.run_command_again_again':
+        'Exécuter une commande en boucle à intervalle fixe tant que le terminal est ouvert. Les tâches sont enregistrées : elles redémarrent au lancement du terminal et peuvent être mises en pause sans être supprimées.',
+    'cli.cron.help.add_job': 'Ajouter une tâche',
+    'cli.cron.help.jobs_interval_status_run':
+        'Tâches avec intervalle, état et nombre d\'exécutions (ls)',
+    'cli.cron.help.pause_job': 'Mettre une tâche en pause',
+    'cli.cron.help.resume_paused_job': 'Reprendre une tâche en pause',
+    'cli.cron.help.remove_job_rm_delete': 'Supprimer une tâche (rm, delete)',
+    'cli.cron.help.intervals_seconds_30_hours':
+        'Intervalles : secondes (30), ou heures, minutes et secondes (1h, 5m, 1h30m, 90s) ; au moins 10 secondes.',
+    'cli.cron.help.every_5_minutes': 'Toutes les 5 minutes',
+    'cli.cron.help.every_hour_half': 'Toutes les heures et demie',
+    'cli.cron.help.pause': 'La mettre en pause',
+
+    // ── Binary ───────────────────────────────────────────────────────
+    'cli.binary.long_description': 'Encoder et décoder des chaînes binaires',
+    'cli.binary.utf8_note': 'Prend en charge l\'encodage de texte UTF-8',
+    'cli.binary.encode_desc': 'Texte vers binaire',
+    'cli.binary.decode_desc': 'Binaire vers texte',
+
+    // ── Morse ────────────────────────────────────────────────────────
+    'cli.morse.long_description': 'Encoder et décoder le code Morse',
+    'cli.morse.note': 'Prend en charge les lettres, les chiffres et la ponctuation courante',
+    'cli.morse.encode_desc': 'Texte vers Morse',
+    'cli.morse.decode_desc': 'Morse vers texte',
+
+    // ── Rot ──────────────────────────────────────────────────────────
+    'cli.rot.long_description': 'Appliquer le chiffrement ROT (rotation) à un texte',
+    'cli.rot.note': 'ROT13 par défaut (auto-inverse : l\'appliquer deux fois redonne l\'original)',
+    'cli.rot.default_desc': 'Appliquer ROT13',
+    'cli.rot.shift_desc': 'Appliquer ROT-N',
+
+    // ── Awk ──────────────────────────────────────────────────────────
+    'cli.awk.description': 'Analyse de motifs et traitement de texte',
+    'cli.awk.help.process_text_records_fields':
+        'Traiter du texte comme des enregistrements et des champs : chaque ligne est découpée en champs $1, $2, ... ($0 est la ligne entière), et chaque règle exécute son { action } sur les lignes correspondantes. Prend en charge les blocs BEGIN et END, les motifs /regex/ et de comparaison de champs, print, les variables, NR et NF. Mettez le programme entre guillemets ; un programme simple fonctionne aussi sans (awk {print $1} file).',
+    'cli.awk.help.run_program_over_file': 'Exécuter un programme sur un fichier',
+    'cli.awk.help.split_fields_instead_spaces': 'Découper les champs sur <sep> au lieu des espaces',
+    'cli.awk.help.run_program_over_piped': 'Exécuter un programme sur l\'entrée redirigée',
+    'cli.awk.help.print_first_column': 'Afficher la première colonne',
+    'cli.awk.help.second_column_csv': 'Deuxième colonne d\'un CSV',
+    'cli.awk.help.filter_rows_field': 'Filtrer les lignes selon un champ',
+    'cli.awk.help.sum_second_column': 'Additionner la deuxième colonne',
+
+    // ── Basename ─────────────────────────────────────────────────────
+    'cli.basename.description': 'Retirer le répertoire d\'un chemin',
+    'cli.basename.help.print_last_part_path':
+        'Afficher la dernière partie d\'un chemin, le nom du fichier ou du répertoire, sans les répertoires qui le précèdent. Si un suffixe est donné, il est aussi retiré de la fin.',
+    'cli.basename.help.name_without_directories': 'Nom sans les répertoires',
+    'cli.basename.help.also_remove_trailing_suffix': 'Retirer aussi un suffixe final',
+    'cli.basename.help.prints_notes_txt': 'Affiche notes.txt',
+    'cli.basename.help.prints_notes': 'Affiche notes',
+    'cli.basename.help.prints_user': 'Affiche user',
+
+    // ── Cat ──────────────────────────────────────────────────────────
+    'cli.cat.description': 'Afficher le contenu d\'un fichier',
+    'cli.cat.help.print_contents_one_more':
+        'Afficher le contenu d\'un ou plusieurs fichiers, concaténés dans l\'ordre, ou de l\'entrée redirigée. Redirigez la sortie vers d\'autres commandes pour la rechercher, la trier ou la compter.',
+    'cli.cat.help.print_files_one_after': 'Afficher des fichiers l\'un après l\'autre',
+    'cli.cat.help.send_file_another_command': 'Envoyer un fichier à une autre commande',
+    'cli.cat.help.show_whole_file': 'Afficher tout le fichier',
+    'cli.cat.help.show_only_lines_error': 'Afficher seulement les lignes contenant error',
+    'cli.cat.help.print_lines_sorted': 'Afficher les lignes triées',
+
+    // ── Cd ───────────────────────────────────────────────────────────
+    'cli.cd.description': 'Changer le répertoire de travail courant',
+    'cli.cd.help.change_current_directory_without':
+        'Changer le répertoire courant. Sans chemin, va dans votre répertoire personnel. Les chemins peuvent être absolus (/...), relatifs à l\'emplacement actuel, ou commencer par ~ pour le répertoire personnel.',
+    'cli.cd.help.go_home_directory': 'Aller dans votre répertoire personnel',
+    'cli.cd.help.go_directory': 'Entrer dans un répertoire',
+    'cli.cd.help.go_up_one_level': 'Remonter d\'un niveau',
+    'cli.cd.help.go_docs_home': 'Aller dans docs de votre répertoire personnel',
+    'cli.cd.help.go_sibling_directory': 'Aller dans un répertoire voisin',
+    'cli.cd.help.go_root': 'Aller à la racine',
+
+    // ── Chmod ────────────────────────────────────────────────────────
+    'cli.chmod.description': 'Changer les permissions d\'un fichier',
+    'cli.chmod.help.change_who_can_read':
+        'Changer qui peut lire (r), écrire (w) et exécuter (x) un fichier. Utilisez un mode octal comme 755 ou symbolique : qui (u utilisateur, g groupe, o autres, a tous), puis + pour ajouter, - pour retirer ou = pour définir, puis les permissions.',
+    'cli.chmod.help.set_permissions': 'Définir les permissions',
+    'cli.chmod.help.apply_directory_everything': 'Appliquer à un répertoire et à tout son contenu',
+    'cli.chmod.help.rw_r_r_owner': 'rw-r--r-- : le propriétaire écrit, les autres lisent',
+    'cli.chmod.help.let_owner_execute': 'Autoriser le propriétaire à l\'exécuter',
+    'cli.chmod.help.take_away_write_group': 'Retirer l\'écriture au groupe et aux autres',
+    'cli.chmod.help.set_whole_directory_tree': 'Définir pour toute une arborescence',
+
+    // ── Chown ────────────────────────────────────────────────────────
+    'cli.chown.description': 'Changer le propriétaire et le groupe d\'un fichier',
+    'cli.chown.help.change_owner_group_files':
+        'Changer le propriétaire et/ou le groupe de fichiers. Indiquez user, user:group, user: (propriétaire seul) ou :group (groupe seul).',
+    'cli.chown.help.change_owner_group_if':
+        'Changer le propriétaire, et le groupe s\'il est indiqué',
+    'cli.chown.help.change_only_group': 'Changer seulement le groupe',
+    'cli.chown.help.apply_directory_everything': 'Appliquer à un répertoire et à tout son contenu',
+    'cli.chown.help.make_alice_owner': 'Faire d\'alice la propriétaire',
+    'cli.chown.help.set_owner_group': 'Définir le propriétaire et le groupe',
+    'cli.chown.help.give_bob_whole_directory': 'Donner un répertoire entier à bob',
+
+    // ── Cp ───────────────────────────────────────────────────────────
+    'cli.cp.description': 'Copier des fichiers et des répertoires',
+    'cli.cp.help.copy_file_new_path':
+        'Copier un fichier vers un nouveau chemin, ou dans un répertoire existant. Copier un répertoire nécessite -r, qui copie tout son contenu. Un fichier déjà présent à la destination est remplacé.',
+    'cli.cp.help.copy_file_new_name': 'Copier un fichier sous un nouveau nom',
+    'cli.cp.help.copy_files_directory': 'Copier des fichiers dans un répertoire',
+    'cli.cp.help.copy_directory_contents': 'Copier un répertoire et son contenu',
+    'cli.cp.help.make_backup_copy': 'Faire une copie de sauvegarde',
+    'cli.cp.help.copy_docs': 'Copier dans ~/docs',
+    'cli.cp.help.duplicate_whole_directory': 'Dupliquer un répertoire entier',
+
+    // ── Cut ──────────────────────────────────────────────────────────
+    'cli.cut.description': 'Extraire des colonnes ou des champs de chaque ligne d\'un fichier',
+    'cli.cut.help.print_selected_parts_each':
+        'Afficher des parties choisies de chaque ligne : champs séparés par un délimiteur (-f, tabulation par défaut) ou positions de caractères (-c). Une liste peut contenir des nombres seuls, des plages ou les deux, comme 1,3 ou 2-4 ou 3-.',
+    'cli.cut.help.select_fields': 'Sélectionner des champs',
+    'cli.cut.help.select_character_positions': 'Sélectionner des positions de caractères',
+    'cli.cut.help.cut_piped_input': 'Découper l\'entrée redirigée',
+    'cli.cut.help.first_third_csv_column': 'Première et troisième colonnes d\'un CSV',
+    'cli.cut.help.first_10_characters_each': '10 premiers caractères de chaque ligne',
+    'cli.cut.help.first_two_fields_split': 'Deux premiers champs séparés par :',
+
+    // ── Dirname ──────────────────────────────────────────────────────
+    'cli.dirname.description': 'Retirer le dernier composant d\'un chemin',
+    'cli.dirname.help.print_directory_part_path':
+        'Afficher la partie répertoire d\'un chemin, tout ce qui précède le dernier /. Un nom seul sans / donne . (le répertoire courant).',
+    'cli.dirname.help.path_without_last_part': 'Chemin sans sa dernière partie',
+    'cli.dirname.help.prints_home_user': 'Affiche /home/user',
+    'cli.dirname.help.prints': 'Affiche .',
+    'cli.dirname.help.prints_2': 'Affiche /',
+
+    // ── Du ───────────────────────────────────────────────────────────
+    'cli.du.description': 'Estimer l\'espace disque utilisé par les fichiers',
+    'cli.du.help.show_how_much_space':
+        'Afficher l\'espace utilisé par les fichiers et répertoires, en octets. Pour un répertoire, chaque sous-répertoire est listé avec sa taille totale ; utilisez -s pour le total seul ou -d pour limiter la profondeur.',
+    'cli.du.help.sizes_path_default_current':
+        'Tailles d\'un chemin (par défaut : le répertoire courant) et de ses sous-répertoires',
+    'cli.du.help.only_total': 'Seulement le total',
+    'cli.du.help.only_levels_deep': 'Seulement <n> niveaux de profondeur',
+    'cli.du.help.size_each_directory_docs': 'Taille de chaque répertoire dans ~/docs',
+    'cli.du.help.total_home_k_m': 'Total de votre répertoire personnel en K/M/G',
+    'cli.du.help.size_each_top_level': 'Taille de chaque dossier de premier niveau',
+
+    // ── Find ─────────────────────────────────────────────────────────
+    'cli.find.description': 'Rechercher des fichiers et des répertoires par nom ou par type',
+    'cli.find.help.list_files_directories_under':
+        'Lister les fichiers et répertoires sous un chemin (le répertoire courant par défaut), en parcourant tous les sous-répertoires. Le chemin de départ est listé en premier. Filtrez par nom avec un motif glob (* et ? ; --name respecte la casse, --iname non) ou par type.',
+    'cli.find.help.list_everything_under_path': 'Tout lister sous un chemin',
+    'cli.find.help.match_names_against_glob': 'Filtrer les noms avec un glob',
+    'cli.find.help.same_ignoring_case': 'Pareil, sans tenir compte de la casse',
+    'cli.find.help.only_files_f_directories': 'Seulement les fichiers (f) ou les répertoires (d)',
+    'cli.find.help.list_everything_docs': 'Tout lister dans ~/docs',
+    'cli.find.help.find_all_txt_files': 'Trouver tous les fichiers .txt',
+    'cli.find.help.directories_near_top': 'Répertoires proches de la racine',
+    'cli.find.help.delete_all_tmp_files': 'Supprimer tous les fichiers .tmp',
+
+    // ── Grep ─────────────────────────────────────────────────────────
+    'cli.grep.description': 'Rechercher un motif dans le contenu des fichiers',
+    'cli.grep.help.print_lines_match_pattern':
+        'Afficher les lignes qui correspondent à un motif. Le motif est une expression régulière, les correspondances sont surlignées, et l\'entrée peut être des fichiers, des répertoires (avec -r) ou du texte redirigé.',
+    'cli.grep.help.search_one_more_files': 'Rechercher dans un ou plusieurs fichiers',
+    'cli.grep.help.search_every_file_under': 'Rechercher dans tous les fichiers d\'un répertoire',
+    'cli.grep.help.filter_piped_input': 'Filtrer l\'entrée redirigée',
+    'cli.grep.help.case_insensitive_search': 'Recherche insensible à la casse',
+    'cli.grep.help.find_todos_line_numbers': 'Trouver les TODO avec numéros de ligne',
+    'cli.grep.help.hide_comment_lines': 'Masquer les lignes de commentaire',
+    'cli.grep.help.count_matching_lines': 'Compter les lignes correspondantes',
+
+    // ── Head ─────────────────────────────────────────────────────────
+    'cli.head.description': 'Afficher les premières lignes d\'un fichier',
+    'cli.head.help.print_first_lines_file':
+        'Afficher les premières lignes d\'un fichier, 10 par défaut. Fonctionne aussi sur l\'entrée redirigée. Avec plusieurs fichiers, chacun reçoit un en-tête ==> name <==.',
+    'cli.head.help.first_10_lines': '10 premières lignes',
+    'cli.head.help.first_lines': '<count> premières lignes',
+    'cli.head.help.first_lines_piped_input': 'Premières lignes de l\'entrée redirigée',
+    'cli.head.help.show_start_file': 'Afficher le début d\'un fichier',
+    'cli.head.help.first_3_lines_each': '3 premières lignes de chaque fichier',
+    'cli.head.help.first_20_lines_log': '20 premières lignes du journal',
+
+    // ── Ln ───────────────────────────────────────────────────────────
+    'cli.ln.description': 'Créer des liens symboliques',
+    'cli.ln.help.create_symbolic_link_new':
+        'Créer un lien symbolique : un nouveau chemin qui pointe vers un autre fichier ou répertoire. Seuls les liens symboliques (-s) sont pris en charge, et la cible n\'a pas besoin d\'exister.',
+    'cli.ln.help.create_pointing': 'Créer <link> pointant vers <target>',
+    'cli.ln.help.shortcut_file': 'Raccourci vers un fichier',
+    'cli.ln.help.shortcut_directory': 'Raccourci vers un répertoire',
+
+    // ── Mkdir ────────────────────────────────────────────────────────
+    'cli.mkdir.description': 'Créer des répertoires',
+    'cli.mkdir.help.create_new_directory_p':
+        'Créer un nouveau répertoire. Avec -p, les répertoires parents manquants sont aussi créés.',
+    'cli.mkdir.help.create_one_more_directories': 'Créer un ou plusieurs répertoires',
+    'cli.mkdir.help.create_directory_missing_parents':
+        'Créer un répertoire et ses parents manquants',
+    'cli.mkdir.help.create_projects_current_directory': 'Créer projects dans le répertoire courant',
+    'cli.mkdir.help.create_whole_path_once': 'Créer tout le chemin en une fois',
+
+    // ── Mv ───────────────────────────────────────────────────────────
+    'cli.mv.description': 'Déplacer ou renommer des fichiers et des répertoires',
+    'cli.mv.help.move_rename_file_directory':
+        'Déplacer ou renommer un fichier ou un répertoire. Si la destination est un répertoire existant, la source y est déplacée ; sinon elle est renommée. Un fichier déjà présent à la destination est remplacé.',
+    'cli.mv.help.rename_file_directory': 'Renommer un fichier ou un répertoire',
+    'cli.mv.help.move_them_directory': 'Les déplacer dans un répertoire',
+    'cli.mv.help.rename_file': 'Renommer un fichier',
+    'cli.mv.help.move_docs': 'Le déplacer dans ~/docs',
+    'cli.mv.help.rename_directory': 'Renommer un répertoire',
+
+    // ── Paste ────────────────────────────────────────────────────────
+    'cli.paste.description': 'Fusionner côte à côte les lignes de fichiers',
+    'cli.paste.help.join_files_side_side':
+        'Joindre des fichiers côte à côte : la ligne 1 de chaque fichier va sur une ligne de sortie, séparées par une tabulation, puis la ligne 2, et ainsi de suite. Avec -s, chaque fichier est joint sur une seule ligne. L\'entrée redirigée est lue comme le fichier - (ou comme seule entrée quand aucun fichier n\'est nommé) ; -d prend une liste de délimiteurs utilisés tour à tour.',
+    'cli.paste.help.merge_files_line_line': 'Fusionner des fichiers ligne par ligne',
+    'cli.paste.help.join_all_lines_file': 'Joindre toutes les lignes d\'un fichier en une seule',
+    'cli.paste.help.merge_piped_input_file': 'Fusionner l\'entrée redirigée avec un fichier',
+    'cli.paste.help.two_columns_tab_separated': 'Deux colonnes séparées par une tabulation',
+    'cli.paste.help.merge_comma_separated': 'Fusionner avec des virgules',
+    'cli.paste.help.turn_list_one_csv': 'Transformer une liste en une ligne CSV',
+
+    // ── Pwd ──────────────────────────────────────────────────────────
+    'cli.pwd.description': 'Afficher le répertoire de travail courant',
+    'cli.pwd.help.print_full_path_directory':
+        'Afficher le chemin complet du répertoire où vous êtes. Les chemins relatifs des autres commandes partent d\'ici.',
+    'cli.pwd.help.show_current_directory': 'Afficher le répertoire courant',
+    'cli.pwd.help.example_home_user': 'Par exemple /home/user',
+    'cli.pwd.help.prints_home_user_docs': 'Affiche /home/user/docs',
+
+    // ── Rm ───────────────────────────────────────────────────────────
+    'cli.rm.description': 'Supprimer des fichiers ou des répertoires',
+    'cli.rm.help.delete_file_directories_only':
+        'Supprimer un fichier. Les répertoires ne sont supprimés qu\'avec -r, qui efface tout leur contenu. Les fichiers supprimés ne peuvent pas être récupérés.',
+    'cli.rm.help.delete_one_more_files': 'Supprimer un ou plusieurs fichiers',
+    'cli.rm.help.delete_directory_contents': 'Supprimer un répertoire et son contenu',
+    'cli.rm.help.delete_without_error_if': 'Supprimer sans erreur s\'il est absent',
+    'cli.rm.help.delete_one_file': 'Supprimer un fichier',
+    'cli.rm.help.delete_whole_directory': 'Supprimer un répertoire entier',
+    'cli.rm.help.quiet_if_file_does': 'Silencieux si le fichier n\'existe pas',
+
+    // ── Rmdir ────────────────────────────────────────────────────────
+    'cli.rmdir.description': 'Supprimer des répertoires vides',
+    'cli.rmdir.help.remove_empty_directory_refuses':
+        'Supprimer un répertoire vide. Refuse de supprimer un répertoire qui contient encore des fichiers ; utilisez rm -r pour cela.',
+    'cli.rmdir.help.remove_empty_directories': 'Supprimer des répertoires vides',
+    'cli.rmdir.help.remove_directory_current_one': 'Supprimer un répertoire du répertoire courant',
+    'cli.rmdir.help.remove_full_path': 'Supprimer par chemin complet',
+
+    // ── Sed ──────────────────────────────────────────────────────────
+    'cli.sed.description': 'Éditeur de flux pour filtrer et transformer du texte',
+    'cli.sed.help.edit_text_line_line':
+        'Modifier du texte ligne par ligne avec un script : substituer (s/old/new/), supprimer (d), afficher (p) ou quitter (q), éventuellement limité à un numéro de ligne, une plage (1,5, 3,$ ou /start/,/end/) ou aux lignes correspondant à /regex/ ; ! après une adresse l\'inverse et ; sépare les commandes. Le remplacement peut utiliser & (la correspondance) et \\1 à \\9 (groupes, écrits \\(...\\) ou, avec -E, (...)). Lit des fichiers ou l\'entrée redirigée et affiche le résultat, ou réécrit les fichiers avec -i.',
+    'cli.sed.help.print_edited_file': 'Afficher le fichier modifié',
+    'cli.sed.help.save_edits_file': 'Enregistrer les modifications dans le fichier',
+    'cli.sed.help.print_only_selected_lines': 'Afficher seulement les lignes sélectionnées',
+    'cli.sed.help.edit_piped_input': 'Modifier l\'entrée redirigée',
+    'cli.sed.help.replace_every_cat_dog': 'Remplacer chaque cat par dog',
+    'cli.sed.help.edit_file_place': 'Modifier le fichier sur place',
+    'cli.sed.help.drop_comment_lines': 'Supprimer les lignes de commentaire',
+    'cli.sed.help.print_lines_1_5': 'Afficher les lignes 1 à 5',
+    'cli.sed.help.swap_two_words': 'Échanger deux mots',
+
+    // ── Sh ───────────────────────────────────────────────────────────
+    'cli.sh.description': 'Exécuter un fichier de script',
+    'cli.sh.help.requires_execute': '(nécessite la permission d\'exécution)',
+    'cli.sh.help.script_syntax': 'Syntaxe des scripts :',
+    'cli.sh.help.comments': 'Les lignes commençant par # sont des commentaires',
+    'cli.sh.help.several_commands': 'Plusieurs commandes sur une ligne',
+    'cli.sh.help.assignment': 'Affectation de variable',
+    'cli.sh.help.substitution': 'Substitution de variable',
+    'cli.sh.help.stop_on_error': 'S\'arrêter en cas d\'erreur (par défaut)',
+    'cli.sh.help.continue_on_errors': 'Continuer malgré les erreurs',
+    'cli.sh.help.exit': 'Arrêter le script avec le statut n',
+    'cli.sh.help.control_flow': 'Structures de contrôle :',
+    'cli.sh.help.until': '(until cmd : l\'inverse)',
+    'cli.sh.help.break_continue': 'Quitter / passer dans une boucle',
+    'cli.sh.help.negate': 'Inverser le code de sortie',
+    'cli.sh.help.conditions': 'Les conditions sont des commandes :',
+    'cli.sh.help.conditions_status':
+        '(statut 0 = vrai ; voir help test). Les boucles s\'arrêtent après 10000 itérations',
+    'cli.sh.help.conditions_loops': 'de while/until ; Ctrl+C arrête le script.',
+    'cli.sh.help.example_script': 'Exemple de script :',
+
+    // ── Sort ─────────────────────────────────────────────────────────
+    'cli.sort.description': 'Trier les lignes de fichiers texte',
+    'cli.sort.help.sort_lines_file_piped':
+        'Trier les lignes d\'un fichier ou de l\'entrée redirigée, par ordre alphabétique par défaut. Tri numérique, inversé, par champ, ou suppression des doublons. Plusieurs fichiers sont triés ensemble en une seule liste.',
+    'cli.sort.help.sort_lines_alphabetically': 'Trier les lignes par ordre alphabétique',
+    'cli.sort.help.sort_field_split': 'Trier par champ <n>, séparé par <sep>',
+    'cli.sort.help.sort_piped_input': 'Trier l\'entrée redirigée',
+    'cli.sort.help.z': 'De A à Z',
+    'cli.sort.help.largest_number_first': 'Plus grand nombre d\'abord',
+    'cli.sort.help.sort_csv_second_column': 'Trier un CSV par sa deuxième colonne',
+    'cli.sort.help.sorted_without_duplicates': 'Trié, sans doublons',
+
+    // ── Stat ─────────────────────────────────────────────────────────
+    'cli.stat.description': 'Afficher les métadonnées d\'un fichier ou répertoire',
+    'cli.stat.help.show_details_about_files':
+        'Afficher les détails de fichiers ou répertoires : chemin complet, taille, type, permissions, propriétaire, groupe, dates de création et de dernière modification.',
+    'cli.stat.help.show_details_each_path': 'Afficher les détails de chaque chemin',
+    'cli.stat.help.details_one_file': 'Détails d\'un fichier',
+    'cli.stat.help.several_paths_once': 'Plusieurs chemins à la fois',
+
+    // ── Tac ──────────────────────────────────────────────────────────
+    'cli.tac.description': 'Afficher un fichier en ordre inverse des lignes',
+    'cli.tac.help.print_file_lines_reverse':
+        'Afficher un fichier avec ses lignes en ordre inverse, dernière ligne d\'abord. Fonctionne aussi sur l\'entrée redirigée.',
+    'cli.tac.help.print_file_bottom_top': 'Afficher un fichier de bas en haut',
+    'cli.tac.help.reverse_piped_input': 'Inverser l\'entrée redirigée',
+    'cli.tac.help.newest_log_lines_first': 'Lignes de journal les plus récentes d\'abord',
+    'cli.tac.help.reverse_list': 'Inverser une liste',
+
+    // ── Tail ─────────────────────────────────────────────────────────
+    'cli.tail.description': 'Afficher les dernières lignes d\'un fichier',
+    'cli.tail.help.print_last_lines_file':
+        'Afficher les dernières lignes d\'un fichier, 10 par défaut. Fonctionne aussi sur l\'entrée redirigée. Avec plusieurs fichiers, chacun reçoit un en-tête ==> name <==.',
+    'cli.tail.help.last_10_lines': '10 dernières lignes',
+    'cli.tail.help.last_lines': '<count> dernières lignes',
+    'cli.tail.help.last_lines_piped_input': 'Dernières lignes de l\'entrée redirigée',
+    'cli.tail.help.show_end_log': 'Afficher la fin d\'un journal',
+    'cli.tail.help.last_5_lines': '5 dernières lignes',
+    'cli.tail.help.last_20_lines_log': '20 dernières lignes du journal',
+
+    // ── Tee ──────────────────────────────────────────────────────────
+    'cli.tee.description': 'Copier l\'entrée redirigée vers des fichiers et vers la sortie',
+    'cli.tee.help.pass_piped_input_through':
+        'Transmettre l\'entrée redirigée sans la modifier et en enregistrer une copie dans chaque fichier nommé, en l\'écrasant ou en ajoutant avec -a. Comme le tee d\'Unix, il ne lit que l\'entrée redirigée : pour copier un fichier, redirigez-le avec cat.',
+    'cli.tee.help.show_piped_output_save': 'Afficher la sortie redirigée et l\'enregistrer',
+    'cli.tee.help.append_instead_overwriting': 'Ajouter au lieu d\'écraser',
+    'cli.tee.help.show_save_copy': 'Afficher et enregistrer une copie',
+    'cli.tee.help.add_line_log': 'Ajouter une ligne à un journal',
+    'cli.tee.help.copy_source_txt_txt': 'Copier source.txt dans a.txt et b.txt',
+
+    // ── Touch ────────────────────────────────────────────────────────
+    'cli.touch.description': 'Créer un fichier vide ou mettre à jour son horodatage',
+    'cli.touch.help.create_empty_file_update':
+        'Créer un fichier vide, ou mettre à jour la date de modification d\'un fichier existant. Le répertoire parent doit déjà exister.',
+    'cli.touch.help.create_files_refresh_their':
+        'Créer les fichiers, ou actualiser leurs horodatages',
+    'cli.touch.help.create_empty_notes_txt': 'Créer un notes.txt vide',
+    'cli.touch.help.create_file_docs': 'Créer un fichier dans ~/docs',
+
+    // ── Tr ───────────────────────────────────────────────────────────
+    'cli.tr.description': 'Convertir ou supprimer des caractères de l\'entrée redirigée',
+    'cli.tr.help.translate_characters_set1_matching':
+        'Convertir les caractères de SET1 en caractères correspondants de SET2, les supprimer (-d) ou réduire les répétitions à un seul (-s). Les ensembles peuvent utiliser des plages comme a-z et des classes comme [:upper:], [:lower:], [:digit:], [:alpha:], [:alnum:] et [:space:]. Les échappements \\n, \\t et \\\\ sont reconnus. Comme le tr d\'Unix, il ne lit que l\'entrée redirigée et n\'accepte aucun fichier en argument : pour transformer un fichier, redirigez-le avec cat.',
+    'cli.tr.help.replace_characters': 'Remplacer des caractères',
+    'cli.tr.help.delete_characters': 'Supprimer des caractères',
+    'cli.tr.help.squeeze_repeated_characters': 'Réduire les caractères répétés',
+    'cli.tr.help.convert_file_upper_case': 'Convertir un fichier en majuscules',
+    'cli.tr.help.upper_case_piped_text': 'Mettre en majuscules le texte redirigé',
+    'cli.tr.help.remove_all_digits': 'Supprimer tous les chiffres',
+    'cli.tr.help.collapse_runs_spaces': 'Réduire les suites d\'espaces',
+
+    // ── Tree ─────────────────────────────────────────────────────────
+    'cli.tree.description': 'Afficher l\'arborescence d\'un répertoire',
+    'cli.tree.help.draw_directory_everything_below':
+        'Dessiner un répertoire et tout ce qu\'il contient sous forme d\'arbre, répertoires d\'abord, suivi du nombre de répertoires et de fichiers. Utilise le répertoire courant par défaut.',
+    'cli.tree.help.show_whole_tree': 'Afficher tout l\'arbre',
+    'cli.tree.help.only_levels_deep': 'Seulement <n> niveaux de profondeur',
+    'cli.tree.help.tree_current_directory': 'Arbre du répertoire courant',
+    'cli.tree.help.tree_docs': 'Arbre de ~/docs',
+    'cli.tree.help.top_two_levels_only': 'Seulement les deux premiers niveaux',
+
+    // ── Uniq ─────────────────────────────────────────────────────────
+    'cli.uniq.description': 'Filtrer les lignes en double adjacentes d\'un fichier',
+    'cli.uniq.help.collapse_repeated_lines_next':
+        'Fusionner en une seule les lignes répétées qui se suivent. Seuls les doublons adjacents sont fusionnés, triez donc l\'entrée d\'abord pour tous les attraper.',
+    'cli.uniq.help.drop_adjacent_duplicate_lines': 'Supprimer les lignes en double adjacentes',
+    'cli.uniq.help.filter_piped_input': 'Filtrer l\'entrée redirigée',
+    'cli.uniq.help.collapse_repeated_lines': 'Fusionner les lignes répétées',
+    'cli.uniq.help.count_how_often_each': 'Compter combien de fois chaque ligne apparaît',
+    'cli.uniq.help.show_only_duplicated_lines': 'Afficher seulement les lignes dupliquées',
+
+    // ── Wc ───────────────────────────────────────────────────────────
+    'cli.wc.description': 'Afficher le nombre de lignes, de mots et de caractères',
+    'cli.wc.help.count_lines_words_characters':
+        'Compter les lignes, mots et caractères de fichiers ou de l\'entrée redirigée. Avec plusieurs fichiers, une ligne de total est affichée à la fin.',
+    'cli.wc.help.lines_words_characters': 'Lignes, mots et caractères',
+    'cli.wc.help.only_line_count': 'Seulement le nombre de lignes',
+    'cli.wc.help.count_piped_input': 'Compter l\'entrée redirigée',
+    'cli.wc.help.all_three_counts': 'Les trois comptes',
+    'cli.wc.help.line_counts_total': 'Nombres de lignes avec un total',
+    'cli.wc.help.how_many_lines_mention': 'Combien de lignes mentionnent error',
+
+    // ── Xargs ────────────────────────────────────────────────────────
+    'cli.xargs.description': 'Construire et exécuter des commandes à partir de l\'entrée',
+    'cli.xargs.help.run_command_arguments_taken':
+        'Exécuter une commande avec des arguments tirés de l\'entrée, séparés par des blancs ou des retours à la ligne. Par défaut, tous sont ajoutés à une seule commande ; -n l\'exécute par lots et -I l\'exécute une fois par ligne, en remplaçant un paramètre. Les options de xargs se placent avant la commande ; tout ce qui la suit, options comprises, appartient à la commande. L\'entrée est du texte redirigé ou, sans redirection, le dernier fichier nommé.',
+    'cli.xargs.help.append_input_lines': 'Ajouter les lignes d\'entrée à <cmd>',
+    'cli.xargs.help.run_once_per_line': 'Exécuter <cmd> une fois par ligne',
+    'cli.xargs.help.read_arguments_file': 'Lire les arguments depuis un fichier',
+    'cli.xargs.help.delete_every_tmp_file': 'Supprimer chaque fichier .tmp',
+    'cli.xargs.help.copy_each_listed_file': 'Copier chaque fichier listé',
+    'cli.xargs.help.one_mkdir_per_line': 'Un mkdir par ligne',
+    'cli.xargs.help.inner_command_keeps_flags': 'La commande interne garde ses options',
+
+    // ── Markdown ─────────────────────────────────────────────────────
+    'cli.md.description': 'Afficher du Markdown dans le terminal',
+    'cli.md.help.show_markdown_formatted_terminal':
+        'Afficher du Markdown mis en forme dans le terminal : titres, texte en gras et en italique, listes, citations, code et liens. Passez le texte en ligne (entre guillemets ou non, \\n commence une nouvelle ligne) ou redirigez-le depuis une autre commande.',
+    'cli.md.help.render_inline_text': 'Afficher du texte en ligne',
+    'cli.md.help.same_optional_render_verb':
+        'Pareil, avec le verbe optionnel render (aussi preview, view)',
+    'cli.md.help.render_output_command': 'Afficher la sortie d\'une commande',
+    'cli.md.help.heading': 'Un titre',
+    'cli.md.help.several_lines': 'Plusieurs lignes',
+    'cli.md.help.piped_text': 'Texte redirigé',
+    'cli.md.help.same_using_aliases': 'Pareil, avec les alias',
+
+    // ── Todo ─────────────────────────────────────────────────────────
+    'cli.todo.description':
+        'Gérer vos tâches depuis le terminal. Ajouter, lister, modifier, terminer et supprimer des éléments TODO.',
+    'cli.todo.ls.description': 'Lister les éléments TODO',
+    'cli.todo.add.description': 'Ajouter une nouvelle tâche',
+    'cli.todo.edit.description': 'Modifier le texte ou l\'échéance d\'une tâche',
+    'cli.todo.done.description': 'Marquer une tâche comme terminée',
+    'cli.todo.toggle.description': 'Basculer une tâche entre terminée et non terminée',
+    'cli.todo.rm.description': 'Supprimer une tâche par ID',
+    'cli.todo.help.commands': 'Commandes :',
+    'cli.todo.help.list_all': 'Lister toutes les tâches',
+    'cli.todo.help.list_pending': 'Lister seulement les tâches en attente',
+    'cli.todo.help.list_completed': 'Lister seulement les tâches terminées',
+    'cli.todo.help.list_overdue': 'Lister seulement les tâches en retard',
+    'cli.todo.help.add': 'Ajouter une nouvelle tâche',
+    'cli.todo.help.add_due': 'Ajouter avec une date d\'échéance',
+    'cli.todo.help.edit': 'Modifier une tâche',
+    'cli.todo.help.done': 'Marquer une tâche comme terminée',
+    'cli.todo.help.toggle': 'Basculer terminée/non terminée',
+    'cli.todo.help.remove': 'Supprimer une tâche',
+    'cli.todo.help.remove_all': 'Supprimer toutes les tâches',
+    'cli.todo.help.due_formats': 'Formats de date d\'échéance :',
+
+    // ── True ─────────────────────────────────────────────────────────
+    'cli.true.description': 'Ne rien faire, avec succès (code de sortie 0)',
+
+    // ── False ────────────────────────────────────────────────────────
+    'cli.false.description': 'Ne rien faire, sans succès (code de sortie 1)',
+
+    // ── Htop ─────────────────────────────────────────────────────────
+    'cli.htop.description': 'Moniteur interactif de processus et de services',
 };

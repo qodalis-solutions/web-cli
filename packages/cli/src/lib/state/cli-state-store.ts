@@ -142,6 +142,11 @@ export class CliStateStore implements ICliStateStore {
     reset(): void {
         this.replaceOnSave = true;
         this.unsaved.clear();
+        // A local edit of every key (a save in progress keeps the reset)
+        const edit = ++this.edits;
+        for (const key of new Set([...Object.keys(this.state$.getValue()), ...Object.keys(this.initialState)])) {
+            this.editedAt.set(key, edit);
+        }
         this.state$.next({ ...this.initialState });
         this.schedulePersist();
     }
@@ -273,7 +278,11 @@ export class CliStateStore implements ICliStateStore {
         }
 
         try {
-            let saved = await keyValueStore.get<CliState>(this.storageKey);
+            // The key changes when another user signs in (scope 'user'): a
+            // load for the previous key must not fill this one
+            const key = this.storageKey;
+            let saved = await keyValueStore.get<CliState>(key);
+            if (key !== this.storageKey) return;
             let migrated = false;
 
             const { version, migrate } = this.options;

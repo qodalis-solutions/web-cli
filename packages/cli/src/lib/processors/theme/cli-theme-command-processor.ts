@@ -8,6 +8,7 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     CliThemeInfo,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
@@ -229,7 +230,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const name = command.value!;
+                    const name = joinShellWords(command.value ?? '');
                     const t = themes[name];
                     if (!t) {
                         context.writer.writeError(
@@ -250,7 +251,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    let themeName = command.value?.trim();
+                    let themeName = joinShellWords(command.value ?? '');
 
                     if (!themeName) {
                         // Interactive selection with live preview
@@ -326,7 +327,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key, value] = command.command.split(' ').slice(2);
+                    const [key, value] = command.positionals ?? [];
 
                     if (!key || !value) {
                         context.writer.writeError(
@@ -415,7 +416,8 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const query = command.value!.toLowerCase();
+                    const search = joinShellWords(command.value ?? '');
+                    const query = search.toLowerCase();
                     const matches = Object.entries(themeInfos).filter(
                         ([name, info]) =>
                             name.toLowerCase().includes(query) ||
@@ -427,13 +429,13 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
 
                     if (matches.length === 0) {
                         context.writer.writeWarning(
-                            `No themes matching "${command.value}"`,
+                            `No themes matching "${search}"`,
                         );
                         return;
                     }
 
                     context.writer.writeln(
-                        `Found ${matches.length} theme${matches.length > 1 ? 's' : ''} matching "${command.value}":`,
+                        `Found ${matches.length} theme${matches.length > 1 ? 's' : ''} matching "${search}":`,
                     );
                     context.writer.writeln();
 
@@ -467,7 +469,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const filter = command.value?.toLowerCase() as
+                    const filter = command.positionals?.[0]?.toLowerCase() as
                         | 'dark'
                         | 'light'
                         | undefined;

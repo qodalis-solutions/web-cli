@@ -69,4 +69,6 @@
 </footer>
 
 <!-- ===== PANEL (collapsible bottom) ===== -->
-<cli-panel [options]="options" [modules]="modules" />
+@if (modulesReady) {
+  <cli-panel [options]="options" [modules]="modules" />
+}

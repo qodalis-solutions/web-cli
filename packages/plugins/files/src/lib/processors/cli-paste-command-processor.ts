@@ -40,21 +40,22 @@ export class CliPasteCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Join files side by side: line 1 of each file goes on one output line, separated by a tab, then line 2, and so on. With -s, each file is joined onto a single line instead. Piped input is read as the file - (or as the only input when no file is named); -d takes a list of delimiters used in turn.',
+            t.t('cli.paste.help.join_files_side_side', 'Join files side by side: line 1 of each file goes on one output line, separated by a tab, then line 2, and so on. With -s, each file is joined onto a single line instead. Piped input is read as the file - (or as the only input when no file is named); -d takes a list of delimiters used in turn.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['paste <file1> <file2...>', 'Merge files line by line'],
-            ['paste -s <file>', 'Join all lines of a file into one'],
-            ['<command> | paste - <file>', 'Merge piped input with a file'],
+            ['paste <file1> <file2...>', t.t('cli.paste.help.merge_files_line_line', 'Merge files line by line')],
+            ['paste -s <file>', t.t('cli.paste.help.join_all_lines_file', 'Join all lines of a file into one')],
+            ['<command> | paste - <file>', t.t('cli.paste.help.merge_piped_input_file', 'Merge piped input with a file')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['paste names.txt ages.txt', 'Two columns, tab separated'],
-            ['paste -d , a.txt b.txt', 'Merge as comma-separated'],
-            ['paste -s -d , list.txt', 'Turn a list into one CSV line'],
+            ['paste names.txt ages.txt', t.t('cli.paste.help.two_columns_tab_separated', 'Two columns, tab separated')],
+            ['paste -d , a.txt b.txt', t.t('cli.paste.help.merge_comma_separated', 'Merge as comma-separated')],
+            ['paste -s -d , list.txt', t.t('cli.paste.help.turn_list_one_csv', 'Turn a list into one CSV line')],
         ]);
     }
 

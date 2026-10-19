@@ -165,7 +165,7 @@ export class CliCompletionEngine {
      */
     private tokenize(input: string): { text: string; start: number }[] {
         const tokens: { text: string; start: number }[] = [];
-        const word = /(?:"[^"]*(?:"|$)|'[^']*(?:'|$)|[^\s"'])+/g;
+        const word = /(?:\\.|"[^"]*(?:"|$)|'[^']*(?:'|$)|[^\s"'\\]|\\$)+/g;
         let match: RegExpExecArray | null;
         while ((match = word.exec(input)) !== null) {
             if (match[0] === '') {

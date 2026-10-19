@@ -86,8 +86,11 @@ export function writeHint(
     command: string,
     action: string,
 ): void {
-    const { writer } = context;
-    const text = `💡 Use ${writer.wrapInColor(command, CliForegroundColor.Cyan)} ${action}`;
+    const { writer, translator } = context;
+    const text = `💡 ${translator.t('cli.common.use_hint', 'Use {command} {action}', {
+        command: writer.wrapInColor(command, CliForegroundColor.Cyan),
+        action,
+    })}`;
     // "ℹ " prefix + the emoji's double width
     const width = Math.min((context.terminal?.cols ?? 80) - 1, 100) - 3;
     if (visibleLength(text) + 1 <= width) {

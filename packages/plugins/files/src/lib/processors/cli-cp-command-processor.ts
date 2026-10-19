@@ -37,21 +37,22 @@ export class CliCpCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Copy a file to a new path, or into an existing directory. Copying a directory needs -r, which copies everything inside it. A file already at the destination is replaced.',
+            t.t('cli.cp.help.copy_file_new_path', 'Copy a file to a new path, or into an existing directory. Copying a directory needs -r, which copies everything inside it. A file already at the destination is replaced.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['cp <source> <dest>', 'Copy a file to a new name'],
-            ['cp <source...> <dir>', 'Copy files into a directory'],
-            ['cp -r <dir> <dest>', 'Copy a directory and its contents'],
+            ['cp <source> <dest>', t.t('cli.cp.help.copy_file_new_name', 'Copy a file to a new name')],
+            ['cp <source...> <dir>', t.t('cli.cp.help.copy_files_directory', 'Copy files into a directory')],
+            ['cp -r <dir> <dest>', t.t('cli.cp.help.copy_directory_contents', 'Copy a directory and its contents')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['cp notes.txt notes.bak', 'Make a backup copy'],
-            ['cp report.txt ~/docs', 'Copy into ~/docs'],
-            ['cp -r project project-copy', 'Duplicate a whole directory'],
+            ['cp notes.txt notes.bak', t.t('cli.cp.help.make_backup_copy', 'Make a backup copy')],
+            ['cp report.txt ~/docs', t.t('cli.cp.help.copy_docs', 'Copy into ~/docs')],
+            ['cp -r project project-copy', t.t('cli.cp.help.duplicate_whole_directory', 'Duplicate a whole directory')],
         ]);
     }
 

@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliBase64CommandProcessor implements ICliCommandProcessor {
@@ -35,7 +36,7 @@ export class CliBase64CommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = command.value || command.data || '';
+                    const text = joinShellWords(command.value ?? '') || command.data || '';
                     const encoded = btoa(
                         new TextEncoder()
                             .encode(text as string)
@@ -73,7 +74,7 @@ export class CliBase64CommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const encoded = command.value || command.data || '';
+                    const encoded = joinShellWords(command.value ?? '') || command.data || '';
                     try {
                         const bytes = Uint8Array.from(
                             atob(encoded as string),

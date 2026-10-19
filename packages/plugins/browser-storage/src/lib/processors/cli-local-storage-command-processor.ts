@@ -36,7 +36,7 @@ export class CliLocalStorageCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key] = command.chainCommands.slice(1);
+                    const [key = ''] = command.positionals ?? [];
 
                     const value = localStorage.getItem(key);
                     context.writer.writeln(value || 'null');
@@ -50,7 +50,8 @@ export class CliLocalStorageCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key, ...value] = command.chainCommands.slice(1);
+                    // `set key "a b"`: arguments split like a shell, case kept
+                    const [key = '', ...value] = command.positionals ?? [];
 
                     localStorage.setItem(key, value.join(' '));
                     context.writer.writeSuccess('Value set successfully');
@@ -64,7 +65,7 @@ export class CliLocalStorageCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key] = command.chainCommands.slice(2);
+                    const [key = ''] = command.positionals ?? [];
 
                     localStorage.removeItem(key);
                     context.writer.writeSuccess('Key removed successfully');

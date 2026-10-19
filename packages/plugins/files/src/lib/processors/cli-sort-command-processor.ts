@@ -60,25 +60,26 @@ export class CliSortCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Sort the lines of a file or piped input, alphabetically by default. Sort numerically, in reverse, by a field, or drop duplicates. Several files are sorted together into one list.',
+            t.t('cli.sort.help.sort_lines_file_piped', 'Sort the lines of a file or piped input, alphabetically by default. Sort numerically, in reverse, by a field, or drop duplicates. Several files are sorted together into one list.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['sort <file>', 'Sort lines alphabetically'],
+            ['sort <file>', t.t('cli.sort.help.sort_lines_alphabetically', 'Sort lines alphabetically')],
             [
                 'sort -k <n> -t <sep> <file>',
-                'Sort by field <n>, split on <sep>',
+                t.t('cli.sort.help.sort_field_split', 'Sort by field <n>, split on <sep>'),
             ],
-            ['<command> | sort', 'Sort piped input'],
+            ['<command> | sort', t.t('cli.sort.help.sort_piped_input', 'Sort piped input')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['sort names.txt', 'A to Z'],
-            ['sort -n -r scores.txt', 'Largest number first'],
-            ['sort -t , -k 2 data.csv', 'Sort a CSV by its second column'],
-            ['cat words.txt | sort -u', 'Sorted, without duplicates'],
+            ['sort names.txt', t.t('cli.sort.help.z', 'A to Z')],
+            ['sort -n -r scores.txt', t.t('cli.sort.help.largest_number_first', 'Largest number first')],
+            ['sort -t , -k 2 data.csv', t.t('cli.sort.help.sort_csv_second_column', 'Sort a CSV by its second column')],
+            ['cat words.txt | sort -u', t.t('cli.sort.help.sorted_without_duplicates', 'Sorted, without duplicates')],
         ]);
     }
 

@@ -46,21 +46,22 @@ export class CliCutCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Print selected parts of each line: fields split by a delimiter (-f, tab by default) or character positions (-c). A list can be single numbers, ranges or both, such as 1,3 or 2-4 or 3-.',
+            t.t('cli.cut.help.print_selected_parts_each', 'Print selected parts of each line: fields split by a delimiter (-f, tab by default) or character positions (-c). A list can be single numbers, ranges or both, such as 1,3 or 2-4 or 3-.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['cut -d <sep> -f <list> <file>', 'Select fields'],
-            ['cut -c <list> <file>', 'Select character positions'],
-            ['<command> | cut -f <list>', 'Cut piped input'],
+            ['cut -d <sep> -f <list> <file>', t.t('cli.cut.help.select_fields', 'Select fields')],
+            ['cut -c <list> <file>', t.t('cli.cut.help.select_character_positions', 'Select character positions')],
+            ['<command> | cut -f <list>', t.t('cli.cut.help.cut_piped_input', 'Cut piped input')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['cut -d , -f 1,3 data.csv', 'First and third CSV column'],
-            ['cut -c 1-10 notes.txt', 'First 10 characters of each line'],
-            ['cat users.txt | cut -d : -f 1-2', 'First two fields split on :'],
+            ['cut -d , -f 1,3 data.csv', t.t('cli.cut.help.first_third_csv_column', 'First and third CSV column')],
+            ['cut -c 1-10 notes.txt', t.t('cli.cut.help.first_10_characters_each', 'First 10 characters of each line')],
+            ['cat users.txt | cut -d : -f 1-2', t.t('cli.cut.help.first_two_fields_split', 'First two fields split on :')],
         ]);
     }
 

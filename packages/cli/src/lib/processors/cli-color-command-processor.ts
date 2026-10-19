@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliColorCommandProcessor implements ICliCommandProcessor {
@@ -30,7 +31,7 @@ export class CliColorCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         const { writer } = context;
-        const input = (command.value || '').trim();
+        const input = joinShellWords(command.value ?? '');
 
         let r: number, g: number, b: number;
 

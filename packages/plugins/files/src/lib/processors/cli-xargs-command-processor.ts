@@ -7,6 +7,7 @@ import {
     writeExamples,
     writeUsage,
     writeWrapped,
+    quoteShellWord,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -39,25 +40,26 @@ export class CliXargsCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Run a command with arguments taken from input, separated by blanks or newlines. By default all of them are appended to one command; -n runs it in batches and -I runs it once per line, replacing a placeholder. xargs options go before the command; everything after it, flags included, belongs to the command. Input is piped text or, without a pipe, the last file named.',
+            t.t('cli.xargs.help.run_command_arguments_taken', 'Run a command with arguments taken from input, separated by blanks or newlines. By default all of them are appended to one command; -n runs it in batches and -I runs it once per line, replacing a placeholder. xargs options go before the command; everything after it, flags included, belongs to the command. Input is piped text or, without a pipe, the last file named.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['<command> | xargs <cmd>', 'Append input lines to <cmd>'],
-            ['<command> | xargs -I {} <cmd {}>', 'Run <cmd> once per line'],
-            ['xargs <cmd> <file>', 'Read the arguments from a file'],
+            ['<command> | xargs <cmd>', t.t('cli.xargs.help.append_input_lines', 'Append input lines to <cmd>')],
+            ['<command> | xargs -I {} <cmd {}>', t.t('cli.xargs.help.run_once_per_line', 'Run <cmd> once per line')],
+            ['xargs <cmd> <file>', t.t('cli.xargs.help.read_arguments_file', 'Read the arguments from a file')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['find . --name *.tmp | xargs rm', 'Delete every .tmp file'],
+            ['find . --name "*.tmp" | xargs rm', t.t('cli.xargs.help.delete_every_tmp_file', 'Delete every .tmp file')],
             [
                 'cat files.txt | xargs -I {} cp {} backup',
-                'Copy each listed file',
+                t.t('cli.xargs.help.copy_each_listed_file', 'Copy each listed file'),
             ],
-            ['cat dirs.txt | xargs -n 1 mkdir', 'One mkdir per line'],
-            ['find . --name *.bak | xargs rm -r', 'The inner command keeps its flags'],
+            ['cat dirs.txt | xargs -n 1 mkdir', t.t('cli.xargs.help.one_mkdir_per_line', 'One mkdir per line')],
+            ['find . --name "*.bak" | xargs rm -r', t.t('cli.xargs.help.inner_command_keeps_flags', 'The inner command keeps its flags')],
         ]);
     }
 
@@ -243,7 +245,11 @@ function stringArg(value: unknown): string | undefined {
     return value == null || value === true || value === '' ? undefined : String(value);
 }
 
-/** An input argument as one word of a command line. */
+/**
+ * An input argument as one literal word of a command line, quoted when it
+ * has any shell character, so `*`, `$VAR`, `$(...)`, braces and operators in
+ * the input are data, never expanded or run.
+ */
 function quoteArg(arg: string): string {
-    return /[\s"'|&;<>]/.test(arg) ? `"${arg.replace(/(["\\])/g, '\\$1')}"` : arg;
+    return quoteShellWord(arg);
 }

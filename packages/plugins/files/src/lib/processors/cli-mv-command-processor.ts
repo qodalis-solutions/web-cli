@@ -20,20 +20,21 @@ export class CliMvCommandProcessor implements ICliCommandProcessor {
     metadata = { icon: '📦', module: 'file management' };
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Move or rename a file or directory. If the destination is an existing directory, the source is moved into it; otherwise it is renamed. A file already at the destination is replaced.',
+            t.t('cli.mv.help.move_rename_file_directory', 'Move or rename a file or directory. If the destination is an existing directory, the source is moved into it; otherwise it is renamed. A file already at the destination is replaced.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['mv <source> <dest>', 'Rename a file or directory'],
-            ['mv <source...> <dir>', 'Move them into a directory'],
+            ['mv <source> <dest>', t.t('cli.mv.help.rename_file_directory', 'Rename a file or directory')],
+            ['mv <source...> <dir>', t.t('cli.mv.help.move_them_directory', 'Move them into a directory')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['mv draft.txt final.txt', 'Rename a file'],
-            ['mv final.txt ~/docs', 'Move it into ~/docs'],
-            ['mv old-dir new-dir', 'Rename a directory'],
+            ['mv draft.txt final.txt', t.t('cli.mv.help.rename_file', 'Rename a file')],
+            ['mv final.txt ~/docs', t.t('cli.mv.help.move_docs', 'Move it into ~/docs')],
+            ['mv old-dir new-dir', t.t('cli.mv.help.rename_directory', 'Rename a directory')],
         ]);
     }
 

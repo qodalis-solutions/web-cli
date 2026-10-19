@@ -21,18 +21,19 @@ export class CliTouchCommandProcessor implements ICliCommandProcessor {
     metadata = { icon: '📄', module: 'file management' };
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Create an empty file, or update the modified time of a file that already exists. The parent directory must already exist.',
+            t.t('cli.touch.help.create_empty_file_update', 'Create an empty file, or update the modified time of a file that already exists. The parent directory must already exist.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['touch <file...>', 'Create the files, or refresh their timestamps'],
+            ['touch <file...>', t.t('cli.touch.help.create_files_refresh_their', 'Create the files, or refresh their timestamps')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['touch notes.txt', 'Create an empty notes.txt'],
-            ['touch ~/docs/todo.md', 'Create a file in ~/docs'],
+            ['touch notes.txt', t.t('cli.touch.help.create_empty_notes_txt', 'Create an empty notes.txt')],
+            ['touch ~/docs/todo.md', t.t('cli.touch.help.create_file_docs', 'Create a file in ~/docs')],
         ]);
     }
 

@@ -145,22 +145,23 @@ export class CliTrCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Translate characters from SET1 into the matching characters of SET2, delete them (-d) or squeeze repeats into one (-s). Sets can use ranges like a-z and classes like [:upper:], [:lower:], [:digit:], [:alpha:], [:alnum:] and [:space:]. Escapes \\n, \\t and \\\\ are understood. Like Unix tr, it reads only piped input and takes no file operands: to transform a file, pipe it in with cat.',
+            t.t('cli.tr.help.translate_characters_set1_matching', 'Translate characters from SET1 into the matching characters of SET2, delete them (-d) or squeeze repeats into one (-s). Sets can use ranges like a-z and classes like [:upper:], [:lower:], [:digit:], [:alpha:], [:alnum:] and [:space:]. Escapes \\n, \\t and \\\\ are understood. Like Unix tr, it reads only piped input and takes no file operands: to transform a file, pipe it in with cat.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['<command> | tr <set1> <set2>', 'Replace characters'],
-            ['<command> | tr -d <set1>', 'Delete characters'],
-            ['<command> | tr -s <set1> [set2]', 'Squeeze repeated characters'],
+            ['<command> | tr <set1> <set2>', t.t('cli.tr.help.replace_characters', 'Replace characters')],
+            ['<command> | tr -d <set1>', t.t('cli.tr.help.delete_characters', 'Delete characters')],
+            ['<command> | tr -s <set1> [set2]', t.t('cli.tr.help.squeeze_repeated_characters', 'Squeeze repeated characters')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['cat notes.txt | tr a-z A-Z', 'Convert a file to upper case'],
-            ['echo hello | tr a-z A-Z', 'Upper-case piped text'],
-            ['cat notes.txt | tr -d 0-9', 'Remove all digits'],
-            ["cat notes.txt | tr -s ' '", 'Collapse runs of spaces'],
+            ['cat notes.txt | tr a-z A-Z', t.t('cli.tr.help.convert_file_upper_case', 'Convert a file to upper case')],
+            ['echo hello | tr a-z A-Z', t.t('cli.tr.help.upper_case_piped_text', 'Upper-case piped text')],
+            ['cat notes.txt | tr -d 0-9', t.t('cli.tr.help.remove_all_digits', 'Remove all digits')],
+            ["cat notes.txt | tr -s ' '", t.t('cli.tr.help.collapse_runs_spaces', 'Collapse runs of spaces')],
         ]);
     }
 

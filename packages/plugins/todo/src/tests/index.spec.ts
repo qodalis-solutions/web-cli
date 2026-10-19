@@ -364,4 +364,18 @@ describe('todo through the engine', () => {
         expect(list.output).toContain('buy milk --urgent');
         expect(list.output).toContain('call Bob');
     });
+
+    it('edits with quoted text and takes a quoted id', async () => {
+        const { CliTestHarness } = await import('@qodalis/cli');
+        const harness = new CliTestHarness();
+        harness.registerProcessors([new CliTodoCommandProcessor()]);
+        await harness.execute('todo add first');
+        await harness.execute(`todo edit 1 "buy  milk"`);
+        const list = await harness.execute('todo ls');
+        expect(list.output).toContain('buy  milk');
+        expect(list.output).not.toContain('"buy');
+
+        const done = await harness.execute('todo done "1"');
+        expect(done.stderr).toEqual([]);
+    });
 });

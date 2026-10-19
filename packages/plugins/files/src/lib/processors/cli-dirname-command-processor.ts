@@ -20,19 +20,20 @@ export class CliDirnameCommandProcessor implements ICliCommandProcessor {
     metadata = { icon: '📂', module: 'file management' };
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Print the directory part of a path, everything before the last /. A bare name with no / gives . (the current directory).',
+            t.t('cli.dirname.help.print_directory_part_path', 'Print the directory part of a path, everything before the last /. A bare name with no / gives . (the current directory).'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['dirname <path>', 'Path without its last part'],
+            ['dirname <path>', t.t('cli.dirname.help.path_without_last_part', 'Path without its last part')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['dirname /home/user/notes.txt', 'Prints /home/user'],
-            ['dirname notes.txt', 'Prints .'],
-            ['dirname /home', 'Prints /'],
+            ['dirname /home/user/notes.txt', t.t('cli.dirname.help.prints_home_user', 'Prints /home/user')],
+            ['dirname notes.txt', t.t('cli.dirname.help.prints', 'Prints .')],
+            ['dirname /home', t.t('cli.dirname.help.prints_2', 'Prints /')],
         ]);
     }
 

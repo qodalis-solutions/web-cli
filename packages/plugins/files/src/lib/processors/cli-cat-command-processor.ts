@@ -22,20 +22,21 @@ export class CliCatCommandProcessor implements ICliCommandProcessor {
     metadata = { icon: '📖', module: 'file management' };
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Print the contents of one or more files, joined in order, or of piped input. Pipe the output into other commands to search, sort or count it.',
+            t.t('cli.cat.help.print_contents_one_more', 'Print the contents of one or more files, joined in order, or of piped input. Pipe the output into other commands to search, sort or count it.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['cat <file...>', 'Print files one after another'],
-            ['cat <file> | <command>', 'Send a file to another command'],
+            ['cat <file...>', t.t('cli.cat.help.print_files_one_after', 'Print files one after another')],
+            ['cat <file> | <command>', t.t('cli.cat.help.send_file_another_command', 'Send a file to another command')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['cat notes.txt', 'Show the whole file'],
-            ['cat app.log | grep error', 'Show only lines with error'],
-            ['cat names.txt | sort', 'Print the lines sorted'],
+            ['cat notes.txt', t.t('cli.cat.help.show_whole_file', 'Show the whole file')],
+            ['cat app.log | grep error', t.t('cli.cat.help.show_only_lines_error', 'Show only lines with error')],
+            ['cat names.txt | sort', t.t('cli.cat.help.print_lines_sorted', 'Print the lines sorted')],
         ]);
     }
 

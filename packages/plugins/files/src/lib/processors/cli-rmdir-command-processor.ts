@@ -21,18 +21,19 @@ export class CliRmdirCommandProcessor implements ICliCommandProcessor {
     metadata = { icon: '🗑', module: 'file management' };
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Remove an empty directory. It refuses to remove a directory that still contains files; use rm -r for that.',
+            t.t('cli.rmdir.help.remove_empty_directory_refuses', 'Remove an empty directory. It refuses to remove a directory that still contains files; use rm -r for that.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['rmdir <dir...>', 'Remove empty directories'],
+            ['rmdir <dir...>', t.t('cli.rmdir.help.remove_empty_directories', 'Remove empty directories')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['rmdir empty-folder', 'Remove a directory in the current one'],
-            ['rmdir ~/docs/old', 'Remove by full path'],
+            ['rmdir empty-folder', t.t('cli.rmdir.help.remove_directory_current_one', 'Remove a directory in the current one')],
+            ['rmdir ~/docs/old', t.t('cli.rmdir.help.remove_full_path', 'Remove by full path')],
         ]);
     }
 

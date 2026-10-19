@@ -23,18 +23,19 @@ export class CliStatCommandProcessor implements ICliCommandProcessor {
     parameters = [];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Show details about files or directories: full path, size, type, permissions, owner, group, and when it was created and last modified.',
+            t.t('cli.stat.help.show_details_about_files', 'Show details about files or directories: full path, size, type, permissions, owner, group, and when it was created and last modified.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['stat <path...>', 'Show details for each path'],
+            ['stat <path...>', t.t('cli.stat.help.show_details_each_path', 'Show details for each path')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['stat notes.txt', 'Details of one file'],
-            ['stat ~/docs notes.txt', 'Several paths at once'],
+            ['stat notes.txt', t.t('cli.stat.help.details_one_file', 'Details of one file')],
+            ['stat ~/docs notes.txt', t.t('cli.stat.help.several_paths_once', 'Several paths at once')],
         ]);
     }
 

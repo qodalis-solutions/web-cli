@@ -18,18 +18,19 @@ export class CliPwdCommandProcessor implements ICliCommandProcessor {
     metadata = { icon: '📂', module: 'file management' };
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Print the full path of the directory you are in. Relative paths in other commands start from here.',
+            t.t('cli.pwd.help.print_full_path_directory', 'Print the full path of the directory you are in. Relative paths in other commands start from here.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['pwd', 'Show the current directory'],
+            ['pwd', t.t('cli.pwd.help.show_current_directory', 'Show the current directory')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['pwd', 'For example /home/user'],
-            ['cd ~/docs; pwd', 'Prints /home/user/docs'],
+            ['pwd', t.t('cli.pwd.help.example_home_user', 'For example /home/user')],
+            ['cd ~/docs; pwd', t.t('cli.pwd.help.prints_home_user_docs', 'Prints /home/user/docs')],
         ]);
     }
 

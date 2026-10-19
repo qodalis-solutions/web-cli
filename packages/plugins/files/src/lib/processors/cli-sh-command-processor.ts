@@ -12,13 +12,10 @@ import { splitArgs } from '../utils/split-args';
 /**
  * Execute a script file containing CLI commands.
  *
- * Supported syntax inside scripts:
- *   - One command per line (pipes, operators, redirects all work)
- *   - `# comment` lines and blank lines are ignored
- *   - `set -e` (default) — stop on first error
- *   - `set +e` — continue on errors
- *   - `VAR=value` — variable assignment (script-scoped)
- *   - `$VAR` / `${VAR}` — variable substitution
+ * Scripts run through the engine's shell runner (`@qodalis/cli`
+ * `runScript`): commands, `;`, comments, `set -e`/`set +e`, `VAR=value`,
+ * `if`/`elif`/`else`/`fi`, `for`/`while`/`until` loops, `break`/`continue`,
+ * `exit`, and `test`/`[ ]` conditions.
  */
 export class CliShCommandProcessor implements ICliCommandProcessor {
     command = 'sh';
@@ -97,10 +94,10 @@ export class CliShCommandProcessor implements ICliCommandProcessor {
     }
 
     writeDescription(context: ICliExecutionContext): void {
-        const { writer } = context;
-        writer.writeln(this.description);
+        const { writer, translator: t } = context;
+        writer.writeln(t.t('cli.sh.description', this.description));
         writer.writeln();
-        writer.writeln('Usage:');
+        writer.writeln(t.t('cli.common.usage', 'Usage:'));
         writer.writeln(
             `  ${writer.wrapInColor('sh <script.sh>', CliForegroundColor.Cyan)}`,
         );
@@ -111,17 +108,31 @@ export class CliShCommandProcessor implements ICliCommandProcessor {
             `  ${writer.wrapInColor('. <script.sh>', CliForegroundColor.Cyan)}`,
         );
         writer.writeln(
-            `  ${writer.wrapInColor('./script.sh', CliForegroundColor.Cyan)}     (requires execute permission)`,
+            `  ${writer.wrapInColor('./script.sh', CliForegroundColor.Cyan)}     ${t.t('cli.sh.help.requires_execute', '(requires execute permission)')}`,
         );
         writer.writeln();
-        writer.writeln('Script syntax:');
-        writer.writeln('  # Lines starting with # are comments');
-        writer.writeln('  VAR=value          # Variable assignment');
-        writer.writeln('  echo $VAR          # Variable substitution');
-        writer.writeln('  set -e             # Stop on error (default)');
-        writer.writeln('  set +e             # Continue on errors');
+        writer.writeln(t.t('cli.sh.help.script_syntax', 'Script syntax:'));
+        writer.writeln(`  # ${t.t('cli.sh.help.comments', 'Lines starting with # are comments')}`);
+        writer.writeln(`  cmd1; cmd2         # ${t.t('cli.sh.help.several_commands', 'Several commands on one line')}`);
+        writer.writeln(`  VAR=value          # ${t.t('cli.sh.help.assignment', 'Variable assignment')}`);
+        writer.writeln(`  echo $VAR          # ${t.t('cli.sh.help.substitution', 'Variable substitution')}`);
+        writer.writeln(`  set -e             # ${t.t('cli.sh.help.stop_on_error', 'Stop on error (default)')}`);
+        writer.writeln(`  set +e             # ${t.t('cli.sh.help.continue_on_errors', 'Continue on errors')}`);
+        writer.writeln(`  exit [n]           # ${t.t('cli.sh.help.exit', 'Stop the script with status n')}`);
         writer.writeln();
-        writer.writeln('Example script:');
+        writer.writeln(t.t('cli.sh.help.control_flow', 'Control flow:'));
+        writer.writeln('  if cmd; then ...; elif cmd; then ...; else ...; fi');
+        writer.writeln('  for NAME in a b *.txt; do ...; done');
+        writer.writeln(`  while cmd; do ...; done      ${t.t('cli.sh.help.until', '(until cmd: the opposite)')}`);
+        writer.writeln(`  break / continue [n]         # ${t.t('cli.sh.help.break_continue', 'Leave / skip in a loop')}`);
+        writer.writeln(`  ! cmd                        # ${t.t('cli.sh.help.negate', 'Negate the exit status')}`);
+        writer.writeln(
+            `  ${t.t('cli.sh.help.conditions', 'Conditions are commands:')} ${writer.wrapInColor('[ -f file ]', CliForegroundColor.Cyan)}, ${writer.wrapInColor('test "$A" = b', CliForegroundColor.Cyan)}, ${writer.wrapInColor('true', CliForegroundColor.Cyan)}, ${writer.wrapInColor('grep x file', CliForegroundColor.Cyan)}`,
+        );
+        writer.writeln(`  ${t.t('cli.sh.help.conditions_status', '(status 0 = true; see help test). Loops stop after 10000 iterations')}`);
+        writer.writeln(`  ${t.t('cli.sh.help.conditions_loops', 'of while/until; Ctrl+C stops the script.')}`);
+        writer.writeln();
+        writer.writeln(t.t('cli.sh.help.example_script', 'Example script:'));
         writer.writeln(
             writer.wrapInColor(
                 '  #!/bin/sh\n' +
@@ -129,95 +140,42 @@ export class CliShCommandProcessor implements ICliCommandProcessor {
                 '  NAME=world\n' +
                 '  echo Hello $NAME\n' +
                 '  mkdir -p /tmp/test\n' +
-                '  echo done > /tmp/test/status.txt',
+                '  for f in a b c; do\n' +
+                '      echo $f > /tmp/test/$f.txt\n' +
+                '  done\n' +
+                '  if [ -f /tmp/test/a.txt ]; then\n' +
+                '      echo done > /tmp/test/status.txt\n' +
+                '  fi',
                 CliForegroundColor.Green,
             ),
         );
     }
 }
 
+/** The script runner `@qodalis/cli` provides as a service. */
+interface CliScriptRunner {
+    run(
+        content: string,
+        context: ICliExecutionContext,
+        options?: { name?: string },
+    ): Promise<number>;
+}
+
+const SCRIPT_RUNNER_TOKEN = 'cli-script-runner';
+
 /**
- * Parse and execute script content line by line.
- *
- * Exported so the executor can reuse it for `./script.sh` execution.
+ * Execute script content with the engine's shell runner (control flow,
+ * variables, `set -e`), the same one used for `./script.sh`.
  */
 export async function executeScript(
     content: string,
     context: ICliExecutionContext,
 ): Promise<void> {
-    const lines = content.split('\n');
-    const variables: Record<string, string> = {};
-    let stopOnError = true;
-
-    for (const rawLine of lines) {
-        const line = rawLine.trim();
-
-        // Skip empty lines and comments
-        if (!line || line.startsWith('#')) {
-            continue;
-        }
-
-        // Handle set -e / set +e
-        if (line === 'set -e') {
-            stopOnError = true;
-            continue;
-        }
-        if (line === 'set +e') {
-            stopOnError = false;
-            continue;
-        }
-
-        // Variable assignment: VAR=value (no spaces around =)
-        const assignMatch = line.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-        if (assignMatch) {
-            const varName = assignMatch[1];
-            let varValue = assignMatch[2];
-            // Strip surrounding quotes
-            if (
-                (varValue.startsWith('"') && varValue.endsWith('"')) ||
-                (varValue.startsWith("'") && varValue.endsWith("'"))
-            ) {
-                varValue = varValue.slice(1, -1);
-            }
-            // Substitute variables in the value itself
-            varValue = substituteVariables(varValue, variables);
-            variables[varName] = varValue;
-            continue;
-        }
-
-        // Substitute variables in the command line
-        const expanded = substituteVariables(line, variables);
-
-        // Execute the command
-        await context.executor.executeCommand(expanded, context);
-
-        const exitCode = context.process.exitCode;
-        if (stopOnError && exitCode !== undefined && exitCode !== 0) {
-            context.writer.writeError(
-                `sh: script aborted at line: ${line}`,
-            );
-            return;
-        }
+    const runner = context.services.get<CliScriptRunner>(SCRIPT_RUNNER_TOKEN);
+    if (!runner) {
+        context.writer.writeError('sh: script runner not available (update @qodalis/cli)');
+        context.process.exit(1, { silent: true });
+        return;
     }
-}
-
-/**
- * Replace `$VAR` and `${VAR}` with values from the variables map.
- * Undefined variables expand to empty string.
- */
-function substituteVariables(
-    input: string,
-    variables: Record<string, string>,
-): string {
-    // ${VAR} form
-    let result = input.replace(
-        /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g,
-        (_, name) => variables[name] ?? '',
-    );
-    // $VAR form (must not be followed by { which was already handled)
-    result = result.replace(
-        /\$([A-Za-z_][A-Za-z0-9_]*)/g,
-        (_, name) => variables[name] ?? '',
-    );
-    return result;
+    await runner.run(content, context, { name: 'sh' });
 }

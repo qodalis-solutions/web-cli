@@ -74,24 +74,25 @@ export class CliSedCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Edit text line by line with a script: substitute (s/old/new/), delete (d), print (p) or quit (q), optionally limited to a line number, a range (1,5, 3,$ or /start/,/end/) or lines matching /regex/; ! after an address inverts it and ; separates commands. The replacement can use & (the match) and \\1 to \\9 (groups, written \\(...\\) or, with -E, (...)). Reads files or piped input and prints the result, or rewrites the files with -i.',
+            t.t('cli.sed.help.edit_text_line_line', 'Edit text line by line with a script: substitute (s/old/new/), delete (d), print (p) or quit (q), optionally limited to a line number, a range (1,5, 3,$ or /start/,/end/) or lines matching /regex/; ! after an address inverts it and ; separates commands. The replacement can use & (the match) and \\1 to \\9 (groups, written \\(...\\) or, with -E, (...)). Reads files or piped input and prints the result, or rewrites the files with -i.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ["sed '<script>' <file>", 'Print the edited file'],
-            ["sed -i '<script>' <file>", 'Save the edits into the file'],
-            ["sed -n '<script>p' <file>", 'Print only selected lines'],
-            ["<command> | sed '<script>'", 'Edit piped input'],
+            ["sed '<script>' <file>", t.t('cli.sed.help.print_edited_file', 'Print the edited file')],
+            ["sed -i '<script>' <file>", t.t('cli.sed.help.save_edits_file', 'Save the edits into the file')],
+            ["sed -n '<script>p' <file>", t.t('cli.sed.help.print_only_selected_lines', 'Print only selected lines')],
+            ["<command> | sed '<script>'", t.t('cli.sed.help.edit_piped_input', 'Edit piped input')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ["sed 's/cat/dog/g' pets.txt", 'Replace every cat with dog'],
-            ["sed -i 's/v1/v2/' config.txt", 'Edit the file in place'],
-            ["sed '/^#/d' config.txt", 'Drop comment lines'],
-            ["sed -n '1,5p' notes.txt", 'Print lines 1 to 5'],
-            ["sed -E 's/(\\w+) (\\w+)/\\2 \\1/' names.txt", 'Swap two words'],
+            ["sed 's/cat/dog/g' pets.txt", t.t('cli.sed.help.replace_every_cat_dog', 'Replace every cat with dog')],
+            ["sed -i 's/v1/v2/' config.txt", t.t('cli.sed.help.edit_file_place', 'Edit the file in place')],
+            ["sed '/^#/d' config.txt", t.t('cli.sed.help.drop_comment_lines', 'Drop comment lines')],
+            ["sed -n '1,5p' notes.txt", t.t('cli.sed.help.print_lines_1_5', 'Print lines 1 to 5')],
+            ["sed -E 's/(\\w+) (\\w+)/\\2 \\1/' names.txt", t.t('cli.sed.help.swap_two_words', 'Swap two words')],
         ]);
     }
 

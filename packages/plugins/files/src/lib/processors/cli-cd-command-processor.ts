@@ -20,21 +20,22 @@ export class CliCdCommandProcessor implements ICliCommandProcessor {
     metadata = { icon: '📁', module: 'file management' };
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Change the current directory. Without a path it goes to your home directory. Paths can be absolute (/...), relative to where you are, or start with ~ for home.',
+            t.t('cli.cd.help.change_current_directory_without', 'Change the current directory. Without a path it goes to your home directory. Paths can be absolute (/...), relative to where you are, or start with ~ for home.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['cd', 'Go to your home directory'],
-            ['cd <dir>', 'Go into a directory'],
-            ['cd ..', 'Go up one level'],
+            ['cd', t.t('cli.cd.help.go_home_directory', 'Go to your home directory')],
+            ['cd <dir>', t.t('cli.cd.help.go_directory', 'Go into a directory')],
+            ['cd ..', t.t('cli.cd.help.go_up_one_level', 'Go up one level')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['cd ~/docs', 'Go to docs in your home'],
-            ['cd ../projects', 'Go to a sibling directory'],
-            ['cd /', 'Go to the root'],
+            ['cd ~/docs', t.t('cli.cd.help.go_docs_home', 'Go to docs in your home')],
+            ['cd ../projects', t.t('cli.cd.help.go_sibling_directory', 'Go to a sibling directory')],
+            ['cd /', t.t('cli.cd.help.go_root', 'Go to the root')],
         ]);
     }
 

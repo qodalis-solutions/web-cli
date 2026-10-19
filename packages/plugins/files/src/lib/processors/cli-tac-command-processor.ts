@@ -21,19 +21,20 @@ export class CliTacCommandProcessor implements ICliCommandProcessor {
     metadata = { icon: '🔄', module: 'file management' };
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Print a file with its lines in reverse order, last line first. Works on piped input too.',
+            t.t('cli.tac.help.print_file_lines_reverse', 'Print a file with its lines in reverse order, last line first. Works on piped input too.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['tac <file>', 'Print a file bottom to top'],
-            ['<command> | tac', 'Reverse piped input'],
+            ['tac <file>', t.t('cli.tac.help.print_file_bottom_top', 'Print a file bottom to top')],
+            ['<command> | tac', t.t('cli.tac.help.reverse_piped_input', 'Reverse piped input')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['tac app.log', 'Newest log lines first'],
-            ['cat list.txt | tac', 'Reverse a list'],
+            ['tac app.log', t.t('cli.tac.help.newest_log_lines_first', 'Newest log lines first')],
+            ['cat list.txt | tac', t.t('cli.tac.help.reverse_list', 'Reverse a list')],
         ]);
     }
 

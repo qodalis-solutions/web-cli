@@ -57,6 +57,8 @@ export class CliLsCommandProcessor implements ICliCommandProcessor {
         const longFormat = command.args['long'] || command.args['l'];
         this.humanReadable = !!(command.args['human-readable'] || command.args['h']);
         const targets = paths.length > 0 ? paths : [fs.getCurrentDirectory()];
+        // Down a pipe or into `$(...)`: one name per line, as a shell's ls
+        const piped: string[] = [];
 
         targets.forEach((targetPath, index) => {
             try {
@@ -89,11 +91,16 @@ export class CliLsCommandProcessor implements ICliCommandProcessor {
                     this.writeLongFormat(filtered, context);
                 } else {
                     this.writeShortFormat(filtered, context);
+                    piped.push(...filtered.map((e) => e.name));
                 }
             } catch (e: any) {
                 context.writer.writeError(e.message);
             }
         });
+
+        if (!longFormat && piped.length > 0) {
+            context.process.output(piped.join('\n'));
+        }
     }
 
     writeDescription(context: ICliExecutionContext): void {

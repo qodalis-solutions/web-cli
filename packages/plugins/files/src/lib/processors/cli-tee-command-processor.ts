@@ -32,22 +32,23 @@ export class CliTeeCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Pass piped input through unchanged and save a copy of it to every file named, overwriting them or appending with -a. Like Unix tee, it reads only piped input: to copy a file, pipe it in with cat.',
+            t.t('cli.tee.help.pass_piped_input_through', 'Pass piped input through unchanged and save a copy of it to every file named, overwriting them or appending with -a. Like Unix tee, it reads only piped input: to copy a file, pipe it in with cat.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['<command> | tee <file...>', 'Show piped output and save it'],
-            ['<command> | tee -a <file>', 'Append instead of overwriting'],
+            ['<command> | tee <file...>', t.t('cli.tee.help.show_piped_output_save', 'Show piped output and save it')],
+            ['<command> | tee -a <file>', t.t('cli.tee.help.append_instead_overwriting', 'Append instead of overwriting')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['cat notes.txt | tee copy.txt', 'Show and save a copy'],
-            ['echo done | tee -a log.txt', 'Add a line to a log'],
+            ['cat notes.txt | tee copy.txt', t.t('cli.tee.help.show_save_copy', 'Show and save a copy')],
+            ['echo done | tee -a log.txt', t.t('cli.tee.help.add_line_log', 'Add a line to a log')],
             [
                 'cat source.txt | tee a.txt b.txt',
-                'Copy source.txt into a.txt and b.txt',
+                t.t('cli.tee.help.copy_source_txt_txt', 'Copy source.txt into a.txt and b.txt'),
             ],
         ]);
     }

@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    unquoteRawArgument,
 } from '@qodalis/cli-core';
 
 export class CliJsonCommandProcessor implements ICliCommandProcessor {
@@ -33,7 +34,7 @@ export class CliJsonCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const input = (command.value ||
+                    const input = (unquoteRawArgument(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     try {
@@ -71,7 +72,7 @@ export class CliJsonCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const input = (command.value ||
+                    const input = (unquoteRawArgument(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     try {
@@ -109,7 +110,7 @@ export class CliJsonCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const input = (command.value ||
+                    const input = (unquoteRawArgument(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     try {

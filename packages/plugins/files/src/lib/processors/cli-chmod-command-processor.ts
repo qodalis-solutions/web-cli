@@ -31,24 +31,25 @@ export class CliChmodCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Change who can read (r), write (w) and execute (x) a file. Use an octal mode such as 755 or a symbolic one: who (u user, g group, o others, a all), then + to add, - to remove or = to set, then the permissions.',
+            t.t('cli.chmod.help.change_who_can_read', 'Change who can read (r), write (w) and execute (x) a file. Use an octal mode such as 755 or a symbolic one: who (u user, g group, o others, a all), then + to add, - to remove or = to set, then the permissions.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['chmod <mode> <file...>', 'Set permissions'],
+            ['chmod <mode> <file...>', t.t('cli.chmod.help.set_permissions', 'Set permissions')],
             [
                 'chmod -R <mode> <dir>',
-                'Apply to a directory and everything in it',
+                t.t('cli.chmod.help.apply_directory_everything', 'Apply to a directory and everything in it'),
             ],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['chmod 644 notes.txt', 'rw-r--r--: owner writes, others read'],
-            ['chmod u+x script.sh', 'Let the owner execute it'],
-            ['chmod go-w shared.txt', 'Take away write for group and others'],
-            ['chmod -R 755 site', 'Set a whole directory tree'],
+            ['chmod 644 notes.txt', t.t('cli.chmod.help.rw_r_r_owner', 'rw-r--r--: owner writes, others read')],
+            ['chmod u+x script.sh', t.t('cli.chmod.help.let_owner_execute', 'Let the owner execute it')],
+            ['chmod go-w shared.txt', t.t('cli.chmod.help.take_away_write_group', 'Take away write for group and others')],
+            ['chmod -R 755 site', t.t('cli.chmod.help.set_whole_directory_tree', 'Set a whole directory tree')],
         ]);
     }
 

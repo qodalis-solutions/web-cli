@@ -31,19 +31,20 @@ export class CliMkdirCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Create a new directory. With -p, any missing parent directories are created too.',
+            t.t('cli.mkdir.help.create_new_directory_p', 'Create a new directory. With -p, any missing parent directories are created too.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['mkdir <dir...>', 'Create one or more directories'],
-            ['mkdir -p <path>', 'Create a directory and its missing parents'],
+            ['mkdir <dir...>', t.t('cli.mkdir.help.create_one_more_directories', 'Create one or more directories')],
+            ['mkdir -p <path>', t.t('cli.mkdir.help.create_directory_missing_parents', 'Create a directory and its missing parents')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['mkdir projects', 'Create projects in the current directory'],
-            ['mkdir -p ~/docs/2026/notes', 'Create the whole path at once'],
+            ['mkdir projects', t.t('cli.mkdir.help.create_projects_current_directory', 'Create projects in the current directory')],
+            ['mkdir -p ~/docs/2026/notes', t.t('cli.mkdir.help.create_whole_path_once', 'Create the whole path at once')],
         ]);
     }
 

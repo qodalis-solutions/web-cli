@@ -38,6 +38,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Pipes and redirects show only the final output.** In `cat f | grep x` only grep's output appears, and `echo hi > f` prints nothing, as in a shell (every stage used to print). Errors and warnings of every stage are still shown. Tables, lists and key-value output are passed down a pipe as text, so `server list | grep node` works. A lone `-` is kept as an operand (`paste - b.txt`), `-n5` / `-f2` work like `-n 5`, and redirect targets can be quoted (`> "my dir/f.txt"`).
 - **Cross-tab sync no longer loses a change.** A sync message from another tab that arrived late, or while this tab was saving, replaced the newer value in memory (saved data was right; the tab showed an old value until reloaded). Stores now read the saved state when another tab saves, and only this terminal's own edits count as unsaved.
 - **Variables for the terminal, the user and everyone.** `NAME=value` is for this terminal only (as in a shell; it used to be saved), `export NAME=value` is saved for the signed-in user, and the new `export --global NAME=value` is shared by every user (permission `system:env:global` with the users plugin; admins have it). The terminal's value wins over the user's, the user's over the shared one. `export NAME` saves a terminal variable, `unset --global` removes a shared one, and `env` shows where each value comes from. Saving applies each change to the latest saved variables under the cross-tab lock: two tabs, or two users in two tabs, used to overwrite each other's variables. `CliEnvironment.onChange` now receives one change at a time (`applyEnvironmentChange` applies it).
+- **Scripts with control flow.** `sh`, `source` and `./script.sh` support `if` / `elif` / `else`, `for … in`, `while`, `until`, `break` / `continue`, `exit`, `;` on one line and `\` line continuation, with syntax errors reported by line (`sh: line 4: syntax error: expected 'fi'`). New `test` / `[ … ]` (strings, numbers, `-e` / `-f` / `-d` paths), `true` (`:`) and `false`. Ctrl+C stops a script; a `while` stops after 10000 rounds. `grep` exits 1 when nothing matches (2 on errors) and has `-q`, so `if grep -q …` works.
+- **Loops and conditions at the prompt.** A line starting with `if`, `for`, `while` or `until` runs like a one-line script (`for f in *.md; do wc -l $f; done`); a failing command does not stop the loop, as in an interactive shell.
+- **`eval` gets the line as typed** (`literalInput` in a processor's metadata): `>`, `|`, `&&`, `$` and wildcards in its code are no longer treated as shell syntax.
+- **Command substitution.** `$(command)` and backticks are replaced by the command's output (`echo "Today is $(date)"`, `COUNT=$(cat log | wc -l)`), nested too; not inside single quotes.
+- **Brace expansion and `**`.** `touch app.{ts,html}`, `mkdir day{1..7}`, `{a..e}`, `{01..10}`, `{0..20..5}`; `cat **/*.md` matches at any depth (not inside dot folders).
+- **Backslash escapes.** Outside quotes a backslash keeps the next character (`cat my\ notes.txt`, `echo \$HOME`); inside double quotes it escapes `"`, `\`, `$` and `` ` ``; operators after a backslash are text (`a\|b`).
+- **Fixes found while moving commands to shell-split arguments:** `alias ll="ls -la"` works (it never reached the command); `history search <text>` searches (the query was always empty); `theme set` / `theme random` read their argument; `localStorage get` / `remove` read the right key and keep its case; `guid compare` / `validate` accept UUIDs containing `d`, `i`, `n`, `r` or `u` (they were stripped); `users adduser "carol"`, `snippet run k="a b"`, `events emit type '{"a":1}'` and `csv` / `chart` with quoted fields work. Unquoted extra spaces are collapsed as in a shell (`string length a   b` counts `a b`); quoted text keeps them. Core exports `unquoteRawArgument` for code and JSON arguments.
+- **Commands get their arguments split like a shell:** `command.positionals` (`cat "a b.txt" c` gives `['a b.txt', 'c']`), so commands no longer each strip quotes their own way. Core exports `splitShellWords`, `joinShellWords` and `quoteShellWord`. The servers accept `positionals` too.
 - **Wildcards.** With the files plugin, `*`, `?` and `[...]` in unquoted arguments become the matching paths (`rm *.log`, `cat docs/*.md`, `ls */`), as in a shell: dot files only for a pattern starting with `.`, a pattern without matches is kept as typed, quoted patterns are never expanded.
 - **Variables and quotes.** `$VAR` is not expanded inside single quotes, and an apostrophe inside double quotes or without a pair (`echo "it's $HOME"`, `echo it's $USER`) no longer stops the expansion of the rest of the line.
 - **`echo` prints its arguments like a shell:** `echo "a" "b"` prints `a b` (was `a" "b`), and words that look like flags are printed (`echo hello --world`, or a variable holding `--x`); they used to disappear. The servers' `echo` behaves the same.
@@ -48,6 +56,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Redirects write whole lines.** `echo one > f.txt; echo two >> f.txt` gives two lines (it gave `onetwo`).
 - **A server that stops is shown as disconnected at once** (`server:disconnected`, panel status, `server list`), instead of after about 30 seconds of event-socket retries.
 - `diff` compares piped input: `echo "a" | diff --b "b"`.
+- **`events` respects permissions.** `events log` and `events watch` show `user:*` events only to those with `audit:read`, and those events no longer carry the user's email or extra data. `events emit` refuses the system's own namespaces (`boot`, `command`, `config`, `module`, `package`, `server`, `service`, `session`, `user`), so `session:changed` can no longer be faked from the terminal.
+- `isExecuting` no longer stays on when a nested command (a script or `$(…)`) finishes before the outer one.
 - Translations for the `server`, `ssh` and `events` commands in all 10 language packs.
 - **Services (DI):**
   - Unloading a module (`pkg remove`, `pkg update`) now removes everything it registered: its guards and permissions at once (a removed plugin's guards used to keep running, and ran twice after `pkg update`), then calls its `onDestroy` (it was only called when the whole terminal was destroyed), then removes its services. An overridden service becomes the previous one again. The users plugin also removes the services it registers at runtime.
@@ -85,6 +95,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - `find`: `--maxdepth` counts from the start path (0 = the path itself), `--name` is case-sensitive, new `--iname`.
   - `sed`: `-n` and `p`, `&` and `\1`…`\9` in replacements, `-E`, several `-e`, `;`-separated commands, address ranges, `!`, `q`; `$` is the real last line.
   - `awk` accepts an unquoted program (`awk {print $1} file`) and several files. `xargs` passes the inner command's flags (`xargs rm -r`). `tee` writes whole lines and passes its input through. `tr` never reads a set as a file name with piped input, and supports `\n`, `\t`, `-d` and `-s` together.
+  - `xargs` quotes each input item, so items containing spaces, `;` or `*` are passed as one argument instead of becoming new commands or wildcards. `mv a a` is refused as the same file (it could delete a neighbouring entry). `echo a \> f` prints `a > f` instead of writing a file. `ls | wc -l` counts the entries (piped `ls` gives one name per line).
   - Every file command has a help page.
 - **Markdown** (`@qodalis/cli-markdown`): `md "# Title"` renders (it was "Command not found"); `\n` makes new lines; piped input is rendered.
 - **Todo:** `todo add "buy milk"` stores the text without the quotes.
@@ -98,6 +109,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - State Management: `update()` and `scope: 'user'`. Services: the typed plugin tokens.
 - New "Command Line" page under Core Concepts: quotes, flags, pipes and redirects, `&&` / `||` / `;`, variables, wildcards and tab completion.
+- The Command Line page covers backslashes, command substitution, brace expansion and `**`, and scripts, and is translated into every language of the docs site.
 - The markdown plugin is loaded in the React, Vue, Angular and vanilla demos.
 
 - New "Using servers from the terminal" section on the Server Integration page (configuration, running remote commands, all `server` commands and aliases, troubleshooting); the Built-in Commands page lists the server commands.
@@ -117,6 +129,18 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Plugins created with `create-cli-plugin` point `umd`/`unpkg` at `umd/index.global.js`, the file the build actually writes (was `umd/index.js`).
 - `@qodalis/cli-encode` and `@qodalis/cli-data-explorer` can be installed with `pkg add` again: their `unpkg` entry pointed at a file their build did not produce.
 - The Electron demo starts again: tsup 9 writes `.cjs` files in an ESM package, and the demo now points at them. It also uses the mobile app's icon.
+
+### Bundle size
+
+- The docs site and the Angular demo load the language packs and the demo's plugins on demand: the docs' initial bundle went from 3.2 MB to 2.3 MB, the Angular demo's from 2.0 MB to 1.5 MB.
+
+### Breaking changes
+
+- `ICliStateStore.update()` is required: a custom state store must implement it.
+- `grep` exits with status 1 when nothing matches (scripts and `&&` chains see it as a failure, as in Unix).
+- `tr` and `tee` read only piped input; a file operand is an error.
+- `sh` / `source` need the engine's script runner service (`ICliScriptRunner_TOKEN`), registered by `@qodalis/cli` 2.0.0-beta.18 or later.
+- `NAME=value` sets a variable for this terminal only; use `export NAME=value` to save it.
 
 ### Panel (`@qodalis/cli`, `@qodalis/react-cli`, `@qodalis/vue-cli`, `@qodalis/angular-cli`)
 

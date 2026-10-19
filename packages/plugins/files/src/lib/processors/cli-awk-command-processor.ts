@@ -42,25 +42,26 @@ export class CliAwkCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'Process text as records and fields: each line is split into fields $1, $2, ... ($0 is the whole line), and each rule runs its { action } on matching lines. Supports BEGIN and END blocks, /regex/ and field comparison patterns, print, variables, NR and NF. Quote the program; a simple one also works unquoted (awk {print $1} file).',
+            t.t('cli.awk.help.process_text_records_fields', 'Process text as records and fields: each line is split into fields $1, $2, ... ($0 is the whole line), and each rule runs its { action } on matching lines. Supports BEGIN and END blocks, /regex/ and field comparison patterns, print, variables, NR and NF. Quote the program; a simple one also works unquoted (awk {print $1} file).'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ["awk '<program>' <file>", 'Run a program over a file'],
+            ["awk '<program>' <file>", t.t('cli.awk.help.run_program_over_file', 'Run a program over a file')],
             [
                 "awk -F <sep> '<program>' <file>",
-                'Split fields on <sep> instead of spaces',
+                t.t('cli.awk.help.split_fields_instead_spaces', 'Split fields on <sep> instead of spaces'),
             ],
-            ["<command> | awk '<program>'", 'Run a program over piped input'],
+            ["<command> | awk '<program>'", t.t('cli.awk.help.run_program_over_piped', 'Run a program over piped input')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ["awk '{print $1}' data.txt", 'Print the first column'],
-            ["awk -F , '{print $2}' data.csv", 'Second column of a CSV'],
-            ["awk '$3 > 100 {print $1}' sales.txt", 'Filter rows by a field'],
-            ["awk '{s += $2} END {print s}' data.txt", 'Sum the second column'],
+            ["awk '{print $1}' data.txt", t.t('cli.awk.help.print_first_column', 'Print the first column')],
+            ["awk -F , '{print $2}' data.csv", t.t('cli.awk.help.second_column_csv', 'Second column of a CSV')],
+            ["awk '$3 > 100 {print $1}' sales.txt", t.t('cli.awk.help.filter_rows_field', 'Filter rows by a field')],
+            ["awk '{s += $2} END {print s}' data.txt", t.t('cli.awk.help.sum_second_column', 'Sum the second column')],
         ]);
     }
 

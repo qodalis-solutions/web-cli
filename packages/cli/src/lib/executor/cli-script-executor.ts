@@ -1,6 +1,7 @@
 import { ICliExecutionContext, CliForegroundColor } from '@qodalis/cli-core';
 import { ICliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
 import { ICliExecutionHost } from './cli-command-executor';
+import { runScript } from './cli-script-runner';
 
 /**
  * Attempt to execute a file path as a script.
@@ -48,55 +49,7 @@ export async function tryExecuteScript(
         return true;
     }
 
-    // Execute the script content line by line
-    const lines = content.split('\n');
-    const variables: Record<string, string> = {};
-    let stopOnError = true;
-
-    for (const rawLine of lines) {
-        const line = rawLine.trim();
-
-        if (!line || line.startsWith('#')) {
-            continue;
-        }
-
-        if (line === 'set -e') {
-            stopOnError = true;
-            continue;
-        }
-        if (line === 'set +e') {
-            stopOnError = false;
-            continue;
-        }
-
-        // Variable assignment
-        const assignMatch = line.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-        if (assignMatch) {
-            const varName = assignMatch[1];
-            let varValue = assignMatch[2];
-            if (
-                (varValue.startsWith('"') && varValue.endsWith('"')) ||
-                (varValue.startsWith("'") && varValue.endsWith("'"))
-            ) {
-                varValue = varValue.slice(1, -1);
-            }
-            varValue = substituteVars(varValue, variables);
-            variables[varName] = varValue;
-            continue;
-        }
-
-        const expanded = substituteVars(line, variables);
-        await executeCommand(expanded, context);
-
-        const exitCode = context.process.exitCode;
-        if (stopOnError && exitCode !== undefined && exitCode !== 0) {
-            context.writer.writeError(
-                `${filePath}: script aborted at line: ${line}`,
-            );
-            return true;
-        }
-    }
-
+    await runScript(content, context, { name: filePath, executeCommand });
     return true;
 }
 
@@ -141,14 +94,14 @@ export function expandEnvironmentVars(
         if (part.quoted) continue;
         let text = part.text;
         if (lastExitCode !== undefined) {
-            text = text.replace(/\$\?/g, String(lastExitCode));
+            text = text.replace(/(?<!\\)\$\?/g, String(lastExitCode));
         }
         text = text.replace(
-            /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g,
+            /(?<!\\)\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g,
             (_, name) => env.get(name) ?? '',
         );
         text = text.replace(
-            /\$([A-Za-z_][A-Za-z0-9_]*)/g,
+            /(?<!\\)\$([A-Za-z_][A-Za-z0-9_]*)/g,
             (_, name) => env.get(name) ?? '',
         );
         const home = env.get('HOME');

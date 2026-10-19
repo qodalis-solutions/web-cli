@@ -52,23 +52,24 @@ export class CliFindCommandProcessor implements ICliCommandProcessor {
     ];
 
     writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
         writeWrapped(
             context,
-            'List files and directories under a path (the current directory by default), searching all subdirectories. The start path itself is listed first. Filter by name with a glob pattern (* and ?; --name is case-sensitive, --iname is not) or by type.',
+            t.t('cli.find.help.list_files_directories_under', 'List files and directories under a path (the current directory by default), searching all subdirectories. The start path itself is listed first. Filter by name with a glob pattern (* and ?; --name is case-sensitive, --iname is not) or by type.'),
         );
         context.writer.writeln();
         writeUsage(context, [
-            ['find [path]', 'List everything under a path'],
-            ['find [path] --name <pattern>', 'Match names against a glob'],
-            ['find [path] --iname <pattern>', 'Same, ignoring case'],
-            ['find [path] --type f|d', 'Only files (f) or directories (d)'],
+            ['find [path]', t.t('cli.find.help.list_everything_under_path', 'List everything under a path')],
+            ['find [path] --name <pattern>', t.t('cli.find.help.match_names_against_glob', 'Match names against a glob')],
+            ['find [path] --iname <pattern>', t.t('cli.find.help.same_ignoring_case', 'Same, ignoring case')],
+            ['find [path] --type f|d', t.t('cli.find.help.only_files_f_directories', 'Only files (f) or directories (d)')],
         ]);
         context.writer.writeln();
         writeExamples(context, [
-            ['find ~/docs', 'List everything in ~/docs'],
-            ['find . --name *.txt', 'Find all .txt files'],
-            ['find . --type d --maxdepth 1', 'Directories near the top'],
-            ['find . --name *.tmp | xargs rm', 'Delete all .tmp files'],
+            ['find ~/docs', t.t('cli.find.help.list_everything_docs', 'List everything in ~/docs')],
+            ['find . --name "*.txt"', t.t('cli.find.help.find_all_txt_files', 'Find all .txt files')],
+            ['find . --type d --maxdepth 1', t.t('cli.find.help.directories_near_top', 'Directories near the top')],
+            ['find . --name "*.tmp" | xargs rm', t.t('cli.find.help.delete_all_tmp_files', 'Delete all .tmp files')],
         ]);
     }
 

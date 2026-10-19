@@ -179,7 +179,9 @@
         <span class="chrome-title">qodalis-cli</span>
       </div>
       <div class="terminal-body">
-        <cli [options]="options" [modules]="modules" height="420px" />
+        @if (modulesReady) {
+          <cli [options]="options" [modules]="modules" height="420px" />
+        }
       </div>
     </div>
   </div>

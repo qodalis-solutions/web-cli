@@ -36,6 +36,7 @@ import { CliTranslationService } from '../services/cli-translation-service';
 import { CliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
 import { CliHttpClient } from '../services/cli-http-client';
 import { CliNotifier } from '../services/cli-notifier';
+import { cliScriptRunner, ICliScriptRunner_TOKEN } from '../executor/cli-script-runner';
 
 /**
  * Result of executing a command through the test harness.
@@ -79,6 +80,8 @@ export class CliTestHarness {
     readonly registry: CliCommandProcessorRegistry;
     readonly executor: CliCommandExecutor;
     readonly services: CliServiceContainer;
+    /** Shared by every command: add a language pack and switch locale to test translations. */
+    readonly translator = new CliTranslationService();
 
     private readonly stateStoreManager: CliStateStoreManager;
     private readonly initialized = new Set<ICliCommandProcessor>();
@@ -128,6 +131,12 @@ export class CliTestHarness {
         this.services.set({
             provide: ICliEnvironment_TOKEN,
             useValue: new CliEnvironment(),
+        });
+
+        // Shell-style script runner (`sh` / `source`)
+        this.services.set({
+            provide: ICliScriptRunner_TOKEN,
+            useValue: cliScriptRunner,
         });
 
         // Same access infrastructure as the engine: permission registry and the
@@ -256,7 +265,7 @@ export class CliTestHarness {
         const context: ICliExecutionHost = {
             writer,
             services: this.services,
-            translator: new CliTranslationService(),
+            translator: this.translator,
             spinner: createNoopSpinner(),
             progressBar: createNoopProgressBar(),
             textAnimator: createNoopTextAnimator(),

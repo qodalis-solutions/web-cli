@@ -40,6 +40,19 @@ export function publishUserEvents(
 ): Subscription | undefined {
     if (!bus) return undefined;
     return events$.subscribe((event) => {
-        bus.emit(`user:${event.type}`, event, { source: '@qodalis/cli-users' });
+        bus.emit(`user:${event.type}`, publicUserEvent(event), { source: '@qodalis/cli-users' });
     });
+}
+
+/**
+ * The event as published on the bus: the user's name, groups and state,
+ * without their email address or custom data (bus events can be listed
+ * with `events log`).
+ */
+export function publicUserEvent(event: ICliUserEvent): ICliUserEvent {
+    const { email: _email, data: _data, ...user } = event.user as ICliUserEvent['user'] & {
+        email?: unknown;
+        data?: unknown;
+    };
+    return { ...event, user: user as ICliUserEvent['user'] };
 }
