@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { ICliCommandProcessor, ICliModule, CliEngineSnapshot } from '@qodalis/cli-core';
-import { CliEngine, CliEngineOptions } from '@qodalis/cli';
+import { CliEngine, CliEngineOptions, resolveCliHostConfig } from '@qodalis/cli';
 import { useCli } from './CliContext';
 import { useCliConfig } from './CliConfigContext';
 import { useCliEngine } from './useCliEngine';
@@ -31,21 +31,10 @@ export function Cli({
     const containerRef = useRef<HTMLDivElement>(null);
     const hasProvider = !!ctx.engine;
 
-    // Merge: local props override global config
-    const mergedModules = modules ?? config.modules;
-    const mergedProcessors = processors ?? config.processors;
-    const mergedOptions = options ?? config.options;
-    const mergedServices = services ?? config.services;
-    const optionsWithSnapshot = snapshot
-        ? { ...mergedOptions, snapshot }
-        : mergedOptions;
-
     // Always call the hook (React rules), but disable it when inside a CliProvider.
     const standaloneEngine = useCliEngine(containerRef, {
-        modules: mergedModules,
-        processors: mergedProcessors,
-        options: optionsWithSnapshot,
-        services: mergedServices,
+        ...resolveCliHostConfig({ modules, processors, options, services }, config),
+        snapshot,
         disabled: hasProvider,
     });
 

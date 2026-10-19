@@ -1,12 +1,7 @@
 import { useRef, useEffect, useState, RefObject } from 'react';
-import { CliEngine, CliEngineOptions } from '@qodalis/cli';
-import { ICliCommandProcessor, ICliModule } from '@qodalis/cli-core';
+import { CliEngine, CreateCliEngineConfig, createCliEngine } from '@qodalis/cli';
 
-export interface UseCliEngineConfig {
-    modules?: ICliModule[];
-    processors?: ICliCommandProcessor[];
-    options?: CliEngineOptions;
-    services?: Record<string, any>;
+export interface UseCliEngineConfig extends Omit<CreateCliEngineConfig, 'framework'> {
     disabled?: boolean;
 }
 
@@ -29,23 +24,7 @@ export function useCliEngine(
             initTimerRef.current = null;
             if (!container) return;
 
-            const e = new CliEngine(container, config?.options);
-
-            e.registerService('cli-framework', 'React');
-
-            if (config?.services) {
-                for (const [token, value] of Object.entries(config.services)) {
-                    e.registerService(token, value);
-                }
-            }
-
-            if (config?.modules) {
-                e.registerModules(config.modules);
-            }
-
-            if (config?.processors) {
-                e.registerProcessors(config.processors);
-            }
+            const e = createCliEngine(container, { ...config, framework: 'React' });
 
             engineRef.current = e;
             e.start().then(() => setEngine(e));
