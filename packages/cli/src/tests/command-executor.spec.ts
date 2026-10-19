@@ -1338,6 +1338,27 @@ describe('CliCommandExecutor', () => {
             expect(receivedValue).toBe('hello world');
         });
 
+        it('should set value when a sub-command is called by its alias', async () => {
+            let receivedValue: string | undefined;
+            const remove = createTestProcessor('remove', async (cmd) => {
+                receivedValue = cmd.value;
+            }, {
+                aliases: ['rm'],
+                valueRequired: true,
+            });
+            registry.registerProcessor(
+                createTestProcessor('mypkg', async () => {}, {
+                    processors: [remove],
+                }),
+            );
+
+            await executor.executeCommand('mypkg rm  guid qr', context);
+            expect(receivedValue).toBe('guid qr');
+
+            await executor.executeCommand('mypkg remove farm', context);
+            expect(receivedValue).toBe('farm');
+        });
+
         it('should set value for valueRequired processor', async () => {
             let receivedValue: string | undefined;
             registry.registerProcessor(

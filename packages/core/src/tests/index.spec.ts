@@ -569,4 +569,33 @@ describe('CliModuleRegistry', () => {
         expect(registry.getModule('dup')?.version).toBe('2.0.0');
         expect(registry.getAll().length).toBe(1);
     });
+
+    it('should unregister a module and notify unregister handlers', async () => {
+        const mod = createModule('removable');
+        await registry.register(mod);
+        const unloaded: string[] = [];
+        registry.onModuleUnregister((m) => unloaded.push(m.name));
+
+        expect(registry.unregister('removable')).toBe(mod);
+        expect(registry.has('removable')).toBeFalse();
+        expect(unloaded).toEqual(['removable']);
+    });
+
+    it('should return undefined when unregistering an unknown module', () => {
+        let called = false;
+        registry.onModuleUnregister(() => (called = true));
+        expect(registry.unregister('missing')).toBeUndefined();
+        expect(called).toBeFalse();
+    });
+
+    it('should boot a module again after it was unregistered', async () => {
+        const booted: string[] = [];
+        registry.onModuleBoot(async (m) => {
+            booted.push(m.name);
+        });
+        await registry.register(createModule('again'));
+        registry.unregister('again');
+        await registry.register(createModule('again'));
+        expect(booted).toEqual(['again', 'again']);
+    });
 });

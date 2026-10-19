@@ -13,6 +13,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - **Typing ahead works.** Keys typed while a command is still running are held and replayed at the next prompt, in order, including Enter. They used to be echoed into the command's output and appended to the line just submitted (`/$ echo hi` then `help` showed `/$ echo hihelp`). Ctrl+C and Esc discard them, and they are dropped when the command takes over the terminal (games, `nano`).
 - **Up arrow recalls the command you just ran.** After running a command, Up skipped it and showed the one before (and did nothing after the very first command).
+- **Sub-command aliases receive their value.** `pkg rm guid` (and any aliased sub-command that takes a value) failed with "Value required" because only the full command name was stripped from the input.
+- **`pkg` command:**
+  - `pkg remove` really unloads the plugin's commands, and `pkg update` loads the new version without a page reload. Both used to keep the old commands until the page was reloaded. Modules can now be unregistered through `CliModuleRegistry.unregister()` / `onModuleUnregister()`.
+  - New aliases: `pkg rm` / `pkg uninstall`, `pkg install`, `pkg list`. `pkg add guid@<version>` installs a specific version.
+  - `pkg check`, `pkg update` and `pkg browse` compare versions with semver including prerelease tags, so `2.0.0-beta.9` is older than `2.0.0-beta.18` and a newer installed version is never offered as an "update". `pkg update` with no name prints an updated / up-to-date / failed summary instead of always "All packages updated".
+  - `pkg browse` probes all 40 official plugins (was 12) in parallel; `pkg check` checks packages in parallel; `pkg versions` uses the configured registry sources (e.g. Verdaccio) instead of always npmjs.org.
+  - Extra spaces between names no longer produce an empty package name; help text columns are aligned. The processor is split into an installer, a search module and help helpers.
 
 ### Angular (`@qodalis/angular-cli`)
 
@@ -26,6 +33,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - The Angular demo and the docs site run zoneless and no longer load zone.js.
 - `nx serve demo-angular` and `nx serve docs` work again: an open-ended `path-to-regexp` override pulled version 8 into Express 4 (`pathRegexp is not a function`).
 - Plugins created with `create-cli-plugin` point `umd`/`unpkg` at `umd/index.global.js`, the file the build actually writes (was `umd/index.js`).
+- `@qodalis/cli-encode` and `@qodalis/cli-data-explorer` can be installed with `pkg add` again: their `unpkg` entry pointed at a file their build did not produce.
+- The Electron demo starts again: tsup 9 writes `.cjs` files in an ESM package, and the demo now points at them. It also uses the mobile app's icon.
 
 ### Panel (`@qodalis/cli`, `@qodalis/react-cli`, `@qodalis/vue-cli`, `@qodalis/angular-cli`)
 

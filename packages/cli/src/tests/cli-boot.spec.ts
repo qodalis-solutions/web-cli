@@ -545,6 +545,37 @@ describe('CliBoot', () => {
         });
     });
 
+    describe('unloadModule', () => {
+        it('should unregister processors and allow the module to boot again', async () => {
+            const context = createMockContext(createMockWriter());
+            const removed: string[] = [];
+            registry.unregisterProcessor = (p: ICliCommandProcessor) =>
+                removed.push(p.command);
+
+            let bootCount = 0;
+            const processor = {
+                command: 'demo',
+                description: 'demo',
+                processCommand: async () => {},
+            } as ICliCommandProcessor;
+            const module: ICliModule = {
+                name: '@qodalis/cli-demo',
+                apiVersion: 2,
+                processors: [processor],
+                onInit: async () => {
+                    bootCount++;
+                },
+            };
+
+            await (boot as any).bootModule(module, context);
+            (boot as any).unloadModule(module);
+            await (boot as any).bootModule(module, context);
+
+            expect(removed).toEqual(['demo']);
+            expect(bootCount).toBe(2);
+        });
+    });
+
     describe('getModuleRegistry', () => {
         it('should return a CliModuleRegistry instance', () => {
             const moduleReg = boot.getModuleRegistry();

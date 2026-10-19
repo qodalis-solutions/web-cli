@@ -375,7 +375,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         // we can distinguish positional-mode from named-arg-mode.
         const value =
             processor.acceptsRawInput || processor.valueRequired
-                ? getRightOfWord(commandName, processor.command)
+                ? this.extractPositionalValue(commandName, processor)
                 : undefined;
 
         commandToProcess.value = value;
@@ -694,6 +694,29 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         }
 
         return undefined;
+    }
+
+    /**
+     * The text after the word that selected `processor`, which may be its
+     * command or one of its aliases (e.g. `pkg rm guid` -> `guid`).
+     */
+    private extractPositionalValue(
+        commandName: string,
+        processor: ICliCommandProcessor,
+    ): string | undefined {
+        const names = new Set(
+            [processor.command, ...(processor.aliases ?? [])].map((n) =>
+                n.toLowerCase(),
+            ),
+        );
+        const word = /\S+/g;
+        let match: RegExpExecArray | null;
+        while ((match = word.exec(commandName)) !== null) {
+            if (names.has(match[0].toLowerCase())) {
+                return commandName.slice(match.index + match[0].length).trim();
+            }
+        }
+        return getRightOfWord(commandName, processor.command);
     }
 
     private guardDenial(result: CliCommandGuardResult, commandName: string): string | undefined {

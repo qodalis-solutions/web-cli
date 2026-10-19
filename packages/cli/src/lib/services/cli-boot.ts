@@ -69,6 +69,12 @@ export class CliBoot {
             await this.bootModule(module, context);
         });
 
+        // Unloading a module (e.g. `pkg remove`) removes its commands and lets a
+        // later registration of the same name (e.g. `pkg update`) boot again.
+        this.moduleRegistry.onModuleUnregister((module: ICliModule) => {
+            this.unloadModule(module);
+        });
+
         // 3. Boot core module first (implicit dependency for all others)
         const coreModule = this.buildCoreModule();
         await this.bootModule(coreModule, context);
@@ -214,6 +220,14 @@ export class CliBoot {
         if (!this.moduleRegistry.has(module.name)) {
             this.moduleRegistry.track(module);
         }
+    }
+
+    private unloadModule(module: ICliModule): void {
+        for (const processor of module.processors ?? []) {
+            this.registry.unregisterProcessor(processor);
+            this.initializedProcessors.delete(processor);
+        }
+        this.bootedModules.delete(module.name);
     }
 
     /**

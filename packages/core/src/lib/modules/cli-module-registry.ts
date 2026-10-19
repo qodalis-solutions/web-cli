@@ -13,6 +13,7 @@ export class CliModuleRegistry {
     private readonly modules = new Map<string, ICliModule>();
     private readonly bootHandlers: ((module: ICliModule) => Promise<void>)[] =
         [];
+    private readonly unregisterHandlers: ((module: ICliModule) => void)[] = [];
 
     /** Optional warning callback — set by the engine to route through ICliLogger */
     onWarn?: (message: string) => void;
@@ -55,6 +56,38 @@ export class CliModuleRegistry {
                 }
             }
         }
+    }
+
+    /**
+     * Register a handler that is called when a module is unregistered,
+     * e.g. so its processors can be removed.
+     */
+    onModuleUnregister(handler: (module: ICliModule) => void): void {
+        this.unregisterHandlers.push(handler);
+    }
+
+    /**
+     * Unregister a module and notify all unregister handlers. A module
+     * registered again afterwards (e.g. a newer version) boots again.
+     * Returns the removed module, or `undefined` when it was not registered.
+     */
+    unregister(name: string): ICliModule | undefined {
+        const module = this.modules.get(name);
+        if (!module) return undefined;
+        this.modules.delete(name);
+        for (const handler of this.unregisterHandlers) {
+            try {
+                handler(module);
+            } catch (e) {
+                const msg = `[CLI] Unregister handler failed for module "${name}": ${e instanceof Error ? e.message : e}`;
+                if (this.onWarn) {
+                    this.onWarn(msg);
+                } else {
+                    console.warn(msg);
+                }
+            }
+        }
+        return module;
     }
 
     /**
