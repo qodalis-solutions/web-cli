@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.5.25",
+    "vue": "^3.5.44",
     "@qodalis/vue-cli": "workspace:*",
     "@qodalis/cli": "workspace:*",
     "@qodalis/cli-core": "workspace:*",
@@ -31,10 +31,10 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
-    "@vitejs/plugin-vue": "^6.0.2",
+    "@vitejs/plugin-vue": "^6.0.10",
     "@vue/tsconfig": "^0.9.1",
     "typescript": "~6.0.3",
-    "vite": "^7.3.7",
-    "vue-tsc": "^3.1.5"
+    "vite": "^8.3.4",
+    "vue-tsc": "^3.3.13"
   }
 }
