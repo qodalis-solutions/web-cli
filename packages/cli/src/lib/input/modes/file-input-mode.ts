@@ -74,7 +74,6 @@ export class FileInputMode extends InputModeBase<CliFileResult[]> {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async handleInput(_data: string): Promise<void> {
         // No keystroke handling — waiting for async dialog
     }

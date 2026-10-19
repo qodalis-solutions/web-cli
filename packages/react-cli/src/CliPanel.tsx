@@ -168,6 +168,9 @@ function PositionIcon({ position, size = 20 }: { position: string; size?: number
 
 export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>(
     function CliPanel(props, ref) {
+        const {
+            onCollapsedChange, onHiddenChange, onMaximizedChange, onHeightChange, onWidthChange, onActiveTabIdChange, onPositionChange, onTabAdded, onTabClosed, onPaneSplit, onPaneClosed,
+        } = props;
         const { options: optionsProp, modules: modulesProp, processors: processorsProp, services: servicesProp, onClose, style, className } = props;
         const config = useCliConfig();
         const options = optionsProp
@@ -201,39 +204,39 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
         // Update helpers that sync internal state + call callbacks
         const updateCollapsed = useCallback((value: boolean) => {
             setInternalCollapsed(value);
-            props.onCollapsedChange?.(value);
-        }, [props.onCollapsedChange]);
+            onCollapsedChange?.(value);
+        }, [onCollapsedChange]);
 
         const updateHidden = useCallback((value: boolean) => {
             setInternalHidden(value);
-            props.onHiddenChange?.(value);
-        }, [props.onHiddenChange]);
+            onHiddenChange?.(value);
+        }, [onHiddenChange]);
 
         const updateMaximized = useCallback((value: boolean) => {
             setInternalMaximized(value);
-            props.onMaximizedChange?.(value);
-        }, [props.onMaximizedChange]);
+            onMaximizedChange?.(value);
+        }, [onMaximizedChange]);
 
         const updateHeight = useCallback((value: number) => {
             setInternalHeight(value);
-            props.onHeightChange?.(value);
-        }, [props.onHeightChange]);
+            onHeightChange?.(value);
+        }, [onHeightChange]);
 
         const updateWidth = useCallback((value: number) => {
             setInternalWidth(value);
-            props.onWidthChange?.(value);
-        }, [props.onWidthChange]);
+            onWidthChange?.(value);
+        }, [onWidthChange]);
 
         const updateActiveTabId = useCallback((value: number) => {
             setInternalActiveTabId(value);
-            props.onActiveTabIdChange?.(value);
-        }, [props.onActiveTabIdChange]);
+            onActiveTabIdChange?.(value);
+        }, [onActiveTabIdChange]);
 
         const updatePosition = useCallback((value: CliPanelPosition) => {
             setInternalPosition(value);
             savePanelPosition(value);
-            props.onPositionChange?.(value);
-        }, [props.onPositionChange]);
+            onPositionChange?.(value);
+        }, [onPositionChange]);
 
         const closable = options?.closable ?? true;
         const resizable = options?.resizable ?? true;
@@ -257,8 +260,10 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
 
         // Refs to avoid stale closures in functional updaters
         const activeTabIdRef = useRef(activeTabId);
+        // eslint-disable-next-line react-hooks/refs -- latest-value ref / DOM measurement; kept as-is, see follow-up
         activeTabIdRef.current = activeTabId;
         const activePaneIdRef = useRef(activePaneId);
+        // eslint-disable-next-line react-hooks/refs -- latest-value ref / DOM measurement; kept as-is, see follow-up
         activePaneIdRef.current = activePaneId;
 
         // Pane resize state
@@ -306,9 +311,9 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
             setTabs(prev => [...prev, tab]);
             updateActiveTabId(tabId);
             setActivePaneId(paneId);
-            props.onTabAdded?.({ tabId });
+            onTabAdded?.({ tabId });
             return tabId;
-        }, [updateActiveTabId, props.onTabAdded]);
+        }, [updateActiveTabId, onTabAdded]);
 
         const toggle = useCallback(() => {
             if (collapsed) {
@@ -344,8 +349,8 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                 }
                 return next;
             });
-            props.onTabClosed?.({ tabId: id });
-        }, [updateCollapsed, updateActiveTabId, props.onTabClosed]);
+            onTabClosed?.({ tabId: id });
+        }, [updateCollapsed, updateActiveTabId, onTabClosed]);
 
         const selectTab = useCallback((id: number) => {
             updateActiveTabId(id);
@@ -389,9 +394,9 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                 return { ...t, panes: newPanes };
             }));
             setActivePaneId(paneId);
-            props.onPaneSplit?.({ paneId, tabId: targetTabId });
+            onPaneSplit?.({ paneId, tabId: targetTabId });
             return paneId;
-        }, [normalizePanes, props.onPaneSplit]);
+        }, [normalizePanes, onPaneSplit]);
 
         const closePane = useCallback((paneId: number) => {
             setTabs(prev => {
@@ -417,12 +422,12 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                         setActivePaneId(newPanes[Math.min(idx, newPanes.length - 1)].id);
                     }
 
-                    props.onPaneClosed?.({ paneId });
+                    onPaneClosed?.({ paneId });
                     return newTabs;
                 }
                 return prev;
             });
-        }, [closeTab, normalizePanes, props.onPaneClosed]);
+        }, [closeTab, normalizePanes, onPaneClosed]);
 
         /* ─── Context menu ───────────────────────────────── */
 
@@ -766,7 +771,7 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
             },
             setPosition: updatePosition,
             addTab, closeTab, selectTab, renameTab, splitPane, closePane, getEngine, getState,
-        }), [collapsed, hidden, maximized, initialized, updateCollapsed, updateHidden, updateMaximized,
+        }), [collapsed, hidden, maximized, initialized, visible, updateCollapsed, updateHidden, updateMaximized,
             updateHeight, updateWidth, updatePosition, handleClose, addTab, closeTab, selectTab,
             renameTab, splitPane, closePane, getEngine, getState]);
 
@@ -1108,7 +1113,7 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                             setTabs(prev => { const next = [...prev]; next.splice(idx + 1, 0, newTab); return next; });
                             updateActiveTabId(tabId);
                             setActivePaneId(paneId);
-                            props.onTabAdded?.({ tabId });
+                            onTabAdded?.({ tabId });
                         }}>Duplicate</button>
                         <button className="cli-panel-context-menu-item" onClick={() => { closeContextMenu(); splitPane(contextMenu.tabId); }}>Split Right</button>
                         <div className="cli-panel-context-menu-separator" />
@@ -1132,7 +1137,9 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                 {servicesDropdownOpen && statusServiceCount.total > 0 && (
                     <div
                         className="cli-panel-services-dropdown"
-                        style={(() => {
+                        style={
+                            // eslint-disable-next-line react-hooks/refs -- measures the anchor element to place the dropdown; see follow-up
+                            (() => {
                             const el = servicesDropdownRef.current;
                             if (!el) return {};
                             const rect = el.getBoundingClientRect();
@@ -1173,7 +1180,9 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                 {serversDropdownOpen && statusServerState !== 'none' && (
                     <div
                         className="cli-panel-services-dropdown"
-                        style={(() => {
+                        style={
+                            // eslint-disable-next-line react-hooks/refs -- measures the anchor element to place the dropdown; see follow-up
+                            (() => {
                             const el = serversDropdownRef.current;
                             if (!el) return {};
                             const rect = el.getBoundingClientRect();

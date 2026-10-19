@@ -270,7 +270,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
         const [mainCommand, ...other] = commandName.split(' ');
 
-        let chainCommands = other.map((c) => c.toLowerCase());
+        const chainCommands = other.map((c) => c.toLowerCase());
 
         const searchableProcessors = context.contextProcessor
             ? (context.contextProcessor.processors ?? [])

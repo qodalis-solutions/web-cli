@@ -12,7 +12,10 @@ import {
     satisfiesMinVersion,
 } from '../lib';
 import { CliBackgroundColor, CliForegroundColor } from '../lib/models';
-import { CancellablePromise, CANCELLATION_ERROR_MESSAGE } from '../lib/types/CancellablePromise';
+import {
+    CancellablePromise,
+    CANCELLATION_ERROR_MESSAGE,
+} from '../lib/types/CancellablePromise';
 import { CliModuleRegistry } from '../lib/modules/cli-module-registry';
 import { ICliModule } from '../lib/interfaces';
 
@@ -329,8 +332,8 @@ describe('ObjectDescriber', () => {
 
     describe('supportsDynamicArgs', () => {
         it('should return true when function uses arguments keyword', () => {
-            // eslint-disable-next-line prefer-rest-params
             const fn = function () {
+                // eslint-disable-next-line prefer-rest-params -- the test checks that `arguments` is detected
                 return arguments;
             };
             expect(ObjectDescriber.supportsDynamicArgs(fn)).toBeTrue();
@@ -346,7 +349,7 @@ describe('ObjectDescriber', () => {
 
     describe('describe', () => {
         it('should create processors for multi-arg functions', () => {
-            const obj: Record<string, Function> = {};
+            const obj: Record<string, (...args: any[]) => any> = {};
             // Use regular functions so toString() is consistent across browsers
             obj['add'] = function (value: any, b: any) {
                 return Number(value) + Number(b);
@@ -362,7 +365,7 @@ describe('ObjectDescriber', () => {
         });
 
         it('should create processors for single-arg functions', () => {
-            const obj: Record<string, Function> = {};
+            const obj: Record<string, (...args: any[]) => any> = {};
             obj['upper'] = function (value: any) {
                 return String(value).toUpperCase();
             };
@@ -372,7 +375,7 @@ describe('ObjectDescriber', () => {
         });
 
         it('should skip functions with no arguments and no dynamic args', () => {
-            const obj: Record<string, Function> = {};
+            const obj: Record<string, (...args: any[]) => any> = {};
             obj['noArgs'] = function () {
                 return 42;
             };
@@ -387,7 +390,7 @@ describe('ObjectDescriber', () => {
         });
 
         it('should apply filter', () => {
-            const obj: Record<string, Function> = {};
+            const obj: Record<string, (...args: any[]) => any> = {};
             obj['keep'] = function (x: any) {
                 return x;
             };
@@ -403,7 +406,7 @@ describe('ObjectDescriber', () => {
         });
 
         it('should skip functions with "function" or "func" arguments', () => {
-            const obj: Record<string, Function> = {};
+            const obj: Record<string, (...args: any[]) => any> = {};
             obj['withCallback'] = function (value: any, func: any) {
                 return func(value);
             };

@@ -68,7 +68,7 @@ export class CliCutCommandProcessor implements ICliCommandProcessor {
             if (command.data != null) {
                 const content = typeof command.data === 'string'
                     ? command.data : JSON.stringify(command.data);
-                let lines = content.split('\n');
+                const lines = content.split('\n');
                 if (lines.length > 0 && lines[lines.length - 1] === '') {
                     lines.pop();
                 }
@@ -116,7 +116,7 @@ export class CliCutCommandProcessor implements ICliCommandProcessor {
                     continue;
                 }
 
-                let lines = content.split('\n');
+                const lines = content.split('\n');
                 // Remove trailing empty line from trailing newline
                 if (lines.length > 0 && lines[lines.length - 1] === '') {
                     lines.pop();

@@ -19,7 +19,7 @@ export class JsonHighlighter implements ISyntaxHighlighter {
             { pattern: /"(?:[^"\\]|\\.)*"/, tokenType: 'string' },
             { pattern: /-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/, tokenType: 'number' },
             { pattern: /\b(?:true|false|null)\b/, tokenType: 'keyword' },
-            { pattern: /[{}\[\]:,]/, tokenType: 'punctuation' },
+            { pattern: /[{}[\]:,]/, tokenType: 'punctuation' },
         ];
     }
 

@@ -74,7 +74,7 @@ export class CliPasteCommandProcessor implements ICliCommandProcessor {
                     );
                     return;
                 }
-                let lines = content.split('\n');
+                const lines = content.split('\n');
                 // Remove trailing empty line from trailing newline
                 if (lines.length > 0 && lines[lines.length - 1] === '') {
                     lines.pop();

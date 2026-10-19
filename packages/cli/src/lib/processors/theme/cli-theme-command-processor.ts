@@ -525,7 +525,6 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     );
 
                     let jsonStr = '';
-                    // eslint-disable-next-line no-constant-condition
                     while (true) {
                         const line =
                             await context.reader.readLine('');

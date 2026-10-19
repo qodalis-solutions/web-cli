@@ -58,11 +58,11 @@ class MockTerminal {
         return { dispose: () => {} };
     }
 
-    onKey(_callback: Function): { dispose: () => void } {
+    onKey(_callback: (...args: any[]) => any): { dispose: () => void } {
         return { dispose: () => {} };
     }
 
-    attachCustomKeyEventHandler(_handler: Function): void {}
+    attachCustomKeyEventHandler(_handler: (...args: any[]) => any): void {}
 
     fireResize(cols: number, rows?: number): void {
         this.cols = cols;
@@ -125,7 +125,6 @@ function stripAnsi(terminal: MockTerminal, startIndex: number): string {
     return terminal.written
         .slice(startIndex)
         .join('')
-        // eslint-disable-next-line no-control-regex
         .replace(/\x1b\[[0-9;]*[A-Za-z]/g, '')
         .replace(/\r/g, '');
 }

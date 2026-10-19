@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
+### Repository
+
+- ESLint works again: migrated to the ESLint 9 flat config (`eslint.config.mjs`), every project gets a `lint` target through `@nx/eslint`, and CI lints affected projects. Fixed the handful of real findings (`prefer-const`, useless regex escapes, `Function` types) and added `CONTRIBUTING.md`, `SECURITY.md`, a code of conduct, a PR template, Dependabot and `CODEOWNERS`.
+
 ### CLI engine (`@qodalis/cli`)
 
 - **Typing ahead works.** Keys typed while a command is still running are held and replayed at the next prompt, in order, including Enter. They used to be echoed into the command's output and appended to the line just submitted (`/$ echo hi` then `help` showed `/$ echo hihelp`). Ctrl+C and Esc discard them, and they are dropped when the command takes over the terminal (games, `nano`).
