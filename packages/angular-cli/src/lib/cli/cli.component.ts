@@ -17,7 +17,7 @@ import {
     ICliModule,
     ICliPingServerService,
 } from '@qodalis/cli-core';
-import { CliEngine, CliEngineOptions } from '@qodalis/cli';
+import { CliEngine, CliEngineOptions, createCliEngine } from '@qodalis/cli';
 import {
     CliCommandProcessor_TOKEN,
     CliModule_TOKEN,
@@ -61,54 +61,20 @@ export class CliComponent implements AfterViewInit, OnDestroy {
     ) {}
 
     ngAfterViewInit(): void {
-        const engineOptions: CliEngineOptions = {
-            ...(this.options ?? {}),
-            ...(this.snapshot ? { snapshot: this.snapshot } : {}),
-        };
+        // Processors provided via Angular DI (resolveCommandProcessorProvider) that
+        // belong to a module are booted with that module, so skip them here.
+        const moduleProcessors = new Set((this.diModules ?? []).flatMap((m) => m.processors ?? []));
+        const diProcessors = (this.diProcessors ?? []).filter((p) => !moduleProcessors.has(p));
 
-        this.engine = new CliEngine(
-            this.terminalDiv.nativeElement,
-            engineOptions,
-        );
-
-        // Identify the serving framework
-        this.engine.registerService('cli-framework', 'Angular');
-
-        // Bridge Angular DI services into the engine's service container
-        if (this.pingServerService) {
-            this.engine.registerService(
-                'cli-ping-server-service',
-                this.pingServerService,
-            );
-        }
-
-        // Register processors provided via Angular DI (from resolveCommandProcessorProvider).
-        // Exclude processors that already belong to a module — those will be
-        // initialized as part of the module boot (which registers services first).
-        if (this.diProcessors && this.diProcessors.length > 0) {
-            const moduleProcessors = new Set(
-                (this.diModules ?? []).flatMap(m => m.processors ?? []),
-            );
-            const standalone = this.diProcessors.filter(p => !moduleProcessors.has(p));
-            if (standalone.length > 0) {
-                this.engine.registerProcessors(standalone);
-            }
-        }
-
-        // Register processors provided via @Input
-        if (this.processors && this.processors.length > 0) {
-            this.engine.registerProcessors(this.processors);
-        }
-
-        // Register modules provided via Angular DI
-        if (this.diModules && this.diModules.length > 0) {
-            this.engine.registerModules(this.diModules);
-        }
-
-        // Register modules provided via @Input
-        if (this.modules && this.modules.length > 0) {
-            this.engine.registerModules(this.modules);
-        }
+        this.engine = createCliEngine(this.terminalDiv.nativeElement, {
+            framework: 'Angular',
+            options: this.options,
+            snapshot: this.snapshot,
+            // Bridge Angular DI services into the engine's service container.
+            services: this.pingServerService ? { 'cli-ping-server-service': this.pingServerService } : undefined,
+            modules: [...(this.diModules ?? []), ...(this.modules ?? [])],
+            processors: [...diProcessors, ...(this.processors ?? [])],
+        });
 
         this.engine.start().then(() => {
             this.engineReady.emit(this.engine!);

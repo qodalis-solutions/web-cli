@@ -1,13 +1,7 @@
-import { ref, onMounted, onBeforeUnmount, Ref, shallowRef } from 'vue';
-import { CliEngine, CliEngineOptions } from '@qodalis/cli';
-import { ICliCommandProcessor, ICliModule } from '@qodalis/cli-core';
+import { onMounted, onBeforeUnmount, Ref, shallowRef } from 'vue';
+import { CliEngine, CreateCliEngineConfig, createCliEngine } from '@qodalis/cli';
 
-export interface UseCliEngineConfig {
-    modules?: ICliModule[];
-    processors?: ICliCommandProcessor[];
-    options?: CliEngineOptions;
-    services?: Record<string, any>;
-}
+export type UseCliEngineConfig = Omit<CreateCliEngineConfig, 'framework'>;
 
 export function useCliEngine(
     containerRef: Ref<HTMLElement | null>,
@@ -18,24 +12,7 @@ export function useCliEngine(
     onMounted(async () => {
         if (!containerRef.value) return;
 
-        const e = new CliEngine(containerRef.value, config?.options);
-
-        e.registerService('cli-framework', 'Vue');
-
-        if (config?.services) {
-            for (const [token, value] of Object.entries(config.services)) {
-                e.registerService(token, value);
-            }
-        }
-
-        if (config?.modules) {
-            e.registerModules(config.modules);
-        }
-
-        if (config?.processors) {
-            e.registerProcessors(config.processors);
-        }
-
+        const e = createCliEngine(containerRef.value, { ...config, framework: 'Vue' });
         await e.start();
         engine.value = e;
     });

@@ -1,28 +1,48 @@
-import { CliProvider, ICliServiceProvider } from '@qodalis/cli-core';
+import { CliProvider, CliToken, ICliServiceProvider } from '@qodalis/cli-core';
+
+/** One registration and, once created, its value. */
+interface Registration {
+    provider: CliProvider;
+    resolved: boolean;
+    value?: any;
+}
 
 /**
  * A simple Map-based service container implementing ICliServiceProvider.
  *
  * Supports three provider types:
  * - `useValue`   : registers a static value
- * - `useFactory` : registers a factory function, invoked once on first `get`
- * - `useClass`   : registers a class constructor, instantiated once on first `get`
+ * - `useFactory` : registers a factory function, invoked once on the first `get`
+ * - `useClass`   : registers a class constructor, instantiated once on the first `get`
+ *
+ * Factories and classes are created lazily, so their `deps` only have to be
+ * registered by the time the service is first used. Add `transient: true` to
+ * create a new instance on every `get`.
  *
  * When `multi: true`, multiple providers for the same token are accumulated
- * and `get()` returns an array of resolved values.
+ * and `getAll()` returns all of them.
+ *
+ * Registering a single token again overrides it; removing that registration
+ * (`remove(token, provider)`, e.g. when a module is unloaded) makes the
+ * previous one active again.
  */
 export class CliServiceContainer implements ICliServiceProvider {
-    /** Stores single-value providers (resolved singletons). */
-    private readonly services = new Map<any, any>();
+    /** Single-value registrations; the last one is active. */
+    private readonly services = new Map<any, Registration[]>();
 
-    /** Stores multi-provider arrays. */
-    private readonly multiServices = new Map<any, any[]>();
+    /** Multi-provider registrations, in registration order. */
+    private readonly multiServices = new Map<any, Registration[]>();
 
     /** Tokens that cannot be overwritten by subsequent `set()` calls. */
     private readonly sealedTokens = new Set<any>();
 
     /** Stores provider recipes for transient tokens (re-resolved on every get). */
     private readonly transientRecipes = new Map<any, CliProvider>();
+
+    private disposed = false;
+
+    /** Registrations being created, to report dependency cycles. */
+    private readonly resolving = new Set<Registration>();
 
     /**
      * Retrieve a service by its token.
@@ -32,19 +52,22 @@ export class CliServiceContainer implements ICliServiceProvider {
      * @param token The token used to register the service.
      * @returns The resolved service instance, or `undefined` if not registered.
      */
+    get<T>(token: CliToken<T>): T | undefined;
+    get<T>(token: any): T | undefined;
     get<T>(token: any): T | undefined {
         // Transient providers: create a new instance on every call
         if (this.transientRecipes.has(token)) {
             return this.resolveProvider(this.transientRecipes.get(token)!) as T;
         }
 
-        if (this.multiServices.has(token)) {
-            const arr = this.multiServices.get(token)!;
-            return arr[arr.length - 1] as T;
+        const multi = this.multiServices.get(token);
+        if (multi) {
+            return this.resolve(multi[multi.length - 1]) as T;
         }
 
-        if (this.services.has(token)) {
-            return this.services.get(token) as T;
+        const single = this.services.get(token);
+        if (single) {
+            return this.resolve(single[single.length - 1]) as T;
         }
 
         return undefined;
@@ -57,9 +80,12 @@ export class CliServiceContainer implements ICliServiceProvider {
      * @param token The token used to register the service.
      * @returns Array of all resolved service instances.
      */
+    getAll<T>(token: CliToken<T>): T[];
+    getAll<T>(token: any): T[];
     getAll<T>(token: any): T[] {
-        if (this.multiServices.has(token)) {
-            return this.multiServices.get(token) as T[];
+        const multi = this.multiServices.get(token);
+        if (multi) {
+            return multi.map((registration) => this.resolve(registration));
         }
 
         // For non-multi tokens, wrap the single value in an array
@@ -76,21 +102,26 @@ export class CliServiceContainer implements ICliServiceProvider {
      * @returns The resolved service instance.
      * @throws Error if the token has not been registered.
      */
+    getRequired<T>(token: CliToken<T>): T;
+    getRequired<T>(token: any): T;
     getRequired<T>(token: any): T {
-        const value = this.get<T>(token);
-        if (value === undefined && !this.has(token)) {
+        if (!this.has(token)) {
             throw new Error(
                 `CliServiceContainer: No provider found for token "${this.tokenToString(token)}".`,
             );
         }
-        return value as T;
+        return this.get<T>(token) as T;
     }
 
     /**
      * Check whether a service is registered for the given token.
      */
     has(token: any): boolean {
-        return this.services.has(token) || this.multiServices.has(token) || this.transientRecipes.has(token);
+        return (
+            this.services.has(token) ||
+            this.multiServices.has(token) ||
+            this.transientRecipes.has(token)
+        );
     }
 
     /**
@@ -133,6 +164,89 @@ export class CliServiceContainer implements ICliServiceProvider {
     }
 
     /**
+     * Remove a registration. With `provider` (the provider object passed to
+     * `set`, or the registered value), only that registration is removed: for
+     * a single token the previous registration becomes active again, for a
+     * multi token the others remain. Without it, every registration of the
+     * token is removed.
+     *
+     * @throws Error if the token is sealed.
+     * @returns Whether something was removed.
+     */
+    remove(token: any, provider?: unknown): boolean {
+        if (this.sealedTokens.has(token) && !this.multiServices.has(token)) {
+            throw new Error(
+                `CliServiceContainer: Cannot remove sealed service "${this.tokenToString(token)}".`,
+            );
+        }
+
+        if (provider === undefined) {
+            const removed = this.has(token);
+            this.services.delete(token);
+            this.multiServices.delete(token);
+            this.transientRecipes.delete(token);
+            return removed;
+        }
+
+        if (this.transientRecipes.get(token) === provider) {
+            this.transientRecipes.delete(token);
+            return true;
+        }
+
+        let removed = false;
+        for (const map of [this.services, this.multiServices]) {
+            const registrations = map.get(token);
+            if (!registrations) continue;
+            const kept = registrations.filter(
+                (registration) => !this.matches(registration, provider),
+            );
+            if (kept.length === registrations.length) continue;
+            removed = true;
+            if (kept.length > 0) {
+                map.set(token, kept);
+            } else {
+                map.delete(token);
+            }
+        }
+        return removed;
+    }
+
+    /**
+     * Dispose the services the container created (`useFactory` / `useClass`)
+     * that have a `dispose()` method. Values registered with `useValue`
+     * belong to whoever registered them and are not disposed. Registrations
+     * are kept, so late callbacks still find their services. Called when the
+     * engine is destroyed; later calls do nothing.
+     */
+    dispose(): void {
+        if (this.disposed) return;
+        this.disposed = true;
+        for (const map of [this.services, this.multiServices]) {
+            for (const registrations of map.values()) {
+                for (const registration of registrations) {
+                    if (
+                        !registration.resolved ||
+                        'useValue' in registration.provider
+                    ) {
+                        continue;
+                    }
+                    const value = registration.value;
+                    if (typeof value?.dispose === 'function') {
+                        try {
+                            value.dispose();
+                        } catch (e) {
+                            console.error(
+                                'CliServiceContainer: Error disposing a service:',
+                                e,
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Returns all registered service tokens (single + multi providers).
      */
     getRegisteredTokens(): string[] {
@@ -151,6 +265,7 @@ export class CliServiceContainer implements ICliServiceProvider {
 
     /**
      * Returns detailed info for each registered service: token name, value type, and multi flag.
+     * Services not created yet are listed as `lazy(Name)` (listing does not create them).
      */
     getRegisteredServiceDetails(): {
         token: string;
@@ -159,16 +274,21 @@ export class CliServiceContainer implements ICliServiceProvider {
     }[] {
         const details: { token: string; type: string; multi: boolean }[] = [];
 
-        for (const [key, value] of this.services.entries()) {
+        for (const [key, registrations] of this.services.entries()) {
             details.push({
                 token: this.tokenToString(key),
-                type: this.describeValue(value),
+                type: this.describeRegistration(
+                    registrations[registrations.length - 1],
+                ),
                 multi: false,
             });
         }
 
         for (const [key, provider] of this.transientRecipes.entries()) {
-            const className = provider['useClass']?.name ?? provider['useFactory']?.name ?? 'transient';
+            const className =
+                provider['useClass']?.name ??
+                provider['useFactory']?.name ??
+                'transient';
             details.push({
                 token: this.tokenToString(key),
                 type: `transient(${className})`,
@@ -176,10 +296,10 @@ export class CliServiceContainer implements ICliServiceProvider {
             });
         }
 
-        for (const [key, values] of this.multiServices.entries()) {
+        for (const [key, registrations] of this.multiServices.entries()) {
             details.push({
                 token: this.tokenToString(key),
-                type: `[${values.map((v: any) => this.describeValue(v)).join(', ')}]`,
+                type: `[${registrations.map((r) => this.describeRegistration(r)).join(', ')}]`,
                 multi: true,
             });
         }
@@ -198,6 +318,16 @@ export class CliServiceContainer implements ICliServiceProvider {
               : String(token);
     }
 
+    private describeRegistration(registration: Registration): string {
+        if (registration.resolved) {
+            return this.describeValue(registration.value);
+        }
+        const { provider } = registration;
+        const name =
+            provider['useClass']?.name || provider['useFactory']?.name || '';
+        return `lazy(${name || 'factory'})`;
+    }
+
     /**
      * Describe a resolved value for diagnostic display.
      */
@@ -214,16 +344,32 @@ export class CliServiceContainer implements ICliServiceProvider {
         return typeof value;
     }
 
+    /** Whether `registration` is the one `provider` refers to. */
+    private matches(registration: Registration, provider: unknown): boolean {
+        return (
+            registration.provider === provider ||
+            ('useValue' in registration.provider &&
+                registration.provider.useValue === provider) ||
+            (registration.resolved && registration.value === provider)
+        );
+    }
+
     /**
      * Register a single provider.
      */
     private registerProvider(provider: CliProvider): void {
-        if (
-            !provider.multi &&
-            this.sealedTokens.has(provider.provide)
-        ) {
+        if (!provider.multi && this.sealedTokens.has(provider.provide)) {
             throw new Error(
                 `CliServiceContainer: Cannot override sealed service "${this.tokenToString(provider.provide)}".`,
+            );
+        }
+        if (
+            !('useValue' in provider) &&
+            !('useFactory' in provider) &&
+            !('useClass' in provider)
+        ) {
+            throw new Error(
+                'CliServiceContainer: Provider must specify useValue, useFactory, or useClass.',
             );
         }
 
@@ -232,14 +378,20 @@ export class CliServiceContainer implements ICliServiceProvider {
             this.transientRecipes.set(provider.provide, provider);
             this.services.delete(provider.provide); // clear any previous singleton
         } else {
-            const value = this.resolveProvider(provider);
+            const registration: Registration = {
+                provider,
+                resolved: 'useValue' in provider,
+                value: 'useValue' in provider ? provider.useValue : undefined,
+            };
 
             if (provider.multi) {
                 const existing = this.multiServices.get(provider.provide) ?? [];
-                existing.push(value);
+                existing.push(registration);
                 this.multiServices.set(provider.provide, existing);
             } else {
-                this.services.set(provider.provide, value);
+                const existing = this.services.get(provider.provide) ?? [];
+                existing.push(registration);
+                this.services.set(provider.provide, existing);
                 this.transientRecipes.delete(provider.provide); // clear any previous transient
             }
         }
@@ -249,29 +401,43 @@ export class CliServiceContainer implements ICliServiceProvider {
         }
     }
 
+    /** The value of a registration, created on first use. */
+    private resolve(registration: Registration): any {
+        if (registration.resolved) {
+            return registration.value;
+        }
+        if (this.resolving.has(registration)) {
+            throw new Error(
+                `CliServiceContainer: Circular dependency while creating "${this.tokenToString(registration.provider.provide)}".`,
+            );
+        }
+        this.resolving.add(registration);
+        try {
+            registration.value = this.resolveProvider(registration.provider);
+            registration.resolved = true;
+            return registration.value;
+        } finally {
+            this.resolving.delete(registration);
+        }
+    }
+
     /**
-     * Resolve a provider definition to a concrete value.
-     *
-     * Note: `deps` are resolved eagerly at registration time, so
-     * dependency tokens must be registered before the provider that needs them.
+     * Resolve a provider definition to a concrete value, resolving its `deps`
+     * from the container.
      */
     private resolveProvider(provider: CliProvider): any {
         if ('useValue' in provider) {
             return provider.useValue;
         }
 
-        const deps = (provider['deps'] ?? []).map((dep: any) => this.getRequired(dep));
+        const deps = (provider['deps'] ?? []).map((dep: any) =>
+            this.getRequired(dep),
+        );
 
         if ('useFactory' in provider) {
             return provider.useFactory(...deps);
         }
 
-        if ('useClass' in provider) {
-            return new provider.useClass(...deps);
-        }
-
-        throw new Error(
-            'CliServiceContainer: Provider must specify useValue, useFactory, or useClass.',
-        );
+        return new provider.useClass(...deps);
     }
 }

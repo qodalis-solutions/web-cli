@@ -1,4 +1,5 @@
-import type { CliLogLevel, CliProvider } from '../models';
+import { createCliToken } from '../models/services';
+import type { CliLogLevel, CliProvider, CliToken } from '../models';
 import type { ICliCommandProcessor } from './command-processor';
 import type { ICliExecutionContext } from './execution-context';
 import type { CliPermissionDefinition } from './authorization';
@@ -237,6 +238,7 @@ export interface ICliServiceProvider {
      * @param service The token (typically a `*_TOKEN` constant) identifying the service
      * @returns The service instance cast to `T`, or `undefined` if not registered
      */
+    get<T>(service: CliToken<T>): T | undefined;
     get<T = unknown>(service: any): T | undefined;
 
     /**
@@ -245,6 +247,7 @@ export interface ICliServiceProvider {
      * @param service The token (typically a `*_TOKEN` constant) identifying the service
      * @returns Array of all resolved service instances
      */
+    getAll<T>(service: CliToken<T>): T[];
     getAll<T = unknown>(service: any): T[];
 
     /**
@@ -255,6 +258,7 @@ export interface ICliServiceProvider {
      * @returns The service instance, cast to `T`
      * @throws If no service is registered for the given token
      */
+    getRequired<T>(service: CliToken<T>): T;
     getRequired<T = unknown>(service: any): T;
 
     /**
@@ -269,15 +273,25 @@ export interface ICliServiceProvider {
      * @param definition A single provider or an array of providers to register
      */
     set(definition: CliProvider | CliProvider[]): void;
+
+    /**
+     * Remove a registration. With `provider` (the provider object passed to
+     * `set`, or the registered value), only that registration is removed: for
+     * a single token the previous registration becomes active again, for a
+     * multi token the others remain. Without it, every registration of the
+     * token is removed. Sealed tokens cannot be removed.
+     * @returns Whether something was removed
+     */
+    remove?(service: any, provider?: unknown): boolean;
 }
 
 // ── Authentication ─────────────────────────────────────────────────
 
 /** DI token for `ICliServerAuthTokenProvider` (multi-provider) */
-export const ICliServerAuthTokenProvider_TOKEN = 'cli-server-auth-token-provider';
+export const ICliServerAuthTokenProvider_TOKEN = createCliToken<ICliServerAuthTokenProvider>('cli-server-auth-token-provider');
 
 /** DI token for `ICliServerAuthService` */
-export const ICliServerAuthService_TOKEN = 'cli-server-auth-service';
+export const ICliServerAuthService_TOKEN = createCliToken<ICliServerAuthService>('cli-server-auth-service');
 
 /**
  * Integrators implement this interface to supply auth credentials
@@ -341,7 +355,7 @@ export interface ICliServerManager {
 }
 
 /** Token for {@link ICliServerManager} */
-export const ICliServerManager_TOKEN = 'cli-server-manager';
+export const ICliServerManager_TOKEN = createCliToken<ICliServerManager>('cli-server-manager');
 
 /**
  * Internal service that resolves auth headers for a server by merging:

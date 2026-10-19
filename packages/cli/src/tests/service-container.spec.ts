@@ -1,3 +1,4 @@
+import { createCliToken } from '@qodalis/cli-core';
 import { CliServiceContainer } from '../lib/services/cli-service-container';
 
 describe('CliServiceContainer', () => {
@@ -96,14 +97,15 @@ describe('CliServiceContainer', () => {
             expect(container.getRequired('url')).toBe('localhost:3000');
         });
 
-        it('should throw when a dep token is not registered', () => {
-            expect(() =>
-                container.set({
-                    provide: 'broken',
-                    useFactory: (x: any) => x,
-                    deps: ['nonexistent'],
-                }),
-            ).toThrowError(/No provider found for token "nonexistent"/);
+        it('should throw on first use when a dep token is not registered', () => {
+            container.set({
+                provide: 'broken',
+                useFactory: (x: any) => x,
+                deps: ['nonexistent'],
+            });
+            expect(() => container.get('broken')).toThrowError(
+                /No provider found for token "nonexistent"/,
+            );
         });
     });
 
@@ -469,6 +471,208 @@ describe('CliServiceContainer', () => {
             const details = container.getRegisteredServiceDetails();
             const multiDetail = details.find((d) => d.token === 'multi')!;
             expect(multiDetail.multi).toBeTrue();
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // Lazy creation
+    // -----------------------------------------------------------------------
+    describe('lazy providers', () => {
+        it('should create factories and classes on first use', () => {
+            let created = 0;
+            class Service {
+                constructor() {
+                    created++;
+                }
+            }
+            container.set({ provide: 'a', useClass: Service });
+            container.set({ provide: 'b', useFactory: () => ++created });
+            expect(created).toBe(0);
+            expect(container.has('a')).toBeTrue();
+
+            container.get('a');
+            container.get('a');
+            expect(created).toBe(1);
+            expect(container.get('b')).toBe(2);
+        });
+
+        it('should allow deps registered after the provider', () => {
+            container.set({
+                provide: 'client',
+                useFactory: (url: string) => ({ url }),
+                deps: ['url'],
+            });
+            container.set({ provide: 'url', useValue: 'http://x' });
+            expect(container.get<any>('client').url).toBe('http://x');
+        });
+
+        it('should create multi providers lazily', () => {
+            let created = 0;
+            container.set({ provide: 'm', useValue: 'v', multi: true });
+            container.set({
+                provide: 'm',
+                useFactory: () => (created++, 'f'),
+                multi: true,
+            });
+            expect(created).toBe(0);
+            expect(container.getAll('m')).toEqual(['v', 'f']);
+            expect(container.getAll('m')).toEqual(['v', 'f']);
+            expect(created).toBe(1);
+        });
+
+        it('should report circular dependencies', () => {
+            container.set({ provide: 'x', useFactory: (y: any) => y, deps: ['y'] });
+            container.set({ provide: 'y', useFactory: (x: any) => x, deps: ['x'] });
+            expect(() => container.get('x')).toThrowError(/Circular dependency/);
+        });
+
+        it('should list services not created yet without creating them', () => {
+            let created = false;
+            class Lazy {
+                constructor() {
+                    created = true;
+                }
+            }
+            container.set({ provide: 'lazy', useClass: Lazy });
+            const detail = container
+                .getRegisteredServiceDetails()
+                .find((d) => d.token === 'lazy')!;
+            expect(detail.type).toBe('lazy(Lazy)');
+            expect(created).toBeFalse();
+        });
+
+        it('should reject a provider without useValue, useFactory or useClass', () => {
+            expect(() => container.set({ provide: 'bad' } as any)).toThrowError(
+                /must specify useValue, useFactory, or useClass/,
+            );
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // remove()
+    // -----------------------------------------------------------------------
+    describe('remove()', () => {
+        it('should remove every registration of a token', () => {
+            container.set({ provide: 's', useValue: 1 });
+            expect(container.remove('s')).toBeTrue();
+            expect(container.has('s')).toBeFalse();
+            expect(container.remove('s')).toBeFalse();
+        });
+
+        it('should make the previous registration active again', () => {
+            const core = { provide: 'logger', useValue: 'core' };
+            const plugin = { provide: 'logger', useValue: 'plugin' };
+            container.set(core);
+            container.set(plugin);
+            expect(container.get('logger')).toBe('plugin');
+
+            container.remove('logger', plugin);
+            expect(container.get('logger')).toBe('core');
+        });
+
+        it('should remove one multi provider by provider or value', () => {
+            const a = { provide: 'g', useValue: 'a', multi: true };
+            container.set(a);
+            container.set({ provide: 'g', useValue: 'b', multi: true });
+            container.set({ provide: 'g', useValue: 'c', multi: true });
+
+            container.remove('g', a);
+            container.remove('g', 'c');
+            expect(container.getAll('g')).toEqual(['b']);
+        });
+
+        it('should remove a created instance by value', () => {
+            class Service {}
+            container.set({ provide: 'svc', useClass: Service });
+            const instance = container.get('svc');
+            expect(container.remove('svc', instance)).toBeTrue();
+            expect(container.has('svc')).toBeFalse();
+        });
+
+        it('should not remove a sealed service', () => {
+            container.set({ provide: 'core', useValue: 1, sealed: true });
+            expect(() => container.remove('core')).toThrowError(
+                /Cannot remove sealed service "core"/,
+            );
+            expect(container.get('core')).toBe(1);
+        });
+
+        it('should not remove a registration it does not have', () => {
+            container.set({ provide: 's', useValue: 1 });
+            // another provider object, or another value
+            expect(container.remove('s', { provide: 's', useValue: 1 })).toBeFalse();
+            expect(container.remove('s', 2)).toBeFalse();
+            expect(container.get('s')).toBe(1);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // dispose()
+    // -----------------------------------------------------------------------
+    describe('dispose()', () => {
+        it('should dispose created services, not registered values', () => {
+            const disposed: string[] = [];
+            class Created {
+                dispose() {
+                    disposed.push('created');
+                }
+            }
+            container.set({ provide: 'created', useClass: Created });
+            container.set({ provide: 'never-used', useClass: Created });
+            container.set({
+                provide: 'value',
+                useValue: { dispose: () => disposed.push('value') },
+            });
+            container.get('created');
+
+            container.dispose();
+            container.dispose();
+
+            expect(disposed).toEqual(['created']);
+            expect(container.get('value')).toBeDefined();
+        });
+
+        it('should keep disposing when one service throws', () => {
+            const disposed: string[] = [];
+            spyOn(console, 'error');
+            container.set({
+                provide: 'bad',
+                useFactory: () => ({
+                    dispose: () => {
+                        throw new Error('boom');
+                    },
+                }),
+            });
+            container.set({
+                provide: 'good',
+                useFactory: () => ({ dispose: () => disposed.push('good') }),
+            });
+            container.get('bad');
+            container.get('good');
+
+            container.dispose();
+            expect(disposed).toEqual(['good']);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // Typed tokens
+    // -----------------------------------------------------------------------
+    describe('typed tokens', () => {
+        it('should infer the service type from the token', () => {
+            const Counter_TOKEN = createCliToken<{ count: number }>('counter');
+            container.set({ provide: Counter_TOKEN, useValue: { count: 3 } });
+
+            const counter = container.getRequired(Counter_TOKEN);
+            const count: number = counter.count;
+            expect(count).toBe(3);
+            expect(container.get(Counter_TOKEN)?.count).toBe(3);
+            expect(container.getAll(Counter_TOKEN)[0].count).toBe(3);
+
+            // @ts-expect-error the token's type has no `name`
+            expect(counter.name).toBeUndefined();
+            // A plain string token still works, with an explicit type
+            expect(container.get<{ count: number }>('counter')!.count).toBe(3);
         });
     });
 });

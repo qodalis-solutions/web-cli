@@ -8,6 +8,7 @@ import { CliPackagesCommandProcessor } from './cli-packages-command-processor';
 import { CliDebugCommandProcessor } from './cli-debug-command-processor';
 import { CliNanoCommandProcessor } from './cli-nano-command-processor';
 import { CliServicesCommandProcessor } from './cli-services-command-processor';
+import { CliEventsCommandProcessor } from './cli-events-command-processor';
 import { CliPsCommandProcessor } from './cli-ps-command-processor';
 import { CliKillCommandProcessor } from './cli-kill-command-processor';
 import { CliHtopCommandProcessor } from './cli-htop-command-processor';
@@ -21,6 +22,7 @@ export { CliPackagesCommandProcessor } from './cli-packages-command-processor';
 export { CliDebugCommandProcessor } from './cli-debug-command-processor';
 export { CliNanoCommandProcessor } from './cli-nano-command-processor';
 export { CliServicesCommandProcessor } from './cli-services-command-processor';
+export { CliEventsCommandProcessor } from './cli-events-command-processor';
 export { CliPsCommandProcessor } from './cli-ps-command-processor';
 export { CliKillCommandProcessor } from './cli-kill-command-processor';
 export { CliHtopCommandProcessor } from './cli-htop-command-processor';
@@ -35,6 +37,7 @@ export const systemProcessors: ICliCommandProcessor[] = [
     new CliDebugCommandProcessor(),
     new CliNanoCommandProcessor(),
     new CliServicesCommandProcessor(),
+    new CliEventsCommandProcessor(),
     new CliPsCommandProcessor(),
     new CliKillCommandProcessor(),
     new CliHtopCommandProcessor(),

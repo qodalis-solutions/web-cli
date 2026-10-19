@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-duplicate-enum-values -- several icons intentionally share a glyph */
 export enum CliIcon {
     // General Symbols
     CheckIcon = '✔', // Success, completion

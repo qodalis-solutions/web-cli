@@ -4,6 +4,7 @@
 export const koTranslations: Record<string, string> = {
     'cli.common.usage': '사용법:',
     'cli.common.examples': '예시:',
+    'cli.common.use_hint': '{action}: {command}',
     'cli.help.description': '명령어 도움말을 표시합니다',
     'cli.help.long_description': '명령어에 대한 도움말 정보를 표시합니다',
     'cli.help.shortcuts': '단축키',
@@ -49,9 +50,18 @@ export const koTranslations: Record<string, string> = {
     'cli.configure.all_reset': '모든 설정이 기본값으로 초기화되었습니다',
     'cli.configure.invalid_number': '잘못된 숫자: {value}',
     'cli.configure.invalid_options': '잘못된 값입니다. 유효한 옵션: {options}',
+    'cli.configure.invalid_boolean': '잘못된 불리언 값: "{value}". true 또는 false를 사용하세요',
     'cli.echo.description': '지정된 텍스트를 출력합니다',
     'cli.echo.long_description': '지정된 텍스트를 터미널에 출력합니다',
     'cli.echo.piping_note': '파이프를 통한 텍스트 및 JSON 객체 출력을 지원합니다',
+    'cli.echo.help.print_text_terminal_add':
+        '터미널에 텍스트를 출력합니다. > file을 추가하면 파일에 저장(덮어쓰기)하고 >> file을 추가하면 파일 끝에 덧붙입니다',
+    'cli.echo.help.print_text': '텍스트 출력',
+    'cli.echo.help.write_text_file': '파일에 텍스트 쓰기',
+    'cli.echo.help.append_text_file': '파일에 텍스트 추가',
+    'cli.echo.help.print_greeting': '인사말 출력',
+    'cli.echo.help.create_replace_notes_txt': 'notes.txt 만들기 또는 교체',
+    'cli.echo.help.add_line': '줄 추가',
     'cli.clear.description': '터미널 지우기',
     'cli.clear.long_description': '터미널 화면의 모든 내용을 지웁니다',
     'cli.clear.shortcut': '단축키:',
@@ -61,6 +71,7 @@ export const koTranslations: Record<string, string> = {
     'cli.uname.cli_versions': 'CLI 코어 및 라이브러리 버전',
     'cli.uname.browser_info': '브라우저 이름, 버전, 사용자 에이전트, 언어 및 플랫폼',
     'cli.uname.os': '운영 체제',
+    'cli.uname.description': '시스템 및 브라우저 상세 정보 출력',
     'cli.hash.description': '텍스트의 해시 다이제스트 생성',
     'cli.hash.long_description': 'Web Crypto API를 사용하여 암호화 해시 다이제스트 생성',
     'cli.cal.description': '달력 표시',
@@ -71,6 +82,7 @@ export const koTranslations: Record<string, string> = {
     'cli.time.description': '현재 로컬 시간과 UTC 표시',
     'cli.time.long_description': '현재 로컬 시간과 UTC 표시',
     'cli.time.show_current': '현재 로컬 시간과 UTC 표시',
+    'cli.time.now.description': '현재 시간 표시',
     'cli.uptime.description': '세션 가동 시간 표시',
     'cli.uptime.long_description': '현재 터미널 세션의 경과 시간을 표시합니다',
     'cli.convert.description': '단위 변환 (길이, 무게, 온도, 데이터)',
@@ -89,6 +101,9 @@ export const koTranslations: Record<string, string> = {
     'cli.lorem.gen_words': '단어 생성',
     'cli.lorem.gen_sentences': '문장 생성',
     'cli.lorem.gen_paragraphs': '단락 생성',
+    'cli.lorem.words.description': '지정한 수의 단어 생성',
+    'cli.lorem.sentences.description': '지정한 수의 문장 생성',
+    'cli.lorem.paragraphs.description': '지정한 수의 단락 생성',
     'cli.alias.description': '명령어 별칭 관리',
     'cli.alias.long_description': '자주 사용하는 명령어의 별칭 단축키를 생성합니다',
     'cli.alias.create_new': '새 별칭 생성',
@@ -108,6 +123,9 @@ export const koTranslations: Record<string, string> = {
     'cli.history.clear': '모든 기록 지우기',
     'cli.history.arrow_hint': '화살표 키 {keys}로 기록을 탐색하세요',
     'cli.history.prefix_hint': '접두사를 입력한 후 {key}를 눌러 접두사로 기록을 검색하세요',
+    'cli.history.description': '현재 세션의 명령어 기록 출력',
+    'cli.history.clear.description': '명령어 기록 삭제',
+    'cli.history.search.description': '명령어 기록에서 패턴 검색',
     'cli.theme.description': '테마 조작',
     'cli.theme.long_description': '테마와 색상으로 터미널 외관을 사용자 정의합니다',
     'cli.hex.description': '16진수 인코딩/디코딩 및 진법 변환',
@@ -116,6 +134,10 @@ export const koTranslations: Record<string, string> = {
     'cli.hex.hex_to_text': '16진수에서 텍스트로',
     'cli.hex.base_conversion': '진법 변환',
     'cli.feedback.long_description': '버그 보고, 기능 요청 또는 새 명령어 제안 — 대화형 또는 인라인으로.',
+    'cli.feedback.report-bug.description': 'GitHub에 버그 신고',
+    'cli.feedback.request-feature.description': 'GitHub에 새 기능 요청',
+    'cli.feedback.request-command.description': 'GitHub에 새 명령어 요청',
+    'cli.feedback.description': '사용자가 버그를 신고하거나 기능을 요청할 수 있음',
     'cli.jwt.description': 'JWT 토큰 디코딩 및 검사',
     'cli.jwt.long_description': 'JSON 웹 토큰 (JWT) 디코딩 및 검사',
     'cli.jwt.decode_display': 'JWT 내용 디코딩 및 표시',
@@ -130,12 +152,20 @@ export const koTranslations: Record<string, string> = {
     'cli.services.restart_desc': '서비스 재시작',
     'cli.services.logs_desc': '서비스 로그 보기',
     'cli.services.info_desc': '서비스 상세 정보',
+    'cli.services.list.description': '등록된 모든 백그라운드 서비스 목록',
+    'cli.services.start.description': '백그라운드 서비스 시작',
+    'cli.services.stop.description': '실행 중인 백그라운드 서비스 중지',
+    'cli.services.restart.description': '백그라운드 서비스 재시작',
+    'cli.services.logs.description': '백그라운드 서비스의 로그 표시',
+    'cli.services.info.description': '서비스의 상세 정보 표시',
     'cli.yes.description': '문자열을 연속적으로 반복',
     'cli.yes.long_description': '문자열을 연속적으로 반복',
     'cli.clipboard.description': '클립보드에 복사 또는 붙여넣기',
     'cli.clipboard.long_description': '시스템 클립보드에 텍스트를 복사하거나 붙여넣기합니다',
     'cli.clipboard.copy_desc': '텍스트를 클립보드에 복사',
     'cli.clipboard.paste_desc': '클립보드에서 붙여넣기',
+    'cli.clipboard.copy.description': '텍스트를 클립보드에 복사',
+    'cli.clipboard.paste.description': '클립보드에서 텍스트 붙여넣기',
     'cli.hotkeys.description': '단축키 정보 표시',
     'cli.hotkeys.long_description': '사용 가능한 모든 키보드 단축키와 핫키를 표시합니다',
     'cli.export.description': '환경 변수 설정',
@@ -143,8 +173,15 @@ export const koTranslations: Record<string, string> = {
     'cli.export.show_all': '모든 변수 표시',
     'cli.export.set_var': '변수 설정',
     'cli.export.set_spaces': '공백 포함 설정',
+    'cli.export.set_many': '여러 개를 한 번에 설정',
+    'cli.export.set_global': '모든 사용자에게 설정',
+    'cli.export.set_session': '이 터미널에만 적용, 저장 안 됨',
+    'cli.export.scopes':
+        '변수는 $VAR 또는 ${VAR}로 사용합니다. 이 터미널에서 설정한 값이 직접 저장한 값보다 우선하고, 그 값이 공유 값보다 우선합니다. env로 각 값의 출처를 확인할 수 있습니다',
     'cli.unset.description': '환경 변수 제거',
     'cli.unset.long_description': '환경 변수를 제거합니다',
+    'cli.unset.own': '이 터미널과 사용자에 대해 제거 (공유 값은 사용자에게 숨겨짐)',
+    'cli.unset.global': '공유 값 제거',
     'cli.env.description': '환경 변수 표시',
     'cli.env.long_description': '환경 변수 표시',
     'cli.env.show_all': '모든 변수 표시',
@@ -159,6 +196,9 @@ export const koTranslations: Record<string, string> = {
     'cli.json.format_desc': '들여쓰기로 JSON 포맷',
     'cli.json.minify_desc': '공백 제거',
     'cli.json.validate_desc': '유효한 JSON인지 확인',
+    'cli.json.format.description': '들여쓰기로 JSON 보기 좋게 출력',
+    'cli.json.minify.description': '공백을 제거해 JSON 최소화',
+    'cli.json.validate.description': '문자열이 유효한 JSON인지 검증',
     'cli.base64.description': 'Base64 문자열 인코딩 또는 디코딩',
     'cli.base64.long_description': 'Base64 문자열 인코딩 및 디코딩',
     'cli.base64.utf8_note': 'UTF-8 텍스트 인코딩을 지원합니다',
@@ -169,6 +209,9 @@ export const koTranslations: Record<string, string> = {
     'cli.timestamp.current': '현재 Unix 타임스탬프',
     'cli.timestamp.to_date': '타임스탬프에서 날짜로',
     'cli.timestamp.from_date': '날짜에서 타임스탬프로',
+    'cli.timestamp.now.description': '현재 Unix 타임스탬프 표시',
+    'cli.timestamp.to-date.description': 'Unix 타임스탬프를 날짜로 변환',
+    'cli.timestamp.from-date.description': '날짜 문자열을 Unix 타임스탬프로 변환',
     'cli.screen.description': '화면 및 터미널 정보 표시',
     'cli.screen.long_description': '화면, 뷰포트 및 터미널 크기 표시',
     'cli.screen.shows': '표시: 해상도, 색 깊이, 픽셀 비율, 창 크기, 터미널 크기',
@@ -179,6 +222,11 @@ export const koTranslations: Record<string, string> = {
     'cli.random.uuid_desc': '랜덤 UUID v4',
     'cli.random.coin_desc': '동전 던지기',
     'cli.random.dice_desc': '주사위 던지기',
+    'cli.random.number.description': '난수 생성',
+    'cli.random.string.description': '임의의 문자열 생성',
+    'cli.random.uuid.description': '임의의 UUID v4 생성',
+    'cli.random.coin.description': '동전 던지기',
+    'cli.random.dice.description': '주사위 굴리기',
     'cli.ping.description': '호스트에 ICMP 유형 ping 전송',
     'cli.ping.long_description': '호스트에 HTTP 기반 ICMP 유형 ping을 전송하고 왕복 통계 표시',
     'cli.ping.ctrl_c': 'Ctrl+C를 눌러 중지하고 통계를 표시합니다.',
@@ -194,5 +242,727 @@ export const koTranslations: Record<string, string> = {
     'cli.debug.processors': '등록된 모든 프로세서',
     'cli.debug.modules': '로드된 모든 모듈',
     'cli.debug.state': '상태 저장소 검사',
+    'cli.debug.processors.description': '등록된 모든 명령어 프로세서 목록',
+    'cli.debug.modules.description': '로드된 모든 CLI 모듈 목록',
+    'cli.debug.state.description': '모든 상태 저장소와 값 검사',
+    'cli.debug.services.description': 'DI 컨테이너에 등록된 모든 서비스 목록',
+    'cli.debug.environment.description': '브라우저, 터미널, 프레임워크 정보 표시',
+    'cli.debug.history.description': '명령어 기록 통계 표시',
+    'cli.debug.health.description': '시스템 상태 확인: 스토리지, 연결, 프로세서 상태',
+    'cli.debug.export.description': '모든 디버그 정보를 JSON으로 내보내기',
+    'cli.debug.servers.description': '구성된 서버와 연결 상태 목록',
     'cli.packages.description': 'CLI 패키지 관리',
+
+    // ── Servers and events ───────────────────────────────────────────
+    'cli.server.description': '원격 CLI 서버 연결 관리',
+    'cli.server.list.description': '서버의 상태, 버전, 명령 표시',
+    'cli.server.status.description': '서버 응답 확인 (전체 또는 한 서버 상세)',
+    'cli.server.commands.description': '각 서버의 명령 표시',
+    'cli.server.reconnect.description': '서버에 다시 연결하고 명령 다시 불러오기',
+    'cli.server.default.description': '공통 명령을 실행할 서버 표시 또는 설정',
+    'cli.server.jobs.description': '연결된 서버의 백그라운드 작업 관리',
+    'cli.server.jobs.list.description': '연결된 모든 서버의 작업 목록',
+    'cli.server.jobs.info.description': '작업의 상세 정보 표시',
+    'cli.server.jobs.trigger.description': '작업 즉시 실행',
+    'cli.server.jobs.pause.description': '작업의 예약 실행 일시 중지',
+    'cli.server.jobs.resume.description': '일시 중지된 작업 재개',
+    'cli.server.jobs.stop.description': '작업을 중지하고 실행 중이면 현재 실행 취소',
+    'cli.server.jobs.cancel.description': '작업의 현재 실행 취소',
+    'cli.server.jobs.history.description': '작업의 실행 기록 표시',
+    'cli.server.jobs.logs.description': '최신 또는 특정 실행의 로그 표시',
+    'cli.server.jobs.edit.description': '작업 설정을 대화형으로 편집',
+    'cli.server.jobs.watch.description': 'WebSocket으로 작업 이벤트 실시간 보기',
+    'cli.server.help.see_everything_you_can': '할 수 있는 모든 작업 보기',
+    'cli.server.help.connect_terminal_remote_cli':
+        '터미널을 원격 CLI 서버(.NET, Node.js, Python)에 연결하고 해당 서버의 명령어를 실행합니다',
+    'cli.server.help.by_name_or_prefix':
+        '각 서버의 명령어는 이름({byName})과 서버를 접두사로 붙인 이름({prefixed})으로 사용할 수 있습니다. 여러 서버에 같은 명령어가 있으면 기본 서버가 실행하며, 기본 서버가 없으면 어느 서버를 사용할지 묻습니다. 같은 이름의 로컬 명령어가 우선하므로 접두사가 붙은 이름을 사용하세요. 중단된 서버는 30초마다 다시 시도하며 복구되면 해당 명령어도 다시 사용할 수 있습니다',
+    'cli.server.help.overview_servers': '서버 개요',
+    'cli.server.help.servers_status_version_commands': '상태, 버전, 명령어가 포함된 서버 목록',
+    'cli.server.help.check_servers_reachable_all': '서버 연결 가능 여부 확인 (전체 또는 하나를 자세히)',
+    'cli.server.help.commands_each_server_provides': '각 서버가 제공하는 명령어',
+    'cli.server.help.connect_again_unreachable_servers': '다시 연결 (연결할 수 없는 서버 또는 하나)',
+    'cli.server.help.show_set_server_shared': '공유 명령어에 사용할 서버 표시 또는 설정',
+    'cli.server.help.open_shell_server_run': '서버에서 셸을 열거나 명령어 하나 실행',
+    'cli.server.help.ping_node_show_details': 'node에 ping을 보내고 세부 정보 표시',
+    'cli.server.help.what_node_can_do': 'node에서 할 수 있는 작업',
+    'cli.server.help.run_echo_node_explicitly': 'node에서 echo를 명시적으로 실행',
+    'cli.server.help.shared_commands_run_node': '공유 명령어를 node에서 실행',
+    'cli.server.help.retry_every_unreachable_server': '연결할 수 없는 모든 서버 재시도',
+    'cli.server.list.help.list_configured_servers_connection':
+        '구성된 서버를 나열합니다: 연결 상태, URL, 서버 및 API 버전, 명령어 수, 셸 접근 가능 여부',
+    'cli.server.list.help.see_why_server_unreachable':
+        '서버에 연결할 수 없는 이유를 확인하거나 server reconnect로 재시도',
+    'cli.server.status.help.details_server': '서버 세부 정보 확인',
+    'cli.server.status.help.try_again': '다시 시도',
+    'cli.server.status.help.load_commands': '명령어 불러오기',
+    'cli.server.status.help.see_commands': '명령어 보기',
+    'cli.server.status.help.ping_servers_without_name':
+        '서버에 ping을 보냅니다. 이름을 지정하지 않으면 모든 서버를 왕복 시간과 함께 한 번에 확인하고, 이름을 지정하면 해당 서버를 자세히(버전, OS, 셸, 스트리밍) 표시하며 연결할 수 없을 때 힌트를 제공합니다',
+    'cli.server.status.help.check_every_server': '모든 서버 확인',
+    'cli.server.status.help.details_one_server': '서버 하나의 세부 정보',
+    'cli.server.status.help.same_server_status': 'server status와 동일',
+    'cli.server.status.help.details_node': 'node의 세부 정보',
+    'cli.server.commands.help.shared_marker':
+        '여러 서버에 있음: 기본 서버(server use <name>)에서 실행되거나 어느 서버를 쓸지 물음',
+    'cli.server.commands.help.local_marker': '같은 이름의 로컬 명령어가 있음: 서버 접두사를 붙여 실행',
+    'cli.server.commands.help.intro':
+        '서버가 제공하는 명령어를 나열합니다(전체 서버 또는 하나). 이름으로 실행하거나 서버를 접두사로 붙여 실행하세요. {example}는 다른 서버나 로컬 명령어가 echo라는 이름이어도 항상 node에서 실행됩니다',
+    'cli.server.commands.help.commands_every_server': '모든 서버의 명령어',
+    'cli.server.commands.help.commands_one_server': '서버 하나의 명령어',
+    'cli.server.commands.help.what_node_can_do': 'node에서 할 수 있는 작업',
+    'cli.server.reconnect.help.reconnect_them_anyway': '그래도 다시 연결',
+    'cli.server.reconnect.help.see_why': '이유 확인',
+    'cli.server.reconnect.help.connect_servers_again_reload':
+        '서버에 다시 연결하고 명령어를 다시 불러옵니다. 예: 서버가 재시작되거나 업데이트된 후. 이름을 지정하지 않으면 연결할 수 없는 모든 서버를 다시 시도합니다',
+    'cli.server.reconnect.help.retry_unreachable_servers': '연결할 수 없는 서버 재시도',
+    'cli.server.reconnect.help.reconnect_one_server': '서버 하나 다시 연결',
+    'cli.server.reconnect.help.reconnect_every_server': '모든 서버 다시 연결',
+    'cli.server.reconnect.help.same_server_reconnect': 'server reconnect와 동일',
+    'cli.server.reconnect.help.reload_commands_node': 'node의 명령어 다시 불러오기',
+    'cli.server.default.help.to_remove': '제거',
+    'cli.server.default.help.to_set_one': '하나 설정',
+    'cli.server.default.help.default_server_runs_commands':
+        '기본 서버는 여러 서버에 있는 명령어(그렇지 않으면 어느 서버를 쓸지 묻습니다)와 server logs처럼 서버 하나가 필요한 명령어를 실행합니다. 다시 로드해도 기억됩니다',
+    'cli.server.default.help.show_default_server': '기본 서버 표시',
+    'cli.server.default.help.set': '설정',
+    'cli.server.default.help.remove': '제거',
+    'cli.server.default.help.same_server_default_node': 'server default node와 동일',
+    'cli.server.jobs.help.see_control_background_jobs':
+        '연결된 서버에서 실행되는 백그라운드 작업을 확인하고 제어합니다. 목록 보기, 즉시 실행, 일시 중지 또는 중지, 기록 및 로그 읽기, 설정 변경, 이벤트 실시간 보기가 가능합니다. 작업은 이름(대소문자 무관) 또는 ID로 선택하며 연결된 모든 서버에서 찾습니다. 작업이 있는 각 서버에 동작이 적용되며 --server로 명령을 한 서버로 제한할 수 있습니다',
+    'cli.server.jobs.help.same_server_jobs_list': 'server jobs list와 동일',
+    'cli.server.jobs.help.live_job_events': '실시간 작업 이벤트',
+    'cli.server.jobs.help.all_jobs': '모든 작업',
+    'cli.server.jobs.help.run_cleanup_job_now': 'cleanup 작업 즉시 실행',
+    'cli.server.jobs.help.failed_runs': '실패한 실행',
+    'cli.server.jobs.help.last_run_output_node': 'node의 마지막 실행 출력',
+    'cli.server.jobs.list.help.list_jobs_every_connected':
+        '연결된 모든 서버의 작업을 나열합니다: 그룹, 상태, 일정, 마지막 및 다음 실행, 마지막 실행 소요 시간. 서버가 여러 개이면 서버마다 별도의 표가 표시됩니다',
+    'cli.server.jobs.list.help.jobs_all_connected_servers': '연결된 모든 서버의 작업',
+    'cli.server.jobs.list.help.only_one_group': '하나의 그룹만',
+    'cli.server.jobs.list.help.jobs_node_server': 'node 서버의 작업',
+    'cli.server.jobs.list.help.jobs_reports_group': 'reports 그룹의 작업',
+    'cli.server.jobs.info.help.show_everything_about_one':
+        '작업 하나에 대한 모든 정보를 표시합니다: 일정, 재시도, 제한 시간, 중복 실행 정책, 현재 실행 중인 항목, 마지막 실행 결과. 작업은 이름(대소문자 무관) 또는 ID로 찾습니다',
+    'cli.server.jobs.info.help.details_cleanup_job': 'cleanup 작업의 세부 정보',
+    'cli.server.jobs.trigger.help.run_job_now_without':
+        '다음 예약 시간을 기다리지 않고 작업을 즉시 실행합니다. 작업 일정은 변경되지 않습니다',
+    'cli.server.jobs.trigger.help.run_cleanup_now': 'cleanup 즉시 실행',
+    'cli.server.jobs.trigger.help.then_read_output': '이후 출력 읽기',
+    'cli.server.jobs.pause.help.stop_running_job_schedule':
+        '재개할 때까지 작업을 일정에 따라 실행하지 않습니다. 이미 진행 중인 실행에는 cancel 또는 stop을 사용하세요',
+    'cli.server.jobs.pause.help.hold_cleanup': 'cleanup 보류',
+    'cli.server.jobs.pause.help.put_back_schedule': '다시 일정에 복귀',
+    'cli.server.jobs.resume.help.put_paused_job_back': '일시 중지된 작업을 다시 일정에 복귀시킵니다',
+    'cli.server.jobs.resume.help.run_cleanup_schedule_again': 'cleanup을 다시 일정에 따라 실행',
+    'cli.server.jobs.stop.help.take_job_off_schedule': '작업을 일정에서 제외하고, 진행 중인 실행이 있으면 취소합니다',
+    'cli.server.jobs.stop.help.stop_cleanup_completely': 'cleanup 완전히 중지',
+    'cli.server.jobs.cancel.help.cancel_run_progress_job':
+        '작업의 진행 중인 실행을 취소합니다. 작업은 일정에 그대로 남아 다음 시간에 다시 실행됩니다',
+    'cli.server.jobs.cancel.help.abort_current_cleanup_run': '현재 cleanup 실행 중단',
+    'cli.server.jobs.history.help.list_past_runs_job':
+        '작업의 과거 실행을 나열합니다: 상태, 시작 시각, 소요 시간, 재시도 횟수, 오류 메시지의 앞부분. 한 실행의 출력을 읽으려면 짧은 ID와 logs --exec를 사용하세요',
+    'cli.server.jobs.history.help.last_20_runs': '마지막 20번의 실행',
+    'cli.server.jobs.history.help.page_through_older_runs': '이전 실행을 페이지별로 보기',
+    'cli.server.jobs.history.help.only_failed_runs': '실패한 실행만',
+    'cli.server.jobs.history.help.last_5_runs': '마지막 5번의 실행',
+    'cli.server.jobs.logs.help.print_log_entries_latest':
+        '작업의 최신 실행 또는 실행 ID(history에서 확인)로 선택한 한 실행의 로그 항목을 출력합니다',
+    'cli.server.jobs.logs.help.logs_latest_run': '최신 실행의 로그',
+    'cli.server.jobs.logs.help.logs_one_run': '한 실행의 로그',
+    'cli.server.jobs.logs.help.what_last_cleanup_run': '마지막 cleanup 실행이 출력한 내용',
+    'cli.server.jobs.edit.help.change_job_step_step':
+        '작업을 단계별로 변경합니다: 설명, 그룹, cron 일정 또는 간격, 최대 재시도 횟수, 제한 시간, 중복 실행 정책(skip, queue 또는 cancel). 값을 유지하려면 Enter, 취소하려면 Ctrl+C 또는 Escape를 누르세요. 확인하기 전에는 아무것도 변경되지 않습니다. 여러 서버에 있는 작업은 --server가 필요합니다',
+    'cli.server.jobs.edit.help.edit_cleanup_server_has': 'cleanup이 있는 서버에서 편집',
+    'cli.server.jobs.watch.help.follow_job_events_they':
+        '연결된 모든 서버의 작업 이벤트(시작, 완료, 실패 등)를 발생하는 대로 한 줄씩 표시합니다. 중지하려면 Ctrl+C를 누르세요',
+    'cli.server.jobs.watch.help.events_all_connected_servers': '연결된 모든 서버의 이벤트',
+    'cli.server.jobs.watch.help.only_events_node': 'node의 이벤트만',
+    'cli.ssh.description': '서버에서 원격 셸 세션 열기',
+    'cli.ssh.help.open_interactive_shell_server':
+        '이 터미널에서 서버의 대화형 셸을 열거나, 명령어 하나를 실행해 출력을 표시합니다. 셸을 활성화한 서버만 사용할 수 있으며 users 플러그인을 사용하면 shell:execute 권한이 필요합니다. 이름을 지정하지 않으면 ssh는 셸 서버가 하나뿐일 때 그 서버를, 아니면 기본 서버를 사용하고, 그것도 없으면 어느 서버를 쓸지 묻습니다',
+    'cli.ssh.help.shell_default_only_server': '기본(또는 유일한) 서버의 셸',
+    'cli.ssh.help.shell_server_exit_ctrl': '서버의 셸 (종료하려면 exit 또는 Ctrl+D)',
+    'cli.ssh.help.run_one_command_print': '명령어 하나를 실행하고 출력 표시',
+    'cli.ssh.help.same_ssh': 'ssh <name>과 동일',
+    'cli.ssh.help.interactive_shell_node': 'node의 대화형 셸',
+    'cli.ssh.help.one_command_node': 'node에서 명령어 하나 실행',
+    'cli.ssh.help.same_ssh_2': 'ssh와 동일',
+    'cli.events.description': '이벤트 버스의 이벤트 관찰, 목록 표시, 보내기',
+    'cli.events.watch.description': '이벤트가 발생할 때마다 표시 (Ctrl+C로 중지)',
+    'cli.events.log.description': '최근 이벤트 표시 (메모리에만 있으며 저장되지 않음)',
+    'cli.events.emit.description': '이벤트 보내기: events emit <type> [json]',
+    'cli.events.watch.help.intro': 'Ctrl+C를 누를 때까지 이벤트를 발생하는 대로 출력',
+    'cli.events.watch.help.every_event': '모든 이벤트',
+    'cli.events.watch.help.namespace': '네임스페이스',
+    'cli.events.watch.help.one_type': '하나의 유형',
+    'cli.events.log.help.intro': '가장 최근 이벤트를 오래된 순으로 표시',
+    'cli.events.log.help.last_20': '마지막 20개 이벤트',
+    'cli.events.log.help.last_50_server': '마지막 50개 서버 이벤트',
+    'cli.events.emit.help.intro': '이벤트 발생, 예: 이벤트를 수신하는 플러그인 테스트',
+    'cli.events.help.commands': '명령어:',
+    'cli.events.help.print_live': '이벤트 실시간 출력',
+    'cli.events.help.recent': '최근 이벤트',
+    'cli.events.help.emit': '이벤트 발생',
+    'cli.events.help.patterns': '패턴: 정확한 유형(package:installed), 네임스페이스(package:*) 또는 모든 이벤트를 뜻하는 *',
+    'cli.events.help.in_memory': '이벤트는 이 터미널의 메모리에만 보관되며 영구 저장되지 않습니다',
+
+    // ── Capture ──────────────────────────────────────────────────────
+    'cli.capture.description': '터미널 출력을 다운로드 가능한 파일로 내보내기',
+    'cli.capture.help.save_what_terminal_including':
+        '스크롤백을 포함해 터미널에 표시된 내용을 브라우저가 다운로드하는 파일로 저장합니다. HTML은 테마 배경과 글자색을 유지하고 txt는 일반 텍스트입니다. 개별 줄의 색상은 유지되지 않습니다',
+    'cli.capture.help.everything_terminal_html': '전체를 terminal-<timestamp>.html로 저장',
+    'cli.capture.help.plain_text_file': '일반 텍스트 파일',
+    'cli.capture.help.only_last_n_lines': '마지막 n줄만',
+    'cli.capture.help.downloads_session_txt': 'session.txt를 다운로드',
+    'cli.capture.help.last_50_lines_html': '마지막 50줄을 HTML로',
+    'cli.capture.help.same_capture': 'capture와 동일',
+
+    // ── Diff ─────────────────────────────────────────────────────────
+    'cli.diff.description': '파일을 줄 단위로 비교',
+    'cli.diff.help.compare_two_texts_line':
+        '두 텍스트를 줄 단위로 비교합니다. 추가된 줄은 +와 함께 녹색으로, 삭제된 줄은 -와 함께 빨간색으로 표시되며 각 변경 주위에 문맥을 위해 변경되지 않은 줄이 몇 개 함께 표시됩니다',
+    'cli.diff.help.compare_two_texts': '두 텍스트 비교',
+    'cli.diff.help.only_changed_lines': '변경된 줄만',
+    'cli.diff.help.one_line_changed': '한 줄 변경됨',
+    'cli.diff.help.prints_no_differences_found': '출력: No differences found',
+    'cli.diff.help.compare_two_files_line':
+        '두 파일을 줄 단위로 비교해 변경 내용을 표시합니다. <(또는 -)로 시작하는 줄은 첫 번째 파일에만, >(또는 +)로 시작하는 줄은 두 번째 파일에만 있습니다',
+    'cli.diff.help.show_differences': '차이점 표시',
+    'cli.diff.help.unified_format_context': '문맥이 포함된 통합 형식',
+    'cli.diff.help.what_changed_between_versions': '버전 간 변경 사항',
+    'cli.diff.help.review_edits_git_style': 'git 스타일로 수정 내용 검토',
+    'cli.diff.help.ignore_upper_lower_case': '대소문자 무시',
+
+    // ── Font Size ────────────────────────────────────────────────────
+    'cli.font-size.description': '터미널 글꼴 크기 조정',
+    'cli.font-size.reset.description': '글꼴 크기를 기본값으로 재설정',
+    'cli.font-size.set.description': '글꼴 크기를 특정 값으로 설정',
+    'cli.font-size.help.intro':
+        '터미널 글자를 {min}px에서 {max}px 사이로 키우거나 줄입니다. 선택한 크기는 저장되어 다음에 터미널을 열 때 복원되며, reset은 페이지가 시작될 때의 크기로 되돌립니다',
+    'cli.font-size.help.show_current_size': '현재 크기 표시',
+    'cli.font-size.help.bigger_smaller_by': '{step}px만큼 키우기 또는 줄이기',
+    'cli.font-size.help.exact_size': '정확한 크기(픽셀, {min}-{max})',
+    'cli.font-size.help.back_default_size': '기본 크기로 되돌리기',
+    'cli.font-size.help.use_16px_text': '16px 글자 사용',
+    'cli.font-size.help.grow_by': '{step}px만큼 키우기',
+    'cli.font-size.help.forget_saved_size': '저장된 크기 삭제',
+
+    // ── Snippet ──────────────────────────────────────────────────────
+    'cli.snippet.description': '매개변수가 있는 명령어 템플릿 저장 및 재사용',
+    'cli.snippet.list.description': '저장된 모든 스니펫 목록',
+    'cli.snippet.save.description': '새 스니펫 저장: snippet save <name> "<template>"',
+    'cli.snippet.show.description': '스니펫 템플릿 표시: snippet show <name>',
+    'cli.snippet.delete.description': '스니펫 삭제: snippet delete <name>',
+    'cli.snippet.run.description': '변수 값으로 스니펫 실행: snippet run <name> var1=val1 var2=val2',
+    'cli.snippet.help.save_command_lines_you':
+        '자주 쓰는 명령줄을 이름이 있는 템플릿으로 저장하고, 실행할 때 {{placeholders}}를 채웁니다. 스니펫은 브라우저에 저장되며 모든 터미널과 탭에서 공유됩니다',
+    'cli.snippet.help.save_replace_snippet': '스니펫 저장(또는 교체)',
+    'cli.snippet.help.fill_placeholders_run': '자리 표시자를 채워 실행',
+    'cli.snippet.help.all_saved_snippets': '저장된 모든 스니펫',
+    'cli.snippet.help.print_snippet': '스니펫 출력',
+    'cli.snippet.help.delete_snippet_rm_remove': '스니펫 삭제 (rm, remove)',
+    'cli.snippet.help.template_placeholder': '자리 표시자가 있는 템플릿',
+    'cli.snippet.help.runs_echo_hello_ada': '실행: echo Hello Ada',
+    'cli.snippet.help.quote_values_spaces': '공백이 있는 값은 따옴표로 묶기',
+
+    // ── Test ─────────────────────────────────────────────────────────
+    'cli.test.description': '조건 평가 (참이면 종료 상태 0)',
+    'cli.test.help.expressions': '표현식:',
+    'cli.test.help.empty_not_empty': '비어 있음 / 비어 있지 않음',
+    'cli.test.help.equal_not_equal': '같음 / 같지 않음',
+    'cli.test.help.integer_comparison': '정수 비교',
+    'cli.test.help.exists_file_directory': '존재함 / 파일 / 디렉터리',
+
+    // ── Kill ─────────────────────────────────────────────────────────
+    'cli.kill.description': 'PID로 실행 중인 프로세스 종료',
+    'cli.kill.help.stop_running_process_pid':
+        'ps에 표시된 PID로 실행 중인 프로세스를 중지합니다. 명령어는 취소되고 백그라운드 서비스는 중지됩니다. 실행 중인 프로세스만 종료할 수 있으며, 종료된 프로세스는 이후 종료 코드 -9와 함께 killed로 표시됩니다',
+    'cli.kill.help.stop_process_pid': '해당 PID의 프로세스 중지',
+    'cli.kill.help.find_pid': 'PID 찾기',
+    'cli.kill.help.stop_process_3': '3번 프로세스 중지',
+
+    // ── Pkg ──────────────────────────────────────────────────────────
+    'cli.pkg.description': 'cli의 패키지 관리',
+    'cli.pkg.ls.description': 'cli의 모든 패키지 목록',
+    'cli.pkg.browse.description': '구성된 모든 소스에서 사용 가능한 패키지 목록',
+    'cli.pkg.add.description': 'cli에 패키지 추가, 예: pkg add guid.',
+    'cli.pkg.remove.description': 'cli에서 패키지 제거',
+    'cli.pkg.versions.description': '패키지의 게시된 모든 버전 표시',
+    'cli.pkg.check.description': '설치된 패키지의 사용 가능한 업데이트 확인',
+    'cli.pkg.update.description': 'cli의 패키지를 최신 버전으로 업데이트하거나 모든 패키지 업데이트',
+    'cli.pkg.source.description': '다운로드용 패키지 소스 확인 또는 설정',
+    'cli.pkg.source.get.description': '현재 CDN 소스 표시',
+    'cli.pkg.source.set.description': '선호하는 패키지 소스 설정 (이름이 없으면 대화형)',
+    'cli.pkg.help.list_installed_packages': '설치된 패키지 목록',
+    'cli.pkg.help.browse_all_available_packages': '사용 가능한 모든 패키지 둘러보기',
+    'cli.pkg.help.install_package': '패키지 설치',
+    'cli.pkg.help.remove_package': '패키지 제거',
+    'cli.pkg.help.show_all_published_versions': '게시된 모든 버전 표시',
+    'cli.pkg.help.check_available_updates': '사용 가능한 업데이트 확인',
+    'cli.pkg.help.update_one_all_packages': '패키지 하나 또는 전체 업데이트',
+    'cli.pkg.help.get_set_package_source': '패키지 소스 확인 또는 설정',
+    'cli.pkg.help.install_qodalis_cli_guid': '@qodalis/cli-guid 설치',
+    'cli.pkg.help.install_multiple_packages': '여러 패키지 설치',
+    'cli.pkg.help.update_all_packages': '모든 패키지 업데이트',
+    'cli.pkg.browse.help.install_package': '패키지 설치',
+    'cli.pkg.add.help.short_name': '짧은 이름',
+    'cli.pkg.add.help.full_name': '전체 이름',
+    'cli.pkg.add.help.multiple_packages': '여러 패키지',
+    'cli.pkg.add.help.specific_version': '특정 버전',
+    'cli.pkg.remove.help.remove_one_package': '패키지 하나 제거',
+    'cli.pkg.remove.help.remove_multiple': '여러 개 제거',
+    'cli.pkg.remove.help.short_alias': '짧은 별칭',
+    'cli.pkg.versions.help.short_name': '짧은 이름',
+    'cli.pkg.versions.help.full_name': '전체 이름',
+    'cli.pkg.check.help.apply_updates': '업데이트 적용',
+    'cli.pkg.update.help.update_latest': '최신 버전으로 업데이트',
+    'cli.pkg.update.help.update_specific_version': '특정 버전으로 업데이트',
+    'cli.pkg.update.help.update_all_packages': '모든 패키지 업데이트',
+    'cli.pkg.update.help.install_specific_version': '특정 버전 설치',
+    'cli.pkg.source.help.change': '변경',
+    'cli.pkg.source.help.show_current_source': '현재 소스 표시',
+    'cli.pkg.source.help.set_preferred_source': '선호 소스 설정',
+    'cli.pkg.help.install_package_2': '패키지 설치',
+
+    // ── Ps ───────────────────────────────────────────────────────────
+    'cli.ps.description': '실행 중인 프로세스와 최근 프로세스 목록',
+    'cli.ps.help.list_processes_terminal_commands':
+        '이 터미널의 프로세스(명령어, 백그라운드 서비스, 데몬, 작업)를 나열합니다. 실행 중인 프로세스와 최근에 완료, 실패, 종료된 프로세스(최근 50개)가 종료 코드 및 시작 후 경과 시간과 함께 표시됩니다',
+    'cli.ps.help.all_processes_oldest_first': '모든 프로세스, 오래된 순',
+    'cli.ps.help.what_running_now': '지금 실행 중인 항목',
+    'cli.ps.help.stop_process_12_pid': 'PID 열의 12번 프로세스 중지',
+
+    // ── Cron ─────────────────────────────────────────────────────────
+    'cli.cron.description': '반복 간격으로 실행할 명령어 예약',
+    'cli.cron.add.description': 'cron 작업 추가: cron add <name> <interval> <command>',
+    'cli.cron.list.description': '모든 cron 작업 목록',
+    'cli.cron.remove.description': 'cron 작업 제거: cron remove <name>',
+    'cli.cron.enable.description': '일시 중지된 cron 작업 활성화',
+    'cli.cron.disable.description': 'cron 작업을 제거하지 않고 일시 중지',
+    'cli.cron.help.run_command_again_again':
+        '터미널이 열려 있는 동안 명령어를 일정한 간격으로 반복 실행합니다. 작업은 저장되어 터미널이 시작될 때 다시 시작되며, 제거하지 않고 일시 중지할 수 있습니다',
+    'cli.cron.help.add_job': '작업 추가',
+    'cli.cron.help.jobs_interval_status_run': '간격, 상태, 실행 횟수가 포함된 작업 목록 (ls)',
+    'cli.cron.help.pause_job': '작업 일시 중지',
+    'cli.cron.help.resume_paused_job': '일시 중지된 작업 재개',
+    'cli.cron.help.remove_job_rm_delete': '작업 제거 (rm, delete)',
+    'cli.cron.help.intervals_seconds_30_hours':
+        '간격: 초(30) 또는 시, 분, 초(1h, 5m, 1h30m, 90s) 형식이며 최소 10초입니다',
+    'cli.cron.help.every_5_minutes': '5분마다',
+    'cli.cron.help.every_hour_half': '1시간 30분마다',
+    'cli.cron.help.pause': '일시 중지',
+
+    // ── Binary ───────────────────────────────────────────────────────
+    'cli.binary.long_description': '이진 문자열 인코딩 및 디코딩',
+    'cli.binary.utf8_note': 'UTF-8 텍스트 인코딩 지원',
+    'cli.binary.encode_desc': '텍스트를 이진수로',
+    'cli.binary.decode_desc': '이진수를 텍스트로',
+
+    // ── Morse ────────────────────────────────────────────────────────
+    'cli.morse.long_description': '모스 부호 인코딩 및 디코딩',
+    'cli.morse.note': '문자, 숫자, 일반적인 문장 부호 지원',
+    'cli.morse.encode_desc': '텍스트를 모스 부호로',
+    'cli.morse.decode_desc': '모스 부호를 텍스트로',
+
+    // ── Rot ──────────────────────────────────────────────────────────
+    'cli.rot.long_description': '텍스트에 ROT(회전) 암호 적용',
+    'cli.rot.note': '기본값은 ROT13 (자기 역변환: 두 번 적용하면 원본으로 돌아옴)',
+    'cli.rot.default_desc': 'ROT13 적용',
+    'cli.rot.shift_desc': 'ROT-N 적용',
+
+    // ── Awk ──────────────────────────────────────────────────────────
+    'cli.awk.description': '패턴 스캔 및 텍스트 처리',
+    'cli.awk.help.process_text_records_fields':
+        '텍스트를 레코드와 필드로 처리합니다. 각 줄은 필드 $1, $2, ...로 나뉘고($0은 줄 전체), 각 규칙은 일치하는 줄에서 { action }을 실행합니다. BEGIN 및 END 블록, /regex/ 및 필드 비교 패턴, print, 변수, NR, NF를 지원합니다. 프로그램은 따옴표로 묶으세요. 간단한 프로그램은 따옴표 없이도 됩니다 (awk {print $1} file)',
+    'cli.awk.help.run_program_over_file': '파일에 프로그램 실행',
+    'cli.awk.help.split_fields_instead_spaces': '공백 대신 <sep>으로 필드 분리',
+    'cli.awk.help.run_program_over_piped': '파이프 입력에 프로그램 실행',
+    'cli.awk.help.print_first_column': '첫 번째 열 출력',
+    'cli.awk.help.second_column_csv': 'CSV의 두 번째 열',
+    'cli.awk.help.filter_rows_field': '필드로 행 필터링',
+    'cli.awk.help.sum_second_column': '두 번째 열 합계',
+
+    // ── Basename ─────────────────────────────────────────────────────
+    'cli.basename.description': '경로에서 디렉터리 제거',
+    'cli.basename.help.print_last_part_path':
+        '경로의 마지막 부분, 즉 앞의 디렉터리를 제외한 파일 또는 디렉터리 이름을 출력합니다. 접미사를 지정하면 끝에서 그것도 제거됩니다',
+    'cli.basename.help.name_without_directories': '디렉터리를 제외한 이름',
+    'cli.basename.help.also_remove_trailing_suffix': '끝의 접미사도 제거',
+    'cli.basename.help.prints_notes_txt': 'notes.txt 출력',
+    'cli.basename.help.prints_notes': 'notes 출력',
+    'cli.basename.help.prints_user': 'user 출력',
+
+    // ── Cat ──────────────────────────────────────────────────────────
+    'cli.cat.description': '파일 내용 표시',
+    'cli.cat.help.print_contents_one_more':
+        '하나 이상의 파일 내용 또는 파이프 입력을 순서대로 이어서 출력합니다. 출력을 다른 명령어로 파이프하여 검색, 정렬, 개수 세기를 할 수 있습니다',
+    'cli.cat.help.print_files_one_after': '파일을 차례로 출력',
+    'cli.cat.help.send_file_another_command': '파일을 다른 명령어로 전달',
+    'cli.cat.help.show_whole_file': '파일 전체 표시',
+    'cli.cat.help.show_only_lines_error': 'error가 포함된 줄만 표시',
+    'cli.cat.help.print_lines_sorted': '정렬된 줄 출력',
+
+    // ── Cd ───────────────────────────────────────────────────────────
+    'cli.cd.description': '현재 작업 디렉터리 변경',
+    'cli.cd.help.change_current_directory_without':
+        '현재 디렉터리를 변경합니다. 경로를 지정하지 않으면 홈 디렉터리로 이동합니다. 경로는 절대 경로(/...), 현재 위치 기준 상대 경로, 또는 홈을 뜻하는 ~로 시작할 수 있습니다',
+    'cli.cd.help.go_home_directory': '홈 디렉터리로 이동',
+    'cli.cd.help.go_directory': '디렉터리로 이동',
+    'cli.cd.help.go_up_one_level': '한 단계 위로 이동',
+    'cli.cd.help.go_docs_home': '홈의 docs로 이동',
+    'cli.cd.help.go_sibling_directory': '같은 수준의 다른 디렉터리로 이동',
+    'cli.cd.help.go_root': '루트로 이동',
+
+    // ── Chmod ────────────────────────────────────────────────────────
+    'cli.chmod.description': '파일 권한 변경',
+    'cli.chmod.help.change_who_can_read':
+        '파일을 읽고(r), 쓰고(w), 실행(x)할 수 있는 대상을 변경합니다. 755 같은 8진수 모드 또는 기호 모드를 사용하세요: 대상(u 사용자, g 그룹, o 기타, a 모두), 그다음 추가는 +, 제거는 -, 설정은 =, 그다음 권한',
+    'cli.chmod.help.set_permissions': '권한 설정',
+    'cli.chmod.help.apply_directory_everything': '디렉터리와 그 안의 모든 항목에 적용',
+    'cli.chmod.help.rw_r_r_owner': 'rw-r--r--: 소유자는 쓰기, 나머지는 읽기',
+    'cli.chmod.help.let_owner_execute': '소유자에게 실행 권한 부여',
+    'cli.chmod.help.take_away_write_group': '그룹과 기타 사용자의 쓰기 권한 제거',
+    'cli.chmod.help.set_whole_directory_tree': '디렉터리 트리 전체에 설정',
+
+    // ── Chown ────────────────────────────────────────────────────────
+    'cli.chown.description': '파일 소유자 및 그룹 변경',
+    'cli.chown.help.change_owner_group_files':
+        '파일의 소유자 및/또는 그룹을 변경합니다. user, user:group, user:(소유자만) 또는 :group(그룹만)을 지정하세요',
+    'cli.chown.help.change_owner_group_if': '소유자 변경, 지정하면 그룹도 변경',
+    'cli.chown.help.change_only_group': '그룹만 변경',
+    'cli.chown.help.apply_directory_everything': '디렉터리와 그 안의 모든 항목에 적용',
+    'cli.chown.help.make_alice_owner': 'alice를 소유자로 지정',
+    'cli.chown.help.set_owner_group': '소유자와 그룹 설정',
+    'cli.chown.help.give_bob_whole_directory': 'bob에게 디렉터리 전체 부여',
+
+    // ── Cp ───────────────────────────────────────────────────────────
+    'cli.cp.description': '파일과 디렉터리 복사',
+    'cli.cp.help.copy_file_new_path':
+        '파일을 새 경로 또는 기존 디렉터리로 복사합니다. 디렉터리를 복사하려면 안의 모든 항목을 복사하는 -r이 필요합니다. 대상에 이미 있는 파일은 교체됩니다',
+    'cli.cp.help.copy_file_new_name': '파일을 새 이름으로 복사',
+    'cli.cp.help.copy_files_directory': '파일을 디렉터리로 복사',
+    'cli.cp.help.copy_directory_contents': '디렉터리와 그 내용 복사',
+    'cli.cp.help.make_backup_copy': '백업 복사본 만들기',
+    'cli.cp.help.copy_docs': '~/docs로 복사',
+    'cli.cp.help.duplicate_whole_directory': '디렉터리 전체 복제',
+
+    // ── Cut ──────────────────────────────────────────────────────────
+    'cli.cut.description': '파일의 각 줄에서 열 또는 필드 추출',
+    'cli.cut.help.print_selected_parts_each':
+        '각 줄에서 선택한 부분을 출력합니다. 구분자로 나눈 필드(-f, 기본값은 탭) 또는 문자 위치(-c)를 사용합니다. 목록은 1,3, 2-4, 3-처럼 숫자, 범위 또는 둘 다 가능합니다',
+    'cli.cut.help.select_fields': '필드 선택',
+    'cli.cut.help.select_character_positions': '문자 위치 선택',
+    'cli.cut.help.cut_piped_input': '파이프 입력 자르기',
+    'cli.cut.help.first_third_csv_column': 'CSV의 첫 번째와 세 번째 열',
+    'cli.cut.help.first_10_characters_each': '각 줄의 처음 10자',
+    'cli.cut.help.first_two_fields_split': ': 기준으로 나눈 처음 두 필드',
+
+    // ── Dirname ──────────────────────────────────────────────────────
+    'cli.dirname.description': '경로에서 마지막 구성 요소 제거',
+    'cli.dirname.help.print_directory_part_path':
+        '경로의 디렉터리 부분, 즉 마지막 / 앞의 모든 것을 출력합니다. /가 없는 이름만 있으면 .(현재 디렉터리)을 반환합니다',
+    'cli.dirname.help.path_without_last_part': '마지막 부분을 제외한 경로',
+    'cli.dirname.help.prints_home_user': '/home/user 출력',
+    'cli.dirname.help.prints': '. 출력',
+    'cli.dirname.help.prints_2': '/ 출력',
+
+    // ── Du ───────────────────────────────────────────────────────────
+    'cli.du.description': '파일 공간 사용량 추정',
+    'cli.du.help.show_how_much_space':
+        '파일과 디렉터리가 사용하는 공간을 바이트로 표시합니다. 디렉터리는 모든 하위 디렉터리가 총 크기와 함께 나열되며, 총합만 보려면 -s, 깊이를 제한하려면 -d를 사용하세요',
+    'cli.du.help.sizes_path_default_current': '경로(기본값: 현재 디렉터리)와 하위 디렉터리의 크기',
+    'cli.du.help.only_total': '총합만',
+    'cli.du.help.only_levels_deep': '<n>단계 깊이까지만',
+    'cli.du.help.size_each_directory_docs': '~/docs의 각 디렉터리 크기',
+    'cli.du.help.total_home_k_m': '홈의 총합을 K/M/G 단위로',
+    'cli.du.help.size_each_top_level': '각 최상위 폴더의 크기',
+
+    // ── Find ─────────────────────────────────────────────────────────
+    'cli.find.description': '이름 또는 유형으로 파일과 디렉터리 검색',
+    'cli.find.help.list_files_directories_under':
+        '경로(기본값은 현재 디렉터리) 아래의 파일과 디렉터리를 모든 하위 디렉터리까지 검색해 나열합니다. 시작 경로 자체가 먼저 나열됩니다. glob 패턴(* 및 ?, --name은 대소문자 구분, --iname은 구분 안 함) 또는 유형으로 이름을 필터링할 수 있습니다',
+    'cli.find.help.list_everything_under_path': '경로 아래의 모든 항목 나열',
+    'cli.find.help.match_names_against_glob': 'glob에 일치하는 이름 찾기',
+    'cli.find.help.same_ignoring_case': '같지만 대소문자 무시',
+    'cli.find.help.only_files_f_directories': '파일(f) 또는 디렉터리(d)만',
+    'cli.find.help.list_everything_docs': '~/docs의 모든 항목 나열',
+    'cli.find.help.find_all_txt_files': '모든 .txt 파일 찾기',
+    'cli.find.help.directories_near_top': '상위 디렉터리',
+    'cli.find.help.delete_all_tmp_files': '모든 .tmp 파일 삭제',
+
+    // ── Grep ─────────────────────────────────────────────────────────
+    'cli.grep.description': '파일 내용에서 패턴 검색',
+    'cli.grep.help.print_lines_match_pattern':
+        '패턴과 일치하는 줄을 출력합니다. 패턴은 정규 표현식이며 일치 항목은 강조 표시되고, 입력은 파일, 디렉터리(-r 사용) 또는 파이프 텍스트일 수 있습니다',
+    'cli.grep.help.search_one_more_files': '하나 이상의 파일 검색',
+    'cli.grep.help.search_every_file_under': '디렉터리 아래의 모든 파일 검색',
+    'cli.grep.help.filter_piped_input': '파이프 입력 필터링',
+    'cli.grep.help.case_insensitive_search': '대소문자 구분 없이 검색',
+    'cli.grep.help.find_todos_line_numbers': '줄 번호와 함께 TODO 찾기',
+    'cli.grep.help.hide_comment_lines': '주석 줄 숨기기',
+    'cli.grep.help.count_matching_lines': '일치하는 줄 수 세기',
+
+    // ── Head ─────────────────────────────────────────────────────────
+    'cli.head.description': '파일의 처음 몇 줄 표시',
+    'cli.head.help.print_first_lines_file':
+        '파일의 처음 몇 줄을 출력합니다(기본값 10줄). 파이프 입력에도 동작합니다. 파일이 여러 개이면 각각 ==> name <== 헤더가 붙습니다',
+    'cli.head.help.first_10_lines': '처음 10줄',
+    'cli.head.help.first_lines': '처음 <count>줄',
+    'cli.head.help.first_lines_piped_input': '파이프 입력의 처음 몇 줄',
+    'cli.head.help.show_start_file': '파일의 시작 부분 표시',
+    'cli.head.help.first_3_lines_each': '각 파일의 처음 3줄',
+    'cli.head.help.first_20_lines_log': '로그의 처음 20줄',
+
+    // ── Ln ───────────────────────────────────────────────────────────
+    'cli.ln.description': '심볼릭 링크 만들기',
+    'cli.ln.help.create_symbolic_link_new':
+        '심볼릭 링크를 만듭니다. 다른 파일이나 디렉터리를 가리키는 새 경로입니다. 심볼릭 링크(-s)만 지원하며 대상이 아직 없어도 됩니다',
+    'cli.ln.help.create_pointing': '<target>을 가리키는 <link> 만들기',
+    'cli.ln.help.shortcut_file': '파일 바로가기',
+    'cli.ln.help.shortcut_directory': '디렉터리 바로가기',
+
+    // ── Mkdir ────────────────────────────────────────────────────────
+    'cli.mkdir.description': '디렉터리 만들기',
+    'cli.mkdir.help.create_new_directory_p': '새 디렉터리를 만듭니다. -p를 사용하면 없는 상위 디렉터리도 함께 만듭니다',
+    'cli.mkdir.help.create_one_more_directories': '하나 이상의 디렉터리 만들기',
+    'cli.mkdir.help.create_directory_missing_parents': '디렉터리와 없는 상위 디렉터리 만들기',
+    'cli.mkdir.help.create_projects_current_directory': '현재 디렉터리에 projects 만들기',
+    'cli.mkdir.help.create_whole_path_once': '전체 경로를 한 번에 만들기',
+
+    // ── Mv ───────────────────────────────────────────────────────────
+    'cli.mv.description': '파일과 디렉터리 이동 또는 이름 변경',
+    'cli.mv.help.move_rename_file_directory':
+        '파일이나 디렉터리를 이동하거나 이름을 변경합니다. 대상이 기존 디렉터리이면 소스가 그 안으로 이동하고, 아니면 이름이 변경됩니다. 대상에 이미 있는 파일은 교체됩니다',
+    'cli.mv.help.rename_file_directory': '파일 또는 디렉터리 이름 변경',
+    'cli.mv.help.move_them_directory': '디렉터리로 이동',
+    'cli.mv.help.rename_file': '파일 이름 변경',
+    'cli.mv.help.move_docs': '~/docs로 이동',
+    'cli.mv.help.rename_directory': '디렉터리 이름 변경',
+
+    // ── Paste ────────────────────────────────────────────────────────
+    'cli.paste.description': '파일의 줄을 나란히 병합',
+    'cli.paste.help.join_files_side_side':
+        '파일을 나란히 결합합니다. 각 파일의 1번째 줄이 탭으로 구분되어 출력의 한 줄이 되고, 그다음 2번째 줄이 이어집니다. -s를 사용하면 각 파일이 한 줄로 결합됩니다. 파이프 입력은 파일 -로 읽히며(파일을 지정하지 않으면 유일한 입력), -d는 차례로 사용할 구분자 목록을 받습니다',
+    'cli.paste.help.merge_files_line_line': '파일을 줄 단위로 병합',
+    'cli.paste.help.join_all_lines_file': '파일의 모든 줄을 한 줄로 결합',
+    'cli.paste.help.merge_piped_input_file': '파이프 입력을 파일과 병합',
+    'cli.paste.help.two_columns_tab_separated': '탭으로 구분된 두 열',
+    'cli.paste.help.merge_comma_separated': '쉼표로 구분해 병합',
+    'cli.paste.help.turn_list_one_csv': '목록을 한 줄의 CSV로 변환',
+
+    // ── Pwd ──────────────────────────────────────────────────────────
+    'cli.pwd.description': '현재 작업 디렉터리 출력',
+    'cli.pwd.help.print_full_path_directory': '현재 있는 디렉터리의 전체 경로를 출력합니다. 다른 명령어의 상대 경로는 여기서 시작합니다',
+    'cli.pwd.help.show_current_directory': '현재 디렉터리 표시',
+    'cli.pwd.help.example_home_user': '예: /home/user',
+    'cli.pwd.help.prints_home_user_docs': '/home/user/docs 출력',
+
+    // ── Rm ───────────────────────────────────────────────────────────
+    'cli.rm.description': '파일 또는 디렉터리 제거',
+    'cli.rm.help.delete_file_directories_only':
+        '파일을 삭제합니다. 디렉터리는 안의 모든 항목을 삭제하는 -r을 사용해야만 제거됩니다. 삭제된 파일은 복구할 수 없습니다',
+    'cli.rm.help.delete_one_more_files': '하나 이상의 파일 삭제',
+    'cli.rm.help.delete_directory_contents': '디렉터리와 그 내용 삭제',
+    'cli.rm.help.delete_without_error_if': '없어도 오류 없이 삭제',
+    'cli.rm.help.delete_one_file': '파일 하나 삭제',
+    'cli.rm.help.delete_whole_directory': '디렉터리 전체 삭제',
+    'cli.rm.help.quiet_if_file_does': '파일이 없어도 조용히 처리',
+
+    // ── Rmdir ────────────────────────────────────────────────────────
+    'cli.rmdir.description': '빈 디렉터리 제거',
+    'cli.rmdir.help.remove_empty_directory_refuses':
+        '빈 디렉터리를 제거합니다. 파일이 남아 있는 디렉터리는 제거하지 않으며, 그 경우 rm -r을 사용하세요',
+    'cli.rmdir.help.remove_empty_directories': '빈 디렉터리 제거',
+    'cli.rmdir.help.remove_directory_current_one': '현재 디렉터리 안의 디렉터리 제거',
+    'cli.rmdir.help.remove_full_path': '전체 경로로 제거',
+
+    // ── Sed ──────────────────────────────────────────────────────────
+    'cli.sed.description': '텍스트 필터링 및 변환용 스트림 편집기',
+    'cli.sed.help.edit_text_line_line':
+        '스크립트로 텍스트를 줄 단위로 편집합니다. 치환(s/old/new/), 삭제(d), 출력(p), 종료(q)를 사용할 수 있으며, 줄 번호, 범위(1,5, 3,$ 또는 /start/,/end/), /regex/에 일치하는 줄로 제한할 수 있습니다. 주소 뒤의 !는 조건을 반전하고 ;는 명령을 구분합니다. 치환 문자열에는 &(일치 항목)와 \\1~\\9(그룹, \\(...\\) 또는 -E 사용 시 (...)로 작성)를 쓸 수 있습니다. 파일 또는 파이프 입력을 읽어 결과를 출력하거나 -i로 파일을 다시 씁니다',
+    'cli.sed.help.print_edited_file': '편집된 파일 출력',
+    'cli.sed.help.save_edits_file': '편집 내용을 파일에 저장',
+    'cli.sed.help.print_only_selected_lines': '선택한 줄만 출력',
+    'cli.sed.help.edit_piped_input': '파이프 입력 편집',
+    'cli.sed.help.replace_every_cat_dog': '모든 cat을 dog로 바꾸기',
+    'cli.sed.help.edit_file_place': '파일을 직접 편집',
+    'cli.sed.help.drop_comment_lines': '주석 줄 제거',
+    'cli.sed.help.print_lines_1_5': '1~5번째 줄 출력',
+    'cli.sed.help.swap_two_words': '두 단어 맞바꾸기',
+
+    // ── Sh ───────────────────────────────────────────────────────────
+    'cli.sh.description': '스크립트 파일 실행',
+    'cli.sh.help.requires_execute': '(실행 권한 필요)',
+    'cli.sh.help.script_syntax': '스크립트 구문:',
+    'cli.sh.help.comments': '#로 시작하는 줄은 주석',
+    'cli.sh.help.several_commands': '한 줄에 여러 명령어',
+    'cli.sh.help.assignment': '변수 할당',
+    'cli.sh.help.substitution': '변수 치환',
+    'cli.sh.help.stop_on_error': '오류 시 중지 (기본값)',
+    'cli.sh.help.continue_on_errors': '오류가 나도 계속',
+    'cli.sh.help.exit': '상태 n으로 스크립트 중지',
+    'cli.sh.help.control_flow': '제어 흐름:',
+    'cli.sh.help.until': '(until cmd: 반대 동작)',
+    'cli.sh.help.break_continue': '루프에서 빠져나오기 / 건너뛰기',
+    'cli.sh.help.negate': '종료 상태 반전',
+    'cli.sh.help.conditions': '조건은 명령어입니다:',
+    'cli.sh.help.conditions_status': '(상태 0 = 참, help test 참조). 반복은 최대 10000회 후',
+    'cli.sh.help.conditions_loops': 'while/until이 중지되며, Ctrl+C로 스크립트를 중지할 수 있습니다',
+    'cli.sh.help.example_script': '스크립트 예시:',
+
+    // ── Sort ─────────────────────────────────────────────────────────
+    'cli.sort.description': '텍스트 파일의 줄 정렬',
+    'cli.sort.help.sort_lines_file_piped':
+        '파일 또는 파이프 입력의 줄을 정렬하며 기본값은 알파벳 순입니다. 숫자 순, 역순, 필드 기준으로 정렬하거나 중복을 제거할 수 있습니다. 여러 파일은 하나의 목록으로 함께 정렬됩니다',
+    'cli.sort.help.sort_lines_alphabetically': '줄을 알파벳 순으로 정렬',
+    'cli.sort.help.sort_field_split': '<n>번째 필드 기준으로 정렬, <sep>으로 분리',
+    'cli.sort.help.sort_piped_input': '파이프 입력 정렬',
+    'cli.sort.help.z': 'A에서 Z까지',
+    'cli.sort.help.largest_number_first': '큰 숫자 먼저',
+    'cli.sort.help.sort_csv_second_column': 'CSV를 두 번째 열 기준으로 정렬',
+    'cli.sort.help.sorted_without_duplicates': '정렬 후 중복 제거',
+
+    // ── Stat ─────────────────────────────────────────────────────────
+    'cli.stat.description': '파일/디렉터리 메타데이터 표시',
+    'cli.stat.help.show_details_about_files':
+        '파일 또는 디렉터리의 세부 정보를 표시합니다: 전체 경로, 크기, 유형, 권한, 소유자, 그룹, 생성 및 마지막 수정 시각',
+    'cli.stat.help.show_details_each_path': '각 경로의 세부 정보 표시',
+    'cli.stat.help.details_one_file': '파일 하나의 세부 정보',
+    'cli.stat.help.several_paths_once': '여러 경로를 한 번에',
+
+    // ── Tac ──────────────────────────────────────────────────────────
+    'cli.tac.description': '파일을 역순 줄 순서로 출력',
+    'cli.tac.help.print_file_lines_reverse': '파일의 줄을 마지막 줄부터 역순으로 출력합니다. 파이프 입력에도 동작합니다',
+    'cli.tac.help.print_file_bottom_top': '파일을 아래에서 위로 출력',
+    'cli.tac.help.reverse_piped_input': '파이프 입력 뒤집기',
+    'cli.tac.help.newest_log_lines_first': '최신 로그 줄 먼저',
+    'cli.tac.help.reverse_list': '목록 뒤집기',
+
+    // ── Tail ─────────────────────────────────────────────────────────
+    'cli.tail.description': '파일의 마지막 몇 줄 표시',
+    'cli.tail.help.print_last_lines_file':
+        '파일의 마지막 몇 줄을 출력합니다(기본값 10줄). 파이프 입력에도 동작합니다. 파일이 여러 개이면 각각 ==> name <== 헤더가 붙습니다',
+    'cli.tail.help.last_10_lines': '마지막 10줄',
+    'cli.tail.help.last_lines': '마지막 <count>줄',
+    'cli.tail.help.last_lines_piped_input': '파이프 입력의 마지막 몇 줄',
+    'cli.tail.help.show_end_log': '로그의 끝부분 표시',
+    'cli.tail.help.last_5_lines': '마지막 5줄',
+    'cli.tail.help.last_20_lines_log': '로그의 마지막 20줄',
+
+    // ── Tee ──────────────────────────────────────────────────────────
+    'cli.tee.description': '파이프 입력을 파일과 출력에 복사',
+    'cli.tee.help.pass_piped_input_through':
+        '파이프 입력을 그대로 통과시키면서 지정한 모든 파일에 복사본을 저장합니다. 기본적으로 덮어쓰며 -a를 사용하면 덧붙입니다. Unix tee처럼 파이프 입력만 읽으므로 파일을 복사하려면 cat으로 파이프하세요',
+    'cli.tee.help.show_piped_output_save': '파이프 출력을 표시하고 저장',
+    'cli.tee.help.append_instead_overwriting': '덮어쓰지 않고 덧붙이기',
+    'cli.tee.help.show_save_copy': '표시하고 복사본 저장',
+    'cli.tee.help.add_line_log': '로그에 줄 추가',
+    'cli.tee.help.copy_source_txt_txt': 'source.txt를 a.txt와 b.txt로 복사',
+
+    // ── Touch ────────────────────────────────────────────────────────
+    'cli.touch.description': '빈 파일 만들기 또는 타임스탬프 갱신',
+    'cli.touch.help.create_empty_file_update':
+        '빈 파일을 만들거나, 이미 있는 파일의 수정 시각을 갱신합니다. 상위 디렉터리가 이미 있어야 합니다',
+    'cli.touch.help.create_files_refresh_their': '파일을 만들거나 타임스탬프 갱신',
+    'cli.touch.help.create_empty_notes_txt': '빈 notes.txt 만들기',
+    'cli.touch.help.create_file_docs': '~/docs에 파일 만들기',
+
+    // ── Tr ───────────────────────────────────────────────────────────
+    'cli.tr.description': '파이프 입력의 문자 변환 또는 삭제',
+    'cli.tr.help.translate_characters_set1_matching':
+        'SET1의 문자를 SET2의 대응하는 문자로 변환하거나, 삭제(-d)하거나, 반복되는 문자를 하나로 줄입니다(-s). 집합에는 a-z 같은 범위와 [:upper:], [:lower:], [:digit:], [:alpha:], [:alnum:], [:space:] 같은 클래스를 사용할 수 있습니다. 이스케이프 \\n, \\t, \\\\를 인식합니다. Unix tr처럼 파이프 입력만 읽고 파일 피연산자는 받지 않으므로 파일을 변환하려면 cat으로 파이프하세요',
+    'cli.tr.help.replace_characters': '문자 바꾸기',
+    'cli.tr.help.delete_characters': '문자 삭제',
+    'cli.tr.help.squeeze_repeated_characters': '반복된 문자 줄이기',
+    'cli.tr.help.convert_file_upper_case': '파일을 대문자로 변환',
+    'cli.tr.help.upper_case_piped_text': '파이프 텍스트를 대문자로',
+    'cli.tr.help.remove_all_digits': '모든 숫자 제거',
+    'cli.tr.help.collapse_runs_spaces': '연속된 공백 합치기',
+
+    // ── Tree ─────────────────────────────────────────────────────────
+    'cli.tree.description': '디렉터리 트리 구조 표시',
+    'cli.tree.help.draw_directory_everything_below':
+        '디렉터리와 그 아래의 모든 항목을 디렉터리 우선 트리로 그리고, 끝에 디렉터리와 파일 수를 표시합니다. 기본값은 현재 디렉터리입니다',
+    'cli.tree.help.show_whole_tree': '전체 트리 표시',
+    'cli.tree.help.only_levels_deep': '<n>단계 깊이까지만',
+    'cli.tree.help.tree_current_directory': '현재 디렉터리의 트리',
+    'cli.tree.help.tree_docs': '~/docs의 트리',
+    'cli.tree.help.top_two_levels_only': '상위 두 단계만',
+
+    // ── Uniq ─────────────────────────────────────────────────────────
+    'cli.uniq.description': '파일에서 인접한 중복 줄 필터링',
+    'cli.uniq.help.collapse_repeated_lines_next':
+        '서로 인접한 반복 줄을 하나로 합칩니다. 인접한 중복만 병합되므로 모두 처리하려면 먼저 입력을 정렬하세요',
+    'cli.uniq.help.drop_adjacent_duplicate_lines': '인접한 중복 줄 제거',
+    'cli.uniq.help.filter_piped_input': '파이프 입력 필터링',
+    'cli.uniq.help.collapse_repeated_lines': '반복된 줄 합치기',
+    'cli.uniq.help.count_how_often_each': '각 줄이 나타난 횟수 세기',
+    'cli.uniq.help.show_only_duplicated_lines': '중복된 줄만 표시',
+
+    // ── Wc ───────────────────────────────────────────────────────────
+    'cli.wc.description': '줄, 단어, 문자 수 출력',
+    'cli.wc.help.count_lines_words_characters':
+        '파일 또는 파이프 입력의 줄, 단어, 문자 수를 셉니다. 파일이 여러 개이면 마지막에 합계 줄이 출력됩니다',
+    'cli.wc.help.lines_words_characters': '줄, 단어, 문자',
+    'cli.wc.help.only_line_count': '줄 수만',
+    'cli.wc.help.count_piped_input': '파이프 입력 세기',
+    'cli.wc.help.all_three_counts': '세 가지 개수 모두',
+    'cli.wc.help.line_counts_total': '합계가 포함된 줄 수',
+    'cli.wc.help.how_many_lines_mention': 'error가 포함된 줄 수',
+
+    // ── Xargs ────────────────────────────────────────────────────────
+    'cli.xargs.description': '파일 입력으로 명령어 구성 및 실행',
+    'cli.xargs.help.run_command_arguments_taken':
+        '공백이나 줄바꿈으로 구분된 입력에서 가져온 인수로 명령어를 실행합니다. 기본적으로 모두 하나의 명령어에 덧붙이며, -n은 묶음으로, -I는 자리 표시자를 바꿔 줄마다 한 번씩 실행합니다. xargs 옵션은 명령어 앞에 오고, 그 뒤의 모든 것은 플래그를 포함해 명령어에 속합니다. 입력은 파이프 텍스트이며 파이프가 없으면 마지막으로 지정한 파일입니다',
+    'cli.xargs.help.append_input_lines': '입력 줄을 <cmd>에 덧붙이기',
+    'cli.xargs.help.run_once_per_line': '줄마다 <cmd>를 한 번씩 실행',
+    'cli.xargs.help.read_arguments_file': '파일에서 인수 읽기',
+    'cli.xargs.help.delete_every_tmp_file': '모든 .tmp 파일 삭제',
+    'cli.xargs.help.copy_each_listed_file': '나열된 각 파일 복사',
+    'cli.xargs.help.one_mkdir_per_line': '줄마다 mkdir 한 번',
+    'cli.xargs.help.inner_command_keeps_flags': '내부 명령어는 플래그를 유지',
+
+    // ── Markdown ─────────────────────────────────────────────────────
+    'cli.md.description': '터미널에서 Markdown 렌더링',
+    'cli.md.help.show_markdown_formatted_terminal':
+        '터미널에 서식이 적용된 Markdown을 표시합니다: 제목, 굵게 및 기울임 텍스트, 목록, 인용, 코드, 링크. 텍스트를 인라인으로 전달하거나(따옴표 유무 무관, \\n은 줄바꿈) 다른 명령어에서 파이프하세요',
+    'cli.md.help.render_inline_text': '인라인 텍스트 렌더링',
+    'cli.md.help.same_optional_render_verb': '동일, 선택적 render 동사 사용 (preview, view도 가능)',
+    'cli.md.help.render_output_command': '명령어의 출력 렌더링',
+    'cli.md.help.heading': '제목',
+    'cli.md.help.several_lines': '여러 줄',
+    'cli.md.help.piped_text': '파이프 텍스트',
+    'cli.md.help.same_using_aliases': '동일, 별칭 사용',
+
+    // ── Todo ─────────────────────────────────────────────────────────
+    'cli.todo.description': '터미널에서 할 일을 관리합니다. TODO 항목 추가, 목록, 편집, 완료, 제거',
+    'cli.todo.ls.description': 'TODO 항목 목록',
+    'cli.todo.add.description': '새 할 일 추가',
+    'cli.todo.edit.description': '할 일의 텍스트 또는 마감일 편집',
+    'cli.todo.done.description': '할 일을 완료로 표시',
+    'cli.todo.toggle.description': '할 일을 완료와 미완료 간 전환',
+    'cli.todo.rm.description': 'ID로 할 일 제거',
+    'cli.todo.help.commands': '명령어:',
+    'cli.todo.help.list_all': '모든 할 일 목록',
+    'cli.todo.help.list_pending': '진행 중인 할 일만 목록',
+    'cli.todo.help.list_completed': '완료된 할 일만 목록',
+    'cli.todo.help.list_overdue': '기한이 지난 할 일만 목록',
+    'cli.todo.help.add': '새 할 일 추가',
+    'cli.todo.help.add_due': '마감일과 함께 추가',
+    'cli.todo.help.edit': '할 일 편집',
+    'cli.todo.help.done': '할 일을 완료로 표시',
+    'cli.todo.help.toggle': '완료/미완료 전환',
+    'cli.todo.help.remove': '할 일 제거',
+    'cli.todo.help.remove_all': '모든 할 일 제거',
+    'cli.todo.help.due_formats': '마감일 형식:',
+
+    // ── True ─────────────────────────────────────────────────────────
+    'cli.true.description': '아무 작업 없이 성공 (종료 상태 0)',
+
+    // ── False ────────────────────────────────────────────────────────
+    'cli.false.description': '아무 작업 없이 실패 (종료 상태 1)',
+
+    // ── Htop ─────────────────────────────────────────────────────────
+    'cli.htop.description': '대화형 프로세스 및 서비스 모니터',
 };

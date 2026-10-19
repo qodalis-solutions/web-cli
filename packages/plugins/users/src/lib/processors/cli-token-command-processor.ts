@@ -4,6 +4,7 @@ import {
     CliProcessorMetadata,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import { CliUsersCommand, formatTime, listArg, USERS_METADATA, words } from './base';
 import { CliApiToken, CliCreateApiToken, CliUsersError } from '../backend/users-backend';
@@ -39,8 +40,6 @@ export function claudeMcpAddExample(serverUrl: string | undefined, token: string
     return `claude mcp add --transport http qcli ${server}/api/qcli/mcp --header "Authorization: Bearer ${token}"`;
 }
 
-const unquote = (s: string): string => s.replace(/^(["'])(.*)\1$/, '$2');
-
 class CliTokenCreateCommandProcessor extends CliUsersCommand {
     override command = 'create';
     override description = 'Create an API token (shown once)';
@@ -70,7 +69,7 @@ class CliTokenCreateCommandProcessor extends CliUsersCommand {
 
     override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
         const service = apiTokens(context);
-        const name = unquote(String(command.value ?? '').trim());
+        const name = joinShellWords(String(command.value ?? ''));
         if (!name) throw new CliUsersError(400, 'usage: token create <name> [--expires=<days>|never] [--permissions=a,b]');
         const request: CliCreateApiToken = { name };
         const expiresInDays = parseExpires(command.args['expires']);

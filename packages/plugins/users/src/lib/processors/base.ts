@@ -20,6 +20,7 @@ import {
     ICliSessionsService_TOKEN,
     ICliUsersStoreService,
     ICliUsersStoreService_TOKEN,
+    splitShellWords,
 } from '@qodalis/cli-core';
 import { CliUsersModuleConfig, CliUsersModuleConfig_TOKEN } from '../models/users-module-config';
 
@@ -92,9 +93,9 @@ function accessText(meta: CliProcessorMetadata): string | undefined {
     return undefined;
 }
 
-/** Positional value split into words */
+/** Positional arguments, split like a shell (`"Ana Maria"` is one word) */
 export function words(command: CliProcessCommand): string[] {
-    return String(command.value ?? '').trim().split(/\s+/).filter(Boolean);
+    return command.positionals ?? splitShellWords(String(command.value ?? ''));
 }
 
 /** Comma separated list argument */

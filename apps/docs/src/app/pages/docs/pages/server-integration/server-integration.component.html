@@ -15,6 +15,51 @@
   |-- GET  /api/qcli/fs/* ------------------&gt; |-- Filesystem access</code></pre>
 </div>
 
+<h2 id="terminal">Using servers from the terminal</h2>
+<p>
+    The app lists its servers in the CLI options. Each one is connected at startup; a server that cannot be reached
+    is retried every 30 seconds and its commands appear when it comes back.
+</p>
+<pre><code class="language-typescript">servers: [
+    &#123; name: 'node', url: 'http://localhost:8047' &#125;,
+    &#123; name: 'ops', url: 'https://ops.example.com', headers: &#123; Authorization: 'Bearer ' + token &#125; &#125;,
+]</code></pre>
+<p>Every command of a server can be run two ways:</p>
+<ul>
+    <li><strong>By name</strong>: <code>echo hello</code>. When several servers have the command, the default server runs
+        it (<code>server use &lt;name&gt;</code>); without one you are asked which server to use.</li>
+    <li><strong>With the server as prefix</strong>: <code>node:echo hello</code> always runs on that server. Use it when a
+        local command has the same name (local commands win), or to pick a server explicitly.</li>
+</ul>
+<table>
+    <thead>
+        <tr><th>Command</th><th>Aliases</th><th>What it does</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>server</code></td><td><code>servers</code>, <code>srv</code></td><td>Overview: every server with its status, URL, server and API version, number of commands and shell access</td></tr>
+        <tr><td><code>server list</code></td><td><code>server ls</code></td><td>The same table</td></tr>
+        <tr><td><code>server status [name]</code></td><td><code>server ping</code>, <code>server info</code></td><td>Without a name, pings every server at once and shows the round-trip time. With a name, shows that server in detail (versions, OS, shell, streaming) and, when it is unreachable, what to check</td></tr>
+        <tr><td><code>server commands [name]</code></td><td><code>server cmds</code></td><td>The commands each server provides, with the name to type: <code>node:echo</code> when a local command has the same name, ◆ when several servers share it</td></tr>
+        <tr><td><code>server reconnect [name]</code></td><td><code>server rc</code>, <code>server connect</code></td><td>Connect again and reload the commands. Without a name, the unreachable servers are retried; <code>--all</code> reconnects every server</td></tr>
+        <tr><td><code>server default [name]</code></td><td><code>server use</code></td><td>Show or set the default server, which runs commands several servers have and commands that need one server (<code>server logs</code>, <code>scp</code>). Remembered across reloads; <code>--clear</code> removes it</td></tr>
+        <tr><td><code>ssh [name] [command]</code></td><td><code>shell</code></td><td>Interactive shell on a server, or one command with its output (servers that enable the shell; see below)</td></tr>
+    </tbody>
+</table>
+<p>
+    Server names are not case-sensitive, a mistyped name gets a suggestion (<code>Did you mean 'node'?</code>), and
+    <code>help server &lt;subcommand&gt;</code> shows each command with examples. Plugins add more:
+    <code>server logs</code> (server-logs) and <code>server jobs</code> (server-jobs).
+</p>
+<h3 id="troubleshooting">When a server is unreachable</h3>
+<p><code>server status &lt;name&gt;</code> lists what to check. The usual causes:</p>
+<ul>
+    <li>The server is not running, or the URL (port, <code>http</code> / <code>https</code>) is wrong.</li>
+    <li>The server does not allow the page's origin. Browsers block the requests (CORS): add the origin to the server's
+        allowed origins (<code>allowedOrigins</code> / <code>QCLI_ALLOWED_ORIGINS</code>).</li>
+    <li>A VPN, proxy or firewall blocks the connection.</li>
+</ul>
+<p>Fix it, then run <code>server reconnect</code>, or wait for the automatic retry.</p>
+
 <h2>{{ 'docs.server-integration.common-api' | translate }}</h2>
 <p>{{ 'docs.server-integration.common-api-desc' | translate }}</p>
 <table>

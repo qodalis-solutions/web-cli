@@ -60,7 +60,7 @@ export class CliCookiesCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key] = command.chainCommands.slice(2);
+                    const [key = ''] = command.positionals ?? [];
 
                     const cookies = document.cookie.split('; ').reduce(
                         (acc, cookie) => {
@@ -86,7 +86,8 @@ export class CliCookiesCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key, ...value] = command.chainCommands.slice(1);
+                    // `set key "a b"`: arguments split like a shell, case kept
+                    const [key = '', ...value] = command.positionals ?? [];
 
                     const expires = new Date();
                     expires.setFullYear(expires.getFullYear() + 1);
@@ -103,7 +104,7 @@ export class CliCookiesCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key] = command.chainCommands.slice(1);
+                    const [key = ''] = command.positionals ?? [];
 
                     document.cookie = `${key}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
                     context.writer.writeSuccess('Cookie removed successfully');

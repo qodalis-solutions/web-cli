@@ -12,7 +12,10 @@ import {
     satisfiesMinVersion,
 } from '../lib';
 import { CliBackgroundColor, CliForegroundColor } from '../lib/models';
-import { CancellablePromise, CANCELLATION_ERROR_MESSAGE } from '../lib/types/CancellablePromise';
+import {
+    CancellablePromise,
+    CANCELLATION_ERROR_MESSAGE,
+} from '../lib/types/CancellablePromise';
 import { CliModuleRegistry } from '../lib/modules/cli-module-registry';
 import { ICliModule } from '../lib/interfaces';
 
@@ -329,8 +332,8 @@ describe('ObjectDescriber', () => {
 
     describe('supportsDynamicArgs', () => {
         it('should return true when function uses arguments keyword', () => {
-            // eslint-disable-next-line prefer-rest-params
             const fn = function () {
+                // eslint-disable-next-line prefer-rest-params -- the test checks that `arguments` is detected
                 return arguments;
             };
             expect(ObjectDescriber.supportsDynamicArgs(fn)).toBeTrue();
@@ -346,7 +349,7 @@ describe('ObjectDescriber', () => {
 
     describe('describe', () => {
         it('should create processors for multi-arg functions', () => {
-            const obj: Record<string, Function> = {};
+            const obj: Record<string, (...args: any[]) => any> = {};
             // Use regular functions so toString() is consistent across browsers
             obj['add'] = function (value: any, b: any) {
                 return Number(value) + Number(b);
@@ -362,7 +365,7 @@ describe('ObjectDescriber', () => {
         });
 
         it('should create processors for single-arg functions', () => {
-            const obj: Record<string, Function> = {};
+            const obj: Record<string, (...args: any[]) => any> = {};
             obj['upper'] = function (value: any) {
                 return String(value).toUpperCase();
             };
@@ -372,7 +375,7 @@ describe('ObjectDescriber', () => {
         });
 
         it('should skip functions with no arguments and no dynamic args', () => {
-            const obj: Record<string, Function> = {};
+            const obj: Record<string, (...args: any[]) => any> = {};
             obj['noArgs'] = function () {
                 return 42;
             };
@@ -387,7 +390,7 @@ describe('ObjectDescriber', () => {
         });
 
         it('should apply filter', () => {
-            const obj: Record<string, Function> = {};
+            const obj: Record<string, (...args: any[]) => any> = {};
             obj['keep'] = function (x: any) {
                 return x;
             };
@@ -403,7 +406,7 @@ describe('ObjectDescriber', () => {
         });
 
         it('should skip functions with "function" or "func" arguments', () => {
-            const obj: Record<string, Function> = {};
+            const obj: Record<string, (...args: any[]) => any> = {};
             obj['withCallback'] = function (value: any, func: any) {
                 return func(value);
             };
@@ -565,5 +568,55 @@ describe('CliModuleRegistry', () => {
 
         expect(registry.getModule('dup')?.version).toBe('2.0.0');
         expect(registry.getAll().length).toBe(1);
+    });
+
+    it('should unregister a module and notify unregister handlers', async () => {
+        const mod = createModule('removable');
+        await registry.register(mod);
+        const unloaded: string[] = [];
+        registry.onModuleUnregister((m) => unloaded.push(m.name));
+
+        expect(registry.unregister('removable')).toBe(mod);
+        expect(registry.has('removable')).toBeFalse();
+        expect(unloaded).toEqual(['removable']);
+    });
+
+    it('should return undefined when unregistering an unknown module', () => {
+        let called = false;
+        registry.onModuleUnregister(() => (called = true));
+        expect(registry.unregister('missing')).toBeUndefined();
+        expect(called).toBeFalse();
+    });
+
+    it('whenIdle waits for boots in progress, including nested ones', async () => {
+        const order: string[] = [];
+        registry.onModuleBoot(async (m) => {
+            await new Promise((r) => setTimeout(r, 20));
+            if (m.name === 'outer') {
+                // a plugin loading another one while booting
+                void registry.register(createModule('inner'));
+            }
+            order.push(m.name);
+        });
+
+        void registry.register(createModule('outer'));
+        await registry.whenIdle();
+
+        expect(order).toEqual(['outer', 'inner']);
+    });
+
+    it('whenIdle resolves right away when nothing is booting', async () => {
+        await expectAsync(registry.whenIdle()).toBeResolved();
+    });
+
+    it('should boot a module again after it was unregistered', async () => {
+        const booted: string[] = [];
+        registry.onModuleBoot(async (m) => {
+            booted.push(m.name);
+        });
+        await registry.register(createModule('again'));
+        registry.unregister('again');
+        await registry.register(createModule('again'));
+        expect(booted).toEqual(['again', 'again']);
     });
 });

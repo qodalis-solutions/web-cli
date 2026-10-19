@@ -1,9 +1,13 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     CliForegroundColor,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -33,6 +37,25 @@ export class CliDiffCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.diff.help.compare_two_files_line', 'Compare two files line by line and show what changed: lines starting with < (or -) are only in the first file, lines starting with > (or +) only in the second.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['diff <file1> <file2>', t.t('cli.diff.help.show_differences', 'Show the differences')],
+            ['diff -u <file1> <file2>', t.t('cli.diff.help.unified_format_context', 'Unified format with context')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['diff old.txt new.txt', t.t('cli.diff.help.what_changed_between_versions', 'What changed between versions')],
+            ['diff -u config.bak config.txt', t.t('cli.diff.help.review_edits_git_style', 'Review edits, git style')],
+            ['diff -i a.txt b.txt', t.t('cli.diff.help.ignore_upper_lower_case', 'Ignore upper/lower case')],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,
@@ -259,6 +282,6 @@ export class CliDiffCommandProcessor implements ICliCommandProcessor {
 
     private parsePaths(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
+        return splitArgs(raw).filter(Boolean);
     }
 }

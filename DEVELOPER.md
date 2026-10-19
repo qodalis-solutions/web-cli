@@ -90,9 +90,16 @@ Tests use **Jasmine + Karma** with `ChromeHeadless`. All test targets are config
 ### Linting & Formatting
 
 ```bash
-pnpm run lint                   # ESLint all projects
+pnpm run lint                   # ESLint all projects (nx run-many -t lint)
 pnpm run format                 # Prettier format all source files
 ```
+
+ESLint 9 uses the single flat config at the workspace root, `eslint.config.mjs`;
+projects do not carry their own config. The `@nx/eslint` plugin registered in
+`nx.json` infers a `lint` target for every project, so `npx nx lint <project>`
+works without a `lint` entry in `project.json`. Angular rules apply to
+`packages/angular-cli`, `apps/demo-angular` and `apps/docs`; React hooks rules
+apply to `*.tsx` and the `react-cli` package. CI runs `nx affected -t lint`.
 
 ### Utilities
 

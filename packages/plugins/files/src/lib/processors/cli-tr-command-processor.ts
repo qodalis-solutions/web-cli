@@ -3,8 +3,10 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
-import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
 
 /**
@@ -15,6 +17,15 @@ function expandSet(set: string): string[] {
     const chars: string[] = [];
     let i = 0;
     while (i < set.length) {
+        // Escapes: \n, \t, \r, \\ and any other escaped character as itself
+        if (set[i] === '\\' && i + 1 < set.length) {
+            const next = set[i + 1];
+            chars.push(
+                next === 'n' ? '\n' : next === 't' ? '\t' : next === 'r' ? '\r' : next,
+            );
+            i += 2;
+            continue;
+        }
         // Character classes
         if (set[i] === '[' && set[i + 1] === ':') {
             const end = set.indexOf(':]', i + 2);
@@ -29,7 +40,7 @@ function expandSet(set: string): string[] {
         if (
             i + 2 < set.length &&
             set[i + 1] === '-' &&
-            set[i + 2] !== undefined
+            set[i + 2] !== '\\'
         ) {
             const start = set.charCodeAt(i);
             const finish = set.charCodeAt(i + 2);
@@ -72,7 +83,7 @@ function getCharClass(name: string): string[] {
 
 /**
  * Parse quoted or unquoted tokens from a raw command string.
- * Returns an array of parsed tokens (flags, SET1, SET2, file path).
+ * Returns an array of parsed tokens (SET1, SET2).
  */
 function parseTokens(raw: string): string[] {
     const tokens: string[] = [];
@@ -109,7 +120,7 @@ function parseTokens(raw: string): string[] {
 
 export class CliTrCommandProcessor implements ICliCommandProcessor {
     command = 'tr';
-    description = 'Translate or delete characters in a file';
+    description = 'Translate or delete characters in piped input';
     author = DefaultLibraryAuthor;
     version = LIBRARY_VERSION;
     acceptsRawInput = true;
@@ -118,123 +129,96 @@ export class CliTrCommandProcessor implements ICliCommandProcessor {
 
     parameters = [
         {
-            name: 'd',
+            name: 'delete',
+            aliases: ['d'],
             description: 'Delete characters in SET1',
             required: false,
             type: 'boolean' as const,
         },
         {
-            name: 's',
+            name: 'squeeze-repeats',
+            aliases: ['s'],
             description: 'Squeeze repeated characters in last operand set',
             required: false,
             type: 'boolean' as const,
         },
     ];
 
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.tr.help.translate_characters_set1_matching', 'Translate characters from SET1 into the matching characters of SET2, delete them (-d) or squeeze repeats into one (-s). Sets can use ranges like a-z and classes like [:upper:], [:lower:], [:digit:], [:alpha:], [:alnum:] and [:space:]. Escapes \\n, \\t and \\\\ are understood. Like Unix tr, it reads only piped input and takes no file operands: to transform a file, pipe it in with cat.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['<command> | tr <set1> <set2>', t.t('cli.tr.help.replace_characters', 'Replace characters')],
+            ['<command> | tr -d <set1>', t.t('cli.tr.help.delete_characters', 'Delete characters')],
+            ['<command> | tr -s <set1> [set2]', t.t('cli.tr.help.squeeze_repeated_characters', 'Squeeze repeated characters')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['cat notes.txt | tr a-z A-Z', t.t('cli.tr.help.convert_file_upper_case', 'Convert a file to upper case')],
+            ['echo hello | tr a-z A-Z', t.t('cli.tr.help.upper_case_piped_text', 'Upper-case piped text')],
+            ['cat notes.txt | tr -d 0-9', t.t('cli.tr.help.remove_all_digits', 'Remove all digits')],
+            ["cat notes.txt | tr -s ' '", t.t('cli.tr.help.collapse_runs_spaces', 'Collapse runs of spaces')],
+        ]);
+    }
+
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const fs = context.services.getRequired<IFileSystemService>(
-            IFileSystemService_TOKEN,
-        );
-
         const raw = command.value || '';
         const positional = parseTokens(raw);
 
-        const deleteMode = !!command.args['d'];
-        const squeezeMode = !!command.args['s'];
+        const deleteMode = !!command.args['d'] || !!command.args['delete'];
+        const squeezeMode =
+            !!command.args['s'] || !!command.args['squeeze-repeats'];
 
         if (positional.length === 0) {
-            context.writer.writeError('tr: missing operand');
+            this.fail(context, 'tr: missing operand');
             return;
         }
 
-        let set1Str: string | undefined;
-        let set2Str: string | undefined;
-        let filePath: string | undefined;
-
-        if (deleteMode && squeezeMode) {
-            // -d -s SET1 SET2 [file]
-            if (positional.length < 2) {
-                context.writer.writeError('tr: missing operand');
-                return;
-            }
-            set1Str = positional[0];
-            set2Str = positional[1];
-            if (positional.length >= 3) {
-                filePath = positional[2];
-            }
-        } else if (deleteMode) {
-            // -d SET1 [file]
-            if (positional.length < 1) {
-                context.writer.writeError('tr: missing operand');
-                return;
-            }
-            set1Str = positional[0];
-            if (positional.length >= 2) {
-                filePath = positional[1];
-            }
+        // How many operands are sets: -d takes one, -d -s and plain
+        // translation two, -s one or two. Like Unix tr there are no file
+        // operands: tr reads only piped input.
+        let setCount: number;
+        if (deleteMode) {
+            setCount = squeezeMode ? 2 : 1;
         } else if (squeezeMode) {
-            if (positional.length < 1) {
-                context.writer.writeError('tr: missing operand');
-                return;
-            }
-            if (positional.length >= 3) {
-                // -s SET1 SET2 file => translate + squeeze
-                set1Str = positional[0];
-                set2Str = positional[1];
-                filePath = positional[2];
-            } else if (positional.length === 2) {
-                // -s SET1 file  OR  -s SET1 SET2 (piped)
-                // If piped data exists and there's no file at positional[1], treat as SET1 + file
-                set1Str = positional[0];
-                filePath = positional[1];
-            } else {
-                // -s SET1 (piped)
-                set1Str = positional[0];
-            }
+            setCount = Math.min(positional.length, 2);
         } else {
-            // translate: SET1 SET2 [file]
-            if (positional.length < 2) {
-                context.writer.writeError('tr: missing operand');
-                return;
-            }
-            set1Str = positional[0];
-            set2Str = positional[1];
-            if (positional.length >= 3) {
-                filePath = positional[2];
-            }
+            setCount = 2;
         }
 
-        let content: string | null;
-        if (filePath) {
-            try {
-                if (fs.isDirectory(filePath)) {
-                    context.writer.writeError(`tr: ${filePath}: Is a directory`);
-                    return;
-                }
-                content = fs.readFile(filePath);
-                if (content === null) {
-                    context.writer.writeError(
-                        `tr: ${filePath}: No such file or directory`,
-                    );
-                    return;
-                }
-            } catch (e: any) {
-                context.writer.writeError(`tr: ${e.message}`);
-                return;
-            }
-        } else if (command.data != null) {
-            content = typeof command.data === 'string'
-                ? command.data : JSON.stringify(command.data);
-        } else {
-            context.writer.writeError('tr: missing file operand');
+        if (positional.length < setCount) {
+            this.fail(context, 'tr: missing operand');
             return;
         }
+        if (positional.length > setCount) {
+            this.fail(context, `tr: extra operand '${positional[setCount]}'`);
+            return;
+        }
+
+        if (command.data == null) {
+            this.fail(
+                context,
+                "tr: no input: tr reads only piped input and takes no file operands; use 'cat file | tr a-z A-Z'",
+            );
+            return;
+        }
+
+        const set1Str: string = positional[0];
+        const set2Str: string | undefined =
+            setCount === 2 ? positional[1] : undefined;
+        const content: string =
+            typeof command.data === 'string'
+                ? command.data
+                : JSON.stringify(command.data);
 
         try {
-
             const set1 = expandSet(set1Str!);
             const set1Set = new Set(set1);
             const set2 = set2Str ? expandSet(set2Str) : [];
@@ -261,8 +245,13 @@ export class CliTrCommandProcessor implements ICliCommandProcessor {
 
             context.writer.writeln(result);
         } catch (e: any) {
-            context.writer.writeError(`tr: ${e.message}`);
+            this.fail(context, `tr: ${e.message}`);
         }
+    }
+
+    private fail(context: ICliExecutionContext, message: string): void {
+        context.writer.writeError(message);
+        context.process.exit(1, { silent: true });
     }
 
     private deleteChars(content: string, deleteSet: Set<string>): string {

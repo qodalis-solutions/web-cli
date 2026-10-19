@@ -11,6 +11,9 @@ import {
     ICliServiceProvider,
     ICliTerminalWriter,
     ICliProcessRegistry,
+    CliEventType,
+    ICliEventBus,
+    ICliEventBus_TOKEN,
 } from '@qodalis/cli-core';
 import { ServiceLogBuffer } from './service-log-buffer';
 import { CliMainThreadServiceRunner } from './cli-main-thread-service-runner';
@@ -27,6 +30,19 @@ interface ServiceEntry {
     /** PID assigned by the process registry */
     pid?: number;
 }
+
+/** Background service source of events relayed from a server (`server-events:<name>`). */
+const SERVER_EVENTS_PREFIX = 'server-events:';
+
+/** Registry lifecycle event types and their event-bus names. */
+const LIFECYCLE_EVENTS: Record<string, CliEventType> = {
+    'service-registered': 'service:registered',
+    'service-started': 'service:started',
+    'service-stopped': 'service:stopped',
+    'service-completed': 'service:completed',
+    'service-failed': 'service:failed',
+    'status-change': 'service:status',
+};
 
 /**
  * Per-session registry that manages background service lifecycle.
@@ -80,9 +96,12 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
 
         // Register with process registry so bg services get a PID
         if (this.processRegistry) {
-            const svcType = entry.service.type === 'daemon' ? 'daemon' as const
-                : entry.service.type === 'job' ? 'job' as const
-                : 'service' as const;
+            const svcType =
+                entry.service.type === 'daemon'
+                    ? ('daemon' as const)
+                    : entry.service.type === 'job'
+                      ? ('job' as const)
+                      : ('service' as const);
             const proc = this.processRegistry.register(name, {
                 name,
                 type: svcType,
@@ -114,7 +133,9 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
 
             if (isDaemon) {
                 // Fire-and-forget for daemons — onStart blocks until abort
-                workerRunner.start().catch((e) => this.handleStartError(entry, name, e));
+                workerRunner
+                    .start()
+                    .catch((e) => this.handleStartError(entry, name, e));
             } else {
                 try {
                     await workerRunner.start();
@@ -142,7 +163,9 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
 
             if (isDaemon) {
                 // Fire-and-forget for daemons — onStart blocks until abort
-                mainRunner.start().catch((e) => this.handleStartError(entry, name, e));
+                mainRunner
+                    .start()
+                    .catch((e) => this.handleStartError(entry, name, e));
             } else {
                 try {
                     await mainRunner.start();
@@ -181,7 +204,9 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
         const entry = this.getEntry(name);
 
         if (entry.service.type !== 'daemon') {
-            throw new Error(`Cannot restart "${name}": only daemon services can be restarted`);
+            throw new Error(
+                `Cannot restart "${name}": only daemon services can be restarted`,
+            );
         }
 
         if (entry.status === 'running') {
@@ -206,36 +231,38 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
 
         this.register(jobService);
 
-        this.start(name).then(() => {
-            const entry = this.entries.get(name);
-            if (entry && entry.status === 'running') {
-                const duration = entry.startedAt
-                    ? Date.now() - entry.startedAt.getTime()
-                    : 0;
-                entry.status = 'done';
-                entry.stoppedAt = new Date();
-                entry.runner = null;
-                this.completeInProcessRegistry(entry, 0);
-                this.emitLifecycleEvent('service-completed', name, {
-                    name,
-                    duration,
-                });
-            }
-        }).catch((e) => {
-            const entry = this.entries.get(name);
-            if (entry) {
-                const error = e instanceof Error ? e : new Error(String(e));
-                entry.status = 'failed';
-                entry.error = error.message;
-                entry.stoppedAt = new Date();
-                entry.runner = null;
-                this.failInProcessRegistry(entry);
-                this.emitLifecycleEvent('service-failed', name, {
-                    name,
-                    error: error.message,
-                });
-            }
-        });
+        this.start(name)
+            .then(() => {
+                const entry = this.entries.get(name);
+                if (entry && entry.status === 'running') {
+                    const duration = entry.startedAt
+                        ? Date.now() - entry.startedAt.getTime()
+                        : 0;
+                    entry.status = 'done';
+                    entry.stoppedAt = new Date();
+                    entry.runner = null;
+                    this.completeInProcessRegistry(entry, 0);
+                    this.emitLifecycleEvent('service-completed', name, {
+                        name,
+                        duration,
+                    });
+                }
+            })
+            .catch((e) => {
+                const entry = this.entries.get(name);
+                if (entry) {
+                    const error = e instanceof Error ? e : new Error(String(e));
+                    entry.status = 'failed';
+                    entry.error = error.message;
+                    entry.stoppedAt = new Date();
+                    entry.runner = null;
+                    this.failInProcessRegistry(entry);
+                    this.emitLifecycleEvent('service-failed', name, {
+                        name,
+                        error: error.message,
+                    });
+                }
+            });
     }
 
     getStatus(name: string): ICliBackgroundServiceInfo | undefined {
@@ -278,7 +305,9 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
                     if (entry.runner) {
                         await Promise.race([
                             entry.runner.stop(),
-                            new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+                            new Promise<void>((resolve) =>
+                                setTimeout(resolve, 5000),
+                            ),
                         ]);
 
                         if (entry.runner instanceof CliWorkerServiceRunner) {
@@ -317,9 +346,7 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
     }
 
     private toInfo(entry: ServiceEntry): ICliBackgroundServiceInfo {
-        const executionMode = entry.runner
-            ? entry.runner.mode
-            : 'main-thread';
+        const executionMode = entry.runner ? entry.runner.mode : 'main-thread';
 
         const uptime =
             entry.status === 'running' && entry.startedAt
@@ -340,7 +367,10 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
         };
     }
 
-    private updateStatus(name: string, status: CliBackgroundServiceStatus): void {
+    private updateStatus(
+        name: string,
+        status: CliBackgroundServiceStatus,
+    ): void {
         const entry = this.entries.get(name);
         if (!entry) return;
 
@@ -357,10 +387,18 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
             this.failInProcessRegistry(entry);
         }
 
-        this.emitLifecycleEvent('status-change', name, { name, from, to: status });
+        this.emitLifecycleEvent('status-change', name, {
+            name,
+            from,
+            to: status,
+        });
     }
 
-    private handleStartError(entry: ServiceEntry, name: string, e: unknown): void {
+    private handleStartError(
+        entry: ServiceEntry,
+        name: string,
+        e: unknown,
+    ): void {
         const error = e instanceof Error ? e : new Error(String(e));
         entry.status = 'failed';
         entry.error = error.message;
@@ -380,11 +418,15 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
     }
 
     private dispatchEvent(event: ICliServiceEvent): void {
-        const eventWithTimestamp = event.timestamp ? event : { ...event, timestamp: new Date() };
+        const eventWithTimestamp = event.timestamp
+            ? event
+            : { ...event, timestamp: new Date() };
 
         for (const { handler, filter } of this.handlers) {
-            if (filter?.source && filter.source !== eventWithTimestamp.source) continue;
-            if (filter?.type && filter.type !== eventWithTimestamp.type) continue;
+            if (filter?.source && filter.source !== eventWithTimestamp.source)
+                continue;
+            if (filter?.type && filter.type !== eventWithTimestamp.type)
+                continue;
             try {
                 handler(eventWithTimestamp);
             } catch {
@@ -392,13 +434,61 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
             }
         }
 
-        const data = eventWithTimestamp.data as Record<string, unknown> | undefined;
+        try {
+            this.forwardToEventBus(eventWithTimestamp);
+        } catch {
+            // Publishing on the bus must never break service event delivery
+        }
+
+        const data = eventWithTimestamp.data as
+            Record<string, unknown> | undefined;
         if (data?.['notify']) {
             this.notify(eventWithTimestamp);
         }
     }
 
-    private emitLifecycleEvent(type: string, source: string, data: unknown): void {
+    /**
+     * Publish service events on the terminal's event bus: lifecycle events as
+     * `service:<started|stopped|...>`, events relayed from a server's event
+     * socket as `server:event`, other custom events as `service:event`.
+     */
+    private forwardToEventBus(event: ICliServiceEvent): void {
+        const bus =
+            typeof this.services?.get === 'function'
+                ? this.services.get<ICliEventBus>(ICliEventBus_TOKEN)
+                : undefined;
+        if (!bus) return;
+
+        const lifecycle = LIFECYCLE_EVENTS[event.type];
+        if (lifecycle) {
+            const data = (event.data ?? {}) as Record<string, unknown>;
+            bus.emit(lifecycle, { name: event.source, ...data } as any, {
+                source: event.source,
+            });
+        } else if (event.source.startsWith(SERVER_EVENTS_PREFIX)) {
+            bus.emit(
+                'server:event',
+                {
+                    server: event.source.slice(SERVER_EVENTS_PREFIX.length),
+                    type: event.type,
+                    data: event.data,
+                },
+                { source: event.source },
+            );
+        } else {
+            bus.emit(
+                'service:event',
+                { service: event.source, type: event.type, data: event.data },
+                { source: event.source },
+            );
+        }
+    }
+
+    private emitLifecycleEvent(
+        type: string,
+        source: string,
+        data: unknown,
+    ): void {
         this.dispatchEvent({
             source,
             type,
@@ -432,7 +522,10 @@ export class CliBackgroundServiceRegistry implements ICliBackgroundServiceRegist
         this.writer.writeln('\u2514' + '\u2500'.repeat(40));
     }
 
-    private completeInProcessRegistry(entry: ServiceEntry, exitCode: number): void {
+    private completeInProcessRegistry(
+        entry: ServiceEntry,
+        exitCode: number,
+    ): void {
         if (entry.pid !== undefined && this.processRegistry) {
             this.processRegistry.complete(entry.pid, exitCode);
         }

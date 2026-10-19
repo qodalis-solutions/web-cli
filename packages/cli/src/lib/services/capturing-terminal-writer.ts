@@ -15,6 +15,9 @@ import {
  *
  * After a command finishes, the executor can retrieve the captured data to use
  * as implicit pipeline output when the command did not call `process.output()`.
+ *
+ * `muted` (output going into a pipe or a file) captures stdout-equivalent
+ * output without showing it; diagnostics are still shown.
  */
 export class CapturingTerminalWriter implements ICliTerminalWriter {
     /** Raw text lines captured from write/writeln calls. */
@@ -29,37 +32,56 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
     /** Raw text lines captured from writeError/writeWarning calls. */
     private _stderrLines: string[] = [];
 
-    constructor(private readonly inner: ICliTerminalWriter) {}
+    /** Number of writeError calls (warnings excluded). */
+    private _errorCount = 0;
+
+    private readonly muted: boolean;
+
+    constructor(
+        private readonly inner: ICliTerminalWriter,
+        options: { muted?: boolean } = {},
+    ) {
+        this.muted = options.muted ?? false;
+    }
+
+    /** Show stdout-equivalent output unless muted. */
+    private show(render: () => void): void {
+        if (!this.muted) render();
+    }
+
+    private captureText(lines: string[]): void {
+        lines.forEach((l) => this._lines.push(stripAnsi(l)));
+    }
 
     // -- stdout-equivalent methods (captured) --------------------------------
 
     write(text: string): void {
         this._lines.push(stripAnsi(text));
-        this.inner.write(text);
+        this.show(() => this.inner.write(text));
     }
 
     writeln(text?: string): void {
         if (text !== undefined && text !== '') {
             this._lines.push(stripAnsi(text));
         }
-        this.inner.writeln(text);
+        this.show(() => this.inner.writeln(text));
     }
 
     writeJson(json: any): void {
         this._jsonValues.push(json);
-        this.inner.writeJson(json);
+        this.show(() => this.inner.writeJson(json));
     }
 
     writeObjectsAsTable(objects: any[]): void {
         this._tableObjects.push(objects);
-        this.inner.writeObjectsAsTable(objects);
+        this.show(() => this.inner.writeObjectsAsTable(objects));
     }
 
     writeTable(headers: string[], rows: string[][]): void {
-        // Table text is hard to reconstruct as structured data.
-        // We still delegate but don't capture — commands that write tables
-        // and want pipeline output should call process.output() explicitly.
-        this.inner.writeTable(headers, rows);
+        // Captured as text lines (so `| grep` works); commands that want
+        // structured pipeline output should call process.output() explicitly.
+        this.captureText([headers, ...rows].map((r) => r.join('  ')));
+        this.show(() => this.inner.writeTable(headers, rows));
     }
 
     // -- stderr-equivalent methods (NOT captured) ----------------------------
@@ -79,6 +101,7 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
 
     writeError(message: string): void {
         this._stderrLines.push(stripAnsi(message));
+        this._errorCount++;
         this.inner.writeError(message);
     }
 
@@ -101,7 +124,7 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
         length?: number;
         char?: string;
     }): void {
-        this.inner.writeDivider(options);
+        this.show(() => this.inner.writeDivider(options));
     }
 
     writeList(
@@ -112,26 +135,30 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
             color?: CliForegroundColor;
         },
     ): void {
-        this.inner.writeList(items, options);
+        this.captureText(items);
+        this.show(() => this.inner.writeList(items, options));
     }
 
     writeKeyValue(
         entries: Record<string, string> | [string, string][],
         options?: { separator?: string; keyColor?: CliForegroundColor },
     ): void {
-        this.inner.writeKeyValue(entries, options);
+        const pairs = Array.isArray(entries) ? entries : Object.entries(entries);
+        this.captureText(pairs.map(([k, v]) => `${k}: ${v}`));
+        this.show(() => this.inner.writeKeyValue(entries, options));
     }
 
     writeColumns(
         items: string[],
         options?: { columns?: number; padding?: number },
     ): void {
-        this.inner.writeColumns(items, options);
+        this.captureText(items);
+        this.show(() => this.inner.writeColumns(items, options));
     }
 
     writeLink(text: string, url: string): void {
         this._lines.push(stripAnsi(text));
-        this.inner.writeLink(text, url);
+        this.show(() => this.inner.writeLink(text, url));
     }
 
     writeBox(
@@ -144,12 +171,12 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
     ): void {
         const lines = Array.isArray(content) ? content : [content];
         lines.forEach((l) => this._lines.push(stripAnsi(l)));
-        this.inner.writeBox(content, options);
+        this.show(() => this.inner.writeBox(content, options));
     }
 
     writeIndented(text: string, level?: number): void {
         this._lines.push(stripAnsi(text));
-        this.inner.writeIndented(text, level);
+        this.show(() => this.inner.writeIndented(text, level));
     }
 
     // -- captured data accessors ---------------------------------------------
@@ -195,6 +222,11 @@ export class CapturingTerminalWriter implements ICliTerminalWriter {
         }
 
         return undefined;
+    }
+
+    /** Whether the command wrote an error message itself. */
+    hasErrors(): boolean {
+        return this._errorCount > 0;
     }
 
     /**

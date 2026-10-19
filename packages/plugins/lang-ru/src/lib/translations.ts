@@ -4,6 +4,7 @@
 export const ruTranslations: Record<string, string> = {
     'cli.common.usage': 'Использование:',
     'cli.common.examples': 'Примеры:',
+    'cli.common.use_hint': 'Используйте {command} {action}',
     'cli.help.description': 'Показать справку по команде',
     'cli.help.long_description': 'Показать справочную информацию по командам',
     'cli.help.shortcuts': 'Горячие клавиши',
@@ -49,9 +50,19 @@ export const ruTranslations: Record<string, string> = {
     'cli.configure.all_reset': 'Вся конфигурация сброшена к значениям по умолчанию',
     'cli.configure.invalid_number': 'Недопустимое число: {value}',
     'cli.configure.invalid_options': 'Недопустимое значение. Допустимые варианты: {options}',
+    'cli.configure.invalid_boolean':
+        'Недопустимое логическое значение: "{value}". Используйте true или false.',
     'cli.echo.description': 'Вывести указанный текст',
     'cli.echo.long_description': 'Вывести указанный текст в терминал',
     'cli.echo.piping_note': 'Поддерживает вывод текста и JSON-объектов через конвейер',
+    'cli.echo.help.print_text_terminal_add':
+        'Вывести текст в терминал. Добавьте > file, чтобы сохранить его в файл (с заменой), или >> file, чтобы дописать в конец.',
+    'cli.echo.help.print_text': 'Вывести текст',
+    'cli.echo.help.write_text_file': 'Записать текст в файл',
+    'cli.echo.help.append_text_file': 'Дописать текст в файл',
+    'cli.echo.help.print_greeting': 'Вывести приветствие',
+    'cli.echo.help.create_replace_notes_txt': 'Создать или заменить notes.txt',
+    'cli.echo.help.add_line': 'Добавить в него строку',
     'cli.clear.description': 'Очистить терминал',
     'cli.clear.long_description': 'Очистить всё содержимое экрана терминала',
     'cli.clear.shortcut': 'Горячая клавиша:',
@@ -61,6 +72,7 @@ export const ruTranslations: Record<string, string> = {
     'cli.uname.cli_versions': 'Версии ядра и библиотек CLI',
     'cli.uname.browser_info': 'Название браузера, версия, user agent, язык и платформа',
     'cli.uname.os': 'Операционная система',
+    'cli.uname.description': 'Вывести подробную информацию о системе и браузере',
     'cli.hash.description': 'Генерировать хеш-дайджесты текста',
     'cli.hash.long_description': 'Генерировать криптографические хеш-дайджесты с помощью Web Crypto API',
     'cli.cal.description': 'Показать календарь',
@@ -71,6 +83,7 @@ export const ruTranslations: Record<string, string> = {
     'cli.time.description': 'Показать текущее местное время и UTC',
     'cli.time.long_description': 'Показать текущее местное время и UTC',
     'cli.time.show_current': 'Показать текущее местное время и UTC',
+    'cli.time.now.description': 'Показать текущее время',
     'cli.uptime.description': 'Показать время работы сессии',
     'cli.uptime.long_description': 'Показать, сколько времени активна текущая сессия терминала',
     'cli.convert.description': 'Конвертировать единицы (длина, вес, температура, данные)',
@@ -89,6 +102,9 @@ export const ruTranslations: Record<string, string> = {
     'cli.lorem.gen_words': 'Генерировать слова',
     'cli.lorem.gen_sentences': 'Генерировать предложения',
     'cli.lorem.gen_paragraphs': 'Генерировать абзацы',
+    'cli.lorem.words.description': 'Сгенерировать заданное число слов',
+    'cli.lorem.sentences.description': 'Сгенерировать заданное число предложений',
+    'cli.lorem.paragraphs.description': 'Сгенерировать заданное число абзацев',
     'cli.alias.description': 'Управление псевдонимами команд',
     'cli.alias.long_description': 'Создание псевдонимов для часто используемых команд',
     'cli.alias.create_new': 'Создать новый псевдоним',
@@ -108,6 +124,9 @@ export const ruTranslations: Record<string, string> = {
     'cli.history.clear': 'Очистить всю историю',
     'cli.history.arrow_hint': 'Используйте клавиши со стрелками {keys} для навигации по истории',
     'cli.history.prefix_hint': 'Введите префикс и нажмите {key} для поиска по истории по префиксу',
+    'cli.history.description': 'Вывести историю команд текущего сеанса',
+    'cli.history.clear.description': 'Очистить историю команд',
+    'cli.history.search.description': 'Искать в истории команд по шаблону',
     'cli.theme.description': 'Взаимодействие с темой',
     'cli.theme.long_description': 'Настройка внешнего вида терминала с помощью тем и цветов',
     'cli.hex.description': 'Кодирование/декодирование hex и преобразование систем счисления',
@@ -116,6 +135,10 @@ export const ruTranslations: Record<string, string> = {
     'cli.hex.hex_to_text': 'Шестнадцатеричный в текст',
     'cli.hex.base_conversion': 'Преобразование системы счисления',
     'cli.feedback.long_description': 'Сообщить об ошибке, запросить функцию или предложить новую команду — интерактивно или встроенно.',
+    'cli.feedback.report-bug.description': 'Сообщить об ошибке на GitHub',
+    'cli.feedback.request-feature.description': 'Запросить новую функцию на GitHub',
+    'cli.feedback.request-command.description': 'Запросить новую команду на GitHub',
+    'cli.feedback.description': 'Позволяет сообщать об ошибках или запрашивать функции',
     'cli.jwt.description': 'Декодировать и проверить токены JWT',
     'cli.jwt.long_description': 'Декодировать и проверить JSON Web Token (JWT)',
     'cli.jwt.decode_display': 'Декодировать и показать содержимое JWT',
@@ -130,12 +153,20 @@ export const ruTranslations: Record<string, string> = {
     'cli.services.restart_desc': 'Перезапустить сервис',
     'cli.services.logs_desc': 'Просмотреть журналы сервиса',
     'cli.services.info_desc': 'Подробности сервиса',
+    'cli.services.list.description': 'Показать все зарегистрированные фоновые службы',
+    'cli.services.start.description': 'Запустить фоновую службу',
+    'cli.services.stop.description': 'Остановить запущенную фоновую службу',
+    'cli.services.restart.description': 'Перезапустить фоновую службу',
+    'cli.services.logs.description': 'Показать журналы фоновой службы',
+    'cli.services.info.description': 'Показать подробную информацию о службе',
     'cli.yes.description': 'Непрерывно повторять строку',
     'cli.yes.long_description': 'Непрерывно повторять строку',
     'cli.clipboard.description': 'Копировать или вставить из буфера обмена',
     'cli.clipboard.long_description': 'Копировать текст в системный буфер обмена или вставить текст из него',
     'cli.clipboard.copy_desc': 'Копировать текст в буфер обмена',
     'cli.clipboard.paste_desc': 'Вставить из буфера обмена',
+    'cli.clipboard.copy.description': 'Копировать текст в буфер обмена',
+    'cli.clipboard.paste.description': 'Вставить текст из буфера обмена',
     'cli.hotkeys.description': 'Показать информацию о горячих клавишах',
     'cli.hotkeys.long_description': 'Показать все доступные сочетания клавиш и горячие клавиши',
     'cli.export.description': 'Установить переменные окружения',
@@ -143,8 +174,15 @@ export const ruTranslations: Record<string, string> = {
     'cli.export.show_all': 'Показать все переменные',
     'cli.export.set_var': 'Установить переменную',
     'cli.export.set_spaces': 'Установить значение с пробелами',
+    'cli.export.set_many': 'Задать сразу несколько',
+    'cli.export.set_global': 'Задать для всех пользователей',
+    'cli.export.set_session': 'Только для этого терминала, без сохранения',
+    'cli.export.scopes':
+        'Используйте переменные как $VAR или ${VAR}. Значение, заданное в этом терминале, приоритетнее вашего сохранённого значения, а оно приоритетнее общего. env показывает источник каждого значения.',
     'cli.unset.description': 'Удалить переменные окружения',
     'cli.unset.long_description': 'Удалить переменную окружения',
+    'cli.unset.own': 'Удалить для этого терминала и для вас (общее значение будет скрыто для вас)',
+    'cli.unset.global': 'Удалить общее значение',
     'cli.env.description': 'Показать переменные окружения',
     'cli.env.long_description': 'Показать переменные окружения',
     'cli.env.show_all': 'Показать все переменные',
@@ -159,6 +197,9 @@ export const ruTranslations: Record<string, string> = {
     'cli.json.format_desc': 'Форматировать JSON с отступами',
     'cli.json.minify_desc': 'Удалить пробелы',
     'cli.json.validate_desc': 'Проверить, является ли валидным JSON',
+    'cli.json.format.description': 'Форматировать JSON с отступами',
+    'cli.json.minify.description': 'Минифицировать JSON, удалив пробелы',
+    'cli.json.validate.description': 'Проверить, является ли строка корректным JSON',
     'cli.base64.description': 'Кодировать или декодировать строки Base64',
     'cli.base64.long_description': 'Кодирование и декодирование строк Base64',
     'cli.base64.utf8_note': 'Поддерживает кодировку текста UTF-8',
@@ -169,6 +210,9 @@ export const ruTranslations: Record<string, string> = {
     'cli.timestamp.current': 'Текущая метка времени Unix',
     'cli.timestamp.to_date': 'Метка времени в дату',
     'cli.timestamp.from_date': 'Дата в метку времени',
+    'cli.timestamp.now.description': 'Показать текущую метку времени Unix',
+    'cli.timestamp.to-date.description': 'Конвертировать метку времени Unix в дату',
+    'cli.timestamp.from-date.description': 'Конвертировать строку даты в метку времени Unix',
     'cli.screen.description': 'Показать информацию об экране и терминале',
     'cli.screen.long_description': 'Показать размеры экрана, области просмотра и терминала',
     'cli.screen.shows': 'Показывает: разрешение, глубину цвета, соотношение пикселей, размер окна, размер терминала',
@@ -179,6 +223,11 @@ export const ruTranslations: Record<string, string> = {
     'cli.random.uuid_desc': 'Случайный UUID v4',
     'cli.random.coin_desc': 'Подбросить монету',
     'cli.random.dice_desc': 'Бросить кубик',
+    'cli.random.number.description': 'Сгенерировать случайное число',
+    'cli.random.string.description': 'Сгенерировать случайную строку',
+    'cli.random.uuid.description': 'Сгенерировать случайный UUID v4',
+    'cli.random.coin.description': 'Подбросить монету',
+    'cli.random.dice.description': 'Бросить кубик',
     'cli.ping.description': 'Отправить ICMP-подобный ping на хост',
     'cli.ping.long_description': 'Отправить HTTP-based ICMP-подобный ping на хост и показать статистику',
     'cli.ping.ctrl_c': 'Нажмите Ctrl+C для остановки и отображения статистики.',
@@ -194,5 +243,755 @@ export const ruTranslations: Record<string, string> = {
     'cli.debug.processors': 'Все зарегистрированные процессоры',
     'cli.debug.modules': 'Все загруженные модули',
     'cli.debug.state': 'Просмотр хранилищ состояния',
+    'cli.debug.processors.description': 'Показать все зарегистрированные обработчики команд',
+    'cli.debug.modules.description': 'Показать все загруженные модули CLI',
+    'cli.debug.state.description': 'Просмотреть все хранилища состояния и их значения',
+    'cli.debug.services.description': 'Показать все зарегистрированные сервисы в DI-контейнере',
+    'cli.debug.environment.description': 'Показать информацию о браузере, терминале и фреймворке',
+    'cli.debug.history.description': 'Показать статистику истории команд',
+    'cli.debug.health.description':
+        'Проверить состояние системы: хранилище, подключение, состояние обработчиков',
+    'cli.debug.export.description': 'Экспортировать всю отладочную информацию в JSON',
+    'cli.debug.servers.description': 'Показать настроенные серверы и состояние их подключения',
     'cli.packages.description': 'Управление пакетами CLI',
+
+    // ── Servers and events ───────────────────────────────────────────
+    'cli.server.description': 'Управление подключениями к удалённым серверам CLI',
+    'cli.server.list.description': 'Показать серверы с состоянием, версией и командами',
+    'cli.server.status.description': 'Проверить доступность серверов (всех или одного подробно)',
+    'cli.server.commands.description': 'Показать команды каждого сервера',
+    'cli.server.reconnect.description': 'Переподключиться к серверам и перезагрузить их команды',
+    'cli.server.default.description': 'Показать или задать сервер для общих команд',
+    'cli.server.jobs.description': 'Управление фоновыми заданиями на подключённых серверах',
+    'cli.server.jobs.list.description': 'Показать все задания на подключённых серверах',
+    'cli.server.jobs.info.description': 'Показать подробную информацию о задании',
+    'cli.server.jobs.trigger.description': 'Немедленно запустить задание',
+    'cli.server.jobs.pause.description': 'Приостановить выполнение задания по расписанию',
+    'cli.server.jobs.resume.description': 'Возобновить приостановленное задание',
+    'cli.server.jobs.stop.description':
+        'Остановить задание и отменить текущее выполнение, если оно идёт',
+    'cli.server.jobs.cancel.description': 'Отменить текущее выполнение задания',
+    'cli.server.jobs.history.description': 'Показать историю выполнения задания',
+    'cli.server.jobs.logs.description': 'Показать журналы последнего или конкретного выполнения',
+    'cli.server.jobs.edit.description': 'Интерактивно изменить настройки задания',
+    'cli.server.jobs.watch.description':
+        'Просмотр событий заданий в реальном времени через WebSocket',
+    'cli.server.help.see_everything_you_can': 'для просмотра всех возможностей',
+    'cli.server.help.connect_terminal_remote_cli':
+        'Подключите терминал к удалённым серверам CLI (.NET, Node.js, Python) и выполняйте их команды.',
+    'cli.server.help.by_name_or_prefix':
+        'Команды каждого сервера доступны по имени ({byName}) и с префиксом сервера ({prefixed}). Если одна команда есть на нескольких серверах, её выполняет сервер по умолчанию; если его нет, вас спросят, какой сервер использовать. Локальная команда с тем же именем имеет приоритет: используйте имя с префиксом. Недоступный сервер опрашивается каждые 30 секунд, и его команды возвращаются, когда он снова доступен.',
+    'cli.server.help.overview_servers': 'Обзор серверов',
+    'cli.server.help.servers_status_version_commands': 'Серверы со статусом, версией и командами',
+    'cli.server.help.check_servers_reachable_all':
+        'Проверить доступность серверов (всех или одного подробно)',
+    'cli.server.help.commands_each_server_provides': 'Команды, которые предоставляет каждый сервер',
+    'cli.server.help.connect_again_unreachable_servers':
+        'Подключиться снова (недоступные серверы или один)',
+    'cli.server.help.show_set_server_shared': 'Показать или задать сервер для общих команд',
+    'cli.server.help.open_shell_server_run':
+        'Открыть оболочку на сервере или выполнить одну команду',
+    'cli.server.help.ping_node_show_details': 'Проверить node и показать его подробности',
+    'cli.server.help.what_node_can_do': 'Что умеет node',
+    'cli.server.help.run_echo_node_explicitly': 'Явно выполнить echo на node',
+    'cli.server.help.shared_commands_run_node': 'Общие команды выполняются на node',
+    'cli.server.help.retry_every_unreachable_server':
+        'Повторить попытку для каждого недоступного сервера',
+    'cli.server.list.help.list_configured_servers_connection':
+        'Список настроенных серверов: состояние подключения, URL, версия сервера и API, число команд и доступ к оболочке.',
+    'cli.server.list.help.see_why_server_unreachable':
+        'чтобы узнать, почему сервер недоступен, и server reconnect для повторной попытки',
+    'cli.server.status.help.details_server': 'для подробностей о сервере',
+    'cli.server.status.help.try_again': 'для повторной попытки',
+    'cli.server.status.help.load_commands': 'для загрузки его команд',
+    'cli.server.status.help.see_commands': 'для просмотра его команд',
+    'cli.server.status.help.ping_servers_without_name':
+        'Проверить серверы. Без имени проверяются все серверы сразу со временем отклика; с именем сервер показывается подробно (версии, ОС, оболочка, потоковая передача) с подсказками, если он недоступен.',
+    'cli.server.status.help.check_every_server': 'Проверить каждый сервер',
+    'cli.server.status.help.details_one_server': 'Подробности об одном сервере',
+    'cli.server.status.help.same_server_status': 'То же, что server status',
+    'cli.server.status.help.details_node': 'Подробности о node',
+    'cli.server.commands.help.shared_marker':
+        'на нескольких серверах: выполняется на сервере по умолчанию (server use <name>) или спрашивает',
+    'cli.server.commands.help.local_marker':
+        'есть локальная команда с таким же именем: выполните её с префиксом сервера',
+    'cli.server.commands.help.intro':
+        'Показать команды, которые предоставляет сервер (все серверы или один). Выполняйте их по имени или с префиксом сервера: {example} всегда выполняется на node, даже если другой сервер или локальная команда называется echo.',
+    'cli.server.commands.help.commands_every_server': 'Команды каждого сервера',
+    'cli.server.commands.help.commands_one_server': 'Команды одного сервера',
+    'cli.server.commands.help.what_node_can_do': 'Что умеет node',
+    'cli.server.reconnect.help.reconnect_them_anyway': 'чтобы всё равно переподключить их',
+    'cli.server.reconnect.help.see_why': 'чтобы узнать причину',
+    'cli.server.reconnect.help.connect_servers_again_reload':
+        'Снова подключиться к серверам и перезагрузить их команды, например после перезапуска или обновления сервера. Без имени повторяется попытка для каждого недоступного сервера.',
+    'cli.server.reconnect.help.retry_unreachable_servers':
+        'Повторить попытку для недоступных серверов',
+    'cli.server.reconnect.help.reconnect_one_server': 'Переподключить один сервер',
+    'cli.server.reconnect.help.reconnect_every_server': 'Переподключить каждый сервер',
+    'cli.server.reconnect.help.same_server_reconnect': 'То же, что server reconnect',
+    'cli.server.reconnect.help.reload_commands_node': 'Перезагрузить команды node',
+    'cli.server.default.help.to_remove': 'чтобы убрать его',
+    'cli.server.default.help.to_set_one': 'чтобы задать его',
+    'cli.server.default.help.default_server_runs_commands':
+        'Сервер по умолчанию выполняет команды, которые есть на нескольких серверах (иначе вас спросят, какой выбрать), и команды, которым нужен один сервер, например server logs. Он запоминается между перезагрузками.',
+    'cli.server.default.help.show_default_server': 'Показать сервер по умолчанию',
+    'cli.server.default.help.set': 'Задать его',
+    'cli.server.default.help.remove': 'Убрать его',
+    'cli.server.default.help.same_server_default_node': 'То же, что server default node',
+    'cli.server.jobs.help.see_control_background_jobs':
+        'Просматривайте и управляйте фоновыми заданиями на подключённых серверах: показывайте список, запускайте задание сразу, приостанавливайте или останавливайте, читайте историю и журналы, меняйте настройки или следите за событиями в реальном времени. Задание выбирается по имени (в любом регистре) или ID и ищется на каждом подключённом сервере; действия применяются к каждому серверу, где есть это задание, а --server ограничивает команду одним сервером.',
+    'cli.server.jobs.help.same_server_jobs_list': 'То же, что server jobs list',
+    'cli.server.jobs.help.live_job_events': 'События заданий в реальном времени',
+    'cli.server.jobs.help.all_jobs': 'Все задания',
+    'cli.server.jobs.help.run_cleanup_job_now': 'Запустить задание cleanup сейчас',
+    'cli.server.jobs.help.failed_runs': 'Его неудачные запуски',
+    'cli.server.jobs.help.last_run_output_node': 'Вывод последнего запуска, на node',
+    'cli.server.jobs.list.help.list_jobs_every_connected':
+        'Список заданий каждого подключённого сервера: группа, статус, расписание, последний и следующий запуск и длительность последнего запуска. Если серверов несколько, у каждого своя таблица.',
+    'cli.server.jobs.list.help.jobs_all_connected_servers': 'Задания на всех подключённых серверах',
+    'cli.server.jobs.list.help.only_one_group': 'Только одна группа',
+    'cli.server.jobs.list.help.jobs_node_server': 'Задания на сервере node',
+    'cli.server.jobs.list.help.jobs_reports_group': 'Задания в группе reports',
+    'cli.server.jobs.info.help.show_everything_about_one':
+        'Показать всё об одном задании: расписание, повторы, тайм-аут, политику перекрытия, выполняющийся сейчас запуск и результат последнего запуска. Задание ищется по имени (в любом регистре) или ID.',
+    'cli.server.jobs.info.help.details_cleanup_job': 'Подробности о задании cleanup',
+    'cli.server.jobs.trigger.help.run_job_now_without':
+        'Запустить задание сейчас, не дожидаясь следующего времени по расписанию. Его расписание не меняется.',
+    'cli.server.jobs.trigger.help.run_cleanup_now': 'Запустить cleanup сейчас',
+    'cli.server.jobs.trigger.help.then_read_output': 'Затем прочитать его вывод',
+    'cli.server.jobs.pause.help.stop_running_job_schedule':
+        'Прекратить запуск задания по расписанию, пока оно не будет возобновлено. Для уже идущего запуска используйте cancel или stop.',
+    'cli.server.jobs.pause.help.hold_cleanup': 'Приостановить cleanup',
+    'cli.server.jobs.pause.help.put_back_schedule': 'Вернуть его в расписание',
+    'cli.server.jobs.resume.help.put_paused_job_back':
+        'Вернуть приостановленное задание в расписание.',
+    'cli.server.jobs.resume.help.run_cleanup_schedule_again':
+        'Снова запускать cleanup по расписанию',
+    'cli.server.jobs.stop.help.take_job_off_schedule':
+        'Снять задание с расписания и отменить текущий запуск, если он есть.',
+    'cli.server.jobs.stop.help.stop_cleanup_completely': 'Полностью остановить cleanup',
+    'cli.server.jobs.cancel.help.cancel_run_progress_job':
+        'Отменить текущий запуск задания. Задание остаётся в расписании и запустится в следующее время.',
+    'cli.server.jobs.cancel.help.abort_current_cleanup_run': 'Прервать текущий запуск cleanup',
+    'cli.server.jobs.history.help.list_past_runs_job':
+        'Список прошлых запусков задания: статус, время начала, длительность, номер повтора и начало сообщения об ошибке. Используйте короткий ID с logs --exec, чтобы прочитать вывод одного запуска.',
+    'cli.server.jobs.history.help.last_20_runs': 'Последние 20 запусков',
+    'cli.server.jobs.history.help.page_through_older_runs': 'Листать более старые запуски',
+    'cli.server.jobs.history.help.only_failed_runs': 'Только неудачные запуски',
+    'cli.server.jobs.history.help.last_5_runs': 'Последние 5 запусков',
+    'cli.server.jobs.logs.help.print_log_entries_latest':
+        'Вывести записи журнала последнего запуска задания или одного запуска, выбранного по ID выполнения (из history).',
+    'cli.server.jobs.logs.help.logs_latest_run': 'Журналы последнего запуска',
+    'cli.server.jobs.logs.help.logs_one_run': 'Журналы одного запуска',
+    'cli.server.jobs.logs.help.what_last_cleanup_run': 'Что вывел последний запуск cleanup',
+    'cli.server.jobs.edit.help.change_job_step_step':
+        'Изменить задание шаг за шагом: описание, группа, расписание cron или интервал, максимум повторов, тайм-аут и политика перекрытия (skip, queue или cancel). Нажмите Enter, чтобы оставить значение, и Ctrl+C или Escape для отмены; ничего не меняется, пока вы не подтвердите. Для задания на нескольких серверах нужен --server.',
+    'cli.server.jobs.edit.help.edit_cleanup_server_has':
+        'Изменить cleanup на сервере, где оно есть',
+    'cli.server.jobs.watch.help.follow_job_events_they':
+        'Следить за событиями заданий по мере их появления (запущено, завершено, сбой и т. д.) на каждом подключённом сервере, по одной строке на событие. Нажмите Ctrl+C для остановки.',
+    'cli.server.jobs.watch.help.events_all_connected_servers':
+        'События со всех подключённых серверов',
+    'cli.server.jobs.watch.help.only_events_node': 'Только события с node',
+    'cli.ssh.description': 'Открыть удалённый сеанс оболочки на сервере',
+    'cli.ssh.help.open_interactive_shell_server':
+        'Открыть интерактивную оболочку на сервере в этом терминале или выполнить там одну команду и вывести её результат. Можно использовать только серверы с включённой оболочкой; с плагином users нужно разрешение shell:execute. Без имени ssh использует единственный сервер с оболочкой, иначе сервер по умолчанию, иначе спрашивает, какой выбрать.',
+    'cli.ssh.help.shell_default_only_server': 'Оболочка на сервере по умолчанию (или единственном)',
+    'cli.ssh.help.shell_server_exit_ctrl': 'Оболочка на сервере (exit или Ctrl+D для выхода)',
+    'cli.ssh.help.run_one_command_print': 'Выполнить одну команду и вывести результат',
+    'cli.ssh.help.same_ssh': 'То же, что ssh <name>',
+    'cli.ssh.help.interactive_shell_node': 'Интерактивная оболочка на node',
+    'cli.ssh.help.one_command_node': 'Одна команда на node',
+    'cli.ssh.help.same_ssh_2': 'То же, что ssh',
+    'cli.events.description': 'Отслеживать, просматривать и отправлять события шины событий',
+    'cli.events.watch.description': 'Показывать события по мере появления (Ctrl+C для остановки)',
+    'cli.events.log.description': 'Показать недавние события (в памяти, не сохраняются)',
+    'cli.events.emit.description': 'Отправить событие: events emit <тип> [json]',
+    'cli.events.watch.help.intro': 'Выводить события по мере появления, до Ctrl+C',
+    'cli.events.watch.help.every_event': 'Все события',
+    'cli.events.watch.help.namespace': 'Пространство имён',
+    'cli.events.watch.help.one_type': 'Один тип',
+    'cli.events.log.help.intro': 'Показать последние события, сначала старые',
+    'cli.events.log.help.last_20': 'Последние 20 событий',
+    'cli.events.log.help.last_50_server': 'Последние 50 событий сервера',
+    'cli.events.emit.help.intro':
+        'Отправить событие, например, чтобы проверить плагин, который его слушает',
+    'cli.events.help.commands': 'Команды:',
+    'cli.events.help.print_live': 'Выводить события в реальном времени',
+    'cli.events.help.recent': 'Недавние события',
+    'cli.events.help.emit': 'Отправить событие',
+    'cli.events.help.patterns':
+        'Шаблоны: точный тип (package:installed), пространство имён (package:*) или * для всех.',
+    'cli.events.help.in_memory':
+        'События хранятся в памяти только для этого терминала; ничего не сохраняется.',
+
+    // ── Capture ──────────────────────────────────────────────────────
+    'cli.capture.description': 'Экспортировать вывод терминала в файл для скачивания',
+    'cli.capture.help.save_what_terminal_including':
+        'Сохранить содержимое терминала, включая прокрутку, в файл, который скачает браузер. HTML сохраняет фон темы и цвет текста; txt — обычный текст. Цвета отдельных строк не сохраняются.',
+    'cli.capture.help.everything_terminal_html': 'Всё в виде terminal-<timestamp>.html',
+    'cli.capture.help.plain_text_file': 'Обычный текстовый файл',
+    'cli.capture.help.only_last_n_lines': 'Только последние n строк',
+    'cli.capture.help.downloads_session_txt': 'Скачивает session.txt',
+    'cli.capture.help.last_50_lines_html': 'Последние 50 строк в виде HTML',
+    'cli.capture.help.same_capture': 'То же, что capture',
+
+    // ── Diff ─────────────────────────────────────────────────────────
+    'cli.diff.description': 'Построчно сравнить файлы',
+    'cli.diff.help.compare_two_texts_line':
+        'Построчно сравнить два текста: добавленные строки показаны зелёным с +, удалённые — красным с -, вокруг каждого изменения выводится несколько неизменённых строк для контекста.',
+    'cli.diff.help.compare_two_texts': 'Сравнить два текста',
+    'cli.diff.help.only_changed_lines': 'Только изменённые строки',
+    'cli.diff.help.one_line_changed': 'Изменена одна строка',
+    'cli.diff.help.prints_no_differences_found': 'Выводит: No differences found',
+    'cli.diff.help.compare_two_files_line':
+        'Построчно сравнить два файла и показать изменения: строки, начинающиеся с < (или -), есть только в первом файле, строки с > (или +) — только во втором.',
+    'cli.diff.help.show_differences': 'Показать различия',
+    'cli.diff.help.unified_format_context': 'Унифицированный формат с контекстом',
+    'cli.diff.help.what_changed_between_versions': 'Что изменилось между версиями',
+    'cli.diff.help.review_edits_git_style': 'Просмотр правок в стиле git',
+    'cli.diff.help.ignore_upper_lower_case': 'Игнорировать регистр',
+
+    // ── Font Size ────────────────────────────────────────────────────
+    'cli.font-size.description': 'Изменить размер шрифта терминала',
+    'cli.font-size.reset.description': 'Сбросить размер шрифта по умолчанию',
+    'cli.font-size.set.description': 'Задать конкретный размер шрифта',
+    'cli.font-size.help.intro':
+        'Увеличить или уменьшить текст терминала от {min}px до {max}px. Выбранный размер сохраняется и восстанавливается при следующем открытии терминала; reset возвращает размер, с которым началась страница.',
+    'cli.font-size.help.show_current_size': 'Показать текущий размер',
+    'cli.font-size.help.bigger_smaller_by': 'Больше или меньше на {step}px',
+    'cli.font-size.help.exact_size': 'Точный размер в пикселях ({min}-{max})',
+    'cli.font-size.help.back_default_size': 'Вернуть размер по умолчанию',
+    'cli.font-size.help.use_16px_text': 'Использовать текст 16px',
+    'cli.font-size.help.grow_by': 'Увеличить на {step}px',
+    'cli.font-size.help.forget_saved_size': 'Забыть сохранённый размер',
+
+    // ── Snippet ──────────────────────────────────────────────────────
+    'cli.snippet.description': 'Сохранять и повторно использовать параметризованные шаблоны команд',
+    'cli.snippet.list.description': 'Показать все сохранённые сниппеты',
+    'cli.snippet.save.description': 'Сохранить новый сниппет: snippet save <name> "<template>"',
+    'cli.snippet.show.description': 'Показать шаблон сниппета: snippet show <name>',
+    'cli.snippet.delete.description': 'Удалить сниппет: snippet delete <name>',
+    'cli.snippet.run.description':
+        'Выполнить сниппет со значениями переменных: snippet run <name> var1=val1 var2=val2',
+    'cli.snippet.help.save_command_lines_you':
+        'Сохраняйте часто используемые командные строки как именованные шаблоны с {{placeholders}}, которые заполняются при запуске. Сниппеты хранятся в браузере и общие для всех ваших терминалов и вкладок.',
+    'cli.snippet.help.save_replace_snippet': 'Сохранить (или заменить) сниппет',
+    'cli.snippet.help.fill_placeholders_run': 'Заполнить плейсхолдеры и запустить',
+    'cli.snippet.help.all_saved_snippets': 'Все сохранённые сниппеты',
+    'cli.snippet.help.print_snippet': 'Вывести сниппет',
+    'cli.snippet.help.delete_snippet_rm_remove': 'Удалить сниппет (rm, remove)',
+    'cli.snippet.help.template_placeholder': 'Шаблон с плейсхолдером',
+    'cli.snippet.help.runs_echo_hello_ada': 'Выполняет: echo Hello Ada',
+    'cli.snippet.help.quote_values_spaces': 'Значения с пробелами берите в кавычки',
+
+    // ── Test ─────────────────────────────────────────────────────────
+    'cli.test.description': 'Проверить условие (код завершения 0, если истинно)',
+    'cli.test.help.expressions': 'Выражения:',
+    'cli.test.help.empty_not_empty': 'пусто / не пусто',
+    'cli.test.help.equal_not_equal': 'равно / не равно',
+    'cli.test.help.integer_comparison': 'сравнение целых чисел',
+    'cli.test.help.exists_file_directory': 'существует / файл / каталог',
+
+    // ── Kill ─────────────────────────────────────────────────────────
+    'cli.kill.description': 'Завершить запущенный процесс по PID',
+    'cli.kill.help.stop_running_process_pid':
+        'Остановить запущенный процесс по его PID, как показано в ps. Команда отменяется, фоновая служба останавливается. Завершить можно только запущенные процессы; после этого они отображаются как killed с кодом выхода -9.',
+    'cli.kill.help.stop_process_pid': 'Остановить процесс с этим PID',
+    'cli.kill.help.find_pid': 'Найти PID',
+    'cli.kill.help.stop_process_3': 'Остановить процесс 3',
+
+    // ── Pkg ──────────────────────────────────────────────────────────
+    'cli.pkg.description': 'Управление пакетами в CLI',
+    'cli.pkg.ls.description': 'Показать все пакеты в CLI',
+    'cli.pkg.browse.description': 'Показать все доступные пакеты из всех настроенных источников',
+    'cli.pkg.add.description': 'Добавить пакет в CLI, например pkg add guid.',
+    'cli.pkg.remove.description': 'Удалить пакет из CLI',
+    'cli.pkg.versions.description': 'Показать все опубликованные версии пакета',
+    'cli.pkg.check.description': 'Проверить установленные пакеты на наличие обновлений',
+    'cli.pkg.update.description':
+        'Обновить пакет в CLI до последней версии или обновить все пакеты',
+    'cli.pkg.source.description': 'Получить или задать источник пакетов для загрузки',
+    'cli.pkg.source.get.description': 'Показать текущий источник CDN',
+    'cli.pkg.source.set.description':
+        'Задать предпочитаемый источник пакетов (интерактивно, если имя не указано)',
+    'cli.pkg.help.list_installed_packages': 'Список установленных пакетов',
+    'cli.pkg.help.browse_all_available_packages': 'Просмотреть все доступные пакеты',
+    'cli.pkg.help.install_package': 'Установить пакет',
+    'cli.pkg.help.remove_package': 'Удалить пакет',
+    'cli.pkg.help.show_all_published_versions': 'Показать все опубликованные версии',
+    'cli.pkg.help.check_available_updates': 'Проверить доступные обновления',
+    'cli.pkg.help.update_one_all_packages': 'Обновить один или все пакеты',
+    'cli.pkg.help.get_set_package_source': 'Получить или задать источник пакетов',
+    'cli.pkg.help.install_qodalis_cli_guid': 'Установить @qodalis/cli-guid',
+    'cli.pkg.help.install_multiple_packages': 'Установить несколько пакетов',
+    'cli.pkg.help.update_all_packages': 'Обновить все пакеты',
+    'cli.pkg.browse.help.install_package': 'для установки пакета',
+    'cli.pkg.add.help.short_name': 'Короткое имя',
+    'cli.pkg.add.help.full_name': 'Полное имя',
+    'cli.pkg.add.help.multiple_packages': 'Несколько пакетов',
+    'cli.pkg.add.help.specific_version': 'Конкретная версия',
+    'cli.pkg.remove.help.remove_one_package': 'Удалить один пакет',
+    'cli.pkg.remove.help.remove_multiple': 'Удалить несколько',
+    'cli.pkg.remove.help.short_alias': 'Короткий псевдоним',
+    'cli.pkg.versions.help.short_name': 'Короткое имя',
+    'cli.pkg.versions.help.full_name': 'Полное имя',
+    'cli.pkg.check.help.apply_updates': 'для применения обновлений',
+    'cli.pkg.update.help.update_latest': 'Обновить до последней версии',
+    'cli.pkg.update.help.update_specific_version': 'Обновить до конкретной версии',
+    'cli.pkg.update.help.update_all_packages': 'Обновить все пакеты',
+    'cli.pkg.update.help.install_specific_version': 'Установить конкретную версию',
+    'cli.pkg.source.help.change': 'для изменения',
+    'cli.pkg.source.help.show_current_source': 'Показать текущий источник',
+    'cli.pkg.source.help.set_preferred_source': 'Задать предпочитаемый источник',
+    'cli.pkg.help.install_package_2': 'для установки пакета',
+
+    // ── Ps ───────────────────────────────────────────────────────────
+    'cli.ps.description': 'Показать запущенные и недавние процессы',
+    'cli.ps.help.list_processes_terminal_commands':
+        'Список процессов этого терминала: команды, фоновые службы, демоны и задания. Запущенные показываются вместе с недавно завершёнными, неудавшимися и убитыми (последние 50), с кодом выхода и временем, прошедшим с запуска.',
+    'cli.ps.help.all_processes_oldest_first': 'Все процессы, сначала старые',
+    'cli.ps.help.what_running_now': 'Что выполняется сейчас',
+    'cli.ps.help.stop_process_12_pid': 'Остановить процесс 12 из столбца PID',
+
+    // ── Cron ─────────────────────────────────────────────────────────
+    'cli.cron.description': 'Запускать команды с повторяющимся интервалом',
+    'cli.cron.add.description': 'Добавить задание cron: cron add <name> <interval> <command>',
+    'cli.cron.list.description': 'Показать все задания cron',
+    'cli.cron.remove.description': 'Удалить задание cron: cron remove <name>',
+    'cli.cron.enable.description': 'Включить приостановленное задание cron',
+    'cli.cron.disable.description': 'Приостановить задание cron без удаления',
+    'cli.cron.help.run_command_again_again':
+        'Запускать команду снова и снова с заданным интервалом, пока терминал открыт. Задания сохраняются: они запускаются снова при старте терминала и могут быть приостановлены без удаления.',
+    'cli.cron.help.add_job': 'Добавить задание',
+    'cli.cron.help.jobs_interval_status_run':
+        'Задания с интервалом, статусом и числом запусков (ls)',
+    'cli.cron.help.pause_job': 'Приостановить задание',
+    'cli.cron.help.resume_paused_job': 'Возобновить приостановленное задание',
+    'cli.cron.help.remove_job_rm_delete': 'Удалить задание (rm, delete)',
+    'cli.cron.help.intervals_seconds_30_hours':
+        'Интервалы: секунды (30) или часы, минуты и секунды (1h, 5m, 1h30m, 90s); не менее 10 секунд.',
+    'cli.cron.help.every_5_minutes': 'Каждые 5 минут',
+    'cli.cron.help.every_hour_half': 'Каждые полтора часа',
+    'cli.cron.help.pause': 'Приостановить его',
+
+    // ── Binary ───────────────────────────────────────────────────────
+    'cli.binary.long_description': 'Кодирование и декодирование двоичных строк',
+    'cli.binary.utf8_note': 'Поддерживает кодировку текста UTF-8',
+    'cli.binary.encode_desc': 'Текст в двоичный код',
+    'cli.binary.decode_desc': 'Двоичный код в текст',
+
+    // ── Morse ────────────────────────────────────────────────────────
+    'cli.morse.long_description': 'Кодирование и декодирование азбуки Морзе',
+    'cli.morse.note': 'Поддерживает буквы, цифры и распространённые знаки препинания',
+    'cli.morse.encode_desc': 'Текст в азбуку Морзе',
+    'cli.morse.decode_desc': 'Азбука Морзе в текст',
+
+    // ── Rot ──────────────────────────────────────────────────────────
+    'cli.rot.long_description': 'Применить шифр ROT (ротация) к тексту',
+    'cli.rot.note': 'По умолчанию ROT13 (самообратный: повторное применение возвращает оригинал)',
+    'cli.rot.default_desc': 'Применить ROT13',
+    'cli.rot.shift_desc': 'Применить ROT-N',
+
+    // ── Awk ──────────────────────────────────────────────────────────
+    'cli.awk.description': 'Поиск по шаблону и обработка текста',
+    'cli.awk.help.process_text_records_fields':
+        'Обработка текста как записей и полей: каждая строка делится на поля $1, $2, ... ($0 — вся строка), и каждое правило выполняет свой { action } на подходящих строках. Поддерживаются блоки BEGIN и END, шаблоны /regex/ и сравнение полей, print, переменные, NR и NF. Программу берите в кавычки; простую можно и без них (awk {print $1} file).',
+    'cli.awk.help.run_program_over_file': 'Выполнить программу над файлом',
+    'cli.awk.help.split_fields_instead_spaces': 'Делить поля по <sep> вместо пробелов',
+    'cli.awk.help.run_program_over_piped': 'Выполнить программу над данными из конвейера',
+    'cli.awk.help.print_first_column': 'Вывести первый столбец',
+    'cli.awk.help.second_column_csv': 'Второй столбец CSV',
+    'cli.awk.help.filter_rows_field': 'Отфильтровать строки по полю',
+    'cli.awk.help.sum_second_column': 'Сложить значения второго столбца',
+
+    // ── Basename ─────────────────────────────────────────────────────
+    'cli.basename.description': 'Убрать каталог из пути',
+    'cli.basename.help.print_last_part_path':
+        'Вывести последнюю часть пути — имя файла или каталога без родительских каталогов. Если указан суффикс, он также удаляется с конца.',
+    'cli.basename.help.name_without_directories': 'Имя без каталогов',
+    'cli.basename.help.also_remove_trailing_suffix': 'Также удалить суффикс в конце',
+    'cli.basename.help.prints_notes_txt': 'Выводит notes.txt',
+    'cli.basename.help.prints_notes': 'Выводит notes',
+    'cli.basename.help.prints_user': 'Выводит user',
+
+    // ── Cat ──────────────────────────────────────────────────────────
+    'cli.cat.description': 'Показать содержимое файла',
+    'cli.cat.help.print_contents_one_more':
+        'Вывести содержимое одного или нескольких файлов, соединённых по порядку, или данные из конвейера. Направьте вывод в другие команды для поиска, сортировки или подсчёта.',
+    'cli.cat.help.print_files_one_after': 'Вывести файлы один за другим',
+    'cli.cat.help.send_file_another_command': 'Передать файл другой команде',
+    'cli.cat.help.show_whole_file': 'Показать файл целиком',
+    'cli.cat.help.show_only_lines_error': 'Показать только строки с error',
+    'cli.cat.help.print_lines_sorted': 'Вывести строки в отсортированном виде',
+
+    // ── Cd ───────────────────────────────────────────────────────────
+    'cli.cd.description': 'Сменить текущий рабочий каталог',
+    'cli.cd.help.change_current_directory_without':
+        'Сменить текущий каталог. Без пути переходит в домашний каталог. Пути могут быть абсолютными (/...), относительными или начинаться с ~ для домашнего каталога.',
+    'cli.cd.help.go_home_directory': 'Перейти в домашний каталог',
+    'cli.cd.help.go_directory': 'Перейти в каталог',
+    'cli.cd.help.go_up_one_level': 'Подняться на один уровень',
+    'cli.cd.help.go_docs_home': 'Перейти в docs в домашнем каталоге',
+    'cli.cd.help.go_sibling_directory': 'Перейти в соседний каталог',
+    'cli.cd.help.go_root': 'Перейти в корень',
+
+    // ── Chmod ────────────────────────────────────────────────────────
+    'cli.chmod.description': 'Изменить права на файл',
+    'cli.chmod.help.change_who_can_read':
+        'Изменить, кто может читать (r), записывать (w) и выполнять (x) файл. Используйте восьмеричный режим, например 755, или символьный: кто (u владелец, g группа, o остальные, a все), затем + для добавления, - для удаления или = для установки, затем права.',
+    'cli.chmod.help.set_permissions': 'Задать права',
+    'cli.chmod.help.apply_directory_everything': 'Применить к каталогу и всему его содержимому',
+    'cli.chmod.help.rw_r_r_owner': 'rw-r--r--: владелец записывает, остальные читают',
+    'cli.chmod.help.let_owner_execute': 'Разрешить владельцу выполнение',
+    'cli.chmod.help.take_away_write_group': 'Убрать запись для группы и остальных',
+    'cli.chmod.help.set_whole_directory_tree': 'Задать для всего дерева каталогов',
+
+    // ── Chown ────────────────────────────────────────────────────────
+    'cli.chown.description': 'Изменить владельца и группу файла',
+    'cli.chown.help.change_owner_group_files':
+        'Изменить владельца и/или группу файлов. Укажите user, user:group (только владелец) или :group (только группа).',
+    'cli.chown.help.change_owner_group_if': 'Изменить владельца и группу, если указана',
+    'cli.chown.help.change_only_group': 'Изменить только группу',
+    'cli.chown.help.apply_directory_everything': 'Применить к каталогу и всему его содержимому',
+    'cli.chown.help.make_alice_owner': 'Сделать alice владельцем',
+    'cli.chown.help.set_owner_group': 'Задать владельца и группу',
+    'cli.chown.help.give_bob_whole_directory': 'Передать bob весь каталог',
+
+    // ── Cp ───────────────────────────────────────────────────────────
+    'cli.cp.description': 'Копировать файлы и каталоги',
+    'cli.cp.help.copy_file_new_path':
+        'Скопировать файл по новому пути или в существующий каталог. Для копирования каталога нужен -r, который копирует всё внутри него. Файл, уже находящийся в месте назначения, заменяется.',
+    'cli.cp.help.copy_file_new_name': 'Скопировать файл под новым именем',
+    'cli.cp.help.copy_files_directory': 'Скопировать файлы в каталог',
+    'cli.cp.help.copy_directory_contents': 'Скопировать каталог и его содержимое',
+    'cli.cp.help.make_backup_copy': 'Сделать резервную копию',
+    'cli.cp.help.copy_docs': 'Скопировать в ~/docs',
+    'cli.cp.help.duplicate_whole_directory': 'Дублировать весь каталог',
+
+    // ── Cut ──────────────────────────────────────────────────────────
+    'cli.cut.description': 'Извлечь столбцы или поля из каждой строки файла',
+    'cli.cut.help.print_selected_parts_each':
+        'Вывести выбранные части каждой строки: поля, разделённые разделителем (-f, по умолчанию табуляция), или позиции символов (-c). Список может состоять из отдельных чисел, диапазонов или того и другого, например 1,3 или 2-4 или 3-.',
+    'cli.cut.help.select_fields': 'Выбрать поля',
+    'cli.cut.help.select_character_positions': 'Выбрать позиции символов',
+    'cli.cut.help.cut_piped_input': 'Обрезать данные из конвейера',
+    'cli.cut.help.first_third_csv_column': 'Первый и третий столбцы CSV',
+    'cli.cut.help.first_10_characters_each': 'Первые 10 символов каждой строки',
+    'cli.cut.help.first_two_fields_split': 'Первые два поля, разделитель :',
+
+    // ── Dirname ──────────────────────────────────────────────────────
+    'cli.dirname.description': 'Убрать последний компонент из пути',
+    'cli.dirname.help.print_directory_part_path':
+        'Вывести каталог из пути — всё до последнего /. Простое имя без / даёт . (текущий каталог).',
+    'cli.dirname.help.path_without_last_part': 'Путь без последней части',
+    'cli.dirname.help.prints_home_user': 'Выводит /home/user',
+    'cli.dirname.help.prints': 'Выводит .',
+    'cli.dirname.help.prints_2': 'Выводит /',
+
+    // ── Du ───────────────────────────────────────────────────────────
+    'cli.du.description': 'Оценить использование места файлами',
+    'cli.du.help.show_how_much_space':
+        'Показать, сколько места занимают файлы и каталоги, в байтах. Для каталога выводится каждый подкаталог с общим размером; используйте -s только для итога или -d для ограничения глубины.',
+    'cli.du.help.sizes_path_default_current':
+        'Размеры пути (по умолчанию текущий каталог) и его подкаталогов',
+    'cli.du.help.only_total': 'Только итог',
+    'cli.du.help.only_levels_deep': 'Только на глубину <n> уровней',
+    'cli.du.help.size_each_directory_docs': 'Размер каждого каталога в ~/docs',
+    'cli.du.help.total_home_k_m': 'Итог по домашнему каталогу в K/M/G',
+    'cli.du.help.size_each_top_level': 'Размер каждой папки верхнего уровня',
+
+    // ── Find ─────────────────────────────────────────────────────────
+    'cli.find.description': 'Искать файлы и каталоги по имени или типу',
+    'cli.find.help.list_files_directories_under':
+        'Список файлов и каталогов по пути (по умолчанию текущий каталог) со всеми подкаталогами. Сам начальный путь выводится первым. Фильтруйте по имени с помощью glob-шаблона (* и ?; --name учитывает регистр, --iname нет) или по типу.',
+    'cli.find.help.list_everything_under_path': 'Вывести всё по пути',
+    'cli.find.help.match_names_against_glob': 'Сопоставить имена с glob-шаблоном',
+    'cli.find.help.same_ignoring_case': 'То же, без учёта регистра',
+    'cli.find.help.only_files_f_directories': 'Только файлы (f) или каталоги (d)',
+    'cli.find.help.list_everything_docs': 'Вывести всё в ~/docs',
+    'cli.find.help.find_all_txt_files': 'Найти все файлы .txt',
+    'cli.find.help.directories_near_top': 'Каталоги у верхнего уровня',
+    'cli.find.help.delete_all_tmp_files': 'Удалить все файлы .tmp',
+
+    // ── Grep ─────────────────────────────────────────────────────────
+    'cli.grep.description': 'Искать шаблон в содержимом файлов',
+    'cli.grep.help.print_lines_match_pattern':
+        'Вывести строки, соответствующие шаблону. Шаблон — регулярное выражение, совпадения подсвечиваются, ввод может быть файлами, каталогами (с -r) или текстом из конвейера.',
+    'cli.grep.help.search_one_more_files': 'Искать в одном или нескольких файлах',
+    'cli.grep.help.search_every_file_under': 'Искать в каждом файле каталога',
+    'cli.grep.help.filter_piped_input': 'Фильтровать данные из конвейера',
+    'cli.grep.help.case_insensitive_search': 'Поиск без учёта регистра',
+    'cli.grep.help.find_todos_line_numbers': 'Найти TODO с номерами строк',
+    'cli.grep.help.hide_comment_lines': 'Скрыть строки комментариев',
+    'cli.grep.help.count_matching_lines': 'Подсчитать подходящие строки',
+
+    // ── Head ─────────────────────────────────────────────────────────
+    'cli.head.description': 'Показать первые строки файла',
+    'cli.head.help.print_first_lines_file':
+        'Вывести первые строки файла, по умолчанию 10. Работает и с данными из конвейера. Для нескольких файлов каждый получает заголовок ==> name <==.',
+    'cli.head.help.first_10_lines': 'Первые 10 строк',
+    'cli.head.help.first_lines': 'Первые <count> строк',
+    'cli.head.help.first_lines_piped_input': 'Первые строки данных из конвейера',
+    'cli.head.help.show_start_file': 'Показать начало файла',
+    'cli.head.help.first_3_lines_each': 'Первые 3 строки каждого файла',
+    'cli.head.help.first_20_lines_log': 'Первые 20 строк журнала',
+
+    // ── Ln ───────────────────────────────────────────────────────────
+    'cli.ln.description': 'Создавать символические ссылки',
+    'cli.ln.help.create_symbolic_link_new':
+        'Создать символическую ссылку: новый путь, указывающий на другой файл или каталог. Поддерживаются только символические ссылки (-s), цель может ещё не существовать.',
+    'cli.ln.help.create_pointing': 'Создать <link>, указывающую на <target>',
+    'cli.ln.help.shortcut_file': 'Ярлык на файл',
+    'cli.ln.help.shortcut_directory': 'Ярлык на каталог',
+
+    // ── Mkdir ────────────────────────────────────────────────────────
+    'cli.mkdir.description': 'Создавать каталоги',
+    'cli.mkdir.help.create_new_directory_p':
+        'Создать новый каталог. С -p также создаются все недостающие родительские каталоги.',
+    'cli.mkdir.help.create_one_more_directories': 'Создать один или несколько каталогов',
+    'cli.mkdir.help.create_directory_missing_parents': 'Создать каталог и недостающие родительские',
+    'cli.mkdir.help.create_projects_current_directory': 'Создать projects в текущем каталоге',
+    'cli.mkdir.help.create_whole_path_once': 'Создать весь путь сразу',
+
+    // ── Mv ───────────────────────────────────────────────────────────
+    'cli.mv.description': 'Перемещать или переименовывать файлы и каталоги',
+    'cli.mv.help.move_rename_file_directory':
+        'Переместить или переименовать файл или каталог. Если место назначения — существующий каталог, источник перемещается в него; иначе он переименовывается. Файл, уже находящийся в месте назначения, заменяется.',
+    'cli.mv.help.rename_file_directory': 'Переименовать файл или каталог',
+    'cli.mv.help.move_them_directory': 'Переместить их в каталог',
+    'cli.mv.help.rename_file': 'Переименовать файл',
+    'cli.mv.help.move_docs': 'Переместить в ~/docs',
+    'cli.mv.help.rename_directory': 'Переименовать каталог',
+
+    // ── Paste ────────────────────────────────────────────────────────
+    'cli.paste.description': 'Объединить строки файлов бок о бок',
+    'cli.paste.help.join_files_side_side':
+        'Объединить файлы бок о бок: строка 1 каждого файла попадает в одну выходную строку через табуляцию, затем строка 2 и так далее. С -s каждый файл объединяется в одну строку. Данные из конвейера читаются как файл - (или как единственный ввод, если файл не указан); -d принимает список разделителей, используемых по очереди.',
+    'cli.paste.help.merge_files_line_line': 'Объединить файлы построчно',
+    'cli.paste.help.join_all_lines_file': 'Объединить все строки файла в одну',
+    'cli.paste.help.merge_piped_input_file': 'Объединить данные из конвейера с файлом',
+    'cli.paste.help.two_columns_tab_separated': 'Два столбца через табуляцию',
+    'cli.paste.help.merge_comma_separated': 'Объединить через запятую',
+    'cli.paste.help.turn_list_one_csv': 'Превратить список в одну строку CSV',
+
+    // ── Pwd ──────────────────────────────────────────────────────────
+    'cli.pwd.description': 'Вывести текущий рабочий каталог',
+    'cli.pwd.help.print_full_path_directory':
+        'Вывести полный путь текущего каталога. Относительные пути в других командах отсчитываются отсюда.',
+    'cli.pwd.help.show_current_directory': 'Показать текущий каталог',
+    'cli.pwd.help.example_home_user': 'Например /home/user',
+    'cli.pwd.help.prints_home_user_docs': 'Выводит /home/user/docs',
+
+    // ── Rm ───────────────────────────────────────────────────────────
+    'cli.rm.description': 'Удалять файлы или каталоги',
+    'cli.rm.help.delete_file_directories_only':
+        'Удалить файл. Каталоги удаляются только с -r, который удаляет всё внутри них. Удалённые файлы восстановить нельзя.',
+    'cli.rm.help.delete_one_more_files': 'Удалить один или несколько файлов',
+    'cli.rm.help.delete_directory_contents': 'Удалить каталог и его содержимое',
+    'cli.rm.help.delete_without_error_if': 'Удалить без ошибки, если файла нет',
+    'cli.rm.help.delete_one_file': 'Удалить один файл',
+    'cli.rm.help.delete_whole_directory': 'Удалить весь каталог',
+    'cli.rm.help.quiet_if_file_does': 'Без сообщений, если файл не существует',
+
+    // ── Rmdir ────────────────────────────────────────────────────────
+    'cli.rmdir.description': 'Удалять пустые каталоги',
+    'cli.rmdir.help.remove_empty_directory_refuses':
+        'Удалить пустой каталог. Каталог, в котором ещё есть файлы, не удаляется; для этого используйте rm -r.',
+    'cli.rmdir.help.remove_empty_directories': 'Удалить пустые каталоги',
+    'cli.rmdir.help.remove_directory_current_one': 'Удалить каталог внутри текущего',
+    'cli.rmdir.help.remove_full_path': 'Удалить по полному пути',
+
+    // ── Sed ──────────────────────────────────────────────────────────
+    'cli.sed.description': 'Потоковый редактор для фильтрации и преобразования текста',
+    'cli.sed.help.edit_text_line_line':
+        'Редактировать текст построчно с помощью скрипта: подстановка (s/old/new/), удаление (d), вывод (p) или выход (q), при необходимости ограниченные номером строки, диапазоном (1,5, 3,$ или /start/,/end/) или строками, соответствующими /regex/; ! после адреса инвертирует его, а ; разделяет команды. В замене можно использовать & (совпадение) и \\1–\\9 (группы, записываются \\(...\\) или, с -E, (...)). Читает файлы или данные из конвейера и выводит результат либо перезаписывает файлы с -i.',
+    'cli.sed.help.print_edited_file': 'Вывести отредактированный файл',
+    'cli.sed.help.save_edits_file': 'Сохранить правки в файл',
+    'cli.sed.help.print_only_selected_lines': 'Вывести только выбранные строки',
+    'cli.sed.help.edit_piped_input': 'Редактировать данные из конвейера',
+    'cli.sed.help.replace_every_cat_dog': 'Заменить каждое cat на dog',
+    'cli.sed.help.edit_file_place': 'Редактировать файл на месте',
+    'cli.sed.help.drop_comment_lines': 'Убрать строки комментариев',
+    'cli.sed.help.print_lines_1_5': 'Вывести строки с 1 по 5',
+    'cli.sed.help.swap_two_words': 'Поменять местами два слова',
+
+    // ── Sh ───────────────────────────────────────────────────────────
+    'cli.sh.description': 'Выполнить файл скрипта',
+    'cli.sh.help.requires_execute': '(требуется право на выполнение)',
+    'cli.sh.help.script_syntax': 'Синтаксис скрипта:',
+    'cli.sh.help.comments': 'Строки, начинающиеся с #, — комментарии',
+    'cli.sh.help.several_commands': 'Несколько команд в одной строке',
+    'cli.sh.help.assignment': 'Присваивание переменной',
+    'cli.sh.help.substitution': 'Подстановка переменной',
+    'cli.sh.help.stop_on_error': 'Остановиться при ошибке (по умолчанию)',
+    'cli.sh.help.continue_on_errors': 'Продолжать при ошибках',
+    'cli.sh.help.exit': 'Остановить скрипт со статусом n',
+    'cli.sh.help.control_flow': 'Управление потоком:',
+    'cli.sh.help.until': '(until cmd: наоборот)',
+    'cli.sh.help.break_continue': 'Выйти из цикла / пропустить итерацию',
+    'cli.sh.help.negate': 'Инвертировать код завершения',
+    'cli.sh.help.conditions': 'Условия — это команды:',
+    'cli.sh.help.conditions_status':
+        '(статус 0 = истина; см. help test). Циклы останавливаются после 10000 итераций',
+    'cli.sh.help.conditions_loops': 'while/until; Ctrl+C останавливает скрипт.',
+    'cli.sh.help.example_script': 'Пример скрипта:',
+
+    // ── Sort ─────────────────────────────────────────────────────────
+    'cli.sort.description': 'Сортировать строки текстовых файлов',
+    'cli.sort.help.sort_lines_file_piped':
+        'Сортировать строки файла или данных из конвейера, по умолчанию по алфавиту. Можно сортировать по числам, в обратном порядке, по полю или удалять дубликаты. Несколько файлов сортируются вместе в один список.',
+    'cli.sort.help.sort_lines_alphabetically': 'Сортировать строки по алфавиту',
+    'cli.sort.help.sort_field_split': 'Сортировать по полю <n>, разделитель <sep>',
+    'cli.sort.help.sort_piped_input': 'Сортировать данные из конвейера',
+    'cli.sort.help.z': 'От A до Z',
+    'cli.sort.help.largest_number_first': 'Сначала наибольшее число',
+    'cli.sort.help.sort_csv_second_column': 'Сортировать CSV по второму столбцу',
+    'cli.sort.help.sorted_without_duplicates': 'Отсортировано, без дубликатов',
+
+    // ── Stat ─────────────────────────────────────────────────────────
+    'cli.stat.description': 'Показать метаданные файла/каталога',
+    'cli.stat.help.show_details_about_files':
+        'Показать сведения о файлах или каталогах: полный путь, размер, тип, права, владелец, группа, время создания и последнего изменения.',
+    'cli.stat.help.show_details_each_path': 'Показать сведения о каждом пути',
+    'cli.stat.help.details_one_file': 'Сведения об одном файле',
+    'cli.stat.help.several_paths_once': 'Несколько путей сразу',
+
+    // ── Tac ──────────────────────────────────────────────────────────
+    'cli.tac.description': 'Вывести файл в обратном порядке строк',
+    'cli.tac.help.print_file_lines_reverse':
+        'Вывести файл с обратным порядком строк, последняя строка первой. Работает и с данными из конвейера.',
+    'cli.tac.help.print_file_bottom_top': 'Вывести файл снизу вверх',
+    'cli.tac.help.reverse_piped_input': 'Обратить данные из конвейера',
+    'cli.tac.help.newest_log_lines_first': 'Сначала новейшие строки журнала',
+    'cli.tac.help.reverse_list': 'Обратить список',
+
+    // ── Tail ─────────────────────────────────────────────────────────
+    'cli.tail.description': 'Показать последние строки файла',
+    'cli.tail.help.print_last_lines_file':
+        'Вывести последние строки файла, по умолчанию 10. Работает и с данными из конвейера. Для нескольких файлов каждый получает заголовок ==> name <==.',
+    'cli.tail.help.last_10_lines': 'Последние 10 строк',
+    'cli.tail.help.last_lines': 'Последние <count> строк',
+    'cli.tail.help.last_lines_piped_input': 'Последние строки данных из конвейера',
+    'cli.tail.help.show_end_log': 'Показать конец журнала',
+    'cli.tail.help.last_5_lines': 'Последние 5 строк',
+    'cli.tail.help.last_20_lines_log': 'Последние 20 строк журнала',
+
+    // ── Tee ──────────────────────────────────────────────────────────
+    'cli.tee.description': 'Копировать данные из конвейера в файлы и в вывод',
+    'cli.tee.help.pass_piped_input_through':
+        'Передать данные из конвейера без изменений и сохранить их копию в каждый указанный файл, перезаписывая или дописывая с -a. Как и Unix tee, читает только данные из конвейера: чтобы скопировать файл, направьте его через cat.',
+    'cli.tee.help.show_piped_output_save': 'Показать вывод конвейера и сохранить его',
+    'cli.tee.help.append_instead_overwriting': 'Дописывать вместо перезаписи',
+    'cli.tee.help.show_save_copy': 'Показать и сохранить копию',
+    'cli.tee.help.add_line_log': 'Добавить строку в журнал',
+    'cli.tee.help.copy_source_txt_txt': 'Скопировать source.txt в a.txt и b.txt',
+
+    // ── Touch ────────────────────────────────────────────────────────
+    'cli.touch.description': 'Создать пустой файл или обновить его метку времени',
+    'cli.touch.help.create_empty_file_update':
+        'Создать пустой файл или обновить время изменения существующего. Родительский каталог должен уже существовать.',
+    'cli.touch.help.create_files_refresh_their': 'Создать файлы или обновить их метки времени',
+    'cli.touch.help.create_empty_notes_txt': 'Создать пустой notes.txt',
+    'cli.touch.help.create_file_docs': 'Создать файл в ~/docs',
+
+    // ── Tr ───────────────────────────────────────────────────────────
+    'cli.tr.description': 'Преобразовать или удалить символы в данных из конвейера',
+    'cli.tr.help.translate_characters_set1_matching':
+        'Преобразовать символы из SET1 в соответствующие символы SET2, удалить их (-d) или сжать повторы в один (-s). В наборах можно использовать диапазоны вроде a-z и классы вроде [:upper:], [:lower:], [:digit:], [:alpha:], [:alnum:] и [:space:]. Поддерживаются экранирования \\n, \\t и \\\\. Как и Unix tr, читает только данные из конвейера и не принимает файлы: чтобы преобразовать файл, направьте его через cat.',
+    'cli.tr.help.replace_characters': 'Заменить символы',
+    'cli.tr.help.delete_characters': 'Удалить символы',
+    'cli.tr.help.squeeze_repeated_characters': 'Сжать повторяющиеся символы',
+    'cli.tr.help.convert_file_upper_case': 'Преобразовать файл в верхний регистр',
+    'cli.tr.help.upper_case_piped_text': 'Верхний регистр для текста из конвейера',
+    'cli.tr.help.remove_all_digits': 'Удалить все цифры',
+    'cli.tr.help.collapse_runs_spaces': 'Свернуть последовательности пробелов',
+
+    // ── Tree ─────────────────────────────────────────────────────────
+    'cli.tree.description': 'Показать структуру дерева каталогов',
+    'cli.tree.help.draw_directory_everything_below':
+        'Нарисовать каталог и всё под ним в виде дерева, сначала каталоги, затем число каталогов и файлов. По умолчанию текущий каталог.',
+    'cli.tree.help.show_whole_tree': 'Показать всё дерево',
+    'cli.tree.help.only_levels_deep': 'Только на глубину <n> уровней',
+    'cli.tree.help.tree_current_directory': 'Дерево текущего каталога',
+    'cli.tree.help.tree_docs': 'Дерево ~/docs',
+    'cli.tree.help.top_two_levels_only': 'Только два верхних уровня',
+
+    // ── Uniq ─────────────────────────────────────────────────────────
+    'cli.uniq.description': 'Отфильтровать соседние повторяющиеся строки файла',
+    'cli.uniq.help.collapse_repeated_lines_next':
+        'Свернуть повторяющиеся строки, идущие подряд, в одну. Объединяются только соседние дубликаты, поэтому сначала отсортируйте ввод, чтобы поймать все.',
+    'cli.uniq.help.drop_adjacent_duplicate_lines': 'Убрать соседние повторяющиеся строки',
+    'cli.uniq.help.filter_piped_input': 'Фильтровать данные из конвейера',
+    'cli.uniq.help.collapse_repeated_lines': 'Свернуть повторяющиеся строки',
+    'cli.uniq.help.count_how_often_each': 'Подсчитать, сколько раз встречается каждая строка',
+    'cli.uniq.help.show_only_duplicated_lines': 'Показать только дублирующиеся строки',
+
+    // ── Wc ───────────────────────────────────────────────────────────
+    'cli.wc.description': 'Вывести число строк, слов и символов',
+    'cli.wc.help.count_lines_words_characters':
+        'Подсчитать строки, слова и символы в файлах или данных из конвейера. Для нескольких файлов в конце выводится итоговая строка.',
+    'cli.wc.help.lines_words_characters': 'Строки, слова и символы',
+    'cli.wc.help.only_line_count': 'Только число строк',
+    'cli.wc.help.count_piped_input': 'Подсчитать данные из конвейера',
+    'cli.wc.help.all_three_counts': 'Все три счётчика',
+    'cli.wc.help.line_counts_total': 'Число строк с итогом',
+    'cli.wc.help.how_many_lines_mention': 'Сколько строк содержат error',
+
+    // ── Xargs ────────────────────────────────────────────────────────
+    'cli.xargs.description': 'Составить и выполнить команды из ввода файла',
+    'cli.xargs.help.run_command_arguments_taken':
+        'Выполнить команду с аргументами из ввода, разделёнными пробелами или переводами строк. По умолчанию все они добавляются к одной команде; -n запускает её пакетами, а -I — по разу на строку, заменяя плейсхолдер. Параметры xargs указываются перед командой; всё после неё, включая флаги, относится к команде. Ввод — текст из конвейера или, без конвейера, последний указанный файл.',
+    'cli.xargs.help.append_input_lines': 'Добавить строки ввода к <cmd>',
+    'cli.xargs.help.run_once_per_line': 'Запустить <cmd> по разу на строку',
+    'cli.xargs.help.read_arguments_file': 'Прочитать аргументы из файла',
+    'cli.xargs.help.delete_every_tmp_file': 'Удалить каждый файл .tmp',
+    'cli.xargs.help.copy_each_listed_file': 'Скопировать каждый файл из списка',
+    'cli.xargs.help.one_mkdir_per_line': 'По одному mkdir на строку',
+    'cli.xargs.help.inner_command_keeps_flags': 'Внутренняя команда сохраняет свои флаги',
+
+    // ── Markdown ─────────────────────────────────────────────────────
+    'cli.md.description': 'Отобразить Markdown в терминале',
+    'cli.md.help.show_markdown_formatted_terminal':
+        'Показать Markdown с форматированием в терминале: заголовки, жирный и курсивный текст, списки, цитаты, код и ссылки. Передайте текст в аргументах (в кавычках или без, \\n начинает новую строку) или направьте его из другой команды.',
+    'cli.md.help.render_inline_text': 'Отобразить текст из аргументов',
+    'cli.md.help.same_optional_render_verb':
+        'То же, с необязательным глаголом render (также preview, view)',
+    'cli.md.help.render_output_command': 'Отобразить вывод команды',
+    'cli.md.help.heading': 'Заголовок',
+    'cli.md.help.several_lines': 'Несколько строк',
+    'cli.md.help.piped_text': 'Текст из конвейера',
+    'cli.md.help.same_using_aliases': 'То же, через псевдонимы',
+
+    // ── Todo ─────────────────────────────────────────────────────────
+    'cli.todo.description':
+        'Управляйте задачами из терминала. Добавляйте, показывайте, редактируйте, завершайте и удаляйте элементы TODO.',
+    'cli.todo.ls.description': 'Показать элементы TODO',
+    'cli.todo.add.description': 'Добавить новую задачу',
+    'cli.todo.edit.description': 'Изменить текст или срок задачи',
+    'cli.todo.done.description': 'Отметить задачу как выполненную',
+    'cli.todo.toggle.description': 'Переключить задачу между выполнено и не выполнено',
+    'cli.todo.rm.description': 'Удалить задачу по ID',
+    'cli.todo.help.commands': 'Команды:',
+    'cli.todo.help.list_all': 'Показать все задачи',
+    'cli.todo.help.list_pending': 'Показать только невыполненные задачи',
+    'cli.todo.help.list_completed': 'Показать только выполненные задачи',
+    'cli.todo.help.list_overdue': 'Показать только просроченные задачи',
+    'cli.todo.help.add': 'Добавить новую задачу',
+    'cli.todo.help.add_due': 'Добавить со сроком',
+    'cli.todo.help.edit': 'Редактировать задачу',
+    'cli.todo.help.done': 'Отметить задачу как выполненную',
+    'cli.todo.help.toggle': 'Переключить выполнено/не выполнено',
+    'cli.todo.help.remove': 'Удалить задачу',
+    'cli.todo.help.remove_all': 'Удалить все задачи',
+    'cli.todo.help.due_formats': 'Форматы срока:',
+
+    // ── True ─────────────────────────────────────────────────────────
+    'cli.true.description': 'Ничего не делать, успешно (код завершения 0)',
+
+    // ── False ────────────────────────────────────────────────────────
+    'cli.false.description': 'Ничего не делать, неуспешно (код завершения 1)',
+
+    // ── Htop ─────────────────────────────────────────────────────────
+    'cli.htop.description': 'Интерактивный монитор процессов и служб',
 };

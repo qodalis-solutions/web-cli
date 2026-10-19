@@ -93,7 +93,12 @@ export class CliServerConnection {
             const baseUrl = this.normalizeUrl(this._config.url);
 
             // Negotiate API version
-            const negotiated = await ServerVersionNegotiator.discover(baseUrl, () => this.resolveAuthHeaders());
+            // An unreachable server fails here, without a second request for its commands
+            const negotiated = await ServerVersionNegotiator.discover(
+                baseUrl,
+                () => this.resolveAuthHeaders(),
+                { rethrowNetworkErrors: true },
+            );
             if (negotiated) {
                 this._apiVersion = negotiated.apiVersion;
                 this._basePath = negotiated.basePath;
@@ -109,7 +114,8 @@ export class CliServerConnection {
             this.connectEventSocket();
             this.stopHealthCheck();
         } catch (e) {
-            this._logger?.warn(`Failed to connect to server "${this._config.name}": ${e}`);
+            // The manager warns once with the URL; this is the detail
+            this._logger?.debug(`Failed to connect to server "${this._config.name}": ${e}`);
             this._connected = false;
             this._commands = [];
             this._capabilities = null;
@@ -313,6 +319,16 @@ export class CliServerConnection {
         }
     }
 
+    /** Whether the server answers HTTP at all (any status: it is running). */
+    private async answers(): Promise<boolean> {
+        try {
+            await this.httpFetch(`${this.normalizeUrl(this._config.url)}/api/qcli/versions`);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     private connectEventSocket(): void {
         if (!this._backgroundServices) {
             this.connectEventSocketDirect();
@@ -511,6 +527,19 @@ export class CliServerConnection {
 
         // Clean up the dead socket before scheduling a new connection
         this.closeEventSocketDirect();
+
+        // A server that stopped is marked disconnected at once (rather than
+        // after every retry), so statuses and `server list` are current
+        if (this._wsReconnectAttempts === 0) {
+            void this.answers().then((alive) => {
+                if (!alive && this._connected) {
+                    this._logger?.warn(
+                        `Server "${this._config.name}" is not responding. Marking disconnected.`,
+                    );
+                    this.handleServerDisconnect();
+                }
+            });
+        }
 
         const delay = Math.min(
             1000 * Math.pow(2, this._wsReconnectAttempts),

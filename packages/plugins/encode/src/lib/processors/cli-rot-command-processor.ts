@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliRotCommandProcessor implements ICliCommandProcessor {
@@ -35,7 +36,7 @@ export class CliRotCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const text = (command.value || command.data || '') as string;
+        const text = (joinShellWords(command.value ?? '') || command.data || '') as string;
         const shift = parseInt(command.args['shift']) || 13;
         const normalizedShift = ((shift % 26) + 26) % 26;
 

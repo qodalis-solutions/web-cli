@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliTimestampCommandProcessor implements ICliCommandProcessor {
@@ -57,7 +58,7 @@ export class CliTimestampCommandProcessor implements ICliCommandProcessor {
                     context: ICliExecutionContext,
                 ) => {
                     const { writer } = context;
-                    let ts = parseInt((command.value || '') as string);
+                    let ts = parseInt(command.positionals?.[0] ?? '');
 
                     if (isNaN(ts)) {
                         writer.writeError('Invalid timestamp');
@@ -107,7 +108,7 @@ export class CliTimestampCommandProcessor implements ICliCommandProcessor {
                     context: ICliExecutionContext,
                 ) => {
                     const { writer } = context;
-                    const input = (command.value || '') as string;
+                    const input = joinShellWords(command.value ?? '');
                     const date = new Date(input);
 
                     if (isNaN(date.getTime())) {

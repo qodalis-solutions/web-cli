@@ -3,12 +3,151 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## v2.0.0-beta.18
+
+### Repository
+
+- ESLint works again: migrated to the ESLint 9 flat config (`eslint.config.mjs`), every project gets a `lint` target through `@nx/eslint`, and CI lints affected projects. Fixed the handful of real findings (`prefer-const`, useless regex escapes, `Function` types) and added `CONTRIBUTING.md`, `SECURITY.md`, a code of conduct, a PR template, Dependabot and `CODEOWNERS`.
 
 ### CLI engine (`@qodalis/cli`)
 
 - **Typing ahead works.** Keys typed while a command is still running are held and replayed at the next prompt, in order, including Enter. They used to be echoed into the command's output and appended to the line just submitted (`/$ echo hi` then `help` showed `/$ echo hihelp`). Ctrl+C and Esc discard them, and they are dropped when the command takes over the terminal (games, `nano`).
 - **Up arrow recalls the command you just ran.** After running a command, Up skipped it and showed the one before (and did nothing after the very first command).
+- **Boot report.** While the CLI starts, the terminal lists each step (terminal and services, each server, each installed package, each module with its command count and setup time) with a thin progress bar and percentage below it. When boot completes the report is cleared and the regular terminal takes over; warnings and errors stay on screen, first-run setup prompts are cleared with the report. Keys typed while booting are kept and replayed at the first prompt. Configure it with `boot: { showLogs, keepLogs, slowStepMs }` in the options, or per user with `configure set system.bootLogs false` (shows the previous spinner). Plugins can add steps through the `CliBootLog_TOKEN` service.
+- **Event bus.** Each terminal has a publish/subscribe bus (`context.events`, or the `ICliEventBus_TOKEN` service) that the system, plugins and commands use to talk to each other without importing each other. `on` / `once` / `events$` take an exact type, a namespace (`package:*`) or `*`, and are typed from `CliEventMap` (plugins add their events with declaration merging), with an explicit type (`on<T>()`), or untyped. Built-in events: `boot:completed`, `command:executed`, `module:loaded` / `module:unloaded`, `package:installed` / `package:updated` / `package:removed`, `server:connected` / `server:unavailable` / `server:disconnected` / `server:event`, `service:*` (background services), `config:changed` / `config:reset` and `session:changed`. Events are kept in memory only: the last 200 are available with `history()`, nothing is persisted. A failing handler is logged and never affects the emitter. The new `events` command watches (`events watch [pattern]`), lists (`events log`) and emits (`events emit <type> [json]`, permission `system:events`) events. The panel's status indicators now refresh on server and command events instead of waiting for the next poll.
+- **`server` commands are easier to use.**
+  - `server` alone shows the servers instead of a usage line; every sub-command has a help page with examples (`help server status`), and `ssh` too.
+  - `server list` shows status with ● / ○, server version, API version, number of commands and shell access. `server status` without a name pings every server at once with the round-trip time; with a name it shows versions, OS, shell and streaming, and for an unreachable server what to check (running, URL, CORS origin, VPN or firewall).
+  - New `server commands [name]`: the commands each server provides, with the name to type (`node:echo` when a local command has the same name) and which ones several servers share.
+  - `server reconnect` without a name retries every unreachable server (`--all`: every server). `server default` is remembered across reloads and explains what it is for.
+  - Aliases: `servers` / `srv`, `server ls`, `server ping` / `server info`, `server cmds`, `server rc` / `server connect`, `server use`, and `shell` for `ssh`. Server names are case-insensitive, and a mistyped name gets a suggestion (`Did you mean 'node'?`); tab completion covers the aliases.
+  - `ssh` says why it cannot connect: unknown server, server unreachable, or shell not enabled on it (instead of "No servers with shell access are available"). Errors no longer end with "Process exited with code 1".
+- **Saved state is no longer lost.**
+  - `snippet save` after a reload replaced every saved snippet: the store was saved without being loaded first. Every command's store is now loaded before the command first runs (and at boot for commands with a `stateConfiguration`), and saving loads it first if needed.
+  - Saved state is merged over `initialState`, so keys added in a later version are present for existing users. A store first read without defaults (the `configure` store, read by the boot report) gets its command's defaults when the command registers.
+  - `getState()` returns a copy, as documented; `persist()` does nothing without storage instead of throwing.
+- **State across terminals and tabs.** A store is still one saved state per browser, now safe to share: a save writes the keys this terminal changed (or changed in place), merged into what is saved under a cross-tab lock, so terminals changing different keys never overwrite each other; other terminals and tabs apply saved changes right away (`syncAcrossTabs`, on by default). New `scope: 'session'` for state that belongs to one terminal and is never saved.
+- **State options:** `autoPersist` (save after every change), `version` + `migrate` (convert older saved state), `reload()`.
+- **Atomic state changes.** `state.update(state => changes)` reads the latest saved state, applies the change and saves it under the cross-tab lock, so two tabs adding to the same list both keep their item. `todo`, `snippet`, `cron` and `alias` / `unalias` use it (adding a todo in two tabs at once used to lose one).
+- **Per-user state.** New `scope: 'user'`: the store is saved separately for each user signed in to the terminal (users plugin) and switches when the user changes (`session:changed`). Signed out, it is shared like a global store.
+- **Theme and font size follow other tabs.** `theme apply` and `font-size set` in one tab or terminal now change the others right away.
+- **Unloading a plugin that adds sub-commands to another command** (`extendsProcessor`) removes only the sub-commands it added; the command itself stays. It used to remove the whole command, or nothing.
+- **No more "Process exited with code 1" after an error message.** The line is shown only when a command fails without printing an error.
+- **Help pages.** Over 40 more commands have a help page with usage and examples (`help grep`, `help cron`, `help server jobs stop`, …). On narrow terminals (phones) descriptions in `help` wrap at word boundaries instead of mid-word, and boxes (`writeBox`) wrap their content. The help helpers (`writeUsage`, `writeExamples`, `writeWrapped`, `writeHint`) are exported from `@qodalis/cli-core` for plugins.
+- **Quotes and combined flags on the command line.** A quoted argument stays one argument (`grep "hello world" notes.txt`), keeps its spacing, and flags inside quotes are text (`echo "a --b"`). Values given after a flag lose their quotes (`find --name "my file.txt"`, `sort -t ','`). Short flags can be combined (`rm -rf dir`, `ls -la`) when each letter is a flag of the command.
+- **Pipes and redirects show only the final output.** In `cat f | grep x` only grep's output appears, and `echo hi > f` prints nothing, as in a shell (every stage used to print). Errors and warnings of every stage are still shown. Tables, lists and key-value output are passed down a pipe as text, so `server list | grep node` works. A lone `-` is kept as an operand (`paste - b.txt`), `-n5` / `-f2` work like `-n 5`, and redirect targets can be quoted (`> "my dir/f.txt"`).
+- **Cross-tab sync no longer loses a change.** A sync message from another tab that arrived late, or while this tab was saving, replaced the newer value in memory (saved data was right; the tab showed an old value until reloaded). Stores now read the saved state when another tab saves, and only this terminal's own edits count as unsaved.
+- **Variables for the terminal, the user and everyone.** `NAME=value` is for this terminal only (as in a shell; it used to be saved), `export NAME=value` is saved for the signed-in user, and the new `export --global NAME=value` is shared by every user (permission `system:env:global` with the users plugin; admins have it). The terminal's value wins over the user's, the user's over the shared one. `export NAME` saves a terminal variable, `unset --global` removes a shared one, and `env` shows where each value comes from. Saving applies each change to the latest saved variables under the cross-tab lock: two tabs, or two users in two tabs, used to overwrite each other's variables. `CliEnvironment.onChange` now receives one change at a time (`applyEnvironmentChange` applies it).
+- **Scripts with control flow.** `sh`, `source` and `./script.sh` support `if` / `elif` / `else`, `for … in`, `while`, `until`, `break` / `continue`, `exit`, `;` on one line and `\` line continuation, with syntax errors reported by line (`sh: line 4: syntax error: expected 'fi'`). New `test` / `[ … ]` (strings, numbers, `-e` / `-f` / `-d` paths), `true` (`:`) and `false`. Ctrl+C stops a script; a `while` stops after 10000 rounds. `grep` exits 1 when nothing matches (2 on errors) and has `-q`, so `if grep -q …` works.
+- **Loops and conditions at the prompt.** A line starting with `if`, `for`, `while` or `until` runs like a one-line script (`for f in *.md; do wc -l $f; done`); a failing command does not stop the loop, as in an interactive shell.
+- **`eval` gets the line as typed** (`literalInput` in a processor's metadata): `>`, `|`, `&&`, `$` and wildcards in its code are no longer treated as shell syntax.
+- **Command substitution.** `$(command)` and backticks are replaced by the command's output (`echo "Today is $(date)"`, `COUNT=$(cat log | wc -l)`), nested too; not inside single quotes.
+- **Brace expansion and `**`.** `touch app.{ts,html}`, `mkdir day{1..7}`, `{a..e}`, `{01..10}`, `{0..20..5}`; `cat **/*.md` matches at any depth (not inside dot folders).
+- **Backslash escapes.** Outside quotes a backslash keeps the next character (`cat my\ notes.txt`, `echo \$HOME`); inside double quotes it escapes `"`, `\`, `$` and `` ` ``; operators after a backslash are text (`a\|b`).
+- **Fixes found while moving commands to shell-split arguments:** `alias ll="ls -la"` works (it never reached the command); `history search <text>` searches (the query was always empty); `theme set` / `theme random` read their argument; `localStorage get` / `remove` read the right key and keep its case; `guid compare` / `validate` accept UUIDs containing `d`, `i`, `n`, `r` or `u` (they were stripped); `users adduser "carol"`, `snippet run k="a b"`, `events emit type '{"a":1}'` and `csv` / `chart` with quoted fields work. Unquoted extra spaces are collapsed as in a shell (`string length a   b` counts `a b`); quoted text keeps them. Core exports `unquoteRawArgument` for code and JSON arguments.
+- **Commands get their arguments split like a shell:** `command.positionals` (`cat "a b.txt" c` gives `['a b.txt', 'c']`), so commands no longer each strip quotes their own way. Core exports `splitShellWords`, `joinShellWords` and `quoteShellWord`. The servers accept `positionals` too.
+- **Wildcards.** With the files plugin, `*`, `?` and `[...]` in unquoted arguments become the matching paths (`rm *.log`, `cat docs/*.md`, `ls */`), as in a shell: dot files only for a pattern starting with `.`, a pattern without matches is kept as typed, quoted patterns are never expanded.
+- **Variables and quotes.** `$VAR` is not expanded inside single quotes, and an apostrophe inside double quotes or without a pair (`echo "it's $HOME"`, `echo it's $USER`) no longer stops the expansion of the rest of the line.
+- **`echo` prints its arguments like a shell:** `echo "a" "b"` prints `a b` (was `a" "b`), and words that look like flags are printed (`echo hello --world`, or a variable holding `--x`); they used to disappear. The servers' `echo` behaves the same.
+- **Tab completion with spaces.** Paths with spaces are completed in quotes (`cat my` + Tab gives `cat "my notes.txt"`), also inside a quote already typed; path completion covers every file command (`sort`, `cut`, `du`, `sed`, …).
+- Redirect errors name the target: `> /nope/f.txt: No such file or directory` (was `> failed: touch: /nope: ...`).
+- An unreachable server is detected with one request instead of two, and logs one warning instead of two.
+- `CliTestHarness` runs the processors' `initialize()` before the first `execute()`, links sub-commands to their command and gives each processor its own state store, as the engine does.
+- **Redirects write whole lines.** `echo one > f.txt; echo two >> f.txt` gives two lines (it gave `onetwo`).
+- **A server that stops is shown as disconnected at once** (`server:disconnected`, panel status, `server list`), instead of after about 30 seconds of event-socket retries.
+- `diff` compares piped input: `echo "a" | diff --b "b"`.
+- **`events` respects permissions.** `events log` and `events watch` show `user:*` events only to those with `audit:read`, and those events no longer carry the user's email or extra data. `events emit` refuses the system's own namespaces (`boot`, `command`, `config`, `module`, `package`, `server`, `service`, `session`, `user`), so `session:changed` can no longer be faked from the terminal.
+- `isExecuting` no longer stays on when a nested command (a script or `$(…)`) finishes before the outer one.
+- Translations for the `server`, `ssh` and `events` commands in all 10 language packs.
+- **Services (DI):**
+  - Unloading a module (`pkg remove`, `pkg update`) now removes everything it registered: its guards and permissions at once (a removed plugin's guards used to keep running, and ran twice after `pkg update`), then calls its `onDestroy` (it was only called when the whole terminal was destroyed), then removes its services. An overridden service becomes the previous one again. The users plugin also removes the services it registers at runtime.
+  - `useClass` / `useFactory` providers are created on first use, so their `deps` can be registered after them; dependency cycles are reported.
+  - Typed tokens: `createCliToken<T>(name)` makes `services.get(TOKEN)` typed without a type argument; the built-in tokens are typed. Plain string tokens still work.
+  - `services.remove(token, provider?)`; created services with a `dispose()` method are disposed when the terminal is destroyed.
+- **Boot completion is observable.** `CliEngine.isBooted` and `CliEngine.booted` (a promise), and `context.isBooted` for commands and plugins. Plugins loaded from scripts (`pkg`) are part of boot: the engine waits for them, setup prompts included (`CliModuleRegistry.whenIdle()`).
+- **The greeting comes last.** The animated greeting is its own module and runs after every other `onAfterBoot` hook, so it no longer writes over setup or sign-in prompts, and stops by itself if other output appears.
+- **Duplicated terminals look like the original.** Restoring a snapshot clears the terminal first; warnings printed by the new terminal's own boot no longer pile up above the restored screen.
+- If boot fails, the error stays on screen and the terminal remains usable. `CliEngine.start()` is split into named phases and module boot into steps.
+- **Typing right after the page loads works.** Keys typed while the welcome greeting animated (about 3 seconds) were silently dropped; typing now stops the greeting and is handled normally (`ICliTextAnimator.cancel()`).
+- **Installing a plugin with a setup step no longer freezes the terminal.** After `pkg add users` finished its account setup, a spinner kept running and blocked all input; the boot spinner is now restored only when it was showing.
+- **Sub-command aliases receive their value.** `pkg rm guid` (and any aliased sub-command that takes a value) failed with "Value required" because only the full command name was stripped from the input.
+- **`pkg` command:**
+  - `pkg remove` really unloads the plugin's commands, and `pkg update` loads the new version without a page reload. Both used to keep the old commands until the page was reloaded. Modules can now be unregistered through `CliModuleRegistry.unregister()` / `onModuleUnregister()`.
+  - New aliases: `pkg rm` / `pkg uninstall`, `pkg install`, `pkg list`. `pkg add guid@<version>` installs a specific version.
+  - `pkg check`, `pkg update` and `pkg browse` compare versions with semver including prerelease tags, so `2.0.0-beta.9` is older than `2.0.0-beta.18` and a newer installed version is never offered as an "update". `pkg update` with no name prints an updated / up-to-date / failed summary instead of always "All packages updated".
+  - `pkg browse` probes all 40 official plugins (was 12) in parallel; `pkg check` checks packages in parallel; `pkg versions` uses the configured registry sources (e.g. Verdaccio) instead of always npmjs.org.
+  - `pkg browse` no longer lists server packages (`@qodalis/cli-server-*`, the dashboard, the core library), which cannot be installed in the browser. Removing a plugin with protected commands (the users plugin) says that they disappear after a reload. Clearer errors for removing an uninstalled package and for unknown packages in `pkg versions`.
+  - Extra spaces between names no longer produce an empty package name; help text columns are aligned. The processor is split into an installer, a search module and help helpers.
+
+### Users (`@qodalis/cli-users`)
+
+- User events (sign-in, sign-out, user and group changes) are also published on the event bus as `user:<type>` (`user:login`, `user:logout`, …), so other plugins can react without depending on the users plugin.
+
+### Plugins
+
+- **Typed tokens:** `IFileSystemService_TOKEN` (files), `IScpTransferService_TOKEN` (scp), `CliUsersModuleConfig_TOKEN` and `CliApiTokensService_TOKEN` (users) are created with `createCliToken`, so `services.get()` returns the right type.
+- **Files** (`@qodalis/cli-files`), closer to Unix:
+  - `cut -f 2` works (a plain number used to fail); `mv dir dir/sub` is refused instead of losing the directory; `echo "a > b"` prints the text instead of writing a file named `b`; `rmdir` removes directories (it always failed).
+  - Quoted paths and patterns work everywhere (`cat "my file.txt"`, `grep "two words"`); combined flags (`rm -rf`, `ls -lah`, `cp -rf`, `grep -in`).
+  - `tr` and `tee` read only piped input, as in Unix (`cat f | tr a-z A-Z`); a file operand is an error instead of being read.
+  - `cat`, `rm`, `mkdir` (`-p`), `touch` and `rmdir` take several paths; `cat` and `paste` read piped input; `sort` sorts several files together; `du` defaults to the current directory; `cp` and `mv` take several sources into a directory.
+  - `wc -l` counts lines like Unix (a final newline is not an extra line); `head` / `tail` no longer print a blank last line, `tail -n 0` prints nothing.
+  - `find`: `--maxdepth` counts from the start path (0 = the path itself), `--name` is case-sensitive, new `--iname`.
+  - `sed`: `-n` and `p`, `&` and `\1`…`\9` in replacements, `-E`, several `-e`, `;`-separated commands, address ranges, `!`, `q`; `$` is the real last line.
+  - `awk` accepts an unquoted program (`awk {print $1} file`) and several files. `xargs` passes the inner command's flags (`xargs rm -r`). `tee` writes whole lines and passes its input through. `tr` never reads a set as a file name with piped input, and supports `\n`, `\t`, `-d` and `-s` together.
+  - `xargs` quotes each input item, so items containing spaces, `;` or `*` are passed as one argument instead of becoming new commands or wildcards. `mv a a` is refused as the same file (it could delete a neighbouring entry). `echo a \> f` prints `a > f` instead of writing a file. `ls | wc -l` counts the entries (piped `ls` gives one name per line).
+  - Every file command has a help page.
+- **Markdown** (`@qodalis/cli-markdown`): `md "# Title"` renders (it was "Command not found"); `\n` makes new lines; piped input is rendered.
+- **Todo:** `todo add "buy milk"` stores the text without the quotes.
+- **Server jobs** (`@qodalis/cli-server-jobs`):
+  - With several servers, actions (`trigger`, `pause`, `resume`, `stop`, `cancel`) and `info` / `history` / `logs` apply to every server that has the job (they stopped at the first), with a note naming the servers; `edit` asks for `--server` when the job is on several. A job found on none of them is reported instead of printing nothing.
+  - `watch` stops on Ctrl+C and when the servers close the connection, and cleans up its subscriptions (it never ended). `edit` can be cancelled at every prompt, and nothing is sent.
+  - `server jobs stop` says "stopped" (was "stoped"); usage messages say `server jobs …`. Help pages for every sub-command.
+- Tests for server jobs, 2048, minesweeper, snake, tetris and wordle.
+
+### Docs site
+
+- State Management: `update()` and `scope: 'user'`. Services: the typed plugin tokens.
+- New "Command Line" page under Core Concepts: quotes, flags, pipes and redirects, `&&` / `||` / `;`, variables, wildcards and tab completion.
+- The Command Line page covers backslashes, command substitution, brace expansion and `**`, and scripts, and is translated into every language of the docs site.
+- The markdown plugin is loaded in the React, Vue, Angular and vanilla demos.
+
+- New "Using servers from the terminal" section on the Server Integration page (configuration, running remote commands, all `server` commands and aliases, troubleshooting); the Built-in Commands page lists the server commands.
+- New "Event Bus" and "Services (DI)" pages under Core Concepts. The State Management page described storage that did not exist (`localStorage`, saving on every `updateState`); it now covers the options, several terminals and migrations.
+
+### Angular (`@qodalis/angular-cli`)
+
+- **Requires Angular 22 or later** (was 16.2). The package is built with Angular 22.2; Angular 19 is out of support and its security fixes (XSS sanitization bypasses, `HttpTransferCache` leaks, i18n XSS, router DoS) only ship for 20.3+, 21.2+ and 22.x.
+- The panel works in zoneless apps, Angular's default since v21, as well as with zone.js. Its templates use the built-in `@if`/`@for` control flow.
+
+### Security and tooling
+
+- Patched every open Dependabot alert: the lockfile was regenerated, Electron moved from 35 to 44 (`@qodalis/electron-cli` and the desktop demo), Vite to 7.3.7, and `undici` under Nx and `uuid` under sockjs are overridden to their patched releases. Two stale npm lockfiles were removed.
+- TypeScript 6.0, tsup 9 and TypeDoc 0.28 across the monorepo. tsconfig no longer uses the options TypeScript 6 deprecates (`baseUrl`, `downlevelIteration`, `node10` resolution): path mappings are relative and modules resolve with `bundler`.
+- The Angular demo and the docs site run zoneless and no longer load zone.js.
+- `nx serve demo-angular` and `nx serve docs` work again: an open-ended `path-to-regexp` override pulled version 8 into Express 4 (`pathRegexp is not a function`).
+- Plugins created with `create-cli-plugin` point `umd`/`unpkg` at `umd/index.global.js`, the file the build actually writes (was `umd/index.js`).
+- `@qodalis/cli-encode` and `@qodalis/cli-data-explorer` can be installed with `pkg add` again: their `unpkg` entry pointed at a file their build did not produce.
+- The Electron demo starts again: tsup 9 writes `.cjs` files in an ESM package, and the demo now points at them. It also uses the mobile app's icon.
+
+### Bundle size
+
+- The docs site and the Angular demo load the language packs and the demo's plugins on demand: the docs' initial bundle went from 3.2 MB to 2.3 MB, the Angular demo's from 2.0 MB to 1.5 MB.
+
+### Breaking changes
+
+- `ICliStateStore.update()` is required: a custom state store must implement it.
+- `grep` exits with status 1 when nothing matches (scripts and `&&` chains see it as a failure, as in Unix).
+- `tr` and `tee` read only piped input; a file operand is an error.
+- `sh` / `source` need the engine's script runner service (`ICliScriptRunner_TOKEN`), registered by `@qodalis/cli` 2.0.0-beta.18 or later.
+- `NAME=value` sets a variable for this terminal only; use `export NAME=value` to save it.
+
+### Panel (`@qodalis/cli`, `@qodalis/react-cli`, `@qodalis/vue-cli`, `@qodalis/angular-cli`)
+
+- **One panel implementation for all three frameworks.** Tabs, split panes, collapse/hide/maximize, position, drag resizing, menus, theme sync and the status bar now live in a framework-agnostic `CliPanelController` in `@qodalis/cli`, with shared icons, class names, labels and status/dropdown models. The React, Vue and Angular `CliPanel` components only render it, with unchanged props, events and `ICliPanelRef` methods.
+- **Same features everywhere.** Angular gains the server-connections dropdown; React and Vue gain Escape to close menus or cancel a rename, and select the tab title when renaming. Double-clicking a tab to rename it no longer loses focus to the terminal. Tab dots show each tab's own activity in every framework (React and Vue only tracked the active tab).
+- **Angular uses the shared `cli-panel.css`.** The private `collapsable-content` component and its stylesheets are gone; the panel uses the same `cli-panel-*` classes as React and Vue. Apps already load the stylesheet through `@qodalis/angular-cli/src/assets/styles.css`.
+- `createCliEngine()`, `resolveCliHostConfig()` and `mergeCliOptions()` in `@qodalis/cli` replace the engine set-up each wrapper repeated (framework service, services, modules, processors, snapshot). Angular now registers its modules before its processors, like React and Vue.
 
 ## v2.0.0-beta.17
 

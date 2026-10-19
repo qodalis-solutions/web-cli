@@ -80,6 +80,9 @@ function createStubStateStore(): ICliStateStore {
         reset: () => {},
         persist: async () => {},
         initialize: async () => {},
+        update: async (change: (s: any) => any) => {
+            Object.assign(state, change(state));
+        },
     } as ICliStateStore;
 }
 
@@ -432,6 +435,26 @@ describe('CliCommandExecutor', () => {
     // 4. Operator | — pipe
     // -----------------------------------------------------------------------
     describe('Operator | — pipe', () => {
+        it('does not show the output of a stage that is piped, only the last one', async () => {
+            registry.registerProcessor(
+                createTestProcessor('producer', async (_cmd, ctx) => {
+                    ctx.writer.writeln('intermediate');
+                    ctx.writer.writeError('producer problem');
+                }),
+            );
+            registry.registerProcessor(
+                createTestProcessor('consumer', async (cmd, ctx) => {
+                    ctx.writer.writeln(`got ${cmd.data}`);
+                }),
+            );
+
+            await executor.executeCommand('producer | consumer', context);
+
+            expect(writer.written.some((l) => l.includes('intermediate') && !l.includes('got'))).toBeFalse();
+            expect(writer.written.some((l) => l.includes('producer problem'))).toBeTrue();
+            expect(writer.written.some((l) => l.includes('got intermediate'))).toBeTrue();
+        });
+
         it('should pass explicit output of first command as data to second', async () => {
             let receivedData: any;
             registry.registerProcessor(
@@ -961,6 +984,38 @@ describe('CliCommandExecutor', () => {
             ).toBeTrue();
         });
 
+        it('should not add the generic exit line after the command\'s own error', async () => {
+            registry.registerProcessor(
+                createTestProcessor('cmd', async (_cmd, ctx) => {
+                    ctx.writer.writeError('Unknown server nod');
+                    ctx.process.exit(1);
+                }),
+            );
+
+            await executor.executeCommand('cmd', context);
+
+            expect(writer.written.some((w) => w.includes('Unknown server nod'))).toBeTrue();
+            expect(
+                writer.written.some((w) => w.includes('Process exited with code')),
+            ).toBeFalse();
+            expect(context.process.exitCode).toBe(1);
+        });
+
+        it('should keep the generic exit line when the command only warned', async () => {
+            registry.registerProcessor(
+                createTestProcessor('cmd', async (_cmd, ctx) => {
+                    ctx.writer.writeWarning('careful');
+                    ctx.process.exit(2);
+                }),
+            );
+
+            await executor.executeCommand('cmd', context);
+
+            expect(
+                writer.written.some((w) => w.includes('Process exited with code 2')),
+            ).toBeTrue();
+        });
+
         it('should write error message for ProcessExitedError with non-zero code', async () => {
             registry.registerProcessor(
                 createTestProcessor('cmd', async (_cmd, ctx) => {
@@ -1163,7 +1218,7 @@ describe('CliCommandExecutor', () => {
             await executor.executeCommand('producer > output.txt', context);
 
             expect(writtenPath).toBe('output.txt');
-            expect(writtenContent).toBe('hello world');
+            expect(writtenContent).toBe('hello world\n');
         });
 
         it('should overwrite existing file with > redirect', async () => {
@@ -1191,7 +1246,7 @@ describe('CliCommandExecutor', () => {
 
             await executor.executeCommand('producer > output.txt', context);
 
-            expect(writtenContent).toBe('new content');
+            expect(writtenContent).toBe('new content\n');
             expect(appendMode).toBeFalsy();
         });
     });
@@ -1225,7 +1280,7 @@ describe('CliCommandExecutor', () => {
 
             await executor.executeCommand('producer >> output.txt', context);
 
-            expect(writtenContent).toBe('appended content');
+            expect(writtenContent).toBe('appended content\n');
             expect(appendMode).toBe(true);
         });
 
@@ -1255,7 +1310,7 @@ describe('CliCommandExecutor', () => {
             await executor.executeCommand('producer >> newfile.txt', context);
 
             expect(createdPath).toBe('newfile.txt');
-            expect(createdContent).toBe('new file content');
+            expect(createdContent).toBe('new file content\n');
         });
     });
 
@@ -1336,6 +1391,27 @@ describe('CliCommandExecutor', () => {
             await executor.executeCommand('myecho hello world', context);
 
             expect(receivedValue).toBe('hello world');
+        });
+
+        it('should set value when a sub-command is called by its alias', async () => {
+            let receivedValue: string | undefined;
+            const remove = createTestProcessor('remove', async (cmd) => {
+                receivedValue = cmd.value;
+            }, {
+                aliases: ['rm'],
+                valueRequired: true,
+            });
+            registry.registerProcessor(
+                createTestProcessor('mypkg', async () => {}, {
+                    processors: [remove],
+                }),
+            );
+
+            await executor.executeCommand('mypkg rm  guid qr', context);
+            expect(receivedValue).toBe('guid qr');
+
+            await executor.executeCommand('mypkg remove farm', context);
+            expect(receivedValue).toBe('farm');
         });
 
         it('should set value for valueRequired processor', async () => {

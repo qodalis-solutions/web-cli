@@ -1,4 +1,4 @@
-import { CliEnvironment } from '../lib/services/cli-environment';
+import { applyEnvironmentChange, CliEnvironment } from '../lib/services/cli-environment';
 import { parseAssignments } from '../lib/processors/cli-env-command-processor';
 
 describe('CliEnvironment', () => {
@@ -63,19 +63,101 @@ describe('CliEnvironment', () => {
     });
 
     it('should report every change and restore a saved snapshot', () => {
-        let saved: any;
+        let saved: any = {};
         env.setProfileResolver(() => 'root');
-        env.onChange = (snapshot) => (saved = snapshot);
+        env.onChange = (change) => (saved = applyEnvironmentChange(saved, change));
 
         env.set('A', '1');
         env.unset('SHELL');
-        expect(saved).toEqual({ root: { vars: { A: '1' }, unset: ['SHELL'] } });
+        expect(saved.profiles).toEqual({ root: { vars: { A: '1' }, unset: ['SHELL'] } });
 
         const restored = new CliEnvironment();
         restored.setProfileResolver(() => 'root');
-        restored.load(saved);
+        restored.load(saved.profiles, saved.global);
         expect(restored.get('A')).toBe('1');
         expect(restored.has('SHELL')).toBeFalse();
+    });
+});
+
+describe('CliEnvironment scopes', () => {
+    let env: CliEnvironment;
+    let user: string;
+
+    beforeEach(() => {
+        env = new CliEnvironment();
+        user = 'ana';
+        env.setProfileResolver(() => user);
+    });
+
+    it('resolves this terminal, then the user, then shared, then built-in', () => {
+        env.set('API', 'shared', 'global');
+        expect(env.get('API')).toBe('shared');
+        expect(env.scopeOf('API')).toBe('global');
+
+        env.set('API', 'mine');
+        expect(env.get('API')).toBe('mine');
+        expect(env.scopeOf('API')).toBe('user');
+
+        env.set('API', 'here', 'session');
+        expect(env.get('API')).toBe('here');
+        expect(env.scopeOf('API')).toBe('session');
+
+        user = 'bob';
+        expect(env.get('API')).toBe('here'); // the terminal's own, whoever is signed in
+        env.unset('API', 'session');
+        expect(env.get('API')).toBe('shared');
+        expect(env.scopeOf('SHELL')).toBe('builtin');
+    });
+
+    it('a saved value replaces the terminal one; session values are never reported', () => {
+        const changes: any[] = [];
+        env.onChange = (c) => changes.push(c);
+        env.set('X', '1', 'session');
+        expect(changes).toEqual([]);
+        env.set('X', '2');
+        expect(env.scopeOf('X')).toBe('user');
+        expect(changes).toEqual([{ scope: 'user', profile: 'ana', name: 'X', value: '2' }]);
+    });
+
+    it('unset hides a shared value for this user only; --global removes it for all', () => {
+        env.set('API', 'shared', 'global');
+        env.unset('API');
+        expect(env.has('API')).toBeFalse();
+        user = 'bob';
+        expect(env.get('API')).toBe('shared');
+        env.unset('API', 'global');
+        expect(env.has('API')).toBeFalse();
+    });
+
+    it('applies each change to the latest saved state, keeping other tabs and users', () => {
+        // Two tabs started from the same saved state, each with a different user
+        let saved: any = { profiles: {}, global: {} };
+        const tab = (name: string) => {
+            const e = new CliEnvironment();
+            e.setProfileResolver(() => name);
+            e.load(saved.profiles, saved.global);
+            e.onChange = (c) => (saved = applyEnvironmentChange(saved, c));
+            return e;
+        };
+        const a = tab('ana');
+        const b = tab('bob');
+        a.set('EDITOR', 'vim');
+        b.set('EDITOR', 'nano');
+        a.set('SHARED', '1', 'global');
+        b.set('OTHER', 'x');
+        expect(saved.profiles).toEqual({
+            ana: { vars: { EDITOR: 'vim' }, unset: [] },
+            bob: { vars: { EDITOR: 'nano', OTHER: 'x' }, unset: [] },
+        });
+        expect(saved.global).toEqual({ SHARED: '1' });
+    });
+
+    it('removes a profile that has nothing left', () => {
+        let saved: any = {};
+        env.onChange = (c) => (saved = applyEnvironmentChange(saved, c));
+        env.set('T', '1');
+        env.unset('T');
+        expect(saved.profiles).toEqual({});
     });
 });
 

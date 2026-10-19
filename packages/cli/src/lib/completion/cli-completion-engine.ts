@@ -129,22 +129,23 @@ export class CliCompletionEngine {
         // Tokenize input up to cursor
         const beforeCursor = input.slice(0, cursor);
         const tokens = this.tokenize(beforeCursor);
-        const allTokens = this.tokenize(input);
+        const allTokens = this.tokenize(input).map((t) => t.text);
 
         // Find which token the cursor is in
         let tokenStart = 0;
         let token = '';
         let tokenIndex = 0;
 
-        if (tokens.length === 0 || beforeCursor.endsWith(' ')) {
+        const last = tokens[tokens.length - 1];
+        if (!last || last.start + last.text.length < beforeCursor.length) {
             // Cursor is at a new token position (after a space or empty input)
             token = '';
             tokenStart = cursor;
             tokenIndex = tokens.length;
         } else {
-            // Cursor is within the last token
-            token = tokens[tokens.length - 1];
-            tokenStart = beforeCursor.lastIndexOf(token);
+            // Cursor is within the last token (`"my no` when a quote is open)
+            token = last.text;
+            tokenStart = last.start;
             tokenIndex = tokens.length - 1;
         }
 
@@ -158,8 +159,22 @@ export class CliCompletionEngine {
         };
     }
 
-    private tokenize(input: string): string[] {
-        return input.split(/\s+/).filter(Boolean);
+    /**
+     * Words with their start, quote-aware: `cat "my notes.txt"` has two, and an
+     * unclosed quote runs to the end (`cat "my no` is being typed).
+     */
+    private tokenize(input: string): { text: string; start: number }[] {
+        const tokens: { text: string; start: number }[] = [];
+        const word = /(?:\\.|"[^"]*(?:"|$)|'[^']*(?:'|$)|[^\s"'\\]|\\$)+/g;
+        let match: RegExpExecArray | null;
+        while ((match = word.exec(input)) !== null) {
+            if (match[0] === '') {
+                word.lastIndex++;
+                continue;
+            }
+            tokens.push({ text: match[0], start: match.index });
+        }
+        return tokens;
     }
 
     private async fetchCompletions(

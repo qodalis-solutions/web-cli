@@ -15,8 +15,8 @@ export function packageJsonTemplate(vars: TemplateVars, monorepo: boolean): stri
             },
             homepage: 'https://qodalis.com',
             keywords: ['cli', 'qodalis', 'terminal', vars.name],
-            umd: './umd/index.js',
-            unpkg: './umd/index.js',
+            umd: './umd/index.global.js',
+            unpkg: './umd/index.global.js',
             scripts: monorepo ? undefined : {
                 build: 'tsup',
             },

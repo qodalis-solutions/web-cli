@@ -25,6 +25,8 @@ import {
     CliFullScreenOptions,
     ICliHttpClient,
     ICliNotifier,
+    ICliEventBus,
+    ICliEventBus_TOKEN,
 } from '@qodalis/cli-core';
 import { CliBackgroundServiceRegistry } from '../services/background';
 import { CliHttpClient } from '../services/cli-http-client';
@@ -40,7 +42,10 @@ import { CliCommandHistory } from '../services/cli-command-history';
 import { CliExecutionProcess } from './cli-execution-process';
 import { CliStateStoreManager } from '../state/cli-state-store-manager';
 import { CliInputReader } from '../services/cli-input-reader';
-import { BrowserFilePickerProvider, NoopFilePickerProvider } from '../services/file-picker';
+import {
+    BrowserFilePickerProvider,
+    NoopFilePickerProvider,
+} from '../services/file-picker';
 import { CliCompletionEngine } from '../completion/cli-completion-engine';
 import {
     CliLineBuffer,
@@ -62,12 +67,25 @@ export interface CliExecutionContextDeps {
 }
 
 export class CliExecutionContext
-    implements
-        ICliExecutionContext,
-        InputModeHost,
-        CommandLineModeHost
+    implements ICliExecutionContext, InputModeHost, CommandLineModeHost
 {
-    public userSession?: ICliUserSession;
+    private _userSession?: ICliUserSession;
+
+    /** The signed-in user; changing it emits `session:changed`. */
+    public get userSession(): ICliUserSession | undefined {
+        return this._userSession;
+    }
+
+    public set userSession(session: ICliUserSession | undefined) {
+        const previous = this._userSession?.user?.name;
+        this._userSession = session;
+        if (session?.user?.name !== previous) {
+            this.events?.emit('session:changed', { user: session?.user?.name });
+        }
+    }
+
+    /** The terminal's event bus. */
+    public readonly events?: ICliEventBus;
 
     public contextProcessor?: ICliCommandProcessor;
 
@@ -131,6 +149,11 @@ export class CliExecutionContext
 
     private readonly modeStack: IInputMode[] = [];
 
+    /** Command-line input typed while booting; `null` when not holding. */
+    private heldInput: string[] | null = null;
+    private releaseHeldInputAtPrompt = false;
+    private _typedDuringBoot = false;
+
     private readonly stateStoreManager: CliStateStoreManager;
 
     private readonly timerManager = new CliTimerManager();
@@ -147,6 +170,7 @@ export class CliExecutionContext
     ) {
         //initialize services
         this.services = deps.services;
+        this.events = deps.services.get<ICliEventBus>(ICliEventBus_TOKEN);
         this.translator = deps.translator;
 
         //initialize state store
@@ -171,9 +195,10 @@ export class CliExecutionContext
         this.clipboard = new CliClipboard(this);
         this.process = new CliExecutionProcess(this);
 
-        this.filePickerProvider = typeof document !== 'undefined'
-            ? new BrowserFilePickerProvider()
-            : new NoopFilePickerProvider();
+        this.filePickerProvider =
+            typeof document !== 'undefined'
+                ? new BrowserFilePickerProvider()
+                : new NoopFilePickerProvider();
 
         this.reader = new CliInputReader(this);
 
@@ -231,13 +256,14 @@ export class CliExecutionContext
         this.pushMode(commandLineMode);
 
         this.terminal.onData(async (data) => {
-            if (this.isProgressRunning()) {
+            // While booting, keep what the user types at the command line and
+            // replay it at the first prompt. Prompts shown during boot (module
+            // setup) push their own input mode and still read input directly.
+            if (this.heldInput && this.modeStack.length === 1) {
+                this.heldInput.push(data);
                 return;
             }
-            const mode = this.currentMode;
-            if (mode) {
-                await mode.handleInput(data);
-            }
+            await this.handleTerminalData(data);
         });
 
         this.terminal.onKey(async (_event) => {});
@@ -252,6 +278,82 @@ export class CliExecutionContext
             return true;
         });
 
+        this.initializeWindowListeners();
+    }
+
+    private async handleTerminalData(data: string): Promise<void> {
+        // A decorative animation (the welcome greeting) must not swallow
+        // what the user types: stop it and handle the key normally.
+        if (
+            this.textAnimator.isRunning &&
+            !this.progressBar.isRunning &&
+            !this.spinner.isRunning
+        ) {
+            this.textAnimator.cancel?.();
+        }
+        if (this.isProgressRunning()) {
+            return;
+        }
+        const mode = this.currentMode;
+        if (mode) {
+            await mode.handleInput(data);
+        }
+    }
+
+    private _isBooted = false;
+
+    /** `true` once boot has completed and the terminal is ready. */
+    get isBooted(): boolean {
+        return this._isBooted;
+    }
+
+    /** Called by the engine when boot has completed. */
+    markBooted(): void {
+        this._isBooted = true;
+    }
+
+    /** Start keeping command-line input instead of handling it (boot). */
+    holdInput(): void {
+        this.heldInput ??= [];
+    }
+
+    /**
+     * Stop holding input: what was typed is replayed at the next prompt, or
+     * right away when `immediately` is set (e.g. no prompt will be drawn).
+     */
+    releaseInput(immediately = false): void {
+        if (!this.heldInput) return;
+        if (immediately) {
+            this.replayHeldInput();
+        } else {
+            this.releaseHeldInputAtPrompt = true;
+        }
+    }
+
+    /** Whether a prompt (readLine, readSelect, ...) or full-screen mode owns the input. */
+    get isReadingInput(): boolean {
+        return this.modeStack.length > 1;
+    }
+
+    /** Whether keys were typed while input was held (boot). */
+    get typedDuringBoot(): boolean {
+        return this._typedDuringBoot || (this.heldInput?.length ?? 0) > 0;
+    }
+
+    private replayHeldInput(): void {
+        const queued = this.heldInput ?? [];
+        this.heldInput = null;
+        this.releaseHeldInputAtPrompt = false;
+        if (queued.length === 0) return;
+        this._typedDuringBoot = true;
+        void (async () => {
+            for (const data of queued) {
+                await this.handleTerminalData(data);
+            }
+        })();
+    }
+
+    private initializeWindowListeners(): void {
         // Window-level capture listener to intercept browser shortcuts that
         // conflict with terminal keybindings when the terminal has focus.
         // Note: Ctrl+W cannot be intercepted (browser closes tab before JS runs).
@@ -261,12 +363,29 @@ export class CliExecutionContext
                 if (!termEl.contains(document.activeElement)) return;
                 if (event.ctrlKey && !event.altKey && !event.metaKey) {
                     const key = event.key.toLowerCase();
-                    if (['f', 's', 'q', 'o', 'k', 'u', 'g', 'r', 'n', 'h'].includes(key)) {
+                    if (
+                        [
+                            'f',
+                            's',
+                            'q',
+                            'o',
+                            'k',
+                            'u',
+                            'g',
+                            'r',
+                            'n',
+                            'h',
+                        ].includes(key)
+                    ) {
                         event.preventDefault();
                     }
                 }
             };
-            window.addEventListener('keydown', this.windowKeydownListener, true);
+            window.addEventListener(
+                'keydown',
+                this.windowKeydownListener,
+                true,
+            );
         }
     }
 
@@ -332,6 +451,10 @@ export class CliExecutionContext
         this.promptLength = this.lineRenderer.renderPrompt(
             this.getPromptOptions(),
         );
+
+        if (this.releaseHeldInputAtPrompt) {
+            this.replayHeldInput();
+        }
     }
 
     /**
@@ -342,7 +465,14 @@ export class CliExecutionContext
     async submitCommand(command: string): Promise<void> {
         if (command.trim()) {
             await this.commandHistory.addCommand(command);
+            const startedAt = Date.now();
             await this.executor.executeCommand(command, this);
+            this.events?.emit('command:executed', {
+                command,
+                exitCode:
+                    (this.executor as { exitStatus?: number }).exitStatus ?? 0,
+                durationMs: Date.now() - startedAt,
+            });
         }
 
         if (!this.isRawModeActive()) {
@@ -416,7 +546,10 @@ export class CliExecutionContext
         return !!this.contextProcessor?.onData;
     }
 
-    public enterFullScreenMode(processor: ICliCommandProcessor, options?: CliFullScreenOptions): void {
+    public enterFullScreenMode(
+        processor: ICliCommandProcessor,
+        options?: CliFullScreenOptions,
+    ): void {
         this.fullScreenManager.enter(
             processor,
             this.setContextProcessor,
@@ -442,10 +575,7 @@ export class CliExecutionContext
         return this.timerManager.createInterval(callback, ms);
     }
 
-    public createTimeout(
-        callback: () => void,
-        ms: number,
-    ): ICliManagedTimer {
+    public createTimeout(callback: () => void, ms: number): ICliManagedTimer {
         return this.timerManager.createTimeout(callback, ms);
     }
 
@@ -484,9 +614,10 @@ export class CliExecutionContext
         const hideUserName = usersConfig?.hideUserName ?? false;
 
         // Signed out while an auth module is loaded: say so in the prompt
-        const anonymousName = usersConfig && !this.userSession
-            ? (usersConfig.anonymousName ?? 'anonymous') || undefined
-            : undefined;
+        const anonymousName =
+            usersConfig && !this.userSession
+                ? (usersConfig.anonymousName ?? 'anonymous') || undefined
+                : undefined;
 
         return {
             userName: this.userSession?.displayName,
@@ -519,13 +650,19 @@ export class CliExecutionContext
             this.contextProcessor.onDispose(this);
         }
 
-        (this.backgroundServices as CliBackgroundServiceRegistry).destroyAll().catch(() => {});
+        (this.backgroundServices as CliBackgroundServiceRegistry)
+            .destroyAll()
+            .catch(() => {});
 
         this.timerManager.clearAll();
         this.fullScreenManager.dispose();
 
         if (this.windowKeydownListener) {
-            window.removeEventListener('keydown', this.windowKeydownListener, true);
+            window.removeEventListener(
+                'keydown',
+                this.windowKeydownListener,
+                true,
+            );
             this.windowKeydownListener = undefined;
         }
 

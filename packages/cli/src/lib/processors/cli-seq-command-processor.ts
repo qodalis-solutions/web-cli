@@ -47,7 +47,7 @@ export class CliSeqCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         const { writer } = context;
-        const parts = (command.value || '').split(/\s+/).map(Number);
+        const parts = (command.positionals ?? []).map(Number);
 
         let start: number, end: number;
         const step = parseFloat(command.args['step'] || command.args['s']) || 1;

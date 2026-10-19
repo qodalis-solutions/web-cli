@@ -6,6 +6,7 @@ import {
     ICliCommandProcessor,
     ICliCommandParameterDescriptor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -51,7 +52,7 @@ export class CliYesnoCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         const count = parseInt(command.args['count'] || command.args['n']) || 1;
-        const question = command.value?.trim();
+        const question = joinShellWords(command.value ?? '');
 
         if (question) {
             context.writer.writeln(

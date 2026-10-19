@@ -1,79 +1,104 @@
 import {
+    AfterViewInit,
+    ChangeDetectorRef,
     Component,
     ElementRef,
     EventEmitter,
-    HostListener,
     Input,
+    NgZone,
+    OnChanges,
     OnDestroy,
     OnInit,
     Output,
     QueryList,
-    ViewChild,
     ViewChildren,
 } from '@angular/core';
+import { CliPanelConfig, CliPanelPosition, CliPanelState, ICliCommandProcessor, ICliModule, ICliPanelRef } from '@qodalis/cli-core';
 import {
-    CliEngineSnapshot,
-    CliPanelConfig,
-    CliPanelPosition,
-    CliPanelState,
-    ICliCommandProcessor,
-    ICliModule,
-    ICliPanelRef,
-    derivePanelThemeStyles,
-    loadPanelPosition,
-    savePanelPosition,
-} from '@qodalis/cli-core';
-import { CliEngine, CliEngineOptions } from '@qodalis/cli';
-import { CliComponent } from '../cli/cli.component';
-import { CollapsableContentComponent } from '../collapsable-content/collapsable-content.component';
-import { CliPanelStatusService, TabStatus, GlobalStatus } from './cli-panel-status.service';
-import { Subject, takeUntil } from 'rxjs';
-
-export interface TerminalPane {
-    id: number;
-    widthPercent: number;
-    snapshot?: CliEngineSnapshot;
-}
-
-export interface TerminalTab {
-    id: number;
-    title: string;
-    isEditing: boolean;
-    panes: TerminalPane[];
-}
-
-export interface TabContextMenu {
-    visible: boolean;
-    x: number;
-    y: number;
-    tabId: number;
-}
+    CliEngine,
+    CliEngineOptions,
+    CliPanelController,
+    CliPanelControlledState,
+    CliPanelPane,
+    CliPanelSnapshot,
+    CliPanelTab,
+    CLOSE_GLYPH,
+    CLOSE_ICON,
+    HIDE_ICON,
+    HIDE_TAB_TERMINAL_ICON,
+    MAXIMIZE_ICON,
+    PANEL_LABELS,
+    PanelContextMenuAction,
+    PanelContextMenuItem,
+    PanelPositionOption,
+    PanelStatusDropdown,
+    PanelStatusIndicator,
+    RESTORE_ICON,
+    SvgIcon,
+    TERMINAL_ICON,
+    collapseChevronIcon,
+    contextMenuItems,
+    contextMenuStyle,
+    glowLineClass,
+    handleRenameKey,
+    hideTabChevronIcon,
+    paneClass,
+    panelTabClass,
+    panelTabDotClass,
+    panelWrapperClass,
+    panelWrapperStyle,
+    panesContainerClass,
+    panesContainerWidth,
+    openStatusDropdown,
+    positionIcon,
+    positionOptions,
+    runContextMenuAction,
+    statusIndicators,
+} from '@qodalis/cli';
+import { Subscription } from 'rxjs';
 
 export type CliPanelOptions = CliEngineOptions & CliPanelConfig;
 
+/** Everything the template renders, rebuilt once per controller change. */
+interface PanelView {
+    wrapperClass: string;
+    wrapperStyle: Record<string, string>;
+    indicators: PanelStatusIndicator[];
+    positionOptions: Array<PanelPositionOption & { icon: SvgIcon }>;
+    positionIcon: SvgIcon;
+    collapseIcon: SvgIcon;
+    hideTabArrowIcon: SvgIcon;
+    maximizeIcon: SvgIcon;
+    contextMenuItems: PanelContextMenuItem[];
+    contextMenuStyle: Record<string, string>;
+    glowLineClass: string;
+    panesContainerClass: string;
+    statusDropdown: PanelStatusDropdown | null;
+}
+
+const CONTROLLED_INPUTS: Array<keyof CliPanelControlledState> = [
+    'collapsed', 'hidden', 'maximized', 'activeTabId', 'position', 'height', 'width',
+];
+
 /**
- * A component that displays the CLI on the bottom of page.
+ * Collapsible, dockable panel with tabs and split panes of CLI terminals.
+ * State and behaviour live in the framework-agnostic `CliPanelController`;
+ * this component renders it.
  */
 @Component({
     standalone: false,
     selector: 'cli-panel',
     templateUrl: './cli-panel.component.html',
-    styleUrls: ['./cli-panel.component.sass'],
 })
-export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEngine> {
-    /**
-     * The options for the CLI.
-     */
+export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy, ICliPanelRef<CliEngine> {
+    /** The options for the CLI. */
     @Input() options?: CliPanelOptions;
 
-    /**
-     * Optional list of CLI modules to register with each terminal pane.
-     */
+    /** Optional list of CLI modules to register with each terminal pane. */
     @Input() modules?: ICliModule[];
 
     /**
      * Optional list of command processors to register with each terminal pane.
-     * This allows passing processors without Angular DI (framework-agnostic pattern).
      * @deprecated Use modules instead.
      */
     @Input() processors?: ICliCommandProcessor[];
@@ -108,718 +133,235 @@ export class CliPanelComponent implements OnInit, OnDestroy, ICliPanelRef<CliEng
     @Output() onPaneSplit = new EventEmitter<{ paneId: number; tabId: number }>();
     @Output() onPaneClosed = new EventEmitter<{ paneId: number }>();
 
-    @ViewChild(CollapsableContentComponent)
-    collapsableContent!: CollapsableContentComponent;
-    @ViewChildren(CliComponent) cliComponents!: QueryList<CliComponent>;
+    @ViewChildren('renameInput') renameInputs!: QueryList<ElementRef<HTMLInputElement>>;
 
-    currentPosition: CliPanelPosition = 'bottom';
+    readonly labels = PANEL_LABELS;
+    readonly closeGlyph = CLOSE_GLYPH;
+    readonly terminalIcon = TERMINAL_ICON;
+    readonly hideTabIcon = HIDE_TAB_TERMINAL_ICON;
+    readonly hideIcon = HIDE_ICON;
+    readonly closeIcon = CLOSE_ICON;
 
-    themeStyles: Record<string, string> = {};
+    controller!: CliPanelController;
+    s!: CliPanelSnapshot;
+    view!: PanelView;
 
-    visible = true;
+    private unsubscribe?: () => void;
+    private renameInputsSub?: Subscription;
 
-    tabs: TerminalTab[] = [];
-    tabStatuses: Record<number, TabStatus> = {};
-    activePaneId = 0;
-    private _internalActiveTabId = 0;
-    private _internalCollapsed = true;
-    private _internalHidden = false;
-    private _internalMaximized = false;
-    private _internalHeight = 600;
-    private _internalWidth = 400;
-    private nextTabId = 1;
-    private nextPaneId = 1;
-    private statusService = new CliPanelStatusService();
-    private destroy$ = new Subject<void>();
-    globalStatus: GlobalStatus = {
-        runningServiceCount: 0,
-        totalServiceCount: 0,
-        serviceDetails: [],
-        serverConnectionState: 'none',
-        serverDetails: [],
-        uptime: 0,
-    };
-
-    protected get resolvedCollapsed(): boolean {
-        return this.collapsed !== undefined ? this.collapsed : this._internalCollapsed;
-    }
-    protected get resolvedHidden(): boolean {
-        return this.hidden !== undefined ? this.hidden : this._internalHidden;
-    }
-    protected get resolvedMaximized(): boolean {
-        return this.maximized !== undefined ? this.maximized : this._internalMaximized;
-    }
-    protected get resolvedActiveTabId(): number {
-        return this.activeTabId !== undefined ? this.activeTabId : this._internalActiveTabId;
-    }
-    protected get resolvedHeight(): number {
-        return this.height !== undefined ? this.height : this._internalHeight;
-    }
-    protected get resolvedWidth(): number {
-        return this.width !== undefined ? this.width : this._internalWidth;
-    }
-    protected get resolvedPosition(): CliPanelPosition {
-        return this.position !== undefined ? this.position : this.currentPosition;
-    }
-
-    contextMenu: TabContextMenu = {
-        visible: false,
-        x: 0,
-        y: 0,
-        tabId: 0,
-    };
-
-    paneResizing = false;
-    private paneResizeTabId = 0;
-    private paneResizeDividerIndex = 0;
-    private paneResizeStartX = 0;
-    private paneResizeStartWidths: number[] = [];
-    private paneResizeContainerWidth = 0;
-
-    private static readonly MIN_PANE_WIDTH_PERCENT = 10;
-
-    protected terminalHeight: string = '100%';
-
-    protected initialized: boolean = false;
-
-    private themeObserver?: MutationObserver;
-
-    constructor(private readonly elementRef: ElementRef) {}
+    constructor(
+        private readonly elementRef: ElementRef<HTMLElement>,
+        private readonly zone: NgZone,
+        private readonly changeDetector: ChangeDetectorRef,
+    ) {}
 
     ngOnInit(): void {
-        this.currentPosition = loadPanelPosition() ?? this.options?.position ?? 'bottom';
-        if (this.options?.isHidden != null) {
-            this._internalHidden = this.options.isHidden;
-        }
-        if (this.options?.isCollapsed != null) {
-            this._internalCollapsed = this.options.isCollapsed;
-        }
-        this.statusService.getGlobalStatus$().pipe(
-            takeUntil(this.destroy$),
-        ).subscribe(status => {
-            this.globalStatus = status;
+        this.controller = new CliPanelController({
+            config: this.options,
+            controlled: this.controlledValues(),
+            callbacks: {
+                onCollapsedChange: (v) => this.collapsedChange.emit(v),
+                onHiddenChange: (v) => this.hiddenChange.emit(v),
+                onMaximizedChange: (v) => this.maximizedChange.emit(v),
+                onActiveTabIdChange: (v) => this.activeTabIdChange.emit(v),
+                onPositionChange: (v) => this.positionChange.emit(v),
+                onHeightChange: (v) => this.heightChange.emit(v),
+                onWidthChange: (v) => this.widthChange.emit(v),
+                onClose: () => this.onClose.emit(),
+                onTabAdded: (e) => this.onTabAdded.emit(e),
+                onTabClosed: (e) => this.onTabClosed.emit(e),
+                onPaneSplit: (e) => this.onPaneSplit.emit(e),
+                onPaneClosed: (e) => this.onPaneClosed.emit(e),
+            },
+        });
+        this.render(this.controller.getSnapshot());
+        // Status polling runs outside Angular; only real changes re-enter the zone.
+        // markForCheck also schedules change detection in zoneless apps.
+        this.unsubscribe = this.controller.subscribe(() =>
+            this.zone.run(() => {
+                this.render(this.controller.getSnapshot());
+                this.changeDetector.markForCheck();
+            }),
+        );
+    }
+
+    ngOnChanges(): void {
+        if (!this.controller) return;
+        this.controller.setControlled(this.controlledValues());
+        this.controller.setOptions(this.options);
+    }
+
+    ngAfterViewInit(): void {
+        this.controller.setRootElement(this.elementRef.nativeElement);
+        this.renameInputsSub = this.renameInputs.changes.subscribe((inputs: QueryList<ElementRef<HTMLInputElement>>) => {
+            const input = inputs.first?.nativeElement;
+            input?.focus();
+            input?.select();
         });
     }
 
     ngOnDestroy(): void {
-        this.themeObserver?.disconnect();
-        this.statusService.destroy();
-        this.destroy$.next();
-        this.destroy$.complete();
+        this.renameInputsSub?.unsubscribe();
+        this.unsubscribe?.();
+        this.controller?.destroy();
     }
 
-    @HostListener('document:click', ['$event'])
-    onDocumentClick(event: MouseEvent): void {
-        if (this.contextMenu.visible) {
-            this.closeContextMenu();
-        }
+    // ── Template handlers ──
+
+    onPaneEngineReady(tabId: number, paneId: number, engine: CliEngine): void {
+        this.zone.runOutsideAngular(() => this.controller.registerEngine(tabId, paneId, engine));
     }
 
-    @HostListener('document:keydown.escape')
-    onEscapeKey(): void {
-        if (this.contextMenu.visible) {
-            this.closeContextMenu();
-        }
-        this.cancelAllEditing();
+    onTabContextMenu(event: MouseEvent, tab: CliPanelTab): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.controller.openContextMenu(tab.id, event.clientX, event.clientY);
     }
 
-    onPositionChange(position: CliPanelPosition): void {
-        this.currentPosition = position;
-        savePanelPosition(this.currentPosition);
-        this.positionChange.emit(position);
+    onRenameKeydown(event: KeyboardEvent, tab: CliPanelTab): void {
+        handleRenameKey(this.controller, tab.id, event.key, (event.target as HTMLInputElement).value);
     }
 
-    onToggle($event: boolean): void {
-        this._internalCollapsed = $event;
-        this.collapsedChange.emit($event);
-        if (!$event && !this.initialized) {
-            this.initialized = true;
-            this.addTab();
-            this.setupThemeSync();
-        }
+    onRenameBlur(event: FocusEvent, tab: CliPanelTab): void {
+        if (tab.isEditing) this.controller.commitRename(tab.id, (event.target as HTMLInputElement).value);
     }
 
-    onContentSizeChange(_event: number) {
-        // Terminal height is handled via CSS flex layout
+    onPanelResizeStart(event: MouseEvent): void {
+        if (!this.s.resizable) return;
+        event.preventDefault();
+        this.controller.startPanelResize(event.clientX, event.clientY);
     }
 
-    // --- Tab management ---
-
-    addTab(title?: string): number {
-        const pane: TerminalPane = { id: this.nextPaneId++, widthPercent: 100 };
-        const tabId = this.nextTabId++;
-        const tab: TerminalTab = {
-            id: tabId,
-            title: title ?? `Terminal ${tabId}`,
-            isEditing: false,
-            panes: [pane],
-        };
-        this.tabs.push(tab);
-        this._internalActiveTabId = tabId;
-        this.activeTabIdChange.emit(tabId);
-        this.activePaneId = pane.id;
-        this.statusService.setActiveTab(tabId);
-        this.onTabAdded.emit({ tabId });
-        return tabId;
+    onPaneResizeStart(event: MouseEvent, tabId: number, dividerIndex: number): void {
+        event.preventDefault();
+        this.controller.startPaneResize(tabId, dividerIndex, event.clientX, panesContainerWidth(event.target));
     }
 
-    closeTab(id: number): void {
-        const index = this.tabs.findIndex((t) => t.id === id);
-        if (index === -1) return;
-
-        this.tabs.splice(index, 1);
-        this.onTabClosed.emit({ tabId: id });
-        this.statusService.unregisterTab(id);
-        delete this.tabStatuses[id];
-
-        if (this.tabs.length === 0) {
-            this.initialized = false;
-            this.collapsableContent?.toggleTerminal();
-            return;
-        }
-
-        if (this.resolvedActiveTabId === id) {
-            const nextIndex = Math.min(index, this.tabs.length - 1);
-            this.selectTab(this.tabs[nextIndex].id);
-        }
+    onIndicatorClick(event: MouseEvent, item: PanelStatusIndicator): void {
+        if (!item.dropdown) return;
+        event.stopPropagation();
+        const anchor = event.currentTarget as Element;
+        if (item.dropdown === 'services') this.controller.toggleServicesDropdown(anchor);
+        else this.controller.toggleServersDropdown(anchor);
     }
 
-    selectTab(id: number): void {
-        this._internalActiveTabId = id;
-        this.activeTabIdChange.emit(id);
-        this.statusService.setActiveTab(id);
-        const tab = this.findTab(id);
-        if (tab && tab.panes.length > 0) {
-            this.activePaneId = tab.panes[0].id;
-        }
-        setTimeout(() => {
-            this.focusActiveTerminal();
-        });
+    onContextMenuAction(action: PanelContextMenuAction): void {
+        runContextMenuAction(this.controller, action);
     }
 
-    trackByTabId(_index: number, tab: TerminalTab): number {
+    tabClass(tab: CliPanelTab): string {
+        return panelTabClass(this.s, tab);
+    }
+
+    tabDotClass(tab: CliPanelTab): string {
+        return panelTabDotClass(this.s, tab);
+    }
+
+    paneClass(tabId: number, paneId: number): string {
+        return paneClass(this.s, tabId, paneId);
+    }
+
+    trackByTabId(_index: number, tab: CliPanelTab): number {
         return tab.id;
     }
 
-    getTabDotClass(tabId: number): string {
-        const status = this.tabStatuses[tabId];
-        if (!status) return 'dot-idle';
-        if (status.executionState === 'running') return 'dot-running';
-        if (status.lastCommandStatus === 'error') return 'dot-error';
-        return 'dot-idle';
-    }
-
-    onPaneEngineReady(tabId: number, paneId: number, engine: CliEngine): void {
-        this.statusService.registerEngine(tabId, paneId, engine);
-        this.statusService.getTabStatus$(tabId).pipe(
-            takeUntil(this.destroy$),
-        ).subscribe(status => {
-            this.tabStatuses[tabId] = status;
-        });
-    }
-
-    trackByPaneId(_index: number, pane: TerminalPane): number {
+    trackByPaneId(_index: number, pane: CliPanelPane): number {
         return pane.id;
     }
 
-    // --- Inline rename ---
-
-    startRename(tab: TerminalTab): void {
-        this.cancelAllEditing();
-        tab.isEditing = true;
-        setTimeout(() => {
-            const input = this.elementRef.nativeElement.querySelector(
-                '.tab-rename-input',
-            ) as HTMLInputElement | null;
-            if (input) {
-                input.focus();
-                input.select();
-            }
-        });
+    trackByKey(_index: number, item: { key?: string; action?: string; position?: string }): string | undefined {
+        return item.key ?? item.action ?? item.position;
     }
 
-    onTabDoubleClick(tab: TerminalTab): void {
-        this.startRename(tab);
-    }
-
-    commitRename(tab: TerminalTab, value: string): void {
-        const trimmed = value.trim();
-        if (trimmed) {
-            tab.title = trimmed;
-        }
-        tab.isEditing = false;
-    }
-
-    onRenameKeydown(event: KeyboardEvent, tab: TerminalTab): void {
-        if (event.key === 'Enter') {
-            this.commitRename(tab, (event.target as HTMLInputElement).value);
-        } else if (event.key === 'Escape') {
-            tab.isEditing = false;
-        }
-    }
-
-    onRenameBlur(event: FocusEvent, tab: TerminalTab): void {
-        if (tab.isEditing) {
-            this.commitRename(tab, (event.target as HTMLInputElement).value);
-        }
-    }
-
-    // --- Context menu ---
-
-    onTabContextMenu(event: MouseEvent, tab: TerminalTab): void {
-        event.preventDefault();
-        event.stopPropagation();
-
-        this.contextMenu = {
-            visible: true,
-            x: event.clientX,
-            y: event.clientY,
-            tabId: tab.id,
-        };
-    }
-
-    closeContextMenu(): void {
-        this.contextMenu = { ...this.contextMenu, visible: false };
-    }
-
-    contextMenuRename(): void {
-        const tab = this.findTab(this.contextMenu.tabId);
-        this.closeContextMenu();
-        if (tab) {
-            this.startRename(tab);
-        }
-    }
-
-    contextMenuDuplicate(): void {
-        const sourceTab = this.findTab(this.contextMenu.tabId);
-        this.closeContextMenu();
-        if (sourceTab) {
-            const snapshot = this.getEngineForTab(sourceTab)?.snapshot();
-
-            const pane: TerminalPane = {
-                id: this.nextPaneId++,
-                widthPercent: 100,
-                snapshot,
-            };
-            const tab: TerminalTab = {
-                id: this.nextTabId++,
-                title: `${sourceTab.title} (copy)`,
-                isEditing: false,
-                panes: [pane],
-            };
-            const sourceIndex = this.tabs.indexOf(sourceTab);
-            this.tabs.splice(sourceIndex + 1, 0, tab);
-            this._internalActiveTabId = tab.id;
-            this.activeTabIdChange.emit(tab.id);
-            this.activePaneId = pane.id;
-        }
-    }
-
-    contextMenuClose(): void {
-        const id = this.contextMenu.tabId;
-        this.closeContextMenu();
-        this.closeTab(id);
-    }
-
-    contextMenuCloseOthers(): void {
-        const id = this.contextMenu.tabId;
-        this.closeContextMenu();
-        this.tabs = this.tabs.filter((t) => t.id === id);
-        this._internalActiveTabId = id;
-        this.activeTabIdChange.emit(id);
-    }
-
-    contextMenuCloseToTheRight(): void {
-        const id = this.contextMenu.tabId;
-        this.closeContextMenu();
-        const index = this.tabs.findIndex((t) => t.id === id);
-        if (index === -1) return;
-        this.tabs = this.tabs.slice(0, index + 1);
-        if (!this.tabs.find((t) => t.id === this.resolvedActiveTabId)) {
-            this._internalActiveTabId = id;
-            this.activeTabIdChange.emit(id);
-        }
-    }
-
-    contextMenuCloseAll(): void {
-        this.closeContextMenu();
-        this.tabs = [];
-        this.initialized = false;
-        this.collapsableContent?.toggleTerminal();
-    }
-
-    // --- Split / close pane ---
-
-    splitPane(tabId?: number): number {
-        const targetTabId = tabId ?? this.resolvedActiveTabId;
-        const tab = this.findTab(targetTabId);
-        if (!tab) return -1;
-
-        const paneId = this.nextPaneId++;
-        const newPane: TerminalPane = { id: paneId, widthPercent: 0 };
-        tab.panes.push(newPane);
-
-        const evenWidth = 100 / tab.panes.length;
-        tab.panes.forEach((p) => (p.widthPercent = evenWidth));
-        this.normalizePaneWidths(tab.panes);
-
-        this.activePaneId = paneId;
-        this.onPaneSplit.emit({ paneId, tabId: targetTabId });
-        return paneId;
-    }
-
-    closePane(paneId: number): void {
-        for (const tab of this.tabs) {
-            const idx = tab.panes.findIndex((p) => p.id === paneId);
-            if (idx === -1) continue;
-
-            if (tab.panes.length <= 1) {
-                this.closeTab(tab.id);
-                return;
-            }
-
-            // Destroy engine at the flat index
-            let flatIndex = 0;
-            for (const t of this.tabs) {
-                for (const p of t.panes) {
-                    if (p.id === paneId) {
-                        const engine = this.cliComponents?.toArray()[flatIndex]?.getEngine();
-                        if (engine) engine.destroy();
-                    }
-                    flatIndex++;
-                }
-            }
-
-            tab.panes.splice(idx, 1);
-            this.normalizePaneWidths(tab.panes);
-
-            if (this.activePaneId === paneId) {
-                this.activePaneId = tab.panes[Math.min(idx, tab.panes.length - 1)].id;
-            }
-
-            this.onPaneClosed.emit({ paneId });
-            setTimeout(() => this.focusActiveTerminal());
-            return;
-        }
-    }
-
-    contextMenuSplitRight(): void {
-        const tabId = this.contextMenu.tabId;
-        this.closeContextMenu();
-        this.splitPane(tabId);
-    }
-
-    // --- Pane resize ---
-
-    onPaneResizeStart(
-        event: MouseEvent,
-        tabId: number,
-        dividerIndex: number,
-    ): void {
-        event.preventDefault();
-        const tab = this.findTab(tabId);
-        if (!tab) return;
-
-        this.paneResizing = true;
-        this.paneResizeTabId = tabId;
-        this.paneResizeDividerIndex = dividerIndex;
-        this.paneResizeStartX = event.clientX;
-        this.paneResizeStartWidths = tab.panes.map((p) => p.widthPercent);
-
-        const container = (event.target as HTMLElement).closest(
-            '.terminal-panes-container',
-        );
-        this.paneResizeContainerWidth = container ? container.clientWidth : 1;
-
-        document.body.classList.add('cli-pane-resizing');
-    }
-
-    @HostListener('document:mousemove', ['$event'])
-    onPaneResizeMove(event: MouseEvent): void {
-        if (!this.paneResizing) return;
-
-        const tab = this.findTab(this.paneResizeTabId);
-        if (!tab) return;
-
-        const deltaX = event.clientX - this.paneResizeStartX;
-        const deltaPct = (deltaX / this.paneResizeContainerWidth) * 100;
-
-        const i = this.paneResizeDividerIndex;
-        const minW = CliPanelComponent.MIN_PANE_WIDTH_PERCENT;
-
-        let leftWidth = this.paneResizeStartWidths[i] + deltaPct;
-        let rightWidth = this.paneResizeStartWidths[i + 1] - deltaPct;
-
-        if (leftWidth < minW) {
-            leftWidth = minW;
-            rightWidth =
-                this.paneResizeStartWidths[i] +
-                this.paneResizeStartWidths[i + 1] -
-                minW;
-        }
-        if (rightWidth < minW) {
-            rightWidth = minW;
-            leftWidth =
-                this.paneResizeStartWidths[i] +
-                this.paneResizeStartWidths[i + 1] -
-                minW;
-        }
-
-        tab.panes[i].widthPercent = leftWidth;
-        tab.panes[i + 1].widthPercent = rightWidth;
-    }
-
-    @HostListener('document:mouseup')
-    onPaneResizeEnd(): void {
-        if (!this.paneResizing) return;
-        this.paneResizing = false;
-        document.body.classList.remove('cli-pane-resizing');
-    }
-
-    // --- Pane focus ---
-
-    onPaneClick(tabId: number, paneId: number): void {
-        this.activePaneId = paneId;
-        if (this.resolvedActiveTabId !== tabId) {
-            this._internalActiveTabId = tabId;
-            this.activeTabIdChange.emit(tabId);
-        }
-        setTimeout(() => this.focusPane(tabId, paneId));
-    }
-
-    // --- ICliPanelRef methods ---
+    // ── ICliPanelRef ──
 
     open(): void {
-        if (!this.visible) {
-            this.visible = true;
-        }
-        if (this.resolvedHidden) {
-            this._internalHidden = false;
-            this.hiddenChange.emit(false);
-        }
-        if (this.resolvedCollapsed) {
-            this._internalCollapsed = false;
-            this.collapsedChange.emit(false);
-            this.collapsableContent?.setCollapsed(false);
-            if (!this.initialized) {
-                this.initialized = true;
-                this.addTab();
-                this.setupThemeSync();
-            }
-        }
+        this.controller.open();
     }
-
     collapse(): void {
-        if (!this.resolvedCollapsed) {
-            this._internalCollapsed = true;
-            this.collapsedChange.emit(true);
-            this.collapsableContent?.setCollapsed(true);
-        }
+        this.controller.collapse();
     }
-
     toggleCollapse(): void {
-        if (this.resolvedCollapsed) {
-            this.open();
-        } else {
-            this.collapse();
-        }
+        this.controller.toggleCollapse();
     }
-
     hide(): void {
-        if (!this.resolvedHidden) {
-            this._internalHidden = true;
-            this.hiddenChange.emit(true);
-            this.collapsableContent?.hideTerminal();
-        }
+        this.controller.hide();
     }
-
     unhide(): void {
-        if (this.resolvedHidden) {
-            this._internalHidden = false;
-            this.hiddenChange.emit(false);
-            this.collapsableContent?.unhideTerminal();
-        }
+        this.controller.unhide();
     }
-
     toggleHide(): void {
-        if (this.resolvedHidden) {
-            this.unhide();
-        } else {
-            this.hide();
-        }
+        this.controller.toggleHide();
     }
-
     close(): void {
-        this.visible = false;
-        this.onClose.emit();
+        this.controller.close();
     }
-
     maximize(): void {
-        if (!this.resolvedMaximized) {
-            this._internalMaximized = true;
-            this.maximizedChange.emit(true);
-            this.collapsableContent?.setMaximized(true);
-        }
+        this.controller.maximize();
     }
-
     restore(): void {
-        if (this.resolvedMaximized) {
-            this._internalMaximized = false;
-            this.maximizedChange.emit(false);
-            this.collapsableContent?.setMaximized(false);
-        }
+        this.controller.restore();
     }
-
     toggleMaximize(): void {
-        if (this.resolvedMaximized) {
-            this.restore();
-        } else {
-            this.maximize();
-        }
+        this.controller.toggleMaximize();
     }
-
     resize(dimensions: { height?: number; width?: number }): void {
-        if (dimensions.height !== undefined) {
-            this._internalHeight = dimensions.height;
-            this.heightChange.emit(dimensions.height);
-        }
-        if (dimensions.width !== undefined) {
-            this._internalWidth = dimensions.width;
-            this.widthChange.emit(dimensions.width);
-        }
-        this.collapsableContent?.setDimensions(dimensions);
+        this.controller.resize(dimensions);
     }
-
-    setPosition(pos: CliPanelPosition): void {
-        this.currentPosition = pos;
-        savePanelPosition(pos);
-        this.positionChange.emit(pos);
+    setPosition(position: CliPanelPosition): void {
+        this.controller.setPosition(position);
     }
-
+    addTab(title?: string): number {
+        return this.controller.addTab(title);
+    }
+    closeTab(tabId: number): void {
+        this.controller.closeTab(tabId);
+    }
+    selectTab(tabId: number): void {
+        this.controller.selectTab(tabId);
+    }
     renameTab(tabId: number, title: string): void {
-        const tab = this.findTab(tabId);
-        if (tab) {
-            tab.title = title;
-        }
+        this.controller.renameTab(tabId, title);
     }
-
+    splitPane(tabId?: number): number {
+        return this.controller.splitPane(tabId);
+    }
+    closePane(paneId: number): void {
+        this.controller.closePane(paneId);
+    }
     getEngine(paneId?: number): CliEngine | undefined {
-        const targetPaneId = paneId ?? this.activePaneId;
-        let flatIndex = 0;
-        for (const tab of this.tabs) {
-            for (const pane of tab.panes) {
-                if (pane.id === targetPaneId) {
-                    const components = this.cliComponents?.toArray();
-                    return components?.[flatIndex]?.getEngine();
-                }
-                flatIndex++;
-            }
-        }
-        return undefined;
+        return this.controller.getEngine(paneId);
     }
-
     getState(): CliPanelState {
-        return {
-            collapsed: this.resolvedCollapsed,
-            hidden: this.resolvedHidden,
-            maximized: this.resolvedMaximized,
-            position: this.resolvedPosition,
-            height: this.resolvedHeight,
-            width: this.resolvedWidth,
-            activeTabId: this.resolvedActiveTabId,
-            activePaneId: this.activePaneId,
-            tabs: this.tabs.map((t) => ({
-                id: t.id,
-                title: t.title,
-                panes: t.panes.map((p) => ({ id: p.id, widthPercent: p.widthPercent })),
-            })),
+        return this.controller.getState();
+    }
+
+    // ── Internals ──
+
+    private controlledValues(): CliPanelControlledState {
+        const values: CliPanelControlledState = {};
+        for (const key of CONTROLLED_INPUTS) {
+            (values as Record<string, unknown>)[key] = this[key];
+        }
+        return values;
+    }
+
+    private render(s: CliPanelSnapshot): void {
+        this.s = s;
+        this.view = {
+            wrapperClass: panelWrapperClass(s),
+            wrapperStyle: panelWrapperStyle(s),
+            indicators: statusIndicators(s),
+            positionOptions: positionOptions(s).map((opt) => ({ ...opt, icon: positionIcon(opt.position, 16) })),
+            positionIcon: positionIcon(s.position),
+            collapseIcon: collapseChevronIcon(s.position, s.collapsed),
+            hideTabArrowIcon: hideTabChevronIcon(s.position),
+            maximizeIcon: s.maximized ? RESTORE_ICON : MAXIMIZE_ICON,
+            contextMenuItems: contextMenuItems(s),
+            contextMenuStyle: contextMenuStyle(s),
+            glowLineClass: glowLineClass(s),
+            panesContainerClass: panesContainerClass(s),
+            statusDropdown: openStatusDropdown(s),
         };
-    }
-
-    // --- Helpers ---
-
-    private findTab(id: number): TerminalTab | undefined {
-        return this.tabs.find((t) => t.id === id);
-    }
-
-    private getEngineForTab(tab: TerminalTab): CliEngine | undefined {
-        if (!this.cliComponents) return undefined;
-
-        let flatIndex = 0;
-        for (const t of this.tabs) {
-            for (const _pane of t.panes) {
-                if (t.id === tab.id) {
-                    const component = this.cliComponents.toArray()[flatIndex];
-                    return component?.getEngine();
-                }
-                flatIndex++;
-            }
-        }
-        return undefined;
-    }
-
-    private cancelAllEditing(): void {
-        this.tabs.forEach((t) => (t.isEditing = false));
-    }
-
-    private focusActiveTerminal(): void {
-        this.focusPane(this.resolvedActiveTabId, this.activePaneId);
-    }
-
-    private focusPane(tabId: number, paneId: number): void {
-        if (!this.cliComponents) return;
-
-        let flatIndex = 0;
-        for (const tab of this.tabs) {
-            for (const pane of tab.panes) {
-                if (tab.id === tabId && pane.id === paneId) {
-                    const component = this.cliComponents.toArray()[flatIndex];
-                    component?.focus();
-                    return;
-                }
-                flatIndex++;
-            }
-        }
-    }
-
-    private normalizePaneWidths(panes: TerminalPane[]): void {
-        const total = panes.reduce((s, p) => s + p.widthPercent, 0);
-        if (total === 0) return;
-        const scale = 100 / total;
-        panes.forEach((p) => (p.widthPercent = p.widthPercent * scale));
-    }
-
-    private setupThemeSync(): void {
-        if (!this.options?.syncTheme) return;
-
-        // Wait for the first terminal to render, then observe style changes
-        setTimeout(() => {
-            this.syncThemeFromEngine();
-
-            const container = this.elementRef.nativeElement.querySelector(
-                '.terminal-container',
-            );
-            if (!container) return;
-
-            this.themeObserver?.disconnect();
-            this.themeObserver = new MutationObserver(() => {
-                this.syncThemeFromEngine();
-            });
-            this.themeObserver.observe(container, {
-                attributes: true,
-                attributeFilter: ['style'],
-            });
-        }, 200);
-    }
-
-    private syncThemeFromEngine(): void {
-        if (!this.cliComponents) return;
-        const first = this.cliComponents.first;
-        if (!first) return;
-        const engine = first.getEngine();
-        if (!engine) return;
-        const theme = engine.getTerminal().options.theme;
-        if (!theme) return;
-        this.themeStyles = derivePanelThemeStyles(theme);
     }
 }

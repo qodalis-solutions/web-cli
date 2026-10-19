@@ -11,36 +11,32 @@ import {
     CliEngineSnapshot,
     ICliCommandProcessor,
     ICliModule,
-    ICliCompletionProvider,
-    ICliCompletionProvider_TOKEN,
     ICliServerAuthService_TOKEN,
+    ICliEventBus_TOKEN,
 } from '@qodalis/cli-core';
 import { CliServerAuthService } from '../services/cli-server-auth.service';
 import { CliCommandExecutor } from '../executor/cli-command-executor';
 import { CliCommandProcessorRegistry } from '../registry/cli-command-processor-registry';
 import { CliExecutionContext } from '../context/cli-execution-context';
-import { CliEnvironment, ICliEnvironment, ICliEnvironment_TOKEN } from '../services/cli-environment';
 import {
-    ICliStateStoreManager,
-} from '../state/cli-state-store-manager';
+    CliEnvironment,
+    ICliEnvironment,
+    ICliEnvironment_TOKEN,
+} from '../services/cli-environment';
+import { ICliStateStoreManager } from '../state/cli-state-store-manager';
 import { CliBoot } from '../services/cli-boot';
-import { welcomeModule } from '../services/cli-welcome-message';
+import { CliBootLog } from '../services/cli-boot-log';
+import { LIBRARY_VERSION } from '../version';
+import { greetingModule, welcomeModule } from '../services/cli-welcome-message';
 import {
     CliBackgroundServiceRegistry_TOKEN,
     CliModuleRegistry_TOKEN,
+    CliBootLog_TOKEN,
     CliProcessorsRegistry_TOKEN,
     CliStateStoreManager_TOKEN,
 } from '../tokens';
 import { CliBackgroundServiceRegistry } from '../services/background/cli-background-service-registry';
 import { CliDragDropService } from '../services/cli-drag-drop.service';
-import { CliCommandCompletionProvider } from '../completion/cli-command-completion-provider';
-import { CliParameterCompletionProvider } from '../completion/cli-parameter-completion-provider';
-import { CliServiceNameCompletionProvider } from '../completion/cli-service-name-completion-provider';
-import { CliPackageNameCompletionProvider } from '../completion/cli-package-name-completion-provider';
-import { CliThemeNameCompletionProvider } from '../completion/cli-theme-name-completion-provider';
-import { CliAliasNameCompletionProvider } from '../completion/cli-alias-name-completion-provider';
-import { CliServerNameCompletionProvider } from '../completion/cli-server-name-completion-provider';
-import { CliConfigKeyCompletionProvider } from '../completion/cli-config-key-completion-provider';
 import {
     CliServerManager,
     CliServerManager_TOKEN,
@@ -52,7 +48,15 @@ import {
     initializeTerminal,
     waitForLayout,
 } from './cli-terminal-setup';
-import { initializeServices } from './cli-service-initializer';
+import {
+    initializeServices,
+    InitializeServicesResult,
+} from './cli-service-initializer';
+import {
+    bootSummary,
+    createBootLog,
+    createCompletionProviders,
+} from './cli-engine-boot';
 
 export interface CliEngineOptions extends CliOptions {
     terminalOptions?: Partial<ITerminalOptions & ITerminalInitOnlyOptions>;
@@ -64,6 +68,14 @@ export interface CliEngineOptions extends CliOptions {
      * `/assets/wasm/` and `/wasm/`; the CLI works without it.
      */
     wasmUrl?: string;
+}
+
+/** What the start phases share once services exist. */
+interface EngineCore {
+    services: InitializeServicesResult['services'];
+    stateStoreManager: InitializeServicesResult['stateStoreManager'];
+    processRegistry: InitializeServicesResult['processRegistry'];
+    executor: CliCommandExecutor;
 }
 
 export class CliEngine {
@@ -82,6 +94,12 @@ export class CliEngine {
     private bootService?: CliBoot;
     private dragDropService?: CliDragDropService;
     private _startedAt?: number;
+    private terminalOptions!: ReturnType<typeof getTerminalOptions>;
+    private _isBooted = false;
+    private resolveBooted!: () => void;
+    private readonly bootedPromise = new Promise<void>((resolve) => {
+        this.resolveBooted = resolve;
+    });
 
     constructor(
         private readonly container: HTMLElement,
@@ -138,24 +156,90 @@ export class CliEngine {
     }
 
     /**
-     * Initialize the terminal, wire up services, boot modules, and show welcome message.
+     * Start the CLI: set up the terminal and services, boot the modules
+     * (reporting progress in the terminal), then hand over to the prompt.
+     *
+     * Phases, in order:
+     *  1. terminal         xterm.js in the container
+     *  2. services         service container, executor, execution context
+     *  3. boot report      hold typed keys, show the boot log
+     *  4. runtime          environment, background services, servers
+     *  5. modules          core + welcome + server + user modules
+     *  6. completion       tab-completion providers
+     *  7. ready            clear the report, replay typed keys, `isBooted`
+     *  8. after boot       `onAfterBoot` hooks (welcome message), snapshot
      */
     async start(): Promise<void> {
-        // 0. Eagerly load WASM accelerator (fire-and-forget — JS fallback if unavailable)
+        // Optional accelerator, fire-and-forget (JS fallback when unavailable)
         initWasmAccelerator(this.options?.wasmUrl).catch(() => {});
+        const startedAt = Date.now();
 
-        // 1. Wait for container to have layout, then initialize xterm.js
+        await this.setupTerminal();
+        const core = await this.setupServices();
+        const bootLog = await this.beginBootReport(core, startedAt);
+
+        let modules: ICliModule[] = [];
+        try {
+            const serverManager = this.registerRuntimeServices(core);
+            await this.connectServers(serverManager, bootLog);
+            modules = this.modulesToBoot();
+            await this.bootService!.boot(
+                this.executionContext,
+                modules,
+                bootLog,
+            );
+            // Plugins loaded from scripts (`pkg`) boot asynchronously, setup
+            // prompts included: boot is complete only when they are done.
+            await this.bootService!.getModuleRegistry().whenIdle();
+            this.executionContext.completionEngine.setProviders(
+                createCompletionProviders({
+                    ...core,
+                    registry: this.registry,
+                    serverManager,
+                    backgroundServices:
+                        this.executionContext.backgroundServices,
+                }),
+            );
+        } catch (e) {
+            await this.failBoot(bootLog, e);
+            throw e;
+        }
+
+        await this.completeBoot(bootLog);
+        await this.runAfterBootHooks(modules);
+
+        if (this.options?.snapshot) {
+            await this.restoreSnapshot(this.options.snapshot);
+        }
+        this._startedAt = Date.now();
+
+        // No prompt was drawn (e.g. restored snapshot): hand over typed keys now
+        this.executionContext.releaseInput(true);
+
+        // Final refit: fonts are loaded and boot output is written by now,
+        // so cell metrics are stable.
+        this.safeFit();
+    }
+
+    // ── Start phases ──
+
+    /** 1. Wait for the container to have a size, then create xterm.js. */
+    private async setupTerminal(): Promise<void> {
         await waitForLayout(this.container);
-        const terminalOpts = getTerminalOptions(this.options?.terminalOptions);
-        const setupResult = initializeTerminal(this.container, terminalOpts);
-        this.terminal = setupResult.terminal;
-        this.fitAddon = setupResult.fitAddon;
-        this.serializeAddon = setupResult.serializeAddon;
-        this.dragDropService = setupResult.dragDropService;
-        this.wheelListener = setupResult.wheelListener;
+        this.terminalOptions = getTerminalOptions(
+            this.options?.terminalOptions,
+        );
+        const setup = initializeTerminal(this.container, this.terminalOptions);
+        this.terminal = setup.terminal;
+        this.fitAddon = setup.fitAddon;
+        this.serializeAddon = setup.serializeAddon;
+        this.dragDropService = setup.dragDropService;
+        this.wheelListener = setup.wheelListener;
         this.handleResize();
+    }
 
-        // 2. Build service container
+    /** 2. Service container, boot service, executor and execution context. */
+    private async setupServices(): Promise<EngineCore> {
         const {
             services,
             logger,
@@ -169,10 +253,8 @@ export class CliEngine {
             dragDropService: this.dragDropService,
         });
 
-        // 3. Create boot service with registry and services
         this.bootService = new CliBoot(this.registry, services);
-
-        // Register the module registry so debug/introspection commands can access it
+        // Debug/introspection commands and `pkg` use the module registry
         services.set([
             {
                 provide: CliModuleRegistry_TOKEN,
@@ -180,22 +262,64 @@ export class CliEngine {
             },
         ]);
 
-        // 4. Create executor and execution context
         const executor = new CliCommandExecutor(this.registry);
-
         this.executionContext = new CliExecutionContext(
             { services, logger, commandHistory, stateStoreManager, translator },
             this.terminal,
             executor,
-            { ...(this.options ?? {}), terminalOptions: terminalOpts },
+            { ...(this.options ?? {}), terminalOptions: this.terminalOptions },
         );
-
         this.executionContext.initializeTerminalListeners();
 
+        return { services, stateStoreManager, processRegistry, executor };
+    }
+
+    /**
+     * 3. Keep what the user types until the terminal is ready (replayed at
+     * the first prompt) and start the boot report (configurable).
+     */
+    private async beginBootReport(
+        core: EngineCore,
+        startedAt: number,
+    ): Promise<CliBootLog> {
+        this.executionContext.holdInput();
+
+        const bootLog = await createBootLog(
+            this.terminal,
+            core.stateStoreManager,
+            {
+                boot: this.options?.boot,
+                restoringSnapshot: !!this.options?.snapshot,
+                startedAt,
+            },
+        );
+        core.services.set([{ provide: CliBootLog_TOKEN, useValue: bootLog }]);
+
+        // Terminal/services + one per server; the boot service adds the modules
+        const serverCount = (this.options?.servers ?? []).filter(
+            (s) => s.enabled !== false,
+        ).length;
+        bootLog.addSteps(1 + serverCount);
+        bootLog.info(`Starting Web CLI ${LIBRARY_VERSION}`);
+        bootLog.ok(
+            `Terminal and services ready · ${this.terminal.cols}×${this.terminal.rows}`,
+            bootLog.elapsedMs,
+        );
+        bootLog.completeStep();
+
+        return bootLog;
+    }
+
+    /** 4. Environment variables, background services, server auth and manager. */
+    private registerRuntimeServices(core: EngineCore): CliServerManager {
+        const { services, processRegistry } = core;
+        const ctx = this.executionContext;
+
         // USER, HOME and PWD follow the signed-in user and the current directory
-        const environment = services.get<ICliEnvironment>(ICliEnvironment_TOKEN);
+        const environment = services.get<ICliEnvironment>(
+            ICliEnvironment_TOKEN,
+        );
         if (environment instanceof CliEnvironment) {
-            const ctx = this.executionContext;
             environment.bind('USER', () => ctx.userSession?.user.name);
             environment.bind('HOME', () => ctx.userSession?.user.homeDir);
             environment.bind('PWD', () => ctx.promptPathProvider?.());
@@ -203,95 +327,135 @@ export class CliEngine {
             environment.setProfileResolver(() => ctx.userSession?.user.name);
         }
 
-        // 4.5. Register background services registry in the service container
-        // and wire it to the process registry so bg services get PIDs
-        (this.executionContext.backgroundServices as CliBackgroundServiceRegistry)
-            .setProcessRegistry(processRegistry);
-        services.set([{
-            provide: CliBackgroundServiceRegistry_TOKEN,
-            useValue: this.executionContext.backgroundServices,
-        }]);
-
-        // 5. Register server auth service and connect to configured servers
-        const serverAuthService = new CliServerAuthService(services);
+        // Background services get PIDs from the process registry
+        (
+            ctx.backgroundServices as CliBackgroundServiceRegistry
+        ).setProcessRegistry(processRegistry);
         services.set([
-            { provide: ICliServerAuthService_TOKEN, useValue: serverAuthService, sealed: true },
+            {
+                provide: CliBackgroundServiceRegistry_TOKEN,
+                useValue: ctx.backgroundServices,
+            },
         ]);
 
         services.set([
             {
-                provide: CliServerManager_TOKEN,
-                useClass: CliServerManager,
-                deps: [CliProcessorsRegistry_TOKEN, ICliServerAuthService_TOKEN],
+                provide: ICliServerAuthService_TOKEN,
+                useValue: new CliServerAuthService(services),
+                sealed: true,
             },
         ]);
-        const serverManager = services.getRequired<CliServerManager>(CliServerManager_TOKEN);
-
-        if (this.options?.servers && this.options.servers.length > 0) {
-            await serverManager.connectAll(this.options.servers, {
-                warn: (msg) => this.executionContext.logger.warn(msg),
-                info: (msg) => this.executionContext.logger.info(msg),
-            }, this.executionContext.backgroundServices, this.executionContext.logger);
-        }
-
-        // 5.5. Prepend welcome module and server module
-        const serverModule = createServerModule();
-        const allModules = this.options?.snapshot
-            ? [serverModule, ...this.userModules]
-            : [welcomeModule, serverModule, ...this.userModules];
-
-        // 6. Boot all modules (core + welcome + user modules)
-        await this.bootService.boot(this.executionContext, allModules);
-
-        // 7. Set up tab-completion providers
-        const defaultProviders: ICliCompletionProvider[] = [
-            new CliServiceNameCompletionProvider(this.executionContext.backgroundServices),
-            new CliPackageNameCompletionProvider(services),
-            new CliThemeNameCompletionProvider(),
-            new CliAliasNameCompletionProvider(stateStoreManager),
-            new CliServerNameCompletionProvider(serverManager),
-            new CliConfigKeyCompletionProvider(this.registry),
-            new CliCommandCompletionProvider(this.registry),
-            new CliParameterCompletionProvider(this.registry, executor),
-        ];
-
-        // Collect plugin-registered providers (multi-service)
-        const pluginProviders = services.getAll<ICliCompletionProvider>(
-            ICliCompletionProvider_TOKEN,
-        );
-
-        this.executionContext.completionEngine.setProviders([
-            ...pluginProviders,
-            ...defaultProviders,
+        services.set([
+            {
+                provide: CliServerManager_TOKEN,
+                useClass: CliServerManager,
+                deps: [
+                    CliProcessorsRegistry_TOKEN,
+                    ICliServerAuthService_TOKEN,
+                    ICliEventBus_TOKEN,
+                ],
+            },
         ]);
+        return services.getRequired<CliServerManager>(CliServerManager_TOKEN);
+    }
 
-        // 8. Run onAfterBoot hooks sorted by priority (lower first)
-        const sorted = [...allModules].sort(
+    /** 4. Connect to the configured servers, one boot step each. */
+    private async connectServers(
+        serverManager: CliServerManager,
+        bootLog: CliBootLog,
+    ): Promise<void> {
+        const servers = this.options?.servers;
+        if (!servers || servers.length === 0) return;
+
+        const ctx = this.executionContext;
+        bootLog.setCurrent('Connecting to servers');
+        // The same logger reports reconnects later; the boot log ignores
+        // entries once boot is finished.
+        await serverManager.connectAll(
+            servers,
+            {
+                warn: (msg) => {
+                    ctx.logger.warn(msg);
+                    bootLog.warn(msg);
+                    bootLog.completeStep();
+                },
+                info: (msg) => {
+                    ctx.logger.info(msg);
+                    bootLog.ok(msg);
+                    bootLog.completeStep();
+                },
+            },
+            ctx.backgroundServices,
+            ctx.logger,
+        );
+    }
+
+    /**
+     * 5. Built-in welcome and server modules, the app's modules, and the
+     * greeting, which runs after every other `onAfterBoot` hook.
+     */
+    private modulesToBoot(): ICliModule[] {
+        const serverModule = createServerModule();
+        // A restored snapshot already contains the welcome screen
+        return this.options?.snapshot
+            ? [serverModule, ...this.userModules]
+            : [
+                  welcomeModule,
+                  serverModule,
+                  ...this.userModules,
+                  greetingModule,
+              ];
+    }
+
+    /** 7. Replace the boot report with the terminal and mark the CLI booted. */
+    private async completeBoot(bootLog: CliBootLog): Promise<void> {
+        await bootLog.finish(
+            bootSummary(
+                bootLog,
+                this.bootService!.getModuleRegistry().getAll().length,
+                this.registry.processors.length,
+            ),
+            this.options?.boot?.keepLogs,
+        );
+        this.executionContext.releaseInput();
+        this.executionContext.markBooted();
+        this._isBooted = true;
+        this.resolveBooted();
+        this.executionContext.events?.emit('boot:completed', {
+            durationMs: bootLog.elapsedMs,
+            modules: this.bootService!.getModuleRegistry().getAll().length,
+            commands: this.registry.processors.length,
+        });
+    }
+
+    /**
+     * Boot threw: never leave the terminal unusable. Keep the report with the
+     * error on screen, show the cursor and hand over typed keys.
+     */
+    private async failBoot(bootLog: CliBootLog, error: unknown): Promise<void> {
+        bootLog.error(
+            `Boot failed: ${error instanceof Error ? error.message : error}`,
+        );
+        await bootLog.finish('Boot failed', true);
+        this.executionContext.releaseInput(true);
+    }
+
+    /** 8. `onAfterBoot` hooks by priority (lower first); one failing hook does not stop the rest. */
+    private async runAfterBootHooks(modules: ICliModule[]): Promise<void> {
+        const sorted = [...modules].sort(
             (a, b) => (a.priority ?? 0) - (b.priority ?? 0),
         );
         for (const module of sorted) {
-            if (module.onAfterBoot) {
-                try {
-                    await module.onAfterBoot(this.executionContext);
-                } catch (e) {
-                    this.executionContext.logger.error(
-                        `Error in onAfterBoot for module "${module.name}":`,
-                        e,
-                    );
-                }
+            if (!module.onAfterBoot) continue;
+            try {
+                await module.onAfterBoot(this.executionContext);
+            } catch (e) {
+                this.executionContext.logger.error(
+                    `Error in onAfterBoot for module "${module.name}":`,
+                    e,
+                );
             }
         }
-
-        // 9. Restore from snapshot if provided
-        if (this.options?.snapshot) {
-            await this.restoreSnapshot(this.options.snapshot);
-        }
-
-        this._startedAt = Date.now();
-
-        // 10. Final refit — by this point fonts are loaded and all boot
-        //     content has been written, so cell metrics are stable.
-        this.safeFit();
     }
 
     /**
@@ -300,19 +464,34 @@ export class CliEngine {
     destroy(): void {
         // 1. Dispose execution context (stops background services, cleans up managed timers)
         this.executionContext?.dispose();
+        (
+            this.executionContext?.events as
+                { dispose?: () => void } | undefined
+        )?.dispose?.();
 
-        // 2. Call onDestroy on all registered modules
+        // 2. Call onDestroy on all registered modules, then dispose the
+        //    services the container created (once those hooks are done)
         if (this.bootService && this.executionContext) {
+            const context = this.executionContext;
             const modules = this.bootService.getModuleRegistry().getAll();
+            const destroyed: Promise<unknown>[] = [];
             for (const module of modules) {
-                if (module.onDestroy) {
-                    try {
-                        module.onDestroy(this.executionContext);
-                    } catch (e) {
-                        this.executionContext.logger.error(`Error in onDestroy for module "${module.name}":`, e);
-                    }
+                if (!module.onDestroy) continue;
+                const report = (e: unknown) =>
+                    context.logger.error(
+                        `Error in onDestroy for module "${module.name}":`,
+                        e,
+                    );
+                try {
+                    destroyed.push(
+                        Promise.resolve(module.onDestroy(context)).catch(report),
+                    );
+                } catch (e) {
+                    report(e);
                 }
             }
+            const services = context.services as { dispose?: () => void };
+            void Promise.all(destroyed).then(() => services.dispose?.());
         }
 
         if (this.resizeListener) {
@@ -360,6 +539,22 @@ export class CliEngine {
     }
 
     /**
+     * `true` once boot has completed: modules are set up and the terminal
+     * accepts input. `onAfterBoot` hooks (welcome message) run right after.
+     */
+    get isBooted(): boolean {
+        return this._isBooted;
+    }
+
+    /**
+     * Resolves when boot has completed (see `isBooted`). Never rejects; if
+     * `start()` fails it stays pending.
+     */
+    get booted(): Promise<void> {
+        return this.bootedPromise;
+    }
+
+    /**
      * Timestamp (ms since epoch) when the engine finished starting.
      */
     get startedAt(): number | undefined {
@@ -392,9 +587,10 @@ export class CliEngine {
             throw new Error('Cannot snapshot before engine has started');
         }
 
-        const stateStoreManager = this.executionContext.services.getRequired<ICliStateStoreManager>(
-            CliStateStoreManager_TOKEN,
-        );
+        const stateStoreManager =
+            this.executionContext.services.getRequired<ICliStateStoreManager>(
+                CliStateStoreManager_TOKEN,
+            );
 
         return {
             version: 1,
@@ -415,20 +611,28 @@ export class CliEngine {
      * source, the restored content may reflow differently.
      */
     private async restoreSnapshot(snap: CliEngineSnapshot): Promise<void> {
-        // Restore terminal buffer (await the write to ensure buffer is fully applied)
+        // Restore terminal buffer (await the write to ensure buffer is fully applied).
+        // Clear first: this engine's own boot may have written output (plugin
+        // warnings) that the snapshot already contains.
         if (snap.terminal.serializedBuffer) {
             await new Promise<void>((resolve) => {
-                this.terminal.write(snap.terminal.serializedBuffer, resolve);
+                this.terminal.write(
+                    '\x1b[2J\x1b[3J\x1b[H' + snap.terminal.serializedBuffer,
+                    resolve,
+                );
             });
         }
 
         // Restore command history
-        await this.executionContext.commandHistory.setHistory(snap.commandHistory);
+        await this.executionContext.commandHistory.setHistory(
+            snap.commandHistory,
+        );
 
         // Restore state stores
-        const stateStoreManager = this.executionContext.services.getRequired<ICliStateStoreManager>(
-            CliStateStoreManager_TOKEN,
-        );
+        const stateStoreManager =
+            this.executionContext.services.getRequired<ICliStateStoreManager>(
+                CliStateStoreManager_TOKEN,
+            );
         for (const entry of snap.stateStores) {
             const store = stateStoreManager.getStateStore(entry.name);
             store.updateState(entry.state);
@@ -453,10 +657,7 @@ export class CliEngine {
      * is hidden (e.g., via [hidden] or display:none on an ancestor).
      */
     private safeFit(): void {
-        if (
-            this.container.offsetWidth > 0 &&
-            this.container.offsetHeight > 0
-        ) {
+        if (this.container.offsetWidth > 0 && this.container.offsetHeight > 0) {
             const oldCols = this.terminal.cols;
             this.fitAddon.fit();
             if (this.executionContext && oldCols !== this.terminal.cols) {

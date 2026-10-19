@@ -38,9 +38,40 @@ export enum CliLogLevel {
 }
 
 /**
+ * How the CLI reports its startup.
+ */
+export interface CliBootOptions {
+    /**
+     * Report each boot step (terminal, services, servers, modules) in the
+     * terminal while the CLI starts. When `false`, a spinner is shown instead.
+     * Users can override it with `configure set system.bootLogs false`.
+     * @default true
+     */
+    showLogs?: boolean;
+
+    /**
+     * Keep the boot report on screen after startup instead of clearing it
+     * when the terminal is ready. Warnings and errors are kept either way.
+     * @default false
+     */
+    keepLogs?: boolean;
+
+    /**
+     * Steps taking at least this many milliseconds are highlighted as slow.
+     * @default 500
+     */
+    slowStepMs?: number;
+}
+
+/**
  * Options for the CLI
  */
 export type CliOptions = Record<string, any> & {
+    /**
+     * How the CLI reports its startup (boot log, spinner).
+     */
+    boot?: CliBootOptions;
+
     /**
      * Custom terminal options
      */
@@ -124,6 +155,14 @@ export type CliProcessorMetadata = Record<string, any> & {
     sealed?: boolean;
 
     /**
+     * The command's text is code or other literal input (`eval`): the engine
+     * passes the whole line as typed, without operators (`|`, `;`, `&&`,
+     * `>`) or expansion of `$(...)`, `$VAR`, braces and wildcards, so
+     * `eval [1,2].map(x => x * 2)` keeps its `=>`, `*` and `${...}`.
+     */
+    literalInput?: boolean;
+
+    /**
      * If true, the processor requires the server to be running
      */
     requireServer?: boolean;
@@ -192,7 +231,55 @@ export type CliStateConfiguration = {
      * @remarks If the store identifier is not set, the processor command name is used
      */
     storeName?: string;
+
+    /**
+     * Save the state after every change, so `persist()` does not have to be
+     * called. Changes made in the same tick are saved together.
+     * @default false
+     */
+    autoPersist?: boolean;
+
+    /**
+     * Version of the state's shape. When the saved state has an older
+     * version, `migrate` converts it while it is loaded. Saved state without
+     * a version counts as version 0.
+     */
+    version?: number;
+
+    /**
+     * Convert saved state of version `fromVersion` to the current
+     * {@link version}. The result is merged over `initialState`.
+     */
+    migrate?: (state: CliState, fromVersion: number) => CliState;
+
+    /**
+     * Apply changes saved by other tabs and terminals of the same browser.
+     * @default true
+     */
+    syncAcrossTabs?: boolean;
+
+    /**
+     * Where the state lives:
+     * - `'global'`: saved in the browser and shared by every terminal and tab
+     *   (each save merges the keys it changed, so terminals changing
+     *   different keys never overwrite each other).
+     * - `'user'`: like `'global'`, but saved separately for each signed-in
+     *   user (signed out, the state is shared); it switches when the user
+     *   signs in or out.
+     * - `'session'`: this terminal only, in memory; never saved or shared.
+     * @default 'global'
+     */
+    scope?: CliStateScope;
 };
+
+/** See {@link CliStateConfiguration.scope}. */
+export type CliStateScope = 'global' | 'user' | 'session';
+
+/** Options of a state store (see {@link CliStateConfiguration}). */
+export type CliStateStoreOptions = Pick<
+    CliStateConfiguration,
+    'autoPersist' | 'version' | 'migrate' | 'syncAcrossTabs' | 'scope'
+>;
 
 export type CliState = Record<string, any>;
 

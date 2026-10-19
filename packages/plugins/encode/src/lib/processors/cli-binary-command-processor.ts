@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliBinaryCommandProcessor implements ICliCommandProcessor {
@@ -35,7 +36,7 @@ export class CliBinaryCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value || command.data || '') as string;
+                    const text = (joinShellWords(command.value ?? '') || command.data || '') as string;
                     const binary = Array.from(new TextEncoder().encode(text))
                         .map((b) => b.toString(2).padStart(8, '0'))
                         .join(' ');
@@ -67,7 +68,7 @@ export class CliBinaryCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const input = (command.value || command.data || '') as string;
+                    const input = (joinShellWords(command.value ?? '') || command.data || '') as string;
                     try {
                         const cleaned = input.replace(/[^01]/g, '');
                         if (cleaned.length === 0 || cleaned.length % 8 !== 0) {

@@ -1,72 +1,117 @@
-<div *ngIf="plugin">
+@if (plugin) {
+  <div>
     <h1>{{ plugin.name }}</h1>
     <p>
-        <code>{{ plugin.npmPackage }}</code>
-        <span *ngIf="plugin.category === 'language'" class="category-badge"> {{ 'docs.plugin-detail.language-pack-badge' | translate }}</span>
-        <span *ngIf="plugin.category === 'game'" class="category-badge"> {{ 'docs.plugin-detail.game-badge' | translate }}</span>
+      <code>{{ plugin.npmPackage }}</code>
+      @if (plugin.category === "language") {
+        <span class="category-badge">
+          {{ "docs.plugin-detail.language-pack-badge" | translate }}</span
+        >
+      }
+      @if (plugin.category === "game") {
+        <span class="category-badge">
+          {{ "docs.plugin-detail.game-badge" | translate }}</span
+        >
+      }
     </p>
     <p>{{ plugin.description }}</p>
-
-    <h2>{{ 'docs.plugin-detail.installation' | translate }}</h2>
+    <h2>{{ "docs.plugin-detail.installation" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">npm</span>
-        <pre><code>{{ installCommand }}</code></pre>
+      <span class="code-label">npm</span>
+      <pre><code>{{ installCommand }}</code></pre>
     </div>
-    <div class="code-block" *ngIf="plugin.category !== 'language'">
-        <span class="code-label">{{ 'docs.plugin-detail.runtime-install' | translate }}</span>
+    @if (plugin.category !== "language") {
+      <div class="code-block">
+        <span class="code-label">{{
+          "docs.plugin-detail.runtime-install" | translate
+        }}</span>
         <pre><code>{{ runtimeInstall }}</code></pre>
-    </div>
-
-    <h2 *ngIf="plugin.command">{{ 'docs.plugin-detail.commands' | translate }}</h2>
-    <div *ngIf="plugin.command" class="command-badges" style="margin-bottom: 24px">
-        <code class="command-badge" *ngFor="let cmd of plugin.command.split(', ')">{{ cmd }}</code>
-    </div>
-
-    <div *ngIf="plugin.notes?.length">
-        <h2>{{ 'docs.plugin-detail.notes' | translate }}</h2>
+      </div>
+    }
+    @if (plugin.command) {
+      <h2>{{ "docs.plugin-detail.commands" | translate }}</h2>
+    }
+    @if (plugin.command) {
+      <div class="command-badges" style="margin-bottom: 24px">
+        @for (cmd of plugin.command.split(", "); track cmd) {
+          <code class="command-badge">{{ cmd }}</code>
+        }
+      </div>
+    }
+    @if (plugin.notes?.length) {
+      <div>
+        <h2>{{ "docs.plugin-detail.notes" | translate }}</h2>
         <ul class="plugin-notes">
-            <li *ngFor="let note of plugin.notes">{{ note }}</li>
+          @for (note of plugin.notes; track note) {
+            <li>{{ note }}</li>
+          }
         </ul>
-    </div>
-
-    <div *ngIf="plugin.examples && plugin.examples.length > 0">
-        <h2>{{ 'docs.plugin-detail.examples' | translate }}</h2>
+      </div>
+    }
+    @if (plugin.examples && plugin.examples.length > 0) {
+      <div>
+        <h2>{{ "docs.plugin-detail.examples" | translate }}</h2>
         <div class="examples-list">
-            <div class="example-item" *ngFor="let example of plugin.examples">
-                <p class="example-description">{{ example.description }}</p>
-                <div class="code-block">
-                    <pre><code>{{ example.command }}</code></pre>
-                </div>
+          @for (example of plugin.examples; track example) {
+            <div class="example-item">
+              <p class="example-description">{{ example.description }}</p>
+              <div class="code-block">
+                <pre><code>{{ example.command }}</code></pre>
+              </div>
             </div>
+          }
         </div>
-    </div>
-
-    <h2>{{ 'docs.plugin-detail.usage' | translate }}</h2>
+      </div>
+    }
+    <h2>{{ "docs.plugin-detail.usage" | translate }}</h2>
     <div class="code-block">
-        <span class="code-label">Setup</span>
-        <pre><code>{{ usageSnippet }}</code></pre>
+      <span class="code-label">Setup</span>
+      <pre><code>{{ usageSnippet }}</code></pre>
     </div>
-
-    <div *ngIf="hasTryIt">
-        <h2>{{ 'docs.plugin-detail.try-it' | translate }}</h2>
-        <p *ngIf="plugin.command">
-            {{ 'docs.plugin-detail.try-it-desc' | translate:{ command: plugin.command.split(', ')[0], baseCommand: plugin.command.split(', ')[0].split(' ')[0] } }}
-        </p>
+    @if (hasTryIt) {
+      <div>
+        <h2>{{ "docs.plugin-detail.try-it" | translate }}</h2>
+        @if (plugin.command) {
+          <p>
+            {{
+              "docs.plugin-detail.try-it-desc"
+                | translate
+                  : {
+                      command: plugin.command.split(", ")[0],
+                      baseCommand: plugin.command.split(", ")[0].split(" ")[0],
+                    }
+            }}
+          </p>
+        }
         <div class="try-it-terminal">
-            <div class="try-it-chrome">
-                <span class="chrome-dot red"></span>
-                <span class="chrome-dot yellow"></span>
-                <span class="chrome-dot green"></span>
-                <span class="chrome-title">{{ plugin.name | lowercase }}</span>
-            </div>
-            <div class="try-it-body">
-                <cli [options]="tryItOptions" [modules]="tryItModules" height="280px" />
-            </div>
+          <div class="try-it-chrome">
+            <span class="chrome-dot red"></span>
+            <span class="chrome-dot yellow"></span>
+            <span class="chrome-dot green"></span>
+            <span class="chrome-title">{{ plugin.name | lowercase }}</span>
+          </div>
+          <div class="try-it-body">
+            <cli
+              [options]="tryItOptions"
+              [modules]="tryItModules"
+              height="280px"
+            />
+          </div>
         </div>
-    </div>
-</div>
+      </div>
+    }
+  </div>
+}
 
-<div *ngIf="!plugin">
-    <h1>{{ 'docs.plugin-detail.not-found-title' | translate }}</h1>
-    <p>{{ 'docs.plugin-detail.not-found-desc' | translate }} <a routerLink="/docs/getting-started">{{ 'docs.plugin-detail.return-link' | translate }}</a>.</p>
-</div>
+@if (!plugin) {
+  <div>
+    <h1>{{ "docs.plugin-detail.not-found-title" | translate }}</h1>
+    <p>
+      {{ "docs.plugin-detail.not-found-desc" | translate }}
+      <a routerLink="/docs/getting-started">{{
+        "docs.plugin-detail.return-link" | translate
+      }}</a
+      >.
+    </p>
+  </div>
+}

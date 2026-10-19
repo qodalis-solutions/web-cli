@@ -5,17 +5,31 @@ import {
 import { CliServerManager } from '../server/cli-server-manager';
 
 /**
- * Sub-commands of `server` that accept a server name value.
+ * Sub-commands of `server` (and their aliases) that accept a server name.
  */
 const SERVER_NAME_SUBCOMMANDS = new Set([
     'status',
+    'ping',
+    'info',
+    'commands',
+    'cmds',
     'reconnect',
+    'rc',
+    'connect',
     'default',
+    'use',
 ]);
+
+/** `server` and its aliases. */
+const SERVER_COMMANDS = new Set(['server', 'servers', 'srv']);
+
+/** `ssh` and its aliases. */
+const SSH_COMMANDS = new Set(['ssh', 'shell']);
 
 /**
  * Provides tab-completion for server names when typing
- * `server status|reconnect|default <name>` or `ssh <name>`.
+ * `server status|commands|reconnect|default <name>` (or their aliases)
+ * or `ssh <name>`.
  *
  * Priority 50 — checked before command and parameter completion.
  */
@@ -31,13 +45,13 @@ export class CliServerNameCompletionProvider
         const rootCommand = tokens[0]?.toLowerCase();
 
         // ssh <name>
-        if (rootCommand === 'ssh' && tokenIndex === 1) {
+        if (SSH_COMMANDS.has(rootCommand) && tokenIndex === 1) {
             return this.matchServerNames(token, true);
         }
 
         // server status|reconnect|default <name>
         if (
-            rootCommand === 'server' &&
+            SERVER_COMMANDS.has(rootCommand) &&
             tokenIndex === 2 &&
             tokens.length >= 2
         ) {

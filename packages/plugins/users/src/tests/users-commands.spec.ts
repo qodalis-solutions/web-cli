@@ -216,4 +216,13 @@ describe('users commands (local mode)', () => {
         expect(r.err).toBe('');
         expect(r.out).toContain("User 'ops' created");
     });
+
+    it('reads quoted user names without their quotes', async () => {
+        const { h, run } = await setup();
+        const r = await run(`adduser "carol" --email=carol@x.io`, 'password1', 'password1');
+        expect(r.err).toBe('');
+        expect(r.out).toContain("User 'carol' created");
+        expect(await userNamed(h, 'carol')).toBeDefined();
+        expect((await run(`userdel 'carol' --force`)).out).toContain("User 'carol' deleted");
+    });
 });

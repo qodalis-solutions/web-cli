@@ -60,7 +60,7 @@ export class JsFallbackAccelerator implements ICliWasmAccelerator {
         let count = 0;
 
         for (let row = 0; row < lines.length; row++) {
-            let line = lines[row];
+            const line = lines[row];
             let newLine = '';
             let searchFrom = 0;
 

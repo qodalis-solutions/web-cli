@@ -32,7 +32,7 @@ export class CliAliasNameCompletionProvider
 
         const store = this.stateStoreManager.getStateStore('aliases');
         const state = store.getState<Record<string, any>>();
-        const aliases = state?.aliases;
+        const aliases = state?.['aliases'];
 
         if (!aliases || typeof aliases !== 'object') {
             return [];

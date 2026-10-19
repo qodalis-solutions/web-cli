@@ -1,4 +1,4 @@
-import { CliTestHarness } from '@qodalis/cli';
+import { CliTestHarness, CliTestCommandProcessor, CliTrueCommandProcessor, CliFalseCommandProcessor } from '@qodalis/cli';
 import { IndexedDbFileSystemService } from '../lib/services';
 import { IFileSystemService_TOKEN } from '../lib/interfaces';
 import { CliEchoCommandProcessor as FilesEchoProcessor } from '../lib/processors/cli-echo-command-processor';
@@ -103,6 +103,9 @@ function setupHarness(): { harness: CliTestHarness; fs: IndexedDbFileSystemServi
         new CliPasteCommandProcessor(),
         new CliXargsCommandProcessor(),
         new CliShCommandProcessor(),
+        new CliTestCommandProcessor(),
+        new CliTrueCommandProcessor(),
+        new CliFalseCommandProcessor(),
     ]);
 
     return { harness, fs };
@@ -118,6 +121,128 @@ describe('Files plugin integration: single commands', () => {
 
     beforeEach(() => {
         ({ harness, fs } = setupHarness());
+    });
+
+    it('reads values stuck to short flags (head -n2, cut -f2)', async () => {
+        const head = await harness.execute('head -n2 /home/user/numbers.txt');
+        expect(head.output.trim().split(/\r?\n/)).toEqual(['3', '1']);
+        const cut = await harness.execute('cut -d , -f2 /home/user/data.csv');
+        expect(cut.output).toContain('age');
+        expect(cut.output).not.toContain('alice');
+    });
+
+    it('redirects to a quoted path with a space', async () => {
+        fs.createDirectory('/home/user/my dir');
+        await harness.execute('echo hi > "my dir/f.txt"');
+        expect(fs.readFile('/home/user/my dir/f.txt')).toBe('hi\n');
+    });
+
+    it('paste reads piped input as -', async () => {
+        fs.createFile('/home/user/b.txt', 'x\ny\n');
+        const result = await harness.execute('echo "a\nb" | paste - b.txt');
+        expect(String(result.data ?? result.output)).toContain('a\tx');
+    });
+
+    it('expands wildcards against the file system', async () => {
+        fs.createFile('/home/user/a.log', 'one\n');
+        fs.createFile('/home/user/b.log', 'two\n');
+        const cat = await harness.execute('cat *.log');
+        expect(cat.output).toContain('one');
+        expect(cat.output).toContain('two');
+        await harness.execute('rm *.log');
+        expect(fs.exists('/home/user/a.log')).toBe(false);
+        expect(fs.exists('/home/user/b.log')).toBe(false);
+        expect(fs.exists('/home/user/hello.txt')).toBe(true);
+    });
+
+    it('keeps a wildcard that matches nothing, and quoted ones', async () => {
+        const result = await harness.execute('echo "*.txt" *.nothing');
+        expect(result.output).toContain('*.txt *.nothing');
+    });
+
+    it('names the redirect target when it cannot be written', async () => {
+        const result = await harness.execute('echo x > /nope/f.txt');
+        expect(result.stderr.join('\n')).toContain('> /nope/f.txt: ');
+        expect(result.stderr.join('\n')).not.toContain('touch');
+    });
+
+    it('grep exits 0 on a match, 1 without, 2 on errors; -q prints nothing', async () => {
+        expect((await harness.execute('grep Hello /home/user/hello.txt')).exitCode ?? 0).toBe(0);
+        expect((await harness.execute('grep nothing-here /home/user/hello.txt')).exitCode).toBe(1);
+        expect((await harness.execute('grep x /home/user/missing.txt')).exitCode).toBe(2);
+        const quiet = await harness.execute('grep -q Hello /home/user/hello.txt');
+        expect(quiet.output).toBe('');
+        expect(quiet.exitCode ?? 0).toBe(0);
+        const chained = await harness.execute('grep -q nope /home/user/hello.txt && echo found || echo missing');
+        expect(chained.output).toContain('missing');
+    });
+
+    it('grep works as a script condition', async () => {
+        fs.createFile('/home/user/check.sh', 'if grep -q Goodbye hello.txt; then\necho yes\nelse\necho no\nfi\n');
+        const result = await harness.execute('sh check.sh');
+        expect(result.output).toContain('yes');
+        expect(result.output).not.toContain('no');
+    });
+
+    it('xargs passes its input as data: no wildcards, variables or substitutions', async () => {
+        const star = await harness.execute("echo '*' | xargs echo");
+        expect(String(star.data ?? star.output)).toContain('*');
+        expect(fs.exists('/home/user/hello.txt')).toBe(true);
+        await harness.execute("echo '$(rm -r /home/user/docs)' | xargs echo");
+        expect(fs.exists('/home/user/docs/readme.md')).toBe(true);
+        fs.createFile('/home/user/junk.txt', 'x');
+        await harness.execute("echo junk.txt | xargs rm");
+        expect(fs.exists('/home/user/junk.txt')).toBe(false);
+    });
+
+    it('mv into the directory a file is already in keeps every file', async () => {
+        fs.createFile('/home/user/a1.txt', 'a');
+        fs.createFile('/home/user/a2.txt', 'b');
+        const result = await harness.execute('mv a1.txt .');
+        expect(result.stderr.join('\n')).toContain('same file');
+        expect(fs.readFile('/home/user/a1.txt')).toBe('a');
+        expect(fs.readFile('/home/user/a2.txt')).toBe('b');
+        await harness.execute('mv docs/readme.md docs');
+        expect(fs.exists('/home/user/docs/readme.md')).toBe(true);
+        expect(fs.exists('/home/user/docs/notes.txt')).toBe(true);
+    });
+
+    it('echo prints an escaped > instead of writing a file', async () => {
+        const result = await harness.execute('echo a \\> b.txt');
+        expect(result.output).toContain('a > b.txt');
+        expect(fs.exists('/home/user/b.txt')).toBe(false);
+    });
+
+    it('ls passes one name per line down a pipe', async () => {
+        const result = await harness.execute('ls /home/user/docs | wc -l');
+        expect(String(result.data ?? result.output).trim()).toBe('2');
+    });
+
+    it('cut accepts a plain field number', async () => {
+        const result = await harness.execute('cut -d , -f 2 /home/user/data.csv');
+        expect(result.stderr).toEqual([]);
+        expect(result.output).toContain('age');
+        expect(result.output).toContain('30');
+        expect(result.output).not.toContain('alice');
+    });
+
+    it('echo keeps a quoted > as text', async () => {
+        const result = await harness.execute('echo "a > b"');
+        expect(result.output).toContain('a > b');
+        expect(fs.exists('/home/user/b')).toBe(false);
+    });
+
+    it('echo still redirects after quoted text', async () => {
+        await harness.execute('echo "x > y" > out.txt');
+        expect(fs.readFile('/home/user/out.txt')).toBe('x > y\n');
+        await harness.execute('echo more >> out.txt');
+        expect(fs.readFile('/home/user/out.txt')).toBe('x > y\nmore\n');
+    });
+
+    it('mv refuses to move a directory into itself', async () => {
+        const result = await harness.execute('mv docs docs/sub');
+        expect(result.stderr.some((l) => l.includes('subdirectory of itself'))).toBe(true);
+        expect(fs.exists('/home/user/docs/readme.md')).toBe(true);
     });
 
     it('cat should display file contents', async () => {
@@ -694,5 +819,565 @@ describe('Files plugin integration: script execution', () => {
         const result = await harness.execute('sh /home/user/operators.sh');
         expect(result.output).toContain('first');
         expect(result.output).toContain('second');
+    });
+});
+
+describe('Files plugin integration: script control flow', () => {
+    let harness: CliTestHarness;
+    let fs: IndexedDbFileSystemService;
+
+    beforeEach(() => {
+        ({ harness, fs } = setupHarness());
+    });
+
+    it('sh runs if / elif / else with test on files', async () => {
+        fs.createFile(
+            '/home/user/if.sh',
+            [
+                'if [ -f hello.txt ]; then',
+                '    echo has-hello',
+                'fi',
+                'if [ -d hello.txt ]; then echo bad; elif [ -d docs ]; then echo has-docs; else echo bad; fi',
+                'if [ -e nothing.txt ]; then',
+                '    echo bad',
+                'else',
+                '    echo no-nothing',
+                'fi',
+                'if grep Goodbye hello.txt; then echo found; fi',
+            ].join('\n'),
+        );
+        const result = await harness.execute('sh /home/user/if.sh');
+        expect(result.stderr).toEqual([]);
+        expect(result.output).toContain('has-hello');
+        expect(result.output).toContain('has-docs');
+        expect(result.output).toContain('no-nothing');
+        expect(result.output).toContain('found');
+        expect(result.output).not.toContain('bad');
+    });
+
+    it('sh runs a for loop over words and wildcards', async () => {
+        fs.createFile(
+            '/home/user/for.sh',
+            [
+                'mkdir -p out',
+                'for name in alpha beta; do',
+                '    echo $name > out/$name.txt',
+                'done',
+                'for f in out/*.txt; do echo file:$f; done',
+            ].join('\n'),
+        );
+        const result = await harness.execute('sh /home/user/for.sh');
+        expect(result.stderr).toEqual([]);
+        expect(fs.readFile('/home/user/out/alpha.txt')).toContain('alpha');
+        expect(fs.readFile('/home/user/out/beta.txt')).toContain('beta');
+        expect(result.output).toContain('file:out/alpha.txt');
+        expect(result.output).toContain('file:out/beta.txt');
+    });
+
+    it('sh runs a while loop until a file appears, with break and continue', async () => {
+        fs.createFile(
+            '/home/user/while.sh',
+            [
+                'while [ ! -f stop.txt ]; do',
+                '    echo looping',
+                '    touch stop.txt',
+                'done',
+                'while true; do',
+                '    if [ -f stop.txt ]; then break; fi',
+                'done',
+                'for i in 1 2 3; do',
+                '    if [ $i -eq 2 ]; then continue; fi',
+                '    echo i=$i',
+                'done',
+                'echo finished',
+            ].join('\n'),
+        );
+        const result = await harness.execute('sh /home/user/while.sh');
+        expect(result.stderr).toEqual([]);
+        expect(result.stdout.filter((l) => l === 'looping').length).toBe(1);
+        expect(result.output).toContain('i=1');
+        expect(result.output).not.toContain('i=2');
+        expect(result.output).toContain('i=3');
+        expect(result.output).toContain('finished');
+    });
+
+    it('./script runs control flow too', async () => {
+        fs.createFile('/home/user/run.sh', 'for x in a b; do if [ $x = b ]; then echo got-$x; fi; done\n');
+        fs.chmod('/home/user/run.sh', 'rwxr-xr-x');
+        const result = await harness.execute('./run.sh');
+        expect(result.output).toContain('got-b');
+        expect(result.output).not.toContain('got-a');
+    });
+
+    it('sh reports an unbalanced block with its line number', async () => {
+        fs.createFile('/home/user/bad.sh', 'echo start\nfor x in a; do\n    echo $x\n');
+        const result = await harness.execute('sh /home/user/bad.sh');
+        expect(result.output).not.toContain('start');
+        expect(result.stderr.some((l) => l.includes("sh: line 3: syntax error: expected 'done'"))).toBe(true);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Unix compatibility: flags, quoting, line counting and operands
+// ---------------------------------------------------------------------------
+
+describe('Files plugin integration: Unix compatibility', () => {
+    let harness: CliTestHarness;
+    let fs: IndexedDbFileSystemService;
+
+    const lines = (output: string): string[] =>
+        output.split('\n').filter((l) => l !== '');
+    /** Output of the last command of a pipe (`output` has every stage's) */
+    const piped = (result: { data: any }): string => String(result.data ?? '');
+
+    beforeEach(() => {
+        ({ harness, fs } = setupHarness());
+        fs.createFile('/home/user/abc.txt', 'a\nb\nc\n');
+    });
+
+    // 1. Combined short flags
+
+    describe('combined short flags', () => {
+        it('rm -rf removes a directory tree', async () => {
+            await harness.execute('mkdir -p tmp/a/b');
+            await harness.execute('touch tmp/a/b/f.txt');
+            const result = await harness.execute('rm -rf tmp');
+            expect(result.stderr).toEqual([]);
+            expect(fs.exists('/home/user/tmp')).toBe(false);
+        });
+
+        it('rm -rf is quiet about a missing path', async () => {
+            const result = await harness.execute('rm -rf nothing-here');
+            expect(result.stderr).toEqual([]);
+        });
+
+        it('ls -la and ls -lah use the long format', async () => {
+            for (const line of ['ls -la /home/user', 'ls -lah /home/user']) {
+                const result = await harness.execute(line);
+                expect(result.stderr).toEqual([]);
+                expect(result.output).toContain('-rw-r--r--');
+                expect(result.output).toContain('hello.txt');
+            }
+        });
+
+        it('grep -in ignores case and numbers lines', async () => {
+            const result = await harness.execute('grep -in HELLO hello.txt');
+            expect(lines(result.output)).toEqual(['1:Hello World', '2:hello again']);
+        });
+
+        it('grep -vc counts non-matching lines', async () => {
+            const result = await harness.execute('grep -vc hello hello.txt');
+            expect(lines(result.output)).toEqual(['2']);
+        });
+
+        it('sort -rn sorts numbers in reverse', async () => {
+            const result = await harness.execute('sort -rn numbers.txt');
+            expect(lines(result.output)).toEqual(['9', '6', '5', '5', '4', '3', '2', '1', '1']);
+        });
+
+        it('sort -nu drops duplicates', async () => {
+            const result = await harness.execute('sort -nu numbers.txt');
+            expect(lines(result.output)).toEqual(['1', '2', '3', '4', '5', '6', '9']);
+        });
+
+        it('cp -r and cp -rf copy a directory', async () => {
+            await harness.execute('cp -r docs docs2');
+            const result = await harness.execute('cp -rf docs docs3');
+            expect(result.stderr).toEqual([]);
+            expect(fs.readFile('/home/user/docs2/notes.txt')).toContain('Note 1');
+            expect(fs.readFile('/home/user/docs3/notes.txt')).toContain('Note 1');
+        });
+
+        it('wc -lw prints lines and words', async () => {
+            const result = await harness.execute('wc -lw hello.txt');
+            expect(result.output).toMatch(/^\s*3\s+5 hello\.txt$/);
+        });
+
+        it('tr -ds deletes and squeezes', async () => {
+            const result = await harness.execute("echo 'a1b22c' | tr -ds 0-9 abc");
+            expect(piped(result)).toBe('abc');
+        });
+    });
+
+    // 2. Values without their quotes
+
+    describe('quoted values', () => {
+        it('grep takes a quoted pattern with a space', async () => {
+            const result = await harness.execute('grep "hello again" hello.txt');
+            expect(result.stderr).toEqual([]);
+            expect(lines(result.output)).toEqual(['hello again']);
+        });
+
+        it('sort -t takes a quoted separator', async () => {
+            const result = await harness.execute("sort -t ',' -k 2 -n data.csv");
+            expect(lines(result.output)).toEqual([
+                'name,age,city',
+                'bob,25,LA',
+                'alice,30,NYC',
+                'charlie,35,NYC',
+            ]);
+        });
+
+        it('find --name takes a quoted glob', async () => {
+            const result = await harness.execute('find /home/user --name "*.md"');
+            expect(lines(result.output)).toEqual(['/home/user/docs/readme.md']);
+        });
+
+        it('sed -e takes quoted expressions, several times', async () => {
+            const result = await harness.execute(
+                "sed -e 's/Hello/Hi/' -e 's/World/Earth/' hello.txt",
+            );
+            expect(lines(result.output)[0]).toBe('Hi Earth');
+        });
+
+        it('file commands take quoted names with spaces', async () => {
+            await harness.execute('mkdir "my dir"');
+            await harness.execute('touch "my dir/my file.txt"');
+            expect(fs.exists('/home/user/my dir/my file.txt')).toBe(true);
+            fs.writeFile('/home/user/my dir/my file.txt', 'hi\n');
+            const cat = await harness.execute('cat "my dir/my file.txt"');
+            expect(cat.output).toBe('hi');
+            await harness.execute('rm "my dir/my file.txt"');
+            await harness.execute('rmdir "my dir"');
+            expect(fs.exists('/home/user/my dir')).toBe(false);
+        });
+    });
+
+    // 3. cat
+
+    describe('cat', () => {
+        it('concatenates several files in order', async () => {
+            const result = await harness.execute('cat abc.txt docs/notes.txt');
+            expect(lines(result.output)).toEqual(['a', 'b', 'c', 'Note 1', 'Note 2', 'Note 3']);
+        });
+
+        it('reports a missing file and prints the others', async () => {
+            const result = await harness.execute('cat abc.txt nope.txt');
+            expect(result.stderr.some((l) => l.includes('nope.txt'))).toBe(true);
+            expect(lines(result.output)).toEqual(['a', 'b', 'c']);
+        });
+
+        it('prints piped input when no file is given', async () => {
+            const result = await harness.execute('echo piped text | cat');
+            expect(result.stderr).toEqual([]);
+            expect(piped(result)).toBe('piped text');
+        });
+    });
+
+    // 4. find
+
+    describe('find', () => {
+        it('--maxdepth 0 lists only the start path', async () => {
+            const result = await harness.execute('find /home/user/docs --maxdepth 0');
+            expect(lines(result.output)).toEqual(['/home/user/docs']);
+        });
+
+        it('--maxdepth 1 lists the start path and its direct children', async () => {
+            const result = await harness.execute('find /home/user/docs --maxdepth 1');
+            expect(lines(result.output).sort()).toEqual([
+                '/home/user/docs',
+                '/home/user/docs/notes.txt',
+                '/home/user/docs/readme.md',
+            ]);
+            const txt = await harness.execute('find /home/user --maxdepth 1 --name "*.txt"');
+            expect(txt.output).toContain('/home/user/hello.txt');
+            expect(txt.output).not.toContain('notes.txt');
+        });
+
+        it('--name is case-sensitive, --iname is not', async () => {
+            const exact = await harness.execute('find /home/user --name "hello*"');
+            expect(lines(exact.output)).toEqual(['/home/user/hello.txt']);
+            const upper = await harness.execute('find /home/user --name "HELLO*"');
+            expect(upper.output).toBe('');
+            const ignoring = await harness.execute('find /home/user --iname "HELLO*"');
+            expect(lines(ignoring.output)).toEqual(['/home/user/hello.txt']);
+        });
+    });
+
+    // 5. Counting lines with a trailing newline
+
+    describe('wc, head and tail line counts', () => {
+        it('wc -l counts newline characters', async () => {
+            fs.createFile('/home/user/no-newline.txt', 'a\nb');
+            expect((await harness.execute('wc -l abc.txt')).output).toMatch(/^\s*3 abc\.txt$/);
+            expect((await harness.execute('wc -l no-newline.txt')).output).toMatch(
+                /^\s*1 no-newline\.txt$/,
+            );
+            expect((await harness.execute('wc -l hello.txt')).output).toMatch(/^\s*3 /);
+        });
+
+        it('wc -l counts piped lines', async () => {
+            expect(piped(await harness.execute('echo a | wc -l'))).toBe('1');
+            expect(piped(await harness.execute('cat abc.txt | wc -l'))).toBe('3');
+        });
+
+        it('tail -n 2 gives the last two lines', async () => {
+            const result = await harness.execute('tail -n 2 abc.txt');
+            expect(result.output).toBe('b\nc');
+            expect(piped(await harness.execute('cat abc.txt | tail -n 2'))).toBe('b\nc');
+        });
+
+        it('head prints no extra empty line', async () => {
+            const result = await harness.execute('head -n 5 abc.txt');
+            expect(result.output).toBe('a\nb\nc');
+        });
+
+        it('head and tail -n 0 print nothing', async () => {
+            expect((await harness.execute('head -n 0 abc.txt')).output).toBe('');
+            expect((await harness.execute('tail -n 0 abc.txt')).output).toBe('');
+        });
+    });
+
+    // 6. xargs keeps the inner command's flags
+
+    describe('xargs', () => {
+        it('passes the inner flags on: xargs rm -r', async () => {
+            await harness.execute('mkdir -p x1/sub x2');
+            const result = await harness.execute('echo x1 x2 | xargs rm -r');
+            expect(result.stderr).toEqual([]);
+            expect(fs.exists('/home/user/x1')).toBe(false);
+            expect(fs.exists('/home/user/x2')).toBe(false);
+        });
+
+        it('keeps a flag of the inner command that xargs also has', async () => {
+            const result = await harness.execute('echo hello.txt | xargs grep -n again');
+            expect(piped(result)).toBe('2:hello again');
+        });
+
+        it('reads its own -n before the inner command', async () => {
+            const result = await harness.execute('echo a b c | xargs -n 1 mkdir');
+            expect(result.stderr).toEqual([]);
+            for (const dir of ['a', 'b', 'c']) {
+                expect(fs.isDirectory(`/home/user/${dir}`)).toBe(true);
+            }
+        });
+
+        it('-I runs the command once per line', async () => {
+            const result = await harness.execute(
+                'cat abc.txt | xargs -I {} touch file-{}.txt',
+            );
+            expect(result.stderr).toEqual([]);
+            expect(fs.exists('/home/user/file-a.txt')).toBe(true);
+            expect(fs.exists('/home/user/file-c.txt')).toBe(true);
+        });
+    });
+
+    // 7. tee
+
+    describe('tee', () => {
+        it('writes piped input to every file and passes it through', async () => {
+            const result = await harness.execute('echo one | tee t1.txt t2.txt');
+            expect(piped(result)).toBe('one');
+            expect(fs.readFile('/home/user/t1.txt')).toBe('one\n');
+            expect(fs.readFile('/home/user/t2.txt')).toBe('one\n');
+        });
+
+        it('overwrites by default and appends lines with -a', async () => {
+            await harness.execute('echo one | tee t.txt');
+            await harness.execute('echo two | tee -a t.txt');
+            expect(fs.readFile('/home/user/t.txt')).toBe('one\ntwo\n');
+            await harness.execute('echo three | tee t.txt');
+            expect(fs.readFile('/home/user/t.txt')).toBe('three\n');
+        });
+
+        it('passes the input on down the pipe', async () => {
+            const result = await harness.execute('cat abc.txt | tee copy.txt | wc -l');
+            expect(piped(result)).toBe('3');
+            expect(fs.readFile('/home/user/copy.txt')).toBe('a\nb\nc\n');
+        });
+
+        it('does not read a file operand without piped input', async () => {
+            const result = await harness.execute('tee copy.txt abc.txt');
+            expect(result.stderr.some((l) => l.includes('cat file | tee out.txt'))).toBe(true);
+            expect(result.exitCode).toBe(1);
+            expect(fs.exists('/home/user/copy.txt')).toBe(false);
+            expect(fs.readFile('/home/user/abc.txt')).toBe('a\nb\nc\n');
+        });
+    });
+
+    // 8. tr reads only piped input
+
+    describe('tr', () => {
+        it('-s with piped input treats SET2 as a set, not a file', async () => {
+            const result = await harness.execute('echo aaab | tr -s a b');
+            expect(result.stderr).toEqual([]);
+            expect(piped(result)).toBe('b');
+        });
+
+        it('-s with one set squeezes it', async () => {
+            const result = await harness.execute('echo hello | tr -s l');
+            expect(piped(result)).toBe('helo');
+        });
+
+        it('rejects an extra operand with piped input', async () => {
+            const result = await harness.execute('echo abc | tr a b abc.txt');
+            expect(result.stderr.some((l) => l.includes('extra operand'))).toBe(true);
+        });
+
+        it('understands escapes such as \\n', async () => {
+            const result = await harness.execute("cat abc.txt | tr '\\n' ,");
+            expect(piped(result)).toBe('a,b,c');
+        });
+
+        it('transforms a file piped through cat', async () => {
+            const result = await harness.execute('cat abc.txt | tr a-z A-Z');
+            expect(result.stderr).toEqual([]);
+            expect(piped(result)).toBe('A\nB\nC');
+        });
+
+        it('takes no file operand: the file is an extra operand', async () => {
+            const result = await harness.execute('tr a-z A-Z abc.txt');
+            expect(result.stderr.some((l) => l.includes("tr: extra operand 'abc.txt'"))).toBe(true);
+            expect(result.exitCode).toBe(1);
+        });
+
+        it('explains how to pipe input when there is none', async () => {
+            const result = await harness.execute('tr a-z A-Z');
+            expect(result.stderr.some((l) => l.includes('cat file | tr a-z A-Z'))).toBe(true);
+            expect(result.exitCode).toBe(1);
+        });
+    });
+
+    // 9. sed
+
+    describe('sed', () => {
+        it('p prints a line again, -n prints only p lines', async () => {
+            const twice = await harness.execute('sed 2p abc.txt');
+            expect(lines(twice.output)).toEqual(['a', 'b', 'b', 'c']);
+            const only = await harness.execute('sed -n 2p abc.txt');
+            expect(lines(only.output)).toEqual(['b']);
+        });
+
+        it('s///p with -n prints changed lines', async () => {
+            const result = await harness.execute("sed -n 's/b/B/p' abc.txt");
+            expect(lines(result.output)).toEqual(['B']);
+        });
+
+        it('replacement uses \\1..\\9 with -E groups', async () => {
+            const result = await harness.execute(
+                "sed -E 's/(\\w+) (\\w+)/\\2 \\1/' hello.txt",
+            );
+            expect(lines(result.output)).toEqual(['World Hello', 'again hello', 'Goodbye']);
+        });
+
+        it('replacement uses \\1 with basic \\( \\) groups and &', async () => {
+            const result = await harness.execute(
+                "sed 's/\\(Hello\\) World/\\1 Earth [&]/' hello.txt",
+            );
+            expect(lines(result.output)[0]).toBe('Hello Earth [Hello World]');
+        });
+
+        it('$ is the last line of a file with a trailing newline', async () => {
+            const result = await harness.execute("sed '$d' abc.txt");
+            expect(lines(result.output)).toEqual(['a', 'b']);
+        });
+
+        it('-i keeps the trailing newline', async () => {
+            await harness.execute("sed -i 's/b/B/' abc.txt");
+            expect(fs.readFile('/home/user/abc.txt')).toBe('a\nB\nc\n');
+        });
+
+        it('runs commands separated by ;', async () => {
+            const result = await harness.execute("sed 's/Hello/Hi/;s/World/Earth/' hello.txt");
+            expect(lines(result.output)[0]).toBe('Hi Earth');
+        });
+
+        it('supports /regex/,/regex/ ranges and !', async () => {
+            const range = await harness.execute("sed -n '/Hello/,/again/p' hello.txt");
+            expect(lines(range.output)).toEqual(['Hello World', 'hello again']);
+            const negated = await harness.execute("sed '/again/!d' hello.txt");
+            expect(lines(negated.output)).toEqual(['hello again']);
+        });
+    });
+
+    // 10. awk without quotes
+
+    describe('awk', () => {
+        it('accepts an unquoted program before a file', async () => {
+            const result = await harness.execute('awk -F , {print $1} data.csv');
+            expect(result.stderr).toEqual([]);
+            expect(lines(result.output)).toEqual(['name', 'alice', 'bob', 'charlie']);
+        });
+
+        it('accepts an unquoted program with piped input', async () => {
+            const result = await harness.execute('cat hello.txt | awk {print $2}');
+            expect(result.stderr).toEqual([]);
+            expect(piped(result)).toBe('World\nagain');
+        });
+
+        it('still accepts a quoted program and several files', async () => {
+            const result = await harness.execute("awk '{print NR}' abc.txt docs/notes.txt");
+            expect(lines(result.output)).toEqual(['1', '2', '3', '4', '5', '6']);
+        });
+    });
+
+    // 11. Several operands, defaults and piped input
+
+    describe('operands', () => {
+        it('mkdir, touch, rm and rmdir take several paths', async () => {
+            await harness.execute('mkdir d1 d2 d3');
+            await harness.execute('mkdir -p p/q r/s');
+            await harness.execute('touch f1.txt f2.txt');
+            for (const p of ['d1', 'd2', 'd3', 'p/q', 'r/s', 'f1.txt', 'f2.txt']) {
+                expect(fs.exists(`/home/user/${p}`)).toBe(true);
+            }
+            const rm = await harness.execute('rm f1.txt f2.txt');
+            const rmdir = await harness.execute('rmdir d1 d2 d3');
+            expect(rm.stderr).toEqual([]);
+            expect(rmdir.stderr).toEqual([]);
+            for (const p of ['d1', 'd2', 'd3', 'f1.txt', 'f2.txt']) {
+                expect(fs.exists(`/home/user/${p}`)).toBe(false);
+            }
+        });
+
+        it('rm goes on after a missing path', async () => {
+            await harness.execute('touch keep-going.txt');
+            const result = await harness.execute('rm missing.txt keep-going.txt');
+            expect(result.stderr.some((l) => l.includes('missing.txt'))).toBe(true);
+            expect(fs.exists('/home/user/keep-going.txt')).toBe(false);
+        });
+
+        it('du defaults to the current directory', async () => {
+            const result = await harness.execute('du -s');
+            expect(result.stderr).toEqual([]);
+            expect(lines(result.output)).toEqual([jasmine.stringMatching(/\t\/home\/user$/)]);
+        });
+
+        it('paste uses piped input as the only input or as -', async () => {
+            const serial = await harness.execute('cat abc.txt | paste -s -d ,');
+            expect(piped(serial)).toBe('a,b,c');
+            const merged = await harness.execute('cat abc.txt | paste - docs/notes.txt');
+            expect(piped(merged)).toBe('a\tNote 1\nb\tNote 2\nc\tNote 3');
+        });
+
+        it('paste with one file prints it as is', async () => {
+            const result = await harness.execute('paste abc.txt');
+            expect(result.output).toBe('a\nb\nc');
+        });
+
+        it('sort sorts several files together', async () => {
+            const result = await harness.execute('sort abc.txt docs/notes.txt');
+            expect(lines(result.output)).toEqual(['a', 'b', 'c', 'Note 1', 'Note 2', 'Note 3']);
+            const mixed = await harness.execute('sort docs/notes.txt abc.txt');
+            expect(lines(mixed.output)).toEqual(['a', 'b', 'c', 'Note 1', 'Note 2', 'Note 3']);
+        });
+
+        it('sh takes the first operand as the script, quoted or not', async () => {
+            const result = await harness.execute('sh "simple.sh" extra');
+            expect(result.stderr).toEqual([]);
+            expect(result.output).toContain('hello');
+            expect(result.output).toContain('world');
+        });
+
+        it('cp and mv put several sources into a directory', async () => {
+            await harness.execute('mkdir box');
+            await harness.execute('cp abc.txt hello.txt box');
+            expect(fs.exists('/home/user/box/abc.txt')).toBe(true);
+            expect(fs.exists('/home/user/box/hello.txt')).toBe(true);
+            await harness.execute('mkdir box2');
+            await harness.execute('mv box/abc.txt box/hello.txt box2');
+            expect(fs.exists('/home/user/box2/abc.txt')).toBe(true);
+            expect(fs.exists('/home/user/box/abc.txt')).toBe(false);
+        });
     });
 });

@@ -4,7 +4,7 @@ import type {
     ICliExecutionContext,
     CliProcessCommand,
 } from '@qodalis/cli-core';
-import { ICliFileTransferService_TOKEN } from '@qodalis/cli-core';
+import { ICliFileTransferService_TOKEN, joinShellWords } from '@qodalis/cli-core';
 import { ElectronFileTransferService } from './services/electron-file-transfer.service';
 import { ElectronClipboardService } from './services/electron-clipboard.service';
 
@@ -26,7 +26,7 @@ const electronOpenProcessor: ICliCommandProcessor = {
         },
     ],
     async processCommand(command: CliProcessCommand, context) {
-        const url = command.value?.trim() || command.args['url'];
+        const url = joinShellWords(command.value ?? '') || command.args['url'];
         if (!url) {
             context.writer.writeError('Usage: open <url>');
             return;

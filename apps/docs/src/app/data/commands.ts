@@ -45,6 +45,15 @@ export const BUILT_IN_GROUPS: CommandGroup[] = [
             'debug',
             'hotkeys',
             'feedback',
+            'events',
+        ],
+    },
+    {
+        label: 'Scripting',
+        commands: [
+            'test',
+            'true',
+            'false',
         ],
     },
     {
@@ -90,6 +99,17 @@ export const BUILT_IN_GROUPS: CommandGroup[] = [
     {
         label: 'Packages',
         commands: ['pkg add', 'pkg ls', 'pkg remove'],
+    },
+    {
+        label: 'Servers',
+        commands: [
+            'server',
+            'server status',
+            'server commands',
+            'server reconnect',
+            'server default',
+            'ssh',
+        ],
     },
     {
         label: 'Configuration',
@@ -182,6 +202,15 @@ export const COMMAND_CATEGORIES: CommandCategory[] = [
             { command: 'debug', description: 'Display system diagnostics and CLI internals' },
             { command: 'hotkeys', description: 'Displays the hotkeys information', aliases: 'shortcuts, keys' },
             { command: 'feedback', description: 'Send feedback, bug reports, or feature requests' },
+            { command: 'events', description: 'Watch, list and emit events on the event bus' },
+        ],
+    },
+    {
+        label: 'Scripting',
+        commands: [
+            { command: 'test', description: 'Check a condition: strings, numbers, paths (also [ … ])' },
+            { command: 'true', description: 'Do nothing, successfully (also :)' },
+            { command: 'false', description: 'Do nothing, unsuccessfully' },
         ],
     },
     {
@@ -196,7 +225,7 @@ export const COMMAND_CATEGORIES: CommandCategory[] = [
         label: 'Environment',
         commands: [
             { command: 'env', description: 'Display environment variables' },
-            { command: 'export', description: 'Set environment variables' },
+            { command: 'export', description: 'Save variables for the user (--global: for everyone)' },
             { command: 'unset', description: 'Remove environment variables' },
             { command: 'alias', description: 'Manage aliases for commands' },
             { command: 'unalias', description: 'Remove aliases for commands' },
@@ -230,6 +259,17 @@ export const COMMAND_CATEGORIES: CommandCategory[] = [
             { command: 'pkg add', description: 'Install a plugin package at runtime', aliases: 'packages add' },
             { command: 'pkg ls', description: 'List installed packages' },
             { command: 'pkg remove', description: 'Remove an installed package' },
+        ],
+    },
+    {
+        label: 'Servers',
+        commands: [
+            { command: 'server', description: 'List the servers with status, version, commands and shell access', aliases: 'servers, srv, server ls' },
+            { command: 'server status [name]', description: 'Ping every server (round-trip time), or show one in detail with hints when it is unreachable', aliases: 'server ping, server info' },
+            { command: 'server commands [name]', description: 'Commands each server provides, with the name to type (node:echo when a local command has the same name)', aliases: 'server cmds' },
+            { command: 'server reconnect [name]', description: 'Connect again and reload commands: the unreachable servers, one server, or all with --all', aliases: 'server rc, server connect' },
+            { command: 'server default [name]', description: 'Show or set the server that runs commands several servers have (remembered across reloads); --clear removes it', aliases: 'server use' },
+            { command: 'ssh [name] [command]', description: 'Interactive shell on a server, or run one command there', aliases: 'shell' },
         ],
     },
     {

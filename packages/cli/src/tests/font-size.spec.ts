@@ -1,3 +1,4 @@
+import { of } from 'rxjs';
 import { CliTestHarness } from '../lib/testing';
 import { CliFontSizeCommandProcessor } from '../lib/processors';
 import { ICliCommandChildProcessor } from '@qodalis/cli-core';
@@ -93,7 +94,7 @@ describe('CliFontSizeCommandProcessor', () => {
             state: {
                 getState: () => ({ fontSize: 14 }),
                 updateState: () => {},
-                select: () => ({ subscribe: () => {} }),
+                select: () => of(null),
                 subscribe: () => ({ unsubscribe: () => {} }),
                 reset: () => {},
                 persist: async () => {},

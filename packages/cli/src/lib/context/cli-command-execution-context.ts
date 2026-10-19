@@ -22,6 +22,7 @@ import {
     ICliHttpClient,
     CliFullScreenOptions,
     ICliNotifier,
+    ICliEventBus,
 } from '@qodalis/cli-core';
 import { Terminal } from '@xterm/xterm';
 import { Subject } from 'rxjs';
@@ -94,11 +95,18 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     createTimeout: (callback: () => void, ms: number) => ICliManagedTimer;
     submitCommand: (command: string) => Promise<void>;
 
+    events?: ICliEventBus;
+
+    get isBooted(): boolean | undefined {
+        return this.context.isBooted;
+    }
+
     constructor(
         public readonly context: ICliExecutionContext,
         processor: ICliCommandProcessor,
     ) {
         this.userSession = context.userSession;
+        this.events = context.events;
         this.spinner = context.spinner;
         this.progressBar = context.progressBar;
         this.textAnimator = context.textAnimator;
@@ -120,10 +128,13 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
         this.translator = context.translator;
         this.reader = context.reader;
 
-        this.enterFullScreenMode = (p: ICliCommandProcessor, o?: CliFullScreenOptions) =>
-            context.enterFullScreenMode(p, o);
+        this.enterFullScreenMode = (
+            p: ICliCommandProcessor,
+            o?: CliFullScreenOptions,
+        ) => context.enterFullScreenMode(p, o);
         this.exitFullScreenMode = () => context.exitFullScreenMode();
-        this.submitCommand = (command: string) => context.submitCommand(command);
+        this.submitCommand = (command: string) =>
+            context.submitCommand(command);
         this.createInterval = (cb, ms) => context.createInterval(cb, ms);
         this.createTimeout = (cb, ms) => context.createTimeout(cb, ms);
         this.backgroundServices = context.backgroundServices;

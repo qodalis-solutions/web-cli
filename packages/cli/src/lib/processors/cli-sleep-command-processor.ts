@@ -32,11 +32,11 @@ export class CliSleepCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ) {
         const { writer, onAbort } = context;
-        const time = parseInt(command.value!);
+        const time = parseInt(command.positionals?.[0] ?? '');
 
         if (isNaN(time) || time < 0) {
             writer.writeError(
-                `Invalid time value: "${command.value}". Please provide a positive number in milliseconds.`,
+                `Invalid time value: "${command.positionals?.join(' ') ?? ''}". Please provide a positive number in milliseconds.`,
             );
             return;
         }

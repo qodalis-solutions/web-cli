@@ -19,7 +19,7 @@ export function createPasswordPolicyValidator(
         if (policy.requireDigit && !/\d/.test(password)) {
             return 'Password must contain at least one digit';
         }
-        if (policy.requireSpecialChar && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
+        if (policy.requireSpecialChar && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(password)) {
             return 'Password must contain at least one special character';
         }
         return null;
