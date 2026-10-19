@@ -15,6 +15,7 @@ export const DOCS_NAV: NavItem[] = [
         label: 'sidebar.core-concepts',
         path: '/docs/core-concepts',
         children: [
+            { label: 'sidebar.command-line', path: '/docs/core-concepts/command-line' },
             { label: 'sidebar.command-processors', path: '/docs/core-concepts/command-processors' },
             { label: 'sidebar.execution-context', path: '/docs/core-concepts/execution-context' },
             { label: 'sidebar.writer-api', path: '/docs/core-concepts/writer-api' },

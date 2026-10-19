@@ -84,6 +84,7 @@
   "sidebar.built-in-commands": "Comenzi Integrate",
   "sidebar.configuration": "Configurare",
   "sidebar.core-concepts": "Concepte Fundamentale",
+  "sidebar.command-line": "Linia de comandă",
   "sidebar.command-processors": "Procesoare de Comenzi",
   "sidebar.execution-context": "Context de Execuție",
   "sidebar.theming": "Teme",

@@ -8,7 +8,8 @@
       "@qodalis/cli-string": ["../../dist/string"],
       "@qodalis/cli-password-generator": ["../../dist/password-generator"],
       "@qodalis/cli-qr": ["../../dist/qr"],
-      "@qodalis/cli-todo": ["../../dist/todo"]
+      "@qodalis/cli-todo": ["../../dist/todo"],
+      "@qodalis/cli-markdown": ["../../dist/markdown"]
     },
     "target": "ES2022",
     "useDefineForClassFields": true,

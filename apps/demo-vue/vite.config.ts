@@ -159,6 +159,10 @@ export default defineConfig({
                 import.meta.dirname,
                 '../../dist/jobs/public-api.mjs',
             ),
+            '@qodalis/cli-markdown': path.resolve(
+                import.meta.dirname,
+                '../../dist/markdown/public-api.mjs',
+            ),
             '@qodalis/cli-encode': path.resolve(
                 import.meta.dirname,
                 '../../dist/encode/public-api.mjs',

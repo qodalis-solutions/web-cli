@@ -27,6 +27,7 @@ import { langRuModule } from '@qodalis/cli-lang-ru';
 import { langRoModule } from '@qodalis/cli-lang-ro';
 import { jobsModule } from '@qodalis/cli-server-jobs';
 import { encodeModule } from '@qodalis/cli-encode';
+import { markdownModule } from '@qodalis/cli-markdown';
 import { dataExplorerModule } from '@qodalis/cli-data-explorer';
 import {
     ICliModule,
@@ -150,6 +151,7 @@ setDemoUsersDefault({ mode: 'server', server: 'node' });
         resolveCliModuleProvider(langRoModule),
         resolveCliModuleProvider(jobsModule),
         resolveCliModuleProvider(encodeModule),
+        resolveCliModuleProvider(markdownModule),
         resolveCliModuleProvider(dataExplorerModule),
         resolveCliModuleProvider(backgroundServicesDemo),
     ],

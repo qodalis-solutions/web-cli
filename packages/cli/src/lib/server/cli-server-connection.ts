@@ -93,7 +93,12 @@ export class CliServerConnection {
             const baseUrl = this.normalizeUrl(this._config.url);
 
             // Negotiate API version
-            const negotiated = await ServerVersionNegotiator.discover(baseUrl, () => this.resolveAuthHeaders());
+            // An unreachable server fails here, without a second request for its commands
+            const negotiated = await ServerVersionNegotiator.discover(
+                baseUrl,
+                () => this.resolveAuthHeaders(),
+                { rethrowNetworkErrors: true },
+            );
             if (negotiated) {
                 this._apiVersion = negotiated.apiVersion;
                 this._basePath = negotiated.basePath;
@@ -109,7 +114,8 @@ export class CliServerConnection {
             this.connectEventSocket();
             this.stopHealthCheck();
         } catch (e) {
-            this._logger?.warn(`Failed to connect to server "${this._config.name}": ${e}`);
+            // The manager warns once with the URL; this is the detail
+            this._logger?.debug(`Failed to connect to server "${this._config.name}": ${e}`);
             this._connected = false;
             this._commands = [];
             this._capabilities = null;

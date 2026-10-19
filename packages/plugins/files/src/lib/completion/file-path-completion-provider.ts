@@ -24,6 +24,25 @@ const FILE_COMMANDS = new Set([
     'head',
     'tail',
     'wc',
+    'sort',
+    'uniq',
+    'cut',
+    'paste',
+    'tac',
+    'diff',
+    'sed',
+    'awk',
+    'du',
+    'stat',
+    'chmod',
+    'chown',
+    'ln',
+    'tee',
+    'basename',
+    'dirname',
+    'sh',
+    'source',
+    'xargs',
 ]);
 
 /**
@@ -53,7 +72,16 @@ export class FilePathCompletionProvider implements ICliCompletionProvider {
             return [];
         }
 
-        return this.completePath(token);
+        // A name with spaces is completed in quotes: `cat "my no` -> `cat "my notes.txt"`
+        const quote = token.startsWith('"') || token.startsWith("'") ? token[0] : '';
+        const partial = quote ? token.slice(1).replace(new RegExp(`${quote}$`), '') : token;
+        const paths = this.completePath(partial);
+        if (!quote && !paths.some((p) => /\s/.test(p))) {
+            return paths;
+        }
+        const q = quote || '"';
+        // Directories stay open so the completion can go on inside them
+        return paths.map((p) => (p.endsWith('/') ? `${q}${p}` : `${q}${p}${q}`));
     }
 
     private completePath(partial: string): string[] {

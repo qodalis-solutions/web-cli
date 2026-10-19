@@ -84,6 +84,7 @@
   "sidebar.built-in-commands": "Встроенные Команды",
   "sidebar.configuration": "Конфигурация",
   "sidebar.core-concepts": "Основные Концепции",
+  "sidebar.command-line": "Командная строка",
   "sidebar.command-processors": "Процессоры Команд",
   "sidebar.execution-context": "Контекст Выполнения",
   "sidebar.theming": "Темы",

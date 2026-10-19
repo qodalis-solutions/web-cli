@@ -39,6 +39,7 @@ import {
     appendStderrToFile,
 } from './cli-io-redirect-handler';
 import { tryExecuteScript, expandEnvironmentVars } from './cli-script-executor';
+import { expandGlobs } from './cli-glob-expander';
 
 /**
  * Extended execution context interface used internally by the command executor.
@@ -246,6 +247,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
 
         // Substitute environment variables ($VAR / ${VAR}) before parsing
         command = expandEnvironmentVars(command, context, this.lastExitCode);
+        // Then wildcards (`rm *.txt`), against the files plugin's file system
+        command = expandGlobs(command, context);
 
         // Handle inline variable assignment: VAR=value (no command after it)
         const assignMatch = command.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);

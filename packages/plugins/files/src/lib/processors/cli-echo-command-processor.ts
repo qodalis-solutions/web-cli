@@ -3,6 +3,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
     writeExamples,
     writeUsage,
     writeWrapped,
@@ -53,7 +54,7 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
             if (this.originalProcessor) {
                 await this.originalProcessor.processCommand(command, context);
             } else {
-                const text = unquote(afterEcho);
+                const text = joinShellWords(afterEcho);
                 context.writer.writeln(text);
                 context.process.output(text);
             }

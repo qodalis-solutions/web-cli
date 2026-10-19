@@ -84,6 +84,7 @@
   "sidebar.built-in-commands": "組み込みコマンド",
   "sidebar.configuration": "設定",
   "sidebar.core-concepts": "コアコンセプト",
+  "sidebar.command-line": "コマンドライン",
   "sidebar.command-processors": "コマンドプロセッサ",
   "sidebar.execution-context": "実行コンテキスト",
   "sidebar.theming": "テーマ",

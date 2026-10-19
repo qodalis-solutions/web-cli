@@ -17,6 +17,16 @@ function targetPath(filePath: string): string {
         : path;
 }
 
+/**
+ * `> notes/x.txt: No such file or directory`: the redirect and its target,
+ * not the file system call that failed (`touch: /notes: ...`).
+ */
+function redirectError(operator: string, filePath: string, e: unknown): string {
+    const message = String((e as Error)?.message ?? e);
+    const reason = message.includes(': ') ? message.slice(message.lastIndexOf(': ') + 2) : message;
+    return `${operator} ${targetPath(filePath)}: ${reason}`;
+}
+
 function asFileText(output: unknown): string {
     const text = typeof output === 'string' ? output : JSON.stringify(output);
     return text === '' || text.endsWith('\n') ? text : text + '\n';
@@ -52,7 +62,7 @@ export async function writeOutputToFile(
         }
         await fs.persist();
     } catch (e: any) {
-        context.writer.writeError(`> failed: ${e.message || e}`);
+        context.writer.writeError(redirectError('>', filePath, e));
     }
 }
 
@@ -86,7 +96,7 @@ export async function appendOutputToFile(
         }
         await fs.persist();
     } catch (e: any) {
-        context.writer.writeError(`>> failed: ${e.message || e}`);
+        context.writer.writeError(redirectError('>>', filePath, e));
     }
 }
 
@@ -118,7 +128,7 @@ export async function writeStderrToFile(
         }
         await fs.persist();
     } catch (e: any) {
-        context.writer.writeError(`2> failed: ${e.message || e}`);
+        context.writer.writeError(redirectError('2>', filePath, e));
     }
 }
 
@@ -150,6 +160,6 @@ export async function appendStderrToFile(
         }
         await fs.persist();
     } catch (e: any) {
-        context.writer.writeError(`2>> failed: ${e.message || e}`);
+        context.writer.writeError(redirectError('2>>', filePath, e));
     }
 }

@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliEchoCommandProcessor implements ICliCommandProcessor {
@@ -27,27 +28,22 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const raw = command.value || command.data || '';
+        // Everything typed after the command word, flag-like words included
+        // (`echo a --b` prints `a --b`, as a shell's echo does)
+        const typed = typedText(command);
+        const raw = typed || command.data || '';
 
         if (typeof raw === 'object') {
             context.writer.writeJson(raw);
             context.process.output(raw);
         } else {
-            const text = this.interpretEscapes(this.stripQuotes(raw));
+            // Typed text is shell words (`echo "a" "b"` prints `a b`); piped
+            // text is printed as it is
+            const words = typed ? joinShellWords(raw) : raw;
+            const text = this.interpretEscapes(words);
             context.writer.writeln(text);
             context.process.output(text);
         }
-    }
-
-    /** Remove surrounding quotes from the text. */
-    private stripQuotes(text: string): string {
-        if (
-            (text.startsWith('"') && text.endsWith('"')) ||
-            (text.startsWith("'") && text.endsWith("'"))
-        ) {
-            return text.slice(1, -1);
-        }
-        return text;
     }
 
     /** Interpret common escape sequences like a POSIX echo -e. */
@@ -83,4 +79,16 @@ export class CliEchoCommandProcessor implements ICliCommandProcessor {
             `  echo "Hello, World!"             ${writer.wrapInColor('# Print quoted text', CliForegroundColor.Green)}`,
         );
     }
+}
+
+/**
+ * The text after the command word (`echo` / `print`), from the line as typed
+ * (variables and wildcards already expanded). Leading `-n`, `-e`, `-E`
+ * options of a shell's echo are skipped: escapes are always interpreted.
+ */
+function typedText(command: CliProcessCommand): string {
+    const raw = command.rawCommand ?? '';
+    const afterWord = raw.replace(/^\s*\S+\s*/, '');
+    const text = afterWord.replace(/^(?:-[neE]+\s+)+/, '').trim();
+    return text || (command.value ?? '');
 }

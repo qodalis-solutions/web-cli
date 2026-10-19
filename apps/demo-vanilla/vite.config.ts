@@ -40,6 +40,10 @@ export default defineConfig({
                 import.meta.dirname,
                 '../../dist/todo/public-api.mjs',
             ),
+            '@qodalis/cli-markdown': path.resolve(
+                import.meta.dirname,
+                '../../dist/markdown/public-api.mjs',
+            ),
         },
     },
 });

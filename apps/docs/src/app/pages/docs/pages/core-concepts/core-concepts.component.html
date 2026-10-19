@@ -15,6 +15,126 @@
 }
 
 <!-- Command Processors -->
+@if (currentTopic === "command-line") {
+  <div>
+    <h1>Command Line</h1>
+    <p>
+      The terminal reads a line the way a Unix shell does: words separated by
+      spaces, quotes to keep spaces in a word, flags, pipes, redirects,
+      variables and wildcards. The rules below apply to every command,
+      built-in or from a plugin.
+    </p>
+
+    <h2>Words and Quotes</h2>
+    <p>
+      Spaces separate the arguments. Double or single quotes keep a word with
+      spaces together, and anything inside them is text, flags included.
+    </p>
+    <div class="code-block">
+      <pre><code>cat "my notes.txt"            # one argument: my notes.txt
+grep "two words" notes.txt     # the pattern is: two words
+echo "a --b"                   # prints a --b (no flag b)
+echo "a" "b"                   # prints a b
+echo it's fine                 # a quote without a pair is text</code></pre>
+    </div>
+    <p>
+      A value given after a flag loses its quotes:
+      <code>find --name "my file.txt"</code> searches for
+      <code>my file.txt</code>.
+    </p>
+
+    <h2>Flags</h2>
+    <table>
+      <thead>
+        <tr><th>Form</th><th>Example</th><th>Meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Long</td><td><code>--lines 5</code>, <code>--lines=5</code></td><td>A value after a space or <code>=</code></td></tr>
+        <tr><td>Short</td><td><code>-n 5</code>, <code>-n5</code></td><td>The value can follow the letter directly</td></tr>
+        <tr><td>Combined</td><td><code>rm -rf dir</code>, <code>ls -la</code></td><td>Several short on/off flags in one; the last may take a value (<code>-rn 5</code>)</td></tr>
+        <tr><td>Boolean</td><td><code>--force</code>, <code>--force=false</code></td><td>On when present</td></tr>
+        <tr><td>Lone dash</td><td><code>paste - b.txt</code></td><td>An argument (piped input), not a flag</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Letters are combined only when each one is a flag of the command, so a
+      command's own multi-letter flags keep working.
+    </p>
+
+    <h2>Pipes and Redirects</h2>
+    <p>
+      <code>|</code> passes a command's output to the next one; only the last
+      command's output is shown. Errors and warnings of every command are
+      shown. Output written as a table or list reaches the next command as
+      text lines, structured output (JSON) as data.
+    </p>
+    <div class="code-block">
+      <pre><code>cat app.log | grep error | wc -l
+server list | grep node
+echo hello > greeting.txt     # write (replace) a file, nothing is shown
+echo again >> greeting.txt    # add to the end
+build 2> errors.txt           # errors to a file (2>> to add)</code></pre>
+    </div>
+    <p>
+      Redirects write whole lines and need the files plugin
+      (<code>&#64;qodalis/cli-files</code>). The target can be quoted:
+      <code>&gt; "my dir/out.txt"</code>.
+    </p>
+
+    <h2>Running Several Commands</h2>
+    <table>
+      <thead>
+        <tr><th>Operator</th><th>Runs the next command</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>a &amp;&amp; b</code></td><td>Only if <code>a</code> succeeded</td></tr>
+        <tr><td><code>a || b</code></td><td>Only if <code>a</code> failed</td></tr>
+        <tr><td><code>a ; b</code></td><td>Always</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Variables</h2>
+    <p>
+      <code>NAME=value</code> (or <code>export NAME=value</code>) sets a
+      variable, <code>env</code> lists them. <code>$NAME</code> and
+      <code>$&#123;NAME&#125;</code> are replaced by their value,
+      <code>$?</code> by the exit code of the last command, and a leading
+      <code>~</code> by the home directory. Inside single quotes nothing is
+      replaced; inside double quotes it is.
+    </p>
+    <div class="code-block">
+      <pre><code>GREETING=Hello
+echo "$GREETING, world"     # Hello, world
+echo '$GREETING'            # $GREETING
+cat ~/notes.txt</code></pre>
+    </div>
+
+    <h2>Wildcards</h2>
+    <p>
+      With the files plugin, unquoted arguments with <code>*</code>,
+      <code>?</code> or <code>[...]</code> become the matching paths, sorted.
+      Names starting with <code>.</code> match only a pattern that starts
+      with <code>.</code>; a pattern that matches nothing is passed as typed;
+      a quoted pattern is never expanded.
+    </p>
+    <div class="code-block">
+      <pre><code>rm *.log               # every .log file here
+cat docs/*.md          # in a folder
+ls file?.txt [ab]*     # one character, or names starting with a or b
+ls */                  # folders only
+grep "*" notes.txt     # quoted: the text *</code></pre>
+    </div>
+
+    <h2>Tab Completion</h2>
+    <p>
+      Tab completes commands, sub-commands, flags and, with the files plugin,
+      paths. Names with spaces are completed in quotes
+      (<code>cat my</code> + Tab gives <code>cat "my notes.txt"</code>), also
+      inside a quote you started. Press Tab twice to list the choices.
+    </p>
+  </div>
+}
+
 @if (currentTopic === "command-processors") {
   <div>
     <h1>{{ "docs.core-concepts.command-processors.title" | translate }}</h1>

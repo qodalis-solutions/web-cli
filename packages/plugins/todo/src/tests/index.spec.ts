@@ -360,5 +360,8 @@ describe('todo through the engine', () => {
         expect(first.output).toContain('Added: "buy milk --urgent"');
         expect(first.output).not.toContain('""');
         expect(second.output).toContain('Added: "call Bob"');
+        const list = await harness.execute('todo ls');
+        expect(list.output).toContain('buy milk --urgent');
+        expect(list.output).toContain('call Bob');
     });
 });

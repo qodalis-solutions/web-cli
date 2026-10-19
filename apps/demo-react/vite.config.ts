@@ -166,6 +166,10 @@ export default defineConfig({
                 import.meta.dirname,
                 '../../dist/encode/public-api.mjs',
             ),
+            '@qodalis/cli-markdown': path.resolve(
+                import.meta.dirname,
+                '../../dist/markdown/public-api.mjs',
+            ),
             '@qodalis/cli-data-explorer': path.resolve(
                 import.meta.dirname,
                 '../../dist/data-explorer/public-api.mjs',

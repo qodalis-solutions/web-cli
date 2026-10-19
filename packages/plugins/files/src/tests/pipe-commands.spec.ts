@@ -115,20 +115,21 @@ describe('CliTeeCommandProcessor', () => {
     });
 
     it('should write to output file and stdout', async () => {
-        const cmd = makeCommand('tee /home/user/output.txt /home/user/file1.txt');
+        // cat file1.txt | tee output.txt
+        const cmd = makeCommand('tee /home/user/output.txt', {}, fs.readFile('/home/user/file1.txt'));
         await processor.processCommand(cmd, ctx);
         const output = writer.written.join('\n');
         // stdout should have the content
         expect(output).toContain('line one');
         // output file should have the content
         const fileContent = fs.readFile('/home/user/output.txt');
-        expect(fileContent).toContain('line one');
+        expect(fileContent).toBe('line one\nline two\nline three\n');
     });
 
     it('should append with -a', async () => {
         // First write something to output
         fs.createFile('/home/user/out.txt', 'existing\n');
-        const cmd = makeCommand('tee -a /home/user/out.txt /home/user/args.txt', { a: true });
+        const cmd = makeCommand('tee -a /home/user/out.txt', { a: true }, fs.readFile('/home/user/args.txt'));
         await processor.processCommand(cmd, ctx);
         const fileContent = fs.readFile('/home/user/out.txt');
         expect(fileContent).toContain('existing');
@@ -136,7 +137,7 @@ describe('CliTeeCommandProcessor', () => {
     });
 
     it('should write to multiple output files', async () => {
-        const cmd = makeCommand('tee /home/user/out1.txt /home/user/out2.txt /home/user/args.txt');
+        const cmd = makeCommand('tee /home/user/out1.txt /home/user/out2.txt', {}, fs.readFile('/home/user/args.txt'));
         await processor.processCommand(cmd, ctx);
         const content1 = fs.readFile('/home/user/out1.txt');
         const content2 = fs.readFile('/home/user/out2.txt');
@@ -144,10 +145,29 @@ describe('CliTeeCommandProcessor', () => {
         expect(content2).toContain('hello');
     });
 
-    it('should error on missing operand', async () => {
+    it('should copy piped input to stdout only when no file is named', async () => {
+        const cmd = makeCommand('tee', {}, 'just output');
+        await processor.processCommand(cmd, ctx);
+        expect(writer.written.join('\n')).toContain('just output');
+        expect(writer.written.some(l => l.includes('tee:'))).toBe(false);
+    });
+
+    it('should error without piped input instead of reading a file', async () => {
+        const exit = spyOn(ctx.process, 'exit');
+        const cmd = makeCommand('tee /home/user/out.txt /home/user/args.txt');
+        await processor.processCommand(cmd, ctx);
+        expect(writer.written.some(l => l.includes('cat file | tee out.txt'))).toBe(true);
+        expect(writer.written.some(l => l.includes('hello'))).toBe(false);
+        expect(fs.exists('/home/user/out.txt')).toBe(false);
+        expect(exit).toHaveBeenCalledWith(1, { silent: true });
+    });
+
+    it('should error with no operand and no piped input', async () => {
+        const exit = spyOn(ctx.process, 'exit');
         const cmd = makeCommand('tee');
         await processor.processCommand(cmd, ctx);
-        expect(writer.written.some(l => l.includes('missing operand'))).toBe(true);
+        expect(writer.written.some(l => l.includes('tee: no input'))).toBe(true);
+        expect(exit).toHaveBeenCalledWith(1, { silent: true });
     });
 });
 

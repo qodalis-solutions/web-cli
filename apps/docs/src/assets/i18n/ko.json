@@ -84,6 +84,7 @@
   "sidebar.built-in-commands": "기본 제공 명령",
   "sidebar.configuration": "설정",
   "sidebar.core-concepts": "핵심 개념",
+  "sidebar.command-line": "명령줄",
   "sidebar.command-processors": "명령 프로세서",
   "sidebar.execution-context": "실행 컨텍스트",
   "sidebar.theming": "테마",

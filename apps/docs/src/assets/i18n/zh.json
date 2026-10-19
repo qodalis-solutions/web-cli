@@ -84,6 +84,7 @@
   "sidebar.built-in-commands": "内置命令",
   "sidebar.configuration": "配置",
   "sidebar.core-concepts": "核心概念",
+  "sidebar.command-line": "命令行",
   "sidebar.command-processors": "命令处理器",
   "sidebar.execution-context": "执行上下文",
   "sidebar.theming": "主题",

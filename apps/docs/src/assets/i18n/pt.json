@@ -84,6 +84,7 @@
   "sidebar.built-in-commands": "Comandos Integrados",
   "sidebar.configuration": "Configuração",
   "sidebar.core-concepts": "Conceitos Fundamentais",
+  "sidebar.command-line": "Linha de comando",
   "sidebar.command-processors": "Processadores de Comandos",
   "sidebar.execution-context": "Contexto de Execução",
   "sidebar.theming": "Temas",

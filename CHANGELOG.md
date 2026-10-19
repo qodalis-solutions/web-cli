@@ -36,6 +36,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Help pages.** Over 40 more commands have a help page with usage and examples (`help grep`, `help cron`, `help server jobs stop`, …). On narrow terminals (phones) descriptions in `help` wrap at word boundaries instead of mid-word, and boxes (`writeBox`) wrap their content. The help helpers (`writeUsage`, `writeExamples`, `writeWrapped`, `writeHint`) are exported from `@qodalis/cli-core` for plugins.
 - **Quotes and combined flags on the command line.** A quoted argument stays one argument (`grep "hello world" notes.txt`), keeps its spacing, and flags inside quotes are text (`echo "a --b"`). Values given after a flag lose their quotes (`find --name "my file.txt"`, `sort -t ','`). Short flags can be combined (`rm -rf dir`, `ls -la`) when each letter is a flag of the command.
 - **Pipes and redirects show only the final output.** In `cat f | grep x` only grep's output appears, and `echo hi > f` prints nothing, as in a shell (every stage used to print). Errors and warnings of every stage are still shown. Tables, lists and key-value output are passed down a pipe as text, so `server list | grep node` works. A lone `-` is kept as an operand (`paste - b.txt`), `-n5` / `-f2` work like `-n 5`, and redirect targets can be quoted (`> "my dir/f.txt"`).
+- **Wildcards.** With the files plugin, `*`, `?` and `[...]` in unquoted arguments become the matching paths (`rm *.log`, `cat docs/*.md`, `ls */`), as in a shell: dot files only for a pattern starting with `.`, a pattern without matches is kept as typed, quoted patterns are never expanded.
+- **Variables and quotes.** `$VAR` is not expanded inside single quotes, and an apostrophe inside double quotes or without a pair (`echo "it's $HOME"`, `echo it's $USER`) no longer stops the expansion of the rest of the line.
+- **`echo` prints its arguments like a shell:** `echo "a" "b"` prints `a b` (was `a" "b`), and words that look like flags are printed (`echo hello --world`, or a variable holding `--x`); they used to disappear. The servers' `echo` behaves the same.
+- **Tab completion with spaces.** Paths with spaces are completed in quotes (`cat my` + Tab gives `cat "my notes.txt"`), also inside a quote already typed; path completion covers every file command (`sort`, `cut`, `du`, `sed`, …).
+- Redirect errors name the target: `> /nope/f.txt: No such file or directory` (was `> failed: touch: /nope: ...`).
+- An unreachable server is detected with one request instead of two, and logs one warning instead of two.
+- `CliTestHarness` runs the processors' `initialize()` before the first `execute()`, links sub-commands to their command and gives each processor its own state store, as the engine does.
 - **Redirects write whole lines.** `echo one > f.txt; echo two >> f.txt` gives two lines (it gave `onetwo`).
 - **A server that stops is shown as disconnected at once** (`server:disconnected`, panel status, `server list`), instead of after about 30 seconds of event-socket retries.
 - `diff` compares piped input: `echo "a" | diff --b "b"`.
@@ -70,6 +77,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Files** (`@qodalis/cli-files`), closer to Unix:
   - `cut -f 2` works (a plain number used to fail); `mv dir dir/sub` is refused instead of losing the directory; `echo "a > b"` prints the text instead of writing a file named `b`; `rmdir` removes directories (it always failed).
   - Quoted paths and patterns work everywhere (`cat "my file.txt"`, `grep "two words"`); combined flags (`rm -rf`, `ls -lah`, `cp -rf`, `grep -in`).
+  - `tr` and `tee` read only piped input, as in Unix (`cat f | tr a-z A-Z`); a file operand is an error instead of being read.
   - `cat`, `rm`, `mkdir` (`-p`), `touch` and `rmdir` take several paths; `cat` and `paste` read piped input; `sort` sorts several files together; `du` defaults to the current directory; `cp` and `mv` take several sources into a directory.
   - `wc -l` counts lines like Unix (a final newline is not an extra line); `head` / `tail` no longer print a blank last line, `tail -n 0` prints nothing.
   - `find`: `--maxdepth` counts from the start path (0 = the path itself), `--name` is case-sensitive, new `--iname`.
@@ -87,6 +95,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ### Docs site
 
 - State Management: `update()` and `scope: 'user'`. Services: the typed plugin tokens.
+- New "Command Line" page under Core Concepts: quotes, flags, pipes and redirects, `&&` / `||` / `;`, variables, wildcards and tab completion.
+- The markdown plugin is loaded in the React, Vue, Angular and vanilla demos.
 
 - New "Using servers from the terminal" section on the Server Integration page (configuration, running remote commands, all `server` commands and aliases, troubleshooting); the Built-in Commands page lists the server commands.
 - New "Event Bus" and "Services (DI)" pages under Core Concepts. The State Management page described storage that did not exist (`localStorage`, saving on every `updateState`); it now covers the options, several terminals and migrations.

@@ -140,6 +140,29 @@ describe('Files plugin integration: single commands', () => {
         expect(String(result.data ?? result.output)).toContain('a\tx');
     });
 
+    it('expands wildcards against the file system', async () => {
+        fs.createFile('/home/user/a.log', 'one\n');
+        fs.createFile('/home/user/b.log', 'two\n');
+        const cat = await harness.execute('cat *.log');
+        expect(cat.output).toContain('one');
+        expect(cat.output).toContain('two');
+        await harness.execute('rm *.log');
+        expect(fs.exists('/home/user/a.log')).toBe(false);
+        expect(fs.exists('/home/user/b.log')).toBe(false);
+        expect(fs.exists('/home/user/hello.txt')).toBe(true);
+    });
+
+    it('keeps a wildcard that matches nothing, and quoted ones', async () => {
+        const result = await harness.execute('echo "*.txt" *.nothing');
+        expect(result.output).toContain('*.txt *.nothing');
+    });
+
+    it('names the redirect target when it cannot be written', async () => {
+        const result = await harness.execute('echo x > /nope/f.txt');
+        expect(result.stderr.join('\n')).toContain('> /nope/f.txt: ');
+        expect(result.stderr.join('\n')).not.toContain('touch');
+    });
+
     it('cut accepts a plain field number', async () => {
         const result = await harness.execute('cut -d , -f 2 /home/user/data.csv');
         expect(result.stderr).toEqual([]);
@@ -1012,6 +1035,14 @@ describe('Files plugin integration: Unix compatibility', () => {
             expect(piped(result)).toBe('3');
             expect(fs.readFile('/home/user/copy.txt')).toBe('a\nb\nc\n');
         });
+
+        it('does not read a file operand without piped input', async () => {
+            const result = await harness.execute('tee copy.txt abc.txt');
+            expect(result.stderr.some((l) => l.includes('cat file | tee out.txt'))).toBe(true);
+            expect(result.exitCode).toBe(1);
+            expect(fs.exists('/home/user/copy.txt')).toBe(false);
+            expect(fs.readFile('/home/user/abc.txt')).toBe('a\nb\nc\n');
+        });
     });
 
     // 8. tr reads only piped input
@@ -1036,6 +1067,24 @@ describe('Files plugin integration: Unix compatibility', () => {
         it('understands escapes such as \\n', async () => {
             const result = await harness.execute("cat abc.txt | tr '\\n' ,");
             expect(piped(result)).toBe('a,b,c');
+        });
+
+        it('transforms a file piped through cat', async () => {
+            const result = await harness.execute('cat abc.txt | tr a-z A-Z');
+            expect(result.stderr).toEqual([]);
+            expect(piped(result)).toBe('A\nB\nC');
+        });
+
+        it('takes no file operand: the file is an extra operand', async () => {
+            const result = await harness.execute('tr a-z A-Z abc.txt');
+            expect(result.stderr.some((l) => l.includes("tr: extra operand 'abc.txt'"))).toBe(true);
+            expect(result.exitCode).toBe(1);
+        });
+
+        it('explains how to pipe input when there is none', async () => {
+            const result = await harness.execute('tr a-z A-Z');
+            expect(result.stderr.some((l) => l.includes('cat file | tr a-z A-Z'))).toBe(true);
+            expect(result.exitCode).toBe(1);
         });
     });
 
