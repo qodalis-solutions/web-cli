@@ -22,6 +22,7 @@ import {
     ICliHttpClient,
     CliFullScreenOptions,
     ICliNotifier,
+    ICliEventBus,
 } from '@qodalis/cli-core';
 import { Terminal } from '@xterm/xterm';
 import { Subject } from 'rxjs';
@@ -94,6 +95,8 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
     createTimeout: (callback: () => void, ms: number) => ICliManagedTimer;
     submitCommand: (command: string) => Promise<void>;
 
+    events?: ICliEventBus;
+
     get isBooted(): boolean | undefined {
         return this.context.isBooted;
     }
@@ -103,6 +106,7 @@ export class CliCommandExecutionContext implements ICliExecutionContext {
         processor: ICliCommandProcessor,
     ) {
         this.userSession = context.userSession;
+        this.events = context.events;
         this.spinner = context.spinner;
         this.progressBar = context.progressBar;
         this.textAnimator = context.textAnimator;

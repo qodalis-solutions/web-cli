@@ -63,6 +63,11 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
     /** Exit status of the last command, expanded as `$?` (0 = success). */
     private lastExitCode = 0;
 
+    /** Exit status of the last command line run (`$?`). */
+    get exitStatus(): number {
+        return this.lastExitCode;
+    }
+
     constructor(protected readonly registry: ICliCommandProcessorRegistry) {
         this.registerGlobalParameter(versionGlobalParameter);
         this.registerGlobalParameter(helpGlobalParameter);

@@ -2109,6 +2109,132 @@
 }
 
 <!-- Notifications -->
+@if (currentTopic === "event-bus") {
+  <div>
+    <h1>Event Bus</h1>
+    <p>
+      Every terminal has an event bus where the system, modules and commands
+      publish and subscribe to events. Use it to react to something happening
+      elsewhere (a package installed, a server connecting, a user signing in)
+      without depending on the code that does it. Access it with
+      <code>context.events</code>, or from the service container with
+      <code>ICliEventBus_TOKEN</code>.
+    </p>
+
+    <h2>Subscribing</h2>
+    <p>
+      <code>on(pattern, handler)</code> returns a function that unsubscribes.
+      A pattern is an exact type, a namespace wildcard such as
+      <code>package:*</code>, or <code>*</code> for every event.
+    </p>
+    <div class="code-block">
+      <pre><code>const myModule: ICliModule = &#123;
+  apiVersion: 2,
+  name: 'my-plugin',
+  async onInit(context) &#123;
+    // Typed: the payload type comes from CliEventMap
+    context.events?.on('package:installed', (e) =&gt;
+      context.writer.writeInfo(`Installed $&#123;e.data.name&#125;@$&#123;e.data.version&#125;`));
+
+    // A whole namespace; the payload is unknown
+    context.events?.on('server:*', (e) =&gt; console.log(e.type, e.data));
+
+    // Only the next one
+    context.events?.once('boot:completed', (e) =&gt;
+      console.log(`Booted in $&#123;e.data.durationMs&#125; ms`));
+  &#125;,
+&#125;;</code></pre>
+    </div>
+    <p>
+      Handlers run synchronously in the order they subscribed. A handler that
+      throws is logged and does not affect other handlers or the code that
+      emitted the event. <code>events$(pattern)</code> returns the same events
+      as an RxJS observable.
+    </p>
+
+    <h2>Emitting your own events</h2>
+    <p>
+      Name events <code>namespace:name</code>, using your plugin name as the
+      namespace. Declare their payloads once with declaration merging, so
+      emitters and listeners are type-checked:
+    </p>
+    <div class="code-block">
+      <pre><code>declare module '@qodalis/cli-core' &#123;
+  interface CliEventMap &#123;
+    'todo:added': &#123; id: number; text: string &#125;;
+  &#125;
+&#125;
+
+context.events?.emit('todo:added', &#123; id: 1, text: 'Buy milk' &#125;, &#123; source: 'todo' &#125;);
+context.events?.on('todo:added', (e) =&gt; e.data.text); // typed</code></pre>
+    </div>
+    <p>
+      Without a declaration, pass the payload type explicitly, or leave it out:
+    </p>
+    <div class="code-block">
+      <pre><code>context.events?.on&lt;&#123; id: number &#125;&gt;('todo:done', (e) =&gt; e.data.id);
+context.events?.emit('todo:refresh');</code></pre>
+    </div>
+
+    <h2>Built-in events</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>Payload</th>
+          <th>When</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>boot:completed</code></td><td><code>durationMs, modules, commands</code></td><td>Boot finished and the terminal accepts input</td></tr>
+        <tr><td><code>command:executed</code></td><td><code>command, exitCode, durationMs</code></td><td>A command line finished (typed or <code>engine.execute</code>)</td></tr>
+        <tr><td><code>module:loaded</code> / <code>module:unloaded</code></td><td><code>name, version, commands</code></td><td>A plugin was booted or unloaded</td></tr>
+        <tr><td><code>package:installed</code> / <code>package:updated</code> / <code>package:removed</code></td><td><code>name, version, previousVersion</code></td><td><code>pkg add</code>, <code>pkg update</code>, <code>pkg remove</code></td></tr>
+        <tr><td><code>server:connected</code> / <code>server:unavailable</code> / <code>server:disconnected</code></td><td><code>name, url, commands, reconnected</code></td><td>Server connection changes</td></tr>
+        <tr><td><code>server:event</code></td><td><code>server, type, data</code></td><td>An event pushed by a server over its event socket</td></tr>
+        <tr><td><code>service:started</code>, <code>service:stopped</code>, <code>service:failed</code>, …</td><td><code>name, …</code></td><td>Background service lifecycle</td></tr>
+        <tr><td><code>service:event</code></td><td><code>service, type, data</code></td><td>A custom event from a background service (<code>context.emit</code>)</td></tr>
+        <tr><td><code>config:changed</code> / <code>config:reset</code></td><td><code>category, key, value</code></td><td>A setting changed with <code>configure</code></td></tr>
+        <tr><td><code>session:changed</code></td><td><code>user</code></td><td>The signed-in user changed</td></tr>
+        <tr><td><code>user:login</code>, <code>user:logout</code>, …</td><td><code>ICliUserEvent</code></td><td>Published by the users plugin for each user event</td></tr>
+      </tbody>
+    </table>
+
+    <h2>History and persistence</h2>
+    <p>
+      Events live in memory: each terminal has its own bus for its lifetime,
+      and nothing is written to storage. Events describe something that just
+      happened; replaying them after a reload would make plugins react twice.
+      Data that must survive a reload belongs in a
+      <a routerLink="/docs/core-concepts/state-management">state store</a>.
+      The bus keeps the last 200 events, available with
+      <code>history(pattern?, limit?)</code>, for example to catch up on
+      what happened before a plugin loaded.
+    </p>
+
+    <h2>The events command</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>events watch [pattern]</code></td><td>Print events as they happen, until Ctrl+C</td></tr>
+        <tr><td><code>events log [pattern] [-n N]</code></td><td>Show recent events</td></tr>
+        <tr><td><code>events emit &lt;type&gt; [json]</code></td><td>Emit an event, e.g. to test a plugin (needs <code>system:events</code> when the users plugin is loaded)</td></tr>
+      </tbody>
+    </table>
+
+    <h2>When to use it</h2>
+    <ul>
+      <li>React to the system: refresh a view when a server reconnects, update a cache after <code>pkg update</code>.</li>
+      <li>Let plugins cooperate without importing each other: one emits <code>todo:added</code>, another listens.</li>
+      <li>Keep using a direct call when one piece of code needs an answer from another; events are fire-and-forget notifications.</li>
+    </ul>
+  </div>
+}
 @if (currentTopic === "notifications") {
   <div>
     <h1>Notifications</h1>

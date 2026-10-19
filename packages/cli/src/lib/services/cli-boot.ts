@@ -13,6 +13,10 @@ import {
     initializeBrowserEnvironment,
     LIBRARY_VERSION as CORE_VERSION,
     satisfiesVersionRange,
+    CliEventMap,
+    CliEventType,
+    ICliEventBus,
+    ICliEventBus_TOKEN,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION as CLI_VERSION, API_VERSION } from '../version';
 import { CliKeyValueStore_TOKEN } from '../tokens';
@@ -167,6 +171,15 @@ export class CliBoot {
 
         this.bootedModules.add(module.name);
         this.reportModule(module, commandCount, Date.now() - startedAt);
+        this.emitEvent(
+            'module:loaded',
+            {
+                name: module.name,
+                version: module.version,
+                commands: commandCount,
+            },
+            module.name,
+        );
 
         // Track in module registry for introspection (without triggering boot handlers)
         if (!this.moduleRegistry.has(module.name)) {
@@ -328,11 +341,28 @@ export class CliBoot {
     }
 
     private unloadModule(module: ICliModule): void {
+        this.emitEvent('module:unloaded', { name: module.name }, module.name);
         for (const processor of module.processors ?? []) {
             this.registry.unregisterProcessor(processor);
             this.initializedProcessors.delete(processor);
         }
         this.bootedModules.delete(module.name);
+    }
+
+    /** Publish on the event bus; never lets the bus break booting. */
+    private emitEvent<K extends CliEventType>(
+        type: K,
+        data: CliEventMap[K],
+        source: string,
+    ): void {
+        try {
+            const bus = this.services.get<ICliEventBus>(ICliEventBus_TOKEN);
+            if (typeof bus?.emit === 'function') {
+                bus.emit(type, data, { source });
+            }
+        } catch {
+            // no bus in this container
+        }
     }
 
     /** Boot warning: into the boot log when it is shown, else the terminal. */
@@ -390,6 +420,10 @@ export class CliBoot {
                 {
                     name: 'system:services',
                     description: 'Start and stop background services',
+                },
+                {
+                    name: 'system:events',
+                    description: 'Emit events on the event bus (events emit)',
                 },
                 {
                     name: 'system:eval',

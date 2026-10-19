@@ -500,6 +500,12 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
             };
             context.state.updateState({ plugins: state.plugins });
         }
+
+        context.events?.emit(
+            'config:changed',
+            { category: stateKey, key, value },
+            { source: 'configure' },
+        );
     }
 
     private getConfigValue(
@@ -855,6 +861,11 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                         });
                         this.applySystemSettings(defaults, context);
                         await context.state.persist();
+                        context.events?.emit(
+                            'config:reset',
+                            { category: 'system' },
+                            { source: 'configure' },
+                        );
                         context.writer.writeSuccess(
                             t.t(
                                 'cli.configure.system_reset',
@@ -896,6 +907,11 @@ export class CliConfigureCommandProcessor implements ICliCommandProcessor {
                             plugins: updatedPlugins,
                         });
                         await context.state.persist();
+                        context.events?.emit(
+                            'config:reset',
+                            { category },
+                            { source: 'configure' },
+                        );
                         context.writer.writeSuccess(
                             t.t(
                                 'cli.configure.category_reset',

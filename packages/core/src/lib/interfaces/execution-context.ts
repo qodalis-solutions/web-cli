@@ -18,6 +18,7 @@ import {
 } from '.';
 import { ICliInputReader } from './input-reader';
 import { ICliBackgroundServiceRegistry } from './background-service';
+import { ICliEventBus } from './event-bus';
 import { CliOptions, ICliUserSession } from '../models';
 
 /**
@@ -72,6 +73,12 @@ export interface ICliExecutionContext {
      * The progress bar to use for showing progress
      */
     progressBar: ICliPercentageProgressBar;
+
+    /**
+     * The terminal's event bus: emit and subscribe to events shared by the
+     * system, modules and commands. Optional for backward compatibility.
+     */
+    readonly events?: ICliEventBus;
 
     /**
      * `true` once the CLI has finished booting (modules set up, terminal

@@ -3,6 +3,7 @@
  */
 
 export * from './lib/processors';
+export { publishUserEvents } from './lib/events';
 export * from './lib/services';
 export * from './lib/backend';
 export * from './lib/models/users-module-config';

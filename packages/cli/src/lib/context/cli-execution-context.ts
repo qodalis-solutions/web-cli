@@ -25,6 +25,8 @@ import {
     CliFullScreenOptions,
     ICliHttpClient,
     ICliNotifier,
+    ICliEventBus,
+    ICliEventBus_TOKEN,
 } from '@qodalis/cli-core';
 import { CliBackgroundServiceRegistry } from '../services/background';
 import { CliHttpClient } from '../services/cli-http-client';
@@ -67,7 +69,23 @@ export interface CliExecutionContextDeps {
 export class CliExecutionContext
     implements ICliExecutionContext, InputModeHost, CommandLineModeHost
 {
-    public userSession?: ICliUserSession;
+    private _userSession?: ICliUserSession;
+
+    /** The signed-in user; changing it emits `session:changed`. */
+    public get userSession(): ICliUserSession | undefined {
+        return this._userSession;
+    }
+
+    public set userSession(session: ICliUserSession | undefined) {
+        const previous = this._userSession?.user?.name;
+        this._userSession = session;
+        if (session?.user?.name !== previous) {
+            this.events?.emit('session:changed', { user: session?.user?.name });
+        }
+    }
+
+    /** The terminal's event bus. */
+    public readonly events?: ICliEventBus;
 
     public contextProcessor?: ICliCommandProcessor;
 
@@ -152,6 +170,7 @@ export class CliExecutionContext
     ) {
         //initialize services
         this.services = deps.services;
+        this.events = deps.services.get<ICliEventBus>(ICliEventBus_TOKEN);
         this.translator = deps.translator;
 
         //initialize state store
@@ -446,7 +465,14 @@ export class CliExecutionContext
     async submitCommand(command: string): Promise<void> {
         if (command.trim()) {
             await this.commandHistory.addCommand(command);
+            const startedAt = Date.now();
             await this.executor.executeCommand(command, this);
+            this.events?.emit('command:executed', {
+                command,
+                exitCode:
+                    (this.executor as { exitStatus?: number }).exitStatus ?? 0,
+                durationMs: Date.now() - startedAt,
+            });
         }
 
         if (!this.isRawModeActive()) {

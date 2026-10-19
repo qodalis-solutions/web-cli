@@ -1,3 +1,4 @@
+import { publishUserEvents } from '../events';
 import {
     ICliAuditService_TOKEN,
     ICliAuthorizationService_TOKEN,
@@ -16,7 +17,10 @@ import {
     ICliUsersStoreService_TOKEN,
 } from '@qodalis/cli-core';
 import { Subscription } from 'rxjs';
-import { CliUsersModuleConfig, CliUsersModuleConfig_TOKEN } from '../models/users-module-config';
+import {
+    CliUsersModuleConfig,
+    CliUsersModuleConfig_TOKEN,
+} from '../models/users-module-config';
 import { ICliUsersBackend } from '../backend/users-backend';
 import { CliLocalUsersBackend } from '../backend/local-users-backend';
 import { CliHttpUsersBackend } from '../backend/http-users-backend';
@@ -65,7 +69,10 @@ export interface CliUsersRuntime {
      * Ends the local session after the backend invalidated it (401, kick,
      * expiry). Prints `reason` once. Bound by the module.
      */
-    terminate: (reason: string, options?: { outsideCommand?: boolean }) => Promise<void>;
+    terminate: (
+        reason: string,
+        options?: { outsideCommand?: boolean },
+    ) => Promise<void>;
     subscriptions: Subscription[];
     disposers: Array<() => void>;
 }
@@ -78,8 +85,12 @@ export async function createUsersRuntime(
     context: ICliExecutionContext,
     config: CliUsersModuleConfig,
 ): Promise<CliUsersRuntime> {
-    const kv = context.services.getRequired<ICliKeyValueStore>(ICliKeyValueStore_TOKEN);
-    const validatePassword = createPasswordPolicyValidator(config.passwordPolicy);
+    const kv = context.services.getRequired<ICliKeyValueStore>(
+        ICliKeyValueStore_TOKEN,
+    );
+    const validatePassword = createPasswordPolicyValidator(
+        config.passwordPolicy,
+    );
 
     // Late-bound so backends can report revoked sessions before the runtime exists
     const runtimeRef: { current?: CliUsersRuntime } = {};
@@ -96,9 +107,13 @@ export async function createUsersRuntime(
         tokenKey = `${SERVER_TOKEN_KEY}:custom`;
     } else if (config.server) {
         serverName = config.server;
-        const serverConfig = context.options?.servers?.find((s) => s.name === serverName);
+        const serverConfig = context.options?.servers?.find(
+            (s) => s.name === serverName,
+        );
         if (!serverConfig) {
-            throw new Error(`@qodalis/cli-users: server "${serverName}" not found in options.servers`);
+            throw new Error(
+                `@qodalis/cli-users: server "${serverName}" not found in options.servers`,
+            );
         }
         serverUrl = serverConfig.url.replace(/\/+$/, '');
         const baseUrl = serverUrl + '/api/v1/qcli';
@@ -108,22 +123,31 @@ export async function createUsersRuntime(
         onTokenChange = (token) => (currentToken = token);
         const tokenProvider: ICliServerAuthTokenProvider = {
             getHeaders: (name: string): Record<string, string> =>
-                name === serverName && currentToken ? { Authorization: `Bearer ${currentToken}` } : {},
+                name === serverName && currentToken
+                    ? { Authorization: `Bearer ${currentToken}` }
+                    : {},
             // WebSockets authenticate with a single-use ticket, never the bearer token in the URL
-            getWebSocketParams: async (name: string): Promise<Record<string, string> | undefined> => {
+            getWebSocketParams: async (
+                name: string,
+            ): Promise<Record<string, string> | undefined> => {
                 if (name !== serverName) return undefined;
                 const rt = runtimeRef.current;
                 const token = rt?.session.getToken();
                 if (!token || !rt?.backend.createWebSocketTicket) return {};
                 try {
-                    const { ticket } = await rt.backend.createWebSocketTicket(token);
+                    const { ticket } =
+                        await rt.backend.createWebSocketTicket(token);
                     return { ticket };
                 } catch {
                     return {}; // e.g. older server without tickets: connect unauthenticated
                 }
             },
         };
-        context.services.set({ provide: ICliServerAuthTokenProvider_TOKEN, useValue: tokenProvider, multi: true });
+        context.services.set({
+            provide: ICliServerAuthTokenProvider_TOKEN,
+            useValue: tokenProvider,
+            multi: true,
+        });
 
         // Any 401 (except a failed login) means the stored token is no longer valid.
         // Only a request made with the current token says so: ending the previous
@@ -134,12 +158,16 @@ export async function createUsersRuntime(
         const loginUrl = `${baseUrl}/sessions`;
         const logoutUrl = `${baseUrl}/sessions/current`;
         const http = withUnauthorizedHandler(context.http, {
-            onUnauthorized: () => runtimeRef.current?.terminate('Session expired or revoked by the server'),
+            onUnauthorized: () =>
+                runtimeRef.current?.terminate(
+                    'Session expired or revoked by the server',
+                ),
             ignore: (url, method, requestOptions) =>
                 (method === 'POST' && url === loginUrl) ||
                 (method === 'DELETE' && url === logoutUrl) ||
                 !currentToken ||
-                authorizationHeader(requestOptions?.headers) !== `Bearer ${currentToken}`,
+                authorizationHeader(requestOptions?.headers) !==
+                    `Bearer ${currentToken}`,
         });
         backend = new CliHttpUsersBackend(baseUrl, http);
         tokenKey = SERVER_TOKEN_KEY;
@@ -148,7 +176,8 @@ export async function createUsersRuntime(
             sessionTimeoutMs: config.sessionTimeout ?? 0,
             validatePassword,
             maxLoginAttempts: config.bruteForceProtection?.maxAttempts ?? 5,
-            lockoutMs: (config.bruteForceProtection?.lockoutSeconds ?? 300) * 1000,
+            lockoutMs:
+                (config.bruteForceProtection?.lockoutSeconds ?? 300) * 1000,
             allowTrustedLogin: config.requirePassword === false,
             hashIterations: config.passwordHashIterations,
             onSessionRevoked: ({ sessionId, reason }) => {
@@ -165,14 +194,28 @@ export async function createUsersRuntime(
 
     const events = new CliDefaultUserEventService();
     if (config.hostAuth && !config.server && !config.backend) {
-        throw new Error('@qodalis/cli-users: hostAuth requires server mode (config.server) or a custom backend');
+        throw new Error(
+            '@qodalis/cli-users: hostAuth requires server mode (config.server) or a custom backend',
+        );
     }
-    const session = new CliUserSessionService(backend, kv, tokenKey, onTokenChange, {
-        tokenSource: config.hostAuth?.getToken,
-        persistToken: config.persistToken,
-        // A session the backend no longer accepts counts as a sign-out
-        onExpired: (user) => events.emit({ type: 'logout', user, timestamp: Date.now(), details: 'session expired' }),
-    });
+    const session = new CliUserSessionService(
+        backend,
+        kv,
+        tokenKey,
+        onTokenChange,
+        {
+            tokenSource: config.hostAuth?.getToken,
+            persistToken: config.persistToken,
+            // A session the backend no longer accepts counts as a sign-out
+            onExpired: (user) =>
+                events.emit({
+                    type: 'logout',
+                    user,
+                    timestamp: Date.now(),
+                    details: 'session expired',
+                }),
+        },
+    );
     const auth = new CliUsersAuthService(backend, session, events, {
         passwordless: config.requirePassword === false,
         validatePassword,
@@ -181,12 +224,20 @@ export async function createUsersRuntime(
     const users = new CliUsersStoreService(backend, session, events);
     const groups = new CliGroupsStoreService(backend, session, events);
     const sessions = new CliSessionsService(backend, session, events);
-    const tokens = new CliApiTokensService(backend, session, events, absoluteUrl(serverUrl ?? backendServerUrl(backend)));
+    const tokens = new CliApiTokensService(
+        backend,
+        session,
+        events,
+        absoluteUrl(serverUrl ?? backendServerUrl(backend)),
+    );
     const audit = new CliUsersAuditService(
         backend,
         session,
         events,
-        local ? (event, username, details) => local!.appendAudit(event, username, details) : undefined,
+        local
+            ? (event, username, details) =>
+                  local!.appendAudit(event, username, details)
+            : undefined,
     );
     const authorization = new CliUsersAuthorizationService(session);
 
@@ -201,7 +252,10 @@ export async function createUsersRuntime(
         { provide: CliApiTokensService_TOKEN, useValue: tokens },
         { provide: ICliAuditService_TOKEN, useValue: audit },
         { provide: ICliAuthorizationService_TOKEN, useValue: authorization },
-        { provide: ICliPermissionService_TOKEN, useValue: new CliDefaultPermissionService(authorization) },
+        {
+            provide: ICliPermissionService_TOKEN,
+            useValue: new CliDefaultPermissionService(authorization),
+        },
     ]);
 
     const runtime: CliUsersRuntime = {
@@ -223,13 +277,20 @@ export async function createUsersRuntime(
         subscriptions: [],
         disposers: [],
     };
+    const published = publishUserEvents(events.events$, context.events);
+    if (published) runtime.subscriptions.push(published);
     runtimeRef.current = runtime;
     return runtime;
 }
 
 /** Display name for the prompt */
-export function displayNameFor(config: CliUsersModuleConfig, user: ICliUser): string {
-    return config.userDisplayFormatter ? config.userDisplayFormatter(user) : user.name;
+export function displayNameFor(
+    config: CliUsersModuleConfig,
+    user: ICliUser,
+): string {
+    return config.userDisplayFormatter
+        ? config.userDisplayFormatter(user)
+        : user.name;
 }
 
 /** Server URL of a custom backend exposing `baseUrl` (e.g. `http://host/api/v1/qcli`) */
@@ -243,17 +304,27 @@ function backendServerUrl(backend: ICliUsersBackend): string | undefined {
 function absoluteUrl(url: string | undefined): string | undefined {
     if (url === undefined) return undefined;
     if (/^https?:\/\//i.test(url)) return url;
-    const origin = typeof location !== 'undefined' ? location?.origin : undefined;
+    const origin =
+        typeof location !== 'undefined' ? location?.origin : undefined;
     if (!origin || origin === 'null') return url || undefined;
-    return `${origin}${url.startsWith('/') ? '' : '/'}${url}`.replace(/\/+$/, '');
+    return `${origin}${url.startsWith('/') ? '' : '/'}${url}`.replace(
+        /\/+$/,
+        '',
+    );
 }
 
 /** `Authorization` header of a request, whatever form the headers were given in */
-function authorizationHeader(headers: HeadersInit | undefined): string | undefined {
+function authorizationHeader(
+    headers: HeadersInit | undefined,
+): string | undefined {
     if (!headers) return undefined;
-    if (typeof Headers !== 'undefined' && headers instanceof Headers) return headers.get('Authorization') ?? undefined;
-    if (Array.isArray(headers)) return headers.find(([k]) => k.toLowerCase() === 'authorization')?.[1];
+    if (typeof Headers !== 'undefined' && headers instanceof Headers)
+        return headers.get('Authorization') ?? undefined;
+    if (Array.isArray(headers))
+        return headers.find(([k]) => k.toLowerCase() === 'authorization')?.[1];
     const record = headers as Record<string, string>;
-    const key = Object.keys(record).find((k) => k.toLowerCase() === 'authorization');
+    const key = Object.keys(record).find(
+        (k) => k.toLowerCase() === 'authorization',
+    );
     return key ? record[key] : undefined;
 }

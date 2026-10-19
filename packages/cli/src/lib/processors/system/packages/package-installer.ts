@@ -146,6 +146,11 @@ export class CliPackageInstaller {
             writer.writeSuccess(
                 `Package ${pkg.name}@${pkg.version} added successfully`,
             );
+            context.events?.emit(
+                'package:installed',
+                { name: pkg.name, version: pkg.version },
+                { source: 'pkg' },
+            );
         } catch (e: any) {
             if (signal?.aborted) return;
             progressBar.complete();
@@ -221,6 +226,15 @@ export class CliPackageInstaller {
             writer.writeSuccess(
                 `Package ${current.name} updated to version ${updated.version} from ${current.version}`,
             );
+            context.events?.emit(
+                'package:updated',
+                {
+                    name: current.name,
+                    version: updated.version,
+                    previousVersion: current.version,
+                },
+                { source: 'pkg' },
+            );
             return 'updated';
         } catch (e: any) {
             if (signal?.aborted) return 'failed';
@@ -247,6 +261,11 @@ export class CliPackageInstaller {
             progressBar.complete();
             writer.writeSuccess(
                 `Package ${pkg.name}@${pkg.version} removed successfully`,
+            );
+            context.events?.emit(
+                'package:removed',
+                { name: pkg.name, version: pkg.version },
+                { source: 'pkg' },
             );
             if (stillLoaded.length > 0) {
                 // Sealed commands (e.g. the users plugin's login/whoami) cannot be

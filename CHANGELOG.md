@@ -14,6 +14,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - **Typing ahead works.** Keys typed while a command is still running are held and replayed at the next prompt, in order, including Enter. They used to be echoed into the command's output and appended to the line just submitted (`/$ echo hi` then `help` showed `/$ echo hihelp`). Ctrl+C and Esc discard them, and they are dropped when the command takes over the terminal (games, `nano`).
 - **Up arrow recalls the command you just ran.** After running a command, Up skipped it and showed the one before (and did nothing after the very first command).
 - **Boot report.** While the CLI starts, the terminal lists each step (terminal and services, each server, each installed package, each module with its command count and setup time) with a thin progress bar and percentage below it. When boot completes the report is cleared and the regular terminal takes over; warnings and errors stay on screen, first-run setup prompts are cleared with the report. Keys typed while booting are kept and replayed at the first prompt. Configure it with `boot: { showLogs, keepLogs, slowStepMs }` in the options, or per user with `configure set system.bootLogs false` (shows the previous spinner). Plugins can add steps through the `CliBootLog_TOKEN` service.
+- **Event bus.** Each terminal has a publish/subscribe bus (`context.events`, or the `ICliEventBus_TOKEN` service) that the system, plugins and commands use to talk to each other without importing each other. `on` / `once` / `events$` take an exact type, a namespace (`package:*`) or `*`, and are typed from `CliEventMap` (plugins add their events with declaration merging), with an explicit type (`on<T>()`), or untyped. Built-in events: `boot:completed`, `command:executed`, `module:loaded` / `module:unloaded`, `package:installed` / `package:updated` / `package:removed`, `server:connected` / `server:unavailable` / `server:disconnected` / `server:event`, `service:*` (background services), `config:changed` / `config:reset` and `session:changed`. Events are kept in memory only: the last 200 are available with `history()`, nothing is persisted. A failing handler is logged and never affects the emitter. The new `events` command watches (`events watch [pattern]`), lists (`events log`) and emits (`events emit <type> [json]`, permission `system:events`) events. The panel's status indicators now refresh on server and command events instead of waiting for the next poll.
 - **Boot completion is observable.** `CliEngine.isBooted` and `CliEngine.booted` (a promise), and `context.isBooted` for commands and plugins. Plugins loaded from scripts (`pkg`) are part of boot: the engine waits for them, setup prompts included (`CliModuleRegistry.whenIdle()`).
 - **The greeting comes last.** The animated greeting is its own module and runs after every other `onAfterBoot` hook, so it no longer writes over setup or sign-in prompts, and stops by itself if other output appears.
 - **Duplicated terminals look like the original.** Restoring a snapshot clears the terminal first; warnings printed by the new terminal's own boot no longer pile up above the restored screen.
@@ -28,6 +29,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - `pkg browse` probes all 40 official plugins (was 12) in parallel; `pkg check` checks packages in parallel; `pkg versions` uses the configured registry sources (e.g. Verdaccio) instead of always npmjs.org.
   - `pkg browse` no longer lists server packages (`@qodalis/cli-server-*`, the dashboard, the core library), which cannot be installed in the browser. Removing a plugin with protected commands (the users plugin) says that they disappear after a reload. Clearer errors for removing an uninstalled package and for unknown packages in `pkg versions`.
   - Extra spaces between names no longer produce an empty package name; help text columns are aligned. The processor is split into an installer, a search module and help helpers.
+
+### Users (`@qodalis/cli-users`)
+
+- User events (sign-in, sign-out, user and group changes) are also published on the event bus as `user:<type>` (`user:login`, `user:logout`, …), so other plugins can react without depending on the users plugin.
+
+### Docs site
+
+- New "Event Bus" page under Core Concepts.
 
 ### Angular (`@qodalis/angular-cli`)
 

@@ -12,6 +12,7 @@ import {
     ICliCommandProcessor,
     ICliModule,
     ICliServerAuthService_TOKEN,
+    ICliEventBus_TOKEN,
 } from '@qodalis/cli-core';
 import { CliServerAuthService } from '../services/cli-server-auth.service';
 import { CliCommandExecutor } from '../executor/cli-command-executor';
@@ -351,6 +352,7 @@ export class CliEngine {
                 deps: [
                     CliProcessorsRegistry_TOKEN,
                     ICliServerAuthService_TOKEN,
+                    ICliEventBus_TOKEN,
                 ],
             },
         ]);
@@ -419,6 +421,11 @@ export class CliEngine {
         this.executionContext.markBooted();
         this._isBooted = true;
         this.resolveBooted();
+        this.executionContext.events?.emit('boot:completed', {
+            durationMs: bootLog.elapsedMs,
+            modules: this.bootService!.getModuleRegistry().getAll().length,
+            commands: this.registry.processors.length,
+        });
     }
 
     /**
@@ -457,6 +464,10 @@ export class CliEngine {
     destroy(): void {
         // 1. Dispose execution context (stops background services, cleans up managed timers)
         this.executionContext?.dispose();
+        (
+            this.executionContext?.events as
+                { dispose?: () => void } | undefined
+        )?.dispose?.();
 
         // 2. Call onDestroy on all registered modules
         if (this.bootService && this.executionContext) {

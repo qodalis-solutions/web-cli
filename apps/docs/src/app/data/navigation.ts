@@ -23,6 +23,7 @@ export const DOCS_NAV: NavItem[] = [
             { label: 'sidebar.http-client', path: '/docs/core-concepts/http-client' },
             { label: 'sidebar.background-services', path: '/docs/core-concepts/background-services' },
             { label: 'sidebar.state-management', path: '/docs/core-concepts/state-management' },
+            { label: 'sidebar.event-bus', path: '/docs/core-concepts/event-bus' },
             { label: 'sidebar.notifications', path: '/docs/core-concepts/notifications' },
             { label: 'sidebar.command-guards', path: '/docs/core-concepts/command-guards' },
             { label: 'sidebar.tabs-and-panes', path: '/docs/core-concepts/tabs-and-panes' },
