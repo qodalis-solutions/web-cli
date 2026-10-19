@@ -1,8 +1,12 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -14,6 +18,25 @@ export class CliBasenameCommandProcessor implements ICliCommandProcessor {
     acceptsRawInput = true;
     valueRequired = true;
     metadata = { icon: '📛', module: 'file management' };
+
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.basename.help.print_last_part_path', 'Print the last part of a path, the file or directory name, without the directories in front. If a suffix is given, it is removed from the end too.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['basename <path>', t.t('cli.basename.help.name_without_directories', 'Name without the directories')],
+            ['basename <path> <suffix>', t.t('cli.basename.help.also_remove_trailing_suffix', 'Also remove a trailing suffix')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['basename /home/user/notes.txt', t.t('cli.basename.help.prints_notes_txt', 'Prints notes.txt')],
+            ['basename /home/user/notes.txt .txt', t.t('cli.basename.help.prints_notes', 'Prints notes')],
+            ['basename /home/user/', t.t('cli.basename.help.prints_user', 'Prints user')],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,
@@ -55,6 +78,6 @@ export class CliBasenameCommandProcessor implements ICliCommandProcessor {
 
     private parseTokens(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
+        return splitArgs(raw).filter(Boolean);
     }
 }

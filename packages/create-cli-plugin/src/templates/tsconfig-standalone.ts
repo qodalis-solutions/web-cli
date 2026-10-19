@@ -6,7 +6,7 @@ export function tsconfigStandaloneTemplate(_vars: TemplateVars): string {
             compilerOptions: {
                 target: 'ES2022',
                 module: 'ES2022',
-                moduleResolution: 'node',
+                moduleResolution: 'bundler',
                 declaration: true,
                 declarationMap: true,
                 sourceMap: true,

@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/electron-cli",
-  "version": "2.0.0-beta.17",
+  "version": "2.0.0-beta.18",
   "description": "Electron integration for the @qodalis CLI terminal engine. Provides native file dialogs, clipboard, and shell integration.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
@@ -53,9 +53,9 @@
     "@qodalis/cli-core": "workspace:^"
   },
   "devDependencies": {
-    "electron": "^35.0.0",
-    "tsup": "^8.0.0",
-    "typescript": "^5.0.0"
+    "electron": "^44.9.0",
+    "tsup": "^9.0.0",
+    "typescript": "^6.0.0"
   },
   "scripts": {
     "build": "tsup",

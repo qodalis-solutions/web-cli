@@ -8,6 +8,7 @@ import {
     DefaultLibraryAuthor,
     CliForegroundColor,
     ICliCommandChildProcessor,
+    unquoteRawArgument,
 } from '@qodalis/cli-core';
 import { parseChartInput, renderBarChart, renderLineChart, renderSparkline } from '../chart-utils';
 import { LIBRARY_VERSION } from '../version';
@@ -28,7 +29,7 @@ export class CliChartCommandProcessor implements ICliCommandProcessor {
             description: 'Horizontal bar chart. Pipe numbers or key:value pairs.',
             valueRequired: true,
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const raw = cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '';
+                const raw = unquoteRawArgument(cmd.value ?? '') || (typeof cmd.data === 'string' ? cmd.data : '') || '';
                 const data = parseChartInput(raw);
                 if (!data.length) {
                     context.writer.writeError('No data. Pipe numbers or key:value pairs.');
@@ -61,7 +62,7 @@ export class CliChartCommandProcessor implements ICliCommandProcessor {
             description: 'Line chart. Pipe numbers or key:value pairs.',
             valueRequired: true,
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const raw = cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '';
+                const raw = unquoteRawArgument(cmd.value ?? '') || (typeof cmd.data === 'string' ? cmd.data : '') || '';
                 const data = parseChartInput(raw);
                 if (!data.length) {
                     context.writer.writeError('No data. Pipe numbers or key:value pairs.');
@@ -91,7 +92,7 @@ export class CliChartCommandProcessor implements ICliCommandProcessor {
             description: 'Single-line sparkline. Pipe numbers or key:value pairs.',
             valueRequired: true,
             processCommand: async (cmd: CliProcessCommand, context: ICliExecutionContext) => {
-                const raw = cmd.value || (typeof cmd.data === 'string' ? cmd.data : '') || '';
+                const raw = unquoteRawArgument(cmd.value ?? '') || (typeof cmd.data === 'string' ? cmd.data : '') || '';
                 const data = parseChartInput(raw);
                 if (!data.length) {
                     context.writer.writeError('No data. Pipe numbers or key:value pairs.');

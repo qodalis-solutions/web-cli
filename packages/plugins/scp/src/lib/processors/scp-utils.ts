@@ -1,4 +1,4 @@
-import { ICliExecutionContext, CliServerConfig } from '@qodalis/cli-core';
+import { ICliExecutionContext, CliServerConfig, splitShellWords } from '@qodalis/cli-core';
 
 export function resolveServer(
     serverName: string | undefined,
@@ -41,7 +41,8 @@ export function formatBytes(bytes: number): string {
 }
 
 /**
- * Parse server and path from either positional args (command.value)
+ * Parse server and path from either positional args (command.value, split
+ * like a shell)
  * or named args (--server, --path).
  *
  * Supports:
@@ -62,10 +63,11 @@ export function parseServerAndPath(
     }
 
     // Fall back to positional from command.value
-    if (!value?.trim()) {
+    // Split like a shell: `"/my dir"` is one argument
+    const parts = splitShellWords(value ?? '');
+    if (parts.length === 0) {
         return null;
     }
-    const parts = value.trim().split(/\s+/);
     if (parts.length < 2) {
         // If only one positional, maybe server is from --server and path is positional
         if (serverArg && parts.length >= 1) {

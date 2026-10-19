@@ -20,6 +20,18 @@
       "outputs": [
         "{workspaceRoot}/dist/tetris"
       ]
+    },
+    "test": {
+      "executor": "@angular-devkit/build-angular:karma",
+      "options": {
+        "tsConfig": "packages/plugins/tetris/tsconfig.spec.json",
+        "polyfills": [
+          "zone.js",
+          "zone.js/testing"
+        ],
+        "browsers": "ChromeHeadless",
+        "watch": false
+      }
     }
   }
 }

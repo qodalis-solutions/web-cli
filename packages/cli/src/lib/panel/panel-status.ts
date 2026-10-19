@@ -14,7 +14,9 @@ export const EXEC_POLL_MS = 300;
 export const GLOBAL_POLL_MS = 2000;
 
 /** Status of a tab from all of its pane engines. */
-export function computeTabStatus(engines: Iterable<CliEngine>): CliPanelTabStatus {
+export function computeTabStatus(
+    engines: Iterable<CliEngine>,
+): CliPanelTabStatus {
     let running = false;
     let lastResult: { command: string; success: boolean } | undefined;
     let notification: CliNotification | null = null;
@@ -37,13 +39,18 @@ export function computeTabStatus(engines: Iterable<CliEngine>): CliPanelTabStatu
 
     return {
         executionState: running ? 'running' : 'idle',
-        lastCommand: lastResult ? { name: lastResult.command, success: lastResult.success } : null,
+        lastCommand: lastResult
+            ? { name: lastResult.command, success: lastResult.success }
+            : null,
         notification,
     };
 }
 
 /** Services, servers and uptime of one engine. */
-export function computeGlobalStatus(engine: CliEngine | undefined, now: number = Date.now()): CliPanelGlobalStatus {
+export function computeGlobalStatus(
+    engine: CliEngine | undefined,
+    now: number = Date.now(),
+): CliPanelGlobalStatus {
     if (!engine) return DEFAULT_GLOBAL_STATUS;
     const context = engine.getContext() as any;
     if (!context) return DEFAULT_GLOBAL_STATUS;
@@ -56,7 +63,11 @@ export function computeGlobalStatus(engine: CliEngine | undefined, now: number =
             running: services.filter((s) => s.status === 'running').length,
             total: services.length,
         };
-        serviceDetails = services.map((s) => ({ name: s.name, status: s.status, description: s.description }));
+        serviceDetails = services.map((s) => ({
+            name: s.name,
+            status: s.status,
+            description: s.description,
+        }));
     } catch {
         /* not available */
     }
@@ -72,14 +83,19 @@ export function computeGlobalStatus(engine: CliEngine | undefined, now: number =
         }
         if (serverManager?.connections?.size > 0) {
             let anyConnected = false;
-            for (const [name, conn] of serverManager.connections as Map<string, any>) {
+            for (const [name, conn] of serverManager.connections as Map<
+                string,
+                any
+            >) {
                 if (conn.connected) anyConnected = true;
                 serverDetails.push({
                     name,
                     url: conn.config?.url ?? '',
                     connected: !!conn.connected,
                     apiVersion: conn.connected ? conn.apiVersion : undefined,
-                    commandCount: conn.connected ? conn.commands?.length : undefined,
+                    commandCount: conn.connected
+                        ? conn.commands?.length
+                        : undefined,
                 });
             }
             serverState = anyConnected ? 'connected' : 'disconnected';
@@ -89,7 +105,11 @@ export function computeGlobalStatus(engine: CliEngine | undefined, now: number =
             if (Array.isArray(configured) && configured.length > 0) {
                 for (const srv of configured) {
                     if (srv.enabled === false) continue;
-                    serverDetails.push({ name: srv.name, url: srv.url ?? '', connected: false });
+                    serverDetails.push({
+                        name: srv.name,
+                        url: srv.url ?? '',
+                        connected: false,
+                    });
                 }
                 serverState = 'disconnected';
             }
@@ -131,7 +151,11 @@ export class CliPanelStatusTracker {
         let entry = this.tabs.get(tabId);
         if (entry?.engines.get(paneId) === engine) return;
         if (!entry) {
-            entry = { engines: new Map(), status: computeTabStatus([]), unsubscribes: [] };
+            entry = {
+                engines: new Map(),
+                status: computeTabStatus([]),
+                unsubscribes: [],
+            };
             this.tabs.set(tabId, entry);
         }
         entry.engines.set(paneId, engine);
@@ -143,10 +167,21 @@ export class CliPanelStatusTracker {
             entry.unsubscribes.push(() => sub.unsubscribe?.());
         }
         try {
-            const off = context?.backgroundServices?.on?.(() => this.refreshGlobal());
+            const off = context?.backgroundServices?.on?.(() =>
+                this.refreshGlobal(),
+            );
             if (typeof off === 'function') entry.unsubscribes.push(off);
         } catch {
             /* not available */
+        }
+        // Server connections and finished commands update the indicators
+        // right away; the polling below stays as a fallback.
+        const events = context?.events;
+        if (typeof events?.on === 'function') {
+            entry.unsubscribes.push(
+                events.on('server:*', () => this.refreshGlobal()),
+                events.on('command:executed', () => this.refreshTab(tabId)),
+            );
         }
 
         this.ensurePolling();
@@ -187,7 +222,8 @@ export class CliPanelStatusTracker {
 
     destroy(): void {
         this.stopPolling();
-        for (const entry of this.tabs.values()) entry.unsubscribes.forEach((off) => off());
+        for (const entry of this.tabs.values())
+            entry.unsubscribes.forEach((off) => off());
         this.tabs.clear();
     }
 
@@ -196,7 +232,10 @@ export class CliPanelStatusTracker {
         this.execTimer = setInterval(() => {
             for (const tabId of this.tabs.keys()) this.refreshTab(tabId);
         }, EXEC_POLL_MS);
-        this.globalTimer = setInterval(() => this.refreshGlobal(), GLOBAL_POLL_MS);
+        this.globalTimer = setInterval(
+            () => this.refreshGlobal(),
+            GLOBAL_POLL_MS,
+        );
     }
 
     private stopPolling(): void {
@@ -216,8 +255,12 @@ export class CliPanelStatusTracker {
     }
 
     private refreshGlobal(): void {
-        const entry = this.activeTabId != null ? this.tabs.get(this.activeTabId) : undefined;
-        const engine = entry?.engines.values().next().value as CliEngine | undefined;
+        const entry =
+            this.activeTabId != null
+                ? this.tabs.get(this.activeTabId)
+                : undefined;
+        const engine = entry?.engines.values().next().value as
+            CliEngine | undefined;
         const next = computeGlobalStatus(engine);
         if (sameJson(next, this.globalStatus)) return;
         this.globalStatus = next;

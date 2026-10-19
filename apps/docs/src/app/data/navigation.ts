@@ -15,6 +15,7 @@ export const DOCS_NAV: NavItem[] = [
         label: 'sidebar.core-concepts',
         path: '/docs/core-concepts',
         children: [
+            { label: 'sidebar.command-line', path: '/docs/core-concepts/command-line' },
             { label: 'sidebar.command-processors', path: '/docs/core-concepts/command-processors' },
             { label: 'sidebar.execution-context', path: '/docs/core-concepts/execution-context' },
             { label: 'sidebar.writer-api', path: '/docs/core-concepts/writer-api' },
@@ -23,6 +24,8 @@ export const DOCS_NAV: NavItem[] = [
             { label: 'sidebar.http-client', path: '/docs/core-concepts/http-client' },
             { label: 'sidebar.background-services', path: '/docs/core-concepts/background-services' },
             { label: 'sidebar.state-management', path: '/docs/core-concepts/state-management' },
+            { label: 'sidebar.services', path: '/docs/core-concepts/services' },
+            { label: 'sidebar.event-bus', path: '/docs/core-concepts/event-bus' },
             { label: 'sidebar.notifications', path: '/docs/core-concepts/notifications' },
             { label: 'sidebar.command-guards', path: '/docs/core-concepts/command-guards' },
             { label: 'sidebar.tabs-and-panes', path: '/docs/core-concepts/tabs-and-panes' },

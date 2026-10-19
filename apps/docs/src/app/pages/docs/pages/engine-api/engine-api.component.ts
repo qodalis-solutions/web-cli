@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { CliComponent } from '@qodalis/angular-cli';
 import { CliEngine } from '@qodalis/cli';
 import { CliOptions, ICliModule } from '@qodalis/cli-core';
@@ -23,6 +23,8 @@ export class EngineApiComponent {
     @ViewChild('demoCli') demoCli!: CliComponent;
 
     private engine?: CliEngine;
+
+    constructor(private readonly cdr: ChangeDetectorRef) {}
 
     onEngineReady(engine: CliEngine): void {
         this.engine = engine;
@@ -56,6 +58,8 @@ export class EngineApiComponent {
 
     private log(msg: string): void {
         this.stateLog.unshift(`[${new Date().toLocaleTimeString()}] ${msg}`);
+        // Called after awaits too; the app is zoneless.
+        this.cdr.markForCheck();
         if (this.stateLog.length > 50) {
             this.stateLog.length = 50;
         }

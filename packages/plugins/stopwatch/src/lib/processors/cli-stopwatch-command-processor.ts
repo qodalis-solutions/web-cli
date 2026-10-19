@@ -3,6 +3,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 import { formatDuration, parseDuration } from '../stopwatch-utils';
@@ -53,7 +54,7 @@ class CliStopwatchTimerCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const input = (command.value ?? '').trim();
+        const input = joinShellWords(command.value ?? '');
         const durationMs = parseDuration(input);
 
         if (!durationMs) {

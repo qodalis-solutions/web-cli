@@ -6,6 +6,7 @@ import {
     CliProcessorMetadata,
     CliIcon,
     ICliCommandProcessorRegistry,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { CliProcessorsRegistry_TOKEN } from '../../tokens';
@@ -83,7 +84,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                     );
                     if (narrow) {
                         writer.writeln(`  ${icon} ${name}${aliasText}`);
-                        writer.writeln(`      ${desc}`);
+                        writeWrapped(context, desc, 6);
                         return;
                     }
                     writer.writeln(`    ${icon}  ${name} ${desc}${aliasText}`);
@@ -108,7 +109,11 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             if (processor) {
-                this.writeProcessorDescription(processor, context);
+                this.writeProcessorDescription(
+                    processor,
+                    context,
+                    this.commandPath(registry, commandsToHelp) || processor.command,
+                );
             } else {
                 writer.writeError(t.t('cli.help.unknown_command', 'Unknown command: {command}', { command: commandsToHelp[0] }));
                 writer.writeln();
@@ -160,9 +165,35 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         );
     }
 
+    /**
+     * Canonical path of the command being described (`server.status` for
+     * `help srv ping`), so a sub-command's translation keys include its
+     * parents: `cli.server.status.description`.
+     */
+    private commandPath(
+        registry: ICliCommandProcessorRegistry,
+        words: string[],
+    ): string {
+        const path: string[] = [];
+        let candidates: ICliCommandProcessor[] | undefined = registry.processors;
+        for (const word of words) {
+            const lower = word.toLowerCase();
+            const match: ICliCommandProcessor | undefined = candidates?.find(
+                (p) =>
+                    p.command.toLowerCase() === lower ||
+                    p.aliases?.some((a) => a.toLowerCase() === lower),
+            );
+            if (!match) break;
+            path.push(match.command);
+            candidates = match.processors;
+        }
+        return path.join('.');
+    }
+
     private writeProcessorDescription(
         processor: ICliCommandProcessor,
         context: ICliExecutionContext,
+        keyPath: string,
     ) {
         const { writer } = context;
         const t = context.translator;
@@ -174,7 +205,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
         if (processor.description) {
             headerLines.push(
-                this.translateDescription(processor.description, processor.command, context),
+                this.translateDescription(processor.description, keyPath, context),
             );
         }
 
@@ -233,12 +264,12 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                     : '';
                 const subDesc = this.translateDescription(
                     sub.description,
-                    `${processor.command}.${sub.command}`,
+                    `${keyPath}.${sub.command}`,
                     context,
                 );
                 if (narrow) {
                     writer.writeln(`    ${subName}${subAliases}`);
-                    writer.writeln(`      ${subDesc}`);
+                    writeWrapped(context, subDesc, 6);
                     return;
                 }
                 writer.writeln(
@@ -258,7 +289,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             commandParams.forEach((param) => {
-                this.writeParameter(param, writer, t, isNarrow(context));
+                this.writeParameter(param, context, isNarrow(context));
             });
         }
 
@@ -269,7 +300,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             );
 
             globalParams.forEach((param) => {
-                this.writeParameter(param, writer, t, isNarrow(context));
+                this.writeParameter(param, context, isNarrow(context));
             });
         }
 
@@ -301,10 +332,10 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
     private writeParameter(
         param: { name: string; aliases?: string[]; type: string; description: string; required: boolean; defaultValue?: any },
-        writer: ICliExecutionContext['writer'],
-        translator: ICliExecutionContext['translator'],
+        context: ICliExecutionContext,
         narrow = false,
     ) {
+        const { writer, translator } = context;
         const aliases = param.aliases?.length
             ? `, ${param.aliases.map((a) => `-${a}`).join(', ')}`
             : '';
@@ -322,7 +353,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 : '';
         if (narrow) {
             writer.writeln(`    ${nameStr} ${typeStr}${required}${defaultVal}`);
-            writer.writeln(`      ${param.description}`);
+            writeWrapped(context, param.description, 6);
             return;
         }
         writer.writeln(

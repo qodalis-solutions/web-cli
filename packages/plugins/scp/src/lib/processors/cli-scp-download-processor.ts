@@ -63,12 +63,11 @@ export class CliScpDownloadProcessor implements ICliCommandChildProcessor {
             localPath = args['local-path'] ? String(args['local-path']) : undefined;
         } else {
             // Fall back to positional
-            const value = command.value?.trim();
-            if (!value) {
+            const parts = command.positionals ?? [];
+            if (parts.length === 0) {
                 context.writer.writeError('Usage: scp download <server> <remote-path> [local-path]');
                 return;
             }
-            const parts = value.split(/\s+/);
             if (parts.length < 2) {
                 context.writer.writeError('Usage: scp download <server> <remote-path> [local-path]');
                 return;

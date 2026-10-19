@@ -1,3 +1,4 @@
+import { skip } from 'rxjs/operators';
 import {
     CliForegroundColor,
     CliProcessCommand,
@@ -7,6 +8,7 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     CliThemeInfo,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
@@ -228,7 +230,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const name = command.value!;
+                    const name = joinShellWords(command.value ?? '');
                     const t = themes[name];
                     if (!t) {
                         context.writer.writeError(
@@ -249,7 +251,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    let themeName = command.value?.trim();
+                    let themeName = joinShellWords(command.value ?? '');
 
                     if (!themeName) {
                         // Interactive selection with live preview
@@ -325,7 +327,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const [key, value] = command.command.split(' ').slice(2);
+                    const [key, value] = command.positionals ?? [];
 
                     if (!key || !value) {
                         context.writer.writeError(
@@ -414,7 +416,8 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const query = command.value!.toLowerCase();
+                    const search = joinShellWords(command.value ?? '');
+                    const query = search.toLowerCase();
                     const matches = Object.entries(themeInfos).filter(
                         ([name, info]) =>
                             name.toLowerCase().includes(query) ||
@@ -426,13 +429,13 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
 
                     if (matches.length === 0) {
                         context.writer.writeWarning(
-                            `No themes matching "${command.value}"`,
+                            `No themes matching "${search}"`,
                         );
                         return;
                     }
 
                     context.writer.writeln(
-                        `Found ${matches.length} theme${matches.length > 1 ? 's' : ''} matching "${command.value}":`,
+                        `Found ${matches.length} theme${matches.length > 1 ? 's' : ''} matching "${search}":`,
                     );
                     context.writer.writeln();
 
@@ -466,7 +469,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const filter = command.value?.toLowerCase() as
+                    const filter = command.positionals?.[0]?.toLowerCase() as
                         | 'dark'
                         | 'light'
                         | undefined;
@@ -582,6 +585,22 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
 
     async initialize(context: ICliExecutionContext): Promise<void> {
         this.defaultTheme = context.terminal.options.theme!;
+        this.applySavedTheme(context, false);
+
+        // A theme applied in another tab or terminal is applied here too
+        context.state
+            .select((state) =>
+                JSON.stringify([
+                    state['selectedTheme'] ?? null,
+                    state['customOptions'] ?? null,
+                ]),
+            )
+            .pipe(skip(1))
+            .subscribe(() => this.applySavedTheme(context, true));
+    }
+
+    /** Apply the saved theme (or the default one when `reset` and none is saved). */
+    private applySavedTheme(context: ICliExecutionContext, reset: boolean): void {
         const state = context.state.getState<ThemeState>();
 
         if (state.selectedTheme && state.selectedTheme !== 'default') {
@@ -591,6 +610,8 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
             }
         } else if (state.customOptions) {
             context.terminal.options.theme = state.customOptions;
+        } else if (reset) {
+            context.terminal.options.theme = { ...this.defaultTheme };
         }
 
         this.applyStyles(context);

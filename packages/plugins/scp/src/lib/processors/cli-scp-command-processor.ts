@@ -46,20 +46,16 @@ export class CliScpCommandCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const value = command.value?.trim();
+        // Arguments split like a shell: `scp srv:"/my dir/a.txt" "b c.txt"`
+        const [first = '', second] = command.positionals ?? [];
 
-        // Shorthand: scp myserver:/remote/path => download
-        if (value && value.includes(':') && !value.startsWith('-')) {
-            const colonIdx = value.indexOf(':');
-            const spaceBeforeColon = value.lastIndexOf(' ', colonIdx);
-
-            // If no space before colon, first token is "server:path"
-            if (spaceBeforeColon === -1) {
-                const serverName = value.substring(0, colonIdx);
-                const rest = value.substring(colonIdx + 1);
-                const parts = rest.trim().split(/\s+/);
-                const remotePath = parts[0];
-                const localPath = parts[1] || remotePath.split('/').pop() || 'download';
+        if (first && !first.startsWith('-')) {
+            // Shorthand: scp myserver:/remote/path [local] => download
+            const colonIdx = first.indexOf(':');
+            if (colonIdx !== -1) {
+                const serverName = first.substring(0, colonIdx);
+                const remotePath = first.substring(colonIdx + 1);
+                const localPath = second || remotePath.split('/').pop() || 'download';
 
                 if (remotePath) {
                     await this.doDownload(serverName, remotePath, localPath, command, context);
@@ -68,19 +64,14 @@ export class CliScpCommandCommandProcessor implements ICliCommandProcessor {
             }
 
             // Shorthand upload: scp ./local myserver:/remote
-            const parts = value.split(/\s+/);
-            if (parts.length >= 2) {
-                const secondPart = parts[1];
-                if (secondPart.includes(':')) {
-                    const localPath = parts[0];
-                    const srvColonIdx = secondPart.indexOf(':');
-                    const serverName = secondPart.substring(0, srvColonIdx);
-                    const remotePath = secondPart.substring(srvColonIdx + 1);
+            if (second?.includes(':')) {
+                const srvColonIdx = second.indexOf(':');
+                const serverName = second.substring(0, srvColonIdx);
+                const remotePath = second.substring(srvColonIdx + 1);
 
-                    if (remotePath) {
-                        await this.doUpload(serverName, localPath, remotePath, context);
-                        return;
-                    }
+                if (remotePath) {
+                    await this.doUpload(serverName, first, remotePath, context);
+                    return;
                 }
             }
         }

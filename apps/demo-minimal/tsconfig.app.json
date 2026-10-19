@@ -1,11 +1,10 @@
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "baseUrl": "../..",
     "paths": {
-      "@qodalis/react-cli": ["packages/react-cli/dist"],
-      "@qodalis/cli-core": ["dist/core"],
-      "@qodalis/cli": ["dist/cli"]
+      "@qodalis/react-cli": ["../../packages/react-cli/dist"],
+      "@qodalis/cli-core": ["../../dist/core"],
+      "@qodalis/cli": ["../../dist/cli"]
     },
     "target": "ES2022",
     "useDefineForClassFields": true,

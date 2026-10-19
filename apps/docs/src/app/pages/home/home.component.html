@@ -3,25 +3,31 @@
   <div class="hero-glow"></div>
   <div class="hero-content">
     <div class="hero-badge">
-      {{ 'home.hero.badge' | translate }}
+      {{ "home.hero.badge" | translate }}
     </div>
     <h1 class="hero-title">
-      {{ 'home.hero.title' | translate }}<br />
-      <span class="accent">{{ 'home.hero.title-accent' | translate }}</span>
+      {{ "home.hero.title" | translate }}<br />
+      <span class="accent">{{ "home.hero.title-accent" | translate }}</span>
     </h1>
     <p class="hero-subtitle">
-      {{ 'home.hero.subtitle' | translate }}
+      {{ "home.hero.subtitle" | translate }}
     </p>
     <div class="hero-actions">
       <button class="btn btn-primary" (click)="scrollToTerminal()">
-        {{ 'home.hero.try-it' | translate }}
+        {{ "home.hero.try-it" | translate }}
       </button>
-      <a routerLink="/docs" class="btn btn-ghost">{{ 'home.hero.read-docs' | translate }}</a>
+      <a routerLink="/docs" class="btn btn-ghost">{{
+        "home.hero.read-docs" | translate
+      }}</a>
     </div>
     <div class="install-bar">
       <code class="install-command">{{ installCommand }}</code>
       <button class="install-copy" (click)="copyInstall()">
-        {{ copied ? ('home.hero.copied' | translate) : ('home.hero.copy' | translate) }}
+        {{
+          copied
+            ? ("home.hero.copied" | translate)
+            : ("home.hero.copy" | translate)
+        }}
       </button>
     </div>
   </div>
@@ -30,57 +36,91 @@
 <!-- ===== FRAMEWORK CODE EXAMPLES ===== -->
 <section class="frameworks-section">
   <div class="section-inner">
-    <h2 class="section-heading">{{ 'home.frameworks.heading' | translate }}</h2>
+    <h2 class="section-heading">{{ "home.frameworks.heading" | translate }}</h2>
     <p class="section-subheading">
-      {{ 'home.frameworks.subheading' | translate }}
+      {{ "home.frameworks.subheading" | translate }}
     </p>
     <div class="framework-tabs">
-      <button class="framework-tab" [class.active]="activeFramework === 'angular'" (click)="setFramework('angular')">Angular</button>
-      <button class="framework-tab" [class.active]="activeFramework === 'react'" (click)="setFramework('react')">React</button>
-      <button class="framework-tab" [class.active]="activeFramework === 'vue'" (click)="setFramework('vue')">Vue</button>
-      <button class="framework-tab" [class.active]="activeFramework === 'vanilla'" (click)="setFramework('vanilla')">Vanilla</button>
+      <button
+        class="framework-tab"
+        [class.active]="activeFramework === 'angular'"
+        (click)="setFramework('angular')"
+      >
+        Angular
+      </button>
+      <button
+        class="framework-tab"
+        [class.active]="activeFramework === 'react'"
+        (click)="setFramework('react')"
+      >
+        React
+      </button>
+      <button
+        class="framework-tab"
+        [class.active]="activeFramework === 'vue'"
+        (click)="setFramework('vue')"
+      >
+        Vue
+      </button>
+      <button
+        class="framework-tab"
+        [class.active]="activeFramework === 'vanilla'"
+        (click)="setFramework('vanilla')"
+      >
+        Vanilla
+      </button>
     </div>
-    <div class="framework-panels" [ngSwitch]="activeFramework">
-      <div class="code-panel" *ngSwitchCase="'angular'">
-        <div class="code-block">
-          <span class="code-label">Setup</span>
-          <pre><code>{{ frameworkSnippets.angular.imports }}</code></pre>
-        </div>
-        <div class="code-block">
-          <span class="code-label">Template</span>
-          <pre><code>{{ frameworkSnippets.angular.template }}</code></pre>
-        </div>
-      </div>
-      <div class="code-panel" *ngSwitchCase="'react'">
-        <div class="code-block">
-          <span class="code-label">Setup</span>
-          <pre><code>{{ frameworkSnippets.react.imports }}</code></pre>
-        </div>
-        <div class="code-block">
-          <span class="code-label">Template</span>
-          <pre><code>{{ frameworkSnippets.react.template }}</code></pre>
-        </div>
-      </div>
-      <div class="code-panel" *ngSwitchCase="'vue'">
-        <div class="code-block">
-          <span class="code-label">Setup</span>
-          <pre><code>{{ frameworkSnippets.vue.imports }}</code></pre>
-        </div>
-        <div class="code-block">
-          <span class="code-label">Template</span>
-          <pre><code>{{ frameworkSnippets.vue.template }}</code></pre>
-        </div>
-      </div>
-      <div class="code-panel" *ngSwitchCase="'vanilla'">
-        <div class="code-block">
-          <span class="code-label">Setup</span>
-          <pre><code>{{ frameworkSnippets.vanilla.imports }}</code></pre>
-        </div>
-        <div class="code-block">
-          <span class="code-label">import and use</span>
-          <pre><code>{{ frameworkSnippets.vanilla.template }}</code></pre>
-        </div>
-      </div>
+    <div class="framework-panels">
+      @switch (activeFramework) {
+        @case ("angular") {
+          <div class="code-panel">
+            <div class="code-block">
+              <span class="code-label">Setup</span>
+              <pre><code>{{ frameworkSnippets.angular.imports }}</code></pre>
+            </div>
+            <div class="code-block">
+              <span class="code-label">Template</span>
+              <pre><code>{{ frameworkSnippets.angular.template }}</code></pre>
+            </div>
+          </div>
+        }
+        @case ("react") {
+          <div class="code-panel">
+            <div class="code-block">
+              <span class="code-label">Setup</span>
+              <pre><code>{{ frameworkSnippets.react.imports }}</code></pre>
+            </div>
+            <div class="code-block">
+              <span class="code-label">Template</span>
+              <pre><code>{{ frameworkSnippets.react.template }}</code></pre>
+            </div>
+          </div>
+        }
+        @case ("vue") {
+          <div class="code-panel">
+            <div class="code-block">
+              <span class="code-label">Setup</span>
+              <pre><code>{{ frameworkSnippets.vue.imports }}</code></pre>
+            </div>
+            <div class="code-block">
+              <span class="code-label">Template</span>
+              <pre><code>{{ frameworkSnippets.vue.template }}</code></pre>
+            </div>
+          </div>
+        }
+        @case ("vanilla") {
+          <div class="code-panel">
+            <div class="code-block">
+              <span class="code-label">Setup</span>
+              <pre><code>{{ frameworkSnippets.vanilla.imports }}</code></pre>
+            </div>
+            <div class="code-block">
+              <span class="code-label">import and use</span>
+              <pre><code>{{ frameworkSnippets.vanilla.template }}</code></pre>
+            </div>
+          </div>
+        }
+      }
     </div>
   </div>
 </section>
@@ -89,11 +129,13 @@
 <section class="features-section">
   <div class="section-inner">
     <div class="features-grid">
-      <div class="feature-card" *ngFor="let f of features">
-        <div class="feature-icon">{{ f.icon }}</div>
-        <h3 class="feature-title">{{ f.title | translate }}</h3>
-        <p class="feature-desc">{{ f.description | translate }}</p>
-      </div>
+      @for (f of features; track f) {
+        <div class="feature-card">
+          <div class="feature-icon">{{ f.icon }}</div>
+          <h3 class="feature-title">{{ f.title | translate }}</h3>
+          <p class="feature-desc">{{ f.description | translate }}</p>
+        </div>
+      }
     </div>
   </div>
 </section>
@@ -101,17 +143,23 @@
 <!-- ===== BUILT-IN COMMANDS ===== -->
 <section class="commands-section">
   <div class="section-inner">
-    <h2 class="section-heading">{{ 'home.commands.heading' | translate:{ count: totalCommandCount } }}</h2>
+    <h2 class="section-heading">
+      {{ "home.commands.heading" | translate: { count: totalCommandCount } }}
+    </h2>
     <p class="section-subheading">
-      {{ 'home.commands.subheading' | translate }}
+      {{ "home.commands.subheading" | translate }}
     </p>
     <div class="command-groups">
-      <div class="command-group" *ngFor="let g of builtInGroups">
-        <span class="command-group-label">{{ g.label }}</span>
-        <div class="command-badges">
-          <code class="command-badge" *ngFor="let c of g.commands">{{ c }}</code>
+      @for (g of builtInGroups; track g) {
+        <div class="command-group">
+          <span class="command-group-label">{{ g.label }}</span>
+          <div class="command-badges">
+            @for (c of g.commands; track c) {
+              <code class="command-badge">{{ c }}</code>
+            }
+          </div>
         </div>
-      </div>
+      }
     </div>
   </div>
 </section>
@@ -119,9 +167,9 @@
 <!-- ===== LIVE TERMINAL ===== -->
 <section class="terminal-section" #terminalSection>
   <div class="section-inner">
-    <h2 class="section-heading">{{ 'home.terminal.heading' | translate }}</h2>
+    <h2 class="section-heading">{{ "home.terminal.heading" | translate }}</h2>
     <p class="section-subheading">
-      {{ 'home.terminal.subheading' | translate }}
+      {{ "home.terminal.subheading" | translate }}
     </p>
     <div class="terminal-wrapper">
       <div class="terminal-chrome">
@@ -131,7 +179,9 @@
         <span class="chrome-title">qodalis-cli</span>
       </div>
       <div class="terminal-body">
-        <cli [options]="options" [modules]="modules" height="420px" />
+        @if (modulesReady) {
+          <cli [options]="options" [modules]="modules" height="420px" />
+        }
       </div>
     </div>
   </div>
@@ -140,17 +190,19 @@
 <!-- ===== ADVANCED FEATURES ===== -->
 <section class="advanced-section">
   <div class="section-inner">
-    <h2 class="section-heading">{{ 'home.advanced.heading' | translate }}</h2>
+    <h2 class="section-heading">{{ "home.advanced.heading" | translate }}</h2>
     <p class="section-subheading">
-      {{ 'home.advanced.subheading' | translate }}
+      {{ "home.advanced.subheading" | translate }}
     </p>
     <div class="advanced-grid">
-      <div class="advanced-card" *ngFor="let a of advancedFeatures">
-        <div class="advanced-icon">{{ a.icon }}</div>
-        <h3 class="advanced-title">{{ a.title | translate }}</h3>
-        <p class="advanced-desc">{{ a.description | translate }}</p>
-        <code class="advanced-example">{{ a.example }}</code>
-      </div>
+      @for (a of advancedFeatures; track a) {
+        <div class="advanced-card">
+          <div class="advanced-icon">{{ a.icon }}</div>
+          <h3 class="advanced-title">{{ a.title | translate }}</h3>
+          <p class="advanced-desc">{{ a.description | translate }}</p>
+          <code class="advanced-example">{{ a.example }}</code>
+        </div>
+      }
     </div>
   </div>
 </section>
@@ -158,44 +210,59 @@
 <!-- ===== PLUGINS ===== -->
 <section class="plugins-section">
   <div class="section-inner">
-    <h2 class="section-heading">{{ 'home.plugins.heading' | translate:{ count: utilityPlugins.length + gamePlugins.length } }}</h2>
+    <h2 class="section-heading">
+      {{
+        "home.plugins.heading"
+          | translate: { count: utilityPlugins.length + gamePlugins.length }
+      }}
+    </h2>
     <p class="section-subheading">
-      {{ 'home.plugins.subheading' | translate }}
+      {{ "home.plugins.subheading" | translate }}
     </p>
 
-    <h3 class="subsection-heading">{{ 'home.plugins.utilities' | translate }}</h3>
+    <h3 class="subsection-heading">
+      {{ "home.plugins.utilities" | translate }}
+    </h3>
     <div class="plugins-grid">
-      <a class="plugin-card" *ngFor="let p of utilityPlugins" [routerLink]="'/docs/plugins/' + p.id">
-        <div class="plugin-header">
-          <span class="plugin-name">{{ p.name }}</span>
-          <code class="plugin-cmd">{{ p.command }}</code>
-        </div>
-        <p class="plugin-desc">{{ p.description }}</p>
-      </a>
+      @for (p of utilityPlugins; track p) {
+        <a class="plugin-card" [routerLink]="'/docs/plugins/' + p.id">
+          <div class="plugin-header">
+            <span class="plugin-name">{{ p.name }}</span>
+            <code class="plugin-cmd">{{ p.command }}</code>
+          </div>
+          <p class="plugin-desc">{{ p.description }}</p>
+        </a>
+      }
     </div>
 
-    <h3 class="subsection-heading">{{ 'home.plugins.games' | translate }}</h3>
+    <h3 class="subsection-heading">{{ "home.plugins.games" | translate }}</h3>
     <div class="plugins-grid">
-      <a class="plugin-card" *ngFor="let p of gamePlugins" [routerLink]="'/docs/plugins/' + p.id">
-        <div class="plugin-header">
-          <span class="plugin-name">{{ p.name }}</span>
-          <code class="plugin-cmd">{{ p.command }}</code>
-        </div>
-        <p class="plugin-desc">{{ p.description }}</p>
-      </a>
+      @for (p of gamePlugins; track p) {
+        <a class="plugin-card" [routerLink]="'/docs/plugins/' + p.id">
+          <div class="plugin-header">
+            <span class="plugin-name">{{ p.name }}</span>
+            <code class="plugin-cmd">{{ p.command }}</code>
+          </div>
+          <p class="plugin-desc">{{ p.description }}</p>
+        </a>
+      }
     </div>
 
-    <h3 class="subsection-heading">{{ 'home.plugins.language-packs' | translate }}</h3>
+    <h3 class="subsection-heading">
+      {{ "home.plugins.language-packs" | translate }}
+    </h3>
     <p class="section-subheading" style="margin-bottom: 20px">
-      {{ 'home.plugins.language-packs-desc' | translate }}
+      {{ "home.plugins.language-packs-desc" | translate }}
     </p>
     <div class="plugins-grid">
-      <a class="plugin-card" *ngFor="let p of languagePacks" [routerLink]="'/docs/plugins/' + p.id">
-        <div class="plugin-header">
-          <span class="plugin-name">{{ p.name }}</span>
-        </div>
-        <p class="plugin-desc">{{ p.description }}</p>
-      </a>
+      @for (p of languagePacks; track p) {
+        <a class="plugin-card" [routerLink]="'/docs/plugins/' + p.id">
+          <div class="plugin-header">
+            <span class="plugin-name">{{ p.name }}</span>
+          </div>
+          <p class="plugin-desc">{{ p.description }}</p>
+        </a>
+      }
     </div>
   </div>
 </section>
@@ -203,63 +270,75 @@
 <!-- ===== CREATE YOUR OWN PLUGIN ===== -->
 <section class="create-plugin-section">
   <div class="section-inner">
-    <h2 class="section-heading">{{ 'home.create-plugin.heading' | translate }}</h2>
+    <h2 class="section-heading">
+      {{ "home.create-plugin.heading" | translate }}
+    </h2>
     <p class="section-subheading">
-      {{ 'home.create-plugin.subheading' | translate }}
+      {{ "home.create-plugin.subheading" | translate }}
     </p>
     <div class="create-plugin-content">
       <div class="code-block">
-        <span class="code-label">{{ 'home.create-plugin.install-label' | translate }}</span>
+        <span class="code-label">{{
+          "home.create-plugin.install-label" | translate
+        }}</span>
         <pre><code>npm install -g &#64;qodalis/create-cli-plugin</code></pre>
       </div>
       <div class="code-block">
-        <span class="code-label">{{ 'home.create-plugin.scaffold-interactive' | translate }}</span>
+        <span class="code-label">{{
+          "home.create-plugin.scaffold-interactive" | translate
+        }}</span>
         <pre><code>create-cli-plugin</code></pre>
       </div>
       <div class="code-block">
-        <span class="code-label">{{ 'home.create-plugin.scaffold-npx' | translate }}</span>
+        <span class="code-label">{{
+          "home.create-plugin.scaffold-npx" | translate
+        }}</span>
         <pre><code>npx &#64;qodalis/create-cli-plugin --name weather --description "Weather forecasts"</code></pre>
       </div>
       <div class="create-plugin-steps">
         <div class="create-step">
           <span class="step-number">1</span>
           <div class="step-content">
-            <strong>{{ 'home.create-plugin.step1-title' | translate }}</strong>
-            <span>{{ 'home.create-plugin.step1-desc' | translate }}</span>
+            <strong>{{ "home.create-plugin.step1-title" | translate }}</strong>
+            <span>{{ "home.create-plugin.step1-desc" | translate }}</span>
           </div>
         </div>
         <div class="create-step">
           <span class="step-number">2</span>
           <div class="step-content">
-            <strong>{{ 'home.create-plugin.step2-title' | translate }}</strong>
-            <span>{{ 'home.create-plugin.step2-desc' | translate }}</span>
+            <strong>{{ "home.create-plugin.step2-title" | translate }}</strong>
+            <span>{{ "home.create-plugin.step2-desc" | translate }}</span>
           </div>
         </div>
         <div class="create-step">
           <span class="step-number">3</span>
           <div class="step-content">
-            <strong>{{ 'home.create-plugin.step3-title' | translate }}</strong>
-            <span>{{ 'home.create-plugin.step3-desc' | translate }}</span>
+            <strong>{{ "home.create-plugin.step3-title" | translate }}</strong>
+            <span>{{ "home.create-plugin.step3-desc" | translate }}</span>
           </div>
         </div>
         <div class="create-step">
           <span class="step-number">4</span>
           <div class="step-content">
-            <strong>{{ 'home.create-plugin.step4-title' | translate }}</strong>
-            <span>{{ 'home.create-plugin.step4-desc' | translate }}</span>
+            <strong>{{ "home.create-plugin.step4-title" | translate }}</strong>
+            <span>{{ "home.create-plugin.step4-desc" | translate }}</span>
           </div>
         </div>
       </div>
       <div class="code-block">
-        <span class="code-label">{{ 'home.create-plugin.register-label' | translate }}</span>
+        <span class="code-label">{{
+          "home.create-plugin.register-label" | translate
+        }}</span>
         <pre><code>import {{ '{' }} weatherModule {{ '}' }} from '&#64;qodalis/cli-weather';
 
-// Angular: &lt;cli [modules]="[weatherModule]" /&gt;
-// React:   &lt;CliConfigProvider modules={{ '{' }}[weatherModule]{{ '}' }}&gt;
-// Vue:     &lt;CliConfigProvider :modules="[weatherModule]"&gt;</code></pre>
+          // Angular: &lt;cli [modules]="[weatherModule]" /&gt;
+          // React:   &lt;CliConfigProvider modules={{ '{' }}[weatherModule]{{ '}' }}&gt;
+        // Vue:     &lt;CliConfigProvider :modules="[weatherModule]"&gt;</code></pre>
       </div>
       <div class="code-block">
-        <span class="code-label">{{ 'home.create-plugin.runtime-label' | translate }}</span>
+        <span class="code-label">{{
+          "home.create-plugin.runtime-label" | translate
+        }}</span>
         <pre><code>pkg add &#64;qodalis/cli-weather</code></pre>
       </div>
     </div>
@@ -269,10 +348,18 @@
 <!-- ===== CTA ===== -->
 <section class="cta-section">
   <div class="section-inner cta-inner">
-    <h2 class="cta-title">{{ 'home.cta.title' | translate }}</h2>
+    <h2 class="cta-title">{{ "home.cta.title" | translate }}</h2>
     <div class="cta-actions">
-      <a routerLink="/docs/getting-started" class="btn btn-primary">{{ 'home.cta.get-started' | translate }}</a>
-      <a href="https://github.com/qodalis-solutions/web-cli" target="_blank" rel="noopener" class="btn btn-ghost">{{ 'home.cta.github' | translate }}</a>
+      <a routerLink="/docs/getting-started" class="btn btn-primary">{{
+        "home.cta.get-started" | translate
+      }}</a>
+      <a
+        href="https://github.com/qodalis-solutions/web-cli"
+        target="_blank"
+        rel="noopener"
+        class="btn btn-ghost"
+        >{{ "home.cta.github" | translate }}</a
+      >
     </div>
   </div>
 </section>

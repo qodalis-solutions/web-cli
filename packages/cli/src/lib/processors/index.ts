@@ -20,6 +20,11 @@ import { CliUnAliasCommandProcessor } from './cli-unalias-command-processor';
 import { CliUnameCommandProcessor } from './cli-uname-command-processor';
 import { CliUptimeCommandProcessor } from './cli-uptime-command-processor';
 import { CliYesCommandProcessor } from './cli-yes-command-processor';
+import {
+    CliTestCommandProcessor,
+    CliTrueCommandProcessor,
+    CliFalseCommandProcessor,
+} from './cli-test-command-processor';
 import { CliConfigureCommandProcessor } from './configure/cli-configure-command-processor';
 
 export * from './cli-echo-command-processor';
@@ -46,6 +51,7 @@ export * from './cli-uname-command-processor';
 export * from './cli-capture-command-processor';
 export * from './cli-snippet-command-processor';
 export * from './cli-diff-command-processor';
+export * from './cli-test-command-processor';
 export * from './diff-utils';
 
 export * from './system';
@@ -92,6 +98,9 @@ export const miscProcessors = [
     new CliClipboardCommandProcessor(),
     new CliConvertCommandProcessor(),
     new CliYesCommandProcessor(),
+    new CliTestCommandProcessor(),
+    new CliTrueCommandProcessor(),
+    new CliFalseCommandProcessor(),
 ];
 
 export const builtinProcessors: ICliCommandProcessor[] = [

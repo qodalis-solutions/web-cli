@@ -1,8 +1,12 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -46,6 +50,25 @@ export class CliUniqCommandProcessor implements ICliCommandProcessor {
             type: 'boolean' as const,
         },
     ];
+
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.uniq.help.collapse_repeated_lines_next', 'Collapse repeated lines that are next to each other into one. Only adjacent duplicates are merged, so sort the input first to catch them all.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['uniq <file>', t.t('cli.uniq.help.drop_adjacent_duplicate_lines', 'Drop adjacent duplicate lines')],
+            ['<command> | uniq', t.t('cli.uniq.help.filter_piped_input', 'Filter piped input')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['uniq log.txt', t.t('cli.uniq.help.collapse_repeated_lines', 'Collapse repeated lines')],
+            ['sort words.txt | uniq -c', t.t('cli.uniq.help.count_how_often_each', 'Count how often each line appears')],
+            ['sort words.txt | uniq -d', t.t('cli.uniq.help.show_only_duplicated_lines', 'Show only the duplicated lines')],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,
@@ -172,6 +195,6 @@ export class CliUniqCommandProcessor implements ICliCommandProcessor {
 
     private parsePaths(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
+        return splitArgs(raw).filter(Boolean);
     }
 }

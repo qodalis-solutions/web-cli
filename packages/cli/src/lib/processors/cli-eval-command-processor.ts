@@ -2,6 +2,7 @@ import {
     CliForegroundColor,
     CliProcessorMetadata,
     DefaultLibraryAuthor,
+    unquoteRawArgument,
 } from '@qodalis/cli-core';
 import {
     CliProcessCommand,
@@ -21,6 +22,8 @@ export class CliEvalCommandProcessor implements ICliCommandProcessor {
         module: 'misc',
         // Enforced only when an auth module is loaded (eval also needs allowEval)
         requiredPermissions: ['system:eval'],
+        // JavaScript: no wildcard, $VAR or $(...) expansion
+        literalInput: true,
     };
 
     async processCommand(
@@ -36,7 +39,7 @@ export class CliEvalCommandProcessor implements ICliCommandProcessor {
         }
 
         try {
-            const output = eval(command.value ?? '');
+            const output = eval(unquoteRawArgument(command.value ?? ''));
 
             if (Array.isArray(output)) {
                 context.writer.writeln('Output:');

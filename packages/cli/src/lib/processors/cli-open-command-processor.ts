@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliOpenCommandProcessor implements ICliCommandProcessor {
@@ -27,7 +28,7 @@ export class CliOpenCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        let url = (command.value || '') as string;
+        let url = joinShellWords(command.value ?? '');
 
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
             url = 'https://' + url;
@@ -36,7 +37,7 @@ export class CliOpenCommandProcessor implements ICliCommandProcessor {
         try {
             new URL(url);
         } catch {
-            context.writer.writeError(`Invalid URL: ${command.value}`);
+            context.writer.writeError(`Invalid URL: ${url}`);
             context.process.exit(-1);
             return;
         }

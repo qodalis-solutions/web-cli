@@ -3,8 +3,12 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
+import { splitArgs } from '../utils/split-args';
 import { LIBRARY_VERSION } from '../version';
 
 export class CliRmCommandProcessor implements ICliCommandProcessor {
@@ -33,6 +37,26 @@ export class CliRmCommandProcessor implements ICliCommandProcessor {
         },
     ];
 
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.rm.help.delete_file_directories_only', 'Delete a file. Directories are only removed with -r, which deletes everything inside them. Deleted files cannot be recovered.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['rm <file...>', t.t('cli.rm.help.delete_one_more_files', 'Delete one or more files')],
+            ['rm -r <dir>', t.t('cli.rm.help.delete_directory_contents', 'Delete a directory and its contents')],
+            ['rm -f <file>', t.t('cli.rm.help.delete_without_error_if', 'Delete without an error if it is missing')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['rm notes.bak', t.t('cli.rm.help.delete_one_file', 'Delete one file')],
+            ['rm -r old-project', t.t('cli.rm.help.delete_whole_directory', 'Delete a whole directory')],
+            ['rm -f maybe.txt', t.t('cli.rm.help.quiet_if_file_does', 'Quiet if the file does not exist')],
+        ]);
+    }
+
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
@@ -40,35 +64,39 @@ export class CliRmCommandProcessor implements ICliCommandProcessor {
         const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
-        const path = command.value;
+        const paths = splitArgs(command.value || '');
         const recursive =
             command.args['recursive'] || command.args['r'] || command.args['R'];
         const force = command.args['force'] || command.args['f'];
 
-        if (!path) {
-            context.writer.writeError('rm: missing operand');
+        if (paths.length === 0) {
+            if (!force) context.writer.writeError('rm: missing operand');
             return;
         }
 
-        try {
-            if (!fs.exists(path)) {
-                if (!force) {
-                    context.writer.writeError(
-                        `rm: ${path}: No such file or directory`,
-                    );
+        let changed = false;
+        for (const path of paths) {
+            try {
+                if (!fs.exists(path)) {
+                    if (!force) {
+                        context.writer.writeError(
+                            `rm: ${path}: No such file or directory`,
+                        );
+                    }
+                    continue;
                 }
-                return;
-            }
 
-            if (fs.isDirectory(path) && !recursive) {
-                context.writer.writeError(`rm: ${path}: Is a directory`);
-                return;
-            }
+                if (fs.isDirectory(path) && !recursive) {
+                    context.writer.writeError(`rm: ${path}: Is a directory`);
+                    continue;
+                }
 
-            fs.remove(path, recursive);
-            await fs.persist();
-        } catch (e: any) {
-            context.writer.writeError(e.message);
+                fs.remove(path, recursive);
+                changed = true;
+            } catch (e: any) {
+                context.writer.writeError(e.message);
+            }
         }
+        if (changed) await fs.persist();
     }
 }

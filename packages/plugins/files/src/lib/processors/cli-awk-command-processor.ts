@@ -3,9 +3,13 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { splitArgs } from '../utils/split-args';
 
 interface AwkRule {
     pattern: AwkPattern;
@@ -37,6 +41,30 @@ export class CliAwkCommandProcessor implements ICliCommandProcessor {
         },
     ];
 
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.awk.help.process_text_records_fields', 'Process text as records and fields: each line is split into fields $1, $2, ... ($0 is the whole line), and each rule runs its { action } on matching lines. Supports BEGIN and END blocks, /regex/ and field comparison patterns, print, variables, NR and NF. Quote the program; a simple one also works unquoted (awk {print $1} file).'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ["awk '<program>' <file>", t.t('cli.awk.help.run_program_over_file', 'Run a program over a file')],
+            [
+                "awk -F <sep> '<program>' <file>",
+                t.t('cli.awk.help.split_fields_instead_spaces', 'Split fields on <sep> instead of spaces'),
+            ],
+            ["<command> | awk '<program>'", t.t('cli.awk.help.run_program_over_piped', 'Run a program over piped input')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ["awk '{print $1}' data.txt", t.t('cli.awk.help.print_first_column', 'Print the first column')],
+            ["awk -F , '{print $2}' data.csv", t.t('cli.awk.help.second_column_csv', 'Second column of a CSV')],
+            ["awk '$3 > 100 {print $1}' sales.txt", t.t('cli.awk.help.filter_rows_field', 'Filter rows by a field')],
+            ["awk '{s += $2} END {print s}' data.txt", t.t('cli.awk.help.sum_second_column', 'Sum the second column')],
+        ]);
+    }
+
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
@@ -45,7 +73,7 @@ export class CliAwkCommandProcessor implements ICliCommandProcessor {
             IFileSystemService_TOKEN,
         );
 
-        const { program, filePath, fieldSep } = this.parseArgs(command);
+        const { program, filePaths, fieldSep } = this.parseArgs(command, fs);
 
         if (!program) {
             context.writer.writeError(
@@ -55,18 +83,22 @@ export class CliAwkCommandProcessor implements ICliCommandProcessor {
         }
 
         let content = '';
-        if (filePath) {
-            try {
-                if (!fs.exists(filePath)) {
-                    context.writer.writeError(
-                        `awk: ${filePath}: No such file or directory`,
-                    );
+        if (filePaths.length > 0) {
+            // Several files are one stream of records
+            for (const filePath of filePaths) {
+                try {
+                    if (!fs.exists(filePath)) {
+                        context.writer.writeError(
+                            `awk: ${filePath}: No such file or directory`,
+                        );
+                        return;
+                    }
+                    const text = fs.readFile(filePath) ?? '';
+                    content += text === '' || text.endsWith('\n') ? text : text + '\n';
+                } catch (e: any) {
+                    context.writer.writeError(`awk: ${e.message}`);
                     return;
                 }
-                content = fs.readFile(filePath) ?? '';
-            } catch (e: any) {
-                context.writer.writeError(`awk: ${e.message}`);
-                return;
             }
         } else if (command.data != null) {
             content = typeof command.data === 'string'
@@ -148,31 +180,75 @@ export class CliAwkCommandProcessor implements ICliCommandProcessor {
         }
     }
 
+    /**
+     * The program is the first operand, usually quoted. Unquoted, it may span
+     * several words (`awk {print $1} file`): it is then everything before the
+     * trailing operands that are existing files, or the whole value with
+     * piped input.
+     */
     private parseArgs(
         command: CliProcessCommand,
-    ): { program: string | null; filePath: string | null; fieldSep: string | null } {
-        const raw = command.value || '';
+        fs: IFileSystemService,
+    ): { program: string | null; filePaths: string[]; fieldSep: string | null } {
+        const raw = (command.value || '').trim();
+        const fieldArg = command.args['F'];
+        const fieldSep: string | null =
+            fieldArg != null && fieldArg !== true ? String(fieldArg) : null;
 
-        const fieldSep: string | null = command.args['F'] || null;
-        let rest = raw;
+        // Quoted program
+        const quoted =
+            raw.match(/^'((?:[^'\\]|\\.)*)'(?:\s+|$)/) ??
+            raw.match(/^"((?:[^"\\]|\\.)*)"(?:\s+|$)/);
+        if (quoted) {
+            return {
+                program: quoted[1],
+                filePaths: splitArgs(raw.slice(quoted[0].length)),
+                fieldSep,
+            };
+        }
 
-        // Extract program (in quotes)
-        let program: string | null = null;
-        const sqMatch = rest.match(/^'((?:[^'\\]|\\.)*)'\s*/);
-        if (sqMatch) {
-            program = sqMatch[1];
-            rest = rest.slice(sqMatch[0].length);
-        } else {
-            const dqMatch = rest.match(/^"((?:[^"\\]|\\.)*)"\s*/);
-            if (dqMatch) {
-                program = dqMatch[1];
-                rest = rest.slice(dqMatch[0].length);
+        const words = raw.split(/\s+/).filter(Boolean);
+        if (words.length === 0) {
+            return { program: null, filePaths: [], fieldSep };
+        }
+
+        const isFile = (word: string): boolean => {
+            try {
+                const path = splitArgs(word).join(' ');
+                return fs.exists(path) && !fs.isDirectory(path);
+            } catch {
+                return false;
+            }
+        };
+
+        // Trailing words that are existing files
+        let split = words.length;
+        while (split > 1 && isFile(words[split - 1])) split--;
+
+        if (split === words.length && command.data == null && words.length > 1) {
+            // No file found and nothing piped: the last word is meant as the
+            // file when the program before it is complete (balanced braces)
+            const program = words.slice(0, -1).join(' ');
+            const last = words[words.length - 1];
+            if (this.bracesBalanced(program) && !/[{}]/.test(last)) {
+                split = words.length - 1;
             }
         }
 
-        const filePath = rest.trim() || null;
+        return {
+            program: words.slice(0, split).join(' '),
+            filePaths: words.slice(split).map((w) => splitArgs(w).join(' ')),
+            fieldSep,
+        };
+    }
 
-        return { program, filePath, fieldSep };
+    private bracesBalanced(text: string): boolean {
+        let depth = 0;
+        for (const ch of text) {
+            if (ch === '{') depth++;
+            else if (ch === '}' && --depth < 0) return false;
+        }
+        return depth === 0;
     }
 
     private parseProgram(program: string): AwkRule[] {

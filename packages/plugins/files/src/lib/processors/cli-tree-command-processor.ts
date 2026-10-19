@@ -5,6 +5,9 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import {
     IFileSystemService,
@@ -12,6 +15,7 @@ import {
     IFileNode,
 } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { splitArgs } from '../utils/split-args';
 
 export class CliTreeCommandProcessor implements ICliCommandProcessor {
     command = 'tree';
@@ -31,6 +35,25 @@ export class CliTreeCommandProcessor implements ICliCommandProcessor {
         },
     ];
 
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.tree.help.draw_directory_everything_below', 'Draw a directory and everything below it as a tree, directories first, followed by a count of directories and files. Defaults to the current directory.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['tree [dir]', t.t('cli.tree.help.show_whole_tree', 'Show the whole tree')],
+            ['tree -L <n> [dir]', t.t('cli.tree.help.only_levels_deep', 'Only <n> levels deep')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['tree', t.t('cli.tree.help.tree_current_directory', 'Tree of the current directory')],
+            ['tree ~/docs', t.t('cli.tree.help.tree_docs', 'Tree of ~/docs')],
+            ['tree -L 2', t.t('cli.tree.help.top_two_levels_only', 'Top two levels only')],
+        ]);
+    }
+
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
@@ -38,7 +61,8 @@ export class CliTreeCommandProcessor implements ICliCommandProcessor {
         const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
-        const targetPath = command.value || fs.getCurrentDirectory();
+        const targetPath =
+            splitArgs(command.value || '').join(' ') || fs.getCurrentDirectory();
         const maxDepth = command.args['depth']
             ? parseInt(command.args['depth'])
             : command.args['L']

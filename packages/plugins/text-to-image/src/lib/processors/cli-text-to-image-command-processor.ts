@@ -8,6 +8,7 @@ import {
     ICliConfigurationOption,
     ICliExecutionContext,
     getPluginConfigValue,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -139,7 +140,7 @@ export class CliTextToImageCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const text = command.value || '';
+        const text = joinShellWords(command.value ?? '');
         const width = command.args['width'] ?? getPluginConfigValue(context, 'text-to-image', 'defaultWidth', DEFAULT_WIDTH);
         const height = command.args['height'] ?? getPluginConfigValue(context, 'text-to-image', 'defaultHeight', DEFAULT_HEIGHT);
         const filename = command.args['fileName'] ?? DEFAULT_FILENAME;

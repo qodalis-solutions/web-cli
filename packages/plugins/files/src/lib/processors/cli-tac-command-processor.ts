@@ -1,8 +1,12 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
@@ -15,6 +19,24 @@ export class CliTacCommandProcessor implements ICliCommandProcessor {
     acceptsRawInput = true;
     valueRequired = true;
     metadata = { icon: '🔄', module: 'file management' };
+
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.tac.help.print_file_lines_reverse', 'Print a file with its lines in reverse order, last line first. Works on piped input too.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['tac <file>', t.t('cli.tac.help.print_file_bottom_top', 'Print a file bottom to top')],
+            ['<command> | tac', t.t('cli.tac.help.reverse_piped_input', 'Reverse piped input')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['tac app.log', t.t('cli.tac.help.newest_log_lines_first', 'Newest log lines first')],
+            ['cat list.txt | tac', t.t('cli.tac.help.reverse_list', 'Reverse a list')],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,
@@ -71,6 +93,6 @@ export class CliTacCommandProcessor implements ICliCommandProcessor {
 
     private parsePaths(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
+        return splitArgs(raw).filter(Boolean);
     }
 }

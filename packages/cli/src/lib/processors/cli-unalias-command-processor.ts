@@ -53,7 +53,7 @@ export class CliUnAliasCommandProcessor implements ICliCommandProcessor {
     ): Promise<void> {
         const { writer } = context;
 
-        const aliasToRemove = command.value!;
+        const aliasToRemove = command.positionals?.[0] ?? '';
 
         const state = context.state.getState() as CliAliasState;
         const owner = aliasOwner(context);
@@ -65,16 +65,11 @@ export class CliUnAliasCommandProcessor implements ICliCommandProcessor {
             return;
         }
 
-        const updated: Record<string, any> = {};
-
-        Object.keys(aliases)
-            .filter((alias) => alias !== aliasToRemove)
-            .forEach((alias) => {
-                updated[alias] = aliases[alias];
-            });
-
-        context.state.updateState(withAliases(state, owner, updated));
-
-        await context.state.persist();
+        // From the latest saved aliases (another tab may have changed them)
+        await context.state.update((saved) => {
+            const updated = { ...aliasesFor(saved as CliAliasState, owner) };
+            delete updated[aliasToRemove];
+            return withAliases(saved as CliAliasState, owner, updated);
+        });
     }
 }

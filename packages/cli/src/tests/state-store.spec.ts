@@ -68,6 +68,17 @@ class MockServiceProvider implements ICliServiceProvider {
 // ---------------------------------------------------------------------------
 // CliStateStore
 // ---------------------------------------------------------------------------
+
+/** Wait until `read()` passes `ok` (saves go through the cross-tab lock, so no fixed tick). */
+async function waitFor<T>(read: () => Promise<T>, ok: (value: T) => boolean): Promise<T> {
+    let value = await read();
+    for (let i = 0; i < 200 && !ok(value); i++) {
+        await new Promise((r) => setTimeout(r, 10));
+        value = await read();
+    }
+    return value;
+}
+
 describe('CliStateStore', () => {
     let store: CliStateStore;
     let services: MockServiceProvider;
@@ -301,5 +312,514 @@ describe('CliStateStoreManager', () => {
         const newStore = manager.getStateStore('new', { y: 2 });
         expect(newStore.getState()).toEqual({ y: 2 });
         expect(manager.getStoreEntries().length).toBe(1);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Loading, saving, migration and sync
+// ---------------------------------------------------------------------------
+describe('CliStateStore persistence', () => {
+    let kvStore: MockKeyValueStore;
+    let services: MockServiceProvider;
+
+    // Saves run under a cross-tab lock: give them a few ticks
+    const flush = () => new Promise<void>((r) => setTimeout(r, 20));
+
+    beforeEach(() => {
+        kvStore = new MockKeyValueStore();
+        services = new MockServiceProvider();
+        services.set({ provide: CliKeyValueStore_TOKEN, useValue: kvStore });
+    });
+
+    it('returns a copy from getState', () => {
+        const store = new CliStateStore(services, 's', { a: 1 });
+        const state = store.getState();
+        state['a'] = 2;
+        expect(store.getState()).toEqual({ a: 1 });
+    });
+
+    it('merges saved state over the initial state (keys added later are kept)', async () => {
+        await kvStore.set('store-state-s', { a: 5 });
+        const store = new CliStateStore(services, 's', { a: 1, added: [] });
+        await store.initialize();
+        expect(store.getState()).toEqual({ a: 5, added: [] });
+    });
+
+    it('loads once: a later initialize keeps changes made since', async () => {
+        await kvStore.set('store-state-s', { a: 5 });
+        const store = new CliStateStore(services, 's', { a: 1 });
+        await store.initialize();
+        store.updateState({ a: 6 });
+        await store.initialize();
+        expect(store.getState()).toEqual({ a: 6 });
+    });
+
+    it('reload reads the saved state again', async () => {
+        const store = new CliStateStore(services, 's', { a: 1 });
+        await store.initialize();
+        await kvStore.set('store-state-s', { a: 9 });
+        await store.reload();
+        expect(store.getState()).toEqual({ a: 9 });
+    });
+
+    it('keeps keys changed before the saved state was loaded', async () => {
+        await kvStore.set('store-state-s', { a: 5, b: 5 });
+        const store = new CliStateStore(services, 's', { a: 1, b: 1 });
+        store.updateState({ b: 2 });
+        await store.initialize();
+        expect(store.getState()).toEqual({ a: 5, b: 2 });
+    });
+
+    it('never replaces saved data when saving before loading', async () => {
+        await kvStore.set('store-state-snippets', {
+            snippets: { old: 'echo old' },
+        });
+        const store = new CliStateStore(services, 'snippets', {
+            snippets: {},
+        });
+        // what `snippet save` did after a reload
+        const { snippets } = store.getState();
+        store.updateState({ snippets: { ...snippets, added: 'echo new' } });
+        await store.persist();
+
+        const saved = await kvStore.get('store-state-snippets');
+        expect(saved.snippets.added).toBe('echo new');
+    });
+
+    it('persist does nothing without a key-value store', async () => {
+        const store = new CliStateStore(new MockServiceProvider(), 's', {});
+        store.updateState({ a: 1 });
+        await expectAsync(store.persist()).toBeResolved();
+        await expectAsync(store.initialize()).toBeResolved();
+    });
+
+    it('autoPersist saves once after the changes of a tick', async () => {
+        const store = new CliStateStore(
+            services,
+            's',
+            { a: 0 },
+            { autoPersist: true },
+        );
+        const setSpy = spyOn(kvStore, 'set').and.callThrough();
+        store.updateState({ a: 1 });
+        store.updateState({ a: 2 });
+        await waitFor(async () => setSpy.calls.count(), (n) => n > 0);
+        await flush();
+        expect(setSpy).toHaveBeenCalledTimes(1);
+        expect(await kvStore.get('store-state-s')).toEqual({ a: 2 });
+
+        store.reset();
+        await waitFor(() => kvStore.get<any>('store-state-s'), (v) => v?.a === 0);
+        expect(await kvStore.get('store-state-s')).toEqual({ a: 0 });
+    });
+
+    it('does not save automatically without autoPersist', async () => {
+        const store = new CliStateStore(services, 's', { a: 0 });
+        store.updateState({ a: 1 });
+        await flush();
+        expect(await kvStore.get('store-state-s')).toBeUndefined();
+    });
+
+    it('migrates saved state of an older version and saves it', async () => {
+        await kvStore.set('store-state-todo', { items: ['a', 'b'] }); // v0
+        const migrate = jasmine
+            .createSpy('migrate')
+            .and.callFake((state: any) => ({
+                todos: state.items.map((text: string) => ({ text })),
+            }));
+        const store = new CliStateStore(
+            services,
+            'todo',
+            { todos: [] },
+            { version: 1, migrate },
+        );
+        await store.initialize();
+
+        expect(migrate).toHaveBeenCalledWith({ items: ['a', 'b'] }, 0);
+        expect(store.getState()['todos']).toEqual([
+            { text: 'a' },
+            { text: 'b' },
+        ]);
+        expect(await kvStore.get('store-state-todo:version')).toBe(1);
+
+        // Already migrated: not again
+        const again = new CliStateStore(
+            services,
+            'todo',
+            { todos: [] },
+            { version: 1, migrate },
+        );
+        await again.initialize();
+        expect(migrate).toHaveBeenCalledTimes(1);
+    });
+
+    it('saves the version with the state', async () => {
+        const store = new CliStateStore(services, 's', {}, { version: 3 });
+        store.updateState({ a: 1 });
+        await store.persist();
+        expect(await kvStore.get('store-state-s:version')).toBe(3);
+    });
+
+    describe('manager', () => {
+        let managers: CliStateStoreManager[];
+        const registry = new CliCommandProcessorRegistry();
+        const createManager = () => {
+            const m = new CliStateStoreManager(services, registry);
+            managers.push(m);
+            return m;
+        };
+
+        beforeEach(() => (managers = []));
+        afterEach(() => managers.forEach((m) => m.dispose()));
+
+        it('adds defaults to a store first created without them', () => {
+            const manager = createManager();
+            const early = manager.getStateStore('configure');
+            early.updateState({ system: { a: 1 } });
+
+            const store = manager.getStateStore('configure', {
+                system: {},
+                plugins: {},
+            });
+            expect(store).toBe(early);
+            expect(store.getState()).toEqual({
+                system: { a: 1 },
+                plugins: {},
+            });
+            store.reset();
+            expect(store.getState()).toEqual({ system: {}, plugins: {} });
+        });
+
+        it('passes the processor state options to its store', async () => {
+            const manager = createManager();
+            const store = manager.getProcessorStateStore({
+                command: 'auto',
+                description: '',
+                stateConfiguration: {
+                    initialState: { n: 0 },
+                    autoPersist: true,
+                },
+                async processCommand() {},
+            });
+            store.updateState({ n: 1 });
+            await waitFor(() => kvStore.get('store-state-auto'), (v) => !!v);
+            expect(await kvStore.get('store-state-auto')).toEqual({ n: 1 });
+        });
+
+        it('a sync arriving while saving does not undo what was saved', async () => {
+            const a = createManager().getStateStore('env', { list: [] as string[] });
+            await a.initialize();
+            // Another tab's older state arrives while the save is being written
+            const set = kvStore.set.bind(kvStore);
+            spyOn(kvStore, 'set').and.callFake(async (key: string, value: any) => {
+                (a as CliStateStore).applySaved({ list: [] });
+                return set(key, value);
+            });
+            await a.update((s) => ({ list: [...(s['list'] as string[]), 'mine'] }));
+            expect(a.getState<any>().list).toEqual(['mine']);
+            expect(await kvStore.get('store-state-env')).toEqual({ list: ['mine'] });
+        });
+
+        it('a late sync message does not replace newer saved state', async () => {
+            const b = createManager().getStateStore('env', { v: 0 });
+            await b.initialize();
+            // Storage already holds the newer value; an older message arrives last
+            await kvStore.set('store-state-env', { v: 2 });
+            const channel = new BroadcastChannel('qodalis-cli-state');
+            channel.postMessage({ key: 'store-state-env', state: { v: 1 } });
+            await waitFor(async () => b.getState<any>().v, (v) => v !== 0);
+            await new Promise((r) => setTimeout(r, 50));
+            channel.close();
+            expect(b.getState<any>().v).toBe(2);
+        });
+
+        it('applies state saved by another tab or terminal', async () => {
+            const a = createManager().getStateStore('theme', { name: 'x' });
+            const b = createManager().getStateStore('theme', { name: 'x' });
+
+            a.updateState({ name: 'dracula' });
+            await a.persist();
+            await new Promise((r) => setTimeout(r, 50));
+
+            expect(b.getState()).toEqual({ name: 'dracula' });
+        });
+
+        it('does not sync stores with syncAcrossTabs: false', async () => {
+            const options = { syncAcrossTabs: false };
+            const a = createManager().getStateStore('game', { n: 0 }, options);
+            const b = createManager().getStateStore('game', { n: 0 }, options);
+
+            a.updateState({ n: 5 });
+            await a.persist();
+            await new Promise((r) => setTimeout(r, 50));
+
+            expect(b.getState()).toEqual({ n: 0 });
+        });
+    });
+});
+
+describe('CliStateStore across terminals', () => {
+    let kvStore: MockKeyValueStore;
+    let services: MockServiceProvider;
+
+    beforeEach(() => {
+        kvStore = new MockKeyValueStore();
+        services = new MockServiceProvider();
+        services.set({ provide: CliKeyValueStore_TOKEN, useValue: kvStore });
+    });
+
+    it('two terminals saving different keys keep both', async () => {
+        const a = new CliStateStore(services, 'shared', { x: 0, y: 0 });
+        const b = new CliStateStore(services, 'shared', { x: 0, y: 0 });
+        await a.initialize();
+        await b.initialize();
+
+        a.updateState({ x: 1 });
+        b.updateState({ y: 2 });
+        await Promise.all([a.persist(), b.persist()]);
+
+        expect(await kvStore.get('store-state-shared')).toEqual({ x: 1, y: 2 });
+        // Each also picked up the other's key when saving (the later one at least)
+        const states = [a.getState(), b.getState()];
+        expect(states).toContain(jasmine.objectContaining({ x: 1, y: 2 }));
+    });
+
+    it('the last save wins for the same key', async () => {
+        const a = new CliStateStore(services, 'shared', { x: 0 });
+        const b = new CliStateStore(services, 'shared', { x: 0 });
+        await a.initialize();
+        await b.initialize();
+        a.updateState({ x: 1 });
+        await a.persist();
+        b.updateState({ x: 2 });
+        await b.persist();
+        expect(await kvStore.get('store-state-shared')).toEqual({ x: 2 });
+    });
+
+    it('saves a key changed in place without updateState', async () => {
+        const store = new CliStateStore(services, 's', { list: [] as string[] });
+        await store.initialize();
+        (store.getState()['list'] as string[]).push('a'); // in place
+        await store.persist();
+        expect(await kvStore.get('store-state-s')).toEqual({ list: ['a'] });
+    });
+
+    it('does not write keys it did not change over newer saved values', async () => {
+        const a = new CliStateStore(services, 'shared', { x: 0, y: 0 });
+        await a.initialize();
+        // another terminal saved y meanwhile
+        await kvStore.set('store-state-shared', { x: 0, y: 7 });
+
+        a.updateState({ x: 1 });
+        await a.persist();
+
+        expect(await kvStore.get('store-state-shared')).toEqual({ x: 1, y: 7 });
+        expect(a.getState()).toEqual({ x: 1, y: 7 });
+    });
+
+    it('keeps unsaved local keys when another terminal saves', () => {
+        const store = new CliStateStore(services, 's', { x: 0, y: 0 });
+        store.updateState({ x: 5 });
+        store.applySaved({ x: 1, y: 1 });
+        expect(store.getState()).toEqual({ x: 5, y: 1 });
+    });
+
+    it('reset writes the whole state', async () => {
+        await kvStore.set('store-state-s', { x: 3, extra: true });
+        const store = new CliStateStore(services, 's', { x: 0 });
+        await store.initialize();
+        store.reset();
+        await store.persist();
+        expect(await kvStore.get('store-state-s')).toEqual({ x: 0 });
+    });
+
+    it('a session store is never loaded, saved or synced', async () => {
+        await kvStore.set('store-state-s', { x: 9 });
+        const store = new CliStateStore(
+            services,
+            's',
+            { x: 0 },
+            { scope: 'session', autoPersist: true },
+        );
+        await store.initialize();
+        expect(store.getState()).toEqual({ x: 0 });
+
+        store.updateState({ x: 1 });
+        await store.persist();
+        await new Promise((r) => setTimeout(r, 20));
+        expect(await kvStore.get('store-state-s')).toEqual({ x: 9 });
+
+        store.applySaved({ x: 4 });
+        expect(store.getState()).toEqual({ x: 1 });
+    });
+
+    it('later options without a value keep earlier ones', async () => {
+        const store = new CliStateStore(
+            services,
+            's',
+            { x: 0 },
+            { autoPersist: true },
+        );
+        store.setOptions({ autoPersist: undefined, version: undefined });
+        store.updateState({ x: 1 });
+        await waitFor(() => kvStore.get('store-state-s'), (v) => !!v);
+        expect(await kvStore.get('store-state-s')).toEqual({ x: 1 });
+    });
+});
+
+describe('CliStateStore defaults and sync', () => {
+    it('applies another terminal\'s save to a store that got its defaults late', async () => {
+        const services = new MockServiceProvider();
+        services.set({
+            provide: CliKeyValueStore_TOKEN,
+            useValue: new MockKeyValueStore(),
+        });
+        // Read early (boot report) without defaults, nothing saved yet
+        const store = new CliStateStore(services, 'configure', {});
+        await store.initialize();
+        store.applyDefaults({ system: { greeting: true }, plugins: {} });
+
+        store.applySaved({ system: { greeting: false }, plugins: {} });
+        expect(store.getState()['system']).toEqual({ greeting: false });
+    });
+
+    it('applies another terminal\'s save when nothing was saved at load', async () => {
+        const services = new MockServiceProvider();
+        services.set({
+            provide: CliKeyValueStore_TOKEN,
+            useValue: new MockKeyValueStore(),
+        });
+        const store = new CliStateStore(services, 's', { x: 0 });
+        await store.initialize();
+        store.applySaved({ x: 3 });
+        expect(store.getState()).toEqual({ x: 3 });
+    });
+});
+
+describe('CliStateStore update()', () => {
+    let kvStore: MockKeyValueStore;
+    let services: MockServiceProvider;
+
+    beforeEach(() => {
+        kvStore = new MockKeyValueStore();
+        services = new MockServiceProvider();
+        services.set({ provide: CliKeyValueStore_TOKEN, useValue: kvStore });
+    });
+
+    it('two terminals adding to the same list at once keep both items', async () => {
+        const a = new CliStateStore(services, 'todo', { todos: [] as string[] });
+        const b = new CliStateStore(services, 'todo', { todos: [] as string[] });
+        await a.initialize();
+        await b.initialize();
+
+        await Promise.all([
+            a.update((s) => ({ todos: [...s['todos'], 'from a'] })),
+            b.update((s) => ({ todos: [...s['todos'], 'from b'] })),
+        ]);
+
+        const saved = (await kvStore.get('store-state-todo')).todos;
+        expect(saved.sort()).toEqual(['from a', 'from b']);
+        // The later one has both; each has at least its own
+        expect(a.getState()['todos']).toContain('from a');
+        expect(b.getState()['todos']).toContain('from b');
+    });
+
+    it('sees what another terminal saved since this one loaded', async () => {
+        const store = new CliStateStore(services, 'todo', { todos: [] as string[] });
+        await store.initialize();
+        await kvStore.set('store-state-todo', { todos: ['elsewhere'] });
+
+        await store.update((s) => ({ todos: [...s['todos'], 'here'] }));
+
+        expect(store.getState()['todos']).toEqual(['elsewhere', 'here']);
+        expect((await kvStore.get('store-state-todo')).todos).toEqual(['elsewhere', 'here']);
+    });
+
+    it('keeps other keys and this terminal\'s unsaved changes', async () => {
+        await kvStore.set('store-state-s', { list: [1], other: 'saved' });
+        const store = new CliStateStore(services, 's', { list: [], other: '', mine: 0 });
+        await store.initialize();
+        store.updateState({ mine: 5 });
+
+        await store.update((s) => ({ list: [...s['list'], 2] }));
+
+        expect(store.getState()).toEqual({ list: [1, 2], other: 'saved', mine: 5 });
+        expect(await kvStore.get('store-state-s')).toEqual({ list: [1, 2], other: 'saved', mine: 5 });
+    });
+
+    it('is a plain change for a session store', async () => {
+        const store = new CliStateStore(services, 's', { n: 1 }, { scope: 'session' });
+        await store.update((s) => ({ n: s['n'] + 1 }));
+        expect(store.getState()).toEqual({ n: 2 });
+        expect(await kvStore.get('store-state-s')).toBeUndefined();
+    });
+});
+
+describe('CliStateStore user scope', () => {
+    let kvStore: MockKeyValueStore;
+    let services: MockServiceProvider;
+    let manager: CliStateStoreManager;
+
+    beforeEach(() => {
+        kvStore = new MockKeyValueStore();
+        services = new MockServiceProvider();
+        services.set({ provide: CliKeyValueStore_TOKEN, useValue: kvStore });
+        manager = new CliStateStoreManager(services, new CliCommandProcessorRegistry());
+    });
+    afterEach(() => manager.dispose());
+
+    it('saves each signed-in user separately, shared while signed out', async () => {
+        const store = manager.getStateStore('notes', { text: '' }, { scope: 'user' });
+        await store.initialize();
+        store.updateState({ text: 'anonymous' });
+        await store.persist();
+
+        manager.setUser('alice');
+        await store.initialize();
+        expect(store.getState()).toEqual({ text: '' });
+        store.updateState({ text: 'alice notes' });
+        await store.persist();
+
+        manager.setUser('bob');
+        await store.initialize();
+        expect(store.getState()).toEqual({ text: '' });
+
+        manager.setUser('alice');
+        await store.initialize();
+        expect(store.getState()).toEqual({ text: 'alice notes' });
+
+        manager.setUser(undefined);
+        await store.initialize();
+        expect(store.getState()).toEqual({ text: 'anonymous' });
+
+        expect(await kvStore.get('store-state-notes:user:alice')).toEqual({ text: 'alice notes' });
+        expect(await kvStore.get('store-state-notes')).toEqual({ text: 'anonymous' });
+    });
+
+    it('a store created after sign-in starts with that user', async () => {
+        await kvStore.set('store-state-prefs:user:alice', { dark: true });
+        manager.setUser('alice');
+        const store = manager.getStateStore('prefs', { dark: false }, { scope: 'user' });
+        await store.initialize();
+        expect(store.getState()).toEqual({ dark: true });
+    });
+
+    it('global stores do not change when the user does', async () => {
+        const store = manager.getStateStore('theme', { name: 'x' });
+        await store.initialize();
+        store.updateState({ name: 'nord' });
+        manager.setUser('alice');
+        expect(store.getState()).toEqual({ name: 'nord' });
+    });
+
+    it('follows session:changed on the event bus', () => {
+        let handler: ((e: any) => void) | undefined;
+        const bus: any = { on: (_: string, h: (e: any) => void) => ((handler = h), () => (handler = undefined)) };
+        const spy = spyOn(manager, 'setUser').and.callThrough();
+        manager.followUser(bus);
+        handler!({ data: { user: 'alice' } });
+        expect(spy).toHaveBeenCalledWith('alice');
+        manager.dispose();
+        expect(handler).toBeUndefined();
     });
 });

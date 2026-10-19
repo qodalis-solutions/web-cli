@@ -1,8 +1,12 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -14,6 +18,24 @@ export class CliDirnameCommandProcessor implements ICliCommandProcessor {
     acceptsRawInput = true;
     valueRequired = true;
     metadata = { icon: '📂', module: 'file management' };
+
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.dirname.help.print_directory_part_path', 'Print the directory part of a path, everything before the last /. A bare name with no / gives . (the current directory).'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['dirname <path>', t.t('cli.dirname.help.path_without_last_part', 'Path without its last part')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['dirname /home/user/notes.txt', t.t('cli.dirname.help.prints_home_user', 'Prints /home/user')],
+            ['dirname notes.txt', t.t('cli.dirname.help.prints', 'Prints .')],
+            ['dirname /home', t.t('cli.dirname.help.prints_2', 'Prints /')],
+        ]);
+    }
 
     async processCommand(
         command: CliProcessCommand,
@@ -57,6 +79,6 @@ export class CliDirnameCommandProcessor implements ICliCommandProcessor {
 
     private parseTokens(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
+        return splitArgs(raw).filter(Boolean);
     }
 }

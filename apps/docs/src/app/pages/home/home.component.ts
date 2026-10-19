@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject } from '@angular/core';
 import { CliLogLevel, CliOptions, ICliModule } from '@qodalis/cli-core';
 import { usersModule } from '@qodalis/cli-users';
 import { guidModule } from '@qodalis/cli-guid';
@@ -29,16 +29,6 @@ import { stopwatchModule } from '@qodalis/cli-stopwatch';
 import { wgetModule } from '@qodalis/cli-wget';
 import { jobsModule } from '@qodalis/cli-server-jobs';
 import { dataExplorerModule } from '@qodalis/cli-data-explorer';
-import { langEsModule } from '@qodalis/cli-lang-es';
-import { langFrModule } from '@qodalis/cli-lang-fr';
-import { langDeModule } from '@qodalis/cli-lang-de';
-import { langPtModule } from '@qodalis/cli-lang-pt';
-import { langItModule } from '@qodalis/cli-lang-it';
-import { langJaModule } from '@qodalis/cli-lang-ja';
-import { langKoModule } from '@qodalis/cli-lang-ko';
-import { langZhModule } from '@qodalis/cli-lang-zh';
-import { langRuModule } from '@qodalis/cli-lang-ru';
-import { langRoModule } from '@qodalis/cli-lang-ro';
 
 import {
     UTILITY_PLUGINS,
@@ -47,6 +37,7 @@ import {
     PluginData,
 } from '../../data/plugins';
 import { BUILT_IN_GROUPS, TOTAL_COMMAND_COUNT, CommandGroup } from '../../data/commands';
+import { loadLanguagePacks } from '../../lang-packs';
 
 export interface Feature {
     icon: string;
@@ -77,6 +68,8 @@ export type Framework = 'angular' | 'react' | 'vue' | 'vanilla';
     styleUrls: ['./home.component.sass'],
 })
 export class HomeComponent {
+    private readonly cdr = inject(ChangeDetectorRef);
+
     @ViewChild('terminalSection') terminalSection!: ElementRef;
 
     modules: ICliModule[] = [
@@ -109,17 +102,15 @@ export class HomeComponent {
         scpModule,
         stopwatchModule,
         wgetModule,
-        langEsModule,
-        langFrModule,
-        langDeModule,
-        langPtModule,
-        langItModule,
-        langJaModule,
-        langKoModule,
-        langZhModule,
-        langRuModule,
-        langRoModule,
     ];
+
+    /** The terminal is created once the language packs (lazy chunks) are in. */
+    modulesReady = false;
+
+    readonly cliLanguagePacks = loadLanguagePacks().then((packs) => {
+        this.modules = [...this.modules, ...packs];
+        this.modulesReady = true;
+    });
 
     options: CliOptions = {
         logLevel: CliLogLevel.DEBUG,
@@ -242,7 +233,10 @@ await engine.start();`,
     copyInstall(): void {
         navigator.clipboard.writeText(this.installCommand);
         this.copied = true;
-        setTimeout(() => (this.copied = false), 2000);
+        setTimeout(() => {
+            this.copied = false;
+            this.cdr.markForCheck();
+        }, 2000);
     }
 
     private toPluginInfo(p: PluginData): PluginInfo {

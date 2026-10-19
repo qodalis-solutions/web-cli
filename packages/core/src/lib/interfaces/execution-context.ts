@@ -18,6 +18,7 @@ import {
 } from '.';
 import { ICliInputReader } from './input-reader';
 import { ICliBackgroundServiceRegistry } from './background-service';
+import { ICliEventBus } from './event-bus';
 import { CliOptions, ICliUserSession } from '../models';
 
 /**
@@ -72,6 +73,18 @@ export interface ICliExecutionContext {
      * The progress bar to use for showing progress
      */
     progressBar: ICliPercentageProgressBar;
+
+    /**
+     * The terminal's event bus: emit and subscribe to events shared by the
+     * system, modules and commands. Optional for backward compatibility.
+     */
+    readonly events?: ICliEventBus;
+
+    /**
+     * `true` once the CLI has finished booting (modules set up, terminal
+     * ready). Optional for backward compatibility; `undefined` means unknown.
+     */
+    readonly isBooted?: boolean;
 
     /**
      * A subject that emits when the command is aborted
@@ -262,10 +275,7 @@ export interface ICliExecutionContext {
      * @param ms The interval delay in milliseconds
      * @returns A managed interval handle with clear() and setDelay() methods
      */
-    createInterval: (
-        callback: () => void,
-        ms: number,
-    ) => ICliManagedInterval;
+    createInterval: (callback: () => void, ms: number) => ICliManagedInterval;
 
     /**
      * Creates a managed timeout that is automatically cleared when full-screen

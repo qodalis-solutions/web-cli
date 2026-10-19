@@ -1,11 +1,16 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { pipedText } from '../utils/lines';
 
 export class CliWcCommandProcessor implements ICliCommandProcessor {
     command = 'wc';
@@ -40,6 +45,29 @@ export class CliWcCommandProcessor implements ICliCommandProcessor {
         },
     ];
 
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.wc.help.count_lines_words_characters', 'Count lines, words and characters in files or piped input. With several files, a total line is printed at the end.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['wc <file...>', t.t('cli.wc.help.lines_words_characters', 'Lines, words and characters')],
+            ['wc -l <file>', t.t('cli.wc.help.only_line_count', 'Only the line count')],
+            ['<command> | wc', t.t('cli.wc.help.count_piped_input', 'Count piped input')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['wc notes.txt', t.t('cli.wc.help.all_three_counts', 'All three counts')],
+            ['wc -l a.txt b.txt', t.t('cli.wc.help.line_counts_total', 'Line counts with a total')],
+            [
+                'cat app.log | grep error | wc -l',
+                t.t('cli.wc.help.how_many_lines_mention', 'How many lines mention error'),
+            ],
+        ]);
+    }
+
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
@@ -58,14 +86,10 @@ export class CliWcCommandProcessor implements ICliCommandProcessor {
         const paths = this.parsePaths(command);
         if (paths.length === 0) {
             if (command.data != null) {
-                const content = typeof command.data === 'string'
-                    ? command.data : JSON.stringify(command.data);
-                const lineCount = content === '' ? 0 : content.split('\n').length;
-                const wordCount =
-                    content.trim() === ''
-                        ? 0
-                        : content.trim().split(/\s+/).length;
-                const charCount = content.length;
+                // Piped text loses its final newline on the way: restore it
+                let content = pipedText(command.data);
+                if (content !== '' && !content.endsWith('\n')) content += '\n';
+                const { lineCount, wordCount, charCount } = this.count(content);
 
                 const parts: string[] = [];
                 if (showAll || showLines) parts.push(String(lineCount).padStart(8));
@@ -90,12 +114,7 @@ export class CliWcCommandProcessor implements ICliCommandProcessor {
                     continue;
                 }
                 const content = fs.readFile(path) ?? '';
-                const lineCount = content === '' ? 0 : content.split('\n').length;
-                const wordCount =
-                    content.trim() === ''
-                        ? 0
-                        : content.trim().split(/\s+/).length;
-                const charCount = content.length;
+                const { lineCount, wordCount, charCount } = this.count(content);
 
                 totalLines += lineCount;
                 totalWords += wordCount;
@@ -123,8 +142,21 @@ export class CliWcCommandProcessor implements ICliCommandProcessor {
         }
     }
 
+    /** Counts like Unix wc: lines are newline characters. */
+    private count(content: string): {
+        lineCount: number;
+        wordCount: number;
+        charCount: number;
+    } {
+        return {
+            lineCount: (content.match(/\n/g) ?? []).length,
+            wordCount: content.trim() === '' ? 0 : content.trim().split(/\s+/).length,
+            charCount: content.length,
+        };
+    }
+
     private parsePaths(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
+        return splitArgs(raw).filter(Boolean);
     }
 }

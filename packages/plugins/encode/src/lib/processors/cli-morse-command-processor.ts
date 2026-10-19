@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 const CHAR_TO_MORSE: Record<string, string> = {
@@ -55,7 +56,7 @@ export class CliMorseCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value || command.data || '') as string;
+                    const text = (joinShellWords(command.value ?? '') || command.data || '') as string;
                     const morse = text
                         .toUpperCase()
                         .split('')
@@ -92,7 +93,7 @@ export class CliMorseCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const input = (command.value || command.data || '') as string;
+                    const input = (joinShellWords(command.value ?? '') || command.data || '') as string;
                     try {
                         const text = input
                             .split(' ')

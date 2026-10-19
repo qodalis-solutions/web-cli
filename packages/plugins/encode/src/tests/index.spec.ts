@@ -231,4 +231,30 @@ describe('@qodalis/cli-encode', () => {
         const result = await harness.execute('morse decode .........');
         expect(result.exitCode).toBe(-1);
     });
+
+    // -----------------------------------------------------------------------
+    // Quoted arguments
+    // -----------------------------------------------------------------------
+
+    it('base64 encode should encode a quoted text without its quotes', async () => {
+        const result = await harness.execute('base64 encode "a b"');
+        expect(result.output).toBe('YSBi');
+    });
+
+    it('url encode should encode a single-quoted text', async () => {
+        const result = await harness.execute("url encode 'a b'");
+        expect(result.output).toContain('a%20b');
+        expect(result.output).not.toContain('%27');
+    });
+
+    it('hash should hash a quoted text, not its quotes', async () => {
+        const quoted = await harness.execute('hash sha256 "hello"');
+        const plain = await harness.execute('hash sha256 hello');
+        expect(quoted.output).toBe(plain.output);
+    });
+
+    it('rot should keep spaces inside quotes', async () => {
+        const result = await harness.execute('rot "Hello  World"');
+        expect(result.output).toContain('Uryyb  Jbeyq');
+    });
 });

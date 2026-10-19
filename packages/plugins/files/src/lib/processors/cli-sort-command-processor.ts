@@ -1,11 +1,16 @@
+import { splitArgs } from '../utils/split-args';
 import {
     CliProcessCommand,
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    writeExamples,
+    writeUsage,
+    writeWrapped,
 } from '@qodalis/cli-core';
 import { IFileSystemService, IFileSystemService_TOKEN } from '../interfaces';
 import { LIBRARY_VERSION } from '../version';
+import { pipedText, splitLines } from '../utils/lines';
 
 export class CliSortCommandProcessor implements ICliCommandProcessor {
     command = 'sort';
@@ -54,6 +59,30 @@ export class CliSortCommandProcessor implements ICliCommandProcessor {
         },
     ];
 
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        writeWrapped(
+            context,
+            t.t('cli.sort.help.sort_lines_file_piped', 'Sort the lines of a file or piped input, alphabetically by default. Sort numerically, in reverse, by a field, or drop duplicates. Several files are sorted together into one list.'),
+        );
+        context.writer.writeln();
+        writeUsage(context, [
+            ['sort <file>', t.t('cli.sort.help.sort_lines_alphabetically', 'Sort lines alphabetically')],
+            [
+                'sort -k <n> -t <sep> <file>',
+                t.t('cli.sort.help.sort_field_split', 'Sort by field <n>, split on <sep>'),
+            ],
+            ['<command> | sort', t.t('cli.sort.help.sort_piped_input', 'Sort piped input')],
+        ]);
+        context.writer.writeln();
+        writeExamples(context, [
+            ['sort names.txt', t.t('cli.sort.help.z', 'A to Z')],
+            ['sort -n -r scores.txt', t.t('cli.sort.help.largest_number_first', 'Largest number first')],
+            ['sort -t , -k 2 data.csv', t.t('cli.sort.help.sort_csv_second_column', 'Sort a CSV by its second column')],
+            ['cat words.txt | sort -u', t.t('cli.sort.help.sorted_without_duplicates', 'Sorted, without duplicates')],
+        ]);
+    }
+
     async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
@@ -65,140 +94,84 @@ export class CliSortCommandProcessor implements ICliCommandProcessor {
         const reverse = !!command.args['r'] || !!command.args['reverse'];
         const numeric = !!command.args['n'] || !!command.args['numeric-sort'];
         const unique = !!command.args['u'] || !!command.args['unique'];
-        const keyField = command.args['k'] || command.args['key'];
-        const delimiter = command.args['t'] || command.args['field-separator'];
+        const keyField = command.args['k'] ?? command.args['key'];
+        const delimiter = command.args['t'] ?? command.args['field-separator'];
 
         const paths = this.parsePaths(command);
+        let lines: string[] = [];
 
         if (paths.length === 0) {
-            if (command.data != null) {
-                const content = typeof command.data === 'string'
-                    ? command.data : JSON.stringify(command.data);
-                let lines = content.split('\n');
-                if (lines.length > 0 && lines[lines.length - 1] === '') {
-                    lines.pop();
-                }
-
-                const keyIndex = keyField
-                    ? parseInt(keyField, 10) - 1
-                    : undefined;
-
-                lines.sort((a, b) => {
-                    let va: string | number = a;
-                    let vb: string | number = b;
-
-                    if (keyIndex !== undefined && keyIndex >= 0) {
-                        const sepRegex = delimiter
-                            ? new RegExp(
-                                  delimiter.replace(
-                                      /[.*+?^${}()|[\]\\]/g,
-                                      '\\$&',
-                                  ),
-                              )
-                            : /\s+/;
-                        const fieldsA = a.split(sepRegex);
-                        const fieldsB = b.split(sepRegex);
-                        va = fieldsA[keyIndex] || '';
-                        vb = fieldsB[keyIndex] || '';
-                    }
-
-                    if (numeric) {
-                        const na = parseFloat(va as string) || 0;
-                        const nb = parseFloat(vb as string) || 0;
-                        return na - nb;
-                    }
-
-                    return (va as string).localeCompare(vb as string);
-                });
-
-                if (unique) {
-                    lines = lines.filter(
-                        (line, i, arr) => i === 0 || line !== arr[i - 1],
-                    );
-                }
-
-                if (reverse) {
-                    lines.reverse();
-                }
-
-                context.writer.writeln(lines.join('\n'));
+            if (command.data == null) {
+                context.writer.writeError('sort: missing file operand');
                 return;
             }
-            context.writer.writeError('sort: missing file operand');
-            return;
+            lines = splitLines(pipedText(command.data));
+        } else {
+            // Several files are sorted together, as one input
+            for (const path of paths) {
+                try {
+                    if (fs.isDirectory(path)) {
+                        context.writer.writeError(
+                            `sort: ${path}: Is a directory`,
+                        );
+                        continue;
+                    }
+                    const content = fs.readFile(path);
+                    if (content === null) {
+                        context.writer.writeError(
+                            `sort: ${path}: No such file or directory`,
+                        );
+                        continue;
+                    }
+                    lines.push(...splitLines(content));
+                } catch (e: any) {
+                    context.writer.writeError(`sort: ${e.message}`);
+                }
+            }
         }
 
-        for (const path of paths) {
-            try {
-                if (fs.isDirectory(path)) {
-                    context.writer.writeError(`sort: ${path}: Is a directory`);
-                    continue;
-                }
-                const content = fs.readFile(path);
-                if (content === null) {
-                    context.writer.writeError(
-                        `sort: ${path}: No such file or directory`,
-                    );
-                    continue;
-                }
-
-                let lines = content.split('\n');
-                // Remove trailing empty line from trailing newline
-                if (lines.length > 0 && lines[lines.length - 1] === '') {
-                    lines.pop();
-                }
-
-                const keyIndex = keyField
-                    ? parseInt(keyField, 10) - 1
-                    : undefined;
-
-                lines.sort((a, b) => {
-                    let va: string | number = a;
-                    let vb: string | number = b;
-
-                    if (keyIndex !== undefined && keyIndex >= 0) {
-                        const sepRegex = delimiter
-                            ? new RegExp(
-                                  delimiter.replace(
-                                      /[.*+?^${}()|[\]\\]/g,
-                                      '\\$&',
-                                  ),
-                              )
-                            : /\s+/;
-                        const fieldsA = a.split(sepRegex);
-                        const fieldsB = b.split(sepRegex);
-                        va = fieldsA[keyIndex] || '';
-                        vb = fieldsB[keyIndex] || '';
-                    }
-
-                    if (numeric) {
-                        const na = parseFloat(va as string) || 0;
-                        const nb = parseFloat(vb as string) || 0;
-                        return na - nb;
-                    }
-
-                    return (va as string).localeCompare(vb as string);
-                });
-
-                if (unique) {
-                    lines = lines.filter(
-                        (line, i, arr) => i === 0 || line !== arr[i - 1],
-                    );
-                }
-
-                if (reverse) {
-                    lines.reverse();
-                }
-
-                context.writer.writeln(lines.join('\n'));
-            } catch (e: any) {
-                context.writer.writeError(`sort: ${e.message}`);
+        const keyIndex =
+            keyField != null && keyField !== true
+                ? parseInt(String(keyField), 10) - 1
+                : undefined;
+        const sepRegex =
+            delimiter != null && delimiter !== true
+                ? new RegExp(
+                      String(delimiter).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+                  )
+                : /\s+/;
+        const keyOf = (line: string): string =>
+            keyIndex !== undefined && keyIndex >= 0
+                ? line.split(sepRegex)[keyIndex] || ''
+                : line;
+        const compare = (a: string, b: string): number => {
+            const va = keyOf(a);
+            const vb = keyOf(b);
+            if (numeric) {
+                return (parseFloat(va) || 0) - (parseFloat(vb) || 0);
             }
+            return va.localeCompare(vb);
+        };
+
+        lines.sort(compare);
+
+        if (unique) {
+            lines = lines.filter(
+                (line, i, arr) => i === 0 || compare(line, arr[i - 1]) !== 0,
+            );
+        }
+
+        if (reverse) {
+            lines.reverse();
+        }
+
+        if (lines.length > 0) {
+            context.writer.writeln(lines.join('\n'));
         }
     }
 
     private parsePaths(command: CliProcessCommand): string[] {
         const raw = command.value || '';
-        return raw.split(/\s+/).filter(Boolean);
+        return splitArgs(raw).filter(Boolean);
     }
 }

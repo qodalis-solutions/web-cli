@@ -2,6 +2,7 @@ import {
     CliForegroundColor,
     CliProcessorMetadata,
     DefaultLibraryAuthor,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import {
     CliProcessCommand,
@@ -44,7 +45,7 @@ export class CliPingCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const host = (command.value || '').trim();
+        const host = joinShellWords(command.value ?? '');
 
         if (!host) {
             context.writer.writeError(

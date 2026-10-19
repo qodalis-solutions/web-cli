@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 export class CliUrlCommandProcessor implements ICliCommandProcessor {
@@ -33,7 +34,7 @@ export class CliUrlCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     const encoded = encodeURIComponent(text);
@@ -65,7 +66,7 @@ export class CliUrlCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value ||
+                    const text = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     try {
@@ -101,7 +102,7 @@ export class CliUrlCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const input = (command.value ||
+                    const input = (joinShellWords(command.value ?? '') ||
                         command.data ||
                         '') as string;
                     try {

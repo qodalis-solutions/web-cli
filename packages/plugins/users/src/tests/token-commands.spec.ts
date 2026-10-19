@@ -126,6 +126,13 @@ describe('token commands (server mode)', () => {
         expect(post.auth).toBe('Bearer TOKEN');
     });
 
+    it('token create takes a quoted name with spaces', async () => {
+        const { run, srv } = await serverSetup();
+        await run(`token create "CI bot"`);
+        const post = srv.calls.find((c) => c.method === 'POST' && c.path === '/tokens')!;
+        expect(post.body).toEqual({ name: 'CI bot' });
+    });
+
     it('token create sends --expires and --permissions', async () => {
         const { run, srv } = await serverSetup();
         const r = await run('token create reader --expires=30 --permissions=commands:execute,users:read');

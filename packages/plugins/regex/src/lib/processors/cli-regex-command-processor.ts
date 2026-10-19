@@ -6,6 +6,7 @@ import {
     highlightTextWithBg,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 import {
@@ -84,7 +85,7 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value || '') as string;
+                    const text = joinShellWords(command.value ?? '');
                     const pattern = command.args['pattern'] || command.args['p'] || '';
 
                     if (!pattern) {
@@ -152,7 +153,7 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value || '') as string;
+                    const text = joinShellWords(command.value ?? '');
                     const pattern = command.args['pattern'] || command.args['p'] || '';
 
                     if (!pattern) {
@@ -257,7 +258,7 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value || '') as string;
+                    const text = joinShellWords(command.value ?? '');
                     const pattern = command.args['pattern'] || command.args['p'] || '';
 
                     if (!pattern) {
@@ -367,7 +368,7 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value || '') as string;
+                    const text = joinShellWords(command.value ?? '');
                     const pattern = command.args['pattern'] || command.args['p'] || '';
                     const replacement = command.args['with'] ?? command.args['w'];
 
@@ -451,7 +452,7 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value || '') as string;
+                    const text = joinShellWords(command.value ?? '');
                     const pattern = command.args['pattern'] || command.args['p'] || '';
 
                     if (!pattern) {
@@ -530,7 +531,7 @@ export class CliRegexCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (command.value || '') as string;
+                    const text = joinShellWords(command.value ?? '');
                     const pattern = command.args['pattern'] || command.args['p'] || '';
 
                     if (!pattern) {

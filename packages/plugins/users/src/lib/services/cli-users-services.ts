@@ -19,6 +19,7 @@ import {
     ICliUserEventService,
     ICliUserSession,
     ICliUsersStoreService,
+    createCliToken,
 } from '@qodalis/cli-core';
 import { from, Observable } from 'rxjs';
 import {
@@ -344,7 +345,8 @@ export class CliSessionsService extends CliUsersServiceBase implements ICliSessi
 // ── API tokens ───────────────────────────────────────────────────────
 
 /** Service token of {@link CliApiTokensService}. */
-export const CliApiTokensService_TOKEN = 'cli-users-api-tokens';
+export const CliApiTokensService_TOKEN =
+    createCliToken<CliApiTokensService>('cli-users-api-tokens');
 
 /** Message shown when the backend has no API tokens (local mode). */
 export const API_TOKENS_LOCAL_MESSAGE =

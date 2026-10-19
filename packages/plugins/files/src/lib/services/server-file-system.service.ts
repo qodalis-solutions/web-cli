@@ -492,6 +492,17 @@ export class ServerFileSystemService implements IFileSystemService {
         const destResolved = this.resolvePath(dest);
         const destNode = this.getNode(destResolved);
 
+        // A directory cannot go inside itself (it would detach from the tree)
+        if (
+            srcNode.type === 'directory' &&
+            (destResolved === srcResolved ||
+                destResolved.startsWith(srcResolved + '/'))
+        ) {
+            throw new Error(
+                `mv: cannot move '${src}' to a subdirectory of itself, '${dest}'`,
+            );
+        }
+
         const srcParts = srcResolved.split('/').filter(Boolean);
         const srcParentPath = '/' + srcParts.slice(0, -1).join('/');
         const srcParent = this.getNode(srcParentPath);
@@ -500,9 +511,13 @@ export class ServerFileSystemService implements IFileSystemService {
             throw new Error(`mv: ${src}: No such file or directory`);
         }
 
-        const srcIndex = srcParent.children.findIndex(
-            (c) => c.name === srcNode.name,
-        );
+        // Into the directory it is already in, or onto itself: nothing to do
+        if (
+            destResolved === srcResolved ||
+            (destNode && destNode.type === 'directory' && destNode === srcParent)
+        ) {
+            throw new Error(`mv: '${src}' and '${dest}' are the same file`);
+        }
 
         if (destNode && destNode.type === 'directory') {
             if (!destNode.children) {
@@ -514,7 +529,8 @@ export class ServerFileSystemService implements IFileSystemService {
             if (existingIdx !== -1) {
                 destNode.children.splice(existingIdx, 1);
             }
-            srcParent.children.splice(srcIndex, 1);
+            // By identity: the index may have moved
+            srcParent.children.splice(srcParent.children.indexOf(srcNode), 1);
             destNode.children.push(srcNode);
             destNode.modifiedAt = Date.now();
         } else {
@@ -529,7 +545,8 @@ export class ServerFileSystemService implements IFileSystemService {
                 );
             }
 
-            srcParent.children.splice(srcIndex, 1);
+            // By identity: the index may have moved
+            srcParent.children.splice(srcParent.children.indexOf(srcNode), 1);
             srcNode.name = newName;
             if (!destParent.children) {
                 destParent.children = [];

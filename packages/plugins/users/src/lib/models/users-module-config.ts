@@ -1,7 +1,8 @@
-import { ICliUser } from '@qodalis/cli-core';
+import { ICliUser, createCliToken } from '@qodalis/cli-core';
 import type { ICliUsersBackend } from '../backend/users-backend';
 
-export const CliUsersModuleConfig_TOKEN = 'cli-users-module-config';
+export const CliUsersModuleConfig_TOKEN =
+    createCliToken<CliUsersModuleConfig>('cli-users-module-config');
 
 export interface CliUsersModuleConfig {
     /** Hide the username from the terminal prompt (default: false) */

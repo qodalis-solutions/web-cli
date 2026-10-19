@@ -15,6 +15,7 @@ import {
     ICliCommandGuard_TOKEN,
     isCliAccessDeniedError,
     CliCommandGuardResult,
+    splitShellWords,
 } from '@qodalis/cli-core';
 import { CliProcessRegistry_TOKEN } from '../services/cli-process-registry';
 import { CommandParser, CommandPart } from '../parsers';
@@ -39,6 +40,12 @@ import {
     appendStderrToFile,
 } from './cli-io-redirect-handler';
 import { tryExecuteScript, expandEnvironmentVars } from './cli-script-executor';
+import { expandBraces, expandGlobs } from './cli-glob-expander';
+import { substituteCommands } from './cli-command-substitution';
+import { runScript } from './cli-script-runner';
+
+/** A line starting with shell control flow (`if`, `for`, `while`, `until`). */
+const CONTROL_FLOW = /^\s*(?:if|for|while|until)\s/;
 
 /**
  * Extended execution context interface used internally by the command executor.
@@ -62,6 +69,13 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
     private globalParameters: ICliGlobalParameterHandler[] = [];
     /** Exit status of the last command, expanded as `$?` (0 = success). */
     private lastExitCode = 0;
+    /** Command lines running per terminal (they can overlap). */
+    private readonly running = new WeakMap<ICliExecutionHost, number>();
+
+    /** Exit status of the last command line run (`$?`). */
+    get exitStatus(): number {
+        return this.lastExitCode;
+    }
 
     constructor(protected readonly registry: ICliCommandProcessorRegistry) {
         this.registerGlobalParameter(versionGlobalParameter);
@@ -84,7 +98,18 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         command: string,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const parts = CommandParser.splitByOperators(command);
+        // A loop or condition typed at the prompt (`for f in *.md; do ...;
+        // done`) runs like a one-line script, without stopping on errors
+        if (CONTROL_FLOW.test(command)) {
+            await runScript(command, context, { name: 'shell', stopOnError: false });
+            return;
+        }
+
+        // A literal-input command (`eval` code) gets the whole line: its `>`,
+        // `|` and `&&` are code, not operators
+        const parts: CommandPart[] = this.isLiteralInput(command, context as ICliExecutionHost)
+            ? [{ type: 'command', value: command.trim() }]
+            : CommandParser.splitByOperators(command);
 
         let rootContext: ICliExecutionHost;
         if (context instanceof CliCommandExecutionContext) {
@@ -93,6 +118,10 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             rootContext = context as ICliExecutionHost;
         }
 
+        // Runs can overlap (`$(...)` inside a command, a cron job during
+        // one): the terminal is executing while any of them is
+        const running = (this.running.get(rootContext) ?? 0) + 1;
+        this.running.set(rootContext, running);
         rootContext.isExecuting = true;
         try {
 
@@ -184,10 +213,15 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
             }
 
             try {
+                // Output going into a pipe or a file is not shown (as in a
+                // shell); errors and warnings still are
+                const nextType = parts[i + 1]?.type;
+                const muted = nextType === '|' || nextType === '>' || nextType === '>>';
                 lastCapturingWriter = await this.executeSingleCommand(
                     part.value,
                     pipelineData,
                     rootContext,
+                    muted,
                 );
 
                 lastExitSuccess =
@@ -221,22 +255,71 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         }
 
         } finally {
-            rootContext.isExecuting = false;
-            rootContext.notifier?.clear();
+            const left = (this.running.get(rootContext) ?? 1) - 1;
+            this.running.set(rootContext, left);
+            if (left === 0) {
+                rootContext.isExecuting = false;
+                rootContext.notifier?.clear();
+            }
         }
+    }
+
+    /** Whether the command named first on the line takes literal input. */
+    private isLiteralInput(command: string, context: ICliExecutionHost): boolean {
+        const name = /^\s*(\S+)/.exec(command)?.[1];
+        if (!name) return false;
+        const processors = context.contextProcessor
+            ? (context.contextProcessor.processors ?? [])
+            : this.registry.processors;
+        const processor = this.registry.findProcessorInCollection(name, [], processors);
+        return !!processor?.metadata?.literalInput;
+    }
+
+    /**
+     * Run a command line and return its output as text instead of showing
+     * it (`$(...)`); its errors and warnings are still shown.
+     */
+    async capture(command: string, from: ICliExecutionContext): Promise<string> {
+        const context: ICliExecutionHost =
+            from instanceof CliCommandExecutionContext
+                ? (from.context as ICliExecutionHost)
+                : (from as ICliExecutionHost);
+        const writer = context.writer;
+        const capture = new CapturingTerminalWriter(writer, { muted: true });
+        context.writer = capture;
+        try {
+            await this.executeCommand(command, context);
+        } finally {
+            context.writer = writer;
+        }
+        const data = capture.hasOutput() ? capture.getCapturedData() : context.process.data;
+        if (data === undefined || data === null) return '';
+        return typeof data === 'string' ? data : JSON.stringify(data);
     }
 
     private async executeSingleCommand(
         command: string,
         data: any | undefined,
         context: ICliExecutionHost,
+        muted = false,
     ): Promise<CapturingTerminalWriter | undefined> {
         const process = context.process as CliExecutionProcess;
 
-        // Substitute environment variables ($VAR / ${VAR}) before parsing
-        command = expandEnvironmentVars(command, context, this.lastExitCode);
+        // Command output first (`$(date)`, `` `date` ``), then environment
+        // variables ($VAR / ${VAR}), braces (`file.{ts,js}`) and wildcards
+        // (`rm *.txt`, against the files plugin's file system), before
+        // parsing. Not for commands whose input is literal (`eval` code).
+        if (!this.isLiteralInput(command, context)) {
+            command = await substituteCommands(command, (inner) =>
+                this.capture(inner, context),
+            );
+            command = expandEnvironmentVars(command, context, this.lastExitCode);
+            command = expandBraces(command);
+            command = expandGlobs(command, context);
+        }
 
-        // Handle inline variable assignment: VAR=value (no command after it)
+        // Handle inline variable assignment: VAR=value (no command after it),
+        // for this terminal only
         const assignMatch = command.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
         if (assignMatch) {
             const env = context.services.get<ICliEnvironment>(ICliEnvironment_TOKEN);
@@ -248,7 +331,8 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 ) {
                     val = val.slice(1, -1);
                 }
-                env.set(assignMatch[1], val);
+                // As in a shell: this terminal only (`export` saves it)
+                env.set(assignMatch[1], val, 'session');
                 process.start();
                 process.end();
                 return;
@@ -309,6 +393,7 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                     aliases[mainCommand],
                     data,
                     context,
+                    muted,
                 );
             }
 
@@ -375,10 +460,14 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         // we can distinguish positional-mode from named-arg-mode.
         const value =
             processor.acceptsRawInput || processor.valueRequired
-                ? getRightOfWord(commandName, processor.command)
+                ? this.extractPositionalValue(commandName, processor)
                 : undefined;
 
         commandToProcess.value = value;
+        // Arguments as a shell splits them, for every command
+        commandToProcess.positionals = splitShellWords(
+            value ?? this.extractPositionalValue(commandName, processor) ?? '',
+        );
 
         // Global guards (auth, permissions, ...): registered once, run before
         // validation, hooks and the command itself.
@@ -451,10 +540,15 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         // the captured text becomes the implicit pipeline data.
         const capturingWriter = new CapturingTerminalWriter(
             commandContext.writer,
+            { muted },
         );
         commandContext.writer = capturingWriter;
 
         try {
+            // The command's saved state is loaded before it first runs
+            // (done once per store; later calls return at once)
+            await commandContext.state.initialize();
+
             const hooks = processor.hooks ?? [];
 
             for (const hook of hooks.filter((h) => h.when === 'before')) {
@@ -508,9 +602,13 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
                 context.abort?.();
 
                 if (e.code !== 0) {
-                    context.writer.writeError(
-                        `Process exited with code ${e.code}`,
-                    );
+                    // A command that already explained the error needs no
+                    // generic line after it (the exit code is kept)
+                    if (!capturingWriter.hasErrors()) {
+                        context.writer.writeError(
+                            `Process exited with code ${e.code}`,
+                        );
+                    }
                 } else {
                     context.writer.writeInfo(
                         'Process exited successfully with code 0',
@@ -694,6 +792,29 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         }
 
         return undefined;
+    }
+
+    /**
+     * The text after the word that selected `processor`, which may be its
+     * command or one of its aliases (e.g. `pkg rm guid` -> `guid`).
+     */
+    private extractPositionalValue(
+        commandName: string,
+        processor: ICliCommandProcessor,
+    ): string | undefined {
+        const names = new Set(
+            [processor.command, ...(processor.aliases ?? [])].map((n) =>
+                n.toLowerCase(),
+            ),
+        );
+        const word = /\S+/g;
+        let match: RegExpExecArray | null;
+        while ((match = word.exec(commandName)) !== null) {
+            if (names.has(match[0].toLowerCase())) {
+                return commandName.slice(match.index + match[0].length).trim();
+            }
+        }
+        return getRightOfWord(commandName, processor.command);
     }
 
     private guardDenial(result: CliCommandGuardResult, commandName: string): string | undefined {

@@ -29,6 +29,12 @@ export interface ICliCommandExecutorService {
     ): Promise<void>;
 
     /**
+     * Run a command line and return its output as text instead of showing it
+     * (as `$(...)` does); its errors and warnings are still shown.
+     */
+    capture?(command: string, context: ICliExecutionContext): Promise<string>;
+
+    /**
      * Register a global parameter handler.
      * Global parameters (e.g. --help, --version) are evaluated for every
      * command before the processor's own processCommand runs.

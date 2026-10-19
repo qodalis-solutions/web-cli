@@ -6,6 +6,7 @@ import {
     CliIcon,
     CliForegroundColor,
     DefaultLibraryAuthor,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import { SyntaxHighlighterRegistry_TOKEN } from '../../tokens';
 import { NanoEditorBuffer } from '../../editor/nano-editor-buffer';
@@ -88,7 +89,7 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
         }
 
         // Parse file path from command
-        const args = (command.value || '').trim();
+        const args = joinShellWords(command.value ?? '');
         if (args) {
             this.filePath = args;
 

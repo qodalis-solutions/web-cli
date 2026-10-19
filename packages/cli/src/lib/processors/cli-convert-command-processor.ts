@@ -5,6 +5,7 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    joinShellWords,
 } from '@qodalis/cli-core';
 
 type ConversionMap = Record<string, Record<string, number>>;
@@ -198,7 +199,7 @@ export class CliConvertCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         const { writer } = context;
-        const input = (command.value || '').trim();
+        const input = joinShellWords(command.value ?? '');
 
         // Parse: "100 km to mi" or "100km mi" or "32 c to f"
         const match = input.match(

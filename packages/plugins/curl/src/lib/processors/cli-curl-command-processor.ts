@@ -7,6 +7,7 @@ import {
     ICliConfigurationOption,
     ICliExecutionContext,
     getPluginConfigValue,
+    joinShellWords,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 import {
@@ -140,7 +141,7 @@ export class CliCurlCommandProcessor implements ICliCommandProcessor {
         command: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
-        const url = command.value;
+        const url = joinShellWords(command.value ?? '');
 
         if (!url) {
             context.writer.writeError('URL is required. Usage: curl <url> [options]');

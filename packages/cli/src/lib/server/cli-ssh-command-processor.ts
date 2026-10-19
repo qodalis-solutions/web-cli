@@ -1,4 +1,5 @@
 import {
+    CliForegroundColor,
     CliProcessCommand,
     CliProcessorMetadata,
     CliServerPermissions,
@@ -8,6 +9,8 @@ import {
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
 import { CliServerManager, CliServerManager_TOKEN } from './cli-server-manager';
+import { writeConfigureHint, writeUnknownServer } from './cli-server-command-helpers';
+import { writeExamples, writeUsage, writeWrapped } from '../processors/system/packages/package-help';
 
 type ShellMessage =
     | { type: 'stdin'; data: string }
@@ -34,6 +37,7 @@ interface ShellSession {
 
 export class CliSshCommandProcessor implements ICliCommandProcessor {
     command = 'ssh';
+    aliases = ['shell'];
     description = 'Open a remote shell session on a server';
     acceptsRawInput = true;
     valueRequired = false;
@@ -77,10 +81,15 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         }
 
         if (shellServers.length === 0) {
-            context.writer.writeError(
-                'No servers with shell access are available.',
-            );
-            context.process.exit(1);
+            const requested =
+                (command.args?.['server'] as string | undefined) ??
+                command.value?.trim().split(/\s+/)[0];
+            if (requested) {
+                this.writeWhyNotAvailable(context, manager, requested);
+            } else {
+                this.writeNoShellServers(context, manager);
+            }
+            context.process.exit(1, { silent: true });
             return;
         }
 
@@ -142,20 +151,21 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         const empty = { serverName: null, oneShotCmd: null, connection: null };
 
         // 1. Check --server=name parameter
+        const manager = context.services.getRequired<CliServerManager>(
+            CliServerManager_TOKEN,
+        );
         const argServer = command.args?.['server'] as string | undefined;
         if (argServer && typeof argServer === 'string') {
-            const entry = shellServers.find((s) => s.name === argServer);
+            const entry = findServer(shellServers, argServer);
             if (!entry) {
-                context.writer.writeError(
-                    `Server '${argServer}' not found or does not support shell access.`,
-                );
-                context.process.exit(1);
+                this.writeWhyNotAvailable(context, manager, argServer);
+                context.process.exit(1, { silent: true });
                 return empty;
             }
             // One-shot command comes from command.value (text after "ssh" excluding flags)
             // Not applicable with --server=name since value would be empty
             return {
-                serverName: argServer,
+                serverName: entry.name,
                 oneShotCmd: null,
                 connection: entry.connection,
             };
@@ -166,7 +176,7 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         if (value) {
             const parts = value.split(/\s+/);
             const candidateName = parts[0];
-            const entry = shellServers.find((s) => s.name === candidateName);
+            const entry = findServer(shellServers, candidateName);
             if (entry) {
                 // Take the remote command verbatim from the raw line: the parsed
                 // value has flag-like tokens (e.g. `sh -c '...'`) stripped
@@ -174,16 +184,14 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
                     this.remoteCommandFromRaw(command.rawCommand, candidateName) ??
                     (parts.slice(1).join(' ') || null);
                 return {
-                    serverName: candidateName,
+                    serverName: entry.name,
                     oneShotCmd,
                     connection: entry.connection,
                 };
             }
-            // Value doesn't match any server — treat as error
-            context.writer.writeError(
-                `Server '${candidateName}' not found or does not support shell access.`,
-            );
-            context.process.exit(1);
+            // Value doesn't match a shell server: say why
+            this.writeWhyNotAvailable(context, manager, candidateName);
+            context.process.exit(1, { silent: true });
             return empty;
         }
 
@@ -197,9 +205,6 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
         }
 
         // 4. Use default server if set and shell-capable
-        const manager = context.services.getRequired<CliServerManager>(
-            CliServerManager_TOKEN,
-        );
         if (manager?.defaultServer) {
             const entry = shellServers.find(
                 (s) => s.name === manager.defaultServer,
@@ -231,6 +236,87 @@ export class CliSshCommandProcessor implements ICliCommandProcessor {
             oneShotCmd: null,
             connection: entry.connection,
         };
+    }
+
+    /** Why `name` cannot be used: unknown, unreachable or without a shell. */
+    private writeWhyNotAvailable(
+        context: ICliExecutionContext,
+        manager: CliServerManager,
+        name: string,
+    ): void {
+        const { writer } = context;
+        const found = [...manager.connections.entries()].find(
+            ([serverName]) => serverName.toLowerCase() === name.toLowerCase(),
+        );
+        if (!found) {
+            writeUnknownServer(context, manager, name);
+            return;
+        }
+        const [serverName, connection] = found;
+        if (!connection.connected) {
+            writer.writeError(`ssh: ${serverName} is unreachable.`);
+            writer.writeInfo(
+                `💡 Use ${writer.wrapInColor(`server status ${serverName}`, CliForegroundColor.Cyan)} to see why`,
+            );
+            return;
+        }
+        writer.writeError(`ssh: ${serverName} does not allow shell access.`);
+        writer.writeln(
+            '  The server has to enable its shell (enableShell / EnableShell / enable_shell) and let you use it.',
+        );
+        writer.writeln(
+            `  See ${writer.wrapInColor('https://cli.qodalis.com/docs/server-integration', CliForegroundColor.Blue)}`,
+        );
+    }
+
+    /** No server has a shell: say whether none is configured, connected or shell-enabled. */
+    private writeNoShellServers(
+        context: ICliExecutionContext,
+        manager: CliServerManager,
+    ): void {
+        const { writer } = context;
+        const all = [...manager.connections.entries()];
+        if (all.length === 0) {
+            writer.writeError('ssh: no servers are configured.');
+            writeConfigureHint(context);
+            return;
+        }
+        const connected = all.filter(([, c]) => c.connected).map(([n]) => n);
+        if (connected.length === 0) {
+            writer.writeError('ssh: no server is connected.');
+            writer.writeInfo(
+                `💡 Use ${writer.wrapInColor('server status', CliForegroundColor.Cyan)} to check them, ${writer.wrapInColor('server reconnect', CliForegroundColor.Cyan)} to retry`,
+            );
+            return;
+        }
+        writer.writeError(
+            `ssh: none of the connected servers (${connected.join(', ')}) allow shell access.`,
+        );
+        writer.writeln(
+            '  A server has to enable its shell (enableShell / EnableShell / enable_shell) for ssh.',
+        );
+    }
+
+    writeDescription(context: ICliExecutionContext): void {
+        const t = context.translator;
+        const { writer } = context;
+        writeWrapped(
+            context,
+            t.t('cli.ssh.help.open_interactive_shell_server', 'Open an interactive shell on a server, in this terminal, or run one command there and print its output. Only servers that enable their shell can be used; with the users plugin you need the shell:execute permission. Without a name, ssh uses the only shell server, else the default server, else asks which one.'),
+        );
+        writer.writeln();
+        writeUsage(context, [
+            ['ssh', t.t('cli.ssh.help.shell_default_only_server', 'Shell on the default (or only) server')],
+            ['ssh <name>', t.t('cli.ssh.help.shell_server_exit_ctrl', 'Shell on a server (exit or Ctrl+D to leave)')],
+            ['ssh <name> <command>', t.t('cli.ssh.help.run_one_command_print', 'Run one command and print its output')],
+            ['ssh --server=<name>', t.t('cli.ssh.help.same_ssh', 'Same as ssh <name>')],
+        ]);
+        writer.writeln();
+        writeExamples(context, [
+            ['ssh node', t.t('cli.ssh.help.interactive_shell_node', 'Interactive shell on node')],
+            ['ssh node ls -la /tmp', t.t('cli.ssh.help.one_command_node', 'One command on node')],
+            ['shell', t.t('cli.ssh.help.same_ssh_2', 'Same as ssh')],
+        ]);
     }
 
     private async executeInteractive(
@@ -532,4 +618,13 @@ export function describeShellClose(event: { code?: number; reason?: string }, se
         default:
             return null;
     }
+}
+
+/** The shell server called `name`, ignoring case. */
+function findServer(
+    servers: Array<{ name: string; connection: CliServerConnection }>,
+    name: string,
+): { name: string; connection: CliServerConnection } | undefined {
+    const wanted = name.toLowerCase();
+    return servers.find((s) => s.name.toLowerCase() === wanted);
 }

@@ -394,6 +394,15 @@ describe('CliPanelController', () => {
             expect(t2).toBe(2);
         });
 
+        it('does not focus the terminal when a rename started meanwhile', () => {
+            const fake = fakeEngine();
+            controller.registerEngine(1, 1, fake.engine);
+            controller.selectTab(1); // first click of a double-click
+            controller.startRename(1); // the dblclick
+            jasmine.clock().tick(1);
+            expect(fake.focus).not.toHaveBeenCalled();
+        });
+
         it('returns the engine of the active pane', () => {
             const fake = fakeEngine();
             controller.registerEngine(1, 1, fake.engine);

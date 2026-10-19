@@ -1,6 +1,8 @@
+import { createCliToken } from '@qodalis/cli-core';
 import { ICliProcessEntry, ICliProcessRegistry, ICliProcessRegisterOptions } from '@qodalis/cli-core';
 
-export const CliProcessRegistry_TOKEN = 'cli-process-registry';
+export const CliProcessRegistry_TOKEN =
+    createCliToken<CliProcessRegistry>('cli-process-registry');
 
 interface InternalEntry extends ICliProcessEntry {
     abortController: AbortController;

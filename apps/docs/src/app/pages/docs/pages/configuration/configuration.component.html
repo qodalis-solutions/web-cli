@@ -1,203 +1,249 @@
-<h1>{{ 'docs.configuration.title' | translate }}</h1>
-<p>{{ 'docs.configuration.intro' | translate }}</p>
+<h1>{{ "docs.configuration.title" | translate }}</h1>
+<p>{{ "docs.configuration.intro" | translate }}</p>
 
 <!-- CliOptions Table -->
-<h2>{{ 'docs.configuration.cli-options' | translate }}</h2>
-<p>{{ 'docs.configuration.cli-options-desc' | translate }}</p>
+<h2>{{ "docs.configuration.cli-options" | translate }}</h2>
+<p>{{ "docs.configuration.cli-options-desc" | translate }}</p>
 
 <table>
-    <thead>
-        <tr>
-            <th>{{ 'docs.configuration.th-option' | translate }}</th>
-            <th>{{ 'docs.configuration.th-type' | translate }}</th>
-            <th>{{ 'docs.configuration.th-default' | translate }}</th>
-            <th>{{ 'docs.configuration.th-description' | translate }}</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>logLevel</code></td>
-            <td><code>CliLogLevel</code></td>
-            <td><code>INFO</code></td>
-            <td>{{ 'docs.configuration.log-level-desc' | translate }}</td>
-        </tr>
-        <tr>
-            <td><code>welcomeMessage</code></td>
-            <td><code>string</code></td>
-            <td>(default)</td>
-            <td>{{ 'docs.configuration.welcome-msg-desc' | translate }}</td>
-        </tr>
-        <tr>
-            <td><code>theme</code></td>
-            <td><code>string</code></td>
-            <td><code>'default'</code></td>
-            <td>{{ 'docs.configuration.theme-desc' | translate }}</td>
-        </tr>
-        <tr>
-            <td><code>serverUrl</code></td>
-            <td><code>string</code></td>
-            <td><code>null</code></td>
-            <td>{{ 'docs.configuration.server-url-desc' | translate }}</td>
-        </tr>
-        <tr>
-            <td><code>terminalOptions</code></td>
-            <td><code>ITerminalOptions</code></td>
-            <td><code>&#123;&#125;</code></td>
-            <td>xterm.js terminal options — <code>fontSize</code>, <code>fontFamily</code>, <code>cursorBlink</code>, <code>scrollback</code>, <code>theme</code>, <code>convertEol</code>, etc. See <a href="https://xtermjs.org/docs/api/terminal/interfaces/iterminalinitonlyoptions/" target="_blank">xterm.js docs</a>.</td>
-        </tr>
-        <tr>
-            <td><code>servers</code></td>
-            <td><code>CliServerConfig[]</code></td>
-            <td><code>[]</code></td>
-            <td>Remote CLI servers to connect to. Each server's commands are auto-discovered and registered as proxy processors. See Server Integration docs.</td>
-        </tr>
-        <tr>
-            <td><code>packageSources</code></td>
-            <td><code>&#123; primary?: string, sources?: CliPackageSource[] &#125;</code></td>
-            <td>Built-in (unpkg, jsdelivr)</td>
-            <td>Custom package sources for the <code>pkg</code> command. Set <code>primary</code> to change the default source. Add entries to <code>sources</code> with <code>name</code>, <code>url</code>, and <code>kind</code> (<code>'registry'</code> or <code>'file'</code>).</td>
-        </tr>
-        <tr>
-            <td><code>allowEval</code></td>
-            <td><code>boolean</code></td>
-            <td><code>false</code></td>
-            <td>Enable the <code>js</code> / <code>calc</code> command. Disabled by default for security — it runs arbitrary JavaScript in the host page context.</td>
-        </tr>
-        <tr>
-            <td><code>wasmUrl</code></td>
-            <td><code>string</code></td>
-            <td>(auto)</td>
-            <td>Where to load the optional WebAssembly accelerator (<code>qodalis_cli_wasm_bg.wasm</code>) from. When omitted it is looked up next to the page (<code>document.baseURI</code>), then at <code>/assets/wasm/</code> and <code>/wasm/</code>. Set it when the app is served under a sub-path. The CLI falls back to JavaScript when the file is missing.</td>
-        </tr>
-    </tbody>
+  <thead>
+    <tr>
+      <th>{{ "docs.configuration.th-option" | translate }}</th>
+      <th>{{ "docs.configuration.th-type" | translate }}</th>
+      <th>{{ "docs.configuration.th-default" | translate }}</th>
+      <th>{{ "docs.configuration.th-description" | translate }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>logLevel</code></td>
+      <td><code>CliLogLevel</code></td>
+      <td><code>INFO</code></td>
+      <td>{{ "docs.configuration.log-level-desc" | translate }}</td>
+    </tr>
+    <tr>
+      <td><code>welcomeMessage</code></td>
+      <td><code>string</code></td>
+      <td>(default)</td>
+      <td>{{ "docs.configuration.welcome-msg-desc" | translate }}</td>
+    </tr>
+    <tr>
+      <td><code>theme</code></td>
+      <td><code>string</code></td>
+      <td><code>'default'</code></td>
+      <td>{{ "docs.configuration.theme-desc" | translate }}</td>
+    </tr>
+    <tr>
+      <td><code>serverUrl</code></td>
+      <td><code>string</code></td>
+      <td><code>null</code></td>
+      <td>{{ "docs.configuration.server-url-desc" | translate }}</td>
+    </tr>
+    <tr>
+      <td><code>terminalOptions</code></td>
+      <td><code>ITerminalOptions</code></td>
+      <td><code>&#123;&#125;</code></td>
+      <td>
+        xterm.js terminal options — <code>fontSize</code>,
+        <code>fontFamily</code>, <code>cursorBlink</code>,
+        <code>scrollback</code>, <code>theme</code>, <code>convertEol</code>,
+        etc. See
+        <a
+          href="https://xtermjs.org/docs/api/terminal/interfaces/iterminalinitonlyoptions/"
+          target="_blank"
+          >xterm.js docs</a
+        >.
+      </td>
+    </tr>
+    <tr>
+      <td><code>servers</code></td>
+      <td><code>CliServerConfig[]</code></td>
+      <td><code>[]</code></td>
+      <td>
+        Remote CLI servers to connect to. Each server's commands are
+        auto-discovered and registered as proxy processors. See Server
+        Integration docs.
+      </td>
+    </tr>
+    <tr>
+      <td><code>packageSources</code></td>
+      <td>
+        <code
+          >&#123; primary?: string, sources?: CliPackageSource[] &#125;</code
+        >
+      </td>
+      <td>Built-in (unpkg, jsdelivr)</td>
+      <td>
+        Custom package sources for the <code>pkg</code> command. Set
+        <code>primary</code> to change the default source. Add entries to
+        <code>sources</code> with <code>name</code>, <code>url</code>, and
+        <code>kind</code> (<code>'registry'</code> or <code>'file'</code>).
+      </td>
+    </tr>
+    <tr>
+      <td><code>allowEval</code></td>
+      <td><code>boolean</code></td>
+      <td><code>false</code></td>
+      <td>
+        Enable the <code>js</code> / <code>calc</code> command. Disabled by
+        default for security — it runs arbitrary JavaScript in the host page
+        context.
+      </td>
+    </tr>
+    <tr>
+      <td><code>wasmUrl</code></td>
+      <td><code>string</code></td>
+      <td>(auto)</td>
+      <td>
+        Where to load the optional WebAssembly accelerator
+        (<code>qodalis_cli_wasm_bg.wasm</code>) from. When omitted it is looked
+        up next to the page (<code>document.baseURI</code>), then at
+        <code>/assets/wasm/</code> and <code>/wasm/</code>. Set it when the app
+        is served under a sub-path. The CLI falls back to JavaScript when the
+        file is missing.
+      </td>
+    </tr>
+  </tbody>
 </table>
 
 <!-- CliServerConfig -->
 <h2>Server Configuration</h2>
-<p>Each entry in the <code>servers</code> array uses the <code>CliServerConfig</code> type:</p>
+<p>
+  Each entry in the <code>servers</code> array uses the
+  <code>CliServerConfig</code> type:
+</p>
 <table>
-    <thead>
-        <tr>
-            <th>Option</th>
-            <th>Type</th>
-            <th>Default</th>
-            <th>Description</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>name</code></td>
-            <td><code>string</code></td>
-            <td>(required)</td>
-            <td>Unique identifier. Server commands are prefixed with this name.</td>
-        </tr>
-        <tr>
-            <td><code>url</code></td>
-            <td><code>string</code></td>
-            <td>(required)</td>
-            <td>Base URL, e.g. <code>"http://localhost:8047"</code></td>
-        </tr>
-        <tr>
-            <td><code>enabled</code></td>
-            <td><code>boolean</code></td>
-            <td><code>true</code></td>
-            <td>Set to <code>false</code> to skip this server on startup</td>
-        </tr>
-        <tr>
-            <td><code>headers</code></td>
-            <td><code>Record&lt;string, string&gt; | () =&gt; Record&lt;string, string&gt;</code></td>
-            <td><code>&#123;&#125;</code></td>
-            <td>Static or dynamic headers. Use a function for rotating tokens (e.g. JWTs).</td>
-        </tr>
-        <tr>
-            <td><code>timeout</code></td>
-            <td><code>number</code></td>
-            <td><code>30000</code></td>
-            <td>Request timeout in milliseconds</td>
-        </tr>
-    </tbody>
+  <thead>
+    <tr>
+      <th>Option</th>
+      <th>Type</th>
+      <th>Default</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>name</code></td>
+      <td><code>string</code></td>
+      <td>(required)</td>
+      <td>Unique identifier. Server commands are prefixed with this name.</td>
+    </tr>
+    <tr>
+      <td><code>url</code></td>
+      <td><code>string</code></td>
+      <td>(required)</td>
+      <td>Base URL, e.g. <code>"http://localhost:8047"</code></td>
+    </tr>
+    <tr>
+      <td><code>enabled</code></td>
+      <td><code>boolean</code></td>
+      <td><code>true</code></td>
+      <td>Set to <code>false</code> to skip this server on startup</td>
+    </tr>
+    <tr>
+      <td><code>headers</code></td>
+      <td>
+        <code
+          >Record&lt;string, string&gt; | () =&gt; Record&lt;string,
+          string&gt;</code
+        >
+      </td>
+      <td><code>&#123;&#125;</code></td>
+      <td>
+        Static or dynamic headers. Use a function for rotating tokens (e.g.
+        JWTs).
+      </td>
+    </tr>
+    <tr>
+      <td><code>timeout</code></td>
+      <td><code>number</code></td>
+      <td><code>30000</code></td>
+      <td>Request timeout in milliseconds</td>
+    </tr>
+  </tbody>
 </table>
 <div class="code-block">
-    <pre><code>servers: [
+  <pre><code>servers: [
     &#123; name: 'node', url: 'http://localhost:8047' &#125;,
     &#123;
-        name: 'api',
-        url: 'https://api.example.com',
-        headers: () =&gt; (&#123; Authorization: 'Bearer ' + getToken() &#125;),
-        timeout: 10000,
+    name: 'api',
+    url: 'https://api.example.com',
+    headers: () =&gt; (&#123; Authorization: 'Bearer ' + getToken() &#125;),
+    timeout: 10000,
     &#125;,
-]</code></pre>
+  ]</code></pre>
 </div>
 
 <!-- CliPanelConfig -->
 <h2>Panel Configuration</h2>
 <p>
-    When using the <code>&lt;cli-panel&gt;</code> component, pass panel-specific options via the
-    <code>options</code> prop. The <code>CliPanelOptions</code> type extends <code>CliOptions</code> with
-    <code>CliPanelConfig</code> properties:
+  When using the <code>&lt;cli-panel&gt;</code> component, pass panel-specific
+  options via the <code>options</code> prop. The
+  <code>CliPanelOptions</code> type extends <code>CliOptions</code> with
+  <code>CliPanelConfig</code> properties:
 </p>
 <table>
-    <thead>
-        <tr>
-            <th>Option</th>
-            <th>Type</th>
-            <th>Default</th>
-            <th>Description</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>isCollapsed</code></td>
-            <td><code>boolean</code></td>
-            <td><code>true</code></td>
-            <td>Whether the panel starts collapsed</td>
-        </tr>
-        <tr>
-            <td><code>isHidden</code></td>
-            <td><code>boolean</code></td>
-            <td><code>false</code></td>
-            <td>Whether the panel starts hidden (showing only the small tab)</td>
-        </tr>
-        <tr>
-            <td><code>position</code></td>
-            <td><code>'bottom' | 'top' | 'left' | 'right'</code></td>
-            <td><code>'bottom'</code></td>
-            <td>Panel position relative to the viewport</td>
-        </tr>
-        <tr>
-            <td><code>closable</code></td>
-            <td><code>boolean</code></td>
-            <td><code>true</code></td>
-            <td>Whether the close button is shown</td>
-        </tr>
-        <tr>
-            <td><code>resizable</code></td>
-            <td><code>boolean</code></td>
-            <td><code>true</code></td>
-            <td>Whether the panel can be resized by dragging</td>
-        </tr>
-        <tr>
-            <td><code>hideable</code></td>
-            <td><code>boolean</code></td>
-            <td><code>true</code></td>
-            <td>Whether the hide button is shown</td>
-        </tr>
-        <tr>
-            <td><code>hideAlignment</code></td>
-            <td><code>'start' | 'center' | 'end'</code></td>
-            <td><code>'center'</code></td>
-            <td>Alignment of the hidden-mode tab along the viewport edge</td>
-        </tr>
-        <tr>
-            <td><code>syncTheme</code></td>
-            <td><code>boolean</code></td>
-            <td><code>false</code></td>
-            <td>Auto-sync panel chrome colors with the active terminal theme</td>
-        </tr>
-    </tbody>
+  <thead>
+    <tr>
+      <th>Option</th>
+      <th>Type</th>
+      <th>Default</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>isCollapsed</code></td>
+      <td><code>boolean</code></td>
+      <td><code>true</code></td>
+      <td>Whether the panel starts collapsed</td>
+    </tr>
+    <tr>
+      <td><code>isHidden</code></td>
+      <td><code>boolean</code></td>
+      <td><code>false</code></td>
+      <td>Whether the panel starts hidden (showing only the small tab)</td>
+    </tr>
+    <tr>
+      <td><code>position</code></td>
+      <td><code>'bottom' | 'top' | 'left' | 'right'</code></td>
+      <td><code>'bottom'</code></td>
+      <td>Panel position relative to the viewport</td>
+    </tr>
+    <tr>
+      <td><code>closable</code></td>
+      <td><code>boolean</code></td>
+      <td><code>true</code></td>
+      <td>Whether the close button is shown</td>
+    </tr>
+    <tr>
+      <td><code>resizable</code></td>
+      <td><code>boolean</code></td>
+      <td><code>true</code></td>
+      <td>Whether the panel can be resized by dragging</td>
+    </tr>
+    <tr>
+      <td><code>hideable</code></td>
+      <td><code>boolean</code></td>
+      <td><code>true</code></td>
+      <td>Whether the hide button is shown</td>
+    </tr>
+    <tr>
+      <td><code>hideAlignment</code></td>
+      <td><code>'start' | 'center' | 'end'</code></td>
+      <td><code>'center'</code></td>
+      <td>Alignment of the hidden-mode tab along the viewport edge</td>
+    </tr>
+    <tr>
+      <td><code>syncTheme</code></td>
+      <td><code>boolean</code></td>
+      <td><code>false</code></td>
+      <td>Auto-sync panel chrome colors with the active terminal theme</td>
+    </tr>
+  </tbody>
 </table>
 <div class="code-block">
-    <pre><code>const panelOptions: CliPanelOptions = &#123;
+  <pre><code>const panelOptions: CliPanelOptions = &#123;
     position: 'right',
     isCollapsed: false,
     isHidden: false,
@@ -205,153 +251,177 @@
     resizable: true,
     syncTheme: true,
     hideAlignment: 'end',
-&#125;;</code></pre>
+  &#125;;</code></pre>
 </div>
 
 <!-- Angular Configuration -->
-<h2>{{ 'docs.configuration.framework-config' | translate }}</h2>
+<h2>{{ "docs.configuration.framework-config" | translate }}</h2>
 
 <div class="framework-tabs">
-    <button class="framework-tab" [class.active]="activeTab === 'angular'" (click)="activeTab = 'angular'">Angular</button>
-    <button class="framework-tab" [class.active]="activeTab === 'react'" (click)="activeTab = 'react'">React</button>
-    <button class="framework-tab" [class.active]="activeTab === 'vue'" (click)="activeTab = 'vue'">Vue</button>
-    <button class="framework-tab" [class.active]="activeTab === 'vanilla'" (click)="activeTab = 'vanilla'">Vanilla JS</button>
+  <button
+    class="framework-tab"
+    [class.active]="activeTab === 'angular'"
+    (click)="activeTab = 'angular'"
+  >
+    Angular
+  </button>
+  <button
+    class="framework-tab"
+    [class.active]="activeTab === 'react'"
+    (click)="activeTab = 'react'"
+  >
+    React
+  </button>
+  <button
+    class="framework-tab"
+    [class.active]="activeTab === 'vue'"
+    (click)="activeTab = 'vue'"
+  >
+    Vue
+  </button>
+  <button
+    class="framework-tab"
+    [class.active]="activeTab === 'vanilla'"
+    (click)="activeTab = 'vanilla'"
+  >
+    Vanilla JS
+  </button>
 </div>
 
 <!-- Angular -->
-<div *ngIf="activeTab === 'angular'">
-    <h3>{{ 'docs.configuration.angular-config' | translate }}</h3>
-    <p>{{ 'docs.configuration.angular-config-desc' | translate }}</p>
-
+@if (activeTab === "angular") {
+  <div>
+    <h3>{{ "docs.configuration.angular-config" | translate }}</h3>
+    <p>{{ "docs.configuration.angular-config-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">app.component.ts</span>
-        <pre><code>import &#123; CliOptions &#125; from '&#64;qodalis/angular-cli';
-
-cliOptions: CliOptions = &#123;
-    logLevel: 'DEBUG',
-    welcomeMessage: 'Welcome to my app!',
-    theme: 'default',
-    serverUrl: 'http://localhost:8046',
-&#125;;</code></pre>
-    </div>
-
-    <div class="code-block">
-        <span class="code-label">app.component.html</span>
-        <pre><code>&lt;cli [options]="cliOptions" [modules]="[]"&gt;&lt;/cli&gt;
-
-&lt;!-- Or with the panel variant --&gt;
-&lt;cli-panel [options]="cliOptions" [modules]="[]"&gt;&lt;/cli-panel&gt;</code></pre>
-    </div>
-
-    <p>{{ 'docs.configuration.angular-styles-desc' | translate }}</p>
-
-    <div class="code-block">
-        <span class="code-label">angular.json</span>
-        <pre><code>"styles": [
-    "node_modules/&#64;qodalis/angular-cli/src/assets/styles.css"
-]</code></pre>
-    </div>
-</div>
-
-<!-- React -->
-<div *ngIf="activeTab === 'react'">
-    <h3>{{ 'docs.configuration.react-config' | translate }}</h3>
-    <p>{{ 'docs.configuration.react-config-desc' | translate }}</p>
-
-    <div class="code-block">
-        <span class="code-label">App.tsx</span>
-        <pre><code>import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/react-cli';
-
-function App() &#123;
-    const options = &#123;
+      <span class="code-label">app.component.ts</span>
+      <pre><code>import &#123; CliOptions &#125; from '&#64;qodalis/angular-cli';
+        cliOptions: CliOptions = &#123;
         logLevel: 'DEBUG',
         welcomeMessage: 'Welcome to my app!',
         theme: 'default',
         serverUrl: 'http://localhost:8046',
-    &#125;;
-
-    return (
-        &lt;CliConfigProvider modules=&#123;[]&#125; options=&#123;options&#125;&gt;
-            &lt;Cli /&gt;
-        &lt;/CliConfigProvider&gt;
-    );
-&#125;</code></pre>
+      &#125;;</code></pre>
     </div>
-</div>
+    <div class="code-block">
+      <span class="code-label">app.component.html</span>
+      <pre><code>&lt;cli [options]="cliOptions" [modules]="[]"&gt;&lt;/cli&gt;
+        &lt;!-- Or with the panel variant --&gt;
+      &lt;cli-panel [options]="cliOptions" [modules]="[]"&gt;&lt;/cli-panel&gt;</code></pre>
+    </div>
+    <p>{{ "docs.configuration.angular-styles-desc" | translate }}</p>
+    <div class="code-block">
+      <span class="code-label">angular.json</span>
+      <pre><code>"styles": [
+        "node_modules/&#64;qodalis/angular-cli/src/assets/styles.css"
+      ]</code></pre>
+    </div>
+  </div>
+}
+
+<!-- React -->
+@if (activeTab === "react") {
+  <div>
+    <h3>{{ "docs.configuration.react-config" | translate }}</h3>
+    <p>{{ "docs.configuration.react-config-desc" | translate }}</p>
+    <div class="code-block">
+      <span class="code-label">App.tsx</span>
+      <pre><code>import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/react-cli';
+        function App() &#123;
+        const options = &#123;
+        logLevel: 'DEBUG',
+        welcomeMessage: 'Welcome to my app!',
+        theme: 'default',
+        serverUrl: 'http://localhost:8046',
+        &#125;;
+        return (
+        &lt;CliConfigProvider modules=&#123;[]&#125; options=&#123;options&#125;&gt;
+        &lt;Cli /&gt;
+        &lt;/CliConfigProvider&gt;
+        );
+      &#125;</code></pre>
+    </div>
+  </div>
+}
 
 <!-- Vue -->
-<div *ngIf="activeTab === 'vue'">
-    <h3>{{ 'docs.configuration.vue-config' | translate }}</h3>
-    <p>{{ 'docs.configuration.vue-config-desc' | translate }}</p>
-
+@if (activeTab === "vue") {
+  <div>
+    <h3>{{ "docs.configuration.vue-config" | translate }}</h3>
+    <p>{{ "docs.configuration.vue-config-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">App.vue</span>
-        <pre><code>&lt;script setup&gt;
-import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/vue-cli';
-
-const options = &#123;
-    logLevel: 'DEBUG',
-    welcomeMessage: 'Welcome to my app!',
-    theme: 'default',
-    serverUrl: 'http://localhost:8046',
-&#125;;
-&lt;/script&gt;
-
-&lt;template&gt;
-    &lt;CliConfigProvider :modules="[]" :options="options"&gt;
+      <span class="code-label">App.vue</span>
+      <pre><code>&lt;script setup&gt;
+        import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/vue-cli';
+        const options = &#123;
+        logLevel: 'DEBUG',
+        welcomeMessage: 'Welcome to my app!',
+        theme: 'default',
+        serverUrl: 'http://localhost:8046',
+        &#125;;
+        &lt;/script&gt;
+        &lt;template&gt;
+        &lt;CliConfigProvider :modules="[]" :options="options"&gt;
         &lt;Cli /&gt;
-    &lt;/CliConfigProvider&gt;
-&lt;/template&gt;</code></pre>
+        &lt;/CliConfigProvider&gt;
+      &lt;/template&gt;</code></pre>
     </div>
-</div>
+  </div>
+}
 
 <!-- Vanilla JS -->
-<div *ngIf="activeTab === 'vanilla'">
-    <h3>{{ 'docs.configuration.vanilla-config' | translate }}</h3>
-    <p>{{ 'docs.configuration.vanilla-config-desc' | translate }}</p>
-
+@if (activeTab === "vanilla") {
+  <div>
+    <h3>{{ "docs.configuration.vanilla-config" | translate }}</h3>
+    <p>{{ "docs.configuration.vanilla-config-desc" | translate }}</p>
     <div class="code-block">
-        <span class="code-label">main.ts</span>
-        <pre><code>import '&#64;qodalis/cli/assets/styles.css';
-import &#123; CliEngine &#125; from '&#64;qodalis/cli';
-import type &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
-
-const options: CliOptions = &#123;
-    logLevel: 'DEBUG',
-    welcomeMessage: 'Welcome to my app!',
-    theme: 'default',
-    servers: [
+      <span class="code-label">main.ts</span>
+      <pre><code>import '&#64;qodalis/cli/assets/styles.css';
+        import &#123; CliEngine &#125; from '&#64;qodalis/cli';
+        import type &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
+        const options: CliOptions = &#123;
+        logLevel: 'DEBUG',
+        welcomeMessage: 'Welcome to my app!',
+        theme: 'default',
+        servers: [
         &#123; name: 'dotnet', url: 'http://localhost:8046' &#125;,
-    ],
-&#125;;
-
-const container = document.getElementById('terminal')!;
-const engine = new CliEngine(container, options);
-
-engine.start().then(() =&gt; engine.focus());</code></pre>
+        ],
+        &#125;;
+        const container = document.getElementById('terminal')!;
+        const engine = new CliEngine(container, options);
+      engine.start().then(() =&gt; engine.focus());</code></pre>
     </div>
-</div>
+  </div>
+}
 
 <!-- Runtime Config -->
-<h2>{{ 'docs.configuration.runtime-config' | translate }}</h2>
-<p>{{ 'docs.configuration.runtime-config-desc' | translate }}</p>
+<h2>{{ "docs.configuration.runtime-config" | translate }}</h2>
+<p>{{ "docs.configuration.runtime-config-desc" | translate }}</p>
 
 <div class="code-block">
-    <span class="code-label">{{ 'docs.configuration.list-config' | translate }}</span>
-    <pre><code>configure list</code></pre>
+  <span class="code-label">{{
+    "docs.configuration.list-config" | translate
+  }}</span>
+  <pre><code>configure list</code></pre>
 </div>
 
 <div class="code-block">
-    <span class="code-label">{{ 'docs.configuration.get-config' | translate }}</span>
-    <pre><code>configure get system.fontSize</code></pre>
+  <span class="code-label">{{
+    "docs.configuration.get-config" | translate
+  }}</span>
+  <pre><code>configure get system.fontSize</code></pre>
 </div>
 
 <div class="code-block">
-    <span class="code-label">{{ 'docs.configuration.set-config' | translate }}</span>
-    <pre><code>configure set system.fontSize 16</code></pre>
+  <span class="code-label">{{
+    "docs.configuration.set-config" | translate
+  }}</span>
+  <pre><code>configure set system.fontSize 16</code></pre>
 </div>
 
 <div class="code-block">
-    <span class="code-label">{{ 'docs.configuration.delete-config' | translate }}</span>
-    <pre><code>configure reset system</code></pre>
+  <span class="code-label">{{
+    "docs.configuration.delete-config" | translate
+  }}</span>
+  <pre><code>configure reset system</code></pre>
 </div>

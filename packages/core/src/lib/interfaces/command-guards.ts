@@ -1,3 +1,4 @@
+import { createCliToken } from '../models/services';
 import { CliProcessCommand } from '../models';
 import { ICliCommandProcessor } from './command-processor';
 import { ICliExecutionContext } from './execution-context';
@@ -132,4 +133,4 @@ export interface ICliCommandGuard {
 }
 
 /** DI token for {@link ICliCommandGuard}; register guards as multi-providers. */
-export const ICliCommandGuard_TOKEN = 'cli-command-guard';
+export const ICliCommandGuard_TOKEN = createCliToken<ICliCommandGuard>('cli-command-guard');

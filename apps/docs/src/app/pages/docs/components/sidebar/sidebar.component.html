@@ -1,55 +1,55 @@
 <nav class="sidebar-nav">
-    <div class="sidebar-section" *ngFor="let section of nav">
-        <ng-container *ngIf="section.external">
-            <a
-                class="sidebar-section-header external"
-                [href]="section.path"
-                target="_blank"
-                rel="noopener"
-            >
-                <span>{{ section.label | translate }}</span>
-                <span class="arrow">&nearr;</span>
-            </a>
-        </ng-container>
-
-        <ng-container *ngIf="!section.external && section.children">
-            <button
-                class="sidebar-section-header"
-                (click)="toggleSection(section.label)"
-                [class.expanded]="isExpanded(section.label)"
-            >
-                <span>{{ section.label | translate }}</span>
-                <span class="chevron">&#9656;</span>
-            </button>
-            <div
-                class="sidebar-children"
-                *ngIf="isExpanded(section.label)"
-            >
-                <a
-                    *ngFor="let child of section.children"
-                    class="sidebar-link"
-                    [routerLink]="child.path"
-                    routerLinkActive="active"
-                    [routerLinkActiveOptions]="{ exact: true }"
-                    (click)="linkClicked.emit()"
-                    >{{ child.label | translate }}</a
-                >
-            </div>
-        </ng-container>
-
-        <ng-container *ngIf="!section.external && !section.children">
-            <a
-                class="sidebar-section-header leaf"
-                [routerLink]="section.path"
+  @for (section of nav; track section) {
+    <div class="sidebar-section">
+      @if (section.external) {
+        <a
+          class="sidebar-section-header external"
+          [href]="section.path"
+          target="_blank"
+          rel="noopener"
+        >
+          <span>{{ section.label | translate }}</span>
+          <span class="arrow">&nearr;</span>
+        </a>
+      }
+      @if (!section.external && section.children) {
+        <button
+          class="sidebar-section-header"
+          (click)="toggleSection(section.label)"
+          [class.expanded]="isExpanded(section.label)"
+        >
+          <span>{{ section.label | translate }}</span>
+          <span class="chevron">&#9656;</span>
+        </button>
+        @if (isExpanded(section.label)) {
+          <div class="sidebar-children">
+            @for (child of section.children; track child) {
+              <a
+                class="sidebar-link"
+                [routerLink]="child.path"
                 routerLinkActive="active"
                 [routerLinkActiveOptions]="{ exact: true }"
                 (click)="linkClicked.emit()"
-            >
-                <span>{{ section.label | translate }}</span>
-            </a>
-        </ng-container>
+                >{{ child.label | translate }}</a
+              >
+            }
+          </div>
+        }
+      }
+      @if (!section.external && !section.children) {
+        <a
+          class="sidebar-section-header leaf"
+          [routerLink]="section.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          (click)="linkClicked.emit()"
+        >
+          <span>{{ section.label | translate }}</span>
+        </a>
+      }
     </div>
+  }
 </nav>
 <div class="sidebar-version">
-    <code>v{{ version }}</code>
+  <code>v{{ version }}</code>
 </div>

@@ -26,6 +26,7 @@ import { wgetModule } from '@qodalis/cli-wget';
 import { sudokuModule } from '@qodalis/cli-sudoku';
 import { jobsModule } from '@qodalis/cli-server-jobs';
 import { encodeModule } from '@qodalis/cli-encode';
+import { markdownModule } from '@qodalis/cli-markdown';
 import { dataExplorerModule } from '@qodalis/cli-data-explorer';
 import {
     CliLogLevel,
@@ -125,6 +126,7 @@ const modules: ICliModule[] = [
     sudokuModule,
     jobsModule,
     encodeModule,
+    markdownModule,
     dataExplorerModule,
     // Users/auth wiring chosen from the URL: ?users=none|local|server&server=node
     ...demoUsersModules(),

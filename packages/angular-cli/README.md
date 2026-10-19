@@ -8,6 +8,8 @@ Angular wrapper for the [Qodalis Web CLI](https://github.com/qodalis-solutions/w
 npm install @qodalis/angular-cli
 ```
 
+Requires Angular 22 or later. The panel works with both zoneless and zone.js change detection.
+
 ## Quick Start
 
 Import the module:

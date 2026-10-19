@@ -27,6 +27,8 @@ export interface ICliPermissionRegistry {
     register(definitions: CliPermissionDefinition[], module?: string): void;
     list(): CliPermissionDefinition[];
     get(name: string): CliPermissionDefinition | undefined;
+    /** Remove the permissions registered by `module` (when it is unloaded). */
+    unregister?(module: string): void;
 }
 
 /** The identity checks are made against. */

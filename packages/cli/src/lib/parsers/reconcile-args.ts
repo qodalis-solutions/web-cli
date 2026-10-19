@@ -1,4 +1,4 @@
-import { ICliCommandParameterDescriptor } from '@qodalis/cli-core';
+import { ICliCommandParameterDescriptor, splitShellWords } from '@qodalis/cli-core';
 import { ParsedArg, ParsedToken } from './command-parser';
 
 /**
@@ -30,6 +30,39 @@ export function reconcileArgs(
         // token.kind === 'flag'
         const descriptor = findDescriptor(token.name, descriptors);
 
+        // `-rf` is `-r -f` when it is not a parameter itself and each letter is
+        const letters = !descriptor && token.short && !token.hasEquals
+            ? expandShortFlags(token.name, descriptors)
+            : undefined;
+        if (letters) {
+            const last = letters[letters.length - 1];
+            for (const letter of letters.slice(0, -1)) {
+                args.push({ name: letter.name, value: true });
+            }
+            if (
+                last.descriptor.type !== 'boolean' &&
+                i + 1 < tokens.length &&
+                tokens[i + 1].kind === 'word'
+            ) {
+                const nextToken = tokens[i + 1] as { kind: 'word'; value: string };
+                args.push({ name: last.name, value: parseValue(unquote(nextToken.value)) });
+                i++;
+            } else {
+                args.push({ name: last.name, value: true });
+            }
+            continue;
+        }
+
+        // `-n5` is `-n 5` when `n` takes a value
+        const stuck = !descriptor && token.short && !token.hasEquals
+            ? /^([a-zA-Z])(.+)$/.exec(token.name)
+            : null;
+        const stuckDescriptor = stuck ? findDescriptor(stuck[1], descriptors) : undefined;
+        if (stuck && stuckDescriptor && stuckDescriptor.type !== 'boolean') {
+            args.push({ name: stuck[1], value: parseValue(stuck[2]) });
+            continue;
+        }
+
         if (
             descriptor &&
             descriptor.type !== 'boolean' &&
@@ -41,7 +74,7 @@ export function reconcileArgs(
             const nextToken = tokens[i + 1] as { kind: 'word'; value: string };
             args.push({
                 name: token.name,
-                value: parseValue(nextToken.value),
+                value: parseValue(unquote(nextToken.value)),
             });
             i++; // skip consumed word
         } else {
@@ -62,6 +95,34 @@ function findDescriptor(
             d.name === name ||
             d.aliases?.some((a) => a === name),
     );
+}
+
+/**
+ * The letters of `-abc` as short flags, when every letter is a parameter
+ * name or alias and all but the last are boolean.
+ */
+function expandShortFlags(
+    name: string,
+    descriptors: ICliCommandParameterDescriptor[] | undefined,
+): { name: string; descriptor: ICliCommandParameterDescriptor }[] | undefined {
+    if (name.length < 2 || !/^[a-zA-Z]+$/.test(name)) return undefined;
+    const letters = [...name].map((letter) => ({
+        name: letter,
+        descriptor: findDescriptor(letter, descriptors),
+    }));
+    const valid = letters.every(
+        (l, index) =>
+            l.descriptor &&
+            (index === letters.length - 1 || l.descriptor.type === 'boolean'),
+    );
+    return valid
+        ? (letters as { name: string; descriptor: ICliCommandParameterDescriptor }[])
+        : undefined;
+}
+
+/** A value as one shell word: `"a b"` -> `a b`, `my\\ file` -> `my file`. */
+function unquote(value: string): string {
+    return splitShellWords(value).join(' ');
 }
 
 function parseValue(value: string): string | number | boolean {
