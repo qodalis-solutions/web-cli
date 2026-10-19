@@ -49,6 +49,34 @@ export function writeExamples(
     );
 }
 
+/**
+ * Write a paragraph wrapped at word boundaries to the terminal width (at
+ * most 100 columns), so long help text never breaks inside a word.
+ */
+export function writeWrapped(
+    context: ICliExecutionContext,
+    text: string,
+    indent = 0,
+): void {
+    const cols = context.terminal?.cols ?? 80;
+    const width = Math.max(20, Math.min(cols - 1, 100) - indent);
+    const pad = ' '.repeat(indent);
+    let line = '';
+    for (const word of text.split(/\s+/).filter(Boolean)) {
+        if (line && visibleLength(line) + 1 + visibleLength(word) > width) {
+            context.writer.writeln(pad + line);
+            line = word;
+        } else {
+            line = line ? `${line} ${word}` : word;
+        }
+    }
+    if (line) context.writer.writeln(pad + line);
+}
+
+function visibleLength(text: string): number {
+    return text.replace(/\x1b\[[0-9;]*m/g, '').length;
+}
+
 /** `💡 Use <command> to <action>` hint. */
 export function writeHint(
     context: ICliExecutionContext,
@@ -56,9 +84,29 @@ export function writeHint(
     action: string,
 ): void {
     const { writer } = context;
-    writer.writeInfo(
-        `💡 Use ${writer.wrapInColor(command, CliForegroundColor.Cyan)} ${action}`,
-    );
+    const text = `💡 Use ${writer.wrapInColor(command, CliForegroundColor.Cyan)} ${action}`;
+    // "ℹ " prefix + the emoji's double width
+    const width = Math.min((context.terminal?.cols ?? 80) - 1, 100) - 3;
+    if (visibleLength(text) + 1 <= width) {
+        writer.writeInfo(text);
+        return;
+    }
+    // Narrow terminal: wrap at words, continuation lines under the text
+    const lines: string[] = [];
+    let line = '';
+    for (const word of text.split(' ')) {
+        if (line && visibleLength(line) + 1 + visibleLength(word) > width) {
+            lines.push(line);
+            line = word;
+        } else {
+            line = line ? `${line} ${word}` : word;
+        }
+    }
+    if (line) lines.push(line);
+    writer.writeInfo(lines[0]);
+    for (const rest of lines.slice(1)) {
+        writer.writeln(`   ${rest}`);
+    }
 }
 
 /** Message shown by commands that need at least one installed package. */
