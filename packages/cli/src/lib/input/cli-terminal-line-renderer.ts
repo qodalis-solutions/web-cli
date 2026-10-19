@@ -60,7 +60,6 @@ export class CliTerminalLineRenderer {
         this.terminal.write(promptString);
         // Calculate visible length by stripping ANSI escape codes.
         // terminal.write() is async so cursorX is unreliable here.
-        // eslint-disable-next-line no-control-regex
         return promptString.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').length;
     }
 

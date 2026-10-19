@@ -1,0 +1,40 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      angular:
+        patterns: ["@angular/*", "@angular-devkit/*", "angular-eslint", "ng-packagr", "zone.js"]
+      xterm:
+        patterns: ["@xterm/*"]
+      nx:
+        patterns: ["nx", "@nx/*"]
+      lint-and-format:
+        patterns: ["eslint", "eslint-*", "@eslint/*", "typescript-eslint", "prettier", "globals"]
+      test:
+        patterns: ["karma*", "jasmine*", "@types/jasmine"]
+    ignore:
+      # Major framework upgrades are planned by hand.
+      - dependency-name: "@angular/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vue"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: cargo
+    directory: /packages/cli/wasm
+    target-branch: develop
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: monthly

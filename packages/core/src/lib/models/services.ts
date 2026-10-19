@@ -17,7 +17,7 @@ export type CliTypeProvider = MultiServices & {
 };
 
 export type CliFactoryProvider = MultiServices & {
-    useFactory: Function;
+    useFactory: (...args: any[]) => any;
     /** DI tokens resolved from the container and passed as factory arguments. */
     deps?: any[];
 };

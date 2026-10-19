@@ -104,6 +104,12 @@ importers:
       '@angular/compiler-cli':
         specifier: ^19.2.0
         version: 19.2.20(@angular/compiler@19.2.20)(supports-color@8.1.1)(typescript@5.8.3)
+      '@eslint/js':
+        specifier: ^9.39.3
+        version: 9.39.3
+      '@nx/eslint':
+        specifier: ^23.3.0
+        version: 23.3.0(@babel/traverse@7.29.0(supports-color@8.1.1))(@zkochan/js-yaml@0.0.7)(eslint@9.39.3(jiti@1.21.7)(supports-color@8.1.1))(nx@23.3.0)(supports-color@8.1.1)
       '@nx/js':
         specifier: ^23.3.0
         version: 23.3.0(@babel/traverse@7.29.0(supports-color@8.1.1))(nx@23.3.0)(supports-color@8.1.1)
@@ -128,6 +134,9 @@ importers:
       eslint-config-prettier:
         specifier: ^9.1.0
         version: 9.1.2(eslint@9.39.3(jiti@1.21.7)(supports-color@8.1.1))
+      globals:
+        specifier: ^16.5.0
+        version: 16.5.0
       jasmine-core:
         specifier: ~5.5.0
         version: 5.5.0
@@ -2962,6 +2971,18 @@ packages:
     resolution: {integrity: sha512-xGSV4gCwQsVdt49VRcfxd2L31dAO/9t9Isv2bM5O89vyEzwd/tkW/IQwUzWn3OdhCnHayd37S1tDyJ5DilCv7w==}
     peerDependencies:
       nx: '>= 22 <= 24 || ^23.0.0-0'
+
+  '@nx/eslint@23.3.0':
+    resolution: {integrity: sha512-gYfB57vBDIFfu+QxZpoKThR9VRgUSgvSm+wheOom6wuPgqPIvAcsg17JklRVGd52j7AAyH5RlaFvjhEo6IsY6w==}
+    peerDependencies:
+      '@nx/jest': 23.3.0
+      '@zkochan/js-yaml': 0.0.7
+      eslint: ^9.0.0 || ^10.0.0
+    peerDependenciesMeta:
+      '@nx/jest':
+        optional: true
+      '@zkochan/js-yaml':
+        optional: true
 
   '@nx/js@23.3.0':
     resolution: {integrity: sha512-J0XWLwFK405uusy4SPDFyHN2e9LpiQmxqItaqaHSQzcXNUs7fWW/pEeoJ6ZQkwn84yWS+hIzT317T98JaoCZhA==}
@@ -6755,6 +6776,11 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   ua-parser-js@0.7.41:
     resolution: {integrity: sha512-O3oYyCMPYgNNHuO7Jjk3uacJWZF8loBgwrfd/5LE/HyZ3lUIOdniQ7DNXJcIgZbwioZxk0fLfI4EVnetdiX5jg==}
     hasBin: true
@@ -9891,6 +9917,25 @@ snapshots:
       semver: 7.7.4
       tslib: 2.8.1
       yargs-parser: 21.1.1
+
+  '@nx/eslint@23.3.0(@babel/traverse@7.29.0(supports-color@8.1.1))(@zkochan/js-yaml@0.0.7)(eslint@9.39.3(jiti@1.21.7)(supports-color@8.1.1))(nx@23.3.0)(supports-color@8.1.1)':
+    dependencies:
+      '@nx/devkit': 23.3.0(nx@23.3.0)
+      '@nx/js': 23.3.0(@babel/traverse@7.29.0(supports-color@8.1.1))(nx@23.3.0)(supports-color@8.1.1)
+      eslint: 9.39.3(jiti@1.21.7)(supports-color@8.1.1)
+      semver: 7.7.4
+      tslib: 2.8.1
+      typescript: 6.0.3
+    optionalDependencies:
+      '@zkochan/js-yaml': 0.0.7
+    transitivePeerDependencies:
+      - '@babel/traverse'
+      - '@swc-node/register'
+      - '@swc/cli'
+      - '@swc/core'
+      - nx
+      - supports-color
+      - verdaccio
 
   '@nx/js@23.3.0(@babel/traverse@7.29.0(supports-color@8.1.1))(nx@23.3.0)(supports-color@8.1.1)':
     dependencies:
@@ -14341,6 +14386,8 @@ snapshots:
   typescript@5.8.3: {}
 
   typescript@5.9.3: {}
+
+  typescript@6.0.3: {}
 
   ua-parser-js@0.7.41: {}
 
