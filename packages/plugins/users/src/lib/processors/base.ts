@@ -18,6 +18,7 @@ import {
     ICliPermissionRegistry_TOKEN,
     ICliSessionsService,
     ICliSessionsService_TOKEN,
+    ICliUserSession,
     ICliUsersStoreService,
     ICliUsersStoreService_TOKEN,
     splitShellWords,
@@ -30,7 +31,7 @@ export interface CliUsersCommandServices {
         getPermissions?(id: string): Promise<{ userId: string; groups: string[]; permissions: string[] }>;
     };
     groups: ICliGroupsStoreService;
-    auth: ICliAuthService & { passwordless?: boolean; hostManaged?: boolean };
+    auth: ICliAuthService & { passwordless?: boolean; hostManaged?: boolean; depth?: number; current?: ICliUserSession };
     sessions: ICliSessionsService;
     audit: ICliAuditService;
     config: CliUsersModuleConfig;

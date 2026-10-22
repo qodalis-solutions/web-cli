@@ -1,6 +1,7 @@
 import { CliLineOptions } from '@qodalis/cli-core';
 import { InputModeHost } from '../input-mode';
 import { InputModeBase } from './input-mode-base';
+import { applyEditingKey, CliKillRing, CliLineBuffer } from '../cli-line-buffer';
 
 /**
  * Input mode for reading a single line of text.
@@ -10,6 +11,7 @@ export class LineInputMode extends InputModeBase<string> {
     private buffer: string;
     private cursorPosition: number;
     private hasError = false;
+    private readonly killRing: CliKillRing = { text: '' };
 
     constructor(
         host: InputModeHost,
@@ -70,6 +72,8 @@ export class LineInputMode extends InputModeBase<string> {
                 this.cursorPosition++;
                 this.host.terminal.write(data);
             }
+        } else if (this.applyEditingKey(data)) {
+            // Home/End, Ctrl+A/E/U/K/W/Y, Delete
         } else if (data.startsWith('\u001B')) {
             // Ignore other escape sequences
         } else {
@@ -94,6 +98,17 @@ export class LineInputMode extends InputModeBase<string> {
                 this.renderLine();
             }
         }
+    }
+
+    private applyEditingKey(data: string): boolean {
+        const line = new CliLineBuffer();
+        line.setText(this.buffer);
+        line.cursorPosition = this.cursorPosition;
+        if (!applyEditingKey(line, data, this.killRing)) return false;
+        this.buffer = line.text;
+        this.cursorPosition = line.cursorPosition;
+        this.renderLine();
+        return true;
     }
 
     onResize(): void {

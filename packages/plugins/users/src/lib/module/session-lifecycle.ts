@@ -26,8 +26,9 @@ export function bindSessionToContext(context: ICliExecutionContext, runtime: Cli
         runtime.events.events$.subscribe((event) => {
             if (event.type === 'login') void runtime.kv.remove(SIGNED_OUT_KEY);
             // Any end of a session (logout, expiry, kick, disabled account) is sticky:
-            // the next boot must not sign anyone in automatically
-            if (event.type === 'logout') void runtime.kv.set(SIGNED_OUT_KEY, true);
+            // the next boot must not sign anyone in automatically. Leaving an `su`
+            // session is not: the session it suspended is current again.
+            if (event.type === 'logout' && !runtime.session.current) void runtime.kv.set(SIGNED_OUT_KEY, true);
         }),
     );
 }

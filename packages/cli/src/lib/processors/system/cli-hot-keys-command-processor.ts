@@ -36,7 +36,7 @@ export class CliHotKeysCommandProcessor implements ICliCommandProcessor {
 
         hotkeysInfo.forEach((hotkey) => {
             writer.writeln(
-                `    ${writer.wrapInColor(hotkey.key.padEnd(12), CliForegroundColor.Cyan)} ${DIM}${hotkey.description}${RESET}`,
+                `    ${writer.wrapInColor(hotkey.key.padEnd(16), CliForegroundColor.Cyan)} ${DIM}${hotkey.description}${RESET}`,
             );
         });
     }

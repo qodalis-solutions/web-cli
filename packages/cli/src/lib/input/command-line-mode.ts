@@ -1,5 +1,5 @@
 import { IInputMode } from './input-mode';
-import { CliLineBuffer } from './cli-line-buffer';
+import { applyEditingKey, CliKillRing, CliLineBuffer, isEscapeSequence } from './cli-line-buffer';
 import {
     CliTerminalLineRenderer,
     PromptOptions,
@@ -38,6 +38,8 @@ export interface CommandLineModeHost {
 
 export class CommandLineMode implements IInputMode {
     private historyIndex = 0;
+    /** History generation `historyIndex` points into (another user's history may be loaded since) */
+    private historyGeneration = 0;
     private isExecutingCommand = false;
     private selectionStart: { x: number; y: number } | null = null;
     private selectionEnd: { x: number; y: number } | null = null;
@@ -53,6 +55,7 @@ export class CommandLineMode implements IInputMode {
      * into the command's output and appended to the line just submitted.
      */
     private typeAhead: string[] = [];
+    private readonly killRing: CliKillRing = { text: '' };
 
     constructor(private readonly host: CommandLineModeHost) {}
 
@@ -120,6 +123,10 @@ export class CommandLineMode implements IInputMode {
             }
         } else if (data === '\u007F') {
             this.handleBackspace();
+        } else if (this.applyEditingKey(data)) {
+            // handled
+        } else if (isEscapeSequence(data)) {
+            // Other keys (F1-F12, PageUp, ...) are not text
         } else {
             this.handleInputText(data);
         }
@@ -244,6 +251,18 @@ export class CommandLineMode implements IInputMode {
         }
     }
 
+    private applyEditingKey(data: string): boolean {
+        const buffer = this.host.lineBuffer;
+        const before = buffer.text;
+        const previousContentLength = this.host.getPromptLength() + before.length;
+        if (!applyEditingKey(buffer, data, this.killRing)) return false;
+        this.clearGhostText();
+        // Moving the cursor keeps the history position; editing starts over
+        if (buffer.text !== before) this.clearHistorySearch();
+        this.refreshLine(previousContentLength);
+        return true;
+    }
+
     private handleBackspace(): void {
         const buffer = this.host.lineBuffer;
         this.clearGhostText();
@@ -324,7 +343,18 @@ export class CommandLineMode implements IInputMode {
         }
     }
 
+    /** Start over at the end when another history was loaded (`su`, `exit`, login) */
+    private syncHistory(): void {
+        const generation = this.host.commandHistory.generation;
+        if (generation === this.historyGeneration) return;
+        this.historyGeneration = generation;
+        this.historySearchPrefix = null;
+        this.bufferSetByHistory = false;
+        this.historyIndex = this.host.commandHistory.getLastIndex();
+    }
+
     private showPreviousCommand(): void {
+        this.syncHistory();
         this.clearGhostText();
         const buffer = this.host.lineBuffer;
 
@@ -353,6 +383,7 @@ export class CommandLineMode implements IInputMode {
     }
 
     private showNextCommand(): void {
+        this.syncHistory();
         this.clearGhostText();
         const buffer = this.host.lineBuffer;
 

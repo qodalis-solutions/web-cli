@@ -1,4 +1,4 @@
-import { CliLineBuffer } from './cli-line-buffer';
+import { applyEditingKey, CliKillRing, CliLineBuffer, isEscapeSequence } from './cli-line-buffer';
 
 describe('CliLineBuffer', () => {
     let buffer: CliLineBuffer;
@@ -103,5 +103,89 @@ describe('CliLineBuffer', () => {
         buffer.setText('world');
         expect(buffer.text).toBe('world');
         expect(buffer.cursorPosition).toBe(5);
+    });
+});
+
+describe('applyEditingKey (readline keys)', () => {
+    let buffer: CliLineBuffer;
+    let ring: CliKillRing;
+    const at = (text: string, cursor: number) => {
+        buffer.setText(text);
+        buffer.cursorPosition = cursor;
+    };
+
+    beforeEach(() => {
+        buffer = new CliLineBuffer();
+        ring = { text: '' };
+    });
+
+    it('Ctrl+A / Home and Ctrl+E / End move to the start and end', () => {
+        at('echo hello', 4);
+        for (const key of ['\u0001', '\u001b[H', '\u001bOH', '\u001b[1~']) {
+            buffer.cursorPosition = 4;
+            expect(applyEditingKey(buffer, key, ring)).toBeTrue();
+            expect(buffer.cursorPosition).toBe(0);
+        }
+        for (const key of ['\u0005', '\u001b[F', '\u001bOF', '\u001b[4~']) {
+            buffer.cursorPosition = 4;
+            expect(applyEditingKey(buffer, key, ring)).toBeTrue();
+            expect(buffer.cursorPosition).toBe(10);
+        }
+        expect(buffer.text).toBe('echo hello');
+    });
+
+    it('Ctrl+U cuts before the cursor, Ctrl+Y pastes it back', () => {
+        at('echo hello', 5);
+        applyEditingKey(buffer, '\u0015', ring);
+        expect(buffer.text).toBe('hello');
+        expect(buffer.cursorPosition).toBe(0);
+        buffer.moveEnd();
+        applyEditingKey(buffer, '\u0019', ring);
+        expect(buffer.text).toBe('helloecho ');
+    });
+
+    it('Ctrl+K cuts from the cursor to the end', () => {
+        at('echo hello', 4);
+        applyEditingKey(buffer, '\u000b', ring);
+        expect(buffer.text).toBe('echo');
+        expect(ring.text).toBe(' hello');
+    });
+
+    it('Ctrl+W and Alt+Backspace cut the previous word (and the spaces after it)', () => {
+        at('git commit -m  ', 15);
+        applyEditingKey(buffer, '\u0017', ring);
+        expect(buffer.text).toBe('git commit ');
+        expect(ring.text).toBe('-m  ');
+        applyEditingKey(buffer, '\u001b\u007f', ring);
+        expect(buffer.text).toBe('git ');
+    });
+
+    it('Delete and Ctrl+D remove the character under the cursor', () => {
+        at('abc', 1);
+        applyEditingKey(buffer, '\u001b[3~', ring);
+        expect(buffer.text).toBe('ac');
+        applyEditingKey(buffer, '\u0004', ring);
+        expect(buffer.text).toBe('a');
+    });
+
+    it('an empty cut keeps the previous kill', () => {
+        at('word', 4);
+        applyEditingKey(buffer, '\u0015', ring);
+        applyEditingKey(buffer, '\u0015', ring);
+        expect(ring.text).toBe('word');
+    });
+
+    it('leaves other input alone', () => {
+        at('x', 1);
+        expect(applyEditingKey(buffer, 'a', ring)).toBeFalse();
+        expect(applyEditingKey(buffer, '\u001b[A', ring)).toBeFalse();
+        expect(buffer.text).toBe('x');
+    });
+
+    it('recognises key sequences that are not text', () => {
+        expect(isEscapeSequence('\u001b[5~')).toBeTrue();
+        expect(isEscapeSequence('\u001bOP')).toBeTrue();
+        expect(isEscapeSequence('\u001b[1;5C')).toBeTrue();
+        expect(isEscapeSequence('hello')).toBeFalse();
     });
 });

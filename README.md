@@ -136,7 +136,7 @@ const options = {
 | `help` | `man` | Show all commands or help for a specific command |
 | `version` | `ver` | Display CLI version and documentation link |
 | `hotkeys` | `shortcuts`, `keys` | Show keyboard shortcuts |
-| `history` | `hist` | Browse and clear command history |
+| `history` | `hist` | Browse and clear your command history (per user with the users plugin) |
 | `theme` | `themes` | Apply, customize, and save terminal themes (interactive selection with live preview) |
 | `feedback` | `support` | Report bugs or request features on GitHub |
 | `pkg` | `packages` | Install, update, remove, and browse packages |
@@ -796,8 +796,8 @@ await engine.start();
 - **Multi-framework** — Angular, React, Vue, or vanilla JS
 - **38 official plugins** — 24 utility, 6 games, 10 language packs
 - **Command chaining** with `&&`, `||`, `|`, and `>>` operators
-- **Command history** with arrow key navigation
-- **Tab-like completions** and keyboard shortcuts (`Ctrl+C`, `Ctrl+L`, `Escape`)
+- **Command history** with arrow key navigation, per user when the users plugin is used (like `~/.bash_history`)
+- **Tab-like completions** and readline keyboard shortcuts (`Ctrl+C`, `Ctrl+L`, `Escape`, `Ctrl+A/E`, `Ctrl+U/K/W/Y`, Home/End; `hotkeys` lists them)
 - **29 built-in themes** with custom color support
 - **Tabs & split panes** — multiple terminals in tabs with horizontal splitting
 - **User sessions** with multi-user support

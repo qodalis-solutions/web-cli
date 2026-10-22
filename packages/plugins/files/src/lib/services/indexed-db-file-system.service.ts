@@ -673,8 +673,13 @@ export class IndexedDbFileSystemService implements IFileSystemService {
             const store = tx.objectStore(STORE_NAME);
 
             store.put(this.root, ROOT_KEY);
-            store.put(this.cwd, CWD_KEY);
-            store.put(this.homePath, HOME_KEY);
+            // The saved directory is the signed-out one (and the only one without
+            // a users module): a signed-in user always starts in their home, and
+            // must not leave their directory behind for whoever comes next
+            if (!this.currentUid) {
+                store.put(this.cwd, CWD_KEY);
+                store.put(this.homePath, HOME_KEY);
+            }
 
             await new Promise<void>((resolve, reject) => {
                 tx.oncomplete = () => resolve();

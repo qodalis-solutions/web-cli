@@ -24,6 +24,7 @@ import {
 import { from, Observable } from 'rxjs';
 import {
     CliApiToken,
+    CliBackendLogin,
     CliCreateApiToken,
     CliCreatedApiToken,
     CliUsersError,
@@ -133,18 +134,32 @@ export class CliUsersAuthService extends CliUsersServiceBase implements ICliAuth
                 this.options.hostAuth.loginHint ?? 'sign-in is managed by the host application',
             );
         }
+        const result = await this.authenticate(username, password);
+        // Replacing every session (like `exec login`): end the old ones on the backend
+        const previous = this.session.getToken();
+        const session = await this.session.start(result);
+        if (previous && previous !== result.token) {
+            await this.backend.logout(previous).catch(() => undefined);
+        }
+        this.emit('login', session.user);
+        return session;
+    }
+
+    /** The session commands act as (live, unlike a command's `context.userSession`) */
+    get current(): ICliUserSession | undefined {
+        return this.session.current;
+    }
+
+    /** Number of `su` sessions open on top of the login session */
+    get depth(): number {
+        return this.session.depth;
+    }
+
+    private async authenticate(username: string, password: string | undefined): Promise<CliBackendLogin> {
         try {
-            const result = await this.backend.login(username, password, {
+            return await this.backend.login(username, password, {
                 trusted: password === undefined && this.passwordless,
             });
-            // Replacing an existing session: end the old one on the backend
-            const previous = this.session.getToken();
-            const session = await this.session.start(result);
-            if (previous && previous !== result.token) {
-                await this.backend.logout(previous).catch(() => undefined);
-            }
-            this.emit('login', session.user);
-            return session;
         } catch (e) {
             this.emit('login_failed', unknownUser(username), (e as Error)?.message);
             throw e;
@@ -164,6 +179,13 @@ export class CliUsersAuthService extends CliUsersServiceBase implements ICliAuth
         }
         const current = this.session.current;
         const token = this.session.getToken();
+        if (this.session.depth) {
+            // Leaving an `su` session: resume the one it suspended
+            const resumed = await this.session.pop();
+            if (token) await this.backend.logout(token).catch(() => undefined);
+            if (current?.user) this.emit('logout', current.user, resumed ? `returned to ${resumed.user.name}` : undefined);
+            return;
+        }
         if (token) await this.backend.logout(token).catch(() => undefined);
         await this.session.clearSession();
         if (current?.user) this.emit('logout', current.user);
@@ -172,7 +194,10 @@ export class CliUsersAuthService extends CliUsersServiceBase implements ICliAuth
     async switchUser(username: string, password?: string): Promise<ICliUserSession> {
         if (this.options.hostAuth) throw new CliUsersError(501, 'switching users is managed by the host application');
         const from = this.session.current?.user;
-        const session = await this.login(username, password);
+        const result = await this.authenticate(username, password);
+        // Like Unix `su`: the current session is suspended, `exit` returns to it
+        const session = await this.session.push(result);
+        this.emit('login', session.user);
         this.emit('user_switched', session.user, from ? `from ${from.name}` : undefined);
         return session;
     }
