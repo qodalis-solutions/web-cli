@@ -261,6 +261,9 @@ export class CliTestHarness {
     ): ICliExecutionHost {
         const process = new CliExecutionProcess(null as any);
         const reader = createQueuedReader(this.readerResponses);
+        const provider = this.userSessionProvider;
+        const fallback = this.userSession;
+        const assigned: { set: boolean; value?: ICliUserSession } = { set: false };
 
         const context: ICliExecutionHost = {
             writer,
@@ -277,7 +280,14 @@ export class CliTestHarness {
             options: undefined,
             logger: createNoopLogger(),
             process,
-            userSession: this.userSessionProvider ? this.userSessionProvider() : this.userSession,
+            // Live, like the engine's root context (commands run by a command see changes)
+            get userSession() {
+                return assigned.set ? assigned.value : provider ? provider() : fallback;
+            },
+            set userSession(value: ICliUserSession | undefined) {
+                assigned.set = true;
+                assigned.value = value;
+            },
             state: this.stateStoreManager.getStateStore('shared'),
             backgroundServices: createNoopBackgroundServices(),
             http: new CliHttpClient(),
