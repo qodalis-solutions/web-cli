@@ -37,6 +37,10 @@ jobs:
           source "$HOME/.cargo/env"
           curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
+      - name: Release notes in CHANGELOG.md
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        run: node tools/release-notes.js --check
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
