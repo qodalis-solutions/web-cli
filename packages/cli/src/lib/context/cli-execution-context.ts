@@ -79,6 +79,8 @@ export class CliExecutionContext
     public set userSession(session: ICliUserSession | undefined) {
         const previous = this._userSession?.user?.name;
         this._userSession = session;
+        // Each user has their own history (the shared one while signed out)
+        void this.commandHistory?.useUser(session?.user?.id);
         if (session?.user?.name !== previous) {
             this.events?.emit('session:changed', { user: session?.user?.name });
         }

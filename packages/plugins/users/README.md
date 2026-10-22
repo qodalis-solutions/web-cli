@@ -122,8 +122,9 @@ their files to `root`, so a later account with the same name never inherits them
 | `groups [user] [--all]` | login | Membership; `--all` lists groups with permissions |
 | `perms [user] [--list]` | login | Effective permissions / declared permissions |
 | `login [user]` | — | Sign in (name or email) |
-| `logout` | login | Sign out (the CLI stays signed out) |
-| `su <user>` | — | Switch user (same lockout and audit as login) |
+| `logout`, `exit` | — | Sign out; after `su`, return to the previous user |
+| `su <user>`, `su - <user>` | — | Switch user on top of the current session, like a nested shell: `exit` returns (same lockout and audit as login). `login` replaces every session |
+| `su -c "<command>" <user>` | — | Run one command as `<user>`, then switch back |
 | `passwd [user]` | login | Own password (asks for the current one) or reset (`users:update`) |
 | `adduser [name]` | `users:create` | Create a user step by step: name, email, full name, groups, home, enabled, password. Invalid answers are asked again (3 tries) |
 | `adduser <name> --email=..` | `users:create` | Non-interactive (only asks for the password): `--full-name`, `--groups`, `--home`, `--disabled`, `--no-password` |
@@ -141,6 +142,23 @@ their files to `root`, so a later account with the same name never inherits them
 | `token revoke <id>` | login (server mode) | Revoke a token (own, or any with `tokens:revoke`) |
 | `last [user]` | `audit:read` | Sign-in history |
 | `audit [--user --event -n]`, `audit clear` | `audit:read` / `audit:clear` | Security audit log |
+
+### Switching users (`su`)
+
+`su` works like nested Unix shells, in local mode and against every server (no server support needed):
+
+```text
+root1:~$ su alice              # asks for alice's password; root1's session stays open
+alice:~$ su -c "perms" bob     # one command as bob, then back to alice (exits with its status)
+alice:~$ exit                  # ends alice's session: back to root1
+root1:~$ exit                  # no su session left: signs out
+```
+
+- Any number of levels. The stack survives a page reload, and the sessions under the current one are kept alive while you work.
+- `exit` skips a session that ended meanwhile (expired, kicked); if none is left, you are signed out. When the current session itself expires or is kicked, every session ends.
+- `login` replaces every session, like `exec login`; so does the first sign-in at boot (`requirePasswordOnBoot`).
+- Each user has their own command history (↑/↓, `history`), like `~/.bash_history`, and their own home directory: `su` and `exit` switch both.
+- `su` always asks for the target user's password (unless the module is passwordless), also for administrators. With host-managed sign-in (`hostAuth`) `su` is not available.
 
 ## API tokens
 

@@ -100,9 +100,40 @@ describe('CommandLineMode history navigation', () => {
         await history.initialize();
     });
 
+    it('Ctrl+U clears a recalled command so a new one can be typed', async () => {
+        await mode.handleInput(UP);
+        expect(lineBuffer.text).toBe('fourth');
+        await mode.handleInput('\u0015');
+        expect(lineBuffer.text).toBe('');
+        await mode.handleInput('history');
+        expect(lineBuffer.text).toBe('history');
+    });
+
+    it('Home and End move without inserting the key sequence', async () => {
+        await mode.handleInput('echo hi');
+        await mode.handleInput('\u001b[H');
+        expect(lineBuffer.cursorPosition).toBe(0);
+        await mode.handleInput('\u001b[F');
+        expect(lineBuffer.cursorPosition).toBe(7);
+        await mode.handleInput('\u001b[5~'); // PageUp is not text
+        expect(lineBuffer.text).toBe('echo hi');
+    });
+
     it('should navigate to the last command on first Up press', async () => {
         await mode.handleInput(UP);
         expect(lineBuffer.text).toBe('fourth');
+    });
+
+    it("Up recalls the new user's history after a user switch", async () => {
+        await mode.handleInput(UP);
+        expect(lineBuffer.text).toBe('fourth');
+        await store.set('cli-command-history:user:u-bob', ['bob-1', 'bob-2']);
+        await history.useUser('u-bob');
+        lineBuffer.clear();
+        await mode.handleInput(UP);
+        expect(lineBuffer.text).toBe('bob-2');
+        await mode.handleInput(UP);
+        expect(lineBuffer.text).toBe('bob-1');
     });
 
     it('should walk through full history with repeated Up presses', async () => {

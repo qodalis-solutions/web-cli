@@ -47,6 +47,27 @@
   env</code></pre>
 </div>
 
+<h2>{{ "docs.built-in-commands.keys-title" | translate }}</h2>
+<p>{{ "docs.built-in-commands.keys-desc" | translate }}</p>
+<table>
+  <thead>
+    <tr>
+      <th>{{ "docs.built-in-commands.th-keys" | translate }}</th>
+      <th>{{ "docs.built-in-commands.th-action" | translate }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (shortcut of keyboardShortcuts; track shortcut.keys) {
+      <tr>
+        <td>
+          <code>{{ shortcut.keys }}</code>
+        </td>
+        <td>{{ "docs.built-in-commands." + shortcut.action | translate }}</td>
+      </tr>
+    }
+  </tbody>
+</table>
+
 <h2>{{ "docs.built-in-commands.try-it" | translate }}</h2>
 <p>{{ "docs.built-in-commands.try-it-desc" | translate }}</p>
 <div class="try-it-terminal">

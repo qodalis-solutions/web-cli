@@ -90,13 +90,18 @@ export interface ICliAuthService {
      */
     login(username: string, password?: string): Promise<ICliUserSession>;
 
-    /** Ends the current session (the CLI is left signed out) */
+    /**
+     * Ends the current session. After `switchUser` the session it suspended is
+     * resumed (Unix `exit` after `su`); otherwise the CLI is left signed out.
+     */
     logout(): Promise<void>;
 
     /**
      * Switch to another user (`su`). Requires the target's password unless
      * the caller may skip it (implementation-defined, e.g. `users:update`).
      * Goes through the same lockout, events and audit as `login`.
+     * Implementations may suspend the current session instead of ending it,
+     * so that `logout` returns to it (like nested Unix shells).
      */
     switchUser?(username: string, password?: string): Promise<ICliUserSession>;
 
