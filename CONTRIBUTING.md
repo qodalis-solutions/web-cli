@@ -15,7 +15,8 @@ architecture guide is in [DEVELOPER.md](DEVELOPER.md).
 
 - Branch from `develop` as `feature/<short-name>` (or `fix/<short-name>`).
 - Open the PR into **`develop`**. `main` only moves by fast-forwarding to `develop` (see Releases) and publishes to npm.
-- PRs are merged with *squash* or *rebase*, never a merge commit.
+- PRs are merged with *rebase* (the only method enabled), so every commit is kept;
+  write commits that make sense on their own. No squash, no merge commits.
 - Keep a PR to one topic. Add a line to the next version's section of
   [CHANGELOG.md](CHANGELOG.md) (`## v<version>`, at the top) for anything a user
   of the packages would notice.
