@@ -8,6 +8,8 @@ on:
   push:
     branches:
       - develop
+  # Run CI on a branch by hand, e.g. when GitHub dropped a push event
+  workflow_dispatch:
 
 jobs:
   build:
