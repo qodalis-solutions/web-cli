@@ -41,11 +41,43 @@ export const hotkeysInfo = [
         description: 'Clear the terminal screen',
     },
     {
+        key: 'Escape',
+        description: 'Cancel and start a new line',
+    },
+    {
         key: '↑ / ↓',
-        description: 'Navigate command history',
+        description: 'Navigate command history (each user has their own)',
     },
     {
         key: 'Tab',
         description: 'Autocomplete command',
+    },
+    {
+        key: 'Ctrl + A / Home',
+        description: 'Move to the start of the line',
+    },
+    {
+        key: 'Ctrl + E / End',
+        description: 'Move to the end of the line',
+    },
+    {
+        key: 'Ctrl + U',
+        description: 'Cut from the start of the line to the cursor',
+    },
+    {
+        key: 'Ctrl + K',
+        description: 'Cut from the cursor to the end of the line',
+    },
+    {
+        key: 'Ctrl + W',
+        description: 'Cut the previous word (also Alt + Backspace)',
+    },
+    {
+        key: 'Ctrl + Y',
+        description: 'Paste the last cut text',
+    },
+    {
+        key: 'Ctrl + D / Del',
+        description: 'Delete the character under the cursor',
     },
 ];

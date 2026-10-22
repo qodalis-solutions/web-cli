@@ -2,8 +2,9 @@ import { CliTestHarness } from '@qodalis/cli';
 import { ICliPermissionRegistry, ICliPermissionRegistry_TOKEN, ICliUser, ICliUsersStoreService, ICliUsersStoreService_TOKEN } from '@qodalis/cli-core';
 import { firstValueFrom } from 'rxjs';
 import { usersModule, usersPermissionDefinitions } from '../public-api';
-import { createUsersRuntime, CliUsersRuntime } from '../lib/module/users-runtime';
+import { createUsersRuntime, CliUsersRuntime, LOCAL_TOKEN_KEY } from '../lib/module/users-runtime';
 import { bindSessionToContext, bindTermination, wrapProcessors } from '../lib/module/session-lifecycle';
+import { CliUserSessionService } from '../lib/services/cli-user-session.service';
 
 async function setup(): Promise<{ h: CliTestHarness; rt: CliUsersRuntime; run: (cmd: string, ...answers: any[]) => Promise<{ out: string; err: string; code?: number }> }> {
     const h = new CliTestHarness();
@@ -224,5 +225,118 @@ describe('users commands (local mode)', () => {
         expect(r.out).toContain("User 'carol' created");
         expect(await userNamed(h, 'carol')).toBeDefined();
         expect((await run(`userdel 'carol' --force`)).out).toContain("User 'carol' deleted");
+    });
+});
+
+describe('su sessions (nested like Unix shells)', () => {
+    async function withUser(run: (cmd: string, ...answers: any[]) => Promise<any>, name: string): Promise<void> {
+        await run(`adduser ${name} --email=${name}@x.io`, 'password1', 'password1');
+    }
+
+    it('exit after su returns to the previous user', async () => {
+        const { run, rt } = await setup();
+        await withUser(run, 'a');
+        await withUser(run, 'b');
+        expect((await run('su a', 'password1')).out).toContain("Switched to a. Use 'exit' to return.");
+        await run('su b', 'password1');
+        expect(rt.session.depth).toBe(2);
+        expect((await run('whoami')).out).toContain('b (b@x.io)');
+
+        expect((await run('exit')).out).toContain('Logged out b. Back to a.');
+        expect((await run('whoami')).out).toContain('a (a@x.io)');
+        expect((await run('logout')).out).toContain('Logged out a. Back to root.');
+        expect((await run('whoami')).out).toContain('root');
+        expect(rt.session.depth).toBe(0);
+
+        expect((await run('exit')).out).toContain("Logged out root. Use 'login' to sign in again.");
+        expect((await run('whoami')).out).toBe('Not logged in');
+    });
+
+    it('keeps the suspended session open and ends the su session on exit', async () => {
+        const { run, rt } = await setup();
+        await withUser(run, 'a');
+        const rootToken = rt.session.getToken()!;
+        await run('su a', 'password1');
+        const aToken = rt.session.getToken()!;
+        await expectAsync(rt.backend.currentSession(rootToken)).toBeResolved();
+        await run('exit');
+        expect(rt.session.getToken()).toBe(rootToken);
+        await expectAsync(rt.backend.currentSession(aToken)).toBeRejected();
+    });
+
+    it('a wrong password leaves the current session as it was', async () => {
+        const { run, rt } = await setup();
+        await withUser(run, 'a');
+        expect((await run('su a', 'nope')).err).toBe('su: invalid credentials');
+        expect(rt.session.depth).toBe(0);
+        expect((await run('whoami')).out).toContain('root');
+    });
+
+    it('login replaces every session, including the suspended ones', async () => {
+        const { run, rt } = await setup();
+        await withUser(run, 'a');
+        const rootToken = rt.session.getToken()!;
+        await run('su a', 'password1');
+        await run('login a', 'password1');
+        expect(rt.session.depth).toBe(0);
+        await expectAsync(rt.backend.currentSession(rootToken)).toBeRejected();
+        await run('exit');
+        expect((await run('whoami')).out).toBe('Not logged in');
+    });
+
+    it('exit skips suspended sessions that ended meanwhile', async () => {
+        const { run, rt } = await setup();
+        await withUser(run, 'a');
+        const rootToken = rt.session.getToken()!;
+        await run('su a', 'password1');
+        await rt.backend.logout(rootToken);
+        expect((await run('exit')).out).toContain("Logged out a. Use 'login' to sign in again.");
+        expect((await run('whoami')).out).toBe('Not logged in');
+    });
+
+    it('su -c runs one command as the user and switches back', async () => {
+        const { run, rt } = await setup();
+        await withUser(run, 'a');
+        const r = await run('su -c whoami a', 'password1');
+        expect(r.out).toContain('a (a@x.io)');
+        expect(r.out).not.toContain('Switched to');
+        expect(rt.session.depth).toBe(0);
+        expect((await run('whoami')).out).toContain('root');
+    });
+
+    it('su -c exits with the status of the command', async () => {
+        const { run, rt } = await setup();
+        await withUser(run, 'a');
+        const failed = await run('su -c nosuchcommand a', 'password1');
+        expect(failed.code).not.toBe(0);
+        expect(rt.session.depth).toBe(0);
+        const ok = await run('su -c whoami a', 'password1');
+        expect(ok.code ?? 0).toBe(0);
+    });
+
+    it('exit and logout while signed out say so', async () => {
+        const { run } = await setup();
+        await run('logout');
+        expect((await run('exit')).err).toBe('exit: not logged in');
+        expect((await run('logout')).err).toBe('logout: not logged in');
+    });
+
+    it('accepts `su - <user>`', async () => {
+        const { run } = await setup();
+        await withUser(run, 'a');
+        await run('su - a', 'password1');
+        expect((await run('whoami')).out).toContain('a (a@x.io)');
+    });
+
+    it('restores the stack after a reload', async () => {
+        const { run, rt } = await setup();
+        await withUser(run, 'a');
+        await run('su a', 'password1');
+        // A second session service over the same storage, as after a page reload
+        const reloaded = new CliUserSessionService(rt.backend, rt.kv, LOCAL_TOKEN_KEY);
+        expect((await reloaded.restoreSession())?.user.name).toBe('a');
+        expect(reloaded.depth).toBe(1);
+        expect((await reloaded.pop())?.user.name).toBe('root');
+        expect(reloaded.depth).toBe(0);
     });
 });

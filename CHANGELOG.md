@@ -3,6 +3,24 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.0.0-beta.20
+
+### Users (`@qodalis/cli-users`)
+
+- **`su` works like Unix: sessions nest.** `su bob` keeps your session open and switches to bob; `exit` (new, the same command as `logout`) ends bob's session and returns to you, with any number of levels. `login` still replaces every session (like `exec login`). The stack survives a reload, sessions under the current one are kept alive while you work, and ones that ended meanwhile (expired, kicked) are skipped on `exit`. Works in local mode and against the .NET, Node and Python servers, with no server changes.
+- `su -c "<command>" <user>` runs one command as the user, switches back and exits with that command's status. `su - <user>` is accepted.
+- `exit` and `logout` while signed out say `not logged in` instead of `login required`.
+
+### CLI engine (`@qodalis/cli`)
+
+- **Command history is per user**, like `~/.bash_history`: each signed-in user has their own, and `su`/`exit` switch to it. While nobody is signed in, and always without the users module, the shared history is used as before. The first user to sign in after upgrading takes over the existing history.
+- **Line editing keys:** Home/End and Ctrl+A/E move to the start/end of the line, Ctrl+U and Ctrl+K cut to the start/end, Ctrl+W and Alt+Backspace cut the previous word, Ctrl+Y pastes the last cut, Delete and Ctrl+D delete the character under the cursor. They work at the prompt and in `readLine` prompts. Home, End, PageUp and other function keys no longer insert their escape sequences as text.
+- `CliTestHarness`: `context.userSession` is live, so commands run by a command (`su -c`) see session changes, as in the engine.
+
+### Files (`@qodalis/cli-files`)
+
+- The saved current directory and home are only the signed-out ones: a signed-in user's directory is no longer left behind for whoever uses the browser next (or for an app without the users module).
+
 ## v2.0.0-beta.19
 
 ### CLI engine (`@qodalis/cli`)

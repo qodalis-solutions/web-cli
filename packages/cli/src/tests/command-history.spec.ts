@@ -202,4 +202,66 @@ describe('CliCommandHistory', () => {
             expect(idx).toBe(-1);
         });
     });
+
+    describe('per user', () => {
+        it('keeps the shared history while nobody is signed in (no users module)', async () => {
+            await history.initialize();
+            await history.addCommand('ls');
+            await history.useUser(undefined);
+            expect(history.getHistory()).toEqual(['ls']);
+            expect(await store.get('cli-command-history')).toEqual(['ls']);
+        });
+
+        it('gives each user their own history', async () => {
+            await history.useUser('u-alice');
+            await history.addCommand('alice-1');
+            await history.useUser('u-bob');
+            expect(history.getHistory()).toEqual([]);
+            await history.addCommand('bob-1');
+            await history.useUser('u-alice');
+            expect(history.getHistory()).toEqual(['alice-1']);
+            await history.useUser('u-bob');
+            expect(history.getHistory()).toEqual(['bob-1']);
+        });
+
+        it('the signed-out history is separate from the users ones', async () => {
+            await history.useUser('u-alice');
+            await history.addCommand('alice-1');
+            await history.useUser(undefined);
+            await history.addCommand('login');
+            expect(history.getHistory()).toEqual(['login']);
+            await history.useUser('u-alice');
+            expect(history.getHistory()).toEqual(['alice-1']);
+        });
+
+        it('hands the existing shared history to the first user who signs in, once', async () => {
+            await store.set('cli-command-history', ['old-1', 'old-2']);
+            await history.initialize();
+            await history.useUser('u-owner');
+            expect(history.getHistory()).toEqual(['old-1', 'old-2']);
+            await history.useUser(undefined);
+            expect(history.getHistory()).toEqual([]);
+            await history.addCommand('login');
+            await history.useUser('u-other');
+            expect(history.getHistory()).toEqual([]);
+        });
+
+        it('a slow load for a previous user does not overwrite the current one', async () => {
+            await store.set('cli-command-history:user:u-a', ['a']);
+            await store.set('cli-command-history:user:u-b', ['b']);
+            const first = history.useUser('u-a');
+            const second = history.useUser('u-b');
+            await Promise.all([first, second]);
+            expect(history.getHistory()).toEqual(['b']);
+        });
+
+        it('changes generation when the history is replaced', async () => {
+            const before = history.generation;
+            await history.useUser('u-a');
+            expect(history.generation).not.toBe(before);
+            const same = history.generation;
+            await history.useUser('u-a');
+            expect(history.generation).toBe(same);
+        });
+    });
 });
