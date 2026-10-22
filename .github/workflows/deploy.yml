@@ -122,3 +122,33 @@ jobs:
             echo "::error::Failed to publish: ${FAILED[*]}"
             exit 1
           fi
+
+  release:
+    name: GitHub release
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create the release for this version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./packages/cli/package.json').version")
+          TAG="v$VERSION"
+          # Pushes to main that do not change the version (docs-only releases) keep the existing release
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG already exists, nothing to do."
+            exit 0
+          fi
+          PREVIOUS=$(gh release list --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName // ""')
+          node tools/release-notes.js "$VERSION" ${PREVIOUS:+--previous=$PREVIOUS} > release-notes.md
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "$TAG" \
+            --notes-file release-notes.md \
+            --latest
