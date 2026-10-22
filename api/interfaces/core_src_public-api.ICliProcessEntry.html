@@ -16,7 +16,7 @@
 </div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">ICliProcessEntry</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#command">command</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#exitcode">exitCode</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#name">name</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#pid">pid</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#starttime">startTime</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#status">status</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;running&quot;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;failed&quot;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;completed&quot;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;killed&quot;</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#type">type</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;command&quot;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;daemon&quot;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;job&quot;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;service&quot;</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e0943b398e5b70ed6316cad501f991a561c07032/packages/core/src/lib/interfaces/process-registry.ts#L60">packages/core/src/lib/interfaces/process-registry.ts:60</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/process-registry.ts#L60">packages/core/src/lib/interfaces/process-registry.ts:60</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -39,41 +39,41 @@
 <h3 class="tsd-anchor-link" id="command"><span>command</span><a href="#command" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">command</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e0943b398e5b70ed6316cad501f991a561c07032/packages/core/src/lib/interfaces/process-registry.ts#L66">packages/core/src/lib/interfaces/process-registry.ts:66</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/process-registry.ts#L66">packages/core/src/lib/interfaces/process-registry.ts:66</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="exitcode"><code class="tsd-tag">Optional</code><span>exit<wbr/>Code</span><a href="#exitcode" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">exitCode</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e0943b398e5b70ed6316cad501f991a561c07032/packages/core/src/lib/interfaces/process-registry.ts#L69">packages/core/src/lib/interfaces/process-registry.ts:69</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/process-registry.ts#L69">packages/core/src/lib/interfaces/process-registry.ts:69</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="name"><span>name</span><a href="#name" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">name</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 <div class="tsd-comment tsd-typography"><p>Display name (service name for bg services, command text for commands)</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e0943b398e5b70ed6316cad501f991a561c07032/packages/core/src/lib/interfaces/process-registry.ts#L63">packages/core/src/lib/interfaces/process-registry.ts:63</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/process-registry.ts#L63">packages/core/src/lib/interfaces/process-registry.ts:63</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="pid"><span>pid</span><a href="#pid" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">pid</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e0943b398e5b70ed6316cad501f991a561c07032/packages/core/src/lib/interfaces/process-registry.ts#L61">packages/core/src/lib/interfaces/process-registry.ts:61</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/process-registry.ts#L61">packages/core/src/lib/interfaces/process-registry.ts:61</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="starttime"><span>start<wbr/>Time</span><a href="#starttime" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">startTime</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e0943b398e5b70ed6316cad501f991a561c07032/packages/core/src/lib/interfaces/process-registry.ts#L67">packages/core/src/lib/interfaces/process-registry.ts:67</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/process-registry.ts#L67">packages/core/src/lib/interfaces/process-registry.ts:67</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="status"><span>status</span><a href="#status" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">status</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;running&quot;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;failed&quot;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;completed&quot;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;killed&quot;</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e0943b398e5b70ed6316cad501f991a561c07032/packages/core/src/lib/interfaces/process-registry.ts#L68">packages/core/src/lib/interfaces/process-registry.ts:68</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/process-registry.ts#L68">packages/core/src/lib/interfaces/process-registry.ts:68</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="type"><span>type</span><a href="#type" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;command&quot;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;daemon&quot;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;job&quot;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">&quot;service&quot;</span></div>
 <div class="tsd-comment tsd-typography"><p>Process type</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e0943b398e5b70ed6316cad501f991a561c07032/packages/core/src/lib/interfaces/process-registry.ts#L65">packages/core/src/lib/interfaces/process-registry.ts:65</a></li></ul></aside></section></section></details></div>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/process-registry.ts#L65">packages/core/src/lib/interfaces/process-registry.ts:65</a></li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
