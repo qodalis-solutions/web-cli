@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  # Re-run a release by hand (Actions > Deploy > Run workflow on main); publishing and the release skip what exists
+  workflow_dispatch:
 
 jobs:
   deploy:

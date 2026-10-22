@@ -27,12 +27,12 @@ VERSION=$(git show "$DEVELOP:packages/cli/package.json" | node -p "JSON.parse(re
 git show "$DEVELOP:CHANGELOG.md" | grep -Eq "^## \[?v${VERSION//./\\.}([] ]|$)" \
     || fail "CHANGELOG.md on develop has no '## v$VERSION' section."
 
-# develop's own CI run (push to develop) must have passed for this exact commit
+# develop's own CI run (the push, or a manual run on develop) must have passed for this exact commit
 if command -v gh > /dev/null; then
-    CONCLUSION=$(gh run list --branch develop --event push --commit "$DEVELOP" \
-        --workflow build.yml --limit 1 --json conclusion --jq '.[0].conclusion // ""')
+    CONCLUSION=$(gh run list --branch develop --commit "$DEVELOP" --workflow build.yml --limit 20 \
+        --json event,conclusion --jq '[.[] | select(.event == "push" or .event == "workflow_dispatch")][0].conclusion // ""')
     [[ "$CONCLUSION" == "success" ]] \
-        || fail "CI on develop ($DEVELOP) is '${CONCLUSION:-not run}', not 'success'. Wait for it or fix it."
+        || fail "CI on develop ($DEVELOP) is '${CONCLUSION:-not run}', not 'success'. Wait for it or fix it (no run? gh workflow run build.yml --ref develop)."
 else
     echo "release: gh not installed, skipping the CI check" >&2
 fi
