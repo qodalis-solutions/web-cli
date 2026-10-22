@@ -16,8 +16,21 @@ architecture guide is in [DEVELOPER.md](DEVELOPER.md).
 - Branch from `develop` as `feature/<short-name>` (or `fix/<short-name>`).
 - Open the PR into **`develop`**. `main` only receives `develop` and publishes to npm.
 - PRs are merged with *squash* or *rebase*, never a merge commit.
-- Keep a PR to one topic. Add a line to the **Unreleased** section of
-  [CHANGELOG.md](CHANGELOG.md) for anything a user of the packages would notice.
+- Keep a PR to one topic. Add a line to the next version's section of
+  [CHANGELOG.md](CHANGELOG.md) (`## v<version>`, at the top) for anything a user
+  of the packages would notice.
+
+## Releases
+
+1. Bump every package to the new version (all `@qodalis/*` packages share one
+   version) and make sure `CHANGELOG.md` has its `## v<version>` section.
+2. Open the release PR from `develop` into `main`. CI fails it when the
+   changelog section is missing (`node tools/release-notes.js --check`).
+3. Merging publishes the packages to npm, then creates the tag `v<version>` and
+   the GitHub release, with that changelog section as its notes. A push to
+   `main` that keeps the version (a docs fix) leaves the release as it is.
+
+`node tools/release-notes.js [version]` prints the notes a release will get.
 
 ## Checks that must pass
 
