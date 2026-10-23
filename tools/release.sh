@@ -24,7 +24,9 @@ git merge-base --is-ancestor "$MAIN" "$DEVELOP" \
     || fail "main is not an ancestor of develop, so it cannot be fast-forwarded. Align the branches first."
 
 VERSION=$(git show "$DEVELOP:packages/cli/package.json" | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version")
-git show "$DEVELOP:CHANGELOG.md" | grep -Eq "^## \[?v${VERSION//./\\.}([] ]|$)" \
+# grep reads all of its input: with -q it would stop at the first match and
+# git show would die of SIGPIPE, which pipefail reports as a failure
+git show "$DEVELOP:CHANGELOG.md" | grep -E "^## \[?v${VERSION//./\\.}([] ]|$)" > /dev/null \
     || fail "CHANGELOG.md on develop has no '## v$VERSION' section."
 
 # develop's own CI run (the push, or a manual run on develop) must have passed for this exact commit
