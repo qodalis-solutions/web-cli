@@ -1,0 +1,84 @@
+<h1>{{ "docs.playground.title" | translate }}</h1>
+<p>{{ "docs.playground.intro" | translate }}</p>
+
+<div class="toolbar">
+    <label class="example-picker">
+        <span>{{ "docs.playground.example" | translate }}</span>
+        <select #picker [value]="exampleId" (change)="selectExample(picker.value)">
+            @if (!exampleId) {
+                <option value="" disabled>{{ "docs.playground.from-link" | translate }}</option>
+            }
+            @for (example of examples; track example.id) {
+                <option [value]="example.id">{{ example.title }}</option>
+            }
+        </select>
+    </label>
+    <button type="button" class="primary" (click)="run()">▶ {{ "docs.playground.run" | translate }}</button>
+    @if (exampleId) {
+        <button type="button" (click)="resetExample()">{{ "docs.playground.reset" | translate }}</button>
+    }
+    <button type="button" (click)="share()">
+        {{
+            (shareState === "copied"
+                ? "docs.playground.link-copied"
+                : shareState === "failed"
+                  ? "docs.playground.link-in-address-bar"
+                  : "docs.playground.share"
+            ) | translate
+        }}
+    </button>
+</div>
+
+@if (fromLink) {
+    <p class="notice">{{ "docs.playground.link-notice" | translate }}</p>
+}
+
+<div class="workspace">
+    <div class="pane">
+        <div class="pane-label">{{ "docs.playground.code" | translate }}</div>
+        <div #editorHost class="editor">
+            @if (status.kind === "loading") {
+                <div class="placeholder">{{ "docs.playground.loading" | translate }}</div>
+            }
+        </div>
+        <label class="pane-label" for="playground-commands">{{ "docs.playground.commands" | translate }}</label>
+        <textarea
+            #commandsInput
+            id="playground-commands"
+            class="commands"
+            rows="3"
+            spellcheck="false"
+            [value]="commands"
+            (input)="commandsChanged(commandsInput.value)"
+        ></textarea>
+    </div>
+
+    <div class="pane">
+        <div class="pane-label">
+            {{ "docs.playground.terminal" | translate }}
+            <span class="status" [class.error]="status.kind === 'error'">
+                @switch (status.kind) {
+                    @case ("ready") {
+                        @if (status.typeErrors) {
+                            {{ "docs.playground.built-with-type-errors" | translate: { count: status.typeErrors } }}
+                        } @else {
+                            {{ "docs.playground.built" | translate: { ms: status.ms } }}
+                        }
+                    }
+                    @case ("paused") {
+                        {{ "docs.playground.press-run" | translate }}
+                    }
+                    @case ("error") {
+                        {{ status.title }}
+                    }
+                }
+            </span>
+        </div>
+        <div #terminalHost class="terminal-host"></div>
+        @if (status.kind === "error") {
+            <pre class="error-detail">{{ status.detail }}</pre>
+        }
+    </div>
+</div>
+
+<p class="hint">{{ "docs.playground.hint" | translate }}</p>

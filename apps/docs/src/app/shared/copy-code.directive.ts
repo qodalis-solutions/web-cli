@@ -5,6 +5,8 @@ import {
     OnDestroy,
     Renderer2,
 } from '@angular/core';
+import { Router } from '@angular/router';
+import { PLAYGROUND_PATH, playgroundUrl } from './playground-link';
 
 import * as Prism from 'prismjs';
 import 'prismjs/components/prism-typescript';
@@ -67,11 +69,13 @@ const LABEL_LANG_MAP: Record<string, string> = {
 export class CopyCodeDirective implements AfterViewInit, OnDestroy {
     private btn!: HTMLButtonElement;
     private listener?: () => void;
+    private playgroundListener?: () => void;
     private timeout?: ReturnType<typeof setTimeout>;
 
     constructor(
         private el: ElementRef<HTMLElement>,
         private renderer: Renderer2,
+        private router: Router,
     ) {}
 
     ngAfterViewInit(): void {
@@ -90,10 +94,38 @@ export class CopyCodeDirective implements AfterViewInit, OnDestroy {
 
         // Syntax highlighting
         this.highlight();
+
+        this.addPlaygroundButton();
+    }
+
+    /** TypeScript examples that define a command get a button that opens them in the playground. */
+    private addPlaygroundButton(): void {
+        const host = this.el.nativeElement;
+        const code = host.querySelector('code');
+        const text = code?.textContent ?? '';
+        const runnable =
+            code?.classList.contains('language-typescript') &&
+            /processCommand\s*\(/.test(text) &&
+            /\bcommand\s*[=:]\s*['"]/.test(text);
+        if (!runnable || this.router.url.startsWith(PLAYGROUND_PATH)) return;
+
+        const button: HTMLButtonElement = this.renderer.createElement('button');
+        this.renderer.addClass(button, 'code-copy-btn');
+        this.renderer.addClass(button, 'code-playground-btn');
+        button.textContent = 'Playground';
+        button.title = 'Open this example in the playground';
+        this.renderer.appendChild(host, button);
+        this.playgroundListener = this.renderer.listen(button, 'click', () => {
+            const command = /\bcommand\s*[=:]\s*['"]([^'"]+)['"]/.exec(text)?.[1];
+            void playgroundUrl({ code: text, commands: command }).then((url) =>
+                this.router.navigateByUrl(url),
+            );
+        });
     }
 
     ngOnDestroy(): void {
         if (this.listener) this.listener();
+        this.playgroundListener?.();
         if (this.timeout) clearTimeout(this.timeout);
     }
 

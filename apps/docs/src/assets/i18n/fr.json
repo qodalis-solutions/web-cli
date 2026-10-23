@@ -509,5 +509,25 @@
   "docs.server-detail.dotnet.docker-port": "Le serveur s'exécute sur le port 8046 par défaut.",
   "docs.server-detail.dotnet.connecting": "Connecter le Frontend",
 
-  "lang.switch": "Langue"
+  "lang.switch": "Langue",
+  "sidebar.playground": "Playground",
+  "docs.playground.title": "Playground",
+  "docs.playground.intro": "Écrivez une commande en TypeScript et essayez-la tout de suite : le terminal est reconstruit avec votre code après chaque modification. Partez d'un exemple, ou ouvrez n'importe quel exemple de cette documentation avec son bouton Playground.",
+  "docs.playground.example": "Exemple",
+  "docs.playground.from-link": "Code d'un lien",
+  "docs.playground.run": "Exécuter",
+  "docs.playground.reset": "Réinitialiser",
+  "docs.playground.share": "Copier le lien",
+  "docs.playground.link-copied": "Lien copié",
+  "docs.playground.link-in-address-bar": "Le lien est dans la barre d'adresse",
+  "docs.playground.link-notice": "Ce code provient d'un lien. Lisez-le d'abord : il s'exécute dans votre navigateur quand vous cliquez sur Exécuter.",
+  "docs.playground.code": "Code",
+  "docs.playground.loading": "Chargement de l'éditeur…",
+  "docs.playground.commands": "Commandes après chaque build (une par ligne)",
+  "docs.playground.terminal": "Terminal",
+  "docs.playground.built": "Construit en {{ms}} ms",
+  "docs.playground.built-with-type-errors": "En cours, avec {{count}} erreur(s) de type : survolez le code souligné",
+  "docs.playground.press-run": "Cliquez sur Exécuter pour démarrer",
+  "docs.playground.hint": "Exportez un processeur de commande (une classe ou un objet avec processCommand) ou un module, et importez depuis @qodalis/cli-core. Votre code est conservé dans ce navigateur ; Copier le lien le partage.",
+  "docs.playground.open": "Playground"
 }
