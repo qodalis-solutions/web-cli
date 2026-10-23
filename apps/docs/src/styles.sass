@@ -907,9 +907,11 @@ $radius-sm: 8px
   padding: 40px 48px
   max-width: 860px
 
-  // The playground puts an editor and a terminal side by side
+  // The playground puts an editor and a terminal side by side: use the whole width
   &:has(docs-playground)
-    max-width: 1400px
+    max-width: none
+    padding-left: 24px
+    padding-right: 24px
 
   // Clear the fixed sidebar toggle (top 64px, 36px tall) so it never covers the title
   @media (max-width: 768px)

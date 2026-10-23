@@ -73,11 +73,16 @@ $mono: 'JetBrains Mono', 'Fira Code', monospace
     color: #f87171
 
 .editor, .terminal-host
-  height: 480px
+  // Fill the window below the title and toolbar
+  height: max(420px, calc(100vh - 420px))
   border: 1px solid $border
   border-radius: 8px
   overflow: hidden
   background: #1e1e1e
+
+  // Stacked below 1100px: a fixed height each
+  @media (max-width: 1100px)
+    height: 480px
 
   @media (max-width: 600px)
     height: 360px
