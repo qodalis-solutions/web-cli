@@ -49,7 +49,7 @@ export class CliSwitchUserCommandProcessor extends CliUsersCommand {
             await promptRequiredPasswordChange(context, auth, session.user.id, password);
         }
         if (typeof run === 'string' && run.trim()) {
-            let status = 0;
+            let status: number;
             try {
                 await context.executor.executeCommand(run, context);
                 status = (context.executor as { exitStatus?: number }).exitStatus ?? 0;
