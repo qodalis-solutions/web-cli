@@ -32,7 +32,7 @@ one terminal and is never saved.</p>
 </div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">ICliStateStore</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-call-signature" href="#getstate-1">getState</a><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#getstatet">T</a> <span class="tsd-signature-keyword">extends</span> <a href="../types/core_src_public-api.CliState.html" class="tsd-signature-type tsd-kind-type-alias">CliState</a> <span class="tsd-signature-symbol">=</span> <a href="../types/core_src_public-api.CliState.html" class="tsd-signature-type tsd-kind-type-alias">CliState</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#getstatet">T</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#initialize-1">initialize</a><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#persist-1">persist</a><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#reload-1">reload</a><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#reset-1">reset</a><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#select-1">select</a><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#selectk">K</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">selector</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">state</span><span class="tsd-signature-symbol">:</span> <a href="../types/core_src_public-api.CliState.html" class="tsd-signature-type tsd-kind-type-alias">CliState</a><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#selectk">K</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Observable</span><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#selectk">K</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#subscribe-1">subscribe</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">callback</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">state</span><span class="tsd-signature-symbol">:</span> <a href="../types/core_src_public-api.CliState.html" class="tsd-signature-type tsd-kind-type-alias">CliState</a><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Subscription</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#update-1">update</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">change</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">state</span><span class="tsd-signature-symbol">:</span> <a href="../types/core_src_public-api.CliState.html" class="tsd-signature-type tsd-kind-type-alias">CliState</a><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/core_src_public-api.CliState.html" class="tsd-signature-type tsd-kind-type-alias">CliState</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#updatestate-1">updateState</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">newState</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/core_src_public-api.CliState.html" class="tsd-signature-type tsd-kind-type-alias">CliState</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/state-store.ts#L59">packages/core/src/lib/interfaces/state-store.ts:59</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/22d7885cf588e00d82016beab155f57d59fa2b99/packages/core/src/lib/interfaces/state-store.ts#L59">packages/core/src/lib/interfaces/state-store.ts:59</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -68,7 +68,7 @@ one terminal and is never saved.</p>
 <h4 class="tsd-returns-title">Returns <a class="tsd-signature-type tsd-kind-type-parameter" href="#getstatet">T</a></h4><p>A shallow copy of the state object</p>
 <aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/state-store.ts#L64">packages/core/src/lib/interfaces/state-store.ts:64</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/22d7885cf588e00d82016beab155f57d59fa2b99/packages/core/src/lib/interfaces/state-store.ts#L64">packages/core/src/lib/interfaces/state-store.ts:64</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="initialize"><span>initialize</span><a href="#initialize" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -80,7 +80,7 @@ is done and keep changes made since.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/state-store.ts#L114">packages/core/src/lib/interfaces/state-store.ts:114</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/22d7885cf588e00d82016beab155f57d59fa2b99/packages/core/src/lib/interfaces/state-store.ts#L114">packages/core/src/lib/interfaces/state-store.ts:114</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="persist"><span>persist</span><a href="#persist" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -91,7 +91,7 @@ is done and keep changes made since.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/state-store.ts#L108">packages/core/src/lib/interfaces/state-store.ts:108</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/22d7885cf588e00d82016beab155f57d59fa2b99/packages/core/src/lib/interfaces/state-store.ts#L108">packages/core/src/lib/interfaces/state-store.ts:108</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="reload"><code class="tsd-tag">Optional</code><span>reload</span><a href="#reload" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -102,7 +102,7 @@ is done and keep changes made since.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/state-store.ts#L117">packages/core/src/lib/interfaces/state-store.ts:117</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/22d7885cf588e00d82016beab155f57d59fa2b99/packages/core/src/lib/interfaces/state-store.ts#L117">packages/core/src/lib/interfaces/state-store.ts:117</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="reset"><span>reset</span><a href="#reset" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -113,7 +113,7 @@ is done and keep changes made since.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/state-store.ts#L103">packages/core/src/lib/interfaces/state-store.ts:103</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/22d7885cf588e00d82016beab155f57d59fa2b99/packages/core/src/lib/interfaces/state-store.ts#L103">packages/core/src/lib/interfaces/state-store.ts:103</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="select"><span>select</span><a href="#select" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -135,7 +135,7 @@ is done and keep changes made since.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Observable</span><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#selectk">K</a><span class="tsd-signature-symbol">&gt;</span></h4><p>Observable of the selected value.</p>
 <aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/state-store.ts#L91">packages/core/src/lib/interfaces/state-store.ts:91</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/22d7885cf588e00d82016beab155f57d59fa2b99/packages/core/src/lib/interfaces/state-store.ts#L91">packages/core/src/lib/interfaces/state-store.ts:91</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="subscribe"><span>subscribe</span><a href="#subscribe" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -153,7 +153,7 @@ is done and keep changes made since.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Subscription</span></h4><p>Subscription object to manage the subscription.</p>
 <aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/state-store.ts#L98">packages/core/src/lib/interfaces/state-store.ts:98</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/22d7885cf588e00d82016beab155f57d59fa2b99/packages/core/src/lib/interfaces/state-store.ts#L98">packages/core/src/lib/interfaces/state-store.ts:98</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="update"><span>update</span><a href="#update" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -174,7 +174,7 @@ once never lose each other's change.</p>
 <li><span><span class="tsd-kind-parameter">change</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">state</span><span class="tsd-signature-symbol">:</span> <a href="../types/core_src_public-api.CliState.html" class="tsd-signature-type tsd-kind-type-alias">CliState</a><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/core_src_public-api.CliState.html" class="tsd-signature-type tsd-kind-type-alias">CliState</a><span class="tsd-signature-symbol">&gt;</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/state-store.ts#L84">packages/core/src/lib/interfaces/state-store.ts:84</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/22d7885cf588e00d82016beab155f57d59fa2b99/packages/core/src/lib/interfaces/state-store.ts#L84">packages/core/src/lib/interfaces/state-store.ts:84</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="updatestate"><span>update<wbr/>State</span><a href="#updatestate" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -193,7 +193,7 @@ Triggers subscribers and persists if a storage backend is configured.</p>
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/89f22c53b67a10d9a6ba44d556d6795b43464145/packages/core/src/lib/interfaces/state-store.ts#L72">packages/core/src/lib/interfaces/state-store.ts:72</a></li></ul></aside></div></li></ul></section></section></details></div>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/22d7885cf588e00d82016beab155f57d59fa2b99/packages/core/src/lib/interfaces/state-store.ts#L72">packages/core/src/lib/interfaces/state-store.ts:72</a></li></ul></aside></div></li></ul></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
