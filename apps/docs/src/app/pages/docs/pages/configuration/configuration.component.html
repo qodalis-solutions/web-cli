@@ -166,12 +166,12 @@
   <pre><code>servers: [
     &#123; name: 'node', url: 'http://localhost:8047' &#125;,
     &#123;
-    name: 'api',
-    url: 'https://api.example.com',
-    headers: () =&gt; (&#123; Authorization: 'Bearer ' + getToken() &#125;),
-    timeout: 10000,
+        name: 'api',
+        url: 'https://api.example.com',
+        headers: () =&gt; (&#123; Authorization: 'Bearer ' + getToken() &#125;),
+        timeout: 10000,
     &#125;,
-  ]</code></pre>
+]</code></pre>
 </div>
 
 <!-- CliPanelConfig -->
@@ -251,7 +251,7 @@
     resizable: true,
     syncTheme: true,
     hideAlignment: 'end',
-  &#125;;</code></pre>
+&#125;;</code></pre>
 </div>
 
 <!-- Angular Configuration -->
@@ -296,25 +296,27 @@
     <div class="code-block">
       <span class="code-label">app.component.ts</span>
       <pre><code>import &#123; CliOptions &#125; from '&#64;qodalis/angular-cli';
-        cliOptions: CliOptions = &#123;
-        logLevel: 'DEBUG',
-        welcomeMessage: 'Welcome to my app!',
-        theme: 'default',
-        serverUrl: 'http://localhost:8046',
-      &#125;;</code></pre>
+
+cliOptions: CliOptions = &#123;
+    logLevel: 'DEBUG',
+    welcomeMessage: 'Welcome to my app!',
+    theme: 'default',
+    serverUrl: 'http://localhost:8046',
+&#125;;</code></pre>
     </div>
     <div class="code-block">
       <span class="code-label">app.component.html</span>
       <pre><code>&lt;cli [options]="cliOptions" [modules]="[]"&gt;&lt;/cli&gt;
-        &lt;!-- Or with the panel variant --&gt;
-      &lt;cli-panel [options]="cliOptions" [modules]="[]"&gt;&lt;/cli-panel&gt;</code></pre>
+
+&lt;!-- Or with the panel variant --&gt;
+&lt;cli-panel [options]="cliOptions" [modules]="[]"&gt;&lt;/cli-panel&gt;</code></pre>
     </div>
     <p>{{ "docs.configuration.angular-styles-desc" | translate }}</p>
     <div class="code-block">
       <span class="code-label">angular.json</span>
       <pre><code>"styles": [
-        "node_modules/&#64;qodalis/angular-cli/src/assets/styles.css"
-      ]</code></pre>
+    "node_modules/&#64;qodalis/angular-cli/src/assets/styles.css"
+]</code></pre>
     </div>
   </div>
 }
@@ -327,19 +329,21 @@
     <div class="code-block">
       <span class="code-label">App.tsx</span>
       <pre><code>import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/react-cli';
-        function App() &#123;
-        const options = &#123;
+
+function App() &#123;
+    const options = &#123;
         logLevel: 'DEBUG',
         welcomeMessage: 'Welcome to my app!',
         theme: 'default',
         serverUrl: 'http://localhost:8046',
-        &#125;;
-        return (
+    &#125;;
+
+    return (
         &lt;CliConfigProvider modules=&#123;[]&#125; options=&#123;options&#125;&gt;
-        &lt;Cli /&gt;
+            &lt;Cli /&gt;
         &lt;/CliConfigProvider&gt;
-        );
-      &#125;</code></pre>
+    );
+&#125;</code></pre>
     </div>
   </div>
 }
@@ -352,19 +356,21 @@
     <div class="code-block">
       <span class="code-label">App.vue</span>
       <pre><code>&lt;script setup&gt;
-        import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/vue-cli';
-        const options = &#123;
-        logLevel: 'DEBUG',
-        welcomeMessage: 'Welcome to my app!',
-        theme: 'default',
-        serverUrl: 'http://localhost:8046',
-        &#125;;
-        &lt;/script&gt;
-        &lt;template&gt;
-        &lt;CliConfigProvider :modules="[]" :options="options"&gt;
+import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/vue-cli';
+
+const options = &#123;
+    logLevel: 'DEBUG',
+    welcomeMessage: 'Welcome to my app!',
+    theme: 'default',
+    serverUrl: 'http://localhost:8046',
+&#125;;
+&lt;/script&gt;
+
+&lt;template&gt;
+    &lt;CliConfigProvider :modules="[]" :options="options"&gt;
         &lt;Cli /&gt;
-        &lt;/CliConfigProvider&gt;
-      &lt;/template&gt;</code></pre>
+    &lt;/CliConfigProvider&gt;
+&lt;/template&gt;</code></pre>
     </div>
   </div>
 }
@@ -377,19 +383,22 @@
     <div class="code-block">
       <span class="code-label">main.ts</span>
       <pre><code>import '&#64;qodalis/cli/assets/styles.css';
-        import &#123; CliEngine &#125; from '&#64;qodalis/cli';
-        import type &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
-        const options: CliOptions = &#123;
-        logLevel: 'DEBUG',
-        welcomeMessage: 'Welcome to my app!',
-        theme: 'default',
-        servers: [
+import &#123; CliEngine &#125; from '&#64;qodalis/cli';
+import type &#123; CliOptions &#125; from '&#64;qodalis/cli-core';
+
+const options: CliOptions = &#123;
+    logLevel: 'DEBUG',
+    welcomeMessage: 'Welcome to my app!',
+    theme: 'default',
+    servers: [
         &#123; name: 'dotnet', url: 'http://localhost:8046' &#125;,
-        ],
-        &#125;;
-        const container = document.getElementById('terminal')!;
-        const engine = new CliEngine(container, options);
-      engine.start().then(() =&gt; engine.focus());</code></pre>
+    ],
+&#125;;
+
+const container = document.getElementById('terminal')!;
+const engine = new CliEngine(container, options);
+
+engine.start().then(() =&gt; engine.focus());</code></pre>
     </div>
   </div>
 }

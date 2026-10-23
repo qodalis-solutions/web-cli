@@ -378,23 +378,25 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">greet-processor.ts</span>
       <pre><code>export class GreetProcessor implements ICliCommandProcessor &#123;
-        command = 'greet';
-        description = 'Say hello';
-        parameters = [
+    command = 'greet';
+    description = 'Say hello';
+
+    parameters = [
         &#123;
-        name: 'name',
-        description: 'Name to greet',
-        required: false,
+            name: 'name',
+            description: 'Name to greet',
+            required: false,
         &#125;,
-        ];
-        async processCommand(
+    ];
+
+    async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
-        ): Promise&lt;void&gt; &#123;
+    ): Promise&lt;void&gt; &#123;
         const name = command.positionals?.[0] || 'World';
         context.writer.writeln(`Hello, $&#123;name&#125;!`);
-        &#125;
-      &#125;</code></pre>
+    &#125;
+&#125;</code></pre>
     </div>
     <p [innerHTML]="'docs.core-concepts.command-processors.arguments-desc' | translate"></p>
     <h2>
@@ -410,13 +412,14 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">nested-processor.ts</span>
       <pre><code>export class GitProcessor implements ICliCommandProcessor &#123;
-        command = 'git';
-        description = 'Git commands';
-        processors = [
+    command = 'git';
+    description = 'Git commands';
+
+    processors = [
         new GitCommitProcessor(),
         new GitPushProcessor(),
-        ];
-      &#125;</code></pre>
+    ];
+&#125;</code></pre>
     </div>
     <h2>
       {{ "docs.core-concepts.command-processors.extending-title" | translate }}
@@ -427,16 +430,17 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">extend-processor.ts</span>
       <pre><code>export class GitStashProcessor implements ICliCommandProcessor &#123;
-        command = 'stash';
-        description = 'Stash changes';
-        extendsProcessor = 'git'; // Adds 'stash' as a sub-command of 'git'
-        async processCommand(
+    command = 'stash';
+    description = 'Stash changes';
+    extendsProcessor = 'git'; // Adds 'stash' as a sub-command of 'git'
+
+    async processCommand(
         command: CliProcessCommand,
         context: ICliExecutionContext,
-        ): Promise&lt;void&gt; &#123;
+    ): Promise&lt;void&gt; &#123;
         context.writer.writeln('Changes stashed.');
-        &#125;
-      &#125;</code></pre>
+    &#125;
+&#125;</code></pre>
     </div>
   </div>
 }
@@ -713,12 +717,14 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">writer-examples.ts</span>
       <pre><code>// Write a line of text
-        context.writer.writeln('Hello, World!');
-        // Write styled HTML output
-        context.writer.writeHtml('&lt;span style="color: green"&gt;Success!&lt;/span&gt;');
-        // Write a warning or error
-        context.writer.writeError('Something went wrong');
-      context.writer.writeWarning('This is deprecated');</code></pre>
+context.writer.writeln('Hello, World!');
+
+// Write styled HTML output
+context.writer.writeHtml('&lt;span style="color: green"&gt;Success!&lt;/span&gt;');
+
+// Write a warning or error
+context.writer.writeError('Something went wrong');
+context.writer.writeWarning('This is deprecated');</code></pre>
     </div>
     <h2>
       {{ "docs.core-concepts.execution-context.spinner-title" | translate }}
@@ -726,15 +732,16 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">spinner-example.ts</span>
       <pre><code>// Show a spinner while loading
-        context.spinner.show('Loading data...');
-        const data = await fetchData();
-        context.spinner.hide();
-        // Show a progress bar
-        context.progressBar.show(&#123; total: 100 &#125;);
-        for (let i = 0; i &lt;= 100; i++) &#123;
-        context.progressBar.update(i);
-        &#125;
-      context.progressBar.hide();</code></pre>
+context.spinner.show('Loading data...');
+const data = await fetchData();
+context.spinner.hide();
+
+// Show a progress bar
+context.progressBar.show(&#123; total: 100 &#125;);
+for (let i = 0; i &lt;= 100; i++) &#123;
+    context.progressBar.update(i);
+&#125;
+context.progressBar.hide();</code></pre>
     </div>
     <h2>
       {{ "docs.core-concepts.execution-context.fullscreen-title" | translate }}
@@ -745,10 +752,12 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">fullscreen-example.ts</span>
       <pre><code>// Enter full-screen mode
-        context.enterFullScreenMode();
-        // Render your full-screen UI...
-        // Exit when done
-      context.exitFullScreenMode();</code></pre>
+context.enterFullScreenMode();
+
+// Render your full-screen UI...
+
+// Exit when done
+context.exitFullScreenMode();</code></pre>
     </div>
     <h2>
       {{ "docs.core-concepts.execution-context.abort-title" | translate }}
@@ -759,10 +768,10 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">abort-example.ts</span>
       <pre><code>while (!context.abortSignal.aborted) &#123;
-        // Do work...
-        await sleep(100);
-        &#125;
-      context.writer.writeln('Operation cancelled.');</code></pre>
+    // Do work...
+    await sleep(100);
+&#125;
+context.writer.writeln('Operation cancelled.');</code></pre>
     </div>
   </div>
 }
@@ -950,8 +959,8 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">Terminal</span>
       <pre><code>theme apply dracula
-        theme list
-      theme current</code></pre>
+theme list
+theme current</code></pre>
     </div>
     <h2>{{ "docs.core-concepts.theming.css-title" | translate }}</h2>
     <p>
@@ -960,19 +969,19 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">custom-theme.css</span>
       <pre><code>:root &#123;
-        --cli-background: #1e1e2e;
-        --cli-foreground: #cdd6f4;
-        --cli-cursor-color: #f5e0dc;
-        --cli-selection-background: #585b70;
-        --cli-black: #45475a;
-        --cli-red: #f38ba8;
-        --cli-green: #a6e3a1;
-        --cli-yellow: #f9e2af;
-        --cli-blue: #89b4fa;
-        --cli-magenta: #f5c2e7;
-        --cli-cyan: #94e2d5;
-        --cli-white: #bac2de;
-      &#125;</code></pre>
+    --cli-background: #1e1e2e;
+    --cli-foreground: #cdd6f4;
+    --cli-cursor-color: #f5e0dc;
+    --cli-selection-background: #585b70;
+    --cli-black: #45475a;
+    --cli-red: #f38ba8;
+    --cli-green: #a6e3a1;
+    --cli-yellow: #f9e2af;
+    --cli-blue: #89b4fa;
+    --cli-magenta: #f5c2e7;
+    --cli-cyan: #94e2d5;
+    --cli-white: #bac2de;
+&#125;</code></pre>
     </div>
     <h2>{{ "docs.core-concepts.theming.custom-title" | translate }}</h2>
     <p>
@@ -981,14 +990,14 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">my-theme.sass</span>
       <pre><code>.cli-theme-custom
-        --cli-background: #0d1117
-        --cli-foreground: #c9d1d9
-        --cli-cursor-color: #58a6ff
-        --cli-selection-background: #264f78
-        --cli-green: #3fb950
-        --cli-red: #f85149
-        --cli-yellow: #d29922
-      --cli-blue: #58a6ff</code></pre>
+    --cli-background: #0d1117
+    --cli-foreground: #c9d1d9
+    --cli-cursor-color: #58a6ff
+    --cli-selection-background: #264f78
+    --cli-green: #3fb950
+    --cli-red: #f85149
+    --cli-yellow: #d29922
+    --cli-blue: #58a6ff</code></pre>
     </div>
     <h2>{{ "docs.core-concepts.theming.try-it" | translate }}</h2>
     <p>
@@ -1169,23 +1178,23 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">Angular</span>
       <pre><code>&lt;cli-panel
-        [options]="{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}"
-        [modules]="modules"
-      &gt;&lt;/cli-panel&gt;</code></pre>
+    [options]="{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}"
+    [modules]="modules"
+&gt;&lt;/cli-panel&gt;</code></pre>
     </div>
     <div class="code-block">
       <span class="code-label">React</span>
       <pre><code>&lt;CliPanel
-        options={{ '{' }}{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}{{ '}' }}
-        modules={{ '{' }}modules{{ '}' }}
-      /&gt;</code></pre>
+    options={{ '{' }}{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}{{ '}' }}
+    modules={{ '{' }}modules{{ '}' }}
+/&gt;</code></pre>
     </div>
     <div class="code-block">
       <span class="code-label">Vue</span>
       <pre><code>&lt;CliPanel
-        :options="{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}"
-        :modules="modules"
-      /&gt;</code></pre>
+    :options="{{ '{' }} position: 'bottom', syncTheme: true {{ '}' }}"
+    :modules="modules"
+/&gt;</code></pre>
     </div>
     <h2>{{ "docs.core-concepts.tabs-panes.state-title" | translate }}</h2>
     <p>
@@ -1285,13 +1294,14 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">readLine</span>
       <pre><code>// Simple text input
-        const name = await reader.readLine('What is your name?');
-        // With placeholder, default, and validation
-        const email = await reader.readLine('Email:', &#123;
-        placeholder: 'user&#64;example.com',
-        default: 'admin&#64;example.com',
-        validate: (v) =&gt; !v.includes('&#64;') ? 'Must be a valid email' : null,
-      &#125;);</code></pre>
+const name = await reader.readLine('What is your name?');
+
+// With placeholder, default, and validation
+const email = await reader.readLine('Email:', &#123;
+    placeholder: 'user&#64;example.com',
+    default: 'admin&#64;example.com',
+    validate: (v) =&gt; !v.includes('&#64;') ? 'Must be a valid email' : null,
+&#125;);</code></pre>
     </div>
     <h3>
       {{ "docs.core-concepts.input-reader.reading-password" | translate }}
@@ -1299,78 +1309,78 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">readPassword</span>
       <pre><code>const password = await reader.readPassword('Enter password:');
-      // Input is masked with asterisks</code></pre>
+// Input is masked with asterisks</code></pre>
     </div>
     <h3>{{ "docs.core-concepts.input-reader.confirmation" | translate }}</h3>
     <div class="code-block">
       <span class="code-label">readConfirm</span>
       <pre><code>// Default is false (y/N), pass true for (Y/n)
-        const confirmed = await reader.readConfirm('Delete all files?', true);
-        if (confirmed) &#123;
-        writer.writeln('Deleting...');
-      &#125;</code></pre>
+const confirmed = await reader.readConfirm('Delete all files?', true);
+if (confirmed) &#123;
+    writer.writeln('Deleting...');
+&#125;</code></pre>
     </div>
     <h3>{{ "docs.core-concepts.input-reader.reading-number" | translate }}</h3>
     <div class="code-block">
       <span class="code-label">readNumber</span>
       <pre><code>const count = await reader.readNumber('How many items?', &#123;
-        min: 1,
-        max: 100,
-        default: 10,
-      &#125;);</code></pre>
+    min: 1,
+    max: 100,
+    default: 10,
+&#125;);</code></pre>
     </div>
     <h3>{{ "docs.core-concepts.input-reader.selection" | translate }}</h3>
     <div class="code-block">
       <span class="code-label">readSelect</span>
       <pre><code>// With descriptions, groups, disabled options, and search
-        const framework = await reader.readSelect('Pick a framework:', [
-        &#123; label: 'React', value: 'react', description: 'UI library', group: 'Frontend' &#125;,
-        &#123; label: 'Vue', value: 'vue', description: 'Progressive framework', group: 'Frontend' &#125;,
-        &#123; label: 'Express', value: 'express', description: 'Node.js framework', group: 'Backend' &#125;,
-        &#123; label: 'Legacy', value: 'legacy', description: 'Deprecated', disabled: true &#125;,
-      ], &#123; searchable: true, default: 'react' &#125;);</code></pre>
+const framework = await reader.readSelect('Pick a framework:', [
+    &#123; label: 'React', value: 'react', description: 'UI library', group: 'Frontend' &#125;,
+    &#123; label: 'Vue', value: 'vue', description: 'Progressive framework', group: 'Frontend' &#125;,
+    &#123; label: 'Express', value: 'express', description: 'Node.js framework', group: 'Backend' &#125;,
+    &#123; label: 'Legacy', value: 'legacy', description: 'Deprecated', disabled: true &#125;,
+], &#123; searchable: true, default: 'react' &#125;);</code></pre>
     </div>
     <h3>{{ "docs.core-concepts.input-reader.inline-select" | translate }}</h3>
     <div class="code-block">
       <span class="code-label">readSelectInline</span>
       <pre><code>// Compact horizontal picker with overflow handling
-        const size = await reader.readSelectInline('Size:', [
-        &#123; label: 'Small', value: 'sm' &#125;,
-        &#123; label: 'Medium', value: 'md' &#125;,
-        &#123; label: 'Large', value: 'lg' &#125;,
-      ]);</code></pre>
+const size = await reader.readSelectInline('Size:', [
+    &#123; label: 'Small', value: 'sm' &#125;,
+    &#123; label: 'Medium', value: 'md' &#125;,
+    &#123; label: 'Large', value: 'lg' &#125;,
+]);</code></pre>
     </div>
     <h3>{{ "docs.core-concepts.input-reader.multi-select" | translate }}</h3>
     <div class="code-block">
       <span class="code-label">readMultiSelect</span>
       <pre><code>// With pre-checked items, search, and select-all (press 'a')
-        const toppings = await reader.readMultiSelect('Choose toppings:', [
-        &#123; label: 'Cheese', value: 'cheese', checked: true &#125;,
-        &#123; label: 'Pepperoni', value: 'pepperoni' &#125;,
-        &#123; label: 'Pineapple', value: 'pineapple', description: 'Controversial!' &#125;,
-      ], &#123; searchable: true &#125;);</code></pre>
+const toppings = await reader.readMultiSelect('Choose toppings:', [
+    &#123; label: 'Cheese', value: 'cheese', checked: true &#125;,
+    &#123; label: 'Pepperoni', value: 'pepperoni' &#125;,
+    &#123; label: 'Pineapple', value: 'pineapple', description: 'Controversial!' &#125;,
+], &#123; searchable: true &#125;);</code></pre>
     </div>
     <h3>{{ "docs.core-concepts.input-reader.reading-date" | translate }}</h3>
     <div class="code-block">
       <span class="code-label">readDate</span>
       <pre><code>const date = await reader.readDate('Start date:', &#123;
-        format: 'YYYY-MM-DD',
-        min: '2024-01-01',
-        max: '2030-12-31',
-      &#125;);</code></pre>
+    format: 'YYYY-MM-DD',
+    min: '2024-01-01',
+    max: '2030-12-31',
+&#125;);</code></pre>
     </div>
     <h3>{{ "docs.core-concepts.input-reader.reading-file" | translate }}</h3>
     <div class="code-block">
       <span class="code-label">readFile</span>
       <pre><code>const files = await reader.readFile('Select files:', &#123;
-        accept: '.json,.txt,.yaml',
-        multiple: true,
-        &#125;);
-        if (files) &#123;
-        for (const file of files) &#123;
+    accept: '.json,.txt,.yaml',
+    multiple: true,
+&#125;);
+if (files) &#123;
+    for (const file of files) &#123;
         writer.writeln(`$&#123;file.name&#125; ($&#123;file.size&#125; bytes)`);
-        &#125;
-      &#125;</code></pre>
+    &#125;
+&#125;</code></pre>
     </div>
     <h2>
       {{ "docs.core-concepts.input-reader.cancellation-title" | translate }}
@@ -1379,10 +1389,10 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <div class="code-block">
       <span class="code-label">handling-cancel.ts</span>
       <pre><code>const result = await reader.readLine('Enter value:');
-        if (result === null) &#123;
-        writer.writeWarning('Input cancelled.');
-        return;
-      &#125;</code></pre>
+if (result === null) &#123;
+    writer.writeWarning('Input cancelled.');
+    return;
+&#125;</code></pre>
     </div>
     <h2>{{ "docs.core-concepts.input-reader.try-it" | translate }}</h2>
     <p>
@@ -1494,7 +1504,7 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     </table>
     <div class="code-block">
       <pre><code>const colored = writer.wrapInColor('Hello', CliForegroundColor.Cyan);
-      writer.writeln(colored);</code></pre>
+writer.writeln(colored);</code></pre>
     </div>
     <h2>Data Display</h2>
     <table>
@@ -1533,19 +1543,20 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     </table>
     <div class="code-block">
       <pre><code>// Table with headers and rows
-        writer.writeTable(
-        ['Name', 'Role', 'Status'],
-        [
+writer.writeTable(
+    ['Name', 'Role', 'Status'],
+    [
         ['Alice', 'Admin', 'Active'],
         ['Bob', 'User', 'Inactive'],
-        ],
-        &#123; fullWidth: true &#125;,
-        );
-        // Auto-table from object array
-        writer.writeObjectsAsTable([
-        &#123; id: 1, name: 'Alice', role: 'admin' &#125;,
-        &#123; id: 2, name: 'Bob', role: 'user' &#125;,
-      ]);</code></pre>
+    ],
+    &#123; fullWidth: true &#125;,
+);
+
+// Auto-table from object array
+writer.writeObjectsAsTable([
+    &#123; id: 1, name: 'Alice', role: 'admin' &#125;,
+    &#123; id: 2, name: 'Bob', role: 'user' &#125;,
+]);</code></pre>
     </div>
     <h2>Layout & Formatting</h2>
     <table>
@@ -1627,22 +1638,24 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     </table>
     <div class="code-block">
       <pre><code>// Key-value pairs
-        writer.writeKeyValue(&#123;
-        'Name': 'Qodalis CLI',
-        'Version': '2.0.0',
-        'License': 'MIT',
-        &#125;);
-        // Bordered box
-        writer.writeBox(['Multi-line content', 'inside a box'], &#123;
-        title: 'Notice',
-        borderColor: CliForegroundColor.Yellow,
-        padding: 1,
-        &#125;);
-        // Columns
-        writer.writeColumns(
-        ['help', 'clear', 'theme', 'version', 'history', 'alias'],
-        &#123; columns: 3, padding: 4 &#125;,
-      );</code></pre>
+writer.writeKeyValue(&#123;
+    'Name': 'Qodalis CLI',
+    'Version': '2.0.0',
+    'License': 'MIT',
+&#125;);
+
+// Bordered box
+writer.writeBox(['Multi-line content', 'inside a box'], &#123;
+    title: 'Notice',
+    borderColor: CliForegroundColor.Yellow,
+    padding: 1,
+&#125;);
+
+// Columns
+writer.writeColumns(
+    ['help', 'clear', 'theme', 'version', 'history', 'alias'],
+    &#123; columns: 3, padding: 4 &#125;,
+);</code></pre>
     </div>
     <h2>File Output</h2>
     <table>
@@ -1787,30 +1800,34 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <h2>Examples</h2>
     <div class="code-block">
       <pre><code>// Typed GET request
-        const users = await context.http.get&lt;User[]&gt;('https://api.example.com/users');
-        // POST with auto-serialized JSON body
-        const result = await context.http.post&lt;Todo&gt;(
-        'https://api.example.com/todos',
-        &#123; title: 'New task', completed: false &#125;,
-        );
-        // Request with timeout
-        const data = await context.http.get('https://api.example.com/slow', &#123;
-        timeout: 5000, // abort after 5 seconds
-        &#125;);
-        // Raw fetch for streaming
-        const response = await context.http.fetch('https://example.com/large-file');
-        const reader = response.body?.getReader();
-        // Error handling with abort detection
-        try &#123;
-        const data = await context.http.get(url);
-        context.writer.writeJson(data);
-        &#125; catch (error: any) &#123;
-        if (error.name === 'AbortError') &#123;
+const users = await context.http.get&lt;User[]&gt;('https://api.example.com/users');
+
+// POST with auto-serialized JSON body
+const result = await context.http.post&lt;Todo&gt;(
+    'https://api.example.com/todos',
+    &#123; title: 'New task', completed: false &#125;,
+);
+
+// Request with timeout
+const data = await context.http.get('https://api.example.com/slow', &#123;
+    timeout: 5000, // abort after 5 seconds
+&#125;);
+
+// Raw fetch for streaming
+const response = await context.http.fetch('https://example.com/large-file');
+const reader = response.body?.getReader();
+
+// Error handling with abort detection
+try &#123;
+    const data = await context.http.get(url);
+    context.writer.writeJson(data);
+&#125; catch (error: any) &#123;
+    if (error.name === 'AbortError') &#123;
         context.writer.writeWarning('Request cancelled.');
-        &#125; else &#123;
+    &#125; else &#123;
         context.writer.writeError(error.message);
-        &#125;
-      &#125;</code></pre>
+    &#125;
+&#125;</code></pre>
     </div>
     <h2>Auto-Abort Behavior</h2>
     <p>
@@ -2020,45 +2037,46 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
     <h2>Example: Daemon Service</h2>
     <div class="code-block">
       <pre><code>context.backgroundServices.register(&#123;
-        name: 'heartbeat',
-        description: 'Logs a heartbeat every 10 seconds',
-        type: 'daemon',
-        async onStart(ctx) &#123;
+    name: 'heartbeat',
+    description: 'Logs a heartbeat every 10 seconds',
+    type: 'daemon',
+    async onStart(ctx) &#123;
         ctx.log('Heartbeat started');
         ctx.createInterval(() =&gt; &#123;
-        ctx.log('Heartbeat: ' + new Date().toLocaleTimeString());
-        ctx.emit(&#123; source: 'heartbeat', type: 'tick' &#125;);
+            ctx.log('Heartbeat: ' + new Date().toLocaleTimeString());
+            ctx.emit(&#123; source: 'heartbeat', type: 'tick' &#125;);
         &#125;, 10000);
-        &#125;,
-        async onStop(ctx) &#123;
+    &#125;,
+    async onStop(ctx) &#123;
         ctx.log('Heartbeat stopped');
-        &#125;,
-        &#125;);
-      await context.backgroundServices.start('heartbeat');</code></pre>
+    &#125;,
+&#125;);
+
+await context.backgroundServices.start('heartbeat');</code></pre>
     </div>
     <h2>Example: One-Shot Job</h2>
     <div class="code-block">
       <pre><code>await context.backgroundServices.startJob('init-data', async (ctx) =&gt; &#123;
-        ctx.log('Loading data...');
-        await fetchData();
-        ctx.log('Done!');
-      &#125;);</code></pre>
+    ctx.log('Loading data...');
+    await fetchData();
+    ctx.log('Done!');
+&#125;);</code></pre>
     </div>
     <h2>Example: Web Worker Service</h2>
     <div class="code-block">
       <pre><code>context.backgroundServices.register(&#123;
-        name: 'ticker',
-        type: 'daemon',
-        workerCompatible: true,
-        workerFactory: () =&gt;
+    name: 'ticker',
+    type: 'daemon',
+    workerCompatible: true,
+    workerFactory: () =&gt;
         new Worker(new URL('./workers/ticker.worker.ts', import.meta.url), &#123;
-        type: 'module',
+            type: 'module',
         &#125;),
-        // Main-thread fallback
-        async onStart(ctx) &#123;
+    // Main-thread fallback
+    async onStart(ctx) &#123;
         ctx.createInterval(() =&gt; ctx.log('Tick'), 5000);
-        &#125;,
-      &#125;);</code></pre>
+    &#125;,
+&#125;);</code></pre>
     </div>
     <h2>Built-in Commands</h2>
     <p>The CLI provides built-in commands to manage services at runtime:</p>
@@ -2310,6 +2328,7 @@ await context.state.update((state) =&gt; (&#123;
 context.state.select(state =&gt; state.count).subscribe(count =&gt; &#123;
     console.log('Count changed:', count);
 &#125;);
+
 // Watch all state changes
 context.state.subscribe(state =&gt; &#123;
     console.log('State updated:', state);
@@ -2323,22 +2342,22 @@ context.state.subscribe(state =&gt; &#123;
     </p>
     <div class="code-block">
       <pre><code>const myProcessor: ICliCommandProcessor = &#123;
-        command: 'weather',
-        configurationOptions: [
+    command: 'weather',
+    configurationOptions: [
         &#123;
-        key: 'unit',
-        label: 'Temperature Unit',
-        description: 'Celsius or Fahrenheit',
-        type: 'select',
-        defaultValue: 'celsius',
-        options: [
-        &#123; label: 'Celsius', value: 'celsius' &#125;,
-        &#123; label: 'Fahrenheit', value: 'fahrenheit' &#125;,
-        ],
+            key: 'unit',
+            label: 'Temperature Unit',
+            description: 'Celsius or Fahrenheit',
+            type: 'select',
+            defaultValue: 'celsius',
+            options: [
+                &#123; label: 'Celsius', value: 'celsius' &#125;,
+                &#123; label: 'Fahrenheit', value: 'fahrenheit' &#125;,
+            ],
         &#125;,
-        ],
-        // ...
-      &#125;;</code></pre>
+    ],
+    // ...
+&#125;;</code></pre>
     </div>
     <p>Users can then run:</p>
     <table>
@@ -2660,27 +2679,30 @@ context.events?.emit('todo:refresh');</code></pre>
     <h2>Example</h2>
     <div class="code-block">
       <pre><code>async processCommand(command, context) &#123;
-        // Show progress
-        context.notifier.info('Downloading 0%...');
-        for (let i = 0; i &lt;= 100; i += 10) &#123;
+    // Show progress
+    context.notifier.info('Downloading 0%...');
+
+    for (let i = 0; i &lt;= 100; i += 10) &#123;
         await new Promise(r =&gt; setTimeout(r, 200));
         context.notifier.info('Downloading ' + i + '%...');
-        &#125;
-        // Show completion
-        context.notifier.success('Download complete!');
-        // Notification auto-clears when processCommand resolves.
-        // To clear manually:
-        // context.notifier.clear();
-      &#125;</code></pre>
+    &#125;
+
+    // Show completion
+    context.notifier.success('Download complete!');
+
+    // Notification auto-clears when processCommand resolves.
+    // To clear manually:
+    // context.notifier.clear();
+&#125;</code></pre>
     </div>
     <h2>Observing Changes</h2>
     <div class="code-block">
       <pre><code>// React to notification changes (e.g., for custom UI)
-        context.notifier.change$.subscribe(notification =&gt; &#123;
-        if (notification) &#123;
+context.notifier.change$.subscribe(notification =&gt; &#123;
+    if (notification) &#123;
         console.log(`[$&#123;notification.severity&#125;] $&#123;notification.message&#125;`);
-        &#125;
-      &#125;);</code></pre>
+    &#125;
+&#125;);</code></pre>
     </div>
   </div>
 }
@@ -2706,24 +2728,28 @@ context.events?.emit('todo:refresh');</code></pre>
     <h2>The ICliCommandGuard Interface</h2>
     <div class="code-block">
       <pre><code>interface ICliCommandGuard &#123;
-        /** Unique name, shown in diagnostics when the guard throws */
-        name: string;
-        /** Execution order; lower runs first. Defaults to 0 */
-        priority?: number;
-        /** Optional filter: return false to skip this guard for the command */
-        appliesTo?(
+    /** Unique name, shown in diagnostics when the guard throws */
+    name: string;
+
+    /** Execution order; lower runs first. Defaults to 0 */
+    priority?: number;
+
+    /** Optional filter: return false to skip this guard for the command */
+    appliesTo?(
         processor: ICliCommandProcessor,
         command: CliProcessCommand,
         context: ICliExecutionContext,
-        ): boolean | Promise&lt;boolean&gt;;
-        /** Decide whether the command may run */
-        canActivate(
+    ): boolean | Promise&lt;boolean&gt;;
+
+    /** Decide whether the command may run */
+    canActivate(
         command: CliProcessCommand,
         processor: ICliCommandProcessor,
         context: ICliExecutionContext,
-        ): CliCommandGuardResult | Promise&lt;CliCommandGuardResult&gt;;
-        &#125;
-      const ICliCommandGuard_TOKEN = 'cli-command-guard';</code></pre>
+    ): CliCommandGuardResult | Promise&lt;CliCommandGuardResult&gt;;
+&#125;
+
+const ICliCommandGuard_TOKEN = 'cli-command-guard';</code></pre>
     </div>
     <h2>Return Values</h2>
     <table>
@@ -2836,24 +2862,26 @@ context.events?.emit('todo:refresh');</code></pre>
     </p>
     <div class="code-block">
       <pre><code>import &#123; ICliCommandGuard, ICliModule &#125; from '&#64;qodalis/cli-core';
-        const maintenanceGuard: ICliCommandGuard = &#123;
-        name: 'maintenance',
-        priority: -50,
-        appliesTo: (processor) =&gt; processor.metadata?.module === 'billing',
-        canActivate: (_command, processor, context) =&gt; &#123;
+
+const maintenanceGuard: ICliCommandGuard = &#123;
+    name: 'maintenance',
+    priority: -50,
+    appliesTo: (processor) =&gt; processor.metadata?.module === 'billing',
+    canActivate: (_command, processor, context) =&gt; &#123;
         const status = context.services.get&lt;MaintenanceStatus&gt;(MaintenanceStatus_TOKEN);
         return status?.active
-        ? `$&#123;processor.command&#125;: billing is in maintenance until $&#123;status.until&#125;`
-        : true;
-        &#125;,
-        &#125;;
-        export const billingModule: ICliModule = &#123;
-        apiVersion: 2,
-        name: 'billing',
-        processors: [new InvoiceProcessor()],
-        services: [&#123; provide: MaintenanceStatus_TOKEN, useValue: &#123; active: false &#125; &#125;],
-        guards: [maintenanceGuard],
-      &#125;;</code></pre>
+            ? `$&#123;processor.command&#125;: billing is in maintenance until $&#123;status.until&#125;`
+            : true;
+    &#125;,
+&#125;;
+
+export const billingModule: ICliModule = &#123;
+    apiVersion: 2,
+    name: 'billing',
+    processors: [new InvoiceProcessor()],
+    services: [&#123; provide: MaintenanceStatus_TOKEN, useValue: &#123; active: false &#125; &#125;],
+    guards: [maintenanceGuard],
+&#125;;</code></pre>
     </div>
     <p>
       Guards can also be registered at runtime, for example from a module's
@@ -2869,15 +2897,15 @@ context.events?.emit('todo:refresh');</code></pre>
     </p>
     <div class="code-block">
       <pre><code>const featureFlagGuard: ICliCommandGuard = &#123;
-        name: 'feature-flags',
-        appliesTo: (processor, _command, context) =&gt;
+    name: 'feature-flags',
+    appliesTo: (processor, _command, context) =&gt;
         context.services.get&lt;FeatureFlags&gt;(FeatureFlags_TOKEN)?.isFlagged(processor.command) ?? false,
-        canActivate: async (_command, processor, context) =&gt; &#123;
+    canActivate: async (_command, processor, context) =&gt; &#123;
         const flags = context.services.getRequired&lt;FeatureFlags&gt;(FeatureFlags_TOKEN);
         const enabled = await flags.isEnabled(processor.command, context.userSession?.user);
         return enabled ? true : `$&#123;processor.command&#125;: not available for your account`;
-        &#125;,
-      &#125;;</code></pre>
+    &#125;,
+&#125;;</code></pre>
     </div>
     <h2>Authentication and Permissions</h2>
     <p>
@@ -2890,22 +2918,23 @@ context.events?.emit('todo:refresh');</code></pre>
     </p>
     <div class="code-block">
       <pre><code>const deployProcessor: ICliCommandProcessor = &#123;
-        command: 'deploy',
-        description: 'Deploy the app',
-        metadata: &#123;
+    command: 'deploy',
+    description: 'Deploy the app',
+    metadata: &#123;
         requireAuth: true,                    // must be signed in
         requiredGroups: ['ops', 'release'],   // member of at least one
         requiredPermissions: ['deploy:run'],  // holds all of these
-        &#125;,
-        async processCommand(command, context) &#123; /* ... */ &#125;,
-        &#125;;
-        export const deployModule: ICliModule = &#123;
-        apiVersion: 2,
-        name: 'deploy',
-        processors: [deployProcessor],
-        // Declared permissions appear in `perms --list` and can be granted to groups
-        permissions: [&#123; name: 'deploy:run', description: 'Run deployments' &#125;],
-      &#125;;</code></pre>
+    &#125;,
+    async processCommand(command, context) &#123; /* ... */ &#125;,
+&#125;;
+
+export const deployModule: ICliModule = &#123;
+    apiVersion: 2,
+    name: 'deploy',
+    processors: [deployProcessor],
+    // Declared permissions appear in `perms --list` and can be granted to groups
+    permissions: [&#123; name: 'deploy:run', description: 'Run deployments' &#125;],
+&#125;;</code></pre>
     </div>
     <table>
       <thead>
@@ -2944,11 +2973,13 @@ context.events?.emit('todo:refresh');</code></pre>
     </p>
     <div class="code-block">
       <pre><code>import &#123; cliAuthorize, cliCanAccess, CliAccessDeniedError &#125; from '&#64;qodalis/cli-core';
-        if (!cliAuthorize(context, 'deploy:rollback')) &#123;
-        throw new CliAccessDeniedError('deploy: rollback not permitted');  // printed as a plain error
-        &#125;
-        // rwx check on a resource you own (files, records, ...)
-      const allowed = cliCanAccess(context, &#123; ownership: &#123; uid: 'alice', gid: 'dev' &#125;, permissions: 'rw-r-----' &#125;, 'write');</code></pre>
+
+if (!cliAuthorize(context, 'deploy:rollback')) &#123;
+    throw new CliAccessDeniedError('deploy: rollback not permitted');  // printed as a plain error
+&#125;
+
+// rwx check on a resource you own (files, records, ...)
+const allowed = cliCanAccess(context, &#123; ownership: &#123; uid: 'alice', gid: 'dev' &#125;, permissions: 'rw-r-----' &#125;, 'write');</code></pre>
     </div>
     <p>
       Permissions are <code>resource:action</code> strings with

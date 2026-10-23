@@ -69,10 +69,10 @@
   <span class="code-label">app.module.ts</span>
   <pre><code>import &#123; CliModule &#125; from '&#64;qodalis/angular-cli';
 
-    &#64;NgModule(&#123;
+&#64;NgModule(&#123;
     imports: [CliModule],
-    &#125;)
-  export class AppModule &#123;&#125;</code></pre>
+&#125;)
+export class AppModule &#123;&#125;</code></pre>
 </div>
 
 <p>{{ "docs.getting-started.angular-styles-desc" | translate }}</p>
@@ -81,7 +81,7 @@
   <span class="code-label">angular.json</span>
   <pre><code>"styles": [
     "node_modules/&#64;qodalis/angular-cli/src/assets/styles.css"
-  ]</code></pre>
+]</code></pre>
 </div>
 
 <p>{{ "docs.getting-started.angular-template-desc" | translate }}</p>
@@ -89,10 +89,10 @@
 <div class="code-block">
   <span class="code-label">app.component.html</span>
   <pre><code>&lt;!-- Full terminal --&gt;
-    &lt;cli&gt;&lt;/cli&gt;
+&lt;cli&gt;&lt;/cli&gt;
 
-    &lt;!-- Collapsible panel --&gt;
-  &lt;cli-panel&gt;&lt;/cli-panel&gt;</code></pre>
+&lt;!-- Collapsible panel --&gt;
+&lt;cli-panel&gt;&lt;/cli-panel&gt;</code></pre>
 </div>
 
 <!-- Quick Start: React -->
@@ -102,19 +102,19 @@
 <div class="code-block">
   <span class="code-label">App.tsx</span>
   <pre><code>import '&#64;qodalis/react-cli/styles.css';
-    import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/react-cli';
+import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/react-cli';
 
-    function App() &#123;
+function App() &#123;
     return (
-    &lt;CliConfigProvider modules=&#123;[]&#125;&gt;
-    &#123;/* Full terminal */&#125;
-    &lt;Cli /&gt;
+        &lt;CliConfigProvider modules=&#123;[]&#125;&gt;
+            &#123;/* Full terminal */&#125;
+            &lt;Cli /&gt;
 
-    &#123;/* Or collapsible panel */&#125;
-    &lt;CliPanel /&gt;
-    &lt;/CliConfigProvider&gt;
+            &#123;/* Or collapsible panel */&#125;
+            &lt;CliPanel /&gt;
+        &lt;/CliConfigProvider&gt;
     );
-  &#125;</code></pre>
+&#125;</code></pre>
 </div>
 
 <!-- Quick Start: Vue -->
@@ -124,19 +124,19 @@
 <div class="code-block">
   <span class="code-label">App.vue</span>
   <pre><code>&lt;script setup&gt;
-    import '&#64;qodalis/vue-cli/styles.css';
-    import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/vue-cli';
-    &lt;/script&gt;
+import '&#64;qodalis/vue-cli/styles.css';
+import &#123; Cli, CliPanel, CliConfigProvider &#125; from '&#64;qodalis/vue-cli';
+&lt;/script&gt;
 
-    &lt;template&gt;
+&lt;template&gt;
     &lt;CliConfigProvider :modules="[]"&gt;
-    &lt;!-- Full terminal --&gt;
-    &lt;Cli /&gt;
+        &lt;!-- Full terminal --&gt;
+        &lt;Cli /&gt;
 
-    &lt;!-- Or collapsible panel --&gt;
-    &lt;CliPanel /&gt;
+        &lt;!-- Or collapsible panel --&gt;
+        &lt;CliPanel /&gt;
     &lt;/CliConfigProvider&gt;
-  &lt;/template&gt;</code></pre>
+&lt;/template&gt;</code></pre>
 </div>
 
 <!-- Quick Start: Vanilla JS -->
@@ -146,29 +146,29 @@
 <div class="code-block">
   <span class="code-label">main.ts</span>
   <pre><code>import '&#64;qodalis/cli/assets/styles.css';
-    import &#123; CliEngine &#125; from '&#64;qodalis/cli';
-    import type &#123; CliOptions, ICliModule &#125; from '&#64;qodalis/cli-core';
+import &#123; CliEngine &#125; from '&#64;qodalis/cli';
+import type &#123; CliOptions, ICliModule &#125; from '&#64;qodalis/cli-core';
 
-    const container = document.getElementById('terminal')!;
-    const engine = new CliEngine(container, &#123;
+const container = document.getElementById('terminal')!;
+const engine = new CliEngine(container, &#123;
     terminalOptions: &#123;
-    fontSize: 14,
-    cursorBlink: true,
+        fontSize: 14,
+        cursorBlink: true,
     &#125;,
-    &#125;);
+&#125;);
 
-  engine.start().then(() =&gt; engine.focus());</code></pre>
+engine.start().then(() =&gt; engine.focus());</code></pre>
 </div>
 
 <div class="code-block">
   <span class="code-label">index.html</span>
   <pre><code>&lt;!DOCTYPE html&gt;
-    &lt;html&gt;
-    &lt;body&gt;
+&lt;html&gt;
+&lt;body&gt;
     &lt;div id="terminal" style="width:100%;height:100vh"&gt;&lt;/div&gt;
     &lt;script type="module" src="/src/main.ts"&gt;&lt;/script&gt;
-    &lt;/body&gt;
-  &lt;/html&gt;</code></pre>
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
 </div>
 
 <!-- Adding Plugins -->
@@ -184,9 +184,9 @@
   <span class="code-label">Import and use</span>
   <pre><code>import &#123; guidModule &#125; from '&#64;qodalis/cli-guid';
 
-    // Angular: &lt;cli [modules]="[guidModule]"&gt;&lt;/cli&gt;
-    // React:   &lt;Cli modules=&#123;[guidModule]&#125; /&gt;
-  // Vue:     &lt;Cli :modules="[guidModule]" /&gt;</code></pre>
+// Angular: &lt;cli [modules]="[guidModule]"&gt;&lt;/cli&gt;
+// React:   &lt;Cli modules=&#123;[guidModule]&#125; /&gt;
+// Vue:     &lt;Cli :modules="[guidModule]" /&gt;</code></pre>
 </div>
 
 <p>{{ "docs.getting-started.runtime-plugins-desc" | translate }}</p>

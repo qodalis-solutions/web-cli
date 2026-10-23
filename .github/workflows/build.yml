@@ -47,6 +47,9 @@ jobs:
           NEW=$(node -p "require('./packages/cli/package.json').version")
           if [ "$OLD" != "$NEW" ]; then node tools/release-notes.js --check; else echo "Version unchanged ($NEW)."; fi
 
+      - name: Docs code blocks
+        run: node tools/check-docs-code-blocks.js
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 

@@ -37,9 +37,9 @@
   <span class="code-label">Import and use</span>
   <pre><code>import &#123; langEsModule &#125; from '&#64;qodalis/cli-lang-es';
 
-    // Angular: &lt;cli [modules]="[langEsModule]" /&gt;
-    // React:   &lt;Cli modules=&#123;[langEsModule]&#125; /&gt;
-  // Vue:     &lt;Cli :modules="[langEsModule]" /&gt;</code></pre>
+// Angular: &lt;cli [modules]="[langEsModule]" /&gt;
+// React:   &lt;Cli modules=&#123;[langEsModule]&#125; /&gt;
+// Vue:     &lt;Cli :modules="[langEsModule]" /&gt;</code></pre>
 </div>
 
 <p>{{ "docs.language-packs.runtime-desc" | translate }}</p>
@@ -67,13 +67,13 @@ configure set system.language es</code></pre>
     description = 'Spanish language pack';
 
     onInit(context: ICliExecutionContext): void &#123;
-    const translator = context.translationService;
-    translator.addTranslations('es', &#123;
-    'cli.help.description': 'Muestra la ayuda',
-    'cli.clear.description': 'Limpia la terminal',
-    'cli.version.description': 'Muestra la version',
-    // ... more translations
-    &#125;);
+        const translator = context.translationService;
+        translator.addTranslations('es', &#123;
+            'cli.help.description': 'Muestra la ayuda',
+            'cli.clear.description': 'Limpia la terminal',
+            'cli.version.description': 'Muestra la version',
+            // ... more translations
+        &#125;);
     &#125;
-  &#125;</code></pre>
+&#125;</code></pre>
 </div>

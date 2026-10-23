@@ -101,7 +101,7 @@
 
     // State
     getState(): CliPanelState;
-  &#125;</code></pre>
+&#125;</code></pre>
 </div>
 
 <!-- Bindable Properties -->
@@ -194,50 +194,56 @@
     <div class="code-block">
       <span class="code-label">app.component.ts</span>
       <pre><code>import &#123; Component, ViewChild &#125; from '&#64;angular/core';
-        import &#123; CliPanelComponent &#125; from '&#64;qodalis/angular-cli';
-        &#64;Component(&#123;
-        selector: 'app-root',
-        templateUrl: './app.component.html',
-        &#125;)
-        export class AppComponent &#123;
-        &#64;ViewChild('panel') panel!: CliPanelComponent;
-        openPanel() &#123;
+import &#123; CliPanelComponent &#125; from '&#64;qodalis/angular-cli';
+
+&#64;Component(&#123;
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+&#125;)
+export class AppComponent &#123;
+    &#64;ViewChild('panel') panel!: CliPanelComponent;
+
+    openPanel() &#123;
         this.panel.open();
-        &#125;
-        addLogsTab() &#123;
+    &#125;
+
+    addLogsTab() &#123;
         const tabId = this.panel.addTab('Logs');
         this.panel.selectTab(tabId);
-        &#125;
-        inspectState() &#123;
+    &#125;
+
+    inspectState() &#123;
         const state = this.panel.getState();
         console.log('Panel state:', state);
-        &#125;
-      &#125;</code></pre>
+    &#125;
+&#125;</code></pre>
     </div>
     <div class="code-block">
       <span class="code-label">app.component.html</span>
       <pre><code>&lt;button (click)="openPanel()"&gt;Open Panel&lt;/button&gt;
-        &lt;button (click)="addLogsTab()"&gt;Add Logs Tab&lt;/button&gt;
-      &lt;cli-panel #panel [options]="options" [modules]="modules"&gt;&lt;/cli-panel&gt;</code></pre>
+&lt;button (click)="addLogsTab()"&gt;Add Logs Tab&lt;/button&gt;
+
+&lt;cli-panel #panel [options]="options" [modules]="modules"&gt;&lt;/cli-panel&gt;</code></pre>
     </div>
     <h3>{{ "docs.panel-api.angular-two-way" | translate }}</h3>
     <p>{{ "docs.panel-api.angular-two-way-desc" | translate }}</p>
     <div class="code-block">
       <span class="code-label">app.component.html</span>
       <pre><code>&lt;!-- Two-way binding with banana-in-a-box syntax --&gt;
-        &lt;cli-panel
-        [(collapsed)]="isCollapsed"
-        [(maximized)]="isMaximized"
-        [(position)]="panelPosition"
-        [(activeTabId)]="currentTab"
-        (onTabAdded)="onNewTab($event)"
-        (onTabClosed)="onTabRemoved($event)"
-        &gt;&lt;/cli-panel&gt;
-        &lt;!-- Your controls stay in sync automatically --&gt;
-        &lt;label&gt;
-        &lt;input type="checkbox" [(ngModel)]="isCollapsed" /&gt;
-        Collapsed
-      &lt;/label&gt;</code></pre>
+&lt;cli-panel
+    [(collapsed)]="isCollapsed"
+    [(maximized)]="isMaximized"
+    [(position)]="panelPosition"
+    [(activeTabId)]="currentTab"
+    (onTabAdded)="onNewTab($event)"
+    (onTabClosed)="onTabRemoved($event)"
+&gt;&lt;/cli-panel&gt;
+
+&lt;!-- Your controls stay in sync automatically --&gt;
+&lt;label&gt;
+    &lt;input type="checkbox" [(ngModel)]="isCollapsed" /&gt;
+    Collapsed
+&lt;/label&gt;</code></pre>
     </div>
   </div>
 }
@@ -250,54 +256,60 @@
     <div class="code-block">
       <span class="code-label">App.tsx</span>
       <pre><code>import &#123; useRef &#125; from 'react';
-        import &#123; CliPanel &#125; from '&#64;qodalis/react-cli';
-        import type &#123; ICliPanelRef &#125; from '&#64;qodalis/cli-core';
-        import type &#123; CliEngine &#125; from '&#64;qodalis/cli';
-        function App() &#123;
-        const panelRef = useRef&lt;ICliPanelRef&lt;CliEngine&gt;&gt;(null);
-        return (
+import &#123; CliPanel &#125; from '&#64;qodalis/react-cli';
+import type &#123; ICliPanelRef &#125; from '&#64;qodalis/cli-core';
+import type &#123; CliEngine &#125; from '&#64;qodalis/cli';
+
+function App() &#123;
+    const panelRef = useRef&lt;ICliPanelRef&lt;CliEngine&gt;&gt;(null);
+
+    return (
         &lt;&gt;
-        &lt;button onClick=&#123;() =&gt; panelRef.current?.open()&#125;&gt;
-        Open Panel
-        &lt;/button&gt;
-        &lt;button onClick=&#123;() =&gt; panelRef.current?.addTab('Logs')&#125;&gt;
-        Add Logs Tab
-        &lt;/button&gt;
-        &lt;CliPanel
-        ref=&#123;panelRef&#125;
-        options=&#123;options&#125;
-        modules=&#123;modules&#125;
-        /&gt;
+            &lt;button onClick=&#123;() =&gt; panelRef.current?.open()&#125;&gt;
+                Open Panel
+            &lt;/button&gt;
+            &lt;button onClick=&#123;() =&gt; panelRef.current?.addTab('Logs')&#125;&gt;
+                Add Logs Tab
+            &lt;/button&gt;
+
+            &lt;CliPanel
+                ref=&#123;panelRef&#125;
+                options=&#123;options&#125;
+                modules=&#123;modules&#125;
+            /&gt;
         &lt;/&gt;
-        );
-      &#125;</code></pre>
+    );
+&#125;</code></pre>
     </div>
     <h3>{{ "docs.panel-api.react-controlled" | translate }}</h3>
     <p>{{ "docs.panel-api.react-controlled-desc" | translate }}</p>
     <div class="code-block">
       <span class="code-label">App.tsx</span>
       <pre><code>import &#123; useState &#125; from 'react';
-        import &#123; CliPanel &#125; from '&#64;qodalis/react-cli';
-        function App() &#123;
-        const [collapsed, setCollapsed] = useState(true);
-        const [position, setPosition] = useState('bottom');
-        return (
+import &#123; CliPanel &#125; from '&#64;qodalis/react-cli';
+
+function App() &#123;
+    const [collapsed, setCollapsed] = useState(true);
+    const [position, setPosition] = useState('bottom');
+
+    return (
         &lt;&gt;
-        &lt;button onClick=&#123;() =&gt; setCollapsed(c =&gt; !c)&#125;&gt;
-        Toggle Panel
-        &lt;/button&gt;
-        &lt;CliPanel
-        collapsed=&#123;collapsed&#125;
-        onCollapsedChange=&#123;setCollapsed&#125;
-        position=&#123;position&#125;
-        onPositionChange=&#123;setPosition&#125;
-        onTabAdded=&#123;(&#123; tabId &#125;) =&gt; console.log('New tab:', tabId)&#125;
-        options=&#123;options&#125;
-        modules=&#123;modules&#125;
-        /&gt;
+            &lt;button onClick=&#123;() =&gt; setCollapsed(c =&gt; !c)&#125;&gt;
+                Toggle Panel
+            &lt;/button&gt;
+
+            &lt;CliPanel
+                collapsed=&#123;collapsed&#125;
+                onCollapsedChange=&#123;setCollapsed&#125;
+                position=&#123;position&#125;
+                onPositionChange=&#123;setPosition&#125;
+                onTabAdded=&#123;(&#123; tabId &#125;) =&gt; console.log('New tab:', tabId)&#125;
+                options=&#123;options&#125;
+                modules=&#123;modules&#125;
+            /&gt;
         &lt;/&gt;
-        );
-      &#125;</code></pre>
+    );
+&#125;</code></pre>
     </div>
   </div>
 }
@@ -310,46 +322,54 @@
     <div class="code-block">
       <span class="code-label">App.vue</span>
       <pre><code>&lt;script setup&gt;
-        import &#123; ref &#125; from 'vue';
-        import &#123; CliPanel &#125; from '&#64;qodalis/vue-cli';
-        const panel = ref();
-        function openPanel() &#123;
-        panel.value.open();
-        &#125;
-        function addLogsTab() &#123;
-        const tabId = panel.value.addTab('Logs');
-        panel.value.selectTab(tabId);
-        &#125;
-        &lt;/script&gt;
-        &lt;template&gt;
-        &lt;button &#64;click="openPanel"&gt;Open Panel&lt;/button&gt;
-        &lt;button &#64;click="addLogsTab"&gt;Add Logs Tab&lt;/button&gt;
-        &lt;CliPanel ref="panel" :options="options" :modules="modules" /&gt;
-      &lt;/template&gt;</code></pre>
+import &#123; ref &#125; from 'vue';
+import &#123; CliPanel &#125; from '&#64;qodalis/vue-cli';
+
+const panel = ref();
+
+function openPanel() &#123;
+    panel.value.open();
+&#125;
+
+function addLogsTab() &#123;
+    const tabId = panel.value.addTab('Logs');
+    panel.value.selectTab(tabId);
+&#125;
+&lt;/script&gt;
+
+&lt;template&gt;
+    &lt;button &#64;click="openPanel"&gt;Open Panel&lt;/button&gt;
+    &lt;button &#64;click="addLogsTab"&gt;Add Logs Tab&lt;/button&gt;
+
+    &lt;CliPanel ref="panel" :options="options" :modules="modules" /&gt;
+&lt;/template&gt;</code></pre>
     </div>
     <h3>{{ "docs.panel-api.vue-v-model" | translate }}</h3>
     <p>{{ "docs.panel-api.vue-v-model-desc" | translate }}</p>
     <div class="code-block">
       <span class="code-label">App.vue</span>
       <pre><code>&lt;script setup&gt;
-        import &#123; ref &#125; from 'vue';
-        import &#123; CliPanel &#125; from '&#64;qodalis/vue-cli';
-        const isCollapsed = ref(true);
-        const position = ref('bottom');
-        &lt;/script&gt;
-        &lt;template&gt;
-        &lt;label&gt;
+import &#123; ref &#125; from 'vue';
+import &#123; CliPanel &#125; from '&#64;qodalis/vue-cli';
+
+const isCollapsed = ref(true);
+const position = ref('bottom');
+&lt;/script&gt;
+
+&lt;template&gt;
+    &lt;label&gt;
         &lt;input type="checkbox" v-model="isCollapsed" /&gt;
         Collapsed
-        &lt;/label&gt;
-        &lt;CliPanel
+    &lt;/label&gt;
+
+    &lt;CliPanel
         v-model:collapsed="isCollapsed"
         v-model:position="position"
         &#64;tab-added="(&#123; tabId &#125;) =&gt; console.log('New tab:', tabId)"
         :options="options"
         :modules="modules"
-        /&gt;
-      &lt;/template&gt;</code></pre>
+    /&gt;
+&lt;/template&gt;</code></pre>
     </div>
   </div>
 }
@@ -475,7 +495,7 @@
     "docs.panel-api.uncontrolled-label" | translate
   }}</span>
   <pre><code>&lt;!-- Panel manages its own state (default) --&gt;
-  &lt;cli-panel [options]="options" [modules]="modules"&gt;&lt;/cli-panel&gt;</code></pre>
+&lt;cli-panel [options]="options" [modules]="modules"&gt;&lt;/cli-panel&gt;</code></pre>
 </div>
 
 <div class="code-block">
@@ -483,11 +503,11 @@
     "docs.panel-api.controlled-label" | translate
   }}</span>
   <pre><code>&lt;!-- Parent controls collapsed state --&gt;
-    &lt;cli-panel
+&lt;cli-panel
     [(collapsed)]="isCollapsed"
     [options]="options"
     [modules]="modules"
-  &gt;&lt;/cli-panel&gt;</code></pre>
+&gt;&lt;/cli-panel&gt;</code></pre>
 </div>
 
 <!-- Status Bar -->
@@ -568,7 +588,7 @@
     // context.notifier.warn('disk space low');
     // context.notifier.error('download failed');
     // context.notifier.clear();  // remove notification
-  &#125;</code></pre>
+&#125;</code></pre>
 </div>
 
 <h3>{{ "docs.panel-api.status-bar-visibility" | translate }}</h3>
