@@ -63,6 +63,24 @@ describe('CliEngine boot', () => {
         expect(engine.getContext().isBooted).toBeTrue();
     });
 
+    it('focuses the terminal on start unless autoFocus is off', async () => {
+        const input = document.createElement('input');
+        document.body.appendChild(input);
+        try {
+            input.focus();
+            engine = new CliEngine(container, { autoFocus: false, welcome: false });
+            await engine.start();
+            expect(document.activeElement).toBe(input);
+            engine.destroy();
+
+            engine = new CliEngine(container, { welcome: false });
+            await engine.start();
+            expect(container.contains(document.activeElement)).toBeTrue();
+        } finally {
+            input.remove();
+        }
+    });
+
     it('shows a custom welcome message', async () => {
         engine = new CliEngine(container, { welcome: { message: 'Hello from the docs' } });
         await engine.start();

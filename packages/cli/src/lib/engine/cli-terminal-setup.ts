@@ -54,6 +54,7 @@ export function getTerminalOptions(
 export function initializeTerminal(
     container: HTMLElement,
     opts: ITerminalOptions & ITerminalInitOnlyOptions,
+    focus = true,
 ): TerminalSetupResult {
     const terminal = new Terminal(opts);
 
@@ -93,7 +94,9 @@ export function initializeTerminal(
     const wheelListener = (e: WheelEvent) => e.preventDefault();
     container.addEventListener('wheel', wheelListener, { passive: false });
 
-    terminal.focus();
+    if (focus) {
+        terminal.focus();
+    }
 
     const dragDropService = new CliDragDropService(container);
 
