@@ -1,10 +1,10 @@
 import { NgModule } from '@angular/core';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateDirective, TranslatePipe } from '@ngx-translate/core';
 import { CopyCodeDirective } from './copy-code.directive';
 
 @NgModule({
     declarations: [CopyCodeDirective],
-    imports: [TranslateModule],
-    exports: [CopyCodeDirective, TranslateModule],
+    imports: [TranslatePipe, TranslateDirective],
+    exports: [CopyCodeDirective, TranslatePipe, TranslateDirective],
 })
 export class SharedModule {}
