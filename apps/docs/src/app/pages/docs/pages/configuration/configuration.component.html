@@ -103,6 +103,18 @@
         file is missing.
       </td>
     </tr>
+    <tr>
+      <td><code>welcome</code></td>
+      <td><code>boolean | CliWelcomeMessageConfig</code></td>
+      <td><code>true</code></td>
+      <td>
+        The welcome banner and greeting shown at startup. <code>false</code>
+        starts with just the prompt (embedded terminals, terminals driven by
+        <code>execute()</code>); an object such as
+        <code>&#123; message: 'Hello' &#125;</code> replaces the banner text.
+        <code>CliEngine</code> option.
+      </td>
+    </tr>
   </tbody>
 </table>
 

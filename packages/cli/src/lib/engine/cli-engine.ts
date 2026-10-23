@@ -27,7 +27,11 @@ import { ICliStateStoreManager } from '../state/cli-state-store-manager';
 import { CliBoot } from '../services/cli-boot';
 import { CliBootLog } from '../services/cli-boot-log';
 import { LIBRARY_VERSION } from '../version';
-import { greetingModule, welcomeModule } from '../services/cli-welcome-message';
+import {
+    CliWelcomeMessageConfig,
+    greetingModule,
+    welcomeModule,
+} from '../services/cli-welcome-message';
 import {
     CliBackgroundServiceRegistry_TOKEN,
     CliModuleRegistry_TOKEN,
@@ -68,6 +72,14 @@ export interface CliEngineOptions extends CliOptions {
      * `/assets/wasm/` and `/wasm/`; the CLI works without it.
      */
     wasmUrl?: string;
+    /**
+     * The welcome banner and greeting shown at startup. `false` starts with
+     * just the prompt (embedded terminals, playgrounds, terminals driven by
+     * `execute()`); an object configures the banner like
+     * `welcomeModule.configure()`.
+     * @default true
+     */
+    welcome?: boolean | CliWelcomeMessageConfig;
 }
 
 /** What the start phases share once services exist. */
@@ -207,6 +219,11 @@ export class CliEngine {
 
         await this.completeBoot(bootLog);
         await this.runAfterBootHooks(modules);
+        // The welcome banner shows the first prompt; without it (and without a
+        // snapshot, which restores its own screen) the engine does
+        if (this.options?.welcome === false && !this.options?.snapshot) {
+            this.executionContext.showPrompt();
+        }
 
         if (this.options?.snapshot) {
             await this.restoreSnapshot(this.options.snapshot);
@@ -397,14 +414,23 @@ export class CliEngine {
     private modulesToBoot(): ICliModule[] {
         const serverModule = createServerModule();
         // A restored snapshot already contains the welcome screen
-        return this.options?.snapshot
-            ? [serverModule, ...this.userModules]
-            : [
-                  welcomeModule,
-                  serverModule,
-                  ...this.userModules,
-                  greetingModule,
-              ];
+        if (!this.showsWelcome) {
+            return [serverModule, ...this.userModules];
+        }
+        const welcome = this.options?.welcome;
+        return [
+            typeof welcome === 'object'
+                ? welcomeModule.configure(welcome)
+                : welcomeModule,
+            serverModule,
+            ...this.userModules,
+            greetingModule,
+        ];
+    }
+
+    /** Whether startup shows the welcome banner (which also shows the first prompt). */
+    private get showsWelcome(): boolean {
+        return !this.options?.snapshot && this.options?.welcome !== false;
     }
 
     /** 7. Replace the boot report with the terminal and mark the CLI booted. */

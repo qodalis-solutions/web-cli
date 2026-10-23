@@ -52,6 +52,27 @@ describe('CliEngine boot', () => {
         expect(text).not.toContain('Starting Web CLI');
     });
 
+    it('starts with just the prompt when the welcome is turned off', async () => {
+        engine = new CliEngine(container, { welcome: false });
+        await engine.start();
+        await new Promise((r) => setTimeout(r, 50));
+
+        const text = bufferText(engine);
+        expect(text).not.toContain('Welcome to Web CLI');
+        expect(text.trim()).toMatch(/\$$/);
+        expect(engine.getContext().isBooted).toBeTrue();
+    });
+
+    it('shows a custom welcome message', async () => {
+        engine = new CliEngine(container, { welcome: { message: 'Hello from the docs' } });
+        await engine.start();
+        await new Promise((r) => setTimeout(r, 50));
+
+        const text = bufferText(engine);
+        expect(text).toContain('Hello from the docs');
+        expect(text).not.toContain('Welcome to Web CLI');
+    });
+
     it('can keep the boot report on screen', async () => {
         engine = new CliEngine(container, { boot: { keepLogs: true } } as any);
         await engine.start();
