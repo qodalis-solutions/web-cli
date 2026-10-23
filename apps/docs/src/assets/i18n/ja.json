@@ -509,5 +509,25 @@
   "docs.server-detail.dotnet.docker-port": "サーバーはデフォルトでポート8046で実行されます。",
   "docs.server-detail.dotnet.connecting": "フロントエンドの接続",
 
-  "lang.switch": "言語"
+  "lang.switch": "言語",
+  "sidebar.playground": "プレイグラウンド",
+  "docs.playground.title": "プレイグラウンド",
+  "docs.playground.intro": "TypeScript でコマンドを書いてすぐに試せます。変更のたびにターミナルがあなたのコードで再構築されます。サンプルから始めるか、このドキュメントの任意のサンプルを Playground ボタンで開いてください。",
+  "docs.playground.example": "サンプル",
+  "docs.playground.from-link": "リンクからのコード",
+  "docs.playground.run": "実行",
+  "docs.playground.reset": "リセット",
+  "docs.playground.share": "リンクをコピー",
+  "docs.playground.link-copied": "リンクをコピーしました",
+  "docs.playground.link-in-address-bar": "リンクはアドレスバーにあります",
+  "docs.playground.link-notice": "このコードはリンクから読み込まれました。先に内容を確認してください。実行を押すとブラウザで実行されます。",
+  "docs.playground.code": "コード",
+  "docs.playground.loading": "エディターを読み込んでいます…",
+  "docs.playground.commands": "ビルドごとに実行するコマンド (1 行に 1 つ)",
+  "docs.playground.terminal": "ターミナル",
+  "docs.playground.built": "{{ms}} ms でビルド",
+  "docs.playground.built-with-type-errors": "実行中、型エラー {{count}} 件: 下線のコードにカーソルを合わせてください",
+  "docs.playground.press-run": "実行を押して開始",
+  "docs.playground.hint": "コマンドプロセッサー (クラス、または processCommand を持つオブジェクト) かモジュールを export し、@qodalis/cli-core から import してください。コードはこのブラウザーに保存され、リンクをコピーで共有できます。",
+  "docs.playground.open": "Playground"
 }

@@ -509,5 +509,25 @@
   "docs.server-detail.dotnet.docker-port": "Der Server läuft standardmäßig auf Port 8046.",
   "docs.server-detail.dotnet.connecting": "Frontend Verbinden",
 
-  "lang.switch": "Sprache"
+  "lang.switch": "Sprache",
+  "sidebar.playground": "Playground",
+  "docs.playground.title": "Playground",
+  "docs.playground.intro": "Schreiben Sie einen Befehl in TypeScript und probieren Sie ihn sofort aus: Das Terminal wird nach jeder Änderung mit Ihrem Code neu aufgebaut. Beginnen Sie mit einem Beispiel oder öffnen Sie ein Beispiel aus dieser Dokumentation über seine Playground-Schaltfläche.",
+  "docs.playground.example": "Beispiel",
+  "docs.playground.from-link": "Code aus einem Link",
+  "docs.playground.run": "Ausführen",
+  "docs.playground.reset": "Zurücksetzen",
+  "docs.playground.share": "Link kopieren",
+  "docs.playground.link-copied": "Link kopiert",
+  "docs.playground.link-in-address-bar": "Der Link steht in der Adressleiste",
+  "docs.playground.link-notice": "Dieser Code stammt aus einem Link. Lesen Sie ihn zuerst: Er läuft in Ihrem Browser, sobald Sie auf Ausführen klicken.",
+  "docs.playground.code": "Code",
+  "docs.playground.loading": "Editor wird geladen…",
+  "docs.playground.commands": "Befehle nach jedem Build (einer pro Zeile)",
+  "docs.playground.terminal": "Terminal",
+  "docs.playground.built": "Erstellt in {{ms}} ms",
+  "docs.playground.built-with-type-errors": "Läuft, mit {{count}} Typfehler(n): unterstrichenen Code mit der Maus berühren",
+  "docs.playground.press-run": "Zum Starten auf Ausführen klicken",
+  "docs.playground.hint": "Exportieren Sie einen Befehlsprozessor (eine Klasse oder ein Objekt mit processCommand) oder ein Modul und importieren Sie aus @qodalis/cli-core. Ihr Code bleibt in diesem Browser gespeichert; Link kopieren teilt ihn.",
+  "docs.playground.open": "Playground"
 }

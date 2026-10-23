@@ -509,5 +509,25 @@
   "docs.server-detail.dotnet.docker-port": "서버는 기본적으로 포트 8046에서 실행됩니다.",
   "docs.server-detail.dotnet.connecting": "프론트엔드 연결",
 
-  "lang.switch": "언어"
+  "lang.switch": "언어",
+  "sidebar.playground": "플레이그라운드",
+  "docs.playground.title": "플레이그라운드",
+  "docs.playground.intro": "TypeScript로 명령을 작성하고 바로 실행해 보세요. 변경할 때마다 터미널이 코드로 다시 만들어집니다. 예제에서 시작하거나, 이 문서의 예제를 Playground 버튼으로 여세요.",
+  "docs.playground.example": "예제",
+  "docs.playground.from-link": "링크의 코드",
+  "docs.playground.run": "실행",
+  "docs.playground.reset": "초기화",
+  "docs.playground.share": "링크 복사",
+  "docs.playground.link-copied": "링크를 복사했습니다",
+  "docs.playground.link-in-address-bar": "링크가 주소 표시줄에 있습니다",
+  "docs.playground.link-notice": "이 코드는 링크에서 왔습니다. 먼저 읽어 보세요. 실행을 누르면 브라우저에서 실행됩니다.",
+  "docs.playground.code": "코드",
+  "docs.playground.loading": "편집기를 불러오는 중…",
+  "docs.playground.commands": "빌드 후 실행할 명령 (한 줄에 하나)",
+  "docs.playground.terminal": "터미널",
+  "docs.playground.built": "{{ms}}ms에 빌드됨",
+  "docs.playground.built-with-type-errors": "실행 중, 타입 오류 {{count}}개: 밑줄 친 코드에 마우스를 올려 보세요",
+  "docs.playground.press-run": "실행을 눌러 시작",
+  "docs.playground.hint": "명령 프로세서(클래스 또는 processCommand가 있는 객체)나 모듈을 export하고 @qodalis/cli-core에서 import하세요. 코드는 이 브라우저에 저장되며, 링크 복사로 공유할 수 있습니다.",
+  "docs.playground.open": "Playground"
 }

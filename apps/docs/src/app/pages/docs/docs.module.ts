@@ -16,6 +16,13 @@ const routes: Routes = [
                 pathMatch: 'full',
             },
             {
+                path: 'playground',
+                loadChildren: () =>
+                    import('./pages/playground/playground.module').then(
+                        (m) => m.PlaygroundModule,
+                    ),
+            },
+            {
                 path: 'getting-started',
                 loadChildren: () =>
                     import('./pages/getting-started/getting-started.module').then(

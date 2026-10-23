@@ -509,5 +509,25 @@
   "docs.server-detail.dotnet.docker-port": "Il server è in ascolto sulla porta 8046 per impostazione predefinita.",
   "docs.server-detail.dotnet.connecting": "Connettere il Frontend",
 
-  "lang.switch": "Lingua"
+  "lang.switch": "Lingua",
+  "sidebar.playground": "Playground",
+  "docs.playground.title": "Playground",
+  "docs.playground.intro": "Scrivi un comando in TypeScript e provalo subito: il terminale viene ricostruito con il tuo codice dopo ogni modifica. Parti da un esempio, oppure apri un esempio di questa documentazione con il suo pulsante Playground.",
+  "docs.playground.example": "Esempio",
+  "docs.playground.from-link": "Codice da un link",
+  "docs.playground.run": "Esegui",
+  "docs.playground.reset": "Ripristina",
+  "docs.playground.share": "Copia link",
+  "docs.playground.link-copied": "Link copiato",
+  "docs.playground.link-in-address-bar": "Il link è nella barra degli indirizzi",
+  "docs.playground.link-notice": "Questo codice proviene da un link. Leggilo prima: viene eseguito nel tuo browser quando premi Esegui.",
+  "docs.playground.code": "Codice",
+  "docs.playground.loading": "Caricamento dell'editor…",
+  "docs.playground.commands": "Comandi dopo ogni build (uno per riga)",
+  "docs.playground.terminal": "Terminale",
+  "docs.playground.built": "Compilato in {{ms}} ms",
+  "docs.playground.built-with-type-errors": "In esecuzione, con {{count}} errore/i di tipo: passa il mouse sul codice sottolineato",
+  "docs.playground.press-run": "Premi Esegui per iniziare",
+  "docs.playground.hint": "Esporta un processore di comandi (una classe o un oggetto con processCommand) o un modulo, e importa da @qodalis/cli-core. Il tuo codice resta in questo browser; Copia link lo condivide.",
+  "docs.playground.open": "Playground"
 }

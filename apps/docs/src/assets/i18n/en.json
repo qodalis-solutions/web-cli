@@ -740,5 +740,25 @@
   "docs.engine-api.accessing-from-panel-desc": "Use the Panel Control API's getEngine() to access the engine for any pane. This works the same across all frameworks.",
   "docs.engine-api.panel-access-label": "Panel engine access",
 
-  "lang.switch": "Language"
+  "lang.switch": "Language",
+  "sidebar.playground": "Playground",
+  "docs.playground.title": "Playground",
+  "docs.playground.intro": "Write a command in TypeScript and try it at once: the terminal is rebuilt with your code after every change. Start from an example, or open any example from these docs with its Playground button.",
+  "docs.playground.example": "Example",
+  "docs.playground.from-link": "Code from a link",
+  "docs.playground.run": "Run",
+  "docs.playground.reset": "Reset",
+  "docs.playground.share": "Copy link",
+  "docs.playground.link-copied": "Link copied",
+  "docs.playground.link-in-address-bar": "Link is in the address bar",
+  "docs.playground.link-notice": "This code came from a link. Read it first: it runs in your browser when you press Run.",
+  "docs.playground.code": "Code",
+  "docs.playground.loading": "Loading the editor…",
+  "docs.playground.commands": "Commands to run after each build (one per line)",
+  "docs.playground.terminal": "Terminal",
+  "docs.playground.built": "Built in {{ms}} ms",
+  "docs.playground.built-with-type-errors": "Running, with {{count}} type error(s): hover the underlined code",
+  "docs.playground.press-run": "Press Run to start",
+  "docs.playground.hint": "Export a command processor (a class or an object with processCommand) or a module, and import from @qodalis/cli-core. Your code is kept in this browser; Copy link shares it.",
+  "docs.playground.open": "Playground"
 }

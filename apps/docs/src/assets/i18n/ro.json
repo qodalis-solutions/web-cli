@@ -509,5 +509,25 @@
   "docs.server-detail.dotnet.docker-port": "Serverul rulează pe portul 8046 implicit.",
   "docs.server-detail.dotnet.connecting": "Conectarea Frontend-ului",
 
-  "lang.switch": "Limbă"
+  "lang.switch": "Limbă",
+  "sidebar.playground": "Playground",
+  "docs.playground.title": "Playground",
+  "docs.playground.intro": "Scrie o comandă în TypeScript și încearc-o imediat: terminalul este reconstruit cu codul tău după fiecare modificare. Pornește de la un exemplu sau deschide orice exemplu din această documentație cu butonul Playground.",
+  "docs.playground.example": "Exemplu",
+  "docs.playground.from-link": "Cod dintr-un link",
+  "docs.playground.run": "Rulează",
+  "docs.playground.reset": "Resetează",
+  "docs.playground.share": "Copiază linkul",
+  "docs.playground.link-copied": "Link copiat",
+  "docs.playground.link-in-address-bar": "Linkul este în bara de adrese",
+  "docs.playground.link-notice": "Acest cod vine dintr-un link. Citește-l mai întâi: rulează în browserul tău când apeși Rulează.",
+  "docs.playground.code": "Cod",
+  "docs.playground.loading": "Se încarcă editorul…",
+  "docs.playground.commands": "Comenzi rulate după fiecare build (câte una pe linie)",
+  "docs.playground.terminal": "Terminal",
+  "docs.playground.built": "Construit în {{ms}} ms",
+  "docs.playground.built-with-type-errors": "Rulează, cu {{count}} eroare/erori de tip: treci cu mouse-ul peste codul subliniat",
+  "docs.playground.press-run": "Apasă Rulează pentru a porni",
+  "docs.playground.hint": "Exportă un procesor de comenzi (o clasă sau un obiect cu processCommand) sau un modul și importă din @qodalis/cli-core. Codul tău rămâne în acest browser; Copiază linkul îl partajează.",
+  "docs.playground.open": "Playground"
 }

@@ -467,6 +467,11 @@ $radius-sm: 8px
 .code-block:hover .code-copy-btn
   opacity: 1
 
+// "Playground" sits left of "Copy"
+.code-playground-btn
+  right: 72px
+  color: $accent
+
 // ─── Features ───
 .features-section
   padding: 64px 0
@@ -901,6 +906,10 @@ $radius-sm: 8px
   min-width: 0
   padding: 40px 48px
   max-width: 860px
+
+  // The playground puts an editor and a terminal side by side
+  &:has(docs-playground)
+    max-width: 1400px
 
   // Clear the fixed sidebar toggle (top 64px, 36px tall) so it never covers the title
   @media (max-width: 768px)
