@@ -58,14 +58,14 @@
 <div class="code-block">
   <span class="code-label">{{ "docs.engine-api.flow" | translate }}</span>
   <pre><code>// 1. Get the CliEngine instance
-    //    - From a &lt;cli&gt; component via getEngine() or (engineReady)
-    //    - From a &lt;cli-panel&gt; via panel.getEngine(paneId?)
-    //    - Or create one directly: new CliEngine(container, options)
+//    - From a &lt;cli&gt; component via getEngine() or (engineReady)
+//    - From a &lt;cli-panel&gt; via panel.getEngine(paneId?)
+//    - Or create one directly: new CliEngine(container, options)
 
-    // 2. Execute commands programmatically
-    await engine.execute('help');
-    await engine.execute('guid');
-  await engine.execute('theme apply dracula');</code></pre>
+// 2. Execute commands programmatically
+await engine.execute('help');
+await engine.execute('guid');
+await engine.execute('theme apply dracula');</code></pre>
 </div>
 
 <!-- Framework Examples -->
@@ -111,54 +111,62 @@
     <div class="code-block">
       <span class="code-label">app.component.ts</span>
       <pre><code>import &#123; Component, ViewChild &#125; from '&#64;angular/core';
-        import &#123; CliComponent &#125; from '&#64;qodalis/angular-cli';
-        import &#123; CliEngine &#125; from '&#64;qodalis/cli';
-        &#64;Component(&#123;
-        selector: 'app-root',
-        templateUrl: './app.component.html',
-        &#125;)
-        export class AppComponent &#123;
-        private engine?: CliEngine;
-        // Option A: capture via event
-        onEngineReady(engine: CliEngine) &#123;
+import &#123; CliComponent &#125; from '&#64;qodalis/angular-cli';
+import &#123; CliEngine &#125; from '&#64;qodalis/cli';
+
+&#64;Component(&#123;
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+&#125;)
+export class AppComponent &#123;
+    private engine?: CliEngine;
+
+    // Option A: capture via event
+    onEngineReady(engine: CliEngine) &#123;
         this.engine = engine;
-        &#125;
-        // Option B: access via ViewChild
-        &#64;ViewChild('terminal') terminal!: CliComponent;
-        async runCommand(command: string) &#123;
+    &#125;
+
+    // Option B: access via ViewChild
+    &#64;ViewChild('terminal') terminal!: CliComponent;
+
+    async runCommand(command: string) &#123;
         // Use the captured engine
         await this.engine?.execute(command);
+
         // Or get it from the component
         const engine = this.terminal.getEngine();
         await engine?.execute(command);
-        &#125;
-      &#125;</code></pre>
+    &#125;
+&#125;</code></pre>
     </div>
     <div class="code-block">
       <span class="code-label">app.component.html</span>
       <pre><code>&lt;button (click)="runCommand('help')"&gt;Show Help&lt;/button&gt;
-        &lt;button (click)="runCommand('guid')"&gt;Generate GUID&lt;/button&gt;
-        &lt;cli
-        #terminal
-        [options]="options"
-        [modules]="modules"
-        height="400px"
-        (engineReady)="onEngineReady($event)"
-      /&gt;</code></pre>
+&lt;button (click)="runCommand('guid')"&gt;Generate GUID&lt;/button&gt;
+
+&lt;cli
+    #terminal
+    [options]="options"
+    [modules]="modules"
+    height="400px"
+    (engineReady)="onEngineReady($event)"
+/&gt;</code></pre>
     </div>
     <h3>{{ "docs.engine-api.angular-panel-title" | translate }}</h3>
     <p>{{ "docs.engine-api.angular-panel-desc" | translate }}</p>
     <div class="code-block">
       <span class="code-label">app.component.ts</span>
       <pre><code>&#64;ViewChild('panel') panel!: CliPanelComponent;
-        async runOnPanel(command: string) &#123;
-        this.panel.open();
-        const engine = this.panel.getEngine();       // active pane
-        await engine?.execute(command);
-        // Or target a specific pane
-        const engine2 = this.panel.getEngine(paneId);
-        await engine2?.execute(command);
-      &#125;</code></pre>
+
+async runOnPanel(command: string) &#123;
+    this.panel.open();
+    const engine = this.panel.getEngine();       // active pane
+    await engine?.execute(command);
+
+    // Or target a specific pane
+    const engine2 = this.panel.getEngine(paneId);
+    await engine2?.execute(command);
+&#125;</code></pre>
     </div>
   </div>
 }
@@ -170,34 +178,40 @@
     <div class="code-block">
       <span class="code-label">App.tsx</span>
       <pre><code>import &#123; useRef &#125; from 'react';
-        import &#123; Cli, CliPanel &#125; from '&#64;qodalis/react-cli';
-        import type &#123; ICliPanelRef &#125; from '&#64;qodalis/cli-core';
-        import type &#123; CliEngine &#125; from '&#64;qodalis/cli';
-        function App() &#123;
-        const engineRef = useRef&lt;CliEngine | null&gt;(null);
-        const panelRef = useRef&lt;ICliPanelRef&lt;CliEngine&gt;&gt;(null);
-        async function runCommand(command: string) &#123;
+import &#123; Cli, CliPanel &#125; from '&#64;qodalis/react-cli';
+import type &#123; ICliPanelRef &#125; from '&#64;qodalis/cli-core';
+import type &#123; CliEngine &#125; from '&#64;qodalis/cli';
+
+function App() &#123;
+    const engineRef = useRef&lt;CliEngine | null&gt;(null);
+    const panelRef = useRef&lt;ICliPanelRef&lt;CliEngine&gt;&gt;(null);
+
+    async function runCommand(command: string) &#123;
         // From standalone &lt;Cli&gt; via onEngineReady
         await engineRef.current?.execute(command);
-        &#125;
-        async function runOnPanel(command: string) &#123;
+    &#125;
+
+    async function runOnPanel(command: string) &#123;
         // From &lt;CliPanel&gt; via getEngine()
         panelRef.current?.open();
         const engine = panelRef.current?.getEngine();
         await engine?.execute(command);
-        &#125;
-        return (
+    &#125;
+
+    return (
         &lt;&gt;
-        &lt;button onClick=&#123;() =&gt; runCommand('help')&#125;&gt;Help&lt;/button&gt;
-        &lt;Cli
-        options=&#123;options&#125;
-        modules=&#123;modules&#125;
-        onEngineReady=&#123;(e) =&gt; (engineRef.current = e)&#125;
-        /&gt;
-        &lt;CliPanel ref=&#123;panelRef&#125; options=&#123;panelOptions&#125; /&gt;
+            &lt;button onClick=&#123;() =&gt; runCommand('help')&#125;&gt;Help&lt;/button&gt;
+
+            &lt;Cli
+                options=&#123;options&#125;
+                modules=&#123;modules&#125;
+                onEngineReady=&#123;(e) =&gt; (engineRef.current = e)&#125;
+            /&gt;
+
+            &lt;CliPanel ref=&#123;panelRef&#125; options=&#123;panelOptions&#125; /&gt;
         &lt;/&gt;
-        );
-      &#125;</code></pre>
+    );
+&#125;</code></pre>
     </div>
   </div>
 }
@@ -209,33 +223,40 @@
     <div class="code-block">
       <span class="code-label">App.vue</span>
       <pre><code>&lt;script setup&gt;
-        import &#123; ref &#125; from 'vue';
-        import &#123; Cli, CliPanel &#125; from '&#64;qodalis/vue-cli';
-        const engine = ref(null);
-        const panel = ref();
-        function onEngineReady(e) &#123;
-        engine.value = e;
-        &#125;
-        async function runCommand(command) &#123;
-        // From standalone &lt;Cli&gt;
-        await engine.value?.execute(command);
-        &#125;
-        async function runOnPanel(command) &#123;
-        // From &lt;CliPanel&gt;
-        panel.value.open();
-        const eng = panel.value.getEngine();
-        await eng?.execute(command);
-        &#125;
-        &lt;/script&gt;
-        &lt;template&gt;
-        &lt;button &#64;click="runCommand('help')"&gt;Help&lt;/button&gt;
-        &lt;Cli
+import &#123; ref &#125; from 'vue';
+import &#123; Cli, CliPanel &#125; from '&#64;qodalis/vue-cli';
+
+const engine = ref(null);
+const panel = ref();
+
+function onEngineReady(e) &#123;
+    engine.value = e;
+&#125;
+
+async function runCommand(command) &#123;
+    // From standalone &lt;Cli&gt;
+    await engine.value?.execute(command);
+&#125;
+
+async function runOnPanel(command) &#123;
+    // From &lt;CliPanel&gt;
+    panel.value.open();
+    const eng = panel.value.getEngine();
+    await eng?.execute(command);
+&#125;
+&lt;/script&gt;
+
+&lt;template&gt;
+    &lt;button &#64;click="runCommand('help')"&gt;Help&lt;/button&gt;
+
+    &lt;Cli
         :options="options"
         :modules="modules"
         &#64;engine-ready="onEngineReady"
-        /&gt;
-        &lt;CliPanel ref="panel" :options="panelOptions" /&gt;
-      &lt;/template&gt;</code></pre>
+    /&gt;
+
+    &lt;CliPanel ref="panel" :options="panelOptions" /&gt;
+&lt;/template&gt;</code></pre>
     </div>
   </div>
 }
@@ -248,18 +269,23 @@
     <div class="code-block">
       <span class="code-label">main.ts</span>
       <pre><code>import '&#64;qodalis/cli/assets/styles.css';
-        import &#123; CliEngine &#125; from '&#64;qodalis/cli';
-        import &#123; guidModule &#125; from '&#64;qodalis/cli-guid';
-        const container = document.getElementById('terminal')!;
-        const engine = new CliEngine(container, &#123;
-        welcomeMessage: 'Ready!',
-        &#125;);
-        engine.registerModules([guidModule]);
-        await engine.start();
-        engine.focus();
-        // Execute commands directly
-        await engine.execute('help');
-      await engine.execute('guid');</code></pre>
+import &#123; CliEngine &#125; from '&#64;qodalis/cli';
+import &#123; guidModule &#125; from '&#64;qodalis/cli-guid';
+
+const container = document.getElementById('terminal')!;
+
+const engine = new CliEngine(container, &#123;
+    welcomeMessage: 'Ready!',
+&#125;);
+
+engine.registerModules([guidModule]);
+
+await engine.start();
+engine.focus();
+
+// Execute commands directly
+await engine.execute('help');
+await engine.execute('guid');</code></pre>
     </div>
   </div>
 }
