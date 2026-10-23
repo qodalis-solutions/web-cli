@@ -236,6 +236,8 @@ export class PlaygroundComponent implements AfterViewInit, OnDestroy {
         const engine = new CliEngine(container, {
             boot: { showLogs: false },
             welcome: false,
+            // Rebuilds happen while the reader types in the editor: leave the keyboard there
+            autoFocus: false,
             wasmUrl: '/assets/wasm/qodalis_cli_wasm_bg.wasm',
         });
         engine.registerModules(modules);

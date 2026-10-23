@@ -7,13 +7,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Docs site
 
-- **Playground** (`/docs/playground`): write a command processor or module in TypeScript in a Monaco editor (autocomplete and type errors from the real `@qodalis/cli-core` types) and the terminal next to it is rebuilt with your code after every change, then runs the commands you list. Five starting points (a command, sub-commands, prompts, progress and cancelling, a module); code is kept in the browser and **Copy link** shares it in the URL. Runnable TypeScript examples in the docs get a **Playground** button that opens them there, with their missing `@qodalis/cli-core` imports added. The editor is loaded only on that page: other pages are unchanged.
+- **Playground** (`/docs/playground`): write a command processor or module in TypeScript in a Monaco editor (autocomplete and type errors from the real `@qodalis/cli-core` types) and the terminal next to it is rebuilt with your code after every change, then runs the commands you list. The page uses the full window width, and the editor keeps the keyboard while the terminal is rebuilt. Five starting points (a command, sub-commands, prompts, progress and cancelling, a module); code is kept in the browser and **Copy link** shares it in the URL. Runnable TypeScript examples in the docs get a **Playground** button that opens them there, with their missing `@qodalis/cli-core` imports added. The editor is loaded only on that page: other pages are unchanged.
 - Code examples keep their own indentation (the beta.18 template migration had re-indented 97 of them); CI checks it (`tools/check-docs-code-blocks.js`).
 - The `GreetProcessor` example on Command Processors works as written: it sets `acceptsRawInput` (without it `greet Ada` is "Command not found") and gives its parameter a `type`.
 
 ### CLI engine (`@qodalis/cli`)
 
 - `CliEngine` option `welcome`: `false` starts with just the prompt, without the banner and the animated greeting (`start()` no longer waits about 4 seconds for the greeting to type out); an object configures the banner like `welcomeModule.configure()`.
+- `CliEngine` option `autoFocus`: `false` leaves the keyboard where it is when the terminal starts (it always focused itself).
 
 ## v2.0.0-beta.20
 
