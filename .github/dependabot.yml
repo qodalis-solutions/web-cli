@@ -26,6 +26,12 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "vue"
         update-types: ["version-update:semver-major"]
+      # Jasmine 7 makes its globals read-only, which the Angular Karma builder
+      # (zone.js patches `describe`) does not support yet.
+      - dependency-name: "jasmine-core"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/jasmine"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: cargo
     directory: /packages/cli/wasm
