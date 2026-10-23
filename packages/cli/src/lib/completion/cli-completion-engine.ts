@@ -132,9 +132,9 @@ export class CliCompletionEngine {
         const allTokens = this.tokenize(input).map((t) => t.text);
 
         // Find which token the cursor is in
-        let tokenStart = 0;
-        let token = '';
-        let tokenIndex = 0;
+        let tokenStart: number;
+        let token: string;
+        let tokenIndex: number;
 
         const last = tokens[tokens.length - 1];
         if (!last || last.start + last.text.length < beforeCursor.length) {

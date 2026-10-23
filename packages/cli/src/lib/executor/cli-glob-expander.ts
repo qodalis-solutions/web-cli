@@ -83,7 +83,7 @@ export function matchGlob(fs: GlobFileSystem, pattern: string): string[] {
                 continue;
             }
             const regex = globToRegExp(segment);
-            let children: { name: string; type: 'file' | 'directory' }[] = [];
+            let children: { name: string; type: 'file' | 'directory' }[];
             try {
                 if (!fs.isDirectory(c.resolved)) continue;
                 children = fs.listDirectory(c.resolved);
@@ -116,7 +116,7 @@ function descendants(
     const found: { shown: string; resolved: string }[] = [];
     const walk = (dir: { shown: string; resolved: string }, depth: number) => {
         if (depth > 32) return;
-        let children: { name: string; type: 'file' | 'directory' }[] = [];
+        let children: { name: string; type: 'file' | 'directory' }[];
         try {
             if (!fs.isDirectory(dir.resolved)) return;
             children = fs.listDirectory(dir.resolved);

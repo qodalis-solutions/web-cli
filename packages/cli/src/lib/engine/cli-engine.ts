@@ -197,7 +197,7 @@ export class CliEngine {
         const core = await this.setupServices();
         const bootLog = await this.beginBootReport(core, startedAt);
 
-        let modules: ICliModule[] = [];
+        let modules: ICliModule[];
         try {
             const serverManager = this.registerRuntimeServices(core);
             await this.connectServers(serverManager, bootLog);

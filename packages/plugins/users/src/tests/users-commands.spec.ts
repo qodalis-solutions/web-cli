@@ -46,7 +46,7 @@ describe('users commands (local mode)', () => {
         r = await run('usermod alice --name=alicia --email=al@x.io');
         expect(r.out).toContain("User 'alicia' updated");
 
-        r = await run('usermod alicia --disable');
+        await run('usermod alicia --disable');
         r = await run('listusers --query=ali');
         expect(r.out).toContain('disabled');
 
