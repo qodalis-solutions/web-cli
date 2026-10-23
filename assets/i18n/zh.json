@@ -509,5 +509,25 @@
   "docs.server-detail.dotnet.docker-port": "服务器默认运行在端口 8046。",
   "docs.server-detail.dotnet.connecting": "连接前端",
 
-  "lang.switch": "语言"
+  "lang.switch": "语言",
+  "sidebar.playground": "演练场",
+  "docs.playground.title": "演练场",
+  "docs.playground.intro": "用 TypeScript 编写命令并立即试用：每次修改后终端都会用你的代码重建。可以从示例开始，或用本文档中示例的 Playground 按钮打开它。",
+  "docs.playground.example": "示例",
+  "docs.playground.from-link": "来自链接的代码",
+  "docs.playground.run": "运行",
+  "docs.playground.reset": "重置",
+  "docs.playground.share": "复制链接",
+  "docs.playground.link-copied": "链接已复制",
+  "docs.playground.link-in-address-bar": "链接在地址栏中",
+  "docs.playground.link-notice": "这段代码来自链接。请先阅读：点击运行后它会在你的浏览器中执行。",
+  "docs.playground.code": "代码",
+  "docs.playground.loading": "正在加载编辑器…",
+  "docs.playground.commands": "每次构建后运行的命令（每行一个）",
+  "docs.playground.terminal": "终端",
+  "docs.playground.built": "构建用时 {{ms}} ms",
+  "docs.playground.built-with-type-errors": "正在运行，有 {{count}} 个类型错误：将鼠标悬停在带下划线的代码上",
+  "docs.playground.press-run": "点击运行开始",
+  "docs.playground.hint": "导出一个命令处理器（类或带 processCommand 的对象）或模块，并从 @qodalis/cli-core 导入。代码保存在此浏览器中；复制链接即可分享。",
+  "docs.playground.open": "Playground"
 }

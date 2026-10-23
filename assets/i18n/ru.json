@@ -509,5 +509,25 @@
   "docs.server-detail.dotnet.docker-port": "Сервер работает на порту 8046 по умолчанию.",
   "docs.server-detail.dotnet.connecting": "Подключение Фронтенда",
 
-  "lang.switch": "Язык"
+  "lang.switch": "Язык",
+  "sidebar.playground": "Песочница",
+  "docs.playground.title": "Песочница",
+  "docs.playground.intro": "Напишите команду на TypeScript и сразу попробуйте её: терминал пересобирается с вашим кодом после каждого изменения. Начните с примера или откройте любой пример из документации кнопкой Playground.",
+  "docs.playground.example": "Пример",
+  "docs.playground.from-link": "Код из ссылки",
+  "docs.playground.run": "Запустить",
+  "docs.playground.reset": "Сбросить",
+  "docs.playground.share": "Копировать ссылку",
+  "docs.playground.link-copied": "Ссылка скопирована",
+  "docs.playground.link-in-address-bar": "Ссылка в адресной строке",
+  "docs.playground.link-notice": "Этот код пришёл по ссылке. Сначала прочитайте его: он выполнится в вашем браузере, когда вы нажмёте «Запустить».",
+  "docs.playground.code": "Код",
+  "docs.playground.loading": "Загрузка редактора…",
+  "docs.playground.commands": "Команды после каждой сборки (по одной в строке)",
+  "docs.playground.terminal": "Терминал",
+  "docs.playground.built": "Собрано за {{ms}} мс",
+  "docs.playground.built-with-type-errors": "Работает, ошибок типов: {{count}} — наведите на подчёркнутый код",
+  "docs.playground.press-run": "Нажмите «Запустить», чтобы начать",
+  "docs.playground.hint": "Экспортируйте обработчик команды (класс или объект с processCommand) или модуль и импортируйте из @qodalis/cli-core. Код сохраняется в этом браузере; «Копировать ссылку» делится им.",
+  "docs.playground.open": "Playground"
 }
