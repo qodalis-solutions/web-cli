@@ -30,3 +30,7 @@ overrides:
   # nx 23.3 pins undici 7.29.0; sockjs (webpack-dev-server) still asks for uuid 8. Both are patched in-range.
   'nx>undici': '^7.29.1'
   'sockjs>uuid': '^11.1.1'
+  # monaco-editor 0.57 bundles dompurify 3.4.15; the DOMPurify advisories are fixed in 3.4.17.
+  'dompurify': '>=3.4.17'
+  # @angular/build 22.2 pins vite 8.3.0; the vite/launch-editor advisories are fixed in 8.3.3.
+  '@angular/build>vite': '^8.3.3'
