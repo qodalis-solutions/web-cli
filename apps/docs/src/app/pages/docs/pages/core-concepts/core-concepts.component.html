@@ -380,11 +380,14 @@ if [ -f notes.md ]; then cat notes.md; else echo "no notes"; fi</code></pre>
       <pre><code>export class GreetProcessor implements ICliCommandProcessor &#123;
     command = 'greet';
     description = 'Say hello';
+    // Words after the command (greet Ada) are its input, not sub-commands
+    acceptsRawInput = true;
 
     parameters = [
         &#123;
             name: 'name',
             description: 'Name to greet',
+            type: 'string',
             required: false,
         &#125;,
     ];
