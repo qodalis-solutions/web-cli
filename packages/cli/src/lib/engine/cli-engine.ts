@@ -80,6 +80,13 @@ export interface CliEngineOptions extends CliOptions {
      * @default true
      */
     welcome?: boolean | CliWelcomeMessageConfig;
+    /**
+     * Focus the terminal when it starts. Turn it off when the terminal sits
+     * next to other inputs that should keep the keyboard (an editor that
+     * rebuilds the terminal while the user types); `focus()` still works.
+     * @default true
+     */
+    autoFocus?: boolean;
 }
 
 /** What the start phases share once services exist. */
@@ -246,7 +253,11 @@ export class CliEngine {
         this.terminalOptions = getTerminalOptions(
             this.options?.terminalOptions,
         );
-        const setup = initializeTerminal(this.container, this.terminalOptions);
+        const setup = initializeTerminal(
+            this.container,
+            this.terminalOptions,
+            this.options?.autoFocus !== false,
+        );
         this.terminal = setup.terminal;
         this.fitAddon = setup.fitAddon;
         this.serializeAddon = setup.serializeAddon;
