@@ -30,7 +30,8 @@
           "zone.js/testing"
         ],
         "browsers": "ChromeHeadless",
-        "watch": false
+        "watch": false,
+        "builderMode": "application"
       }
     }
   }
