@@ -296,8 +296,8 @@ importers:
         specifier: ^8.3.4
         version: 8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1)
       wait-on:
-        specifier: ^8.0.0
-        version: 8.0.5(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^9.5.1
+        version: 9.5.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
 
   apps/demo-minimal:
     dependencies:
@@ -7456,9 +7456,9 @@ packages:
       typescript:
         optional: true
 
-  wait-on@8.0.5:
-    resolution: {integrity: sha512-J3WlS0txVHkhLRb2FsmRg3dkMTCV1+M6Xra3Ho7HzZDHpE7DCOnoSoCJsZotrmW3uRMhvIJGSKUKrh/MeF4iag==}
-    engines: {node: '>=12.0.0'}
+  wait-on@9.5.1:
+    resolution: {integrity: sha512-bOtj1wRY6u+GPnNskZLcgZNHOaL5NC4+5hRCbEpVoVX6MbMrCLCqIBM2bjsAfrgst3ZC0siIo7vLb4LuYFfIow==}
+    engines: {node: '>=20.0.0'}
     hasBin: true
 
   watchpack@2.6.2:
@@ -14584,12 +14584,11 @@ snapshots:
     optionalDependencies:
       typescript: 6.0.3
 
-  wait-on@8.0.5(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1):
+  wait-on@9.5.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1):
     dependencies:
       axios: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       joi: 18.3.0
       lodash: 4.18.1
-      minimist: 1.2.8
       rxjs: 7.8.2
     transitivePeerDependencies:
       - debug
