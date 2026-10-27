@@ -1,76 +1,64 @@
 # @qodalis/react-cli
 
-React wrapper for the [Qodalis Web CLI](https://github.com/qodalis-solutions/web-cli) — a web-based terminal with 50+ built-in commands, theming, and runtime package installation.
+React components for [Qodalis CLI](https://github.com/qodalis-solutions/web-cli): a web terminal extended through command modules.
 
-## Installation
+[![npm](https://img.shields.io/npm/v/@qodalis/react-cli.svg)](https://www.npmjs.com/package/@qodalis/react-cli)
+[![Build](https://github.com/qodalis-solutions/web-cli/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/qodalis-solutions/web-cli/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)
+
+## Install
 
 ```bash
 npm install @qodalis/react-cli
 ```
 
-## Quick Start
+Works with React 18 and 19.
+
+## Usage
 
 ```tsx
+import '@qodalis/react-cli/styles.css';
 import { Cli } from '@qodalis/react-cli';
+import { guidModule } from '@qodalis/cli-guid';
 
-function App() {
-  return <Cli style={{ width: '100vw', height: '100vh' }} />;
+export function App() {
+    return (
+        <Cli
+            modules={[guidModule]}
+            options={{ welcome: { message: 'Welcome to My App', show: 'daily' } }}
+            style={{ height: '100vh' }}
+        />
+    );
 }
 ```
 
-## Components
-
-| Export | Description |
-|--------|-------------|
-| `Cli` | Full-screen terminal component |
-| `CliPanel` | Collapsible panel variant |
-| `CliProvider` | Context provider for sharing a CLI engine instance across components |
-| `CliConfigProvider` | Configuration context provider |
-| `useCli` | Hook to access the CLI engine from context |
-| `useCliEngine` | Hook to create and manage a CLI engine instance |
-| `useCliConfig` | Hook to access CLI configuration from context |
-| `CliEngine` | Re-exported framework-agnostic engine for advanced use |
-
-## Configuration
+`CliConfigProvider` shares `modules`, `options` and `services` with every terminal below it; props on a component override it:
 
 ```tsx
-import { Cli } from '@qodalis/react-cli';
+import { CliConfigProvider, CliPanel } from '@qodalis/react-cli';
 
-function App() {
-  return (
-    <Cli
-      options={{
-        welcomeMessage: { message: 'Welcome!', show: 'daily' },
-        usersModule: { enabled: true },
-      }}
-      style={{ width: '100vw', height: '100vh' }}
-    />
-  );
-}
+<CliConfigProvider modules={[guidModule]}>
+    <CliPanel options={{ position: 'bottom' }} />
+</CliConfigProvider>;
 ```
 
-## Registering Custom Commands
+## Exports
 
-```tsx
-import { Cli } from '@qodalis/react-cli';
-import { ICliModule } from '@qodalis/cli-core';
-import { GreetCommandProcessor } from './greet-command-processor';
-
-const myModule: ICliModule = {
-  apiVersion: 2,
-  name: 'my-commands',
-  processors: [new GreetCommandProcessor()],
-};
-
-function App() {
-  return <Cli modules={[myModule]} />;
-}
-```
+| Export | Purpose |
+| --- | --- |
+| `Cli` | Terminal. Props: `modules`, `options`, `services`, `snapshot`, `onReady(engine)`, `style`, `className` |
+| `CliPanel` | Panel docked to an edge of the page, with tabs and split panes. Props: `options` (`CliPanelOptions`), `modules`, `services`, `onClose`, plus controlled `collapsed`, `hidden`, `maximized`, `activeTabId`, `position`, `height`, `width` |
+| `CliConfigProvider`, `useCliConfig` | Shared configuration for the terminals below it |
+| `CliProvider`, `useCli` | Shares one engine instance between components |
+| `useCliEngine` | Creates and manages a `CliEngine` on your own container element |
+| `CliEngine`, `CliEngineOptions` | Re-exported from `@qodalis/cli` |
 
 ## Documentation
 
-See the [main README](https://github.com/qodalis-solutions/web-cli#readme) for the full command reference, extension guide, and framework comparison.
+- [Getting started](https://cli.qodalis.com/docs/getting-started), [Configuration](https://cli.qodalis.com/docs/configuration), [Panel API](https://cli.qodalis.com/docs/panel-api)
+- [Plugins](https://cli.qodalis.com/docs/plugins) and [creating a plugin](https://cli.qodalis.com/docs/create-plugin)
+- [Migrating to 2.0](https://cli.qodalis.com/docs/migration)
 
 ## License
 
-MIT
+[MIT](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)

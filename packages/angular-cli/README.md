@@ -1,96 +1,81 @@
 # @qodalis/angular-cli
 
-Angular wrapper for the [Qodalis Web CLI](https://github.com/qodalis-solutions/web-cli) — a web-based terminal with 50+ built-in commands, theming, and runtime package installation.
+Angular components for [Qodalis CLI](https://github.com/qodalis-solutions/web-cli): a web terminal extended through command modules.
 
-## Installation
+[![npm](https://img.shields.io/npm/v/@qodalis/angular-cli.svg)](https://www.npmjs.com/package/@qodalis/angular-cli)
+[![Build](https://github.com/qodalis-solutions/web-cli/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/qodalis-solutions/web-cli/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)
+
+## Install
 
 ```bash
 npm install @qodalis/angular-cli
 ```
 
-Requires Angular 22 or later. The panel works with both zoneless and zone.js change detection.
-
-## Quick Start
-
-Import the module:
-
-```typescript
-import { CliModule } from '@qodalis/angular-cli';
-
-@NgModule({
-  imports: [CliModule],
-})
-export class AppModule {}
-```
-
-Add styles to `angular.json`:
+Requires Angular 22 or later; works with zoneless and zone.js change detection. Add the stylesheet to `angular.json`:
 
 ```json
-{
-  "styles": [
-    "node_modules/@qodalis/angular-cli/src/assets/styles.css"
-  ]
+"styles": ["node_modules/@qodalis/angular-cli/src/assets/styles.css"]
+```
+
+## Usage
+
+Import `CliModule` and pass the modules (plugins or your own commands) to the component:
+
+```typescript
+import { Component } from '@angular/core';
+import { CliModule } from '@qodalis/angular-cli';
+import { ICliModule } from '@qodalis/cli-core';
+import { guidModule } from '@qodalis/cli-guid';
+
+@Component({
+    selector: 'app-root',
+    imports: [CliModule],
+    template: `<cli [modules]="modules" [options]="options" height="100vh" />`,
+})
+export class AppComponent {
+    modules: ICliModule[] = [guidModule];
+    options = { welcome: { message: 'Welcome to My App', show: 'daily' as const } };
 }
 ```
 
-Use the component:
-
-```html
-<!-- Full terminal -->
-<cli [options]="cliOptions" />
-
-<!-- Collapsible panel -->
-<cli-panel />
-```
-
-## Configuration
+To register modules once for every `<cli>` and `<cli-panel>` in the app, provide them through DI instead:
 
 ```typescript
-const cliOptions = {
-  welcomeMessage: {
-    message: '-- Welcome to My App --',
-    show: 'daily', // 'never' | 'once' | 'daily' | 'always'
-  },
-  usersModule: {
-    enabled: true,
-  },
+import { ApplicationConfig } from '@angular/core';
+import { resolveCliModuleProvider } from '@qodalis/angular-cli';
+import { guidModule } from '@qodalis/cli-guid';
+
+export const appConfig: ApplicationConfig = {
+    providers: [resolveCliModuleProvider(guidModule)],
 };
 ```
 
-## Registering Custom Commands
+## Components
 
-```typescript
-import { CliModule, resolveCliModuleProvider } from '@qodalis/angular-cli';
-import { ICliModule } from '@qodalis/cli-core';
-import { MyCommandProcessor } from './my-command-processor';
+| Selector | Inputs | Outputs |
+| --- | --- | --- |
+| `<cli>` | `options`, `modules`, `height`, `snapshot` | `engineReady` (the `CliEngine`) |
+| `<cli-panel>` | `options` (`CliPanelOptions`: `position`, `isCollapsed`, `isHidden`, `resizable`, ...), `modules`, `collapsed`, `hidden`, `maximized`, `activeTabId`, `position`, `height`, `width` | `onClose`, `collapsedChange`, `hiddenChange`, `maximizedChange`, `activeTabIdChange` |
 
-const myModule: ICliModule = {
-  apiVersion: 2,
-  name: 'my-commands',
-  processors: [new MyCommandProcessor()],
-};
-
-@NgModule({
-  imports: [CliModule],
-  providers: [resolveCliModuleProvider(myModule)],
-})
-export class AppModule {}
-```
+`<cli-panel>` is a panel docked to an edge of the page (`'bottom' | 'top' | 'left' | 'right'`) with tabs and split panes.
 
 ## Exports
 
-| Export | Description |
-|--------|-------------|
-| `CliModule` | Angular module that registers the terminal components |
-| `CliComponent` | Full-screen terminal component (`<cli>`) |
-| `CliPanelComponent` | Collapsible panel variant (`<cli-panel>`) |
-| `resolveCliProviders` | Helper to register custom command processors via DI |
-| `CliEngine` | Re-exported framework-agnostic engine for advanced use |
+| Export | Purpose |
+| --- | --- |
+| `CliModule` | Declares and exports `<cli>` and `<cli-panel>` |
+| `CliComponent`, `CliPanelComponent`, `CliPanelOptions` | The components and panel options type |
+| `resolveCliModuleProvider(module)` | Registers an `ICliModule` through DI |
+| `CliEngine`, `CliEngineOptions` | Re-exported from `@qodalis/cli` |
 
 ## Documentation
 
-See the [main README](https://github.com/qodalis-solutions/web-cli#readme) for the full command reference, extension guide, and framework comparison.
+- [Getting started](https://cli.qodalis.com/docs/getting-started), [Configuration](https://cli.qodalis.com/docs/configuration), [Panel API](https://cli.qodalis.com/docs/panel-api)
+- [Plugins](https://cli.qodalis.com/docs/plugins) and [creating a plugin](https://cli.qodalis.com/docs/create-plugin)
+- [Migrating to 2.0](https://cli.qodalis.com/docs/migration)
+- Example app: [qodalis-cli-angular-example](https://github.com/qodalis-solutions/qodalis-cli-angular-example)
 
 ## License
 
-MIT
+[MIT](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)
