@@ -1,24 +1,75 @@
-# Cli extension
+# @qodalis/cli-browser-storage
 
-The `@qodalis/cli-browser-storage` package is a CLI extension designed to provide utilities for browser storage services like cookies, localStorage etc.
+Read and write browser cookies and local storage from the Qodalis CLI.
 
-# Installation
+[![npm version](https://img.shields.io/npm/v/@qodalis/cli-browser-storage.svg)](https://www.npmjs.com/package/@qodalis/cli-browser-storage)
+[![license](https://img.shields.io/npm/l/@qodalis/cli-browser-storage.svg)](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)
+
+## Install
 
 ```bash
-packages add @qodalis/cli-browser-storage
+npm install @qodalis/cli-browser-storage
 ```
 
-# Usage
+Or install it at runtime in a running terminal:
 
 ```bash
-cookies set key value
-cookies get key
-cookies remove key
+pkg add browser-storage
+```
+
+## Usage
+
+Register `browserStorageModule` with your terminal.
+
+```typescript
+import { browserStorageModule } from '@qodalis/cli-browser-storage';
+
+// Angular (template)
+// <cli [modules]="[browserStorageModule]"></cli>
+
+// Angular (DI, NgModule or application providers)
+providers: [resolveCliModuleProvider(browserStorageModule)];
+
+// React
+<Cli modules={[browserStorageModule]} />
+
+// Vue
+<Cli :modules="[browserStorageModule]" />
+
+// Vanilla TypeScript (CliEngine from @qodalis/cli)
+engine.registerModule(browserStorageModule);
+```
+
+## Commands
+
+The module registers two commands: `cookies` and `local-storage`. Running either alone prints its help. Values may contain spaces; quote them or pass several words.
+
+| Command | Description |
+|---|---|
+| `cookies list` | List all cookies for the current page |
+| `cookies get <key>` | Print a cookie value (`null` if missing) |
+| `cookies set <key> <value>` | Set a cookie (path `/`, expires in one year) |
+| `cookies remove <key>` | Delete a cookie |
+| `local-storage get <key>` | Print a local storage value (`null` if missing) |
+| `local-storage set <key> <value>` | Store a value |
+| `local-storage remove <key>` | Delete a key |
+
+```bash
+cookies set lang en
+cookies get lang
 cookies list
+cookies remove lang
 
-local-storage get key
-local-storage set key value
-local-storage remove key
+local-storage set theme dark
+local-storage set greeting "hello world"
+local-storage get theme
+local-storage remove theme
 ```
 
-This command downloads and registers the extension for use within the CLI environment.
+## Documentation
+
+https://cli.qodalis.com/docs/plugins/browser-storage
+
+## License
+
+MIT
