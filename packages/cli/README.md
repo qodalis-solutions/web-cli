@@ -1,56 +1,62 @@
 # @qodalis/cli
 
-Framework-agnostic terminal engine for the [Qodalis Web CLI](https://github.com/qodalis-solutions/web-cli) — 50+ built-in commands, theming, runtime package installation, and extensible command processing.
+The framework-agnostic engine of [Qodalis CLI](https://github.com/qodalis-solutions/web-cli): terminal, command line, executor, built-in commands and package manager. The Angular, React, Vue and Electron packages are thin wrappers around it.
 
-## Installation
+[![npm](https://img.shields.io/npm/v/@qodalis/cli.svg)](https://www.npmjs.com/package/@qodalis/cli)
+[![Build](https://github.com/qodalis-solutions/web-cli/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/qodalis-solutions/web-cli/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)
+
+## Install
 
 ```bash
-npm install @qodalis/cli
+npm install @qodalis/cli @qodalis/cli-core
 ```
 
-## Quick Start
+Use it directly in plain TypeScript, or in a framework without a wrapper. For Angular, React or Vue, install [`@qodalis/angular-cli`](https://www.npmjs.com/package/@qodalis/angular-cli), [`@qodalis/react-cli`](https://www.npmjs.com/package/@qodalis/react-cli) or [`@qodalis/vue-cli`](https://www.npmjs.com/package/@qodalis/vue-cli) instead.
+
+## Usage
 
 ```typescript
+import '@qodalis/cli/assets/styles.css';
 import { CliEngine } from '@qodalis/cli';
+import { guidModule } from '@qodalis/cli-guid';
 
 const engine = new CliEngine(document.getElementById('terminal')!, {
-  welcome: { message: 'Welcome!', show: 'always' },
+    welcome: { message: 'Welcome to My App', show: 'daily' },
+    terminalOptions: { fontSize: 14 },
 });
 
-engine.registerModule({
-  apiVersion: 2,
-  name: 'my-commands',
-  processors: [new MyCommandProcessor()],
-});
+engine.registerModule(guidModule);
 await engine.start();
 ```
 
-## What's Inside
+| `CliEngine` member | Purpose |
+| --- | --- |
+| `new CliEngine(container, options?)` | Creates the engine on a container element (`CliEngineOptions`) |
+| `registerModule(module)`, `registerModules(modules)` | Adds commands, services and translations from an `ICliModule` (before `start()`) |
+| `registerService(token, value)` | Provides a service to commands (before `start()`) |
+| `start()` | Boots the modules and opens the terminal |
+| `execute(command)` | Runs a command line as if typed |
+| `focus()`, `getTerminal()`, `getContext()` | Focus, the xterm.js `Terminal`, the execution context |
+| `snapshot()` | Captures the terminal state (restore it with the `snapshot` option) |
+| `destroy()` | Disposes the terminal, background services and listeners |
 
-This is the core engine that powers all framework wrappers (`@qodalis/angular-cli`, `@qodalis/react-cli`, `@qodalis/vue-cli`). It provides:
+Tests can run commands without a browser terminal through `CliTestHarness`.
 
-- **`CliEngine`** — Main entry point. Manages the xterm.js terminal, command execution, input handling, theming, and state persistence.
-- **Command processor registry** — Register, discover, and execute command processors.
-- **Built-in commands** — 50+ commands: help, theme, pkg, echo, eval, json, base64, hash, random, and more.
-- **Command parsing** — Supports flags, quoted strings, chaining (`&&`, `||`, `|`, `>>`), and argument coercion.
-- **Input reader** — Interactive prompts: `readLine`, `readPassword`, `readConfirm`, `readSelect` (with live preview via `onChange`).
-- **Theming** — Built-in themes with interactive selection and custom color support.
-- **Runtime package manager** — Install npm packages at runtime without rebuilding.
-- **State persistence** — Per-processor state storage across sessions.
+## What is in it
 
-## When to Use This Package
-
-Use `@qodalis/cli` directly when:
-- Building a vanilla JS/TS application without a framework
-- Integrating into a framework not covered by the existing wrappers
-- Needing low-level control over the terminal engine
-
-For framework-specific wrappers, use [`@qodalis/angular-cli`](https://www.npmjs.com/package/@qodalis/angular-cli), [`@qodalis/react-cli`](https://www.npmjs.com/package/@qodalis/react-cli), or [`@qodalis/vue-cli`](https://www.npmjs.com/package/@qodalis/vue-cli).
+- Command line with history, completion, readline shortcuts, `&&`, `||`, `;`, pipes and `>`/`>>` redirects.
+- Built-in commands: `help`, `theme`, `pkg`, `history`, `alias`, `json`, `diff`, `random`, `timestamp`, `convert`, `color`, `clipboard`, `ps`, `kill`, `htop`, `nano` and more ([full list](https://cli.qodalis.com/docs/built-in-commands)).
+- `pkg`: installs plugins from npm at runtime.
+- Server connections (`servers` option): remote commands, streamed output, `ssh` shell sessions.
+- The dockable panel with tabs and split panes used by the wrappers.
 
 ## Documentation
 
-See the [main README](https://github.com/qodalis-solutions/web-cli#readme) for the full command reference, extension guide, and configuration options.
+- [Engine API](https://cli.qodalis.com/docs/engine-api) and [Configuration](https://cli.qodalis.com/docs/configuration)
+- [Core concepts](https://cli.qodalis.com/docs/core-concepts) and [creating a plugin](https://cli.qodalis.com/docs/create-plugin)
+- [Migrating to 2.0](https://cli.qodalis.com/docs/migration)
 
 ## License
 
-MIT
+[MIT](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)

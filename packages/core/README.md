@@ -1,65 +1,68 @@
 # @qodalis/cli-core
 
-Shared interfaces, models, types, themes, and utilities for the [Qodalis Web CLI](https://github.com/qodalis-solutions/web-cli) framework.
+Interfaces, models, themes and utilities shared by every [Qodalis CLI](https://github.com/qodalis-solutions/web-cli) package. Plugins depend only on this package, never on a framework.
 
-## Installation
+[![npm](https://img.shields.io/npm/v/@qodalis/cli-core.svg)](https://www.npmjs.com/package/@qodalis/cli-core)
+[![Build](https://github.com/qodalis-solutions/web-cli/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/qodalis-solutions/web-cli/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)
+
+## Install
 
 ```bash
 npm install @qodalis/cli-core
 ```
 
-## What's Inside
-
-This package provides the foundational types that all Qodalis CLI libraries and plugins depend on:
-
-### Interfaces
-
-- **`ICliCommandProcessor`** — The core interface for implementing CLI commands. Defines `command`, `description`, `processCommand()`, optional sub-processors, parameters, and hooks.
-- **`ICliExecutionContext`** — Passed to every command at runtime. Provides access to the terminal writer, input reader, progress bars, spinners, state store, user session, clipboard, and abort signals.
-- **`ICliInputReader`** — Terminal input API: `readLine()`, `readPassword()`, `readConfirm()`, `readSelect()` (with optional `onChange` callback for live preview).
-- **`ICliTerminalWriter`** — Terminal output API: `writeln()`, `writeError()`, `writeSuccess()`, `writeWarning()`, `writeInfo()`, `wrapInColor()`.
-
-### Models
-
-- **`CliProcessCommand`** — Parsed command with `command`, `value`, `args`, `chainCommands`, and `rawCommand`.
-- **`CliProcessorMetadata`** — Processor metadata: `sealed`, `hidden`, `module`, `icon`, `requiredCoreVersion`.
-- **`CliSelectOption`** — Options for `readSelect()` interactive menus.
-- **`CliStateConfiguration`** — State persistence configuration for processors.
-
-### Themes
-
-Built-in terminal themes (Dark, Dracula, Solarized, etc.) and the `ICliTheme` interface for custom themes.
-
-### Utilities
-
-Helper functions for command parsing, string manipulation, and common CLI operations.
-
-## Usage
+## A command and its module
 
 ```typescript
 import {
-  ICliCommandProcessor,
-  ICliExecutionContext,
-  CliProcessCommand,
+    API_VERSION,
+    CliProcessCommand,
+    ICliCommandProcessor,
+    ICliExecutionContext,
+    ICliModule,
 } from '@qodalis/cli-core';
 
-export class MyCommandProcessor implements ICliCommandProcessor {
-  command = 'my-command';
-  description = 'Does something useful';
+class GreetCommandProcessor implements ICliCommandProcessor {
+    command = 'greet';
+    description = 'Greet someone by name';
+    valueRequired = true;
 
-  async processCommand(
-    command: CliProcessCommand,
-    context: ICliExecutionContext,
-  ): Promise<void> {
-    context.writer.writeln('Hello from my command!');
-  }
+    async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        context.writer.writeSuccess(`Hello, ${command.value}!`);
+    }
 }
+
+export const greetModule: ICliModule = {
+    apiVersion: API_VERSION,
+    name: 'my-app-commands',
+    processors: [new GreetCommandProcessor()],
+};
 ```
+
+Hosts register the module through the `modules` input/prop, `resolveCliModuleProvider()` (Angular) or `engine.registerModule()`.
+
+## Main types
+
+| Type | Purpose |
+| --- | --- |
+| `ICliModule` | What a plugin exports: `processors`, `services`, `translations`, `permissions`, `guards`, `dependencies`, `priority`, `configure()` and lifecycle hooks (`onInit`, ...) |
+| `ICliCommandProcessor` | A command: `command`, `description`, `parameters`, sub-command `processors`, `processCommand()` |
+| `ICliExecutionContext` | Passed to every command: `writer`, `reader`, `state`, `http`, `clipboard`, `spinner`, `progressBar`, `services`, full-screen mode, abort signal |
+| `ICliTerminalWriter` | Output: `writeln`, `writeSuccess`, `writeError`, `writeTable`, `writeJson`, `writeBox`, `wrapInColor`, ... |
+| `ICliInputReader` | Prompts: `readLine`, `readPassword`, `readConfirm`, `readSelect`, `readMultiSelect`, `readNumber`, `readDate`, `readFile` |
+| `CliProcessCommand` | The parsed command: `command`, `value`, `args`, `rawCommand` |
+| `CliOptions` | Options shared by the engine and wrappers (`servers`, `logLevel`, `packageSources`, ...) |
+| `API_VERSION` | The module API version a plugin is built against |
+
+The package also holds the built-in themes, the panel and server models, and helpers used by plugins.
 
 ## Documentation
 
-See the [main README](https://github.com/qodalis-solutions/web-cli#readme) for full documentation, framework integration guides, and the complete command reference.
+- [Core concepts](https://cli.qodalis.com/docs/core-concepts) and [creating a plugin](https://cli.qodalis.com/docs/create-plugin)
+- [AI plugin development](https://cli.qodalis.com/docs/ai-plugin-development) and the API guide at [llms-full.txt](https://cli.qodalis.com/llms-full.txt)
+- [Migrating to 2.0](https://cli.qodalis.com/docs/migration)
 
 ## License
 
-MIT
+[MIT](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)

@@ -1,76 +1,68 @@
 # @qodalis/vue-cli
 
-Vue 3 wrapper for the [Qodalis Web CLI](https://github.com/qodalis-solutions/web-cli) — a web-based terminal with 50+ built-in commands, theming, and runtime package installation.
+Vue 3 components for [Qodalis CLI](https://github.com/qodalis-solutions/web-cli): a web terminal extended through command modules.
 
-## Installation
+[![npm](https://img.shields.io/npm/v/@qodalis/vue-cli.svg)](https://www.npmjs.com/package/@qodalis/vue-cli)
+[![Build](https://github.com/qodalis-solutions/web-cli/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/qodalis-solutions/web-cli/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)
+
+## Install
 
 ```bash
 npm install @qodalis/vue-cli
 ```
 
-## Quick Start
+Requires Vue 3.3 or later.
+
+## Usage
 
 ```vue
 <script setup lang="ts">
+import '@qodalis/vue-cli/styles.css';
 import { Cli } from '@qodalis/vue-cli';
+import { guidModule } from '@qodalis/cli-guid';
+
+const modules = [guidModule];
+const options = { welcome: { message: 'Welcome to My App', show: 'daily' as const } };
 </script>
 
 <template>
-  <Cli :style="{ width: '100vw', height: '100vh' }" />
+    <Cli :modules="modules" :options="options" :style="{ height: '100vh' }" />
 </template>
 ```
 
-## Components
-
-| Export | Description |
-|--------|-------------|
-| `Cli` | Full-screen terminal component |
-| `CliPanel` | Collapsible panel variant |
-| `CliProvider` | Provider component for sharing a CLI engine instance |
-| `useCli` | Composable to access the CLI engine from the provider |
-| `useCliEngine` | Composable to create and manage a CLI engine instance |
-| `CliInjectionKey` | Injection key for provide/inject pattern |
-| `CliEngine` | Re-exported framework-agnostic engine for advanced use |
-
-## Configuration
+`CliConfigProvider` shares `modules`, `options` and `services` with every terminal below it; props on a component override it:
 
 ```vue
 <script setup lang="ts">
-import { Cli } from '@qodalis/vue-cli';
-
-const options = {
-  welcomeMessage: { message: 'Welcome!', show: 'daily' },
-  usersModule: { enabled: true },
-};
+import { CliConfigProvider, CliPanel } from '@qodalis/vue-cli';
+import { guidModule } from '@qodalis/cli-guid';
 </script>
 
 <template>
-  <Cli :options="options" :style="{ width: '100vw', height: '100vh' }" />
+    <CliConfigProvider :modules="[guidModule]">
+        <CliPanel :options="{ position: 'bottom' }" />
+    </CliConfigProvider>
 </template>
 ```
 
-## Registering Custom Commands
+## Exports
 
-```vue
-<script setup lang="ts">
-import { Cli } from '@qodalis/vue-cli';
-import { ICliModule } from '@qodalis/cli-core';
-import { GreetCommandProcessor } from './greet-command-processor';
-
-const modules: ICliModule[] = [
-  { apiVersion: 2, name: 'my-commands', processors: [new GreetCommandProcessor()] },
-];
-</script>
-
-<template>
-  <Cli :modules="modules" />
-</template>
-```
+| Export | Purpose |
+| --- | --- |
+| `Cli` | Terminal. Props: `modules`, `options`, `services`, `snapshot`, `style`, `class`; emits `ready` with the engine |
+| `CliPanel` | Panel docked to an edge of the page, with tabs and split panes. Props: `options` (`CliPanelOptions`), `modules`, `services`, `onClose`, plus controlled `collapsed`, `hidden`, `maximized`, `activeTabId`, `position`, `height`, `width` |
+| `CliConfigProvider`, `CliConfigKey` | Shared configuration for the terminals below it |
+| `CliProvider`, `useCli`, `CliInjectionKey` | Shares one engine instance between components |
+| `useCliEngine` | Creates and manages a `CliEngine` on your own container element |
+| `CliEngine`, `CliEngineOptions` | Re-exported from `@qodalis/cli` |
 
 ## Documentation
 
-See the [main README](https://github.com/qodalis-solutions/web-cli#readme) for the full command reference, extension guide, and framework comparison.
+- [Getting started](https://cli.qodalis.com/docs/getting-started), [Configuration](https://cli.qodalis.com/docs/configuration), [Panel API](https://cli.qodalis.com/docs/panel-api)
+- [Plugins](https://cli.qodalis.com/docs/plugins) and [creating a plugin](https://cli.qodalis.com/docs/create-plugin)
+- [Migrating to 2.0](https://cli.qodalis.com/docs/migration)
 
 ## License
 
-MIT
+[MIT](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)
