@@ -27,7 +27,7 @@
         "index.d.ts"
     ],
     "dependencies": {
-        "@inquirer/prompts": "^7.0.0",
+        "@inquirer/prompts": "^8.7.4",
         "commander": "^15.0.0"
     }
 }
