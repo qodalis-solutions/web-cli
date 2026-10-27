@@ -1,6 +1,10 @@
 # @qodalis/create-cli-plugin
 
-Scaffold new [Qodalis CLI](https://github.com/qodalis-solutions/web-cli) plugins with a single command.
+Scaffolds a [Qodalis CLI](https://github.com/qodalis-solutions/web-cli) plugin: a command processor, its `ICliModule`, a browser bundle for `pkg add`, and the build setup.
+
+[![npm](https://img.shields.io/npm/v/@qodalis/create-cli-plugin.svg)](https://www.npmjs.com/package/@qodalis/create-cli-plugin)
+[![Build](https://github.com/qodalis-solutions/web-cli/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/qodalis-solutions/web-cli/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)
 
 ## Usage
 
@@ -8,102 +12,63 @@ Scaffold new [Qodalis CLI](https://github.com/qodalis-solutions/web-cli) plugins
 npx @qodalis/create-cli-plugin
 ```
 
-Or install globally:
-
-```bash
-npm install -g @qodalis/create-cli-plugin
-create-cli-plugin
-```
-
-### Interactive Mode
-
-Run without arguments for interactive prompts:
-
-```
-$ npx @qodalis/create-cli-plugin
-Creating a standalone plugin project.
-
-? Plugin name (lowercase, e.g. "mylib"): weather
-? Description: Weather forecasts for the CLI
-? Processor class name (Cli___CommandProcessor): Weather
-
-Scaffolding plugin in /home/user/qodalis-cli-weather...
-  created qodalis-cli-weather/package.json
-  created qodalis-cli-weather/tsup.config.ts
-  ...
-
-Installing dependencies...
-
-Done!
-
-Next steps:
-  1. cd qodalis-cli-weather
-  2. Implement your command in src/lib/processors/
-  3. npx tsup
-  4. npm publish --access public
-```
-
-### Non-Interactive Mode
-
-Pass arguments directly:
+Without options it asks for the name, description and processor class name. To skip the prompts:
 
 ```bash
 npx @qodalis/create-cli-plugin --name weather --description "Weather forecasts" --processor-name Weather
 ```
 
-## Two Modes
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `-n, --name <name>` | prompted | Lowercase plugin name; the package becomes `@qodalis/cli-<name>` |
+| `-d, --description <text>` | `CLI extension for <name>` | Package description |
+| `-p, --processor-name <Name>` | PascalCase of the name | Class name, as in `Cli<Name>CommandProcessor` |
 
-### Standalone (default)
+## Standalone and monorepo
 
-Creates a fully independent npm project:
+| | Standalone (any directory) | Inside the web-cli monorepo |
+| --- | --- | --- |
+| Output | `./qodalis-cli-<name>/` | `packages/plugins/<name>/` |
+| `@qodalis/cli-core` | `^<scaffolder version>` from npm | `workspace:*` |
+| Extra files | `.gitignore`, `pnpm-workspace.yaml`, `AGENTS.md` | `project.json` (Nx), `tsconfig.spec.json`; path alias in `tsconfig.base.json` and a Karma test entry in `angular.json` |
+| Install | Runs `pnpm install` (or `npm install`) | None (workspace) |
+| Build and test | `npm run build` (tsup) into `dist/`; add a test runner of your choice | `pnpm nx build <name>` into `dist/<name>/`, `pnpm nx test <name>` |
+
+In the monorepo, run it through `pnpm run create-plugin -- --name <name> ...`.
+
+## Generated plugin
 
 ```
 qodalis-cli-weather/
-├── package.json          # @qodalis/cli-core as npm dependency
-├── tsup.config.ts        # Builds CJS + ESM + IIFE bundle
-├── tsconfig.json
-├── .gitignore
-├── README.md
-└── src/
-    ├── public-api.ts
-    ├── cli-entrypoint.ts
-    └── lib/
-        ├── version.ts
-        ├── index.ts
-        └── processors/
-            └── cli-weather-command-processor.ts
+  package.json
+  tsup.config.ts          # CJS, ESM, types and the IIFE bundle in umd/
+  tsconfig.json
+  README.md
+  src/
+    public-api.ts         # exports weatherModule (ICliModule)
+    cli-entrypoint.ts     # IIFE entry that calls bootCliModule() for pkg add
+    lib/
+      version.ts          # LIBRARY_VERSION, API_VERSION
+      index.ts
+      processors/
+        cli-weather-command-processor.ts
+    tests/
+      index.spec.ts
 ```
 
-### Monorepo
-
-When run inside the [web-cli monorepo](https://github.com/qodalis-solutions/web-cli), creates the plugin at `packages/plugins/<name>/` with:
-- `workspace:*` dependencies
-- Shared tsup config
-- Nx project.json and test config
-- Auto-updated tsconfig.base.json path aliases
-
-## What Gets Generated
-
-- **Command Processor** implementing `ICliCommandProcessor` from `@qodalis/cli-core`
-- **CLI Module** for framework registration
-- **Public API** barrel export
-- **IIFE entrypoint** for runtime browser loading via `pkg add`
-- **Test spec** with Jasmine
-- **Build config** producing CJS, ESM, and IIFE bundles
-
-## After Scaffolding
-
-1. Implement your command logic in `src/lib/processors/`
-2. Build: `npm run build` (or `npx tsup`)
-3. Publish: `npm publish --access public`
-
-Users install your plugin at runtime:
+Implement the command in `src/lib/processors/`, build, then `npm publish --access public` from the package folder. Apps install it with npm and pass `weatherModule` to the terminal (`modules` input/prop, `resolveCliModuleProvider()` in Angular, `engine.registerModule()`), or load it at runtime:
 
 ```bash
 pkg add @qodalis/cli-weather
-weather forecast --city "New York"
 ```
+
+The standalone project includes an `AGENTS.md` for AI coding agents. With [`@qodalis/mcp-cli`](https://www.npmjs.com/package/@qodalis/mcp-cli), Claude Code can run this scaffolder itself and look up the plugin API.
+
+## Documentation
+
+- [Creating a plugin](https://cli.qodalis.com/docs/create-plugin) and [Core concepts](https://cli.qodalis.com/docs/core-concepts)
+- [AI plugin development](https://cli.qodalis.com/docs/ai-plugin-development)
 
 ## License
 
-MIT
+[MIT](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)
