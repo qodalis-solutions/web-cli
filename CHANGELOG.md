@@ -3,6 +3,17 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.0.0
+
+The first stable release of the 2.0 line: the same packages as 2.0.0-rc.4. Upgrading from 1.x: see [Upgrading to 2.0](https://cli.qodalis.com/docs/migration). The sections below list every change since 1.0.39.
+
+- **Framework-agnostic engine**: `@qodalis/cli` runs the terminal in any page (`CliEngine`); `@qodalis/angular-cli`, `@qodalis/react-cli` and `@qodalis/vue-cli` wrap it with a terminal and a collapsible panel, and `@qodalis/electron-cli` adds native dialogs, clipboard and file transfer.
+- **Modules**: commands are registered through `ICliModule` (the `modules` input/prop, `resolveCliModuleProvider()` or `engine.registerModule()`), with lifecycle hooks, dependencies, configuration and translations; the deprecated processor-only APIs are gone.
+- **Plugins**: 40 plugins as framework-free packages, among them a virtual file system with `nano`, users with groups, permissions and audit, a data explorer, server logs and jobs, games and 10 languages.
+- **Servers**: Node, .NET and Python servers run commands remotely, stream output and shells, and expose an MCP endpoint and API tokens; `@qodalis/mcp-cli` connects Claude Code to a server and helps build plugins.
+- **Touch screens**: full-screen commands declare their keys (`controls`) so phone apps show them as buttons.
+- **Tooling and docs**: `@qodalis/create-cli-plugin`, a docs site with a playground, `llms.txt` for AI assistants and runnable starters for Angular, React, Vue and vanilla TypeScript.
+
 ## v2.0.0-rc.4
 
 Keys for touch screens, tab completion after flag values, and a session lifetime option for local users.
