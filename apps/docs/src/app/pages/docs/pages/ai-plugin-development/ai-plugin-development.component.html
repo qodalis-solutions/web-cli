@@ -1,0 +1,120 @@
+<h1>{{ 'docs.ai-plugin-development.title' | translate }}</h1>
+<p>{{ 'docs.ai-plugin-development.intro' | translate }}</p>
+
+<!-- MCP developer tools -->
+<h2>{{ 'docs.ai-plugin-development.mcp-title' | translate }}</h2>
+<p [innerHTML]="'docs.ai-plugin-development.mcp-desc' | translate"></p>
+
+<table>
+    <thead>
+        <tr>
+            <th>{{ 'docs.ai-plugin-development.th-tool' | translate }}</th>
+            <th>{{ 'docs.ai-plugin-development.th-purpose' | translate }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>qcli_docs_search</code></td>
+            <td>{{ 'docs.ai-plugin-development.tool-docs-search' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>qcli_docs_read</code></td>
+            <td>{{ 'docs.ai-plugin-development.tool-docs-read' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>qcli_api</code></td>
+            <td>{{ 'docs.ai-plugin-development.tool-api' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>qcli_scaffold_plugin</code></td>
+            <td>{{ 'docs.ai-plugin-development.tool-scaffold' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>create-web-plugin</code></td>
+            <td>{{ 'docs.ai-plugin-development.prompt-web' | translate }}</td>
+        </tr>
+        <tr>
+            <td><code>create-server-command</code></td>
+            <td>{{ 'docs.ai-plugin-development.prompt-server' | translate }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Setup -->
+<h2>{{ 'docs.ai-plugin-development.setup-title' | translate }}</h2>
+<p>{{ 'docs.ai-plugin-development.setup-dev' | translate }}</p>
+<div class="code-block">
+    <span class="code-label">shell</span>
+    <pre><code>claude mcp add qcli -- npx -y &#64;qodalis/mcp-cli</code></pre>
+</div>
+
+<p>{{ 'docs.ai-plugin-development.setup-server' | translate }}</p>
+<div class="code-block">
+    <span class="code-label">shell</span>
+    <pre><code>claude mcp add qcli -e QCLI_URL=http://localhost:8047 -e QCLI_TOKEN=&lt;token&gt; -- npx -y &#64;qodalis/mcp-cli</code></pre>
+</div>
+<p [innerHTML]="'docs.ai-plugin-development.setup-server-note' | translate"></p>
+
+<p>{{ 'docs.ai-plugin-development.setup-other' | translate }}</p>
+<div class="code-block">
+    <span class="code-label">.mcp.json</span>
+    <pre><code>&#123;
+  "mcpServers": &#123;
+    "qcli": &#123;
+      "command": "npx",
+      "args": ["-y", "&#64;qodalis/mcp-cli"]
+    &#125;
+  &#125;
+&#125;</code></pre>
+</div>
+
+<!-- llms.txt -->
+<h2>{{ 'docs.ai-plugin-development.llms-title' | translate }}</h2>
+<p>{{ 'docs.ai-plugin-development.llms-desc' | translate }}</p>
+<ul>
+    <li><a href="/llms.txt">https://cli.qodalis.com/llms.txt</a> — {{ 'docs.ai-plugin-development.llms-index' | translate }}</li>
+    <li><a href="/llms-full.txt">https://cli.qodalis.com/llms-full.txt</a> — {{ 'docs.ai-plugin-development.llms-full' | translate }}</li>
+</ul>
+<p>{{ 'docs.ai-plugin-development.llms-usage' | translate }}</p>
+<div class="code-block">
+    <span class="code-label">Prompt</span>
+    <pre><code>Read https://cli.qodalis.com/llms-full.txt, then build a Qodalis CLI web plugin that ...</code></pre>
+</div>
+
+<!-- AGENTS.md -->
+<h2>{{ 'docs.ai-plugin-development.agents-title' | translate }}</h2>
+<p [innerHTML]="'docs.ai-plugin-development.agents-desc' | translate"></p>
+
+<!-- Example prompts -->
+<h2>{{ 'docs.ai-plugin-development.prompts-title' | translate }}</h2>
+<p>{{ 'docs.ai-plugin-development.prompts-desc' | translate }}</p>
+<div class="code-block">
+    <span class="code-label">Web plugin</span>
+    <pre><code>Create a Qodalis CLI web plugin "weather" with sub-commands "current" and "forecast"
+that call https://wttr.in, a --units parameter (metric|imperial), a spinner while loading
+and CliTestHarness tests. Scaffold it with create-cli-plugin.</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">Server command</span>
+    <pre><code>Add a "disk-usage" command to my Node CLI server that returns a table of mounted
+volumes (structured output), requires the permission "system:read", and add a Vitest test.</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">Interactive command</span>
+    <pre><code>Write a web command "deploy" that asks for the environment with readSelect, confirms
+with readConfirm, handles Ctrl+C (null answers) and posts to /api/deploy with context.http.</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">With a server</span>
+    <pre><code>List the commands of my CLI server and run "weather current --location Paris".</code></pre>
+</div>
+
+<!-- Tips -->
+<h2>{{ 'docs.ai-plugin-development.tips-title' | translate }}</h2>
+<ul>
+    <li [innerHTML]="'docs.ai-plugin-development.tip-modules' | translate"></li>
+    <li [innerHTML]="'docs.ai-plugin-development.tip-verify' | translate"></li>
+    <li [innerHTML]="'docs.ai-plugin-development.tip-version' | translate"></li>
+</ul>
+
+<p>{{ 'docs.ai-plugin-development.see-also' | translate }} <a routerLink="/docs/plugins/create-your-own">{{ 'sidebar.create-a-plugin' | translate }}</a>, <a routerLink="/docs/server-integration">{{ 'sidebar.server-integration' | translate }}</a></p>
