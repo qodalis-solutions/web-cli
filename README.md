@@ -22,6 +22,19 @@
 
 Qodalis CLI renders an [xterm.js](https://xtermjs.org/) terminal in your app with a shell-like command line, built-in commands, themes and a runtime package manager. You add commands as **modules** (`ICliModule`): the 40 official plugins, your own commands, or packages installed at runtime with `pkg add`. It can also connect to a Node.js, .NET or Python backend to run server-side commands.
 
+## Try it online
+
+Starter projects for each framework, using the published npm packages:
+
+| Framework | StackBlitz | CodeSandbox | Gitpod | Repository |
+|---|---|---|---|---|
+| **Angular** | [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/qodalis-solutions/qodalis-cli-angular-example) | [![Open in CodeSandbox](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/github/qodalis-solutions/qodalis-cli-angular-example) | [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/qodalis-solutions/qodalis-cli-angular-example) | [source](https://github.com/qodalis-solutions/qodalis-cli-angular-example) |
+| **React** | [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/qodalis-solutions/qodalis-cli-react-example) | [![Open in CodeSandbox](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/github/qodalis-solutions/qodalis-cli-react-example) | [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/qodalis-solutions/qodalis-cli-react-example) | [source](https://github.com/qodalis-solutions/qodalis-cli-react-example) |
+| **Vue** | [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/qodalis-solutions/qodalis-cli-vue-example) | [![Open in CodeSandbox](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/github/qodalis-solutions/qodalis-cli-vue-example) | [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/qodalis-solutions/qodalis-cli-vue-example) | [source](https://github.com/qodalis-solutions/qodalis-cli-vue-example) |
+| **Vanilla TypeScript** | [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/qodalis-solutions/qodalis-cli-vanilla-example) | [![Open in CodeSandbox](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/github/qodalis-solutions/qodalis-cli-vanilla-example) | [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/qodalis-solutions/qodalis-cli-vanilla-example) | [source](https://github.com/qodalis-solutions/qodalis-cli-vanilla-example) |
+
+Or try the terminal and write your own commands in the [docs playground](https://cli.qodalis.com/docs/playground).
+
 ## Install
 
 | Framework  | Package                                                                    | Install                               |
@@ -213,7 +226,7 @@ Details and examples for each plugin: [Plugins](https://cli.qodalis.com/docs/plu
 | [cli-server-dashboard](https://github.com/qodalis-solutions/cli-server-dashboard) | Admin dashboard the servers serve at `/qcli/admin` |
 | [mcp-cli](https://github.com/qodalis-solutions/mcp-cli) | `@qodalis/mcp-cli`: MCP server for Claude Code and other AI clients |
 | [pwa-cli](https://github.com/qodalis-solutions/pwa-cli) | The terminal as an installable PWA and an [Android app](https://play.google.com/store/apps/details?id=com.qodalis.cli) |
-| [qodalis-cli-angular-example](https://github.com/qodalis-solutions/qodalis-cli-angular-example) | Minimal Angular app using the npm packages ([open in StackBlitz](https://stackblitz.com/github/qodalis-solutions/qodalis-cli-angular-example)) |
+| [Angular](https://github.com/qodalis-solutions/qodalis-cli-angular-example), [React](https://github.com/qodalis-solutions/qodalis-cli-react-example), [Vue](https://github.com/qodalis-solutions/qodalis-cli-vue-example) and [vanilla](https://github.com/qodalis-solutions/qodalis-cli-vanilla-example) examples | Starter apps using the npm packages ([try them online](#try-it-online)) |
 
 Connecting a server: [Server integration](https://cli.qodalis.com/docs/server-integration).
 
