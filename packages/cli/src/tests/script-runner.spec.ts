@@ -268,7 +268,8 @@ describe('script runner', () => {
             expect(lines(result)).toEqual([]);
             expect(result.stderr.some((l) => l.includes('line 1: while: stopped after 10000 iterations'))).toBe(true);
             expect(result.exitCode).toBe(1);
-        });
+            // 10000 iterations of the default cap: well over Jasmine's 5 s on a slow CI runner
+        }, 30000);
     });
 
     describe('syntax errors', () => {
