@@ -377,4 +377,45 @@ describe('CliStringCommandProcessor', () => {
             expect(result.data).toBe('hello there you');
         });
     });
+
+    describe('required --find', () => {
+        let harness: CliTestHarness;
+
+        beforeEach(() => {
+            harness = new CliTestHarness();
+            harness.registerProcessor(new CliStringCommandProcessor());
+        });
+
+        for (const sub of ['includes', 'startsWith', 'endsWith']) {
+            it(`${sub} without --find fails instead of matching the empty string`, async () => {
+                const result = await harness.execute(`string ${sub} hello`);
+                expect(result.exitCode).not.toBe(0);
+                expect(result.stderr.join('\n')).toContain('--find is required');
+            });
+        }
+
+        it('includes with --find still works', async () => {
+            const result = await harness.execute('string includes hello --find=ell');
+            expect(result.exitCode).toBe(0);
+            expect(result.data).toBe(true);
+        });
+    });
+
+    describe('piped data that is not text', () => {
+        it('uses it as JSON instead of failing', async () => {
+            const harness = new CliTestHarness();
+            harness.registerProcessor(new CliStringCommandProcessor());
+            harness.registerProcessor({
+                command: 'emit-json',
+                description: 'Outputs an array',
+                processCommand: async (_cmd: any, context: any) => {
+                    context.process.output([{ a: 'x' }]);
+                },
+            } as any);
+
+            const result = await harness.execute('emit-json | string upper');
+            expect(result.exitCode).toBe(0);
+            expect(result.data).toBe('[{"A":"X"}]');
+        });
+    });
 });
