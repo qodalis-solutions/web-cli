@@ -22,7 +22,7 @@ export interface PluginData {
 }
 
 export const PLUGINS: PluginData[] = [
-    // ===== Utilities (22) =====
+    // ===== Utilities =====
     {
         id: 'data-explorer',
         name: 'Data Explorer',
@@ -134,6 +134,26 @@ export const PLUGINS: PluginData[] = [
         examples: [
             { command: 'generate-password', description: 'Generate a 16-character password' },
             { command: 'generate-password --length=32 --symbols', description: 'Generate a 32-char password with symbols' },
+        ],
+    },
+    {
+        id: 'encode',
+        name: 'Encode',
+        npmPackage: '@qodalis/cli-encode',
+        command: 'base64',
+        description: 'Encoding and hashing tools: base64, hex, binary, URL, Morse, ROT, JWT decoding and SHA hashes.',
+        category: 'utility',
+        moduleExport: 'encodeModule',
+        moduleImport: '@qodalis/cli-encode',
+        examples: [
+            { command: 'base64 encode "hello world"', description: 'Encode text as Base64' },
+            { command: 'base64 decode aGVsbG8gd29ybGQ=', description: 'Decode Base64' },
+            { command: 'hash sha256 "hello"', description: 'SHA-256 hash of a text' },
+            { command: 'hex convert 255 --to=2', description: 'Convert a number between bases (default 10 to 16)' },
+            { command: 'url encode "a b&c=d"', description: 'Percent-encode a text for URLs' },
+            { command: 'morse encode "SOS"', description: 'Encode text as Morse code' },
+            { command: 'rot "Hello" --shift=13', description: 'Rotate letters (ROT13 by default)' },
+            { command: 'jwt decode <token>', description: 'Show the header and payload of a JWT' },
         ],
     },
     {
