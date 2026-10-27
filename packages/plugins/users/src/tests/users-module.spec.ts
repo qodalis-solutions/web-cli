@@ -171,6 +171,24 @@ describe('usersModule lifecycle', () => {
             expect(f2.ctx.userSession).toBeUndefined();
         });
 
+        it('maxSessionLifetime ends a session that has lasted longer', async () => {
+            const f = fakeContext(new MemoryKv());
+            const m = track(await boot({ ...DEV, maxSessionLifetime: 30 }, f));
+            expect(f.ctx.userSession).toBeDefined();
+            await new Promise((r) => setTimeout(r, 60));
+            await m._runtime.session.touch();
+            expect(f.ctx.userSession).toBeUndefined();
+        });
+
+        it('maxSessionLifetime 0 keeps the session until sign-out', async () => {
+            const f = fakeContext(new MemoryKv());
+            const m = track(await boot({ ...DEV, maxSessionLifetime: 0 }, f));
+            expect((m._runtime.local as any).options.maxSessionLifetimeMs).toBe(0);
+            await new Promise((r) => setTimeout(r, 60));
+            await m._runtime.session.touch();
+            expect(f.ctx.userSession).toBeDefined();
+        });
+
         it('seeds without a configured password must change it at first sign-in', async () => {
             const f = fakeContext(new MemoryKv(), { answers: [] });
             const m = track(await boot({ passwordHashIterations: 1000, seedUsers: [{ name: 'ops', email: 'ops@x.io', groups: ['admin'] }] }, f));

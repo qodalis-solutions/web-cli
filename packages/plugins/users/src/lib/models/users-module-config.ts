@@ -32,6 +32,11 @@ export interface CliUsersModuleConfig {
     /** Idle session timeout in ms, local mode (0 = no timeout, default: 0). The server has its own setting. */
     sessionTimeout?: number;
     /**
+     * Local mode: longest a session lasts, in ms, before signing in again
+     * (`0` = until sign-out). Default 12 hours.
+     */
+    maxSessionLifetime?: number;
+    /**
      * Custom formatter for the user display name in the prompt.
      * @default user.name
      * @example (user) => user.email

@@ -179,6 +179,9 @@ export async function createUsersRuntime(
     } else {
         local = new CliLocalUsersBackend(kv, {
             sessionTimeoutMs: config.sessionTimeout ?? 0,
+            ...(config.maxSessionLifetime !== undefined
+                ? { maxSessionLifetimeMs: config.maxSessionLifetime }
+                : {}),
             validatePassword,
             maxLoginAttempts: config.bruteForceProtection?.maxAttempts ?? 5,
             lockoutMs:

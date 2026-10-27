@@ -219,6 +219,7 @@ All options of `usersModule.configure()`:
 | `requirePassword` | `true` | `false` (local only) allows passwordless `login`/`su`; development only |
 | `requirePasswordOnBoot` | `false` | Ask for credentials at startup |
 | `sessionTimeout` | `0` | Local idle timeout in ms (`0` = none) |
+| `maxSessionLifetime` | 12 h | Local: longest a session lasts in ms before signing in again (`0` = until sign-out) |
 | `passwordPolicy` | `{ minLength: 8 }` | `minLength`, `requireUppercase`, `requireDigit`, `requireSpecialChar` |
 | `bruteForceProtection` | `{ maxAttempts: 5, lockoutSeconds: 300 }` | Local lockout (`maxAttempts: 0` disables) |
 | `passwordHashIterations` | `100000` | PBKDF2 iterations for local password hashes |
