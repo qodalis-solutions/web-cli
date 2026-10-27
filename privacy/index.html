@@ -19,7 +19,7 @@
 </head>
 <body>
   <h1>Privacy Policy</h1>
-  <p class="updated">Qodalis CLI app for Android (<code>com.qodalis.cli</code>) and its web app · Last updated 16 October 2026</p>
+  <p class="updated">Qodalis CLI app for Android (<code>com.qodalis.cli</code>) and its web app · Last updated 27 October 2026</p>
 
   <p>Qodalis CLI is a terminal that runs on your device. It is published by Qodalis Solutions. This policy explains what the app does with your data. In short: the app collects nothing, and what you create stays on your device.</p>
 
@@ -27,13 +27,16 @@
   <p>None. The app has no accounts on our servers, no analytics, no advertising, no crash reporting and no tracking of any kind. We do not receive, sell or share personal data, so there are no third parties we share it with.</p>
 
   <h2>Data stored on your device</h2>
-  <p>Commands you run can save data locally in the app's storage on your device, for example command history, settings and themes, environment variables, to-do items, files in the virtual file system, saved snippets and game scores. This data never leaves your device unless you send it somewhere yourself. Uninstalling the app, or clearing its storage, deletes it. On Android, the system backup you have enabled for your Google account may include it.</p>
+  <p>Commands you run can save data locally in the app's storage on your device, for example command history, settings and themes, environment variables, to-do items, files in the virtual file system, saved snippets and game scores. The user account you create at first launch is stored the same way: its user name, email, optional full name and a salted hash of its password (never the password itself). This data never leaves your device unless you send it somewhere yourself. Uninstalling the app, or clearing its storage, deletes it. On Android, the system backup you have enabled for your Google account may include it.</p>
 
   <h2>Network access</h2>
   <p>The app works offline. It uses the network only when you run a command that needs it, such as <code>curl</code>, <code>wget</code> or <code>speed-test</code>, or when you connect it to a Qodalis CLI server you choose. Those requests go directly from your device to the address you entered, and the operator of that service handles them under its own privacy policy. We are not involved.</p>
 
   <h2>Permissions</h2>
-  <p>The Android app requests only Internet access, used for the commands above. It does not access your contacts, location, camera, microphone or files outside the app.</p>
+  <p>The Android app requests Internet access, used for the commands above, and two permissions Android grants at install without asking: network state, so the <code>network</code> command can show whether you are online, and vibration, for the <code>vibrate</code> command. It does not access your contacts, location, camera, microphone or files outside the app.</p>
+
+  <h2 id="delete-account">Deleting your account</h2>
+  <p>Your user account exists only on your device. To delete it, run <code>userdel &lt;user name&gt;</code> in the app, or clear the app's storage (Android: Settings → Apps → Qodalis CLI → Storage → Clear storage), or uninstall the app. Any of these removes the account and its data at once; there is no copy on a server to request deletion from.</p>
 
   <h2>Keyboard input</h2>
   <p>On Android the app asks the keyboard not to offer suggestions or learn from what you type, so text you enter in the terminal, including passwords, is not added to your keyboard's dictionary.</p>

@@ -1,5 +1,5 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>CliEngineOptions | Qodalis CLI - v2.0.0-rc.3</title><meta name="description" content="Documentation for Qodalis CLI"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
-<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">Qodalis CLI - v2.0.0-rc.3</a>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>CliEngineOptions | Qodalis CLI - v2.0.0-rc.4</title><meta name="description" content="Documentation for Qodalis CLI"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">Qodalis CLI - v2.0.0-rc.4</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
 <div id="tsd-search-status" aria-live="polite" aria-atomic="true">
@@ -12,7 +12,7 @@
 <li><a href="" aria-current="page">CliEngineOptions</a></li></ul>
 <h1>Interface CliEngineOptions</h1></div>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">CliEngineOptions</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#alloweval">allowEval</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#autofocus">autoFocus</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#boot">boot</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliBootOptions</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#loglevel">logLevel</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliLogLevel</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#packagesources">packageSources</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">primary</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">sources</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliPackageSource</span><span class="tsd-signature-symbol">[]</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#servers">servers</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliServerConfig</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#snapshot">snapshot</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliEngineSnapshot</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#terminaloptions">terminalOptions</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ITerminalOptions</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-type">ITerminalInitOnlyOptions</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#wasmurl">wasmUrl</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#welcome">welcome</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span> <span class="tsd-signature-symbol">|</span> <a href="cli_src_public-api.CliWelcomeMessageConfig.html" class="tsd-signature-type tsd-kind-interface">CliWelcomeMessageConfig</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">[</span><span class="tsd-kind-index-signature">key</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div>
-<section class="tsd-panel tsd-hierarchy" data-refl="10345">
+<section class="tsd-panel tsd-hierarchy" data-refl="10388">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
 <li class="tsd-hierarchy-item"><span class="tsd-signature-type">CliOptions</span>
@@ -24,7 +24,7 @@
 <li class="tsd-index-signature">
 <div class="tsd-signature"><span class="tsd-signature-symbol">[</span><span class="tsd-kind-parameter">key</span>: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]:</span> <span class="tsd-signature-type">any</span></div></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/729ed7bc899c04170f4ad0744e04dcd96a90b646/packages/cli/src/lib/engine/cli-engine.ts#L64">packages/cli/src/lib/engine/cli-engine.ts:64</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e5b780d826016721eadc7d92c0ff3161c3b4ebe5/packages/cli/src/lib/engine/cli-engine.ts#L64">packages/cli/src/lib/engine/cli-engine.ts:64</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -62,7 +62,7 @@ user-facing deployments.</p>
 </div></div><aside class="tsd-sources">
 <p>Inherited from CliOptions.allowEval</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2110</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2164</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="autofocus"><code class="tsd-tag">Optional</code><span>auto<wbr/>Focus</span><a href="#autofocus" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">autoFocus</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
@@ -77,7 +77,7 @@ rebuilds the terminal while the user types); <code>focus()</code> still works.</
 
 </div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/729ed7bc899c04170f4ad0744e04dcd96a90b646/packages/cli/src/lib/engine/cli-engine.ts#L88">packages/cli/src/lib/engine/cli-engine.ts:88</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e5b780d826016721eadc7d92c0ff3161c3b4ebe5/packages/cli/src/lib/engine/cli-engine.ts#L88">packages/cli/src/lib/engine/cli-engine.ts:88</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="boot"><code class="tsd-tag">Optional</code><span>boot</span><a href="#boot" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">boot</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliBootOptions</span></div>
@@ -85,7 +85,7 @@ rebuilds the terminal while the user types); <code>focus()</code> still works.</
 </div><aside class="tsd-sources">
 <p>Inherited from CliOptions.boot</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2075</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2129</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="loglevel"><code class="tsd-tag">Optional</code><span>log<wbr/>Level</span><a href="#loglevel" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">logLevel</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliLogLevel</span></div>
@@ -93,7 +93,7 @@ rebuilds the terminal while the user types); <code>focus()</code> still works.</
 </div><aside class="tsd-sources">
 <p>Inherited from CliOptions.logLevel</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2083</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2137</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="packagesources"><code class="tsd-tag">Optional</code><span>package<wbr/>Sources</span><a href="#packagesources" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">packageSources</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">primary</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">sources</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliPackageSource</span><span class="tsd-signature-symbol">[]</span> <span class="tsd-signature-symbol">}</span></div>
@@ -113,7 +113,7 @@ Built-in sources (unpkg, jsdelivr) are always available.</p>
 </div></li></ul></div><aside class="tsd-sources">
 <p>Inherited from CliOptions.packageSources</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2088</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2142</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="servers"><code class="tsd-tag">Optional</code><span>servers</span><a href="#servers" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">servers</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliServerConfig</span><span class="tsd-signature-symbol">[]</span></div>
@@ -122,14 +122,14 @@ Commands from each server are discovered and registered as proxy processors.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from CliOptions.servers</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2102</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2156</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="snapshot"><code class="tsd-tag">Optional</code><span>snapshot</span><a href="#snapshot" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">snapshot</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliEngineSnapshot</span></div>
 <div class="tsd-comment tsd-typography"><p>Optional snapshot to restore on start()</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/729ed7bc899c04170f4ad0744e04dcd96a90b646/packages/cli/src/lib/engine/cli-engine.ts#L67">packages/cli/src/lib/engine/cli-engine.ts:67</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e5b780d826016721eadc7d92c0ff3161c3b4ebe5/packages/cli/src/lib/engine/cli-engine.ts#L67">packages/cli/src/lib/engine/cli-engine.ts:67</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="terminaloptions"><code class="tsd-tag">Optional</code><span>terminal<wbr/>Options</span><a href="#terminaloptions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">terminalOptions</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ITerminalOptions</span> <span class="tsd-signature-symbol">&amp;</span> <span class="tsd-signature-type">ITerminalInitOnlyOptions</span><span class="tsd-signature-symbol">&gt;</span></div>
@@ -137,7 +137,7 @@ Commands from each server are discovered and registered as proxy processors.</p>
 </div><aside class="tsd-sources">
 <p>Overrides CliOptions.terminalOptions</p>
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/729ed7bc899c04170f4ad0744e04dcd96a90b646/packages/cli/src/lib/engine/cli-engine.ts#L65">packages/cli/src/lib/engine/cli-engine.ts:65</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e5b780d826016721eadc7d92c0ff3161c3b4ebe5/packages/cli/src/lib/engine/cli-engine.ts#L65">packages/cli/src/lib/engine/cli-engine.ts:65</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="wasmurl"><code class="tsd-tag">Optional</code><span>wasm<wbr/>Url</span><a href="#wasmurl" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">wasmUrl</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div>
@@ -146,7 +146,7 @@ omitted it is looked up next to the page (<code>document.baseURI</code>), then a
 <code>/assets/wasm/</code> and <code>/wasm/</code>; the CLI works without it.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/729ed7bc899c04170f4ad0744e04dcd96a90b646/packages/cli/src/lib/engine/cli-engine.ts#L73">packages/cli/src/lib/engine/cli-engine.ts:73</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e5b780d826016721eadc7d92c0ff3161c3b4ebe5/packages/cli/src/lib/engine/cli-engine.ts#L73">packages/cli/src/lib/engine/cli-engine.ts:73</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="welcome"><code class="tsd-tag">Optional</code><span>welcome</span><a href="#welcome" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">welcome</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span> <span class="tsd-signature-symbol">|</span> <a href="cli_src_public-api.CliWelcomeMessageConfig.html" class="tsd-signature-type tsd-kind-interface">CliWelcomeMessageConfig</a></div>
@@ -162,7 +162,7 @@ just the prompt (embedded terminals, playgrounds, terminals driven by
 
 </div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/729ed7bc899c04170f4ad0744e04dcd96a90b646/packages/cli/src/lib/engine/cli-engine.ts#L81">packages/cli/src/lib/engine/cli-engine.ts:81</a></li></ul></aside></section></section></details></div>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e5b780d826016721eadc7d92c0ff3161c3b4ebe5/packages/cli/src/lib/engine/cli-engine.ts#L81">packages/cli/src/lib/engine/cli-engine.ts:81</a></li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -179,7 +179,7 @@ just the prompt (embedded terminals, playgrounds, terminals driven by
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
 <div><a href="#alloweval" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>allow<wbr/>Eval</span></a><a href="#autofocus"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>auto<wbr/>Focus</span></a><a href="#boot" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>boot</span></a><a href="#loglevel" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>log<wbr/>Level</span></a><a href="#packagesources" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>package<wbr/>Sources</span></a><a href="#servers" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>servers</span></a><a href="#snapshot"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>snapshot</span></a><a href="#terminaloptions"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>terminal<wbr/>Options</span></a><a href="#wasmurl"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>wasm<wbr/>Url</span></a><a href="#welcome"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>welcome</span></a></div></details></div></details></div>
 <div class="site-menu">
-<nav class="tsd-navigation"><a href="../modules.html">Qodalis CLI - v2.0.0-rc.3</a>
+<nav class="tsd-navigation"><a href="../modules.html">Qodalis CLI - v2.0.0-rc.4</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">
 <li>Loading...</li></ul></nav></div></div></div><footer></footer>
 <div class="overlay"></div></body></html>

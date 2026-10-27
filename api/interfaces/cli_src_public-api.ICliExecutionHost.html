@@ -1,5 +1,5 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>ICliExecutionHost | Qodalis CLI - v2.0.0-rc.3</title><meta name="description" content="Documentation for Qodalis CLI"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
-<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">Qodalis CLI - v2.0.0-rc.3</a>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>ICliExecutionHost | Qodalis CLI - v2.0.0-rc.4</title><meta name="description" content="Documentation for Qodalis CLI"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">Qodalis CLI - v2.0.0-rc.4</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
 <div id="tsd-search-status" aria-live="polite" aria-atomic="true">
@@ -16,14 +16,14 @@
 The concrete implementation (e.g. CliExecutionContext in angular-cli) provides these.</p>
 </div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">ICliExecutionHost</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#backgroundservices">backgroundServices</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliBackgroundServiceRegistry</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#clearcurrentline">clearCurrentLine</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#clearline">clearLine</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#clipboard">clipboard</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliClipboard</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#contextprocessor">contextProcessor</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">ICliCommandProcessor</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#createinterval">createInterval</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">callback</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">ms</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">ICliManagedInterval</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#createtimeout">createTimeout</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">callback</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">ms</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">ICliManagedTimer</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#currentline">currentLine</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#cursorposition">cursorPosition</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#enterfullscreenmode">enterFullScreenMode</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">processor</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliCommandProcessor</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">options</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliFullScreenOptions</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#events">events</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">ICliEventBus</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#executor">executor</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliCommandExecutorService</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#exitfullscreenmode">exitFullScreenMode</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#http">http</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliHttpClient</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#isbooted">isBooted</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#isexecuting">isExecuting</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#lastcommandresult">lastCommandResult</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">command</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">success</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#logger">logger</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliLogger</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#notifier">notifier</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliNotifier</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#onabort">onAbort</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Subject</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#options">options</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliOptions</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#process">process</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliExecutionProcess</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#progressbar">progressBar</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliPercentageProgressBar</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#promptlength">promptLength</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#promptpathprovider">promptPathProvider</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#reader">reader</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliInputReader</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#refreshcurrentline">refreshCurrentLine</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#services">services</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliServiceProvider</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#setcontextprocessor">setContextProcessor</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">processor</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliCommandProcessor</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">silent</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">fullScreen</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#setcurrentline">setCurrentLine</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">line</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#showprompt">showPrompt</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">options</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">{</span><br/>            <span class="tsd-kind-property">keepCurrentLine</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>            <span class="tsd-kind-property">newLine</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>            <span class="tsd-kind-property">reset</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#signal">signal</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">AbortSignal</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#spinner">spinner</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">ICliSpinner</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#state">state</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliStateStore</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#terminal">terminal</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Terminal</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#textanimator">textAnimator</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">ICliTextAnimator</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#translator">translator</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliTranslationService</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#usersession">userSession</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">ICliUserSession</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#writer">writer</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliTerminalWriter</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#abort-1">abort</a><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#submitcommand-1">submitCommand</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">command</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div>
-<section class="tsd-panel tsd-hierarchy" data-refl="8842">
+<section class="tsd-panel tsd-hierarchy" data-refl="8885">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
 <li class="tsd-hierarchy-item"><span class="tsd-signature-type">ICliExecutionContext</span>
 <ul class="tsd-hierarchy">
 <li class="tsd-hierarchy-item"><span class="tsd-hierarchy-target">ICliExecutionHost</span></li></ul></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/729ed7bc899c04170f4ad0744e04dcd96a90b646/packages/cli/src/lib/executor/cli-command-executor.ts#L55">packages/cli/src/lib/executor/cli-command-executor.ts:55</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e5b780d826016721eadc7d92c0ff3161c3b4ebe5/packages/cli/src/lib/executor/cli-command-executor.ts#L55">packages/cli/src/lib/executor/cli-command-executor.ts:55</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -88,7 +88,7 @@ are scoped to this session and destroyed when the engine shuts down.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.backgroundServices</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2642</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2696</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="clearcurrentline"><span>clear<wbr/>Current<wbr/>Line</span><a href="#clearcurrentline" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">clearCurrentLine</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
@@ -96,7 +96,7 @@ are scoped to this session and destroyed when the engine shuts down.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.clearCurrentLine</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2572</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2626</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="clearline"><span>clear<wbr/>Line</span><a href="#clearline" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">clearLine</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
@@ -105,7 +105,7 @@ Uses promptLength + currentLine.length to determine how many rows to clear.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.clearLine</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2568</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2622</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="clipboard"><span>clipboard</span><a href="#clipboard" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">clipboard</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliClipboard</span></div>
@@ -113,12 +113,12 @@ Uses promptLength + currentLine.length to determine how many rows to clear.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.clipboard</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2502</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2556</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="contextprocessor"><code class="tsd-tag">Optional</code><span>context<wbr/>Processor</span><a href="#contextprocessor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">contextProcessor</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">ICliCommandProcessor</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/729ed7bc899c04170f4ad0744e04dcd96a90b646/packages/cli/src/lib/executor/cli-command-executor.ts#L56">packages/cli/src/lib/executor/cli-command-executor.ts:56</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e5b780d826016721eadc7d92c0ff3161c3b4ebe5/packages/cli/src/lib/executor/cli-command-executor.ts#L56">packages/cli/src/lib/executor/cli-command-executor.ts:56</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="createinterval"><span>create<wbr/>Interval</span><a href="#createinterval" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">createInterval</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">callback</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">ms</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">ICliManagedInterval</span></div>
@@ -145,7 +145,7 @@ mode exits or the CLI component is destroyed.</p>
 </li></ul></li></ul></div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.createInterval</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2628</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2682</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="createtimeout"><span>create<wbr/>Timeout</span><a href="#createtimeout" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">createTimeout</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">callback</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">ms</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">ICliManagedTimer</span></div>
@@ -172,7 +172,7 @@ mode exits or the CLI component is destroyed.</p>
 </li></ul></li></ul></div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.createTimeout</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2636</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2690</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="currentline"><code class="tsd-tag">Readonly</code><span>current<wbr/>Line</span><a href="#currentline" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">currentLine</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
@@ -180,7 +180,7 @@ mode exits or the CLI component is destroyed.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.currentLine</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2554</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2608</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="cursorposition"><span>cursor<wbr/>Position</span><a href="#cursorposition" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">cursorPosition</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
@@ -188,7 +188,7 @@ mode exits or the CLI component is destroyed.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.cursorPosition</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2563</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2617</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="enterfullscreenmode"><span>enter<wbr/>Full<wbr/>Screen<wbr/>Mode</span><a href="#enterfullscreenmode" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">enterFullScreenMode</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">processor</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliCommandProcessor</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">options</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliFullScreenOptions</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
@@ -219,7 +219,7 @@ visible (suitable for REPL / input-line interfaces).</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.enterFullScreenMode</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2615</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2669</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="events"><code class="tsd-tag">Optional</code> <code class="tsd-tag">Readonly</code><span>events</span><a href="#events" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">events</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">ICliEventBus</span></div>
@@ -228,7 +228,7 @@ system, modules and commands. Optional for backward compatibility.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.events</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2467</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2521</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="executor"><span>executor</span><a href="#executor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">executor</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliCommandExecutorService</span></div>
@@ -236,7 +236,7 @@ system, modules and commands. Optional for backward compatibility.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.executor</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2498</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2552</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="exitfullscreenmode"><span>exit<wbr/>Full<wbr/>Screen<wbr/>Mode</span><a href="#exitfullscreenmode" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">exitFullScreenMode</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
@@ -245,7 +245,7 @@ clears the context processor, and re-displays the prompt.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.exitFullScreenMode</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2620</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2674</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="http"><span>http</span><a href="#http" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">http</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliHttpClient</span></div>
@@ -260,7 +260,7 @@ abort signal so requests are cancelled on Ctrl+C.</p>
 </div></div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.http</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2652</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2706</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="isbooted"><code class="tsd-tag">Optional</code> <code class="tsd-tag">Readonly</code><span>is<wbr/>Booted</span><a href="#isbooted" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">isBooted</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
@@ -269,17 +269,17 @@ ready). Optional for backward compatibility; <code>undefined</code> means unknow
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.isBooted</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2472</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2526</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="isexecuting"><code class="tsd-tag">Optional</code><span>is<wbr/>Executing</span><a href="#isexecuting" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">isExecuting</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/729ed7bc899c04170f4ad0744e04dcd96a90b646/packages/cli/src/lib/executor/cli-command-executor.ts#L59">packages/cli/src/lib/executor/cli-command-executor.ts:59</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e5b780d826016721eadc7d92c0ff3161c3b4ebe5/packages/cli/src/lib/executor/cli-command-executor.ts#L59">packages/cli/src/lib/executor/cli-command-executor.ts:59</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="lastcommandresult"><code class="tsd-tag">Optional</code><span>last<wbr/>Command<wbr/>Result</span><a href="#lastcommandresult" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">lastCommandResult</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">command</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">success</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span> <span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/729ed7bc899c04170f4ad0744e04dcd96a90b646/packages/cli/src/lib/executor/cli-command-executor.ts#L58">packages/cli/src/lib/executor/cli-command-executor.ts:58</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e5b780d826016721eadc7d92c0ff3161c3b4ebe5/packages/cli/src/lib/executor/cli-command-executor.ts#L58">packages/cli/src/lib/executor/cli-command-executor.ts:58</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="logger"><span>logger</span><a href="#logger" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">logger</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliLogger</span></div>
@@ -287,7 +287,7 @@ ready). Optional for backward compatibility; <code>undefined</code> means unknow
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.logger</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2584</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2638</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="notifier"><span>notifier</span><a href="#notifier" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">notifier</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliNotifier</span></div>
@@ -303,7 +303,7 @@ Cleared automatically when the command finishes.</p>
 </div></div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.notifier</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2539</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2593</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="onabort"><span>on<wbr/>Abort</span><a href="#onabort" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">onAbort</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Subject</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></div>
@@ -311,7 +311,7 @@ Cleared automatically when the command finishes.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.onAbort</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2476</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2530</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="options"><code class="tsd-tag">Optional</code><span>options</span><a href="#options" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">options</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">CliOptions</span></div>
@@ -319,7 +319,7 @@ Cleared automatically when the command finishes.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.options</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2510</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2564</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="process"><span>process</span><a href="#process" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">process</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliExecutionProcess</span></div>
@@ -327,7 +327,7 @@ Cleared automatically when the command finishes.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.process</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2580</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2634</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="progressbar"><span>progress<wbr/>Bar</span><a href="#progressbar" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">progressBar</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliPercentageProgressBar</span></div>
@@ -335,7 +335,7 @@ Cleared automatically when the command finishes.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.progressBar</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2462</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2516</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="promptlength"><span>prompt<wbr/>Length</span><a href="#promptlength" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">promptLength</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
@@ -343,7 +343,7 @@ Cleared automatically when the command finishes.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.promptLength</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2550</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2604</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="promptpathprovider"><code class="tsd-tag">Optional</code><span>prompt<wbr/>Path<wbr/>Provider</span><a href="#promptpathprovider" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">promptPathProvider</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span></div>
@@ -355,7 +355,7 @@ Return null to fall back to the default <code>~</code>.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.promptPathProvider</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2601</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2655</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="reader"><span>reader</span><a href="#reader" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">reader</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliInputReader</span></div>
@@ -363,7 +363,7 @@ Return null to fall back to the default <code>~</code>.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.reader</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2494</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2548</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="refreshcurrentline"><span>refresh<wbr/>Current<wbr/>Line</span><a href="#refreshcurrentline" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">refreshCurrentLine</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
@@ -371,7 +371,7 @@ Return null to fall back to the default <code>~</code>.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.refreshCurrentLine</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2576</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2630</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="services"><span>services</span><a href="#services" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">services</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliServiceProvider</span></div>
@@ -379,7 +379,7 @@ Return null to fall back to the default <code>~</code>.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.services</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2588</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2642</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="setcontextprocessor"><span>set<wbr/>Context<wbr/>Processor</span><a href="#setcontextprocessor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">setContextProcessor</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">processor</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliCommandProcessor</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">silent</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">fullScreen</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
@@ -407,7 +407,7 @@ Return null to fall back to the default <code>~</code>.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.setContextProcessor</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2546</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2600</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="setcurrentline"><span>set<wbr/>Current<wbr/>Line</span><a href="#setcurrentline" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">setCurrentLine</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">line</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
@@ -429,7 +429,7 @@ Return null to fall back to the default <code>~</code>.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.setCurrentLine</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2559</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2613</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="showprompt"><span>show<wbr/>Prompt</span><a href="#showprompt" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">showPrompt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">options</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">keepCurrentLine</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">newLine</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">reset</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
@@ -437,7 +437,7 @@ Return null to fall back to the default <code>~</code>.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.showPrompt</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2514</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2568</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="signal"><code class="tsd-tag">Optional</code><span>signal</span><a href="#signal" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">signal</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">AbortSignal</span></div>
@@ -447,7 +447,7 @@ or listen to onAbort for cooperative cancellation.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.signal</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2482</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2536</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="spinner"><code class="tsd-tag">Optional</code><span>spinner</span><a href="#spinner" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">spinner</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">ICliSpinner</span></div>
@@ -455,7 +455,7 @@ or listen to onAbort for cooperative cancellation.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.spinner</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2454</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2508</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="state"><span>state</span><a href="#state" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">state</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliStateStore</span></div>
@@ -463,7 +463,7 @@ or listen to onAbort for cooperative cancellation.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.state</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2506</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2560</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="terminal"><span>terminal</span><a href="#terminal" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">terminal</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Terminal</span></div>
@@ -471,7 +471,7 @@ or listen to onAbort for cooperative cancellation.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.terminal</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2486</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2540</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="textanimator"><code class="tsd-tag">Optional</code><span>text<wbr/>Animator</span><a href="#textanimator" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">textAnimator</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">ICliTextAnimator</span></div>
@@ -479,7 +479,7 @@ or listen to onAbort for cooperative cancellation.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.textAnimator</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2458</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2512</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="translator"><span>translator</span><a href="#translator" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">translator</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliTranslationService</span></div>
@@ -488,7 +488,7 @@ Use <code>translator.t(key, defaultValue)</code> to get translated strings.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.translator</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2593</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2647</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="usersession"><code class="tsd-tag">Optional</code><span>user<wbr/>Session</span><a href="#usersession" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">userSession</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">ICliUserSession</span></div>
@@ -496,7 +496,7 @@ Use <code>translator.t(key, defaultValue)</code> to get translated strings.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.userSession</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2450</li></ul></aside></section>
+<li>Defined in dist/core/public-api.d.ts:2504</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="writer"><span>writer</span><a href="#writer" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">writer</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ICliTerminalWriter</span></div>
@@ -504,7 +504,7 @@ Use <code>translator.t(key, defaultValue)</code> to get translated strings.</p>
 </div><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.writer</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2490</li></ul></aside></section></section></details>
+<li>Defined in dist/core/public-api.d.ts:2544</li></ul></aside></section></section></details>
 <details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
 <h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
 <section>
@@ -516,7 +516,7 @@ Use <code>translator.t(key, defaultValue)</code> to get translated strings.</p>
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/729ed7bc899c04170f4ad0744e04dcd96a90b646/packages/cli/src/lib/executor/cli-command-executor.ts#L57">packages/cli/src/lib/executor/cli-command-executor.ts:57</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/e5b780d826016721eadc7d92c0ff3161c3b4ebe5/packages/cli/src/lib/executor/cli-command-executor.ts#L57">packages/cli/src/lib/executor/cli-command-executor.ts:57</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited">
 <h3 class="tsd-anchor-link" id="submitcommand"><span>submit<wbr/>Command</span><a href="#submitcommand" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -534,7 +534,7 @@ and programmatic execution to ensure identical behaviour.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Inherited from ICliExecutionContext.submitCommand</p>
 <ul>
-<li>Defined in dist/core/public-api.d.ts:2524</li></ul></aside></div></li></ul></section></section></details></div>
+<li>Defined in dist/core/public-api.d.ts:2578</li></ul></aside></div></li></ul></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -553,7 +553,7 @@ and programmatic execution to ensure identical behaviour.</p>
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
 <div><a href="#abort"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>abort</span></a><a href="#submitcommand" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>submit<wbr/>Command</span></a></div></details></div></details></div>
 <div class="site-menu">
-<nav class="tsd-navigation"><a href="../modules.html">Qodalis CLI - v2.0.0-rc.3</a>
+<nav class="tsd-navigation"><a href="../modules.html">Qodalis CLI - v2.0.0-rc.4</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">
 <li>Loading...</li></ul></nav></div></div></div><footer></footer>
 <div class="overlay"></div></body></html>
