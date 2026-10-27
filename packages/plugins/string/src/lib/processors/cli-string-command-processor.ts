@@ -10,6 +10,17 @@ import {
 import * as _ from 'lodash';
 import { LIBRARY_VERSION } from '../version';
 
+/**
+ * The text a sub-command works on: its value, else the piped data. Piped data
+ * that is not text (e.g. the JSON array of `csv to-json`) is used as JSON.
+ */
+const inputText = (value: string | undefined, data: unknown): string => {
+    const fromValue = joinShellWords(value ?? '');
+    if (fromValue) return fromValue;
+    if (data === undefined || data === null) return '';
+    return typeof data === 'string' ? data : JSON.stringify(data);
+};
+
 const lodash = (_ as any).default || _;
 
 /**
@@ -34,7 +45,7 @@ function stringTransform(
             cmd: CliProcessCommand,
             context: ICliExecutionContext,
         ) => {
-            const text = (joinShellWords(cmd.value ?? '') || cmd.data || '') as string;
+            const text = inputText(cmd.value, cmd.data);
             const result = transform(text);
             context.writer.writeln(
                 `${context.writer.wrapInColor('Result: ', CliForegroundColor.Yellow)}${result}`,
@@ -248,9 +259,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (joinShellWords(command.value ?? '') ||
-                        command.data ||
-                        '') as string;
+                    const text = inputText(command.value, command.data);
                     const count = Math.min(
                         parseInt(command.args['count'] || command.args['n']) ||
                             2,
@@ -309,9 +318,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (joinShellWords(command.value ?? '') ||
-                        command.data ||
-                        '') as string;
+                    const text = inputText(command.value, command.data);
                     const find =
                         command.args['find'] || command.args['f'] || '';
                     const replacement =
@@ -374,9 +381,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (joinShellWords(command.value ?? '') ||
-                        command.data ||
-                        '') as string;
+                    const text = inputText(command.value, command.data);
                     const length =
                         parseInt(command.args['length'] || command.args['l']) ||
                         30;
@@ -436,9 +441,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (joinShellWords(command.value ?? '') ||
-                        command.data ||
-                        '') as string;
+                    const text = inputText(command.value, command.data);
                     const length = parseInt(
                         command.args['length'] || command.args['l'],
                     );
@@ -510,9 +513,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (joinShellWords(command.value ?? '') ||
-                        command.data ||
-                        '') as string;
+                    const text = inputText(command.value, command.data);
                     const delimiter =
                         command.args['by'] ||
                         command.args['d'] ||
@@ -554,9 +555,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (joinShellWords(command.value ?? '') ||
-                        command.data ||
-                        '') as string;
+                    const text = inputText(command.value, command.data);
                     const words: string[] = lodash.words(text);
                     const { writer } = context;
 
@@ -595,9 +594,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (joinShellWords(command.value ?? '') ||
-                        command.data ||
-                        '') as string;
+                    const text = inputText(command.value, command.data);
                     context.writer.writeln(
                         `${context.writer.wrapInColor('Result: ', CliForegroundColor.Yellow)}${text.length}`,
                     );
@@ -623,9 +620,7 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (joinShellWords(command.value ?? '') ||
-                        command.data ||
-                        '') as string;
+                    const text = inputText(command.value, command.data);
                     const { writer } = context;
 
                     const lines = text.split(/\r?\n/).length;
@@ -686,11 +681,16 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (joinShellWords(command.value ?? '') ||
-                        command.data ||
-                        '') as string;
+                    const text = inputText(command.value, command.data);
                     const find =
                         command.args['find'] || command.args['f'] || '';
+
+                    if (!find) {
+                        context.writer.writeError('--find is required');
+                        context.process.exit(-1);
+                        return;
+                    }
+
                     const result = text.includes(find);
                     const { writer } = context;
 
@@ -731,11 +731,16 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (joinShellWords(command.value ?? '') ||
-                        command.data ||
-                        '') as string;
+                    const text = inputText(command.value, command.data);
                     const find =
                         command.args['find'] || command.args['f'] || '';
+
+                    if (!find) {
+                        context.writer.writeError('--find is required');
+                        context.process.exit(-1);
+                        return;
+                    }
+
                     const result = text.startsWith(find);
                     const { writer } = context;
 
@@ -774,11 +779,16 @@ export class CliStringCommandProcessor implements ICliCommandProcessor {
                     command: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    const text = (joinShellWords(command.value ?? '') ||
-                        command.data ||
-                        '') as string;
+                    const text = inputText(command.value, command.data);
                     const find =
                         command.args['find'] || command.args['f'] || '';
+
+                    if (!find) {
+                        context.writer.writeError('--find is required');
+                        context.process.exit(-1);
+                        return;
+                    }
+
                     const result = text.endsWith(find);
                     const { writer } = context;
 

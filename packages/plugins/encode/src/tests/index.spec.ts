@@ -179,6 +179,12 @@ describe('@qodalis/cli-encode', () => {
         expect(result.output).toContain('Hello World');
     });
 
+    it('rot with --shift=0 leaves the text unchanged', async () => {
+        const result = await harness.execute('rot Hello --shift=0');
+        expect(result.output).toContain('Hello');
+        expect(result.output).not.toContain('Uryyb');
+    });
+
     it('rot should support custom shift', async () => {
         const result = await harness.execute('rot abc --shift=1');
         expect(result.output).toContain('bcd');

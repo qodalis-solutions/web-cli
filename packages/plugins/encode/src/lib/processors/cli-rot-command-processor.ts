@@ -37,7 +37,8 @@ export class CliRotCommandProcessor implements ICliCommandProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         const text = (joinShellWords(command.value ?? '') || command.data || '') as string;
-        const shift = parseInt(command.args['shift']) || 13;
+        const parsedShift = parseInt(command.args['shift']);
+        const shift = Number.isNaN(parsedShift) ? 13 : parsedShift;
         const normalizedShift = ((shift % 26) + 26) % 26;
 
         const result = text.replace(/[a-zA-Z]/g, (char) => {
