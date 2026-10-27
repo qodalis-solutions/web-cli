@@ -140,9 +140,16 @@ export class CliPasswordGeneratorCommandProcessor implements ICliCommandProcesso
         if (numbers) chars += nums;
         if (symbols) chars += sym;
 
+        // Cryptographically secure, without modulo bias: values at or above the
+        // largest multiple of chars.length are drawn again.
+        const limit = 256 - (256 % chars.length);
+        const bytes = new Uint8Array(1);
         let password = '';
-        for (let i = 0; i < length; i++) {
-            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        while (password.length < length) {
+            crypto.getRandomValues(bytes);
+            if (bytes[0] < limit) {
+                password += chars.charAt(bytes[0] % chars.length);
+            }
         }
 
         return password;
