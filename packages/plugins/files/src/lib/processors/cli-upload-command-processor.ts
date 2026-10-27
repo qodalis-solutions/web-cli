@@ -34,7 +34,7 @@ export class CliUploadCommandProcessor implements ICliCommandProcessor {
         const fs = context.services.getRequired<IFileSystemService>(
             IFileSystemService_TOKEN,
         );
-        const fileService = context.services.getRequired<ICliFileTransferService>(
+        const fileService = context.services.get<ICliFileTransferService>(
             ICliFileTransferService_TOKEN,
         );
 

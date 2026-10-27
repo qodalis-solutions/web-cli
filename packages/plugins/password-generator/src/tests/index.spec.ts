@@ -1,3 +1,4 @@
+import { CliTestHarness } from '@qodalis/cli';
 import { CliPasswordGeneratorCommandProcessor } from '../lib/processors/cli-password-generator-command-processor';
 
 describe('CliPasswordGeneratorCommandProcessor', () => {
@@ -98,6 +99,21 @@ describe('CliPasswordGeneratorCommandProcessor', () => {
     describe('writeDescription', () => {
         it('should have writeDescription defined as a function', () => {
             expect(typeof processor.writeDescription).toBe('function');
+        });
+    });
+
+    describe('generation', () => {
+        it('uses crypto.getRandomValues, never Math.random', async () => {
+            const harness = new CliTestHarness();
+            harness.registerProcessor(new CliPasswordGeneratorCommandProcessor());
+            const mathRandom = spyOn(Math, 'random').and.callThrough();
+            const cryptoRandom = spyOn(crypto, 'getRandomValues').and.callThrough();
+
+            const result = await harness.execute('generate-password --length=40');
+
+            expect(result.data).toMatch(/^[a-zA-Z0-9]{40}$/);
+            expect(cryptoRandom).toHaveBeenCalled();
+            expect(mathRandom).not.toHaveBeenCalled();
         });
     });
 });

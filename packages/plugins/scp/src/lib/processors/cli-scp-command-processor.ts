@@ -135,7 +135,7 @@ export class CliScpCommandCommandProcessor implements ICliCommandProcessor {
             );
             context.spinner?.hide();
 
-            const fileService = context.services.getRequired<ICliFileTransferService>(
+            const fileService = context.services.get<ICliFileTransferService>(
                 ICliFileTransferService_TOKEN,
             );
 
@@ -170,7 +170,7 @@ export class CliScpCommandCommandProcessor implements ICliCommandProcessor {
         const server = resolveServer(serverName, context);
         if (!server) return;
 
-        const fileService = context.services.getRequired<ICliFileTransferService>(
+        const fileService = context.services.get<ICliFileTransferService>(
             ICliFileTransferService_TOKEN,
         );
 

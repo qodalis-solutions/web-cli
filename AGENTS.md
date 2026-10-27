@@ -4,7 +4,7 @@ Guide for AI coding agents working in the web-cli monorepo: the Qodalis CLI engi
 
 ## Setup and commands
 
-pnpm 12 and Nx 23, on Node 22. pnpm settings live in `pnpm-workspace.yaml`; pnpm 12 ignores `.npmrc`.
+pnpm 12 and Nx 24, on Node 22. pnpm settings live in `pnpm-workspace.yaml`; pnpm 12 ignores `.npmrc`.
 
 ```bash
 pnpm install --frozen-lockfile

@@ -101,7 +101,7 @@ export class CliScpUploadProcessor implements ICliCommandChildProcessor {
         const server = resolveServer(serverName, context);
         if (!server) return;
 
-        const fileService = context.services.getRequired<ICliFileTransferService>(
+        const fileService = context.services.get<ICliFileTransferService>(
             ICliFileTransferService_TOKEN,
         );
 
