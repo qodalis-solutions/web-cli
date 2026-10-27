@@ -1,5 +1,5 @@
 import { defineComponent, computed, inject, watch, PropType, h, onBeforeUnmount, onMounted, shallowRef, VNode, Fragment } from 'vue';
-import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, ICliPanelRef } from '@qodalis/cli-core';
+import { ICliModule, CliPanelConfig, CliPanelPosition, ICliPanelRef } from '@qodalis/cli-core';
 import {
     CliEngine,
     CliEngineOptions,
@@ -61,7 +61,6 @@ export const CliPanel = defineComponent({
     props: {
         options: { type: Object as PropType<CliPanelOptions>, default: undefined },
         modules: { type: Array as PropType<ICliModule[]>, default: undefined },
-        processors: { type: Array as PropType<ICliCommandProcessor[]>, default: undefined },
         services: { type: Object as PropType<Record<string, any>>, default: undefined },
         onClose: { type: Function as PropType<() => void>, default: undefined },
         collapsed: { type: Boolean, default: undefined },
@@ -373,7 +372,6 @@ export const CliPanel = defineComponent({
                                         h(Cli, {
                                             options: mergedOptions.value,
                                             modules: hostConfig.value.modules,
-                                            processors: hostConfig.value.processors,
                                             services: hostConfig.value.services,
                                             snapshot: pane.snapshot,
                                             style: { height: '100%' },

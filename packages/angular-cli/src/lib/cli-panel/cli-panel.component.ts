@@ -13,7 +13,7 @@ import {
     QueryList,
     ViewChildren,
 } from '@angular/core';
-import { CliPanelConfig, CliPanelPosition, CliPanelState, ICliCommandProcessor, ICliModule, ICliPanelRef } from '@qodalis/cli-core';
+import { CliPanelConfig, CliPanelPosition, CliPanelState, ICliModule, ICliPanelRef } from '@qodalis/cli-core';
 import {
     CliEngine,
     CliEngineOptions,
@@ -96,12 +96,6 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
     /** Optional list of CLI modules to register with each terminal pane. */
     @Input() modules?: ICliModule[];
-
-    /**
-     * Optional list of command processors to register with each terminal pane.
-     * @deprecated Use modules instead.
-     */
-    @Input() processors?: ICliCommandProcessor[];
 
     @Output() onClose = new EventEmitter<void>();
 

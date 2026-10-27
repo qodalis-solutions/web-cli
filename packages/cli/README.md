@@ -14,10 +14,14 @@ npm install @qodalis/cli
 import { CliEngine } from '@qodalis/cli';
 
 const engine = new CliEngine(document.getElementById('terminal')!, {
-  welcomeMessage: { message: 'Welcome!', show: 'always' },
+  welcome: { message: 'Welcome!', show: 'always' },
 });
 
-engine.registerProcessors([new MyCommandProcessor()]);
+engine.registerModule({
+  apiVersion: 2,
+  name: 'my-commands',
+  processors: [new MyCommandProcessor()],
+});
 await engine.start();
 ```
 

@@ -24,9 +24,6 @@ export const getCliNameArt = (cols: number): string => {
     return '\n  Qodalis CLI\n';
 };
 
-/** @deprecated Use getCliNameArt(cols) instead */
-export const CLi_Name_Art = CLi_Name_Art_Full;
-
 export const hotkeysInfo = [
     {
         key: 'Ctrl + C',

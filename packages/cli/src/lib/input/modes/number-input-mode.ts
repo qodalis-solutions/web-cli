@@ -3,11 +3,6 @@ import { InputModeHost } from '../input-mode';
 import { InputModeBase } from './input-mode-base';
 
 /**
- * @deprecated Use CliNumberOptions from @qodalis/cli-core instead.
- */
-export type NumberInputOptions = CliNumberOptions;
-
-/**
  * Input mode for reading an integer number.
  * Only accepts digits and a minus sign at position 0.
  * Supports left/right cursor navigation.
@@ -22,7 +17,7 @@ export class NumberInputMode extends InputModeBase<number> {
         host: InputModeHost,
         resolve: (value: number | null) => void,
         private readonly promptText: string,
-        private readonly options?: NumberInputOptions,
+        private readonly options?: CliNumberOptions,
     ) {
         super(host, resolve);
         this.buffer = options?.default != null ? String(options.default) : '';

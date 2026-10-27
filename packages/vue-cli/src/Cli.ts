@@ -7,7 +7,7 @@ import {
     h,
     inject,
 } from 'vue';
-import { ICliCommandProcessor, ICliModule, CliEngineSnapshot } from '@qodalis/cli-core';
+import { ICliModule, CliEngineSnapshot } from '@qodalis/cli-core';
 import { CliEngine, CliEngineOptions, createCliEngine, resolveCliHostConfig } from '@qodalis/cli';
 import { CliInjectionKey } from './cliInjection';
 import { CliConfigKey } from './CliConfigProvider';
@@ -17,7 +17,6 @@ import { CliConfigKey } from './CliConfigProvider';
  */
 export interface CliProps {
     modules?: ICliModule[];
-    processors?: ICliCommandProcessor[];
     options?: CliEngineOptions;
     services?: Record<string, any>;
     snapshot?: CliEngineSnapshot;
@@ -30,10 +29,6 @@ export const Cli = defineComponent({
     props: {
         modules: {
             type: Array as PropType<ICliModule[]>,
-            default: undefined,
-        },
-        processors: {
-            type: Array as PropType<ICliCommandProcessor[]>,
             default: undefined,
         },
         options: {

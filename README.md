@@ -117,12 +117,9 @@ Pass options to customize the terminal:
 
 ```typescript
 const options = {
-  welcomeMessage: {
+  welcome: {
     message: '-- your custom welcome message --',
     show: 'daily', // 'never', 'once', 'daily', 'always'
-  },
-  usersModule: {
-    enabled: true,
   },
 };
 ```
@@ -761,7 +758,7 @@ export class GreetCommandProcessor implements ICliCommandProcessor {
 }
 ```
 
-Register it with your framework (Angular: `resolveCommandProcessorProvider(GreetCommandProcessor)`, React/Vue: pass via `processors` prop), or wrap it in an inline `ICliModule`:
+Wrap it in an `ICliModule` and register the module with your framework (Angular: `resolveCliModuleProvider(myModule)`, React/Vue: the `modules` prop, vanilla: `engine.registerModule(myModule)`):
 
 ```typescript
 const myModule: ICliModule = {
@@ -784,10 +781,14 @@ For advanced use cases or non-framework environments, use `CliEngine` directly:
 import { CliEngine } from '@qodalis/cli';
 
 const engine = new CliEngine(document.getElementById('terminal')!, {
-  welcomeMessage: { message: 'Welcome!', show: 'always' },
+  welcome: { message: 'Welcome!', show: 'always' },
 });
 
-engine.registerProcessors([new GreetCommandProcessor()]);
+engine.registerModule({
+  apiVersion: 2,
+  name: 'my-app-commands',
+  processors: [new GreetCommandProcessor()],
+});
 await engine.start();
 ```
 

@@ -60,12 +60,19 @@ const cliOptions = {
 ## Registering Custom Commands
 
 ```typescript
-import { CliModule, resolveCommandProcessorProvider } from '@qodalis/angular-cli';
+import { CliModule, resolveCliModuleProvider } from '@qodalis/angular-cli';
+import { ICliModule } from '@qodalis/cli-core';
 import { MyCommandProcessor } from './my-command-processor';
+
+const myModule: ICliModule = {
+  apiVersion: 2,
+  name: 'my-commands',
+  processors: [new MyCommandProcessor()],
+};
 
 @NgModule({
   imports: [CliModule],
-  providers: [resolveCommandProcessorProvider(MyCommandProcessor)],
+  providers: [resolveCliModuleProvider(myModule)],
 })
 export class AppModule {}
 ```

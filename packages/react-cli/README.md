@@ -53,10 +53,17 @@ function App() {
 
 ```tsx
 import { Cli } from '@qodalis/react-cli';
+import { ICliModule } from '@qodalis/cli-core';
 import { GreetCommandProcessor } from './greet-command-processor';
 
+const myModule: ICliModule = {
+  apiVersion: 2,
+  name: 'my-commands',
+  processors: [new GreetCommandProcessor()],
+};
+
 function App() {
-  return <Cli processors={[new GreetCommandProcessor()]} />;
+  return <Cli modules={[myModule]} />;
 }
 ```
 

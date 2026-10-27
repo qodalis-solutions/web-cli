@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { ICliCommandProcessor, ICliModule, CliEngineSnapshot } from '@qodalis/cli-core';
+import { ICliModule, CliEngineSnapshot } from '@qodalis/cli-core';
 import { CliEngine, CliEngineOptions, resolveCliHostConfig } from '@qodalis/cli';
 import { useCli } from './CliContext';
 import { useCliConfig } from './CliConfigContext';
@@ -7,7 +7,6 @@ import { useCliEngine } from './useCliEngine';
 
 export interface CliProps {
     modules?: ICliModule[];
-    processors?: ICliCommandProcessor[];
     options?: CliEngineOptions;
     services?: Record<string, any>;
     snapshot?: CliEngineSnapshot;
@@ -18,7 +17,6 @@ export interface CliProps {
 
 export function Cli({
     modules,
-    processors,
     options,
     services,
     snapshot,
@@ -33,7 +31,7 @@ export function Cli({
 
     // Always call the hook (React rules), but disable it when inside a CliProvider.
     const standaloneEngine = useCliEngine(containerRef, {
-        ...resolveCliHostConfig({ modules, processors, options, services }, config),
+        ...resolveCliHostConfig({ modules, options, services }, config),
         snapshot,
         disabled: hasProvider,
     });

@@ -9,7 +9,6 @@ import {
     CliOptions,
     CliProvider,
     CliEngineSnapshot,
-    ICliCommandProcessor,
     ICliModule,
     ICliServerAuthService_TOKEN,
     ICliEventBus_TOKEN,
@@ -142,33 +141,9 @@ export class CliEngine {
     }
 
     /**
-     * Register a command processor to be loaded on start().
-     * @deprecated Use registerModule() instead.
-     */
-    registerProcessor(processor: ICliCommandProcessor): void {
-        this.userModules.push({
-            apiVersion: 2,
-            name: `__inline_${processor.command}`,
-            processors: [processor],
-        });
-    }
-
-    /**
-     * Register multiple command processors to be loaded on start().
-     * @deprecated Use registerModule() instead.
-     */
-    registerProcessors(processors: ICliCommandProcessor[]): void {
-        this.userModules.push({
-            apiVersion: 2,
-            name: '__inline_processors',
-            processors,
-        });
-    }
-
-    /**
-     * Register a service to be available in the service container.
-     * Must be called before start().
-     * @deprecated Use registerModule() with services instead.
+     * Register a service to be available in the service container before
+     * any module boots. Must be called before start(). Services a module
+     * needs for itself belong in its `services`.
      */
     registerService(token: string, value: any): void {
         this.pendingServices.push({ provide: token, useValue: value });

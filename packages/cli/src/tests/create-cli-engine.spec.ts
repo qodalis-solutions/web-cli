@@ -1,23 +1,20 @@
-import { ICliCommandProcessor, ICliModule } from '@qodalis/cli-core';
+import { ICliModule } from '@qodalis/cli-core';
 import { CLI_FRAMEWORK_SERVICE, createCliEngine, mergeCliOptions, resolveCliHostConfig } from '../lib/engine';
 
 describe('createCliEngine', () => {
-    const processor = { command: 'x' } as ICliCommandProcessor;
     const module = { apiVersion: 2, name: 'm' } as ICliModule;
 
-    it('registers framework, services, modules and processors in order', () => {
+    it('registers framework, services and modules in order', () => {
         const engine = createCliEngine(document.createElement('div'), {
             framework: 'React',
             services: { a: 1 },
             modules: [module],
-            processors: [processor],
         }) as any;
         expect(engine.pendingServices).toEqual([
             { provide: CLI_FRAMEWORK_SERVICE, useValue: 'React' },
             { provide: 'a', useValue: 1 },
         ]);
-        expect(engine.userModules[0]).toBe(module);
-        expect(engine.userModules[1].processors).toEqual([processor]);
+        expect(engine.userModules).toEqual([module]);
     });
 
     it('adds the snapshot to the options without mutating them', () => {
@@ -29,7 +26,7 @@ describe('createCliEngine', () => {
     });
 
     it('skips empty lists', () => {
-        const engine = createCliEngine(document.createElement('div'), { modules: [], processors: [] }) as any;
+        const engine = createCliEngine(document.createElement('div'), { modules: [] }) as any;
         expect(engine.userModules).toEqual([]);
         expect(engine.pendingServices).toEqual([]);
     });
@@ -42,7 +39,7 @@ describe('resolveCliHostConfig', () => {
         expect(resolved.modules).toBe(inherited.modules);
         expect(resolved.options).toEqual({ b: 2 } as any);
         expect(resolved.services).toBe(inherited.services);
-        expect(resolveCliHostConfig({}, null)).toEqual({ modules: undefined, processors: undefined, options: undefined, services: undefined });
+        expect(resolveCliHostConfig({}, null)).toEqual({ modules: undefined, options: undefined, services: undefined });
     });
 });
 

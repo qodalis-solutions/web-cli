@@ -3,7 +3,7 @@ import {
     CliModuleRegistry,
     ICliCommandProcessorRegistry,
     ICliExecutionContext,
-    ICliUmdModule,
+    ICliModule,
     Package,
 } from '@qodalis/cli-core';
 import { ScriptLoaderService } from '../../../services/script-loader';
@@ -290,7 +290,7 @@ export class CliPackageInstaller {
     unload(packageName: string): string[] {
         const module = this.moduleRegistry?.getModule(packageName);
         const legacy = (window as any)[packageName] as
-            ICliUmdModule | undefined;
+            ICliModule | undefined;
         const processors = module?.processors ?? legacy?.processors ?? [];
 
         if (module) {

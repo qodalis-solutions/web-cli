@@ -1,15 +1,10 @@
 import { InjectionToken } from '@angular/core';
 import {
-    ICliCommandProcessor,
     ICliModule,
     ICliPingServerService,
     ICliUserSessionService,
     ICliUsersStoreService,
 } from '@qodalis/cli-core';
-
-export const CliCommandProcessor_TOKEN = new InjectionToken<
-    ICliCommandProcessor[]
->('cli-processors');
 
 export const ICliUserSessionService_TOKEN =
     new InjectionToken<ICliUserSessionService>('cli-user-session-service');

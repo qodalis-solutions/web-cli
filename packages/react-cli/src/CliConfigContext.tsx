@@ -1,10 +1,9 @@
 import React, { createContext, useContext } from 'react';
-import { ICliCommandProcessor, ICliModule, CliOptions } from '@qodalis/cli-core';
+import { ICliModule, CliOptions } from '@qodalis/cli-core';
 import { CliEngineOptions } from '@qodalis/cli';
 
 export interface CliConfigValue {
     modules?: ICliModule[];
-    processors?: ICliCommandProcessor[];
     options?: CliEngineOptions;
     services?: Record<string, any>;
 }
@@ -21,13 +20,12 @@ export interface CliConfigProviderProps extends CliConfigValue {
 
 export function CliConfigProvider({
     modules,
-    processors,
     options,
     services,
     children,
 }: CliConfigProviderProps): React.JSX.Element {
     return (
-        <CliConfigCtx.Provider value={{ modules, processors, options, services }}>
+        <CliConfigCtx.Provider value={{ modules, options, services }}>
             {children}
         </CliConfigCtx.Provider>
     );
