@@ -59,7 +59,7 @@
     "@eslint/js": "^10.0.1",
     "@nx/eslint": "^24.0.1",
     "@types/jasmine": "~5.1.0",
-    "@types/lodash": "^4.17.14",
+    "@types/lodash": "^4.17.27",
     "@types/node": "^22.13.11",
     "@types/semver": "^7.7.1",
     "angular-eslint": "^22.6.0",

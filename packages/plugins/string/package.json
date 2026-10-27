@@ -23,7 +23,7 @@
   "dependencies": {
     "@qodalis/cli-core": "workspace:^",
     "lodash": "^4.17.21",
-    "@types/lodash": "^4.17.14"
+    "@types/lodash": "^4.17.27"
   },
   "sideEffects": false,
   "cliDependencies": [
