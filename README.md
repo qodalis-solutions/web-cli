@@ -232,7 +232,7 @@ See [AI plugin development](https://cli.qodalis.com/docs/ai-plugin-development).
 
 ## Development
 
-This repository is a pnpm 12 + Nx 23 monorepo (Node 22):
+This repository is a pnpm 12 + Nx 24 monorepo (Node 22):
 
 ```bash
 pnpm install
