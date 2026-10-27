@@ -3,6 +3,12 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.0.0
+
+### CLI engine (`@qodalis/cli`)
+
+- Tab completion reads a line the way the executor does: the value of a flag (`--sides 6`, `-s 6`) is not taken for a sub-command, so `dice roll --sides 6 --` completes the flags of `dice roll` (the parent command's flags included) and `dice --seed 42 r` completes its sub-commands; both found nothing before. A flag's value is not completed with sub-command names.
+
 ## v2.0.0-rc.3
 
 Dependency cleanup and build fixes; no changes to the packages' APIs.
