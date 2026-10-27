@@ -98,7 +98,7 @@ importers:
     devDependencies:
       '@angular-devkit/build-angular':
         specifier: ^22.2.4
-        version: 22.2.4(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@angular/compiler@22.2.3)(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(@angular/platform-browser@22.2.3(@angular/animations@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@types/node@22.20.5)(chokidar@5.0.0)(jiti@2.7.0)(karma@6.4.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(lightningcss@1.33.0)(ng-packagr@22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(rollup@4.64.9)(sass-embedded@1.104.1)(sass@1.105.2)(supports-color@8.1.1)(typescript@6.0.3)(yaml@2.9.1)
+        version: 22.2.4(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@angular/compiler@22.2.3)(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(@angular/platform-browser@22.2.3(@angular/animations@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@types/node@22.20.5)(chokidar@5.0.0)(jiti@2.7.0)(karma@6.4.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(lightningcss@1.33.0)(ng-packagr@22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(rollup@4.64.9)(sass-embedded@1.104.1)(sass@1.106.1)(supports-color@8.1.1)(typescript@6.0.3)(yaml@2.9.1)
       '@angular/cli':
         specifier: ^22.2.4
         version: 22.2.4(@types/node@22.20.5)(chokidar@5.0.0)
@@ -169,8 +169,8 @@ importers:
         specifier: ^3.4.2
         version: 3.9.10
       sass:
-        specifier: ^1.85.1
-        version: 1.105.2
+        specifier: ^1.106.1
+        version: 1.106.1
       tsup:
         specifier: ^9.0.0
         version: 9.0.0(jiti@2.7.0)(postcss@8.5.28)(typescript@6.0.3)(yaml@2.9.1)
@@ -276,7 +276,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       '@vitejs/plugin-react':
         specifier: ^6.1.2
-        version: 6.1.2(vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1))
+        version: 6.1.2(vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1))
       concurrently:
         specifier: ^9.1.2
         version: 9.2.5
@@ -291,7 +291,7 @@ importers:
         version: 6.0.3
       vite:
         specifier: ^8.3.4
-        version: 8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1)
+        version: 8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1)
       wait-on:
         specifier: ^9.5.1
         version: 9.5.1(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -325,13 +325,13 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       '@vitejs/plugin-react':
         specifier: ^6.1.2
-        version: 6.1.2(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1))
+        version: 6.1.2(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1))
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
       vite:
         specifier: ^8.3.4
-        version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1)
+        version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1)
 
   apps/demo-react:
     dependencies:
@@ -407,13 +407,13 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       '@vitejs/plugin-react':
         specifier: ^6.1.2
-        version: 6.1.2(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1))
+        version: 6.1.2(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1))
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
       vite:
         specifier: ^8.3.4
-        version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1)
+        version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1)
 
   apps/demo-vanilla:
     dependencies:
@@ -447,7 +447,7 @@ importers:
         version: 6.0.3
       vite:
         specifier: ^8.3.4
-        version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1)
+        version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1)
 
   apps/demo-vue:
     dependencies:
@@ -514,7 +514,7 @@ importers:
         version: 24.19.2
       '@vitejs/plugin-vue':
         specifier: ^6.0.10
-        version: 6.0.10(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.44(typescript@6.0.3))
+        version: 6.0.10(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.44(typescript@6.0.3))
       '@vue/tsconfig':
         specifier: ^0.9.1
         version: 0.9.1(typescript@6.0.3)(vue@3.5.44(typescript@6.0.3))
@@ -523,7 +523,7 @@ importers:
         version: 6.0.3
       vite:
         specifier: ^8.3.4
-        version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1)
+        version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1)
       vue-tsc:
         specifier: ^3.3.13
         version: 3.3.13(typescript@6.0.3)
@@ -5662,11 +5662,8 @@ packages:
     resolution: {integrity: sha512-771TFWFD70G1wLTC4oU2Cw4qvtmNrIw+wRvBtn+okgHl7slJVi7zfNcdmqDL72BojM30VNJ2UHylr1o77U37Jw==}
     peerDependencies:
       webpack: '*'
-      webpack-sources: '*'
     peerDependenciesMeta:
       webpack:
-        optional: true
-      webpack-sources:
         optional: true
 
   lightningcss-android-arm64@1.33.0:
@@ -6848,6 +6845,11 @@ packages:
     engines: {node: '>=20.19.0'}
     hasBin: true
 
+  sass@1.106.1:
+    resolution: {integrity: sha512-kD+Gi66vycZcbJt+42NC4z4PXNMcCajVrJPhqoKKXy5cOBMmJQt052CxIBcRjwYXeImHYOpu/ydWWGZQIenl7A==}
+    engines: {node: '>=20.19.0'}
+    hasBin: true
+
   sax@1.6.1:
     resolution: {integrity: sha512-42tBVwLWnaQvW5zc4HbZrTuWccECCZfBi92FDuwtqxasH+JbPB3/FOKb1m222K42R4WxuxzzMsTswfzgtSu64Q==}
     engines: {node: '>=11.0.0'}
@@ -7575,7 +7577,7 @@ snapshots:
     transitivePeerDependencies:
       - chokidar
 
-  ? '@angular-devkit/build-angular@22.2.4(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@angular/compiler@22.2.3)(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(@angular/platform-browser@22.2.3(@angular/animations@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@types/node@22.20.5)(chokidar@5.0.0)(jiti@2.7.0)(karma@6.4.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(lightningcss@1.33.0)(ng-packagr@22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(rollup@4.64.9)(sass-embedded@1.104.1)(sass@1.105.2)(supports-color@8.1.1)(typescript@6.0.3)(yaml@2.9.1)'
+  ? '@angular-devkit/build-angular@22.2.4(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@angular/compiler@22.2.3)(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(@angular/platform-browser@22.2.3(@angular/animations@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@types/node@22.20.5)(chokidar@5.0.0)(jiti@2.7.0)(karma@6.4.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(lightningcss@1.33.0)(ng-packagr@22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(rollup@4.64.9)(sass-embedded@1.104.1)(sass@1.106.1)(supports-color@8.1.1)(typescript@6.0.3)(yaml@2.9.1)'
   : dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular-devkit/architect': 0.2202.4(chokidar@5.0.0)
@@ -7619,7 +7621,7 @@ snapshots:
       postcss-loader: 8.2.1(postcss@8.5.28)(typescript@6.0.3)(webpack@5.112.0(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28))
       resolve-url-loader: 5.0.0
       rxjs: 7.8.2
-      sass-loader: 17.0.1(sass-embedded@1.104.1)(sass@1.105.2)(webpack@5.112.0(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28))
+      sass-loader: 17.0.1(sass-embedded@1.104.1)(sass@1.106.1)(webpack@5.112.0(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28))
       semver: 7.8.5
       source-map-loader: 5.0.0(webpack@5.112.0(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28))
       source-map-support: 0.5.21
@@ -7686,7 +7688,7 @@ snapshots:
   '@angular-devkit/core@22.2.3(chokidar@5.0.0)':
     dependencies:
       ajv: 8.20.0
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1(ajv@8.20.0)
       jsonc-parser: 3.3.1
       picomatch: 4.0.7
       rxjs: 7.8.2
@@ -7697,7 +7699,7 @@ snapshots:
   '@angular-devkit/core@22.2.4(chokidar@5.0.0)':
     dependencies:
       ajv: 8.20.0
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1(ajv@8.20.0)
       jsonc-parser: 3.3.1
       picomatch: 4.0.7
       rxjs: 7.8.2
@@ -10810,25 +10812,25 @@ snapshots:
     dependencies:
       vite: 8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.104.1)(terser@5.51.2)(yaml@2.9.1)
 
-  '@vitejs/plugin-react@6.1.2(vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1))':
+  '@vitejs/plugin-react@6.1.2(vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
-      vite: 8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1)
+      vite: 8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1)
 
-  '@vitejs/plugin-react@6.1.2(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1))':
+  '@vitejs/plugin-react@6.1.2(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
-      vite: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1)
+      vite: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1)
 
-  '@vitejs/plugin-react@6.1.2(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1))':
+  '@vitejs/plugin-react@6.1.2(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
-      vite: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1)
+      vite: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1)
 
-  '@vitejs/plugin-vue@6.0.10(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.44(typescript@6.0.3))':
+  '@vitejs/plugin-vue@6.0.10(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.44(typescript@6.0.3))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
-      vite: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1)
+      vite: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1)
       vue: 3.5.44(typescript@6.0.3)
 
   '@volar/language-core@2.4.28':
@@ -11079,8 +11081,8 @@ snapshots:
 
   agent-base@9.0.0: {}
 
-  ajv-formats@3.0.1:
-    dependencies:
+  ajv-formats@3.0.1(ajv@8.20.0):
+    optionalDependencies:
       ajv: 8.20.0
 
   ajv-keywords@5.1.0(ajv@8.20.0):
@@ -12904,7 +12906,7 @@ snapshots:
       rolldown: 1.2.14
       rolldown-plugin-dts: 0.28.8(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(rolldown@1.2.14)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
       rxjs: 7.8.2
-      sass: 1.105.2
+      sass: 1.106.1
       sass-embedded: 1.105.2
       tinyglobby: 0.2.17
       tslib: 2.8.1
@@ -13765,9 +13767,9 @@ snapshots:
       sass-embedded-win32-arm64: 1.105.2
       sass-embedded-win32-x64: 1.105.2
 
-  sass-loader@17.0.1(sass-embedded@1.104.1)(sass@1.105.2)(webpack@5.112.0(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28)):
+  sass-loader@17.0.1(sass-embedded@1.104.1)(sass@1.106.1)(webpack@5.112.0(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28)):
     optionalDependencies:
-      sass: 1.105.2
+      sass: 1.106.1
       sass-embedded: 1.104.1
       webpack: 5.112.0(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28)
 
@@ -13786,6 +13788,15 @@ snapshots:
       source-map-js: 1.2.2
     optionalDependencies:
       '@parcel/watcher': 2.6.0
+    optional: true
+
+  sass@1.106.1:
+    dependencies:
+      chokidar: 5.0.0
+      immutable: 5.1.9
+      source-map-js: 1.2.2
+    optionalDependencies:
+      '@parcel/watcher': 2.6.0
 
   sax@1.6.1:
     optional: true
@@ -13796,7 +13807,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.20.0
-      ajv-formats: 3.0.1
+      ajv-formats: 3.0.1(ajv@8.20.0)
       ajv-keywords: 5.1.0(ajv@8.20.0)
 
   selfsigned@5.5.0:
@@ -14273,7 +14284,7 @@ snapshots:
       terser: 5.51.2
       yaml: 2.9.1
 
-  vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1):
+  vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
@@ -14286,12 +14297,12 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.7.0
       less: 4.9.1(supports-color@8.1.1)
-      sass: 1.105.2
+      sass: 1.106.1
       sass-embedded: 1.105.2
       terser: 5.51.2
       yaml: 2.9.1
 
-  vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1):
+  vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
@@ -14304,12 +14315,12 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.7.0
       less: 4.9.1(supports-color@8.1.1)
-      sass: 1.105.2
+      sass: 1.106.1
       sass-embedded: 1.104.1
       terser: 5.51.2
       yaml: 2.9.1
 
-  vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.51.2)(yaml@2.9.1):
+  vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.105.2)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
@@ -14322,7 +14333,7 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.7.0
       less: 4.9.1(supports-color@8.1.1)
-      sass: 1.105.2
+      sass: 1.106.1
       sass-embedded: 1.105.2
       terser: 5.51.2
       yaml: 2.9.1
