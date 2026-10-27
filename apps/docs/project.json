@@ -9,8 +9,33 @@
     "cli"
   ],
   "targets": {
+    "llms": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/build-llms.js"
+      },
+      "inputs": [
+        "{workspaceRoot}/docs/ai/**/*",
+        "{workspaceRoot}/tools/build-llms.js"
+      ],
+      "outputs": [
+        "{projectRoot}/src/static/llms.txt",
+        "{projectRoot}/src/static/llms-full.txt"
+      ],
+      "cache": true
+    },
     "build": {
       "executor": "@angular-devkit/build-angular:browser",
+      "dependsOn": [
+        "^build",
+        "llms"
+      ],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/docs/ai/**/*",
+        "{workspaceRoot}/tools/build-llms.js"
+      ],
       "options": {
         "outputPath": "dist/docs",
         "index": "apps/docs/src/index.html",
@@ -81,6 +106,9 @@
     },
     "serve": {
       "executor": "@angular-devkit/build-angular:dev-server",
+      "dependsOn": [
+        "llms"
+      ],
       "options": {
         "port": 4300,
         "proxyConfig": "proxy.conf.json"
