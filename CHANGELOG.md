@@ -3,11 +3,44 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## v2.0.0
+## v2.0.0-rc.2
+
+Second release candidate: fixes found while testing rc.1, plugin-development help for AI assistants, and rewritten READMEs. No API removals.
 
 ### CLI engine (`@qodalis/cli`)
 
-- `--flag value` works on sub-commands and on commands that take no value: `dice roll --sides 6` ran as "Command not found: dice roll 6", since the value was read as a sub-command (only `--sides=6` worked). Flags of the parent command are read on its sub-commands too (`dice --seed 5 roll`).
+- `--flag value` works on sub-commands and on commands that take no value: `dice roll --sides 6` ran as "Command not found: dice roll 6", since the value was read as a sub-command (only `--sides=6` worked). Flags of the parent command are read on its sub-commands too (`dice --seed 5 roll`). A word after a flag that takes a value is now always that flag's value.
+
+### Plugins
+
+- `@qodalis/cli-password-generator`: passwords are drawn with `crypto.getRandomValues` (was `Math.random()`), without modulo bias.
+- `@qodalis/cli-string`: `includes`, `startsWith` and `endsWith` fail with "--find is required" instead of matching the empty string; piped data that is not text (e.g. the array from `csv to-json`) is used as JSON instead of failing with "toUpperCase is not a function".
+- `@qodalis/cli-encode`: `rot --shift=0` leaves the text unchanged (it fell back to 13).
+- `@qodalis/cli-scp` and `upload` (`@qodalis/cli-files`): without a file transfer service they say so instead of throwing.
+
+### Plugin scaffolding (`@qodalis/create-cli-plugin`)
+
+- Standalone plugins depend on `@qodalis/cli-core` of the same version (was `^0.0.16`), install with pnpm 12 (a `pnpm-workspace.yaml` allows esbuild's build script), and publish their build: `main`/`module`/`types`/`umd` point into `dist/`, which is published (`files`). The UMD bundle is `umd/index.global.js`, as `package.json` says.
+- Monorepo plugins are registered in `angular.json`, so `nx test <plugin>` runs, with the path alias `./dist/<name>`.
+- Standalone plugins get an `AGENTS.md` for AI coding assistants; `--version` prints the package version.
+- `@inquirer/prompts` 8.
+
+### Build plugins with AI
+
+- **llms.txt** and **llms-full.txt** at https://cli.qodalis.com: a plugin development reference for AI assistants (web plugins; Node, .NET and Python server plugins; recipes), generated from `docs/ai/*.md` at docs build time.
+- Docs page **Build plugins with AI** (`/docs/ai-plugin-development`): the developer tools of `@qodalis/mcp-cli` 0.2 (docs search, API declarations, plugin scaffolding, prompts; no server needed), `llms.txt` and `AGENTS.md`.
+- `AGENTS.md` in the repository for AI coding agents.
+
+### Docs and READMEs
+
+- Every README rewritten against the current API: the root README (also the npm page of core, cli and the framework wrappers), the core packages, `create-cli-plugin`, all 40 plugins (16 had none, including the language packs) and a new one for `@qodalis/electron-cli`. Wrong commands fixed on the way (`server jobs`, `server logs`, `md`). `DEVELOPER.md` brought up to date.
+- Docs: Encode plugin page; the Create a Plugin page lists the right build output (`dist/public-api.*`); `nano` is shown as the core command it is.
+
+### Packaging and dependencies
+
+- `@qodalis/electron-cli` is published to npm (its build was never copied into `dist/` for publishing).
+- Security advisories closed: `electron` 44.9.1; overrides for `fast-uri` (>= 3.1.9), `serialize-javascript` (>= 7.1.3) and `body-parser` (1.20.9 / 2.4.0). `pnpm audit`: no known vulnerabilities.
+- Nx 24.0.1, ng-packagr 22.2.5, jasmine-core 5.13; Dependabot skips `@types/node` majors (types follow the Node 22 runtime).
 
 ## v2.0.0-rc.1
 
