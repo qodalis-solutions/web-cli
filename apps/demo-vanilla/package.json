@@ -12,9 +12,10 @@
     "@qodalis/cli": "workspace:*",
     "@qodalis/cli-core": "workspace:*",
     "@qodalis/cli-guid": "workspace:*",
-    "@qodalis/cli-string": "workspace:*",
+    "@qodalis/cli-markdown": "workspace:*",
     "@qodalis/cli-password-generator": "workspace:*",
     "@qodalis/cli-qr": "workspace:*",
+    "@qodalis/cli-string": "workspace:*",
     "@qodalis/cli-todo": "workspace:*"
   },
   "devDependencies": {

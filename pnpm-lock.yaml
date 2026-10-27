@@ -338,6 +338,9 @@ importers:
       '@qodalis/cli':
         specifier: workspace:*
         version: link:../../packages/cli
+      '@qodalis/cli-2048':
+        specifier: workspace:*
+        version: link:../../packages/plugins/2048
       '@qodalis/cli-browser-storage':
         specifier: workspace:*
         version: link:../../packages/plugins/browser-storage
@@ -347,12 +350,54 @@ importers:
       '@qodalis/cli-curl':
         specifier: workspace:*
         version: link:../../packages/plugins/curl
+      '@qodalis/cli-data-explorer':
+        specifier: workspace:*
+        version: link:../../packages/plugins/data-explorer
+      '@qodalis/cli-encode':
+        specifier: workspace:*
+        version: link:../../packages/plugins/encode
       '@qodalis/cli-files':
         specifier: workspace:*
         version: link:../../packages/plugins/files
       '@qodalis/cli-guid':
         specifier: workspace:*
         version: link:../../packages/plugins/guid
+      '@qodalis/cli-lang-de':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-de
+      '@qodalis/cli-lang-es':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-es
+      '@qodalis/cli-lang-fr':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-fr
+      '@qodalis/cli-lang-it':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-it
+      '@qodalis/cli-lang-ja':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-ja
+      '@qodalis/cli-lang-ko':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-ko
+      '@qodalis/cli-lang-pt':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-pt
+      '@qodalis/cli-lang-ro':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-ro
+      '@qodalis/cli-lang-ru':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-ru
+      '@qodalis/cli-lang-zh':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-zh
+      '@qodalis/cli-markdown':
+        specifier: workspace:*
+        version: link:../../packages/plugins/markdown
+      '@qodalis/cli-minesweeper':
+        specifier: workspace:*
+        version: link:../../packages/plugins/minesweeper
       '@qodalis/cli-password-generator':
         specifier: workspace:*
         version: link:../../packages/plugins/password-generator
@@ -362,18 +407,30 @@ importers:
       '@qodalis/cli-regex':
         specifier: workspace:*
         version: link:../../packages/plugins/regex
+      '@qodalis/cli-scp':
+        specifier: workspace:*
+        version: link:../../packages/plugins/scp
       '@qodalis/cli-server-jobs':
         specifier: workspace:*
         version: link:../../packages/plugins/server-jobs
       '@qodalis/cli-server-logs':
         specifier: workspace:*
         version: link:../../packages/plugins/server-logs
+      '@qodalis/cli-snake':
+        specifier: workspace:*
+        version: link:../../packages/plugins/snake
       '@qodalis/cli-speed-test':
         specifier: workspace:*
         version: link:../../packages/plugins/speed-test
       '@qodalis/cli-string':
         specifier: workspace:*
         version: link:../../packages/plugins/string
+      '@qodalis/cli-sudoku':
+        specifier: workspace:*
+        version: link:../../packages/plugins/sudoku
+      '@qodalis/cli-tetris':
+        specifier: workspace:*
+        version: link:../../packages/plugins/tetris
       '@qodalis/cli-text-to-image':
         specifier: workspace:*
         version: link:../../packages/plugins/text-to-image
@@ -383,6 +440,12 @@ importers:
       '@qodalis/cli-users':
         specifier: workspace:*
         version: link:../../packages/plugins/users
+      '@qodalis/cli-wget':
+        specifier: workspace:*
+        version: link:../../packages/plugins/wget
+      '@qodalis/cli-wordle':
+        specifier: workspace:*
+        version: link:../../packages/plugins/wordle
       '@qodalis/cli-yesno':
         specifier: workspace:*
         version: link:../../packages/plugins/yesno
@@ -426,6 +489,9 @@ importers:
       '@qodalis/cli-guid':
         specifier: workspace:*
         version: link:../../packages/plugins/guid
+      '@qodalis/cli-markdown':
+        specifier: workspace:*
+        version: link:../../packages/plugins/markdown
       '@qodalis/cli-password-generator':
         specifier: workspace:*
         version: link:../../packages/plugins/password-generator
@@ -454,6 +520,9 @@ importers:
       '@qodalis/cli':
         specifier: workspace:*
         version: link:../../packages/cli
+      '@qodalis/cli-2048':
+        specifier: workspace:*
+        version: link:../../packages/plugins/2048
       '@qodalis/cli-browser-storage':
         specifier: workspace:*
         version: link:../../packages/plugins/browser-storage
@@ -463,12 +532,54 @@ importers:
       '@qodalis/cli-curl':
         specifier: workspace:*
         version: link:../../packages/plugins/curl
+      '@qodalis/cli-data-explorer':
+        specifier: workspace:*
+        version: link:../../packages/plugins/data-explorer
+      '@qodalis/cli-encode':
+        specifier: workspace:*
+        version: link:../../packages/plugins/encode
       '@qodalis/cli-files':
         specifier: workspace:*
         version: link:../../packages/plugins/files
       '@qodalis/cli-guid':
         specifier: workspace:*
         version: link:../../packages/plugins/guid
+      '@qodalis/cli-lang-de':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-de
+      '@qodalis/cli-lang-es':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-es
+      '@qodalis/cli-lang-fr':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-fr
+      '@qodalis/cli-lang-it':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-it
+      '@qodalis/cli-lang-ja':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-ja
+      '@qodalis/cli-lang-ko':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-ko
+      '@qodalis/cli-lang-pt':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-pt
+      '@qodalis/cli-lang-ro':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-ro
+      '@qodalis/cli-lang-ru':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-ru
+      '@qodalis/cli-lang-zh':
+        specifier: workspace:*
+        version: link:../../packages/plugins/lang-zh
+      '@qodalis/cli-markdown':
+        specifier: workspace:*
+        version: link:../../packages/plugins/markdown
+      '@qodalis/cli-minesweeper':
+        specifier: workspace:*
+        version: link:../../packages/plugins/minesweeper
       '@qodalis/cli-password-generator':
         specifier: workspace:*
         version: link:../../packages/plugins/password-generator
@@ -478,18 +589,30 @@ importers:
       '@qodalis/cli-regex':
         specifier: workspace:*
         version: link:../../packages/plugins/regex
+      '@qodalis/cli-scp':
+        specifier: workspace:*
+        version: link:../../packages/plugins/scp
       '@qodalis/cli-server-jobs':
         specifier: workspace:*
         version: link:../../packages/plugins/server-jobs
       '@qodalis/cli-server-logs':
         specifier: workspace:*
         version: link:../../packages/plugins/server-logs
+      '@qodalis/cli-snake':
+        specifier: workspace:*
+        version: link:../../packages/plugins/snake
       '@qodalis/cli-speed-test':
         specifier: workspace:*
         version: link:../../packages/plugins/speed-test
       '@qodalis/cli-string':
         specifier: workspace:*
         version: link:../../packages/plugins/string
+      '@qodalis/cli-sudoku':
+        specifier: workspace:*
+        version: link:../../packages/plugins/sudoku
+      '@qodalis/cli-tetris':
+        specifier: workspace:*
+        version: link:../../packages/plugins/tetris
       '@qodalis/cli-text-to-image':
         specifier: workspace:*
         version: link:../../packages/plugins/text-to-image
@@ -499,6 +622,12 @@ importers:
       '@qodalis/cli-users':
         specifier: workspace:*
         version: link:../../packages/plugins/users
+      '@qodalis/cli-wget':
+        specifier: workspace:*
+        version: link:../../packages/plugins/wget
+      '@qodalis/cli-wordle':
+        specifier: workspace:*
+        version: link:../../packages/plugins/wordle
       '@qodalis/cli-yesno':
         specifier: workspace:*
         version: link:../../packages/plugins/yesno
