@@ -21,6 +21,7 @@ export * from './completion';
 export * from './execution-context';
 
 export * from './command-processor';
+export * from './command-controls';
 
 export * from './progress-bars';
 

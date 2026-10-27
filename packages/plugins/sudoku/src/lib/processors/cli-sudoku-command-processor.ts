@@ -7,6 +7,8 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     ICliManagedInterval,
+    CliKeyData,
+    ICliCommandControls,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -247,6 +249,30 @@ export class CliSudokuCommandProcessor implements ICliCommandProcessor {
         icon: '\uD83E\uDDE9', // puzzle piece
         requiredCoreVersion: '>=2.0.0 <3.0.0',
         requiredCliVersion: '>=2.0.0 <3.0.0',
+    };
+
+    controls: ICliCommandControls = {
+        swipe: true,
+        keys: [
+            { label: 'ESC', key: 'Esc', data: CliKeyData.escape, description: 'Quit' },
+            { label: '1', key: '1', data: '1', description: 'Enter 1' },
+            { label: '2', key: '2', data: '2', description: 'Enter 2' },
+            { label: '3', key: '3', data: '3', description: 'Enter 3' },
+            { label: '4', key: '4', data: '4', description: 'Enter 4' },
+            { label: '5', key: '5', data: '5', description: 'Enter 5' },
+            { label: '6', key: '6', data: '6', description: 'Enter 6' },
+            { label: '7', key: '7', data: '7', description: 'Enter 7' },
+            { label: '8', key: '8', data: '8', description: 'Enter 8' },
+            { label: '9', key: '9', data: '9', description: 'Enter 9' },
+            { label: 'CLR', key: '0', data: '0', description: 'Clear the cell' },
+            { label: 'NOTE', key: 'N', data: 'n', description: 'Notes on/off' },
+            { label: 'HINT', key: 'H', data: 'h', description: 'Hint' },
+            { label: 'CHK', key: 'C', data: 'c', description: 'Check' },
+            { label: '←', key: 'Left', data: CliKeyData.left, description: 'Left', repeat: true },
+            { label: '↑', key: 'Up', data: CliKeyData.up, description: 'Up', repeat: true },
+            { label: '↓', key: 'Down', data: CliKeyData.down, description: 'Down', repeat: true },
+            { label: '→', key: 'Right', data: CliKeyData.right, description: 'Right', repeat: true },
+        ],
     };
 
     stateConfiguration?: CliStateConfiguration | undefined = {

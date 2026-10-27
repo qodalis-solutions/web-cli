@@ -7,6 +7,8 @@ import {
     CliForegroundColor,
     DefaultLibraryAuthor,
     joinShellWords,
+    CliKeyData,
+    ICliCommandControls,
 } from '@qodalis/cli-core';
 import { SyntaxHighlighterRegistry_TOKEN } from '../../tokens';
 import { NanoEditorBuffer } from '../../editor/nano-editor-buffer';
@@ -51,6 +53,27 @@ export class CliNanoCommandProcessor implements ICliCommandProcessor {
     metadata: CliProcessorMetadata = {
         icon: '📝',
         module: 'system',
+    };
+
+    controls: ICliCommandControls = {
+        textInput: true,
+        keys: [
+            { label: 'Save', key: 'Ctrl+S', data: CliKeyData.ctrl('s'), description: 'Save the file' },
+            { label: 'Exit', key: 'Ctrl+X', data: CliKeyData.ctrl('x'), description: 'Exit (asks to save changes)' },
+            { label: 'Find', key: 'Ctrl+W', data: CliKeyData.ctrl('w'), description: 'Search' },
+            { label: 'Cut', key: 'Ctrl+K', data: CliKeyData.ctrl('k'), description: 'Cut the line' },
+            { label: 'Paste', key: 'Ctrl+U', data: CliKeyData.ctrl('u'), description: 'Paste the cut text' },
+            { label: 'Help', key: 'Ctrl+G', data: CliKeyData.ctrl('g'), description: 'Show the help' },
+            { label: 'Esc', key: 'Esc', data: CliKeyData.escape, description: 'Cancel a prompt' },
+            { label: '←', key: 'Left', data: CliKeyData.left, description: 'Left', repeat: true },
+            { label: '↑', key: 'Up', data: CliKeyData.up, description: 'Up', repeat: true },
+            { label: '↓', key: 'Down', data: CliKeyData.down, description: 'Down', repeat: true },
+            { label: '→', key: 'Right', data: CliKeyData.right, description: 'Right', repeat: true },
+            { label: 'Home', key: 'Home', data: CliKeyData.home, description: 'Start of the line' },
+            { label: 'End', key: 'End', data: CliKeyData.end, description: 'End of the line' },
+            { label: 'PgUp', key: 'PageUp', data: CliKeyData.pageUp, description: 'Page up', repeat: true },
+            { label: 'PgDn', key: 'PageDown', data: CliKeyData.pageDown, description: 'Page down', repeat: true },
+        ],
     };
 
     private buffer!: NanoEditorBuffer;

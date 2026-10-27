@@ -7,6 +7,8 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     ICliManagedInterval,
+    CliKeyData,
+    ICliCommandControls,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -209,6 +211,21 @@ export class CliTetrisCommandProcessor implements ICliCommandProcessor {
         icon: '\uD83E\uDDF1', // brick emoji
         requiredCoreVersion: '>=2.0.0 <3.0.0',
         requiredCliVersion: '>=2.0.0 <3.0.0',
+    };
+
+    controls: ICliCommandControls = {
+        swipe: true,
+        tap: CliKeyData.up,
+        keys: [
+            { label: 'ESC', key: 'Esc', data: CliKeyData.escape, description: 'Quit' },
+            { label: '⟳', key: 'Up', data: CliKeyData.up, description: 'Rotate' },
+            { label: 'DROP', key: 'Space', data: CliKeyData.space, description: 'Hard drop' },
+            { label: 'P', key: 'P', data: 'p', description: 'Pause' },
+            { label: 'R', key: 'R', data: 'r', description: 'Retry' },
+            { label: '←', key: 'Left', data: CliKeyData.left, description: 'Move left', repeat: true },
+            { label: '↓', key: 'Down', data: CliKeyData.down, description: 'Soft drop', repeat: true },
+            { label: '→', key: 'Right', data: CliKeyData.right, description: 'Move right', repeat: true },
+        ],
     };
 
     stateConfiguration?: CliStateConfiguration | undefined = {

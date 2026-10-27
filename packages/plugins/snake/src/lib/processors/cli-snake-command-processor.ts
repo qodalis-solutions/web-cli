@@ -7,6 +7,8 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     ICliManagedInterval,
+    CliKeyData,
+    ICliCommandControls,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -106,6 +108,19 @@ export class CliSnakeCommandProcessor implements ICliCommandProcessor {
         icon: '\uD83D\uDC0D',
         requiredCoreVersion: '>=2.0.0 <3.0.0',
         requiredCliVersion: '>=2.0.0 <3.0.0',
+    };
+
+    controls: ICliCommandControls = {
+        swipe: true,
+        keys: [
+            { label: 'ESC', key: 'Esc', data: CliKeyData.escape, description: 'Quit' },
+            { label: 'PAUSE', key: 'Space', data: CliKeyData.space, description: 'Pause' },
+            { label: 'R', key: 'R', data: 'r', description: 'Retry' },
+            { label: '←', key: 'Left', data: CliKeyData.left, description: 'Left', repeat: true },
+            { label: '↑', key: 'Up', data: CliKeyData.up, description: 'Up', repeat: true },
+            { label: '↓', key: 'Down', data: CliKeyData.down, description: 'Down', repeat: true },
+            { label: '→', key: 'Right', data: CliKeyData.right, description: 'Right', repeat: true },
+        ],
     };
 
     stateConfiguration?: CliStateConfiguration | undefined = {

@@ -121,6 +121,7 @@ All members:
 | `onData?(data, context)` | `Promise<void>` | Raw terminal input while this processor is the context processor (full-screen apps). |
 | `onResize?(cols, rows, context)` | `void` | Terminal resized while in full-screen mode. |
 | `onDispose?(context)` | `void` | Full-screen mode ended, terminal disconnected or component destroyed. |
+| `controls?` | `ICliCommandControls` | Keys a full-screen command reads, so touch hosts can show them as buttons (see below). |
 
 Execution order for one command: parse -> find processor -> global parameter handlers (`--help`, ...) -> extract `value`/`positionals` -> command guards -> `valueRequired` check -> required-parameter and `validator` checks -> `validateBeforeExecution` -> `before` hooks -> `processCommand` -> `after` hooks.
 
@@ -587,6 +588,30 @@ export class CliClockCommandProcessor implements ICliCommandProcessor {
 
 - `onData` receives raw sequences: arrows `\x1b[A`/`\x1b[B`/`\x1b[C`/`\x1b[D`, Enter `\r`, Backspace `\x7f`, Escape `\x1b`, Ctrl+C `\x03` (passed through in full-screen mode).
 - Pass `{ showCursor: true }` for REPL-style UIs.
+
+#### Declaring the keys (`controls`)
+
+Phones have no Ctrl, Esc or arrow keys, so a full-screen command declares the keys it reads in `controls`. Hosts on touch screens (the Qodalis CLI phone app) show them as buttons while the command runs and send each key's `data` to `onData`; help screens can list them.
+
+```typescript
+import { CliKeyData, ICliCommandControls } from '@qodalis/cli-core';
+
+controls: ICliCommandControls = {
+    keys: [
+        { label: 'ESC', key: 'Esc', data: CliKeyData.escape, description: 'Quit' },
+        { label: 'PAUSE', key: 'Space', data: CliKeyData.space, description: 'Pause' },
+        { label: '←', key: 'Left', data: CliKeyData.left, description: 'Left', repeat: true },
+        { label: 'SAVE', key: 'Ctrl+S', data: CliKeyData.ctrl('s'), description: 'Save' },
+    ],
+    swipe: true,              // swipes on the screen send arrows (games on a board)
+    tap: CliKeyData.space,    // a tap sends this key's data
+    // textInput: true,       // the command also reads typed text (editors): keep the keyboard open
+};
+```
+
+- `data` is what a terminal sends for the key (`CliKeyData` has the arrows, Home/End, PgUp/PgDn, Esc, Enter, Backspace and `ctrl(letter)`); a letter key is just the letter (`'f'`).
+- List the most used keys first; `repeat: true` repeats a held key.
+- Without `textInput`, touch hosts close the on-screen keyboard so the command gets the screen (a hardware keyboard keeps working).
 
 ### Extending an existing command
 
