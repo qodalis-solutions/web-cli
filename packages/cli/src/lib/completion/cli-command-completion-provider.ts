@@ -5,6 +5,7 @@ import {
     ICliCommandProcessor,
 } from '@qodalis/cli-core';
 import { getAccelerator } from '../wasm';
+import { resolveCompletionPath } from './cli-completion-path';
 
 /**
  * Provides tab-completion for command names and sub-command names.
@@ -23,26 +24,19 @@ export class CliCommandCompletionProvider implements ICliCompletionProvider {
             return this.getCommandNames(this.registry.processors, token);
         }
 
-        // Complete sub-commands: find the parent processor
-        const mainCommand = tokens[0];
-        const processor = this.registry.findProcessor(mainCommand, []);
-        if (!processor?.processors?.length) {
+        // Complete sub-commands of the command the words before the cursor
+        // matched; flag values (`--sides 6`) are not sub-commands
+        const path = resolveCompletionPath(
+            tokens,
+            tokenIndex,
+            this.registry.processors,
+            token,
+        );
+        if (path.isFlagValue || !path.subCommands) {
             return [];
         }
 
-        // Walk the chain for nested sub-commands
-        let current: ICliCommandProcessor = processor;
-        for (let i = 1; i < tokenIndex; i++) {
-            const sub = current.processors?.find(
-                (p) => p.command === tokens[i],
-            );
-            if (!sub?.processors?.length) {
-                return [];
-            }
-            current = sub;
-        }
-
-        return this.getCommandNames(current.processors ?? [], token);
+        return this.getCommandNames(path.subCommands, token);
     }
 
     private getCommandNames(

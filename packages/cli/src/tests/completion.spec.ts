@@ -516,3 +516,76 @@ describe('CliCompletionEngine with quoted words', () => {
         expect(seen.tokens).toEqual(['cp', '"a b.txt"']);
     });
 });
+
+// ---------------------------------------------------------------------------
+// Completion after `--flag value`
+// ---------------------------------------------------------------------------
+describe('Completion after a flag with a value', () => {
+    let engine: CliCompletionEngine;
+
+    beforeEach(() => {
+        const registry = new CliCommandProcessorRegistry();
+        registry.registerProcessor(
+            createProcessor('dice', {
+                parameters: [
+                    { name: 'verbose', aliases: ['v'], type: 'boolean', description: 'Verbose', required: false },
+                    { name: 'seed', type: 'number', description: 'Seed', required: false },
+                ],
+                processors: [
+                    createProcessor('roll', {
+                        parameters: [
+                            { name: 'sides', aliases: ['s'], type: 'number', description: 'Sides', required: false },
+                            { name: 'count', aliases: ['n'], type: 'number', description: 'Count', required: false },
+                        ],
+                        processors: [createProcessor('history'), createProcessor('hold')],
+                    }),
+                    createProcessor('reset'),
+                ],
+            }),
+        );
+        engine = new CliCompletionEngine();
+        engine.setProviders([
+            new CliCommandCompletionProvider(registry),
+            new CliParameterCompletionProvider(registry, createMockExecutor()),
+        ]);
+    });
+
+    const candidates = async (input: string): Promise<string[]> => {
+        engine.resetState();
+        const first = await engine.complete(input, input.length);
+        if (first.action === 'complete') return [first.replacement!];
+        const second = await engine.complete(input, input.length);
+        return second.candidates ?? [];
+    };
+
+    it('completes flag names of the sub-command after a flag value', async () => {
+        expect(await candidates('dice roll --sides 6 --c')).toEqual(['--count']);
+    });
+
+    it("offers the parent's flags too", async () => {
+        const result = await candidates('dice roll --sides 6 --');
+        expect(result).toEqual(['--count', '--seed', '--sides', '--verbose']);
+    });
+
+    it('completes sub-commands after a flag value given to the parent', async () => {
+        expect(await candidates('dice --seed 42 r')).toEqual(['reset', 'roll']);
+        expect(await candidates('dice --seed 42 roll h')).toEqual(['history', 'hold']);
+    });
+
+    it('completes sub-commands after a short flag with a value', async () => {
+        expect(await candidates('dice roll -s 6 hi')).toEqual(['history']);
+    });
+
+    it('does not offer sub-commands as the value of a flag', async () => {
+        expect(await candidates('dice roll --sides ')).toEqual([]);
+        expect(await candidates('dice roll --sides h')).toEqual([]);
+    });
+
+    it('treats the word after a boolean flag as a sub-command', async () => {
+        expect(await candidates('dice --verbose r')).toEqual(['reset', 'roll']);
+    });
+
+    it('does not consume a word after a --flag=value', async () => {
+        expect(await candidates('dice --seed=42 rol')).toEqual(['roll']);
+    });
+});

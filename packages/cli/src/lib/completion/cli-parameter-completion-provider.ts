@@ -6,6 +6,7 @@ import {
     ICliCommandParameterDescriptor,
 } from '@qodalis/cli-core';
 import { getAccelerator } from '../wasm';
+import { resolveCompletionPath } from './cli-completion-path';
 
 /**
  * Provides tab-completion for parameter/flag names (e.g. --recursive, -r).
@@ -20,7 +21,7 @@ export class CliParameterCompletionProvider implements ICliCompletionProvider {
     ) {}
 
     getCompletions(context: ICliCompletionContext): string[] {
-        const { tokens, token } = context;
+        const { tokens, tokenIndex, token } = context;
 
         // Only complete tokens that start with -
         if (!token.startsWith('-')) {
@@ -31,21 +32,21 @@ export class CliParameterCompletionProvider implements ICliCompletionProvider {
             return [];
         }
 
-        // Find the processor for the command
-        const mainCommand = tokens[0];
-        const chainCommands = tokens.slice(1).filter((t) => !t.startsWith('-'));
-
-        const processor = this.registry.findProcessorInCollection(
-            mainCommand,
-            chainCommands,
+        // The command the words before the cursor matched, read like the
+        // executor reads them (`dice roll --sides 6 --` is on `dice roll`)
+        const path = resolveCompletionPath(
+            tokens,
+            tokenIndex,
             this.registry.processors,
+            token,
         );
 
-        // Merge processor-specific parameters with global parameters
+        // Its parameters, its parents' (nearest first), then the global ones
+        const seen = new Set<string>();
         const allParameters: ICliCommandParameterDescriptor[] = [
-            ...(processor?.parameters ?? []),
+            ...path.descriptors,
             ...this.executor.getGlobalParameters(),
-        ];
+        ].filter((p) => !seen.has(p.name) && !!seen.add(p.name));
 
         if (allParameters.length === 0) {
             return [];
