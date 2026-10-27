@@ -1,0 +1,230 @@
+<h1>{{ "docs.migration.title" | translate }}</h1>
+<p>{{ "docs.migration.intro" | translate }}</p>
+
+<!-- Packages -->
+<h2 id="packages">{{ "docs.migration.packages" | translate }}</h2>
+<p [innerHTML]="'docs.migration.packages-desc' | translate"></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>{{ "docs.migration.th-package" | translate }}</th>
+      <th>{{ "docs.migration.th-role" | translate }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>&#64;qodalis/cli-core</code></td>
+      <td>{{ "docs.migration.pkg-core" | translate }}</td>
+    </tr>
+    <tr>
+      <td><code>&#64;qodalis/cli</code></td>
+      <td>{{ "docs.migration.pkg-cli" | translate }}</td>
+    </tr>
+    <tr>
+      <td>
+        <code>&#64;qodalis/angular-cli</code>, <code>&#64;qodalis/react-cli</code>,
+        <code>&#64;qodalis/vue-cli</code>
+      </td>
+      <td>{{ "docs.migration.pkg-wrappers" | translate }}</td>
+    </tr>
+    <tr>
+      <td><code>&#64;qodalis/cli-users</code></td>
+      <td>{{ "docs.migration.pkg-users" | translate }}</td>
+    </tr>
+    <tr>
+      <td><code>&#64;qodalis/cli-&lt;name&gt;</code></td>
+      <td>{{ "docs.migration.pkg-plugins" | translate }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="code-block">
+  <span class="code-label">npm</span>
+  <pre><code>npm install &#64;qodalis/angular-cli&#64;^2 &#64;qodalis/cli&#64;^2 &#64;qodalis/cli-core&#64;^2</code></pre>
+</div>
+
+<!-- Modules -->
+<h2 id="modules">{{ "docs.migration.modules" | translate }}</h2>
+<p [innerHTML]="'docs.migration.modules-desc' | translate"></p>
+
+<div class="code-block">
+  <span class="code-label">my-module.ts</span>
+  <pre><code>import &#123; ICliModule &#125; from '&#64;qodalis/cli-core';
+import &#123; GreetCommandProcessor &#125; from './greet-command-processor';
+
+export const myModule: ICliModule = &#123;
+    apiVersion: 2,
+    name: 'my-commands',
+    processors: [new GreetCommandProcessor()],
+&#125;;</code></pre>
+</div>
+
+<h3>Angular</h3>
+<div class="code-block">
+  <span class="code-label">1.x</span>
+  <pre><code>import &#123; CliModule, resolveCommandProcessorProvider &#125; from '&#64;qodalis/angular-cli';
+import &#123; CliGuidModule &#125; from '&#64;qodalis/cli-guid';
+
+&#64;NgModule(&#123;
+    imports: [CliModule, CliGuidModule],
+    providers: [resolveCommandProcessorProvider(GreetCommandProcessor)],
+&#125;)
+export class AppModule &#123;&#125;</code></pre>
+</div>
+<div class="code-block">
+  <span class="code-label">2.0</span>
+  <pre><code>import &#123; CliModule, resolveCliModuleProvider &#125; from '&#64;qodalis/angular-cli';
+import &#123; guidModule &#125; from '&#64;qodalis/cli-guid';
+
+&#64;NgModule(&#123;
+    imports: [CliModule],
+    providers: [
+        ...resolveCliModuleProvider(guidModule),
+        ...resolveCliModuleProvider(myModule),
+    ],
+&#125;)
+export class AppModule &#123;&#125;
+
+// or per component: &lt;cli [modules]="[guidModule, myModule]" /&gt;</code></pre>
+</div>
+
+<h3>React / Vue</h3>
+<div class="code-block">
+  <span class="code-label">React</span>
+  <pre><code>// before: &lt;Cli processors=&#123;[new GreetCommandProcessor()]&#125; /&gt;
+&lt;Cli modules=&#123;[guidModule, myModule]&#125; /&gt;</code></pre>
+</div>
+<div class="code-block">
+  <span class="code-label">Vue</span>
+  <pre><code>&lt;!-- before: &lt;Cli :processors="processors" /&gt; --&gt;
+&lt;Cli :modules="[guidModule, myModule]" /&gt;</code></pre>
+</div>
+
+<h3>{{ "docs.migration.engine" | translate }}</h3>
+<div class="code-block">
+  <span class="code-label">TypeScript</span>
+  <pre><code>const engine = new CliEngine(document.getElementById('terminal')!);
+// before: engine.registerProcessors([new GreetCommandProcessor()]);
+engine.registerModule(myModule);
+await engine.start();</code></pre>
+</div>
+
+<!-- Removed APIs -->
+<h2 id="removed">{{ "docs.migration.removed" | translate }}</h2>
+<p>{{ "docs.migration.removed-desc" | translate }}</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>{{ "docs.migration.th-removed" | translate }}</th>
+      <th>{{ "docs.migration.th-instead" | translate }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>resolveCommandProcessorProvider(Processor)</code></td>
+      <td><code>resolveCliModuleProvider(module)</code></td>
+    </tr>
+    <tr>
+      <td><code>CliCommandProcessor_TOKEN</code></td>
+      <td><code>CliModule_TOKEN</code></td>
+    </tr>
+    <tr>
+      <td>{{ "docs.migration.removed-processors-input" | translate }}</td>
+      <td>{{ "docs.migration.removed-modules-input" | translate }}</td>
+    </tr>
+    <tr>
+      <td><code>engine.registerProcessor()</code>, <code>engine.registerProcessors()</code></td>
+      <td><code>engine.registerModule()</code>, <code>engine.registerModules()</code></td>
+    </tr>
+    <tr>
+      <td><code>ICliUmdModule</code>, <code>bootUmdModule()</code></td>
+      <td><code>ICliModule</code>, <code>bootCliModule()</code></td>
+    </tr>
+    <tr>
+      <td>{{ "docs.migration.removed-plugin-ngmodules" | translate }}</td>
+      <td>{{ "docs.migration.removed-plugin-modules" | translate }}</td>
+    </tr>
+    <tr>
+      <td><code>allowUnlistedCommands</code></td>
+      <td><code>acceptsRawInput</code></td>
+    </tr>
+    <tr>
+      <td><code>options.welcomeMessage</code></td>
+      <td>
+        {{ "docs.migration.removed-welcome" | translate }}
+        <code>welcomeModule.configure()</code>
+      </td>
+    </tr>
+    <tr>
+      <td><code>options.usersModule</code></td>
+      <td><code>&#64;qodalis/cli-users</code></td>
+    </tr>
+    <tr>
+      <td><code>context.setStatusText()</code>, <code>context.clearStatusText()</code></td>
+      <td><code>context.notifier</code></td>
+    </tr>
+    <tr>
+      <td><code>NumberInputOptions</code></td>
+      <td><code>CliNumberOptions</code> (<code>&#64;qodalis/cli-core</code>)</td>
+    </tr>
+    <tr>
+      <td><code>CLi_Name_Art</code></td>
+      <td><code>getCliNameArt(cols)</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Options -->
+<h2 id="welcome">{{ "docs.migration.welcome" | translate }}</h2>
+<p>{{ "docs.migration.welcome-desc" | translate }}</p>
+<div class="code-block">
+  <span class="code-label">1.x</span>
+  <pre><code>const options = &#123;
+    welcomeMessage: &#123; message: 'Hello!', show: 'daily' &#125;,
+    usersModule: &#123; enabled: true &#125;,
+&#125;;</code></pre>
+</div>
+<div class="code-block">
+  <span class="code-label">2.0</span>
+  <pre><code>import &#123; usersModule &#125; from '&#64;qodalis/cli-users';
+
+const options = &#123;
+    welcome: &#123; message: 'Hello!', show: 'daily' &#125;, // false: no banner
+&#125;;
+const modules = [usersModule];</code></pre>
+</div>
+
+<!-- Servers -->
+<h2 id="servers">{{ "docs.migration.servers" | translate }}</h2>
+<p>{{ "docs.migration.servers-desc" | translate }}</p>
+<table>
+  <thead>
+    <tr>
+      <th>{{ "docs.migration.th-server" | translate }}</th>
+      <th>{{ "docs.migration.th-package" | translate }}</th>
+      <th>{{ "docs.migration.th-version" | translate }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Node.js</td>
+      <td><code>&#64;qodalis/cli-server-node</code></td>
+      <td>1.0.0-beta.9</td>
+    </tr>
+    <tr>
+      <td>.NET</td>
+      <td><code>Qodalis.Cli</code></td>
+      <td>1.0.0-beta.8</td>
+    </tr>
+    <tr>
+      <td>Python</td>
+      <td><code>qodalis-cli-server</code></td>
+      <td>1.0.0b8</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="next">{{ "docs.migration.next" | translate }}</h2>
+<p [innerHTML]="'docs.migration.next-desc' | translate"></p>
