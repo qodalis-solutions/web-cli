@@ -3,7 +3,23 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## v2.0.0
+## v2.0.0-rc.4
+
+Keys for touch screens, tab completion after flag values, and a session lifetime option for local users.
+
+### Command controls for touch screens
+
+- `ICliCommandProcessor.controls` (`ICliCommandControls` in `@qodalis/cli-core`): the keys a full-screen command reads, each with a label, the data it sends to `onData`, its usual key and a description, plus whether the command reads typed text (`textInput`), what a tap sends (`tap`) and whether swipes send arrows (`swipe`). Hosts on touch screens show them as buttons; `CliKeyData` has the common key sequences and `ctrl(letter)`.
+- Declared by every full-screen command: `nano` (Save, Exit, Find, Cut, Paste, Help, navigation), `htop`, `ssh`, `data-explorer`, `stopwatch` and its `timer`, and the games (tetris, snake, 2048, minesweeper, sudoku, wordle).
+
+### Users (`@qodalis/cli-users`)
+
+- `maxSessionLifetime` (local mode): how long a session lasts before signing in again, in ms; `0` keeps it until sign-out (default 12 hours, as before). Apps on a personal device, such as the phone app, can keep their owner signed in.
+
+### Docs
+
+- The privacy policy covers the phone app's local user account (stored on the device, password as a salted hash) and how to delete it (`#delete-account`), and lists its install-time permissions.
+- The AI guide documents `controls` for full-screen commands.
 
 ### CLI engine (`@qodalis/cli`)
 
