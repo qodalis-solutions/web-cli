@@ -3,6 +3,14 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.0.0-rc.3
+
+Dependency cleanup and build fixes; no changes to the packages' APIs.
+
+- Unused dependencies removed: `@microsoft/signalr`, `@xterm/addon-webgl` and `@nx/js` from the workspace, and the Vite template ESLint packages from the React demos. `eslint-plugin-react-hooks` is declared where the ESLint config imports it.
+- Electron 45 for `@qodalis/electron-cli` development and the Electron demo (the package still accepts `electron` >= 28); sass 1.106, concurrently 10.
+- Builds: specs wait for the builds of the packages they import, and every app declares the `@qodalis` packages it imports, so building only affected projects (as CI does) no longer misses them. A files spec that depended on the order of the other specs is deterministic.
+
 ## v2.0.0-rc.2
 
 Second release candidate: fixes found while testing rc.1, plugin-development help for AI assistants, and rewritten READMEs. No API removals.
