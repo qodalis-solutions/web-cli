@@ -1,57 +1,89 @@
 # @qodalis/cli-curl
 
-CLI extension for making HTTP requests with a real curl-like interface.
+Make HTTP requests from the Qodalis CLI with a curl-like interface.
 
-## Installation
+[![npm version](https://img.shields.io/npm/v/@qodalis/cli-curl.svg)](https://www.npmjs.com/package/@qodalis/cli-curl)
+[![license](https://img.shields.io/npm/l/@qodalis/cli-curl.svg)](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)
 
+## Install
+
+```bash
+npm install @qodalis/cli-curl
 ```
-packages add @qodalis/cli-curl
-packages add curl
+
+Or install it at runtime in a running terminal:
+
+```bash
+pkg add curl
 ```
 
 ## Usage
 
-```bash
-# Simple GET request
-curl https://api.example.com/users
+Register `curlModule` with your terminal.
 
-# POST with JSON body
-curl https://api.example.com/users -X POST -d '{"name":"John"}' -H 'Content-Type: application/json'
+```typescript
+import { curlModule } from '@qodalis/cli-curl';
 
-# PUT request
-curl https://api.example.com/users/1 -X PUT -d '{"name":"Jane"}'
+// Angular (template)
+// <cli [modules]="[curlModule]"></cli>
 
-# DELETE request
-curl https://api.example.com/users/1 -X DELETE
+// Angular (DI, NgModule or application providers)
+providers: [resolveCliModuleProvider(curlModule)];
 
-# HEAD request
-curl https://api.example.com/status -X HEAD -v
+// React
+<Cli modules={[curlModule]} />
 
-# Verbose output with pretty-printed JSON
-curl https://api.example.com/users -v --pretty
+// Vue
+<Cli :modules="[curlModule]" />
 
-# With timeout and proxy
-curl https://api.example.com/data --timeout 5000 --proxy
-
-# Silent mode (body only)
-curl https://api.example.com/users -s
+// Vanilla TypeScript (CliEngine from @qodalis/cli)
+engine.registerModule(curlModule);
 ```
 
-## Options
+## Commands
 
-| Flag | Alias | Description |
-|------|-------|-------------|
-| `--request` | `-X` | HTTP method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS) |
-| `--header` | `-H` | Add header (repeatable) |
-| `--data` | `-d` | Request body (auto-detects JSON) |
-| `--data-raw` | | Request body as-is |
-| `--verbose` | `-v` | Show headers and timing |
-| `--pretty` | | Pretty-print JSON response |
-| `--timeout` | | Timeout in ms (default: 30000) |
-| `--location` | `-L` | Follow redirects (default: true) |
-| `--proxy` | | Route through CORS proxy |
-| `--silent` | `-s` | Only output body |
+`curl <url> [options]`. The method defaults to `GET`, or `POST` when a body is given. A `--data` body that parses as JSON is minified and sent with `Content-Type: application/json` unless you set that header yourself. With `--verbose` the output ends with the equivalent curl command.
 
-## CORS
+| Flag | Alias | Default | Description |
+|---|---|---|---|
+| `--request` | `-X` | `GET` / `POST` | Method: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS` |
+| `--header` | `-H` | | Add a header, `'Name: value'` (repeatable) |
+| `--data` | `-d` | | Request body; JSON is detected |
+| `--data-raw` | | | Request body sent as-is |
+| `--verbose` | `-v` | `false` | Show request and response headers, timing and redirects |
+| `--pretty` | | `false` | Pretty-print a JSON response |
+| `--timeout` | | `30000` | Timeout in milliseconds |
+| `--location` | `-L` | `true` | Follow redirects; `--location=false` stops at the redirect |
+| `--proxy` | | `false` | Send the request through `proxy.qodalis.com` to get around CORS |
+| `--silent` | `-s` | `false` | Print only the body, without the status line |
 
-Browser security prevents cross-origin requests by default. Use `--proxy` to route requests through `proxy.qodalis.com` to bypass CORS restrictions.
+```bash
+curl https://api.example.com/users
+curl https://api.example.com/users -X POST -d '{"name":"John"}' -H 'Content-Type: application/json'
+curl https://api.example.com/users/1 -X DELETE
+curl https://api.example.com/status -X HEAD -v
+curl https://api.example.com/users --pretty -s
+curl https://api.example.com/data --proxy --timeout=5000
+```
+
+### CORS
+
+The request runs in the browser, so the target server must allow cross-origin requests. Otherwise use `--proxy`, which rewrites `https://host/path` to `https://proxy.qodalis.com/proxy/https/host/path`.
+
+## Configuration
+
+Set with `configure set curl.<key> <value>` or the interactive `configure` menu. Command-line flags override these.
+
+| Key | Default | Description |
+|---|---|---|
+| `defaultTimeout` | `30000` | Request timeout in milliseconds (1000-300000) |
+| `prettyPrint` | `false` | Pretty-print JSON responses by default |
+| `verbose` | `false` | Show request and response headers by default |
+
+## Documentation
+
+https://cli.qodalis.com/docs/plugins/curl
+
+## License
+
+MIT
