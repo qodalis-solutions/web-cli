@@ -1,3 +1,4 @@
+import { ICliCommandControls } from './command-controls';
 import {
     CliProcessCommand,
     CliProcessorMetadata,
@@ -179,6 +180,12 @@ export interface ICliCommandProcessor {
      * The metadata for the command processor
      */
     metadata?: CliProcessorMetadata;
+
+    /**
+     * The keys a full-screen command reads while it runs (an editor, a
+     * game), so hosts on touch screens can show them as buttons.
+     */
+    controls?: ICliCommandControls;
 
     /**
      * Processors that are nested under this processor

@@ -9,6 +9,8 @@ import {
     ICliExecutionContext,
     resolveServerHeaders,
     cliDefaultServer,
+    CliKeyData,
+    ICliCommandControls,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 import {
@@ -28,6 +30,19 @@ const MAX_HISTORY = 50;
 
 export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
     command = 'data-explorer';
+
+    controls: ICliCommandControls = {
+        textInput: true,
+        keys: [
+            { label: 'ESC', key: 'Esc', data: CliKeyData.escape, description: 'Quit' },
+            { label: '←', key: 'Left', data: CliKeyData.left, description: 'Left', repeat: true },
+            { label: '↑', key: 'Up', data: CliKeyData.up, description: 'Up', repeat: true },
+            { label: '↓', key: 'Down', data: CliKeyData.down, description: 'Down', repeat: true },
+            { label: '→', key: 'Right', data: CliKeyData.right, description: 'Right', repeat: true },
+            { label: 'HOME', key: 'Home', data: CliKeyData.home, description: 'Start of the line' },
+            { label: 'END', key: 'End', data: CliKeyData.end, description: 'End of the line' },
+        ],
+    };
 
     description = 'Interactive query console for data sources';
 

@@ -8,6 +8,8 @@ import {
     ICliManagedInterval,
     ICliProcessEntry,
     ICliProcessRegistry,
+    CliKeyData,
+    ICliCommandControls,
 } from '@qodalis/cli-core';
 import { CliProcessRegistry_TOKEN } from '../../services/cli-process-registry';
 
@@ -109,6 +111,19 @@ function pad(str: string, len: number): string {
 
 export class CliHtopCommandProcessor implements ICliCommandProcessor {
     command = 'htop';
+
+    controls: ICliCommandControls = {
+        keys: [
+            { label: '↑', key: 'Up', data: CliKeyData.up, description: 'Select the previous process', repeat: true },
+            { label: '↓', key: 'Down', data: CliKeyData.down, description: 'Select the next process', repeat: true },
+            { label: 'KILL', key: 'K', data: 'k', description: 'Kill the process' },
+            { label: 'START', key: 'S', data: 's', description: 'Start the service' },
+            { label: 'STOP', key: 'T', data: 't', description: 'Stop the service' },
+            { label: 'RESTART', key: 'R', data: 'r', description: 'Restart the service' },
+            { label: 'LOGS', key: 'L', data: 'l', description: 'Show the logs' },
+            { label: 'Q', key: 'Q', data: 'q', description: 'Quit' },
+        ],
+    };
     description = 'Interactive process and service monitor';
     author = DefaultLibraryAuthor;
     metadata?: CliProcessorMetadata = {

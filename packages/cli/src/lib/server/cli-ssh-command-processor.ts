@@ -6,6 +6,8 @@ import {
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    CliKeyData,
+    ICliCommandControls,
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
 import { CliServerManager, CliServerManager_TOKEN } from './cli-server-manager';
@@ -37,6 +39,21 @@ interface ShellSession {
 
 export class CliSshCommandProcessor implements ICliCommandProcessor {
     command = 'ssh';
+
+    controls: ICliCommandControls = {
+        textInput: true,
+        keys: [
+            { label: 'ESC', key: 'Esc', data: CliKeyData.escape, description: 'Escape' },
+            { label: 'TAB', key: 'Tab', data: '\t', description: 'Complete' },
+            { label: '^C', key: 'Ctrl+C', data: CliKeyData.ctrl('c'), description: 'Interrupt' },
+            { label: '^D', key: 'Ctrl+D', data: CliKeyData.ctrl('d'), description: 'End of input' },
+            { label: '^L', key: 'Ctrl+L', data: CliKeyData.ctrl('l'), description: 'Clear the screen' },
+            { label: '←', key: 'Left', data: CliKeyData.left, description: 'Left', repeat: true },
+            { label: '↑', key: 'Up', data: CliKeyData.up, description: 'Up', repeat: true },
+            { label: '↓', key: 'Down', data: CliKeyData.down, description: 'Down', repeat: true },
+            { label: '→', key: 'Right', data: CliKeyData.right, description: 'Right', repeat: true },
+        ],
+    };
     aliases = ['shell'];
     description = 'Open a remote shell session on a server';
     acceptsRawInput = true;

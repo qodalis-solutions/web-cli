@@ -6,6 +6,8 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    CliKeyData,
+    ICliCommandControls,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 
@@ -132,6 +134,20 @@ export class Cli2048CommandProcessor implements ICliCommandProcessor {
         icon: '\uD83D\uDD22', // U+1F522
         requiredCoreVersion: '>=2.0.0 <3.0.0',
         requiredCliVersion: '>=2.0.0 <3.0.0',
+    };
+
+    controls: ICliCommandControls = {
+        swipe: true,
+        keys: [
+            { label: 'ESC', key: 'Esc', data: CliKeyData.escape, description: 'Quit' },
+            { label: 'UNDO', key: 'U', data: 'u', description: 'Undo' },
+            { label: 'R', key: 'R', data: 'r', description: 'Retry' },
+            { label: 'GO ON', key: 'C', data: 'c', description: 'Keep playing after 2048' },
+            { label: '←', key: 'Left', data: CliKeyData.left, description: 'Left', repeat: true },
+            { label: '↑', key: 'Up', data: CliKeyData.up, description: 'Up', repeat: true },
+            { label: '↓', key: 'Down', data: CliKeyData.down, description: 'Down', repeat: true },
+            { label: '→', key: 'Right', data: CliKeyData.right, description: 'Right', repeat: true },
+        ],
     };
 
     stateConfiguration?: CliStateConfiguration | undefined = {

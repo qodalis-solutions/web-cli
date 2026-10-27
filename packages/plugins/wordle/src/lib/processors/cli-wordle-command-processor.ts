@@ -6,6 +6,8 @@ import {
     DefaultLibraryAuthor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    CliKeyData,
+    ICliCommandControls,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 import { WORD_LIST } from '../words';
@@ -109,6 +111,15 @@ export class CliWordleCommandProcessor implements ICliCommandProcessor {
         icon: '\uD83D\uDCDD', // memo emoji
         requiredCoreVersion: '>=2.0.0 <3.0.0',
         requiredCliVersion: '>=2.0.0 <3.0.0',
+    };
+
+    controls: ICliCommandControls = {
+        textInput: true,
+        keys: [
+            { label: 'ENTER', key: 'Enter', data: CliKeyData.enter, description: 'Submit the guess' },
+            { label: '⌫', key: 'Backspace', data: CliKeyData.backspace, description: 'Delete a letter' },
+            { label: 'ESC', key: 'Esc', data: CliKeyData.escape, description: 'Quit' },
+        ],
     };
 
     stateConfiguration?: CliStateConfiguration | undefined = {

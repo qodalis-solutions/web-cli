@@ -4,6 +4,8 @@ import {
     ICliCommandProcessor,
     ICliExecutionContext,
     joinShellWords,
+    CliKeyData,
+    ICliCommandControls,
 } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../version';
 import { formatDuration, parseDuration } from '../stopwatch-utils';
@@ -38,6 +40,14 @@ const ansi = {
 
 class CliStopwatchTimerCommandProcessor implements ICliCommandProcessor {
     command = 'timer';
+
+    controls: ICliCommandControls = {
+        keys: [
+            { label: 'PAUSE', key: 'Space', data: CliKeyData.space, description: 'Pause or resume' },
+            { label: 'R', key: 'R', data: 'r', description: 'Reset' },
+            { label: 'Q', key: 'Q', data: 'q', description: 'Quit' },
+        ],
+    };
     description = 'Run a countdown timer (e.g. timer 5m, timer 1h30m, timer 90s)';
     author = DefaultLibraryAuthor;
     version = LIBRARY_VERSION;
@@ -246,6 +256,15 @@ class CliStopwatchTimerCommandProcessor implements ICliCommandProcessor {
 
 export class CliStopwatchCommandProcessor implements ICliCommandProcessor {
     command = 'stopwatch';
+
+    controls: ICliCommandControls = {
+        keys: [
+            { label: 'PAUSE', key: 'Space', data: CliKeyData.space, description: 'Pause or resume' },
+            { label: 'LAP', key: 'L', data: 'l', description: 'Record a lap' },
+            { label: 'R', key: 'R', data: 'r', description: 'Reset' },
+            { label: 'Q', key: 'Q', data: 'q', description: 'Quit' },
+        ],
+    };
 
     description = 'Interactive stopwatch and countdown timer';
 
