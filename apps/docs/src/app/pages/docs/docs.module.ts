@@ -30,6 +30,13 @@ const routes: Routes = [
                     ),
             },
             {
+                path: 'migration',
+                loadChildren: () =>
+                    import('./pages/migration/migration.module').then(
+                        (m) => m.MigrationModule,
+                    ),
+            },
+            {
                 path: 'built-in-commands',
                 loadChildren: () =>
                     import('./pages/built-in-commands/built-in-commands.module').then(
