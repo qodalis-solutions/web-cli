@@ -14,6 +14,7 @@ import { testTemplate } from './templates/test';
 import { gitignoreTemplate } from './templates/gitignore';
 import { pnpmWorkspaceTemplate } from './templates/pnpm-workspace';
 import { readmeTemplate } from './templates/readme';
+import { agentsMdTemplate } from './templates/agents-md';
 import { projectJsonTemplate } from './templates/project-json';
 import { tsconfigSpecTemplate } from './templates/tsconfig-spec';
 import { MonorepoInfo } from './detect-monorepo';
@@ -99,6 +100,7 @@ export function scaffoldPlugin(answers: PluginAnswers, monorepo: MonorepoInfo | 
     if (!isMonorepo) {
         writeFile(path.join(projectDir, '.gitignore'), gitignoreTemplate());
         writeFile(path.join(projectDir, 'pnpm-workspace.yaml'), pnpmWorkspaceTemplate());
+        writeFile(path.join(projectDir, 'AGENTS.md'), agentsMdTemplate(vars));
     }
 
     return projectDir;

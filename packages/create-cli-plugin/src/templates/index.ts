@@ -12,5 +12,6 @@ export { versionTemplate } from './version';
 export { testTemplate } from './test';
 export { gitignoreTemplate } from './gitignore';
 export { readmeTemplate } from './readme';
+export { agentsMdTemplate } from './agents-md';
 export { projectJsonTemplate } from './project-json';
 export { tsconfigSpecTemplate } from './tsconfig-spec';
