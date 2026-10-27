@@ -7,6 +7,9 @@ describe('IndexedDbFileSystemService saved directory', () => {
         fs.createDirectory('/tmp/anon', true);
         fs.createDirectory('/home/alice', true);
 
+        // The database is shared with the other specs (Karma runs them in one
+        // browser, in random order), so set the signed-out state explicitly
+        fs.setHomePath('/tmp/anon');
         fs.setCurrentDirectory('/tmp/anon');
         await fs.persist();
 
@@ -19,7 +22,7 @@ describe('IndexedDbFileSystemService saved directory', () => {
         const next = new IndexedDbFileSystemService();
         await next.initialize();
         expect(next.getCurrentDirectory()).toBe('/tmp/anon');
-        expect(next.getHomePath()).not.toBe('/home/alice');
+        expect(next.getHomePath()).toBe('/tmp/anon');
         // The tree itself is still saved while signed in
         expect(next.exists('/home/alice')).toBeTrue();
     });
