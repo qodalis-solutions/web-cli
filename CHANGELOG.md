@@ -3,6 +3,29 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.0.0-rc.1
+
+Release candidate for 2.0.0: the API is frozen, only fixes go in until 2.0.0. Upgrading from 1.x or an earlier beta: see [Upgrading to 2.0](https://cli.qodalis.com/docs/migration).
+
+### Breaking: deprecated APIs removed
+
+- `@qodalis/cli-core`: `ICliUmdModule` (use `ICliModule`) and `bootUmdModule()` (use `bootCliModule()`; `window.cliCore.bootUmdModule` is gone too).
+- `@qodalis/cli`: `CliEngine.registerProcessor()` / `registerProcessors()` (wrap the processors in a module and use `registerModule()`), `NumberInputOptions` (use `CliNumberOptions` from core), `CLi_Name_Art` (use `getCliNameArt(cols)`), and `processors` in `CliHostConfig` / `createCliEngine()`.
+- `@qodalis/angular-cli`: `resolveCommandProcessorProvider()` (use `resolveCliModuleProvider()`), `CliCommandProcessor_TOKEN` (use `CliModule_TOKEN`), and the `processors` input of `<cli>` and `<cli-panel>`. `resolveCliModuleProvider()` now only provides the module; its processors are no longer also provided one by one.
+- `@qodalis/react-cli` and `@qodalis/vue-cli`: the `processors` prop of `Cli`, `CliPanel`, `CliProvider` and `CliConfigProvider` (use `modules`).
+- `CliEngine.registerService()` stays (no longer deprecated): it registers a service before any module boots, as the framework wrappers do.
+
+### Docs site
+
+- New page **Upgrading to 2.0** (`/docs/migration`): packages, registering commands through modules in each framework, every removed or renamed API with its replacement, and the server versions to use.
+- READMEs register commands through modules and use the `welcome` option (they still showed `registerProcessors()`, the `processors` prop and the removed `welcomeMessage` option).
+
+### Dependencies
+
+- ESLint 10, ngx-translate 18 (the docs app uses `provideTranslateService` and the standalone pipe), xterm.js updates, Nx and Angular updates, commander 15.
+- Overrides for open advisories: `dompurify` >= 3.4.17, and the `vite` of `@angular/build` ^8.3.3.
+- `@qodalis/cli-core` specs run with the esbuild Karma builder.
+
 ## v2.0.0-beta.21
 
 ### Docs site
@@ -284,7 +307,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `context.notifier` replaces `setStatusText` / `clearStatusText`; panel status bars show notifications by level, with compact indicators for vertical panels.
 - HTTP client service and constructor injection (`deps`) in the service container.
 
-## [v2.0.1](https://github.com/qodalis-solutions/web-cli/compare/v1.0.39...v2.0.1) (2026-02-28)
+## v2.0.0-beta.1 to v2.0.0-beta.13 (2026-02-28 onwards)
+
+The changes from 1.0.39 that opened the 2.0 line (this section was first headed v2.0.1, a version that was never published).
 
 ### Breaking Changes
 
