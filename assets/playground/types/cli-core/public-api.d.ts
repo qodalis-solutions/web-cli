@@ -4041,7 +4041,7 @@ interface CliThemeInfo {
 
 declare const DefaultThemeInfos: Record<string, CliThemeInfo>;
 
-declare const LIBRARY_VERSION = "2.0.0-rc.1";
+declare const LIBRARY_VERSION = "2.0.0-rc.2";
 declare const API_VERSION = 2;
 
 /**

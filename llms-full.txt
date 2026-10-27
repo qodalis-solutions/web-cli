@@ -1,0 +1,1740 @@
+# Qodalis CLI plugin development
+
+> Reference for writing Qodalis CLI plugins: browser (web) plugins that run in the terminal UI, and server plugins for the Node.js, .NET and Python CLI servers. Every topic is self-contained. Version 2.0. Source: https://github.com/qodalis-solutions/web-cli. Docs: https://cli.qodalis.com.
+
+## Overview
+
+### Web plugins vs server plugins
+
+A Qodalis CLI command is either a web plugin running in the browser or a server plugin running in a CLI server; the user types both in the same terminal.
+
+- **Web plugin**: a TypeScript package exporting an `ICliModule` (from `@qodalis/cli-core`) whose `processors` implement `ICliCommandProcessor`. It runs in the page, writes to the xterm.js terminal through `context.writer`, can prompt (`context.reader`), keep state, call HTTP APIs, go full screen, run background services. Use it for anything that can run in the browser: tools, formatters, games, UIs over a REST API, interactive prompts.
+- **Server plugin**: a processor/module for a Qodalis CLI server (`@qodalis/cli-server-abstractions` for Node, `Qodalis.Cli.Abstractions` for .NET, `qodalis-cli-server-abstractions` for Python). It runs on the server, receives the parsed command over HTTP and returns text or structured output (`text`, `table`, `list`, `json`, `key-value`). Use it when the command needs server resources: the filesystem, databases, secrets, OS processes, private networks. Server commands are also exposed as MCP tools when the server enables MCP.
+- The browser terminal discovers server commands at startup (`GET /api/v1/qcli/commands`) and registers a proxy for each one as `<server>:<command>` (e.g. `node:weather`) plus the bare name (`weather`) when no local command owns it.
+- Rule of thumb: no secrets and no server-only resources -> web plugin; otherwise server plugin. Both can coexist (a web command can call a server through `context.http`).
+
+### Packages
+
+The npm, NuGet and PyPI packages a plugin author uses, by role.
+
+| Package | Role |
+|---|---|
+| `@qodalis/cli-core` | Web plugin API: `ICliModule`, `ICliCommandProcessor`, `ICliExecutionContext`, `CliProcessCommand`, `API_VERSION`, `DefaultLibraryAuthor`, `bootCliModule`, colors, tokens. The only runtime dependency of a web plugin. |
+| `@qodalis/cli` | Framework-agnostic engine: `CliEngine`, `CliTestHarness` (for tests). |
+| `@qodalis/angular-cli` | Angular wrapper: `CliModule`, `<cli>`, `<cli-panel>`, `resolveCliModuleProvider`. |
+| `@qodalis/react-cli` | React wrapper: `Cli`, `CliPanel`, `CliProvider`, `CliConfigProvider`. |
+| `@qodalis/vue-cli` | Vue 3 wrapper: `Cli`, `CliPanel`, `CliConfigProvider`. |
+| `@qodalis/create-cli-plugin` | Scaffolder (`npx @qodalis/create-cli-plugin`). |
+| `@qodalis/cli-<name>` | Published web plugins (`@qodalis/cli-guid`, `@qodalis/cli-todo`, ...). Each exports `<name>Module`. |
+| `@qodalis/cli-server-abstractions` (npm) | Node server plugin API. Server: `@qodalis/cli-server-node`. |
+| `Qodalis.Cli.Abstractions` (NuGet) | .NET server plugin API. Server: `Qodalis.Cli`. |
+| `qodalis-cli-server-abstractions` (PyPI, import `qodalis_cli_server_abstractions`) | Python server plugin API. Server: `qodalis-cli-server` (import `qodalis_cli`). |
+| `@qodalis/mcp-cli` | MCP server for AI assistants: docs search, API lookup, plugin scaffolding, and (with `QCLI_URL`) driving a CLI server. |
+
+## Web plugins
+
+### Scaffolding a web plugin with create-cli-plugin
+
+`@qodalis/create-cli-plugin` generates a ready-to-build web plugin, either standalone (its own npm project) or inside the web-cli monorepo.
+
+```bash
+# Standalone, interactive
+npx @qodalis/create-cli-plugin
+
+# Standalone, non-interactive (all flags optional except --name)
+npx @qodalis/create-cli-plugin --name weather --description "Weather forecasts" --processor-name Weather
+
+# Inside the web-cli monorepo (builds the scaffolder first)
+pnpm run create-plugin -- --name weather --description "Weather forecasts" --processor-name Weather
+```
+
+- Flags: `-n, --name <name>` (lowercase; becomes the command and `@qodalis/cli-<name>`), `-d, --description <description>` (default `CLI extension for <name>`), `-p, --processor-name <name>` (PascalCase; default: PascalCase of the name; the class is `Cli<ProcessorName>CommandProcessor`). Without `--name` it prompts.
+- Monorepo mode is detected by walking up to a directory with a `pnpm-workspace.yaml` mentioning `packages/plugins`; the plugin is created in `packages/plugins/<name>/` with `project.json`, `tsconfig.spec.json`, a `tsconfig.base.json` path alias `@qodalis/cli-<name>` -> `./dist/<name>` and an `angular.json` Karma test entry. Build with `pnpm nx build <name>`, test with `pnpm nx test <name>`.
+- Standalone mode creates `./qodalis-cli-<name>/`, runs `pnpm install` (or `npm install`), and also writes `.gitignore`, `pnpm-workspace.yaml` and `AGENTS.md`. Build with `npx tsup` (or `npm run build`), publish with `npm publish --access public`.
+
+Generated layout (both modes):
+
+```text
+src/
+  public-api.ts                        # exports the processor, version and `<name>Module: ICliModule`
+  cli-entrypoint.ts                    # UMD entry: bootCliModule(module) for `pkg add`
+  lib/
+    index.ts                           # barrel
+    version.ts                         # LIBRARY_VERSION, API_VERSION = 2
+    processors/cli-<name>-command-processor.ts
+  tests/index.spec.ts                  # Jasmine-style describe/it/expect
+tsup.config.ts                         # CJS + ESM + d.ts, plus IIFE bundle in dist/umd
+package.json                           # name @qodalis/cli-<name>, dependency @qodalis/cli-core
+```
+
+### ICliModule
+
+`ICliModule` (from `@qodalis/cli-core`) is the unit a web plugin exports: it bundles command processors, services, guards, permissions and translations, plus lifecycle hooks.
+
+```typescript
+import { API_VERSION, ICliModule } from '@qodalis/cli-core';
+
+export const weatherModule: ICliModule = {
+    apiVersion: API_VERSION,          // required; modules below the runtime's API_VERSION (2) are rejected at boot
+    name: '@qodalis/cli-weather',     // required; unique id
+    version: '1.0.0',
+    description: 'Weather forecasts',
+    dependencies: [],                 // module names booted before this one
+    priority: 0,                      // lower boots first (default 0)
+    processors: [new CliWeatherCommandProcessor()],
+    services: [],                     // CliProvider[] registered in the shared container
+    guards: [],                       // ICliCommandGuard[] run before every command
+    permissions: [],                  // CliPermissionDefinition[] ({ name: 'weather:read', description? })
+    translations: { es: { 'cli.weather.description': 'Previsión del tiempo' } },
+    async onInit(context) {},         // after services are registered, before processors initialize
+    async onSetup(context) { return true; }, // first-run setup; true marks it done (persisted)
+    async onAfterBoot(context) {},    // all modules booted, terminal interactive
+    async onDestroy(context) {},      // teardown
+};
+```
+
+- `config?: Record<string, any>` and `configure?(config): ICliModule` support configurable modules; implement `ICliConfigurableModule<TConfig>` and return a copy: `configure(config) { return { ...this, config }; }`. Hosts then pass `weatherModule.configure({ units: 'metric' })`.
+- Only `apiVersion` and `name` are required. Use the `API_VERSION` constant (core exports `API_VERSION = 2`; scaffolded plugins keep their own copy in `src/lib/version.ts`).
+- Removed in 2.0.0-rc.1: `ICliUmdModule`, `bootUmdModule`, `registerProcessor(s)`, `resolveCommandProcessorProvider`, `CliCommandProcessor_TOKEN` and the `processors` input/prop. Always wrap processors in a module.
+
+### ICliCommandProcessor
+
+`ICliCommandProcessor` is the interface every web command implements; only `command` and `processCommand` are required.
+
+```typescript
+import {
+    CliProcessCommand,
+    ICliCommandProcessor,
+    ICliExecutionContext,
+} from '@qodalis/cli-core';
+
+export class CliHelloCommandProcessor implements ICliCommandProcessor {
+    command = 'hello';
+    aliases = ['hi'];
+    description = 'Greets someone';
+    author = { name: 'Jane Doe', email: 'jane@example.com' };
+    version = '1.0.0';
+    acceptsRawInput = true;           // text after the command -> command.value / command.positionals
+    metadata = { icon: '👋', module: '@acme/cli-hello' };
+    parameters = [
+        { name: 'shout', aliases: ['s'], description: 'Upper-case the greeting', required: false, type: 'boolean' },
+    ];
+
+    async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const name = command.positionals?.[0] ?? 'world';
+        const text = `Hello, ${name}!`;
+        context.writer.writeln(command.args['shout'] ? text.toUpperCase() : text);
+    }
+}
+```
+
+All members:
+
+| Member | Type | Purpose |
+|---|---|---|
+| `command` | `string` | Command word (matched case-insensitively). |
+| `aliases?` | `string[]` | Alternative names. |
+| `description?` | `string` | Shown by `help`; translated via key `cli.<command>.description`. |
+| `author?` | `ICliCommandAuthor` | `{ name, email }`. `DefaultLibraryAuthor` is the Qodalis author; use your own for third-party plugins. |
+| `version?` | `string` | Default `'1.0.0'`. |
+| `acceptsRawInput?` | `boolean` | Capture text after the command as `command.value` instead of treating it as sub-commands. |
+| `valueRequired?` | `boolean` | Like `acceptsRawInput`, and the engine errors (`Value required`) unless a positional value, piped data or named args are given; required-parameter checks are skipped when positional input exists. |
+| `metadata?` | `CliProcessorMetadata` | `sealed`, `hidden`, `requireServer`, `module`, `icon`, `requiredCoreVersion`, `requiredCliVersion`, `requireAuth`, `requiredGroups`, `requiredPermissions`, `literalInput` (see the metadata topic). |
+| `processors?` | `ICliCommandChildProcessor[]` | Sub-commands (`parent` is set by the engine). |
+| `parameters?` | `ICliCommandParameterDescriptor[]` | Flags (`--name value`, `--name=value`, `-n`). |
+| `hooks?` | `ICliProcessorHook[]` | `{ when: 'before' \| 'after', execute(context): Promise<void> }`. |
+| `stateConfiguration?` | `CliStateConfiguration` | Per-processor persisted state (root processors only). |
+| `configurationOptions?` | `ICliConfigurationOption[]` | Settings shown by the `configure` command. |
+| `extendsProcessor?` | `boolean` | Wrap an existing processor with the same `command` instead of replacing it. |
+| `originalProcessor?` | `ICliCommandProcessor` | Set by the registry when `extendsProcessor` is true; delegate with `this.originalProcessor.processCommand(command, context)`. |
+| `processCommand(command, context)` | `Promise<void>` | Runs the command. |
+| `writeDescription?(context)` | `void` | Custom long help text. |
+| `validateBeforeExecution?(command, context)` | `{ valid, message? }` | Reject a command before it runs; `message` is printed as an error. |
+| `initialize?(context)` | `Promise<void>` | Called once at boot (with the processor's own state store). |
+| `onData?(data, context)` | `Promise<void>` | Raw terminal input while this processor is the context processor (full-screen apps). |
+| `onResize?(cols, rows, context)` | `void` | Terminal resized while in full-screen mode. |
+| `onDispose?(context)` | `void` | Full-screen mode ended, terminal disconnected or component destroyed. |
+
+Execution order for one command: parse -> find processor -> global parameter handlers (`--help`, ...) -> extract `value`/`positionals` -> command guards -> `valueRequired` check -> required-parameter and `validator` checks -> `validateBeforeExecution` -> `before` hooks -> `processCommand` -> `after` hooks.
+
+### CliProcessCommand and argument parsing
+
+`CliProcessCommand` is the parsed command passed to `processCommand`: words, flags, positional values and piped data.
+
+```typescript
+type CliProcessCommand = {
+    command: string;              // command text without flags, e.g. 'todo add'
+    chainCommands: string[];      // command words, e.g. ['todo', 'add']
+    rawCommand: string;           // the line as typed
+    value?: string;               // text after the command/sub-command words (flags removed, quotes kept); only with acceptsRawInput/valueRequired
+    positionals?: string[];       // shell-split arguments: quotes removed, escapes applied, flags excluded
+    args: Record<string, any>;    // flags, keyed by parameter name AND each alias
+    data?: any;                   // piped input from the previous command (`a | b`)
+};
+```
+
+- Flag forms: `--name=value` (always works), `--name value` / `-n 5` (space form: only when the parameter is declared, its `type` is not `'boolean'`, **and** the processor accepts positional input via `acceptsRawInput` or `valueRequired`; otherwise the value word is taken as a sub-command and the command is not found), `-n5`, `-abc` (= `-a -b -c` when each letter is a declared boolean). A flag without value is `true`.
+- Values that look numeric become numbers, `'true'`/`'false'` become booleans. For declared parameters: `type: 'boolean'` maps `true/'true'/'1'/'yes'/'y'/1` to `true`, anything else to `false`; `type: 'array'` collects repeated flags (`--tag a --tag b` -> `['a', 'b']`). Other types keep the parsed value; convert yourself (`Number(command.args['count'])`).
+- Undeclared flags still land in `args` under their typed name.
+- Read a flag that has aliases with `getParameterValue(descriptor, command.args)` (exported from `@qodalis/cli-core`), or just `command.args['name']` (aliases are mirrored for declared parameters).
+- `defaultValue` is shown by `help` only; it is not injected into `args`. Apply it yourself: `const units = command.args['units'] ?? 'metric';`.
+- Prefer `command.positionals` to `command.value` (quotes handled, `"my file.txt"` is one argument).
+
+### Parameters
+
+`ICliCommandParameterDescriptor` declares a flag: name, aliases, type, required, default (help only) and an optional validator.
+
+```typescript
+import { ICliCommandParameterDescriptor } from '@qodalis/cli-core';
+
+const parameters: ICliCommandParameterDescriptor[] = [
+    {
+        name: 'count',
+        aliases: ['c'],
+        description: 'How many items to generate',
+        required: false,
+        type: 'number',            // 'string' | 'number' | 'boolean' | 'array' | 'object' | string
+        defaultValue: 1,           // shown in help; not applied automatically
+        validator: (value) =>
+            Number(value) > 0 && Number(value) <= 100
+                ? { valid: true }
+                : { valid: false, message: 'count must be between 1 and 100' },
+    },
+    { name: 'json', description: 'Print JSON', required: false, type: 'boolean' },
+];
+```
+
+- Set `acceptsRawInput = true` on a processor whose parameters take values if users should be able to type `--count 5`; without it only `--count=5` works.
+- `required: true` parameters are checked only in named-argument mode (no positional value and no piped data); the error is `Missing required parameters: --name`.
+- `validator` runs when the flag is present; failures print `Invalid parameters:` with each message and the command does not run.
+- Every command also gets the global `--help` handling; a processor declaring a parameter with the same name or alias takes it over.
+
+### Sub-commands
+
+Sub-commands are nested processors in `processors`; the engine walks the command words down the tree and runs the deepest match.
+
+```typescript
+import {
+    CliProcessCommand,
+    ICliCommandProcessor,
+    ICliExecutionContext,
+} from '@qodalis/cli-core';
+
+class NotesAddProcessor implements ICliCommandProcessor {
+    command = 'add';
+    description = 'Add a note';
+    valueRequired = true;                      // `notes add buy milk` -> value 'buy milk'
+
+    async processCommand(command: CliProcessCommand, context: ICliExecutionContext) {
+        const text = command.positionals!.join(' ');      // quotes removed; command.value keeps them
+        const notes: string[] = context.state.getState()['notes'] ?? [];
+        context.state.updateState({ notes: [...notes, text] });
+        await context.state.persist();
+        context.writer.writeSuccess('Note added');
+    }
+}
+
+class NotesListProcessor implements ICliCommandProcessor {
+    command = 'list';
+    aliases = ['ls'];
+    description = 'List notes';
+
+    async processCommand(_: CliProcessCommand, context: ICliExecutionContext) {
+        const notes: string[] = context.state.getState()['notes'] ?? [];
+        context.writer.writeList(notes, { ordered: true });
+    }
+}
+
+export class CliNotesCommandProcessor implements ICliCommandProcessor {
+    command = 'notes';
+    description = 'Keep short notes';
+    processors = [new NotesAddProcessor(), new NotesListProcessor()];
+    stateConfiguration = { initialState: { notes: [] } };   // state is owned by the root processor
+
+    async processCommand(command: CliProcessCommand, context: ICliExecutionContext) {
+        await context.executor.showHelp(command, context);  // `notes` alone prints help
+    }
+}
+```
+
+- Resolution: match the first word against root `command`/`aliases`, then each following word against the current processor's `processors`. If a word matches no child, the command is not found, unless the current processor has no children and `acceptsRawInput`/`valueRequired` is set (then the rest is its value).
+- Children share the root processor's state store (`context.state`).
+- Translation keys for sub-commands include the path: `cli.notes.add.description`.
+
+### Processor metadata, access control and permissions
+
+`metadata` (`CliProcessorMetadata`) flags how the engine treats a processor: sealing, visibility, server requirement, version requirements and access control.
+
+```typescript
+metadata = {
+    icon: '🌦',                       // string or CliIcon, shown in help
+    module: '@qodalis/cli-weather',  // owning module name
+    hidden: false,                   // true: not listed by `help`, still runnable
+    sealed: false,                   // true: cannot be replaced/removed (can still be extended)
+    requireServer: false,            // the command needs a connected server
+    requiredCoreVersion: '2.0.0',    // skip the processor at boot if @qodalis/cli-core is older
+    requiredCliVersion: '2.0.0',     // same for @qodalis/cli
+    literalInput: false,             // true: pass the whole line verbatim (no pipes, ;, &&, $VAR expansion)
+    requireAuth: true,               // a signed-in user is required
+    requiredGroups: ['admin'],       // user must be in one of these groups (implies requireAuth)
+    requiredPermissions: ['weather:write'], // user must hold all (implies requireAuth)
+};
+```
+
+- `requireAuth`, `requiredGroups` and `requiredPermissions` are enforced by core guards only when an auth module registers an `ICliAuthorizationService` (e.g. `@qodalis/cli-users`); without one they are informational.
+- Declare the permission names your module uses in `ICliModule.permissions` (`{ name: 'weather:write', description: 'Change weather settings' }`) so admins can list and grant them.
+- Inside a command, check ad hoc with the authorization service: `context.services.get(ICliAuthorizationService_TOKEN)?.can('weather:write')`.
+
+### Command guards
+
+An `ICliCommandGuard` runs before every command (across all modules) and can block it; contribute guards through `ICliModule.guards`.
+
+```typescript
+import { ICliCommandGuard, ICliModule, API_VERSION } from '@qodalis/cli-core';
+
+const businessHoursGuard: ICliCommandGuard = {
+    name: 'business-hours',
+    priority: 10,                                          // lower runs first
+    appliesTo: (processor) => processor.command === 'deploy',
+    canActivate: (command, processor, context) => {
+        const hour = new Date().getHours();
+        return hour >= 9 && hour < 17 ? true : 'deploy is only allowed 09:00-17:00';
+    },
+};
+
+export const deployModule: ICliModule = {
+    apiVersion: API_VERSION,
+    name: '@acme/cli-deploy',
+    processors: [/* ... */],
+    guards: [businessHoursGuard],
+};
+```
+
+- `canActivate` returns `CliCommandGuardResult`: `true`/`undefined` allow; `false` blocks with a default message; a `string` blocks with that message; or `{ allowed: boolean, message?: string }`. May be async.
+- A guard that throws blocks the command (fail closed). Blocked commands exit with code -1 and the message printed as an error.
+
+### ICliExecutionContext
+
+`ICliExecutionContext` is the second argument of `processCommand`: the command's access to the terminal, input, state, services, HTTP and process control.
+
+| Member | Use |
+|---|---|
+| `writer: ICliTerminalWriter` | Output (`writeln`, `writeSuccess`, `writeError`, tables, JSON, ...). |
+| `reader: ICliInputReader` | Interactive prompts (`readLine`, `readConfirm`, `readSelect`, ...). |
+| `progressBar: ICliPercentageProgressBar` | `show(text?)`, `update(percent, { type?: 'replace' \| 'increment' })`, `setText`, `complete()`, `hide()`. |
+| `spinner?: ICliSpinner` | `show(text?)`, `setText(text)`, `hide()`. |
+| `textAnimator?: ICliTextAnimator` | `showText(text, { speed?, removeAfterTyping? })` typewriter effect. |
+| `notifier: ICliNotifier` | Status line in the panel header: `info`, `success`, `warn`, `error`, `clear`; cleared when the command ends. |
+| `state: ICliStateStore` | The processor's state store (see state topic). |
+| `clipboard: ICliClipboard` | `write(text)`, `read()`. |
+| `http: ICliHttpClient` | HTTP client wired to the command's abort signal. |
+| `services: ICliServiceProvider` | DI container (`get`, `getRequired`, `getAll`, `has`, `set`). |
+| `translator: ICliTranslationService` | `t(key, defaultValue, params?)`, `getLocale()`. |
+| `executor: ICliCommandExecutorService` | `showHelp(command, context)`, `executeCommand(line, context)`. |
+| `process: ICliExecutionProcess` | `exit(code?, { silent? })` ends the command (it throws to unwind unless `silent`), `output(data)` sets pipe data. |
+| `signal?: AbortSignal` / `onAbort: Subject<void>` | Ctrl+C / kill; check for cooperative cancellation. |
+| `backgroundServices: ICliBackgroundServiceRegistry` | Register/start daemons and jobs. |
+| `events?: ICliEventBus` | Terminal event bus. |
+| `logger: ICliLogger` | `log`, `info`, `warn`, `error`, `debug`. |
+| `options?: CliOptions` | Host options (servers, logLevel, ...). |
+| `userSession?: ICliUserSession` | Current user session, when an auth module is present. |
+| `terminal: Terminal` | The raw xterm.js terminal (`cols`, `rows`, `write`). |
+| `enterFullScreenMode(processor, { showCursor? })` / `exitFullScreenMode()` | Alternate screen; input routed to `processor.onData`. |
+| `createInterval(cb, ms)` / `createTimeout(cb, ms)` | Managed timers, cleared on full-screen exit and destroy. |
+| `setContextProcessor(processor, silent?, fullScreen?)` | Route subsequent input to a processor. |
+| `submitCommand(line)` | Run a line as if typed (history + prompt). |
+| `promptPathProvider?` | Set to `() => string \| null` to change the path shown in the prompt. |
+| `showPrompt`, `currentLine`, `setCurrentLine`, `cursorPosition`, `clearLine`, `clearCurrentLine`, `refreshCurrentLine`, `promptLength` | Low-level line editing. |
+| `isBooted?` | `true` once boot finished. |
+
+```typescript
+async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+    context.spinner?.show('Loading');
+    try {
+        const items = await context.http.get<{ name: string }[]>('https://api.example.com/items');
+        context.spinner?.hide();
+        context.writer.writeObjectsAsTable(items);
+        context.process.output(items);              // available to the next command in a pipe
+    } catch (e) {
+        context.spinner?.hide();
+        context.writer.writeError(`Request failed: ${e}`);
+        context.process.exit(1);
+    }
+}
+```
+
+### Writer API
+
+`context.writer` (`ICliTerminalWriter`) writes text, colors, tables, lists, JSON, boxes and links to the terminal.
+
+```typescript
+import { CliForegroundColor } from '@qodalis/cli-core';
+
+const w = context.writer;
+w.write('no newline');
+w.writeln('line');                                   // writeln() alone prints an empty line
+w.writeSuccess('Done');
+w.writeInfo('FYI');
+w.writeWarning('Careful');
+w.writeError('Failed');                              // stderr in tests
+w.writeln(w.wrapInColor('cyan text', CliForegroundColor.Cyan));
+w.wrapInBackgroundColor('text', CliBackgroundColor.Blue);
+w.writeJson({ a: 1 });                               // pretty, colorized
+w.writeTable(['Name', 'Size'], [['a.txt', '1 KB']]);
+w.writeObjectsAsTable([{ name: 'a', size: 1 }]);
+w.writeList(['one', 'two'], { ordered: true, prefix: '-', color: CliForegroundColor.Green });
+w.writeKeyValue({ Status: 'ok', Version: '1.0' }, { separator: ':', keyColor: CliForegroundColor.Yellow });
+w.writeColumns(['a', 'b', 'c', 'd'], { columns: 2, padding: 2 });
+w.writeDivider({ char: '-', length: 40, color: CliForegroundColor.White });
+w.writeBox(['Line 1', 'Line 2'], { title: 'Notice', borderColor: CliForegroundColor.Cyan, padding: 1 });
+w.writeLink('Docs', 'https://cli.qodalis.com');
+w.writeIndented('indented', 2);                      // 2 spaces per level
+w.writeToFile('report.txt', 'content');              // browser download
+```
+
+- Colors: `CliForegroundColor` / `CliBackgroundColor` enums (`Black`, `Red`, `Green`, `Yellow`, `Blue`, `Magenta`, `Cyan`, `White`, `Reset`).
+- Use `\r\n` or `writeln` for new lines; xterm needs carriage returns with raw `write`.
+
+### Input reader
+
+`context.reader` (`ICliInputReader`) shows interactive prompts; every method resolves `null` when the user aborts (Ctrl+C or Escape).
+
+```typescript
+const name = await context.reader.readLine('Name: ', {
+    default: 'guest',
+    placeholder: 'your name',
+    validate: (v) => (v.trim() ? null : 'Name is required'),   // string = error, null = ok
+});
+if (name === null) return;                                       // aborted
+
+const password = await context.reader.readPassword('Password: ');
+const ok = await context.reader.readConfirm('Continue?', true);  // boolean | null
+const env = await context.reader.readSelect('Environment:', [
+    { label: 'Production', value: 'prod', description: 'live', group: 'Remote' },
+    { label: 'Staging', value: 'stage', group: 'Remote' },
+    { label: 'Local', value: 'local', disabled: true },
+], { default: 'stage', searchable: true, onChange: (v) => {} });
+const size = await context.reader.readSelectInline('Size:', [
+    { label: 'S', value: 's' }, { label: 'M', value: 'm' },
+]);
+const tags = await context.reader.readMultiSelect('Tags:', [
+    { label: 'bug', value: 'bug', checked: true }, { label: 'feature', value: 'feature' },
+], { searchable: true });                                        // string[] | null
+const count = await context.reader.readNumber('Count:', { min: 1, max: 10, default: 3 });
+const date = await context.reader.readDate('Due date:', { format: 'YYYY-MM-DD', min: '2026-01-01' });
+const files = await context.reader.readFile('Pick a file', { multiple: false });  // CliFileResult[] | null
+```
+
+### State store and persistence
+
+Each root processor gets its own state store (`context.state`) configured by `stateConfiguration`; sub-commands share their root's store.
+
+```typescript
+export class CliCounterCommandProcessor implements ICliCommandProcessor {
+    command = 'counter';
+    stateConfiguration = {
+        initialState: { count: 0 },
+        storeName: 'counter',     // default: the command name
+        autoPersist: true,        // save after every change (else call persist())
+        scope: 'global' as const, // 'global' (browser, all tabs) | 'user' (per signed-in user) | 'session' (this terminal, memory)
+        version: 1,
+        migrate: (state, fromVersion) => state,
+        syncAcrossTabs: true,
+    };
+
+    async processCommand(_: CliProcessCommand, context: ICliExecutionContext) {
+        const { count } = context.state.getState<{ count: number }>();
+        context.state.updateState({ count: count + 1 });
+        // or: await context.state.update((s) => ({ count: s['count'] + 1 }));
+        context.writer.writeln(`count = ${count + 1}`);
+    }
+}
+```
+
+- `ICliStateStore`: `getState<T>()`, `updateState(partial)`, `update(fn)`, `select(selector)` (Observable), `subscribe(cb)`, `reset()`, `persist()`, `initialize()`, `reload?()`.
+- `configurationOptions` values (set with `configure`) are read with `getPluginConfigValue(context, '<command>', '<key>', defaultValue)` from `@qodalis/cli-core`.
+
+### Configuration options
+
+`configurationOptions` exposes processor settings in the built-in `configure` command (interactive menu and `configure get/set`).
+
+```typescript
+import { getPluginConfigValue, ICliConfigurationOption } from '@qodalis/cli-core';
+
+configurationOptions: ICliConfigurationOption[] = [
+    { key: 'units', label: 'Units', description: 'Temperature units', type: 'select', defaultValue: 'metric',
+      options: [{ label: 'Metric', value: 'metric' }, { label: 'Imperial', value: 'imperial' }] },
+    { key: 'maxDays', label: 'Max days', description: 'Forecast length', type: 'number', defaultValue: 3,
+      validator: (v) => (v >= 1 && v <= 7 ? { valid: true } : { valid: false, message: '1-7' }) },
+];
+
+// in processCommand
+const units = getPluginConfigValue(context, 'weather', 'units', 'metric');
+```
+
+- Option `type`: `'string' | 'number' | 'boolean' | 'select'`; `category` overrides the grouping (default: the processor's command name, which is also the category passed to `getPluginConfigValue`).
+
+### Services and dependency injection
+
+Modules register services with `services: CliProvider[]`; commands resolve them from `context.services` by token.
+
+```typescript
+import { API_VERSION, createCliToken, ICliModule } from '@qodalis/cli-core';
+
+export interface IWeatherApi { current(city: string): Promise<string>; }
+export const IWeatherApi_TOKEN = createCliToken<IWeatherApi>('weather-api');   // typed string token
+
+class WeatherApi implements IWeatherApi {
+    constructor(private readonly baseUrl: string) {}
+    async current(city: string) { return `${city}: sunny`; }
+}
+
+export const weatherModule: ICliModule = {
+    apiVersion: API_VERSION,
+    name: '@acme/cli-weather',
+    services: [
+        { provide: 'weather-base-url', useValue: 'https://api.example.com' },
+        { provide: IWeatherApi_TOKEN, useClass: WeatherApi, deps: ['weather-base-url'] },
+        // { provide: TOKEN, useFactory: (url: string) => new WeatherApi(url), deps: ['weather-base-url'] },
+        // { provide: TOKEN, useValue: x, multi: true }   // multi-provider: read with getAll
+    ],
+    processors: [/* ... */],
+};
+
+// in processCommand
+const api = context.services.getRequired(IWeatherApi_TOKEN);   // throws if missing; get() returns undefined
+```
+
+- `CliProvider` = `{ provide, sealed?, transient?, multi? }` plus one of `useValue`, `useClass` (+ `deps`), `useFactory` (+ `deps`). `useClass`/`useFactory` are created lazily on first `get`, so `deps` may be registered later.
+- `sealed: true` prevents overriding the token; `transient: true` creates a new instance per `get`.
+- Well-known tokens are exported from `@qodalis/cli-core` (e.g. `ICliAuthorizationService_TOKEN`, `ICliCommandGuard_TOKEN`, `ICliServerAuthTokenProvider_TOKEN`, `ICliTranslationService_TOKEN`).
+
+### Translations (i18n)
+
+Plugins ship translations in `ICliModule.translations` and translate at runtime with `context.translator.t(key, englishDefault, params?)`.
+
+```typescript
+export const weatherModule: ICliModule = {
+    apiVersion: API_VERSION,
+    name: '@acme/cli-weather',
+    processors: [new CliWeatherCommandProcessor()],
+    translations: {
+        es: { 'cli.weather.description': 'Mostrar el tiempo', 'cli.weather.now': 'Ahora en {city}' },
+        fr: { 'cli.weather.description': 'Afficher la météo', 'cli.weather.now': 'Maintenant à {city}' },
+    },
+};
+
+// in processCommand: English default inline, {param} interpolation
+context.writer.writeln(context.translator.t('cli.weather.now', 'Now in {city}', { city }));
+```
+
+- `help` translates descriptions automatically with key `cli.<command path>.description` (e.g. `cli.weather.forecast.description`).
+- Locale codes used by the official language packs: `de`, `es`, `fr`, `it`, `ja`, `ko`, `pt`, `ro`, `ru`, `zh`. Missing keys fall back to the default string.
+
+### HTTP client
+
+`context.http` (`ICliHttpClient`) is a fetch wrapper that parses JSON, throws `CliHttpError` on non-2xx and aborts on Ctrl+C.
+
+```typescript
+import { CliHttpError } from '@qodalis/cli-core';
+
+try {
+    const user = await context.http.get<{ name: string }>('https://api.example.com/me', { timeout: 5000 });
+    await context.http.post('https://api.example.com/items', { name: 'x' }, { headers: { 'X-Key': 'k' } });
+} catch (e) {
+    if (e instanceof CliHttpError) context.writer.writeError(`${e.status} ${e.statusText}`);
+    else throw e;
+}
+```
+
+- Methods: `fetch(url, init?)` (raw `Response`), `get`, `post(url, body?)`, `put`, `patch`, `delete`, `head` (returns `Response`), `options`. Options extend `RequestInit` (minus `method`/`body`) with `timeout` (ms).
+
+### Background services and jobs
+
+`context.backgroundServices` runs daemons (long-lived) and jobs (one-shot) outside the command, on the main thread or in a Web Worker.
+
+```typescript
+export const heartbeatModule: ICliModule = {
+    apiVersion: API_VERSION,
+    name: '@acme/cli-heartbeat',
+    async onAfterBoot(context) {
+        context.backgroundServices.register({
+            name: 'heartbeat',
+            description: 'Logs every 10s',
+            type: 'daemon',                                   // 'daemon' | 'job'
+            async onStart(ctx) {
+                ctx.createInterval(() => ctx.log('beat'), 10000);
+                ctx.emit({ source: 'heartbeat', type: 'started' });
+            },
+            async onStop(ctx) { ctx.log('stopped'); },
+            onError(error, ctx) { ctx.log(error.message, 'error'); },
+        });
+        await context.backgroundServices.start('heartbeat');
+    },
+};
+
+// one-shot job from a command
+await context.backgroundServices.startJob('export', async (ctx) => {
+    ctx.log('exporting...');
+    if (ctx.signal.aborted) return;
+});
+```
+
+- `ICliServiceContext` (`ctx`): `signal`, `emit(event)`, `log(message, level?)` (`'info' | 'warn' | 'error'`), `createInterval`, `createTimeout`, `state`, `services`.
+- Registry: `register`, `start(name)`, `stop(name)`, `restart(name)`, `startJob(name, task, { workerCompatible? })`, `getStatus(name)`, `list()`, `getLogs(name, limit?)`, `on(handler, { source?, type? })` (returns unsubscribe), `destroyAll()`.
+- Worker mode: set `workerCompatible: true` and `workerFactory: () => new Worker(...)`; `onStart` is the main-thread fallback. Users manage services with the built-in `services` command.
+
+### Full-screen mode and raw input
+
+A processor can take over the terminal (games, editors, pagers) with `enterFullScreenMode`, receiving every keystroke in `onData`.
+
+```typescript
+export class CliClockCommandProcessor implements ICliCommandProcessor {
+    command = 'clock';
+    description = 'Full-screen clock (q to quit)';
+    private context?: ICliExecutionContext;
+
+    async processCommand(_: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        this.context = context;
+        context.enterFullScreenMode(this);                    // alternate screen, cursor hidden
+        this.render();
+        context.createInterval(() => this.render(), 1000);    // cleared automatically on exit
+    }
+
+    async onData(data: string, context: ICliExecutionContext): Promise<void> {
+        if (data === 'q' || data === '\x1b') context.exitFullScreenMode();   // also restores the prompt
+    }
+
+    onResize(cols: number, rows: number): void { this.render(); }
+
+    onDispose(): void { this.context = undefined; }
+
+    private render(): void {
+        const t = this.context?.terminal;
+        if (!t) return;
+        t.write('\x1b[H\x1b[2J');                             // home + clear
+        t.write(new Date().toLocaleTimeString());
+    }
+}
+```
+
+- `onData` receives raw sequences: arrows `\x1b[A`/`\x1b[B`/`\x1b[C`/`\x1b[D`, Enter `\r`, Backspace `\x7f`, Escape `\x1b`, Ctrl+C `\x03` (passed through in full-screen mode).
+- Pass `{ showCursor: true }` for REPL-style UIs.
+
+### Extending an existing command
+
+Set `extendsProcessor = true` to wrap a processor registered with the same `command` and delegate to `originalProcessor`.
+
+```typescript
+export class EchoTimestampProcessor implements ICliCommandProcessor {
+    command = 'echo';
+    extendsProcessor = true;
+    acceptsRawInput = true;
+    originalProcessor?: ICliCommandProcessor;              // set by the registry
+
+    async processCommand(command: CliProcessCommand, context: ICliExecutionContext) {
+        context.writer.write(`[${new Date().toISOString()}] `);
+        await this.originalProcessor?.processCommand(command, context);
+    }
+}
+```
+
+- Without `extendsProcessor`, registering a processor with an existing command replaces it (unless the existing one has `metadata.sealed`).
+
+### Registering a module in a host app
+
+Hosts pass plugin modules to the terminal: Angular DI or `[modules]`, React/Vue `modules` prop, or `CliEngine.registerModule` in plain TypeScript.
+
+```typescript
+// Angular (NgModule)
+import { CliModule, resolveCliModuleProvider } from '@qodalis/angular-cli';
+import { guidModule } from '@qodalis/cli-guid';
+
+@NgModule({
+    imports: [BrowserModule, CliModule],
+    providers: [resolveCliModuleProvider(guidModule), resolveCliModuleProvider(weatherModule)],
+})
+export class AppModule {}
+// template: <cli></cli> or <cli-panel></cli-panel>; or pass [modules]="modules" on either
+```
+
+```tsx
+// React
+import { Cli, CliConfigProvider } from '@qodalis/react-cli';
+
+<Cli modules={[guidModule, weatherModule]} />
+// or share config: <CliConfigProvider modules={modules} options={options}><Cli /></CliConfigProvider>
+```
+
+```html
+<!-- Vue 3 -->
+<script setup lang="ts">
+import { Cli } from '@qodalis/vue-cli';
+const modules = [guidModule, weatherModule];
+</script>
+<template>
+  <Cli :modules="modules" />
+</template>
+```
+
+```typescript
+// Vanilla TypeScript
+import '@xterm/xterm/css/xterm.css';
+import { CliEngine } from '@qodalis/cli';
+import { CliLogLevel } from '@qodalis/cli-core';
+
+const engine = new CliEngine(document.getElementById('terminal')!, { logLevel: CliLogLevel.INFO });
+engine.registerModule(weatherModule);          // or registerModules([...]); before start()
+await engine.start();
+```
+
+- `<CliPanel>` (React/Vue) and `<cli-panel>` (Angular) accept the same `modules`.
+- Configured modules: pass `weatherModule.configure({ ... })` instead of `weatherModule`.
+
+### Runtime installation with pkg add (UMD)
+
+Published plugins can be installed in a running terminal with `pkg add @qodalis/cli-<name>`, which loads the plugin's IIFE bundle and boots its module.
+
+```bash
+pkg add @qodalis/cli-weather     # alias: packages add
+pkg ls
+pkg remove @qodalis/cli-weather
+```
+
+```typescript
+// src/cli-entrypoint.ts (bundled to dist/umd/index.global.js by tsup, format 'iife')
+import { bootCliModule, ICliModule } from '@qodalis/cli-core';
+import { CliWeatherCommandProcessor } from './lib/processors/cli-weather-command-processor';
+import { API_VERSION } from './lib/version';
+
+const module: ICliModule = {
+    apiVersion: API_VERSION,
+    name: '@qodalis/cli-weather',
+    processors: [new CliWeatherCommandProcessor()],
+};
+
+bootCliModule(module);
+```
+
+- `package.json` fields `umd` and `unpkg` point at the IIFE bundle; packages are fetched from unpkg/jsdelivr by default (`CliOptions.packageSources` adds sources).
+- `bootCliModule(module)` registers the module with the running terminal's module registry; it does nothing outside a browser terminal.
+- UMD bundles must not use Angular decorators; use plain classes.
+
+### Testing with CliTestHarness
+
+`CliTestHarness` (from `@qodalis/cli`) runs commands through the real parser and executor without xterm or DOM, capturing output.
+
+```typescript
+import { CliTestHarness } from '@qodalis/cli';
+import { CliNotesCommandProcessor } from '../lib/processors/cli-notes-command-processor';
+import { CliGreetCommandProcessor } from '../lib/processors/cli-greet-command-processor';
+
+describe('notes', () => {
+    let harness: CliTestHarness;
+
+    beforeEach(() => {
+        harness = new CliTestHarness();
+        harness.registerProcessor(new CliNotesCommandProcessor());
+    });
+
+    it('adds and lists notes', async () => {
+        await harness.execute('notes add "buy milk"');
+        const result = await harness.execute('notes list');
+        expect(result.lists[0]).toEqual(['buy milk']);
+        expect(result.exitCode).toBe(0);
+    });
+
+    it('answers prompts', async () => {
+        harness.registerProcessor(new CliGreetCommandProcessor());   // calls readLine then readConfirm
+        harness.setReaderResponses('Ada', true);     // consumed in order by readLine, readConfirm, ...
+        const result = await harness.execute('greet');
+        expect(result.output).toContain('Ada');
+    });
+});
+```
+
+- Result (`CliTestResult`): `stdout: string[]`, `stderr: string[]` (writeError/writeWarning), `output` (stdout joined by `\n`), `exitCode`, `data` (from `process.output`), `tables: { headers, rows }[]`, `lists: string[][]`.
+- Harness API: `registerProcessor(p)`, `registerProcessors([...])`, `registerService(token, value)`, `initializeProcessors()`, `setReaderResponses(...values)`, `setUserSession(session)`, `setUserSessionProvider(fn)`, `execute(line)`, plus `registry`, `executor`, `services`, `translator`.
+- Pipes work: `harness.execute('echo hello | grep hello')`. State is in memory per harness.
+- In the monorepo, tests are Jasmine on Karma (`pnpm nx test <name>`, ChromeHeadless). Test files live in `src/tests/*.spec.ts`.
+
+### Building and publishing a web plugin
+
+Web plugins build with tsup into CJS, ESM, type declarations and an IIFE bundle for runtime loading, then publish to npm.
+
+```bash
+# standalone plugin
+npx tsup                       # or npm run build -> dist/public-api.{js,mjs,d.ts}, dist/umd/index.global.js
+npm publish --access public    # files: ["dist"]
+
+# monorepo plugin
+pnpm nx build <name>           # -> dist/<name>/
+pnpm nx test <name>
+pnpm nx lint <name>
+```
+
+- Mark `@qodalis/cli-core` as external in the library build (the scaffolded `tsup.config.ts` does); the IIFE build bundles everything (`noExternal: [/.*/]`).
+- `@qodalis/cli-core` is a dependency; standalone plugins pin `^<scaffolder version>` (all `@qodalis/*` web packages share one version).
+
+### Conventions for web plugins
+
+Naming, structure and API-version rules that official and third-party web plugins follow.
+
+- Package `@qodalis/cli-<name>` for official plugins (any scope for third-party); module export `<camelName>Module`; processor class `Cli<Name>CommandProcessor` in `src/lib/processors/cli-<name>-command-processor.ts`; module name = package name.
+- Always set `apiVersion: API_VERSION` (2). Plugins depend only on `@qodalis/cli-core` (never on Angular/React/Vue).
+- Translation keys: `cli.<command path>.<key>`; always pass the English default to `t()`.
+- Use `context.writer` for output (never `console.log`), `context.http` for requests (abort on Ctrl+C), `context.reader` for prompts, `createInterval`/`createTimeout` for timers in full-screen apps.
+- Check `null` from every reader method (user aborted). Exit with `context.process.exit(1)` on failure so pipes and `&&` stop (it throws to end the command; code after it does not run).
+- TypeScript style in the monorepo: 4-space indent, single quotes, semicolons.
+
+## Server plugins
+
+### How server commands reach the browser terminal
+
+A server plugin registers command processors in a Qodalis CLI server (Node, .NET or Python); the browser terminal discovers them and proxies execution over HTTP.
+
+- The host app lists servers in `CliOptions.servers`: `{ name: 'node', url: 'http://localhost:8047' }` (optional `headers`, `timeout`, `enabled`).
+- At startup the terminal calls `GET /api/qcli/versions` and `GET /api/v1/qcli/commands`, then registers each root command as `<server>:<command>` (e.g. `node:weather`) and as the bare name (`weather`) unless a local web command already owns it. If several servers have the command, the bare name uses the default server (`server default <name>`) or asks.
+- Running a command sends `POST /api/v1/qcli/execute` with `{ command, chainCommands, rawCommand, value, positionals, args, data }`; the server resolves the processor and returns `{ exitCode, outputs: [...] }`. `POST /api/v1/qcli/execute/stream` returns Server-Sent Events (`output`, `done`, `error`).
+- Output types rendered by the browser: `text` (optional `style`: `success | error | info | warning`), `table` (`headers`, `rows`), `list` (`items`, `ordered?`), `json` (`value`), `key-value` (`entries: { key, value }[]`).
+- In the browser, a server command that has sub-commands accepts only its sub-command words; a leaf command accepts positional text (`weather current Paris`).
+- Exceptions thrown by a processor become exit code 1 with `Error executing command: <message>` (style `error`). Unknown commands return `Unknown command: <name>`.
+- Servers: Node `@qodalis/cli-server-node` (default port 8047 in the demos), .NET `Qodalis.Cli` (8046), Python `qodalis-cli-server` (8048).
+
+### Node: minimal server processor
+
+A Node server command extends `CliCommandProcessor` from `@qodalis/cli-server-abstractions` and returns its output text from `handleAsync`.
+
+```typescript
+import {
+    CliCommandProcessor,
+    CliProcessCommand,
+    getPositionalText,
+} from '@qodalis/cli-server-abstractions';
+
+export class CliGreetCommandProcessor extends CliCommandProcessor {
+    command = 'greet';
+    description = 'Greets someone';
+    acceptsValue = true;          // optional positional value (valueRequired = true makes it mandatory)
+
+    async handleAsync(command: CliProcessCommand, signal?: AbortSignal): Promise<string> {
+        const name = getPositionalText(command) || 'world';
+        return `Hello, ${name}!`;
+    }
+}
+```
+
+```typescript
+import { createCliServer } from '@qodalis/cli-server-node';
+
+const { app } = createCliServer({
+    configure: (builder) => builder.addProcessor(new CliGreetCommandProcessor()),
+});
+app.listen(8047);
+```
+
+- `ICliCommandProcessor` members: `command`, `description`, `author` (default `DefaultLibraryAuthor`), `version` (default `'1.0.0'`), `allowUnlistedCommands?`, `valueRequired?`, `acceptsValue?`, `processors?`, `parameters?`, `requiredPermissions?`, `handleAsync(command, signal?) => Promise<string>`, `handleStructuredAsync?(command, signal?) => Promise<CliStructuredResponse>` (takes precedence when present).
+- `CliProcessCommand`: `command`, `chainCommands: string[]`, `rawCommand`, `value?` (as typed), `positionals?: string[]` (shell-split; sent by current browsers), `args: Record<string, any>`, `data?`. Helpers: `getPositionals(command)` (falls back to splitting `value`), `getPositionalText(command)`, `splitShellWords`, `joinShellWords`, `quoteShellWord`.
+- `signal` is aborted when the HTTP client disconnects.
+- Packages: `npm install @qodalis/cli-server-abstractions` for plugins; `@qodalis/cli-server-node` for the host.
+
+### Node: parameters, sub-commands and modules
+
+Node server commands declare flags with `CliCommandParameterDescriptor`, nest sub-commands in `processors`, and are grouped into a `CliModule` registered with `builder.addModule`.
+
+```typescript
+import {
+    CliCommandParameterDescriptor,
+    CliCommandProcessor,
+    CliModule,
+    CliProcessCommand,
+    getPositionalText,
+    ICliCommandProcessor,
+} from '@qodalis/cli-server-abstractions';
+
+// constructor order: (name, description, required = false, type = 'string', aliases?, defaultValue?)
+const locationParam = new CliCommandParameterDescriptor(
+    'location', 'City name', false, 'string', ['-l'], 'London',
+);
+
+function location(command: CliProcessCommand): string {
+    return command.args?.location ? String(command.args.location) : getPositionalText(command) || 'London';
+}
+
+class WeatherCurrentProcessor extends CliCommandProcessor {
+    command = 'current';
+    description = 'Current conditions';
+    parameters = [locationParam];
+    acceptsValue = true;
+    async handleAsync(command: CliProcessCommand): Promise<string> {
+        return `Sunny in ${location(command)}`;
+    }
+}
+
+class CliWeatherCommandProcessor extends CliCommandProcessor {
+    command = 'weather';
+    description = 'Weather information';
+    parameters = [locationParam];
+    processors: ICliCommandProcessor[] = [new WeatherCurrentProcessor()];
+    async handleAsync(command: CliProcessCommand): Promise<string> {
+        return `Sunny in ${location(command)}`;
+    }
+}
+
+export class WeatherModule extends CliModule {
+    name = 'weather';
+    version = '1.0.0';
+    description = 'Weather commands';
+    processors: ICliCommandProcessor[] = [new CliWeatherCommandProcessor()];
+}
+
+// host: createCliServer({ configure: (builder) => builder.addModule(new WeatherModule()) });
+```
+
+- Dispatch: root by `command` (case-insensitive), then each `chainCommands` word against `processors`. If a word matches no child, the current processor handles it only when `allowUnlistedCommands` is true; otherwise `Unknown command`. Only the resolved processor runs.
+- Registering a second processor with the same command replaces the first.
+- `CliBuilder` (all chainable): `addProcessor(p)`, `addModule(m)`, `addMcpToolProvider(provider)`, `setFileStorageProvider(...)`, `addDataExplorerProvider(...)`, `addFileSystem(options)`.
+- `createCliServer(options)` options: `basePath` (default `'/api/qcli'`), `cors`, `allowedOrigins`, `enableShell`, `shell`, `trustProxy`, `auth`, `mcp` (`boolean | CliMcpOptions`), `configure(builder)`. Returns `{ app, registry, builder, executor, eventSocketManager, logSocketManager, mountPlugin, setAuth, mcp }`.
+
+### Node: structured and streaming output
+
+Node processors return tables, lists, JSON and key-value output from `handleStructuredAsync`, or stream outputs over SSE with `handleStreamAsync`.
+
+```typescript
+import {
+    CliCommandProcessor,
+    CliProcessCommand,
+    CliStructuredOutput,
+    CliStructuredResponse,
+    ICliStreamCommandProcessor,
+} from '@qodalis/cli-server-abstractions';
+
+export class CliUsersCommandProcessor extends CliCommandProcessor implements ICliStreamCommandProcessor {
+    command = 'users';
+    description = 'Lists users';
+
+    async handleAsync(): Promise<string> {
+        return 'use the structured output';
+    }
+
+    async handleStructuredAsync(command: CliProcessCommand): Promise<CliStructuredResponse> {
+        return {
+            exitCode: 0,
+            outputs: [
+                { type: 'text', value: '2 users', style: 'info' },
+                { type: 'table', headers: ['Name', 'Role'], rows: [['ada', 'admin'], ['bob', 'user']] },
+                { type: 'key-value', entries: [{ key: 'Total', value: '2' }] },
+            ],
+        };
+    }
+
+    async handleStreamAsync(
+        command: CliProcessCommand,
+        emit: (output: CliStructuredOutput) => void,
+        signal?: AbortSignal,
+    ): Promise<number> {
+        for (const name of ['ada', 'bob']) {
+            if (signal?.aborted) return 1;
+            emit({ type: 'text', value: name });
+        }
+        return 0;                                        // exit code
+    }
+}
+```
+
+- `CliStructuredOutput` = `text` (`value`, `style?`) | `table` (`headers`, `rows`) | `list` (`items`, `ordered?`) | `json` (`value`) | `key-value` (`entries`). Import these types from `@qodalis/cli-server-abstractions` (the server package re-exports them as `CliServerOutput` / `CliServerResponse`).
+- `CliResponseBuilder` (from `@qodalis/cli-server-node`): `writeText(text, style?)`, `writeTable(headers, rows)`, `writeList(items, ordered?)`, `writeJson(value)`, `writeKeyValue(record)`, `setExitCode(code)`, `build()`.
+- `/execute/stream` prefers `handleStreamAsync`, then `handleStructuredAsync` (each output emitted), then `handleAsync`.
+
+### Node: permissions and MCP tools
+
+Node processors declare `requiredPermissions`; every command automatically becomes an MCP tool when MCP is on, and plugins can add custom tools with an `McpToolProvider`.
+
+```typescript
+import { createCliServer, mcpError, mcpObjectSchema, McpToolProvider } from '@qodalis/cli-server-node';
+
+class CliDeployCommandProcessor extends CliCommandProcessor {
+    command = 'deploy';
+    description = 'Deploys the app';
+    requiredPermissions = ['deploy:run'];        // plus commands:execute; enforced when the server is protected
+    async handleAsync(): Promise<string> { return 'deployed'; }
+}
+
+const statusTools: McpToolProvider = {
+    name: 'status',
+    getTools: () => [
+        {
+            name: 'status_ping',                     // ^[a-z0-9_-]{1,64}$
+            description: 'Ping a host',
+            inputSchema: mcpObjectSchema({ host: { type: 'string', description: 'Host name' } }, ['host']),
+            requiredPermissions: [],
+            annotations: { readOnlyHint: true },
+            call: async (args, context) =>
+                args.host ? { text: `pong ${args.host}`, isError: false } : mcpError('host required'),
+        },
+    ],
+};
+
+createCliServer({
+    mcp: { instructions: 'Deployment server tools' },   // or mcp: true; endpoint POST /api/qcli/mcp
+    configure: (builder) => builder.addProcessor(new CliDeployCommandProcessor()).addMcpToolProvider(statusTools),
+});
+```
+
+- Permissions are enforced only when an auth provider protects the server (the users plugin): `/execute` requires `commands:execute` plus every `requiredPermissions` along the root-to-sub-command chain.
+- Command tools: a processor becomes a tool when it has no sub-processors, declares parameters or takes a value; name = command path joined with `_` (`weather_current`); input schema = parameters (+ `value`).
+- `CliMcpOptions`: `enabled?`, `tools?` (allow-list, trailing `*` = prefix), `exclude?`, `token?` (static bearer, only without an auth provider), `instructions?`.
+- `McpTool.call(args, context)` gets pre-validated args and `{ auth?, signal, request }`; return `McpToolResult` `{ text, structured?, isError }` (helpers `mcpError(message)`, `mcpJson(value, text?)`). Also `server.mcp.addProvider(provider)` after creation.
+
+### Node: testing server processors
+
+Node server processors are tested with Vitest, by calling `handleAsync` directly or through the HTTP API with Supertest.
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import request from 'supertest';
+import { createCliServer } from '@qodalis/cli-server-node';
+import { CliGreetCommandProcessor } from '../greet';
+
+describe('greet', () => {
+    it('greets directly', async () => {
+        const result = await new CliGreetCommandProcessor().handleAsync({
+            command: 'greet', chainCommands: [], rawCommand: 'greet Ada', value: 'Ada', args: {},
+        });
+        expect(result).toBe('Hello, Ada!');
+    });
+
+    it('greets over HTTP', async () => {
+        const { app } = createCliServer({ configure: (b) => b.addProcessor(new CliGreetCommandProcessor()) });
+        const res = await request(app)
+            .post('/api/v1/qcli/execute')
+            .send({ command: 'greet', chainCommands: [], rawCommand: 'greet Ada', value: 'Ada', args: {} })
+            .expect(200);
+        expect(res.body.exitCode).toBe(0);
+        expect(res.body.outputs[0]).toEqual({ type: 'text', value: 'Hello, Ada!' });
+    });
+});
+```
+
+### .NET: minimal server processor
+
+A .NET server command derives from `Qodalis.Cli.CliCommandProcessor` (interface `ICliCommandProcessor` in `Qodalis.Cli.Abstractions`) and returns text from `HandleAsync`.
+
+```csharp
+using Qodalis.Cli;
+using Qodalis.Cli.Abstractions;
+using Qodalis.Cli.Abstractions.Helpers;
+
+public class CliGreetCommandProcessor : CliCommandProcessor
+{
+    public override string Command { get; set; } = "greet";
+    public override string Description { get; set; } = "Greets someone";
+    public override bool? AcceptsRawInput { get; set; } = true;
+
+    public override Task<string> HandleAsync(CliProcessCommand command, CancellationToken cancellationToken = default)
+    {
+        var name = CliValueHelpers.GetPositionalText(command);
+        return Task.FromResult($"Hello, {(string.IsNullOrWhiteSpace(name) ? "world" : name)}!");
+    }
+}
+```
+
+```csharp
+// Program.cs
+builder.Services
+    .AddControllers()
+    .AddCli(cli =>
+    {
+        cli.AddProcessor<CliGreetCommandProcessor>();     // built by DI (constructor injection)
+    });
+
+var app = builder.Build();
+app.UseWebSockets();
+app.MapControllers();
+app.UseCli();                                            // after UseWebSockets()
+app.Run();
+```
+
+- `ICliCommandProcessor`: `Command`, `Description`, `Author` (default `DefaultLibraryAuthor.Instance`), `AllowUnlistedCommands`, `ValueRequired`, `AcceptsRawInput`, `Version` (default `"1.0.0"`), `Processors`, `Parameters`, `RequiredPermissions`, `HandleAsync(command, cancellationToken)`, default-implemented `HandleStructuredAsync(command, cancellationToken)` (return `null` to fall back to `HandleAsync`).
+- `CliProcessCommand`: `Command`, `Data`, `ChainCommands`, `RawCommand`, `Value`, `Positionals` (may be `null` from old clients), `Args: Dictionary<string, object>`. Helpers in `CliValueHelpers`: `GetPositionals`, `GetPositionalText`, `SplitShellWords`, `JoinShellWords`, `QuoteShellWord`.
+- The base classes `CliCommandProcessor` and `CliModule` live in the `Qodalis.Cli` package (namespace `Qodalis.Cli`); reference it, not only `Qodalis.Cli.Abstractions`.
+- The cancellation token is the HTTP request's `RequestAborted`.
+
+### .NET: parameters, sub-commands and modules
+
+.NET server commands declare flags with `CliCommandParameterDescriptor` object initializers, nest sub-commands in `Processors`, and group them in a `CliModule` registered with `cli.AddModule`.
+
+```csharp
+using Qodalis.Cli;
+using Qodalis.Cli.Abstractions;
+using Qodalis.Cli.Abstractions.Helpers;
+
+public class CliWeatherCommandProcessor : CliCommandProcessor
+{
+    public override string Command { get; set; } = "weather";
+    public override string Description { get; set; } = "Weather information";
+    public override bool? AcceptsRawInput { get; set; } = true;
+
+    public override IEnumerable<ICliCommandParameterDescriptor>? Parameters { get; set; } =
+    [
+        new CliCommandParameterDescriptor
+        {
+            Name = "location",                       // required member
+            Description = "City name",               // required member
+            Aliases = ["-l"],
+            Type = CommandParameterType.String,      // String | Number | Boolean | Array | Object
+            DefaultValue = "London",
+        },
+    ];
+
+    public override IEnumerable<ICliCommandProcessor>? Processors { get; set; } = [new WeatherCurrentProcessor()];
+
+    public override Task<string> HandleAsync(CliProcessCommand command, CancellationToken cancellationToken = default)
+        => Task.FromResult($"Sunny in {Location(command)}");
+
+    internal static string Location(CliProcessCommand command) =>
+        command.Args.TryGetValue("location", out var loc) ? loc.ToString()!
+        : CliValueHelpers.GetPositionalText(command) is { Length: > 0 } text ? text : "London";
+}
+
+internal class WeatherCurrentProcessor : CliCommandProcessor
+{
+    public override string Command { get; set; } = "current";
+    public override string Description { get; set; } = "Current conditions";
+    public override bool? AcceptsRawInput { get; set; } = true;
+
+    public override Task<string> HandleAsync(CliProcessCommand command, CancellationToken cancellationToken = default)
+        => Task.FromResult($"Sunny in {CliWeatherCommandProcessor.Location(command)}");
+}
+
+public class WeatherModule : CliModule
+{
+    public override string Name => "weather";
+    public override string Version => "1.0.0";
+    public override string Description => "Weather commands";
+    public override IEnumerable<ICliCommandProcessor> Processors { get; } = [new CliWeatherCommandProcessor()];
+}
+
+// Program.cs: .AddCli(cli => cli.AddModule(new WeatherModule()));
+```
+
+- Dispatch: root by `Command` (case-insensitive), then each chain word against `Processors`; at the first word that matches no child the deepest matched processor handles the command (so `weather Paris` runs `weather`).
+- The last registration of a command name wins.
+- `CliBuilder` (in `AddCli(cli => ...)`): `AddProcessor<T>()` (DI-built), `AddProcessor(instance)`, `AddProcessorsFromAssembly(assembly)`, `AddModule(module)` (module-created instances, no DI), `AddMcp(o => ...)`, `EnableShell(...)`, `SetAllowedOrigins(...)`, `AddFileSystem(...)`, `AddDataExplorerProvider(...)`, `AddApplicationPart(assembly)`, `Services` (the `IServiceCollection`). Plugins add their own `CliBuilder` extension methods (e.g. `cli.AddJob<T>(...)`).
+- Packages: `dotnet add package Qodalis.Cli` (brings `Qodalis.Cli.Abstractions`); targets .NET 10.
+
+### .NET: structured and streaming output
+
+.NET processors return structured output by explicitly implementing `ICliCommandProcessor.HandleStructuredAsync` with `CliResponseBuilder`, and stream with `ICliStreamCommandProcessor`.
+
+```csharp
+using Qodalis.Cli;
+using Qodalis.Cli.Abstractions;
+using Qodalis.Cli.Models;
+using Qodalis.Cli.Services;
+
+public class CliUsersCommandProcessor : CliCommandProcessor, ICliStreamCommandProcessor
+{
+    public override string Command { get; set; } = "users";
+    public override string Description { get; set; } = "Lists users";
+
+    public override Task<string> HandleAsync(CliProcessCommand command, CancellationToken ct = default)
+        => Task.FromResult(string.Empty);
+
+    // The base class does not declare HandleStructuredAsync: implement the interface member explicitly
+    Task<ICliStructuredResponse?> ICliCommandProcessor.HandleStructuredAsync(CliProcessCommand command, CancellationToken ct)
+    {
+        var builder = new CliResponseBuilder();
+        builder.WriteText("2 users", "info");
+        builder.WriteTable(["Name", "Role"], [["ada", "admin"], ["bob", "user"]]);
+        builder.WriteKeyValue(new Dictionary<string, string> { ["Total"] = "2" });
+        return Task.FromResult<ICliStructuredResponse?>(builder.Build());
+    }
+
+    public async Task<int> HandleStreamAsync(CliProcessCommand command, Func<object, Task> emit, CancellationToken ct = default)
+    {
+        foreach (var name in new[] { "ada", "bob" })
+        {
+            ct.ThrowIfCancellationRequested();
+            await emit(new TextOutput { Value = name });
+        }
+        return 0;                                    // exit code
+    }
+}
+```
+
+- `ICliResponseBuilder`: `WriteText(text, style?)`, `WriteTable(headers, rows)`, `WriteList(items, ordered = false)`, `WriteJson(value)`, `WriteKeyValue(dictionary)`, `SetExitCode(code)`, `Build()` -> `CliServerResponse { ExitCode, Outputs }`.
+- Output classes (`Qodalis.Cli.Models`): `TextOutput { Value, Style }`, `TableOutput { Headers, Rows }`, `ListOutput { Items, Ordered }`, `JsonOutput { Value }`, `KeyValueOutput { Entries: KeyValueEntry[] }`.
+- The executor uses the structured result only if it is a `CliServerResponse`; an empty `HandleAsync` string produces no output.
+
+### .NET: permissions and MCP tools
+
+.NET processors declare `RequiredPermissions`; with `cli.AddMcp()` every command is an MCP tool, and plugins add tools by registering an `IMcpToolProvider`.
+
+```csharp
+using System.Text.Json.Nodes;
+using Qodalis.Cli.Mcp;
+
+public class CliDeployCommandProcessor : CliCommandProcessor
+{
+    public override string Command { get; set; } = "deploy";
+    public override string Description { get; set; } = "Deploys the app";
+    public override IEnumerable<string>? RequiredPermissions { get; set; } = ["deploy:run"];
+    public override Task<string> HandleAsync(CliProcessCommand command, CancellationToken ct = default)
+        => Task.FromResult("deployed");
+}
+
+internal sealed class StatusMcpToolProvider : IMcpToolProvider
+{
+    public Task<IReadOnlyList<McpToolDefinition>> GetToolsAsync(McpToolContext context, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<McpToolDefinition>>(
+        [
+            new McpToolDefinition
+            {
+                Name = "status_ping",
+                Description = "Ping a host",
+                InputSchema = McpSchema.Object(new JsonObject { ["host"] = McpSchema.Property("string", "Host name") }, "host"),
+                Annotations = McpToolAnnotations.ReadOnly,
+                CallAsync = (args, ctx, ct) => Task.FromResult(McpToolResult.Ok($"pong {McpSchema.GetString(args, "host")}")),
+            },
+        ]);
+}
+
+// Program.cs
+.AddCli(cli =>
+{
+    cli.AddProcessor<CliDeployCommandProcessor>();
+    cli.Services.AddMcpToolProvider<StatusMcpToolProvider>();
+    cli.AddMcp(o => o.Instructions = "Deployment server tools");   // POST /api/qcli/mcp
+});
+```
+
+- Permissions are checked only when the server requires authentication (users plugin): `commands:execute` plus the `RequiredPermissions` of every processor from the root to the resolved sub-command (401 without a principal, 403 when missing).
+- `McpOptions`: `Enabled`, `Tools` (allow-list, trailing `*`), `Exclude`, `Token`, `Instructions`. Command tools: name = command path joined with `_`; schema from `Parameters` (+ `value`).
+- `McpToolResult.Ok(text, structured?)` / `McpToolResult.Error(text)`; `McpToolContext` has `Principal`, `Services`, `HttpContext`. Plugin tools win name collisions over command tools.
+
+### .NET: testing server processors
+
+.NET server processors are tested with xUnit by building a `CliCommandRegistry` and `CliCommandExecutorService` directly.
+
+```csharp
+using Microsoft.Extensions.Logging.Abstractions;
+using Qodalis.Cli.Abstractions;
+using Qodalis.Cli.Models;
+using Qodalis.Cli.Services;
+
+public class GreetTests
+{
+    [Fact]
+    public async Task Greets()
+    {
+        var registry = new CliCommandRegistry(NullLogger<CliCommandRegistry>.Instance);
+        var executor = new CliCommandExecutorService(registry, NullLogger<CliCommandExecutorService>.Instance, Array.Empty<ICliProcessorFilter>());
+        registry.Register(new CliGreetCommandProcessor());
+
+        var response = await executor.ExecuteAsync(new CliProcessCommand { Command = "greet", Value = "Ada" });
+
+        Assert.Equal(0, response.ExitCode);
+        Assert.Equal("Hello, Ada!", Assert.IsType<TextOutput>(response.Outputs[0]).Value);
+    }
+}
+```
+
+- Or call `processor.HandleAsync(new CliProcessCommand { ... })` directly. Integration tests use `Microsoft.AspNetCore.Mvc.Testing` / `TestServer`.
+
+### Python: minimal server processor
+
+A Python server command subclasses `CliCommandProcessor` from `qodalis_cli_server_abstractions` and returns text from `async handle_async(command, cancellation_event=None)`.
+
+```python
+import asyncio
+
+from qodalis_cli_server_abstractions import (
+    CliCommandProcessor,
+    CliProcessCommand,
+    get_positional_text,
+)
+
+
+class CliGreetCommandProcessor(CliCommandProcessor):
+    @property
+    def command(self) -> str:
+        return "greet"
+
+    @property
+    def description(self) -> str:
+        return "Greets someone"
+
+    @property
+    def value_required(self) -> bool | None:
+        return False  # False = optional positional value, True = required, None = no value
+
+    async def handle_async(
+        self,
+        command: CliProcessCommand,
+        cancellation_event: asyncio.Event | None = None,
+    ) -> str:
+        return f"Hello, {get_positional_text(command) or 'world'}!"
+```
+
+```python
+import uvicorn
+from qodalis_cli import CliServerOptions, create_cli_server
+
+result = create_cli_server(
+    CliServerOptions(configure=lambda builder: builder.add_processor(CliGreetCommandProcessor()))
+)
+uvicorn.run(result.app, host="0.0.0.0", port=8048)
+```
+
+- `ICliCommandProcessor` properties: `command` and `description` (abstract), `author` (default `DEFAULT_LIBRARY_AUTHOR`), `version` (`"1.0.0"`), `allow_unlisted_commands`, `value_required`, `processors`, `parameters`, `required_permissions`; methods `handle_async(command, cancellation_event=None) -> str` (abstract) and `handle_structured_async(command, cancellation_event=None)`.
+- `CliProcessCommand` dataclass: `command`, `raw_command`, `value`, `args: dict`, `chain_commands: list[str]`, `data`, `positionals: list[str] | None`. Helpers: `get_positionals`, `get_positional_text`, `split_shell_words`, `join_shell_words`.
+- Packages: `pip install qodalis-cli-server-abstractions` (plugins), `qodalis-cli-server` (host, import `qodalis_cli`). Python >= 3.10.
+- Poll `cancellation_event.is_set()` in long loops when it is given; `/execute` passes `None`.
+
+### Python: parameters, sub-commands and modules
+
+Python server commands declare flags with `CliCommandParameterDescriptor`, nest sub-commands in `processors`, and are grouped into a `CliModule` registered with `builder.add_module`.
+
+```python
+import asyncio
+
+from qodalis_cli_server_abstractions import (
+    CliCommandParameterDescriptor,
+    CliCommandProcessor,
+    CliModule,
+    CliProcessCommand,
+    ICliCommandParameterDescriptor,
+    ICliCommandProcessor,
+    get_positional_text,
+)
+
+_location = CliCommandParameterDescriptor(
+    name="location", description="City name", required=False,
+    type="string", aliases=["-l"], default_value="London",
+)
+
+
+def _get_location(command: CliProcessCommand) -> str:
+    return str(command.args.get("location") or get_positional_text(command) or "London")
+
+
+class _WeatherCurrentProcessor(CliCommandProcessor):
+    @property
+    def command(self) -> str:
+        return "current"
+
+    @property
+    def description(self) -> str:
+        return "Current conditions"
+
+    @property
+    def parameters(self) -> list[ICliCommandParameterDescriptor]:
+        return [_location]
+
+    async def handle_async(self, command: CliProcessCommand, cancellation_event: asyncio.Event | None = None) -> str:
+        return f"Sunny in {_get_location(command)}"
+
+
+class _CliWeatherCommandProcessor(CliCommandProcessor):
+    @property
+    def command(self) -> str:
+        return "weather"
+
+    @property
+    def description(self) -> str:
+        return "Weather information"
+
+    @property
+    def parameters(self) -> list[ICliCommandParameterDescriptor]:
+        return [_location]
+
+    @property
+    def processors(self) -> list[ICliCommandProcessor]:
+        return [_WeatherCurrentProcessor()]
+
+    async def handle_async(self, command: CliProcessCommand, cancellation_event: asyncio.Event | None = None) -> str:
+        return f"Sunny in {_get_location(command)}"
+
+
+class WeatherModule(CliModule):
+    @property
+    def name(self) -> str:
+        return "weather"
+
+    @property
+    def version(self) -> str:
+        return "1.0.0"
+
+    @property
+    def description(self) -> str:
+        return "Weather commands"
+
+    @property
+    def processors(self) -> list[ICliCommandProcessor]:
+        return [_CliWeatherCommandProcessor()]
+
+
+# host: create_cli_server(CliServerOptions(configure=lambda b: b.add_module(WeatherModule())))
+```
+
+- `CliCommandParameterDescriptor(name, description, required=False, type="string", aliases=None, default_value=None)`.
+- Dispatch: root by `command.lower()`, then each `chain_commands` word against `processors`; if a word matches no child, the current processor handles it only when `allow_unlisted_commands` is truthy, else `Unknown command`. Only the resolved processor runs.
+- `CliBuilder` (chainable): `add_processor`, `add_module`, `set_file_storage_provider`, `add_data_explorer_provider`, `add_filesystem` (legacy). Registering the same command twice replaces the first.
+- `CliServerOptions`: `base_path` (`"/api/qcli"`), `cors`, `cors_origins`, `allowed_origins`, `enable_shell`, `shell`, `mcp` (`True`, dict or `CliMcpOptions`), `configure`. `create_cli_server` returns `CliServerResult` with `app`, `registry`, `builder`, `executor`, `mcp`, `mount_plugin(plugin)`, ...
+
+### Python: structured and streaming output
+
+Python processors return structured output by overriding `handle_structured_async` with `CliResponseBuilder`, and stream by also implementing `ICliStreamCommandProcessor`.
+
+```python
+import asyncio
+from typing import Any, Callable
+
+from qodalis_cli import CliResponseBuilder
+from qodalis_cli_server_abstractions import (
+    CliCommandProcessor,
+    CliProcessCommand,
+    ICliStreamCommandProcessor,
+)
+
+
+class CliUsersCommandProcessor(CliCommandProcessor, ICliStreamCommandProcessor):
+    @property
+    def command(self) -> str:
+        return "users"
+
+    @property
+    def description(self) -> str:
+        return "Lists users"
+
+    async def handle_async(self, command: CliProcessCommand, cancellation_event: asyncio.Event | None = None) -> str:
+        return "ada, bob"
+
+    async def handle_structured_async(
+        self, command: CliProcessCommand, cancellation_event: asyncio.Event | None = None
+    ) -> Any:
+        builder = CliResponseBuilder()
+        builder.write_text("2 users", "info")
+        builder.write_table(["Name", "Role"], [["ada", "admin"], ["bob", "user"]])
+        builder.write_key_value({"Total": "2"})
+        return builder.build()
+
+    async def handle_stream_async(
+        self,
+        command: CliProcessCommand,
+        emit: Callable[[dict[str, Any]], None],
+        cancellation_event: asyncio.Event | None = None,
+    ) -> int:
+        for name in ("ada", "bob"):
+            emit({"type": "text", "value": name})
+        return 0  # exit code
+```
+
+- Keep the `cancellation_event` parameter in every override: the executor always passes two arguments.
+- Return `self._STRUCTURED_NOT_IMPLEMENTED` from `handle_structured_async` to fall back to `handle_async`.
+- `CliResponseBuilder`: `write_text(text, style=None)`, `write_table(headers, rows)`, `write_list(items, ordered=False)`, `write_json(value)`, `write_key_value(dict)`, `set_exit_code(code)`, `build()` -> `CliServerResponse`. Output models (`qodalis_cli.models`): `CliServerTextOutput`, `CliServerTableOutput`, `CliServerListOutput`, `CliServerJsonOutput`, `CliServerKeyValueOutput`.
+
+### Python: permissions and MCP tools
+
+Python processors declare `required_permissions`; with `mcp=True` every command is an MCP tool, and plugins add tools by registering an `IMcpToolProvider` on `result.mcp`.
+
+```python
+from qodalis_cli import CliMcpOptions, CliServerOptions, McpTool, McpToolResult, create_cli_server
+from qodalis_cli.mcp import object_schema
+
+
+class StatusToolProvider:
+    name = "status"
+
+    async def get_tools(self, context):
+        async def ping(args, ctx):
+            return McpToolResult(text=f"pong {args['host']}")
+
+        return [
+            McpTool(
+                name="status_ping",
+                description="Ping a host",
+                input_schema=object_schema({"host": {"type": "string"}}, ["host"]),
+                call=ping,
+                annotations={"readOnlyHint": True},
+            )
+        ]
+
+
+result = create_cli_server(
+    CliServerOptions(configure=configure, mcp=CliMcpOptions(instructions="Deployment server tools"))
+)
+result.mcp.add_provider(StatusToolProvider())   # endpoint POST /api/qcli/mcp
+```
+
+- Declare permissions on a processor with `@property def required_permissions(self) -> list[str] | None: return ["deploy:run"]`; enforced (403) only when the users plugin protects the server, together with `commands:execute`, along the whole command chain.
+- `CliMcpOptions(enabled=True, tools=None, exclude=None, token=None, instructions=None)`. Command tools: name = command path joined with `_`; schema from `parameters` (+ `value` when `value_required` is not `None`).
+- `McpToolResult(text, structured=None, is_error=False)`, `McpToolResult.error(message)`; a plugin object with `on_mount(self, server)` can call `server.mcp.add_provider(...)` when mounted with `result.mount_plugin(plugin)`.
+
+### Python: testing server processors
+
+Python server processors are tested with pytest (`asyncio_mode = "auto"`), calling `handle_async` directly or through `CliCommandExecutorService`.
+
+```python
+from qodalis_cli import CliCommandExecutorService, CliCommandRegistry
+from qodalis_cli_server_abstractions import CliProcessCommand
+
+
+async def test_greet_direct():
+    command = CliProcessCommand(command="greet", raw_command="greet Ada", value="Ada")
+    assert await CliGreetCommandProcessor().handle_async(command) == "Hello, Ada!"
+
+
+async def test_greet_executor():
+    registry = CliCommandRegistry()
+    registry.register(CliGreetCommandProcessor())
+    result = await CliCommandExecutorService(registry).execute_async(CliProcessCommand(command="greet", value="Ada"))
+    assert result.exit_code == 0
+    assert result.outputs[0].value == "Hello, Ada!"
+```
+
+- HTTP tests: `from fastapi.testclient import TestClient`; `with TestClient(create_cli_server(CliServerOptions(configure=...)).app) as client: client.post("/api/v1/qcli/execute", json={...})`.
+
+## Recipes
+
+### Recipe: a complete web plugin end to end
+
+Build, test and register a `dice` web plugin (`dice roll --sides 20 --count 2`) from scaffold to host app.
+
+```bash
+npx @qodalis/create-cli-plugin --name dice --description "Roll dice" --processor-name Dice
+cd qodalis-cli-dice
+```
+
+```typescript
+// src/lib/processors/cli-dice-command-processor.ts
+import {
+    CliProcessCommand,
+    ICliCommandProcessor,
+    ICliExecutionContext,
+} from '@qodalis/cli-core';
+import { LIBRARY_VERSION } from '../version';
+
+class DiceRollProcessor implements ICliCommandProcessor {
+    command = 'roll';
+    description = 'Roll one or more dice';
+    acceptsRawInput = true;                                  // lets users type `--sides 20` as well as `--sides=20`
+    parameters = [
+        { name: 'sides', aliases: ['s'], description: 'Sides per die', required: false, type: 'number', defaultValue: 6,
+          validator: (v: any) => (Number(v) >= 2 ? { valid: true } : { valid: false, message: 'at least 2 sides' }) },
+        { name: 'count', aliases: ['c'], description: 'Number of dice', required: false, type: 'number', defaultValue: 1 },
+    ];
+
+    async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const sides = Number(command.args['sides'] ?? 6);       // defaultValue is not applied automatically
+        const count = Number(command.args['count'] ?? 1);
+        const rolls = Array.from({ length: count }, () => 1 + Math.floor(Math.random() * sides));
+        context.writer.writeln(`${rolls.join(' ')}  (total ${rolls.reduce((a, b) => a + b, 0)})`);
+        context.process.output(rolls);                           // pipe-able
+    }
+}
+
+export class CliDiceCommandProcessor implements ICliCommandProcessor {
+    command = 'dice';
+    description = 'Roll dice';
+    author = { name: 'Jane Doe', email: 'jane@example.com' };
+    version = LIBRARY_VERSION;
+    processors = [new DiceRollProcessor()];
+    metadata = { icon: '🎲' };
+
+    async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        await context.executor.showHelp(command, context);
+    }
+}
+```
+
+```typescript
+// src/public-api.ts (generated; module export)
+import { ICliModule } from '@qodalis/cli-core';
+import { CliDiceCommandProcessor } from './lib/processors/cli-dice-command-processor';
+import { API_VERSION } from './lib/version';
+
+export * from './lib/processors/cli-dice-command-processor';
+export * from './lib/version';
+
+export const diceModule: ICliModule = {
+    apiVersion: API_VERSION,
+    name: '@qodalis/cli-dice',
+    processors: [new CliDiceCommandProcessor()],
+    translations: { es: { 'cli.dice.description': 'Tirar dados' } },
+};
+```
+
+```typescript
+// src/tests/index.spec.ts
+import { CliTestHarness } from '@qodalis/cli';
+import { CliDiceCommandProcessor } from '../lib/processors/cli-dice-command-processor';
+
+describe('dice', () => {
+    it('rolls the requested number of dice', async () => {
+        const harness = new CliTestHarness();
+        harness.registerProcessor(new CliDiceCommandProcessor());
+        const result = await harness.execute('dice roll --sides 6 --count 3');
+        expect(result.data.length).toBe(3);
+        expect(result.data.every((n: number) => n >= 1 && n <= 6)).toBe(true);
+    });
+
+    it('rejects one-sided dice', async () => {
+        const harness = new CliTestHarness();
+        harness.registerProcessor(new CliDiceCommandProcessor());
+        const result = await harness.execute('dice roll --sides 1');
+        expect(result.output).toContain('at least 2 sides');
+    });
+});
+```
+
+```bash
+npx tsup                      # dist/public-api.{js,mjs,d.ts} + dist/umd/index.global.js
+npm publish --access public   # then in any Qodalis terminal: pkg add @qodalis/cli-dice
+```
+
+```tsx
+// Host app (React); Angular: providers: [resolveCliModuleProvider(diceModule)]
+import { Cli } from '@qodalis/react-cli';
+import { diceModule } from '@qodalis/cli-dice';
+
+export const App = () => <Cli modules={[diceModule]} />;
+```
+
+- `CliTestHarness` comes from `@qodalis/cli` (add it as a dev dependency together with a test runner in a standalone project; the monorepo already runs Jasmine/Karma).
+- The validator error is printed by the engine (`Invalid parameters:` + message), so the command never runs with bad input.
+
+### Recipe: a server command used from the browser terminal
+
+Add a `sysinfo` command to a Node CLI server and run it from a web terminal configured with that server.
+
+```typescript
+// server.ts (Node, Express): npm install @qodalis/cli-server-node @qodalis/cli-server-abstractions
+import os from 'node:os';
+import {
+    CliCommandProcessor,
+    CliProcessCommand,
+    CliStructuredResponse,
+} from '@qodalis/cli-server-abstractions';
+import { createCliServer } from '@qodalis/cli-server-node';
+
+class CliSysinfoCommandProcessor extends CliCommandProcessor {
+    command = 'sysinfo';
+    description = 'Server host information';
+
+    async handleAsync(): Promise<string> {
+        return `${os.hostname()} (${os.platform()})`;
+    }
+
+    async handleStructuredAsync(_: CliProcessCommand): Promise<CliStructuredResponse> {
+        return {
+            exitCode: 0,
+            outputs: [
+                {
+                    type: 'key-value',
+                    entries: [
+                        { key: 'Host', value: os.hostname() },
+                        { key: 'Platform', value: `${os.platform()} ${os.release()}` },
+                        { key: 'CPUs', value: String(os.cpus().length) },
+                        { key: 'Uptime', value: `${Math.round(os.uptime() / 60)} min` },
+                    ],
+                },
+            ],
+        };
+    }
+}
+
+const { app } = createCliServer({
+    allowedOrigins: ['http://localhost:4200'],          // the web app's origin (CORS + WebSocket upgrades)
+    configure: (builder) => builder.addProcessor(new CliSysinfoCommandProcessor()),
+});
+app.listen(8047, () => console.log('CLI server on http://localhost:8047'));
+```
+
+```typescript
+// Web app: tell the terminal about the server (CliOptions.servers)
+import { CliOptions } from '@qodalis/cli-core';
+
+export const options: CliOptions = {
+    servers: [{ name: 'node', url: 'http://localhost:8047' }],
+};
+// Angular: <cli [options]="options"></cli>   React: <Cli options={options} />   Vue: <Cli :options="options" />
+```
+
+```bash
+# in the browser terminal
+sysinfo          # bare name (no local command named sysinfo)
+node:sysinfo     # explicit server
+server ls        # connected servers
+```
+
+- The same command in .NET: `cli.AddProcessor<CliSysinfoCommandProcessor>()` with a `CliCommandProcessor` subclass; in Python: `builder.add_processor(...)` with a `CliCommandProcessor` subclass (see the server plugin topics).
+- Enable `mcp: true` in `createCliServer` to expose `sysinfo` as an MCP tool too.
+
+### Recipe: a web plugin with an interactive prompt
+
+A `signup` web command that asks for a name, a plan, extra options and confirmation, handling Ctrl+C at every step.
+
+```typescript
+import {
+    CliProcessCommand,
+    ICliCommandProcessor,
+    ICliExecutionContext,
+} from '@qodalis/cli-core';
+
+export class CliSignupCommandProcessor implements ICliCommandProcessor {
+    command = 'signup';
+    description = 'Create an account interactively';
+
+    async processCommand(_: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const { reader, writer } = context;
+
+        const email = await reader.readLine('Email: ', {
+            placeholder: 'you@example.com',
+            validate: (v) => (/^\S+@\S+\.\S+$/.test(v) ? null : 'Enter a valid email'),
+        });
+        if (email === null) return writer.writeWarning('Cancelled');
+
+        const plan = await reader.readSelect('Plan:', [
+            { label: 'Free', value: 'free', description: '1 project' },
+            { label: 'Pro', value: 'pro', description: 'unlimited projects' },
+        ], { default: 'free' });
+        if (plan === null) return writer.writeWarning('Cancelled');
+
+        const extras = await reader.readMultiSelect('Extras:', [
+            { label: 'Newsletter', value: 'newsletter', checked: true },
+            { label: 'Beta features', value: 'beta' },
+        ]);
+        if (extras === null) return writer.writeWarning('Cancelled');
+
+        writer.writeKeyValue({ Email: email, Plan: plan, Extras: extras.join(', ') || '-' });
+        const confirmed = await reader.readConfirm('Create the account?', true);
+        if (!confirmed) return writer.writeWarning('Not created');
+
+        context.spinner?.show('Creating account');
+        try {
+            await context.http.post('https://api.example.com/accounts', { email, plan, extras });
+            context.spinner?.hide();
+            writer.writeSuccess(`Account created for ${email}`);
+        } catch (e) {
+            context.spinner?.hide();
+            writer.writeError(`Failed: ${e}`);
+            context.process.exit(1);
+        }
+    }
+}
+```
+
+```typescript
+// test: queue answers in prompt order
+const harness = new CliTestHarness();
+harness.registerProcessor(new CliSignupCommandProcessor());
+harness.setReaderResponses('ada@example.com', 'pro', ['beta'], false);
+const result = await harness.execute('signup');
+expect(result.output).toContain('ada@example.com');
+expect(result.stderr.join('\n')).toContain('Not created');      // writeWarning goes to stderr
+```
+
+- Every `reader` method resolves `null` on Ctrl+C/Escape: check it before using the value.
+- `readConfirm` resolves `boolean | null`; `!confirmed` treats abort as "no".
