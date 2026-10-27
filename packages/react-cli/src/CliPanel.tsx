@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react';
-import { ICliCommandProcessor, ICliModule, CliPanelConfig, CliPanelPosition, ICliPanelRef } from '@qodalis/cli-core';
+import { ICliModule, CliPanelConfig, CliPanelPosition, ICliPanelRef } from '@qodalis/cli-core';
 import {
     CliEngine,
     CliEngineOptions,
@@ -47,7 +47,6 @@ export interface CliPanelOptions extends CliEngineOptions, CliPanelConfig {}
 export interface CliPanelProps {
     options?: CliPanelOptions;
     modules?: ICliModule[];
-    processors?: ICliCommandProcessor[];
     services?: Record<string, any>;
     onClose?: () => void;
     style?: React.CSSProperties;
@@ -110,7 +109,7 @@ const asStyle = (style: Record<string, string>) => style as React.CSSProperties;
 export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>(function CliPanel(props, ref) {
     const config = useCliConfig();
     const options = mergeCliOptions<CliPanelOptions>(props.options, config.options);
-    const { modules, processors, services } = resolveCliHostConfig(props, config);
+    const { modules, services } = resolveCliHostConfig(props, config);
 
     const [controller] = useState(
         () =>
@@ -279,7 +278,6 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                                                         <Cli
                                                             options={options}
                                                             modules={modules}
-                                                            processors={processors}
                                                             services={services}
                                                             snapshot={pane.snapshot}
                                                             onReady={(engine) => controller.registerEngine(tab.id, pane.id, engine)}

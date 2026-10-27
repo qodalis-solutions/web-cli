@@ -22,7 +22,6 @@ export const initializeBrowserEnvironment = ({
         ...utils,
         ...enums,
         bootCliModule,
-        bootUmdModule,
     };
 
     // Safety warning for any UMD module trying to use Angular decorators
@@ -46,11 +45,4 @@ export const bootCliModule = async (module: ICliModule): Promise<void> => {
     if (typeof window !== 'undefined' && (window as any).__cliModuleRegistry) {
         await (window as any).__cliModuleRegistry.register(module);
     }
-};
-
-/**
- * @deprecated Use bootCliModule instead
- */
-export const bootUmdModule = async (module: ICliModule): Promise<void> => {
-    await bootCliModule(module);
 };

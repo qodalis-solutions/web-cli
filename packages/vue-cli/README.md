@@ -54,13 +54,16 @@ const options = {
 ```vue
 <script setup lang="ts">
 import { Cli } from '@qodalis/vue-cli';
+import { ICliModule } from '@qodalis/cli-core';
 import { GreetCommandProcessor } from './greet-command-processor';
 
-const processors = [new GreetCommandProcessor()];
+const modules: ICliModule[] = [
+  { apiVersion: 2, name: 'my-commands', processors: [new GreetCommandProcessor()] },
+];
 </script>
 
 <template>
-  <Cli :processors="processors" />
+  <Cli :modules="modules" />
 </template>
 ```
 

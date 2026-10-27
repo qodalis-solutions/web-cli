@@ -1,5 +1,5 @@
 import { defineComponent, ref, PropType, h, provide } from 'vue';
-import { ICliCommandProcessor, ICliModule } from '@qodalis/cli-core';
+import { ICliModule } from '@qodalis/cli-core';
 import { CliEngineOptions } from '@qodalis/cli';
 import { CliInjectionKey } from './cliInjection';
 import { useCliEngine } from './useCliEngine';
@@ -9,10 +9,6 @@ export const CliProvider = defineComponent({
     props: {
         modules: {
             type: Array as PropType<ICliModule[]>,
-            default: undefined,
-        },
-        processors: {
-            type: Array as PropType<ICliCommandProcessor[]>,
             default: undefined,
         },
         options: {
@@ -33,7 +29,6 @@ export const CliProvider = defineComponent({
         const containerRef = ref<HTMLElement | null>(null);
         const engine = useCliEngine(containerRef, {
             modules: props.modules,
-            processors: props.processors,
             options: props.options,
             services: props.services,
         });

@@ -13,13 +13,11 @@ import {
 } from '@angular/core';
 import {
     CliEngineSnapshot,
-    ICliCommandProcessor,
     ICliModule,
     ICliPingServerService,
 } from '@qodalis/cli-core';
 import { CliEngine, CliEngineOptions, createCliEngine } from '@qodalis/cli';
 import {
-    CliCommandProcessor_TOKEN,
     CliModule_TOKEN,
     ICliPingServerService_TOKEN,
 } from './tokens';
@@ -37,7 +35,6 @@ import {
 })
 export class CliComponent implements AfterViewInit, OnDestroy {
     @Input() options?: CliEngineOptions;
-    @Input() processors?: ICliCommandProcessor[];
     @Input() modules?: ICliModule[];
     @Input() height?: string;
     @Input() snapshot?: CliEngineSnapshot;
@@ -50,9 +47,6 @@ export class CliComponent implements AfterViewInit, OnDestroy {
 
     constructor(
         @Optional()
-        @Inject(CliCommandProcessor_TOKEN)
-        private readonly diProcessors: ICliCommandProcessor[],
-        @Optional()
         @Inject(CliModule_TOKEN)
         private readonly diModules: ICliModule[],
         @Optional()
@@ -61,11 +55,6 @@ export class CliComponent implements AfterViewInit, OnDestroy {
     ) {}
 
     ngAfterViewInit(): void {
-        // Processors provided via Angular DI (resolveCommandProcessorProvider) that
-        // belong to a module are booted with that module, so skip them here.
-        const moduleProcessors = new Set((this.diModules ?? []).flatMap((m) => m.processors ?? []));
-        const diProcessors = (this.diProcessors ?? []).filter((p) => !moduleProcessors.has(p));
-
         this.engine = createCliEngine(this.terminalDiv.nativeElement, {
             framework: 'Angular',
             options: this.options,
@@ -73,7 +62,6 @@ export class CliComponent implements AfterViewInit, OnDestroy {
             // Bridge Angular DI services into the engine's service container.
             services: this.pingServerService ? { 'cli-ping-server-service': this.pingServerService } : undefined,
             modules: [...(this.diModules ?? []), ...(this.modules ?? [])],
-            processors: [...diProcessors, ...(this.processors ?? [])],
         });
 
         this.engine.start().then(() => {

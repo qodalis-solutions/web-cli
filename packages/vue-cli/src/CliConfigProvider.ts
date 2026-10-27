@@ -1,10 +1,9 @@
 import { defineComponent, provide, PropType, InjectionKey } from 'vue';
-import { ICliCommandProcessor, ICliModule } from '@qodalis/cli-core';
+import { ICliModule } from '@qodalis/cli-core';
 import { CliEngineOptions } from '@qodalis/cli';
 
 export interface CliConfigValue {
     modules?: ICliModule[];
-    processors?: ICliCommandProcessor[];
     options?: CliEngineOptions;
     services?: Record<string, any>;
 }
@@ -19,10 +18,6 @@ export const CliConfigProvider = defineComponent({
             type: Array as PropType<ICliModule[]>,
             default: undefined,
         },
-        processors: {
-            type: Array as PropType<ICliCommandProcessor[]>,
-            default: undefined,
-        },
         options: {
             type: Object as PropType<CliEngineOptions>,
             default: undefined,
@@ -35,7 +30,6 @@ export const CliConfigProvider = defineComponent({
     setup(props, { slots }) {
         provide(CliConfigKey, {
             modules: props.modules,
-            processors: props.processors,
             options: props.options,
             services: props.services,
         });

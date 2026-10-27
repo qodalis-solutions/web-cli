@@ -139,11 +139,6 @@ export interface ICliConfigurableModule<T extends Record<string, any> = Record<s
 }
 
 /**
- * @deprecated Use ICliModule instead
- */
-export type ICliUmdModule = ICliModule;
-
-/**
  * Represents a logger for the CLI
  */
 export interface ICliLogger {

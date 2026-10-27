@@ -1,4 +1,4 @@
-import { CliEngineSnapshot, ICliCommandProcessor, ICliModule } from '@qodalis/cli-core';
+import { CliEngineSnapshot, ICliModule } from '@qodalis/cli-core';
 import { CliEngine, CliEngineOptions } from './cli-engine';
 
 /** Service token holding the name of the framework hosting the CLI. */
@@ -7,8 +7,6 @@ export const CLI_FRAMEWORK_SERVICE = 'cli-framework';
 /** What a framework wrapper passes to an engine: shared by components, providers and config contexts. */
 export interface CliHostConfig {
     modules?: ICliModule[];
-    /** @deprecated Use modules instead. */
-    processors?: ICliCommandProcessor[];
     options?: CliEngineOptions;
     /** Extra services registered by token before start. */
     services?: Record<string, any>;
@@ -22,8 +20,8 @@ export interface CreateCliEngineConfig extends CliHostConfig {
 }
 
 /**
- * Create an engine for `container` with the services, modules and
- * processors of a wrapper registered (in that order). Call `start()` on it.
+ * Create an engine for `container` with the services and modules of a
+ * wrapper registered (in that order). Call `start()` on it.
  */
 export function createCliEngine(container: HTMLElement, config: CreateCliEngineConfig = {}): CliEngine {
     const options: CliEngineOptions | undefined = config.snapshot
@@ -36,7 +34,6 @@ export function createCliEngine(container: HTMLElement, config: CreateCliEngineC
         engine.registerService(token, value);
     }
     if (config.modules?.length) engine.registerModules(config.modules);
-    if (config.processors?.length) engine.registerProcessors(config.processors);
     return engine;
 }
 
@@ -47,7 +44,6 @@ export function createCliEngine(container: HTMLElement, config: CreateCliEngineC
 export function resolveCliHostConfig(local: CliHostConfig, inherited?: CliHostConfig | null): CliHostConfig {
     return {
         modules: local.modules ?? inherited?.modules,
-        processors: local.processors ?? inherited?.processors,
         options: local.options ?? inherited?.options,
         services: local.services ?? inherited?.services,
     };
