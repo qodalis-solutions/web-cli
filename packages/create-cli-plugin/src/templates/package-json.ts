@@ -1,7 +1,12 @@
 import { TemplateVars } from './types';
+import { LIBRARY_VERSION } from '../lib/version';
 
 export function packageJsonTemplate(vars: TemplateVars, monorepo: boolean): string {
-    const coreVersion = monorepo ? 'workspace:*' : '^0.0.16';
+    // Standalone plugins depend on the core released with this scaffolder (all @qodalis packages share one version)
+    const coreVersion = monorepo ? 'workspace:*' : `^${LIBRARY_VERSION}`;
+    // Monorepo plugins are published from dist/<name> (package.json copied next to the build);
+    // standalone ones from their own folder, with the build in dist/
+    const out = monorepo ? '.' : './dist';
     return JSON.stringify(
         {
             name: `@qodalis/cli-${vars.name}`,
@@ -15,8 +20,8 @@ export function packageJsonTemplate(vars: TemplateVars, monorepo: boolean): stri
             },
             homepage: 'https://qodalis.com',
             keywords: ['cli', 'qodalis', 'terminal', vars.name],
-            umd: './umd/index.global.js',
-            unpkg: './umd/index.global.js',
+            umd: `${out}/umd/index.global.js`,
+            unpkg: `${out}/umd/index.global.js`,
             scripts: monorepo ? undefined : {
                 build: 'tsup',
             },
@@ -27,15 +32,16 @@ export function packageJsonTemplate(vars: TemplateVars, monorepo: boolean): stri
                 tsup: '^8.0.0',
                 typescript: '^5.0.0',
             },
+            files: monorepo ? undefined : ['dist'],
             sideEffects: false,
-            main: './public-api.js',
-            module: './public-api.mjs',
-            types: './public-api.d.ts',
+            main: `${out}/public-api.js`,
+            module: `${out}/public-api.mjs`,
+            types: `${out}/public-api.d.ts`,
             exports: {
                 '.': {
-                    types: './public-api.d.ts',
-                    import: './public-api.mjs',
-                    require: './public-api.js',
+                    types: `${out}/public-api.d.ts`,
+                    import: `${out}/public-api.mjs`,
+                    require: `${out}/public-api.js`,
                 },
             },
         },

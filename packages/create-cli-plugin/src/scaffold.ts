@@ -12,6 +12,7 @@ import { cliEntrypointTemplate } from './templates/cli-entrypoint';
 import { versionTemplate } from './templates/version';
 import { testTemplate } from './templates/test';
 import { gitignoreTemplate } from './templates/gitignore';
+import { pnpmWorkspaceTemplate } from './templates/pnpm-workspace';
 import { readmeTemplate } from './templates/readme';
 import { projectJsonTemplate } from './templates/project-json';
 import { tsconfigSpecTemplate } from './templates/tsconfig-spec';
@@ -91,11 +92,13 @@ export function scaffoldPlugin(answers: PluginAnswers, monorepo: MonorepoInfo | 
         writeFile(path.join(projectDir, 'project.json'), projectJsonTemplate(vars));
         writeFile(path.join(projectDir, 'tsconfig.spec.json'), tsconfigSpecTemplate(vars));
         updateTsconfigPaths(monorepo!.root, vars.name);
+        registerKarmaProject(monorepo!.root, vars.name);
     }
 
     // Standalone-specific files
     if (!isMonorepo) {
         writeFile(path.join(projectDir, '.gitignore'), gitignoreTemplate());
+        writeFile(path.join(projectDir, 'pnpm-workspace.yaml'), pnpmWorkspaceTemplate());
     }
 
     return projectDir;
@@ -108,8 +111,35 @@ function updateTsconfigPaths(monorepoRoot: string, name: string): void {
 
     const alias = `@qodalis/cli-${name}`;
     if (!tsconfig.compilerOptions.paths[alias]) {
-        tsconfig.compilerOptions.paths[alias] = [`dist/${name}`];
+        tsconfig.compilerOptions.paths[alias] = [`./dist/${name}`];
         fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2) + '\n', 'utf-8');
         console.log(`  updated tsconfig.base.json with path alias: ${alias}`);
+    }
+}
+
+/** The Karma test builder runs through angular.json, so the plugin's specs need an entry there. */
+function registerKarmaProject(monorepoRoot: string, name: string): void {
+    const angularJsonPath = path.join(monorepoRoot, 'angular.json');
+    if (!fs.existsSync(angularJsonPath)) return;
+    const angularJson = JSON.parse(fs.readFileSync(angularJsonPath, 'utf-8'));
+
+    if (!angularJson.projects[name]) {
+        const root = `packages/plugins/${name}`;
+        angularJson.projects[name] = {
+            projectType: 'library',
+            root,
+            sourceRoot: `${root}/src`,
+            architect: {
+                test: {
+                    builder: '@angular-devkit/build-angular:karma',
+                    options: {
+                        tsConfig: `${root}/tsconfig.spec.json`,
+                        polyfills: ['zone.js', 'zone.js/testing'],
+                    },
+                },
+            },
+        };
+        fs.writeFileSync(angularJsonPath, JSON.stringify(angularJson, null, 2) + '\n', 'utf-8');
+        console.log(`  updated angular.json with test project: ${name}`);
     }
 }

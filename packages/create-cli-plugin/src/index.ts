@@ -3,13 +3,14 @@ import { execSync } from 'child_process';
 import { detectMonorepo } from './detect-monorepo';
 import { promptForPluginInfo, toPascalCase, PluginAnswers } from './prompts';
 import { scaffoldPlugin } from './scaffold';
+import { LIBRARY_VERSION } from './lib/version';
 
 const program = new Command();
 
 program
     .name('create-cli-plugin')
     .description('Scaffold a new Qodalis CLI plugin')
-    .version('1.0.0')
+    .version(LIBRARY_VERSION)
     .option('-n, --name <name>', 'Plugin name (lowercase)')
     .option('-d, --description <description>', 'Plugin description')
     .option('-p, --processor-name <name>', 'Processor class name (PascalCase)')
