@@ -33,6 +33,7 @@ Second release candidate: fixes found while testing rc.1, plugin-development hel
 
 ### Docs and READMEs
 
+- The README links the runnable starters for Angular, React, Vue and vanilla TypeScript (StackBlitz, CodeSandbox, Gitpod).
 - Every README rewritten against the current API: the root README (also the npm page of core, cli and the framework wrappers), the core packages, `create-cli-plugin`, all 40 plugins (16 had none, including the language packs) and a new one for `@qodalis/electron-cli`. Wrong commands fixed on the way (`server jobs`, `server logs`, `md`). `DEVELOPER.md` brought up to date.
 - Docs: Encode plugin page; the Create a Plugin page lists the right build output (`dist/public-api.*`); `nano` is shown as the core command it is.
 
