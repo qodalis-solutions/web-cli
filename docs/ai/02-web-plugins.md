@@ -589,9 +589,11 @@ export class CliClockCommandProcessor implements ICliCommandProcessor {
 - `onData` receives raw sequences: arrows `\x1b[A`/`\x1b[B`/`\x1b[C`/`\x1b[D`, Enter `\r`, Backspace `\x7f`, Escape `\x1b`, Ctrl+C `\x03` (passed through in full-screen mode).
 - Pass `{ showCursor: true }` for REPL-style UIs.
 
-#### Declaring the keys (`controls`)
+### Touch keys for full-screen commands (controls)
 
-Phones have no Ctrl, Esc or arrow keys, so a full-screen command declares the keys it reads in `controls`. Hosts on touch screens (the Qodalis CLI phone app) show them as buttons while the command runs and send each key's `data` to `onData`; help screens can list them.
+A full-screen command lists the keys it reads in `controls`, so phones (which have no Ctrl, Esc or arrow keys) can show them as buttons.
+
+Hosts on touch screens (the Qodalis CLI phone app) show them as buttons while the command runs and send each key's `data` to `onData`; help screens can list them.
 
 ```typescript
 import { CliKeyData, ICliCommandControls } from '@qodalis/cli-core';
