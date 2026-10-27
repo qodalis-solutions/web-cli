@@ -19,7 +19,8 @@ import {
 } from '@qodalis/cli-core';
 import { CliProcessRegistry_TOKEN } from '../services/cli-process-registry';
 import { CommandParser, CommandPart } from '../parsers';
-import { reconcileArgs } from '../parsers/reconcile-args';
+import { flagTakesNextWord, reconcileArgs } from '../parsers/reconcile-args';
+import { ParsedToken } from '../parsers/command-parser';
 import { CliExecutionProcess } from '../context/cli-execution-process';
 import { CliArgsParser } from '../parsers/args-parser';
 import { ProcessExitedError } from '../errors';
@@ -352,13 +353,21 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         let { commandName } = parsed;
         let parsedArgs = parsed.args;
 
-        const [mainCommand, ...other] = commandName.split(' ');
-
-        const chainCommands = other.map((c) => c.toLowerCase());
-
         const searchableProcessors = context.contextProcessor
             ? (context.contextProcessor.processors ?? [])
             : this.registry.processors;
+
+        // The words of the command path, without the values of
+        // space-separated flags (`dice roll --sides 6` is `dice roll`)
+        const { words, descriptors } = this.commandWords(
+            parsed.tokens,
+            searchableProcessors,
+        );
+        const [mainCommand = '', ...other] = words.length
+            ? words
+            : commandName.split(' ');
+
+        const chainCommands = other.map((c) => c.toLowerCase());
 
         const processor = this.registry.findProcessorInCollection(
             mainCommand,
@@ -367,15 +376,12 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
         );
 
         // Reconcile space-separated args (e.g. --server dotnet)
-        // using the processor's parameter descriptors.
+        // using the parameter descriptors of the command path.
         // Update both parsedArgs AND commandName so that consumed
         // flag values (e.g. "5" in "-n 5") are excluded from
         // the positional value passed to the processor.
-        if (processor?.parameters?.length) {
-            const reconciled = reconcileArgs(
-                parsed.tokens,
-                processor.parameters,
-            );
+        if (processor && descriptors.length) {
+            const reconciled = reconcileArgs(parsed.tokens, descriptors);
             parsedArgs = reconciled.args;
             commandName = reconciled.commandParts.join(' ');
         }
@@ -798,6 +804,46 @@ export class CliCommandExecutor implements ICliCommandExecutorService {
      * The text after the word that selected `processor`, which may be its
      * command or one of its aliases (e.g. `pkg rm guid` -> `guid`).
      */
+    /**
+     * Reads the words of a command left to right, matching each against the
+     * sub-commands of the processor matched so far. A flag that takes a
+     * value (by the parameters of the processors matched so far, nearest
+     * first) consumes the word after it, so that word is neither a
+     * sub-command nor part of the command's value.
+     */
+    private commandWords(
+        tokens: ParsedToken[],
+        processors: ICliCommandProcessor[],
+    ): { words: string[]; descriptors: ICliCommandParameterDescriptor[] } {
+        const words: string[] = [];
+        let descriptors: ICliCommandParameterDescriptor[] = [];
+        let candidates: ICliCommandProcessor[] | undefined = processors;
+
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
+            if (token.kind === 'flag') {
+                if (tokens[i + 1]?.kind === 'word' && flagTakesNextWord(token, descriptors)) {
+                    i++;
+                }
+                continue;
+            }
+            words.push(token.value);
+            const name = token.value.toLowerCase();
+            const match: ICliCommandProcessor | undefined = candidates?.find(
+                (p) =>
+                    p.command.toLowerCase() === name ||
+                    p.aliases?.some((a) => a.toLowerCase() === name),
+            );
+            if (match) {
+                descriptors = [...(match.parameters ?? []), ...descriptors];
+            }
+            // Past the command path, the remaining words are its value
+            candidates = match?.processors?.length ? match.processors : undefined;
+        }
+
+        return { words, descriptors };
+    }
+
     private extractPositionalValue(
         commandName: string,
         processor: ICliCommandProcessor,

@@ -85,6 +85,21 @@ export function reconcileArgs(
     return { args, commandParts };
 }
 
+/**
+ * Whether `flag` takes the word after it as its value (`--sides 6`,
+ * `-rn 5`), the way {@link reconcileArgs} reads it.
+ */
+export function flagTakesNextWord(
+    flag: Extract<ParsedToken, { kind: 'flag' }>,
+    descriptors: ICliCommandParameterDescriptor[] | undefined,
+): boolean {
+    if (flag.hasEquals) return false;
+    const descriptor = findDescriptor(flag.name, descriptors);
+    if (descriptor) return descriptor.type !== 'boolean';
+    const letters = flag.short ? expandShortFlags(flag.name, descriptors) : undefined;
+    return !!letters && letters[letters.length - 1].descriptor.type !== 'boolean';
+}
+
 function findDescriptor(
     name: string,
     descriptors: ICliCommandParameterDescriptor[] | undefined,

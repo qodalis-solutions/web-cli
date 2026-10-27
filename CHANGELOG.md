@@ -3,6 +3,12 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.0.0
+
+### CLI engine (`@qodalis/cli`)
+
+- `--flag value` works on sub-commands and on commands that take no value: `dice roll --sides 6` ran as "Command not found: dice roll 6", since the value was read as a sub-command (only `--sides=6` worked). Flags of the parent command are read on its sub-commands too (`dice --seed 5 roll`).
+
 ## v2.0.0-rc.1
 
 Release candidate for 2.0.0: the API is frozen, only fixes go in until 2.0.0. Upgrading from 1.x or an earlier beta: see [Upgrading to 2.0](https://cli.qodalis.com/docs/migration).
