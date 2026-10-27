@@ -1,93 +1,86 @@
 # @qodalis/cli-text-to-image
 
-A CLI extension that converts text into downloadable PNG images. Renders text on an HTML canvas with configurable dimensions, colors, fonts, and alignment, then triggers a browser download.
+Render text into a PNG image and download it from the Qodalis CLI.
 
-## Installation
+[![npm version](https://img.shields.io/npm/v/@qodalis/cli-text-to-image.svg)](https://www.npmjs.com/package/@qodalis/cli-text-to-image)
+[![license](https://img.shields.io/npm/l/@qodalis/cli-text-to-image.svg)](https://github.com/qodalis-solutions/web-cli/blob/main/LICENSE)
+
+## Install
 
 ```bash
-pkg add @qodalis/cli-text-to-image
+npm install @qodalis/cli-text-to-image
+```
+
+Or install it at runtime in a running terminal:
+
+```bash
+pkg add text-to-image
 ```
 
 ## Usage
 
-```bash
-text-to-image <text> [options]
-```
-
-### Options
-
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `--width` | integer | `800` | Image width in pixels |
-| `--height` | integer | `400` | Image height in pixels |
-| `--bgColor` | string | `#ffffff` | Background color (hex) |
-| `--textColor` | string | `#000000` | Text color (hex) |
-| `--font` | string | `30px Arial` | CSS font string |
-| `--fileName` | string | `text-image.png` | Output filename |
-| `--padding` | integer | `40` | Padding around text in pixels |
-| `--textAlign` | string | `center` | Horizontal alignment: `left`, `center`, or `right` |
-
-### Examples
-
-**Basic usage** - creates an 800x400 white image with centered black text:
-
-```bash
-text-to-image "Hello World"
-```
-
-**Custom colors and font** - dark background with light text:
-
-```bash
-text-to-image "Welcome Banner" --bgColor=#1a1a2e --textColor=#e0e0e0 --font="bold 48px Georgia"
-```
-
-**Custom dimensions** - long text wraps automatically:
-
-```bash
-text-to-image "This is a longer paragraph that will wrap to fit the image" --width=600 --height=300
-```
-
-**Left-aligned with padding**:
-
-```bash
-text-to-image "Meeting notes for today" --textAlign=left --padding=60
-```
-
-**Custom filename**:
-
-```bash
-text-to-image "Project Logo" --fileName=logo.png --font="bold 64px Helvetica" --bgColor=#2d3436 --textColor=#dfe6e9
-```
-
-## Features
-
-- Automatic word wrapping based on canvas width and padding
-- Configurable text alignment (left, center, right)
-- CSS font strings for full control over typeface, weight, and size
-- Hex color support for background and text
-- Direct browser download as PNG
-
-## Programmatic Usage
+Register `textToImageModule` with your terminal.
 
 ```typescript
 import { textToImageModule } from '@qodalis/cli-text-to-image';
 
-// Register as a module
-cliBuilder.addModule(textToImageModule);
+// Angular (template)
+// <cli [modules]="[textToImageModule]"></cli>
+
+// Angular (DI, NgModule or application providers)
+providers: [resolveCliModuleProvider(textToImageModule)];
+
+// React
+<Cli modules={[textToImageModule]} />
+
+// Vue
+<Cli :modules="[textToImageModule]" />
+
+// Vanilla TypeScript (CliEngine from @qodalis/cli)
+engine.registerModule(textToImageModule);
 ```
 
-Or use the processor directly:
+## Commands
 
-```typescript
-import { CliTextToImageCommandProcessor } from '@qodalis/cli-text-to-image';
+`text-to-image <text>` draws the text on an HTML canvas, wraps it to the image width, and downloads the result as a PNG. It then prints the options it used. Text is required.
 
-const processor = new CliTextToImageCommandProcessor();
+| Flag | Default | Description |
+|---|---|---|
+| `--width` | `800` | Image width in pixels |
+| `--height` | `400` | Image height in pixels |
+| `--bgColor` | `#ffffff` | Background color (any CSS color) |
+| `--textColor` | `#000000` | Text color (any CSS color) |
+| `--font` | `30px Arial` | CSS font string, e.g. `bold 48px Georgia` |
+| `--padding` | `40` | Space between the text and the image edges, in pixels |
+| `--textAlign` | `center` | `left`, `center` or `right` |
+| `--fileName` | `text-image.png` | Name of the downloaded file |
+
+The `width`, `height`, `bgColor`, `textColor` and `font` defaults can be changed through configuration (below).
+
+```bash
+text-to-image "Hello World"
+text-to-image "Welcome Banner" --bgColor=#1a1a2e --textColor=#e0e0e0 --font="bold 48px Georgia"
+text-to-image "This is a longer paragraph that wraps to fit the image" --width=600 --height=300
+text-to-image "Meeting notes for today" --textAlign=left --padding=60
+text-to-image "Project Logo" --fileName=logo.png --font="bold 64px Helvetica"
 ```
 
-## Browser (UMD)
+## Configuration
 
-```html
-<script src="https://unpkg.com/@qodalis/cli-text-to-image/umd/index.js"></script>
-```
+Set with `configure set text-to-image.<key> <value>` or the interactive `configure` menu.
 
-The UMD bundle self-registers via `bootCliModule` when loaded.
+| Key | Default | Description |
+|---|---|---|
+| `defaultWidth` | `800` | Image width when `--width` is not given (50-4096) |
+| `defaultHeight` | `400` | Image height when `--height` is not given (50-4096) |
+| `defaultBgColor` | `#ffffff` | Background color when `--bgColor` is not given |
+| `defaultTextColor` | `#000000` | Text color when `--textColor` is not given |
+| `defaultFont` | `30px Arial` | Font when `--font` is not given |
+
+## Documentation
+
+https://cli.qodalis.com/docs/plugins/text-to-image
+
+## License
+
+MIT
