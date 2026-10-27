@@ -40,13 +40,18 @@ web-cli/
     angular-cli/           # @qodalis/angular-cli — Angular wrapper components
     react-cli/             # @qodalis/react-cli — React wrapper
     vue-cli/               # @qodalis/vue-cli — Vue 3 wrapper
+    electron-cli/          # @qodalis/electron-cli — Electron integration
     create-cli-plugin/     # @qodalis/create-cli-plugin — plugin scaffolding tool
-    plugins/               # 21 CLI plugins (guid, regex, snake, tetris, etc.)
+    plugins/               # 40 CLI plugins (tools, games, language packs)
   apps/
     demo-angular/          # Angular demo app
     demo-react/            # React demo app (Vite)
     demo-vue/              # Vue demo app (Vite)
+    demo-vanilla/          # Plain TypeScript demo using CliEngine (Vite)
+    demo-minimal/          # Smallest React setup (Vite)
+    demo-electron/         # Electron desktop demo
     docs/                  # Documentation site (Angular)
+  docs/ai/                 # Source of llms.txt / llms-full.txt
 ```
 
 **Build order** is managed by Nx via `dependsOn: ["^build"]`:
@@ -60,13 +65,14 @@ core -> cli -> angular-cli -> plugins -> framework wrappers -> apps
 ### Building
 
 ```bash
-pnpm run build                  # Build all 31 projects
+pnpm run build                  # Build every project
 pnpm run build:affected         # Build only changed projects (Nx affected)
 pnpm run build:core             # Build core library only
 pnpm run build:cli              # Build CLI engine only
-pnpm run build:angular-cli      # Build Angular wrapper (compiles SASS first)
+pnpm run build:angular-cli      # Build Angular wrapper (ng-packagr)
 pnpm run build:react-cli        # Build React wrapper
 pnpm run build:vue-cli          # Build Vue wrapper
+pnpm run build:electron-cli     # Build Electron integration
 ```
 
 ### Development Servers
@@ -75,6 +81,9 @@ pnpm run build:vue-cli          # Build Vue wrapper
 pnpm run serve:angular-demo     # localhost:4303
 pnpm run serve:react-demo       # localhost:4301 (Vite)
 pnpm run serve:vue-demo         # localhost:4302 (Vite)
+pnpm run serve:vanilla-demo     # localhost:4304 (Vite)
+pnpm run serve:minimal-demo     # localhost:4305 (Vite)
+pnpm run serve:electron-demo    # Electron window
 pnpm run serve:docs             # localhost:4300
 ```
 
@@ -106,8 +115,7 @@ apply to `*.tsx` and the `react-cli` package. CI runs `nx affected -t lint`.
 ```bash
 pnpm run inject-versions        # Sync version.ts files from package.json versions
 pnpm run graph                  # Open Nx dependency graph in browser
-pnpm run build:styles           # Compile SASS for angular-cli
-pnpm run build:styles:watch     # Watch mode SASS compilation
+node tools/check-docs-code-blocks.js   # Check code blocks in the docs templates
 ```
 
 ## Creating a New Plugin
@@ -127,7 +135,7 @@ pnpm run create-plugin -- --name my-plugin --description "My plugin description"
 This will:
 1. Create `packages/plugins/my-plugin/` with all boilerplate
 2. Generate the processor class, module, tsup config, project.json, and test file
-3. Add the `@qodalis/cli-my-plugin` path alias to `tsconfig.base.json`
+3. Add the `@qodalis/cli-my-plugin` path alias to `tsconfig.base.json` and the Karma test entry to `angular.json`
 
 ### Plugin Structure
 
@@ -252,6 +260,8 @@ import { myModule } from '@qodalis/cli-my-plugin';
 export class AppModule {}
 ```
 
+React and Vue take the modules through the `modules` prop of `Cli`, `CliPanel` or `CliConfigProvider`; plain TypeScript calls `engine.registerModule(module)` before `engine.start()`.
+
 ## Key Interfaces
 
 | Interface | Location | Description |
@@ -259,7 +269,7 @@ export class AppModule {}
 | `ICliCommandProcessor` | `packages/core/src/lib/interfaces/command-processor.ts` | Command definition: command name, parameters, sub-commands, processCommand handler |
 | `ICliExecutionContext` | `packages/core/src/lib/interfaces/execution-context.ts` | Runtime context: writer, input reader, progress bars, state store, clipboard, spinner, abort signal |
 | `ICliInputReader` | `packages/core/src/lib/interfaces/input-reader.ts` | Interactive input: readLine, readPassword, readConfirm, readSelect, readMultiSelect, readNumber |
-| `ICliModule` | `packages/core/src/lib/interfaces/index.ts` | Module definition: name, processors, lifecycle hooks |
+| `ICliModule` | `packages/core/src/lib/interfaces/services.ts` | Module definition: name, processors, services, translations, lifecycle hooks |
 
 ## Build System
 
@@ -312,7 +322,7 @@ npx nx test snake
 
 ## Working with Nx
 
-This workspace uses **Nx 22** for build orchestration and caching.
+This workspace uses **Nx 24** for build orchestration and caching.
 
 ```bash
 # See the full dependency graph
@@ -342,8 +352,8 @@ Three GitHub Actions workflows:
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| `build.yml` | Pull requests to `main` | Installs, builds affected, runs affected tests |
-| `deploy.yml` | Push to `main` | Builds all, publishes all packages to npm |
+| `build.yml` | Pull requests into `main`/`develop`, pushes to `develop` | Installs, lints, builds and tests the affected projects |
+| `deploy.yml` | Push to `main` | Builds all, publishes the packages to npm (skipping published versions), creates the `v<version>` tag and GitHub release |
 | `deploy-docs.yml` | Push to `main` / manual | Builds all + docs, generates TypeDoc, deploys to GitHub Pages |
 
 All workflows use Node 22 and pnpm.
@@ -478,11 +488,13 @@ packages/cli/
 
 ### Serving WASM in Consumer Apps
 
-The WASM loader searches for the binary at these paths (in order):
+The WASM loader tries these URLs in order:
 
-1. `/assets/wasm/qodalis_cli_wasm_bg.wasm`
-2. `./assets/wasm/qodalis_cli_wasm_bg.wasm`
-3. `/wasm/qodalis_cli_wasm_bg.wasm`
+1. The `wasmUrl` engine option, when set
+2. `assets/wasm/qodalis_cli_wasm_bg.wasm` next to the page (`document.baseURI`)
+3. `/assets/wasm/qodalis_cli_wasm_bg.wasm`
+4. `./assets/wasm/qodalis_cli_wasm_bg.wasm`
+5. `/wasm/qodalis_cli_wasm_bg.wasm`
 
 Consumer apps must copy the `.wasm` file from `node_modules/@qodalis/cli/wasm/` to one of these serving paths. In Angular, use the `assets` array in `angular.json` / `project.json`:
 
@@ -494,7 +506,7 @@ Consumer apps must copy the `.wasm` file from `node_modules/@qodalis/cli/wasm/` 
 }
 ```
 
-Alternatively, pass an explicit URL: `initWasmAccelerator('/custom/path/to/file.wasm')`.
+Alternatively, pass an explicit URL with the `wasmUrl` option of `CliEngine` (or the `options` input/prop of the wrappers).
 
 ### Skipping WASM Build
 
@@ -523,20 +535,6 @@ Kill lingering processes:
 
 ```bash
 pkill -f "karma|chrome.*headless"
-```
-
-### SASS styles not updating
-
-Rebuild styles manually:
-
-```bash
-pnpm run build:styles
-```
-
-Or use watch mode while developing:
-
-```bash
-pnpm run build:styles:watch
 ```
 
 ### Nx cache giving stale results
