@@ -4,7 +4,47 @@
   "projectType": "application",
   "sourceRoot": "apps/demo-angular/src",
   "prefix": "app",
-  "implicitDependencies": ["angular-cli", "cli"],
+  "implicitDependencies": [
+    "2048",
+    "angular-cli",
+    "browser-storage",
+    "cli",
+    "core",
+    "curl",
+    "data-explorer",
+    "encode",
+    "files",
+    "guid",
+    "lang-de",
+    "lang-es",
+    "lang-fr",
+    "lang-it",
+    "lang-ja",
+    "lang-ko",
+    "lang-pt",
+    "lang-ro",
+    "lang-ru",
+    "lang-zh",
+    "markdown",
+    "minesweeper",
+    "password-generator",
+    "qr",
+    "regex",
+    "scp",
+    "server-jobs",
+    "server-logs",
+    "snake",
+    "speed-test",
+    "string",
+    "sudoku",
+    "tetris",
+    "text-to-image",
+    "todo",
+    "users",
+    "wget",
+    "wordle",
+    "yesno"
+  ],
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:browser",
@@ -58,7 +98,9 @@
         }
       },
       "defaultConfiguration": "production",
-      "outputs": ["{workspaceRoot}/dist/demo-angular"]
+      "outputs": [
+        "{workspaceRoot}/dist/demo-angular"
+      ]
     },
     "serve": {
       "executor": "@angular-devkit/build-angular:dev-server",
