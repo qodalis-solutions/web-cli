@@ -98,7 +98,7 @@ importers:
     devDependencies:
       '@angular-devkit/build-angular':
         specifier: ^22.2.4
-        version: 22.2.4(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@angular/compiler@22.2.3)(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(@angular/platform-browser@22.2.3(@angular/animations@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@types/node@22.20.5)(chokidar@5.0.0)(jiti@2.7.0)(karma@6.4.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(lightningcss@1.33.0)(ng-packagr@22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(rollup@4.64.9)(sass-embedded@1.104.1)(sass@1.106.1)(supports-color@8.1.1)(typescript@6.0.3)(yaml@2.9.1)
+        version: 22.2.4(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@angular/compiler@22.2.3)(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(@angular/platform-browser@22.2.3(@angular/animations@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@types/node@22.20.5)(chokidar@5.0.0)(jiti@2.7.0)(karma@6.4.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(lightningcss@1.33.0)(ng-packagr@22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3)))(rollup@4.64.9)(sass-embedded@1.104.1)(sass@1.106.1)(supports-color@8.1.1)(typescript@6.0.3)(yaml@2.9.1)
       '@angular/cli':
         specifier: ^22.2.4
         version: 22.2.4(@types/node@22.20.5)(chokidar@5.0.0)
@@ -161,7 +161,7 @@ importers:
         version: 0.57.0
       ng-packagr:
         specifier: ^22.2.5
-        version: 22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
+        version: 22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3))
       nx:
         specifier: ^24.0.1
         version: 24.0.1
@@ -654,8 +654,8 @@ importers:
         specifier: ^8.3.4
         version: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1)
       vue-tsc:
-        specifier: ^3.3.13
-        version: 3.3.13(typescript@6.0.3)
+        specifier: ^3.3.14
+        version: 3.3.14(typescript@6.0.3)
 
   packages/angular-cli:
     dependencies:
@@ -4193,16 +4193,24 @@ packages:
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
       vue: ^3.2.25 || ^3.6.0-rc.10
 
-  '@volar/language-core@2.4.28':
-    resolution: {integrity: sha512-w4qhIJ8ZSitgLAkVay6AbcnC7gP3glYM3fYwKV3srj8m494E3xtrCv6E+bWviiK/8hs6e6t1ij1s2Endql7vzQ==}
+  '@volar/language-core@2.4.30':
+    resolution: {integrity: sha512-73fjwEV8wat6aOZ6U/y/hqtE30ocrIWECg67b0txGczOMNw+MffLmvJ5fnFfN9drVUEYZzLdaNo6VAy6G6avMw==}
 
-  '@volar/source-map@2.4.28':
-    resolution: {integrity: sha512-yX2BDBqJkRXfKw8my8VarTyjv48QwxdJtvRgUpNE5erCsgEUdI2DsLbpa+rOQVAJYshY99szEcRDmyHbF10ggQ==}
-
-  '@volar/typescript@2.4.28':
-    resolution: {integrity: sha512-Ja6yvWrbis2QtN4ClAKreeUZPVYMARDYZl9LMEv1iQ1QdepB6wn0jTRxA9MftYmYa4DQ4k/DaSZpFPUfxl8giw==}
+  '@volar/language-service@2.4.30':
+    resolution: {integrity: sha512-w/xDsASiqC71ggCOm7sTDXDNk/l72XEptodeRC68tgZ0e5QM4hM3zAqBGC7mBctvhrpYwKfMG+t9xcUo2hEFtA==}
     peerDependencies:
-      typescript: '*'
+      typescript: <7
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  '@volar/source-map@2.4.30':
+    resolution: {integrity: sha512-zym1ob/KwDDyN+0jGVtxwbxJSRRnUvv5HspCtz3yEfVVdCG4/dzxJktMGPAgemqRuVs81O0o/y0q3qOUErR8kg==}
+
+  '@volar/typescript@2.4.30':
+    resolution: {integrity: sha512-/DgA5tgYFPfrLFuSjIMXMGHk1LQv2+P8eny6+BhGNzFJELWIW7UZlc56ZLIRFhLsPpMfIFxM8/HvOPBggrjTZg==}
+    peerDependencies:
+      typescript: <7
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -4219,8 +4227,8 @@ packages:
   '@vue/compiler-ssr@3.5.44':
     resolution: {integrity: sha512-xr5gb1JVHlfXJwSlRz1FeP6uxoazdzHuMTVLE7up+4Vrqxk219CvxLPxD9NXBt47yvZW7+p4DXfyp4O1fkByIA==}
 
-  '@vue/language-core@3.3.13':
-    resolution: {integrity: sha512-axA0Xemn5LuUKuKWob0/kVq7xQ2mJJM6VqA9Exvt35nM9yRC31goWVve/G/Zb2ZCLsXC8FHYjjfXlnshknSCew==}
+  '@vue/language-core@3.3.14':
+    resolution: {integrity: sha512-kRB+3hHg0c+BdD1XLAvwjVMQd5pC05zijSlPDRI3ERvC/s04JlRs5upy2KjeMg/9m9oD5zuMVh9yVvkKfZqoJg==}
 
   '@vue/reactivity@3.5.44':
     resolution: {integrity: sha512-u+QJdKeBBEADkPdevsL+6E12QlYVfBD8Zcw5qjDQKtamI6l14KyqazJMobhCKelhWN5zpyKUiEDoTyHE93cqWw==}
@@ -7452,11 +7460,24 @@ packages:
     resolution: {integrity: sha512-qZKX4RnBzH2ugr8Lxa7x+0V6XD9Sb/ouARtiasEQCHB1EVU4NXtmHsDDrx1dO4ne5fc3J6EW05BP1Dl0z0iung==}
     engines: {node: '>=0.10.0'}
 
+  vscode-jsonrpc@10.0.0:
+    resolution: {integrity: sha512-USSfxg0vDIpTQqlQBGxF3mBARyoS8cU7LHLpbYNh6dOJt32dlskxPWB0Irrh5TllTmyf7oNLAvqDqzklbwwnpA==}
+    engines: {node: '>=14.17.0'}
+
+  vscode-languageserver-protocol@3.18.5:
+    resolution: {integrity: sha512-FW4fBMzZ99N8xeob4py0l050wgCoRgTpEq5Xcsb9lM1bc29UKGR/wSV+4knaqFxssFHajy7OzNiKP/m3U1ZEuA==}
+
+  vscode-languageserver-textdocument@1.0.16:
+    resolution: {integrity: sha512-qeNEuOi9a3qkqRf7Gfez2WL2VwlBTLCNekHBGO9kxPVUp9XuY15yfTJ9jwvOwKI0I2MhUUfZq95NSp+LK1CLQg==}
+
+  vscode-languageserver-types@3.18.5:
+    resolution: {integrity: sha512-kPd6+JQNz3HMJvjKlqUxERSlZHAntl/aGpsk7ImwIh0ewDKDcjgAEyVSYciPiOJD3ftbK9IrfiqUeTZLSbCizw==}
+
   vscode-uri@3.2.0:
     resolution: {integrity: sha512-m2gXo3bn0G1kT9InzMf07fTbqMbGtyckj3bH5ktLO+1Ssv+yiATZ4dhwaQv9UZWxJh6E9IFGnQyjgWVDWVBDrg==}
 
-  vue-tsc@3.3.13:
-    resolution: {integrity: sha512-jE4/bXdOMSHVxEGgQCqNllJy+9N3Gx6tfSAsg0yhFK/MAN6eXqISihupnDEKSCt12VVnjN2gI3AqLYcqoh5x/A==}
+  vue-tsc@3.3.14:
+    resolution: {integrity: sha512-URAu2H9AuMZMg9GCgnqbaHHHd8pBZRAwNV2e2yYS8VDsoTVXHiOSo663OS6DkEvauQ2yixn5TPFJ9WV9QIspkA==}
     hasBin: true
     peerDependencies:
       typescript: '>=5.0.0'
@@ -7714,13 +7735,13 @@ snapshots:
     transitivePeerDependencies:
       - chokidar
 
-  ? '@angular-devkit/build-angular@22.2.4(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@angular/compiler@22.2.3)(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(@angular/platform-browser@22.2.3(@angular/animations@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@types/node@22.20.5)(chokidar@5.0.0)(jiti@2.7.0)(karma@6.4.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(lightningcss@1.33.0)(ng-packagr@22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)))(rollup@4.64.9)(sass-embedded@1.104.1)(sass@1.106.1)(supports-color@8.1.1)(typescript@6.0.3)(yaml@2.9.1)'
+  ? '@angular-devkit/build-angular@22.2.4(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@angular/compiler@22.2.3)(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(@angular/platform-browser@22.2.3(@angular/animations@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@types/node@22.20.5)(chokidar@5.0.0)(jiti@2.7.0)(karma@6.4.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(lightningcss@1.33.0)(ng-packagr@22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3)))(rollup@4.64.9)(sass-embedded@1.104.1)(sass@1.106.1)(supports-color@8.1.1)(typescript@6.0.3)(yaml@2.9.1)'
   : dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular-devkit/architect': 0.2202.4(chokidar@5.0.0)
       '@angular-devkit/build-webpack': 0.2202.4(chokidar@5.0.0)(webpack-dev-server@6.0.0(supports-color@8.1.1)(webpack@5.112.0(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28)))(webpack@5.112.0(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28))
       '@angular-devkit/core': 22.2.4(chokidar@5.0.0)
-      '@angular/build': 22.2.4(c373587e74892f9adae633a916dfdfe2)
+      '@angular/build': 22.2.4(4721c2cbc63b1bc1d3f8058e2ed91f9a)
       '@angular/compiler-cli': 22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3)
       '@babel/core': 8.0.5
       '@babel/generator': 8.0.5
@@ -7776,7 +7797,7 @@ snapshots:
       '@angular/platform-browser': 22.2.3(@angular/animations@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)))(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))
       esbuild: 0.28.2
       karma: 6.4.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
-      ng-packagr: 22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
+      ng-packagr: 22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3))
     transitivePeerDependencies:
       - '@angular/compiler'
       - '@minify-html/node'
@@ -7932,7 +7953,7 @@ snapshots:
       '@angular/core': 22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3)
       tslib: 2.8.1
 
-  '@angular/build@22.2.4(c373587e74892f9adae633a916dfdfe2)':
+  '@angular/build@22.2.4(4721c2cbc63b1bc1d3f8058e2ed91f9a)':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular-devkit/architect': 0.2202.4(chokidar@5.0.0)
@@ -7972,7 +7993,7 @@ snapshots:
       karma: 6.4.4(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       less: 4.9.1(supports-color@8.1.1)
       lmdb: 3.5.6
-      ng-packagr: 22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
+      ng-packagr: 22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3))
       postcss: 8.5.28
       rollup: 4.64.9
     transitivePeerDependencies:
@@ -10970,15 +10991,25 @@ snapshots:
       vite: 8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass-embedded@1.104.1)(sass@1.106.1)(terser@5.51.2)(yaml@2.9.1)
       vue: 3.5.44(typescript@6.0.3)
 
-  '@volar/language-core@2.4.28':
+  '@volar/language-core@2.4.30':
     dependencies:
-      '@volar/source-map': 2.4.28
+      '@volar/source-map': 2.4.30
 
-  '@volar/source-map@2.4.28': {}
-
-  '@volar/typescript@2.4.28(typescript@6.0.3)':
+  '@volar/language-service@2.4.30(typescript@6.0.3)':
     dependencies:
-      '@volar/language-core': 2.4.28
+      '@volar/language-core': 2.4.30
+      vscode-languageserver-protocol: 3.18.5
+      vscode-languageserver-textdocument: 1.0.16
+      vscode-uri: 3.2.0
+    optionalDependencies:
+      typescript: 6.0.3
+
+  '@volar/source-map@2.4.30': {}
+
+  '@volar/typescript@2.4.30(typescript@6.0.3)':
+    dependencies:
+      '@volar/language-core': 2.4.30
+      '@volar/language-service': 2.4.30(typescript@6.0.3)
       path-browserify: 1.0.1
       vscode-uri: 3.2.0
     optionalDependencies:
@@ -11014,9 +11045,9 @@ snapshots:
       '@vue/compiler-dom': 3.5.44
       '@vue/shared': 3.5.44
 
-  '@vue/language-core@3.3.13':
+  '@vue/language-core@3.3.14':
     dependencies:
-      '@volar/language-core': 2.4.28
+      '@volar/language-core': 2.4.30
       '@vue/compiler-dom': 3.5.44
       '@vue/shared': 3.5.44
       alien-signals: 3.2.1
@@ -13024,7 +13055,7 @@ snapshots:
     dependencies:
       content-type: 2.1.0
 
-  ng-packagr@22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)):
+  ng-packagr@22.2.5(@angular/compiler-cli@22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3))(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(supports-color@8.1.1)(tslib@2.8.1)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3)):
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular/compiler-cli': 22.2.3(@angular/compiler@22.2.3)(typescript@6.0.3)
@@ -13041,7 +13072,7 @@ snapshots:
       ora: 9.4.1
       postcss: 8.5.30
       rolldown: 1.2.14
-      rolldown-plugin-dts: 0.28.8(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(rolldown@1.2.14)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3))
+      rolldown-plugin-dts: 0.28.8(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(rolldown@1.2.14)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3))
       rxjs: 7.8.2
       sass: 1.106.1
       sass-embedded: 1.105.2
@@ -13613,7 +13644,7 @@ snapshots:
     dependencies:
       glob: 7.2.3
 
-  rolldown-plugin-dts@0.28.8(@volar/typescript@2.4.28(typescript@6.0.3))(@vue/language-core@3.3.13)(rolldown@1.2.14)(typescript@6.0.3)(vue-tsc@3.3.13(typescript@6.0.3)):
+  rolldown-plugin-dts@0.28.8(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(rolldown@1.2.14)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3)):
     dependencies:
       dts-resolver: 3.0.0
       get-tsconfig: 5.0.0-beta.6
@@ -13623,10 +13654,10 @@ snapshots:
       yuku-codegen: 0.19.0
       yuku-parser: 0.19.0
     optionalDependencies:
-      '@volar/typescript': 2.4.28(typescript@6.0.3)
-      '@vue/language-core': 3.3.13
+      '@volar/typescript': 2.4.30(typescript@6.0.3)
+      '@vue/language-core': 3.3.14
       typescript: 6.0.3
-      vue-tsc: 3.3.13(typescript@6.0.3)
+      vue-tsc: 3.3.14(typescript@6.0.3)
     transitivePeerDependencies:
       - oxc-resolver
 
@@ -14479,12 +14510,23 @@ snapshots:
 
   void-elements@2.0.1: {}
 
+  vscode-jsonrpc@10.0.0: {}
+
+  vscode-languageserver-protocol@3.18.5:
+    dependencies:
+      vscode-jsonrpc: 10.0.0
+      vscode-languageserver-types: 3.18.5
+
+  vscode-languageserver-textdocument@1.0.16: {}
+
+  vscode-languageserver-types@3.18.5: {}
+
   vscode-uri@3.2.0: {}
 
-  vue-tsc@3.3.13(typescript@6.0.3):
+  vue-tsc@3.3.14(typescript@6.0.3):
     dependencies:
-      '@volar/typescript': 2.4.28(typescript@6.0.3)
-      '@vue/language-core': 3.3.13
+      '@volar/typescript': 2.4.30(typescript@6.0.3)
+      '@vue/language-core': 3.3.14
       typescript: 6.0.3
 
   vue@3.5.44(typescript@6.0.3):
