@@ -94,6 +94,24 @@ export type CliServerConfig = {
 };
 
 /**
+ * Which rows of a longer result a server table holds. Commands that page (`--skip`,
+ * `--take`) send it; servers also send it, with `truncated`, when they cut a
+ * table from a command that does not page.
+ */
+export type CliServerTablePage = {
+    /** Rows skipped before these */
+    skip: number;
+    /** Rows asked for */
+    take: number;
+    /** All rows, when the command knows it */
+    total?: number;
+    /** Whether more rows follow */
+    hasMore: boolean;
+    /** The server cut the table: `--skip` will not show the rest */
+    truncated?: boolean;
+};
+
+/**
  * A single output item in a server response
  */
 export type CliServerOutput =
@@ -102,7 +120,7 @@ export type CliServerOutput =
           value: string;
           style?: 'success' | 'error' | 'info' | 'warning';
       }
-    | { type: 'table'; headers: string[]; rows: string[][] }
+    | { type: 'table'; headers: string[]; rows: string[][]; page?: CliServerTablePage }
     | { type: 'list'; items: string[]; ordered?: boolean }
     | { type: 'json'; value: any }
     | { type: 'key-value'; entries: { key: string; value: string }[] };

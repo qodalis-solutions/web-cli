@@ -129,6 +129,38 @@
     </tbody>
 </table>
 
+<h2 id="paging">Paging long results</h2>
+<p>
+    A server command that lists records pages them, so a terminal never receives thousands of rows. Such commands accept
+    <code>--skip</code> (default 0) and <code>--take</code> (default 50, at most 500), and the terminal shows which
+    rows you see and how to go on:
+</p>
+<pre><code>accounts list --take 20
+...
+Rows 1–20 of 236 · next: accounts list --take 20 --skip 20</code></pre>
+<p>Writing such a command: declare the parameters, read them and write the rows with the paged table writer.</p>
+<pre><code class="language-csharp">// .NET (Qodalis.Cli.Abstractions.Helpers)
+Parameters = CliPaging.Parameters();
+var page = CliPaging.From(command);                       // page.Skip, page.Take
+builder.WritePagedTable(["Id", "Name"], rows, page, total);</code></pre>
+<pre><code class="language-typescript">// Node
+parameters = CliPaging.parameters();
+const page = CliPaging.from(command);                     // page.skip, page.take
+builder.writePagedTable(['Id', 'Name'], rows, page, &#123; total &#125;);</code></pre>
+<pre><code class="language-python"># Python
+parameters = CliPaging.parameters()
+page = CliPaging.from_command(command)                   # page.skip, page.take
+builder.write_paged_table(["Id", "Name"], rows, page, total=total)</code></pre>
+<p>
+    Without a total, pass <code>hasMore</code> (query one row more than the page). On the wire the table carries
+    <code>page: &#123; skip, take, total?, hasMore &#125;</code>.
+</p>
+<p>
+    As a safety net, a table from a command that does not page is cut at the server option <code>maxTableRows</code>
+    (.NET <code>MaxTableRows</code>, Python <code>max_table_rows</code>; default 200, 0 = no limit) and the terminal
+    says the rest was left out. Raise the limit only for commands you control; paging is the fix.
+</p>
+
 <h2 id="shell-security">Remote shell security</h2>
 <p>
     The <code>ssh</code> command opens a PTY shell on the server (<code>/ws/v1/qcli/shell</code>). That is OS-level
