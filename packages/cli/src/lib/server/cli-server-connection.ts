@@ -9,7 +9,7 @@ import {
     ICliLogger,
     ICliServerAuthService,
     ServerVersionNegotiator,
-    buildAuthenticatedWebSocketUrl,
+    buildServerWebSocketUrl,
     appendQueryParams,
     resolveHeaders,
 } from '@qodalis/cli-core';
@@ -77,7 +77,8 @@ export class CliServerConnection {
 
     /**
      * WebSocket URL for this server with auth: single-use upgrade params from
-     * auth providers when available, otherwise headers copied into the URL.
+     * auth providers when available, otherwise a ticket fetched with the
+     * headers (never the headers themselves, unless the config opts in).
      */
     async buildWebSocketUrl(path: string): Promise<string> {
         const url = this.toWebSocketUrl(this.normalizeUrl(this._config.url)) + path;
@@ -85,7 +86,9 @@ export class CliServerConnection {
         if (params) {
             return appendQueryParams(url, params);
         }
-        return buildAuthenticatedWebSocketUrl(url, () => this.resolveAuthHeaders());
+        return buildServerWebSocketUrl(url, () => this.resolveAuthHeaders(), {
+            unsafeHeadersInWebSocketUrl: this._config.unsafeHeadersInWebSocketUrl,
+        });
     }
 
     async connect(): Promise<void> {

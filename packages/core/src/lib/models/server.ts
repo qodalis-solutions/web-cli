@@ -79,6 +79,18 @@ export type CliServerConfig = {
 
     /** Request timeout in milliseconds. @default 30000 */
     timeout?: number;
+
+    /**
+     * Copy `headers` into WebSocket URLs as `_header_<name>` query params
+     * (the behaviour up to 2.0.0). Off by default: tokens in URLs end up in
+     * access, proxy and CDN logs and in browser history. Without it, sockets
+     * authenticate with a single-use ticket from
+     * `POST /api/v1/qcli/sessions/ws-ticket` (users plugin) fetched with these
+     * headers. Only for servers that still read `_header_Authorization`, such
+     * as a shell `accessToken` without the users plugin.
+     * @deprecated use the users plugin's WebSocket tickets
+     */
+    unsafeHeadersInWebSocketUrl?: boolean;
 };
 
 /**

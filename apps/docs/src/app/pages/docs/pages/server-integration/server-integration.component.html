@@ -175,8 +175,13 @@ createCliServer(&#123; enableShell: true, shell: &#123; token: process.env.QCLI_
 CliServerOptions(enable_shell=True, shell=CliShellOptions(token=os.environ["QCLI_SHELL_TOKEN"], idle_timeout=900))</code></pre>
 <pre><code class="language-csharp">// .NET
 cli.EnableShell(o =&gt; &#123; o.Token = builder.Configuration["Shell:Token"]; o.IdleTimeout = TimeSpan.FromMinutes(15); &#125;);</code></pre>
-<p>Client side, token mode only needs the header on the server entry:</p>
-<pre><code class="language-typescript">servers: [&#123; name: 'ops', url: 'https://ops.example.com', headers: &#123; Authorization: 'Bearer ' + shellToken &#125; &#125;]</code></pre>
+<p>
+    Client side, token mode needs the header on the server entry and, because the shell socket reads the token from the
+    URL, <code>unsafeHeadersInWebSocketUrl</code> (the token then shows in access and proxy logs; prefer users mode for
+    anything beyond a private network):
+</p>
+<pre><code class="language-typescript">servers: [&#123; name: 'ops', url: 'https://ops.example.com', headers: &#123; Authorization: 'Bearer ' + shellToken &#125;,
+    unsafeHeadersInWebSocketUrl: true &#125;]</code></pre>
 <p>In every mode:</p>
 <ul>
     <li><strong>Session-bound</strong> (users mode): logout, expiry, an administrator revoking the session, disabling the user or removing <code>shell:execute</code> closes open shells immediately.</li>

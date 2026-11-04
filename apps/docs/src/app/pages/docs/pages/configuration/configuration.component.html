@@ -172,8 +172,14 @@
       </td>
       <td><code>&#123;&#125;</code></td>
       <td>
-        Static or dynamic headers. Use a function for rotating tokens (e.g.
-        JWTs).
+        Static or dynamic headers sent with every HTTP request. Use a function
+        for rotating tokens (e.g. JWTs). WebSockets never carry them: the
+        browser cannot set socket headers, so the client trades them for a
+        single-use ticket (<code>POST /api/v1/qcli/sessions/ws-ticket</code>,
+        users plugin) and connects with <code>?ticket=</code>. A server without
+        that endpoint gets unauthenticated sockets and a console warning. With
+        the users module loaded for the server, leave <code>headers</code> out:
+        the module signs requests and sockets itself.
       </td>
     </tr>
     <tr>
@@ -181,6 +187,18 @@
       <td><code>number</code></td>
       <td><code>30000</code></td>
       <td>Request timeout in milliseconds</td>
+    </tr>
+    <tr>
+      <td><code>unsafeHeadersInWebSocketUrl</code></td>
+      <td><code>boolean</code></td>
+      <td><code>false</code></td>
+      <td>
+        Deprecated. Copy <code>headers</code> into WebSocket URLs as
+        <code>_header_&lt;name&gt;</code> query parameters, as up to 2.0.0.
+        Tokens in URLs end up in access, proxy and CDN logs and in browser
+        history; use it only for a server that still needs it, such as a shell
+        token without the users plugin.
+      </td>
     </tr>
   </tbody>
 </table>
