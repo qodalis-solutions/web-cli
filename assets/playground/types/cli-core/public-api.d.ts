@@ -3342,6 +3342,34 @@ type CliServerConfig = {
     headers?: CliHeadersProvider;
     /** Request timeout in milliseconds. @default 30000 */
     timeout?: number;
+    /**
+     * Copy `headers` into WebSocket URLs as `_header_<name>` query params
+     * (the behaviour up to 2.0.0). Off by default: tokens in URLs end up in
+     * access, proxy and CDN logs and in browser history. Without it, sockets
+     * authenticate with a single-use ticket from
+     * `POST /api/v1/qcli/sessions/ws-ticket` (users plugin) fetched with these
+     * headers. Only for servers that still read `_header_Authorization`, such
+     * as a shell `accessToken` without the users plugin.
+     * @deprecated use the users plugin's WebSocket tickets
+     */
+    unsafeHeadersInWebSocketUrl?: boolean;
+};
+/**
+ * Which rows of a longer result a server table holds. Commands that page (`--skip`,
+ * `--take`) send it; servers also send it, with `truncated`, when they cut a
+ * table from a command that does not page.
+ */
+type CliServerTablePage = {
+    /** Rows skipped before these */
+    skip: number;
+    /** Rows asked for */
+    take: number;
+    /** All rows, when the command knows it */
+    total?: number;
+    /** Whether more rows follow */
+    hasMore: boolean;
+    /** The server cut the table: `--skip` will not show the rest */
+    truncated?: boolean;
 };
 /**
  * A single output item in a server response
@@ -3354,6 +3382,7 @@ type CliServerOutput = {
     type: 'table';
     headers: string[];
     rows: string[][];
+    page?: CliServerTablePage;
 } | {
     type: 'list';
     items: string[];
@@ -3740,35 +3769,40 @@ declare class ServerVersionNegotiator {
 }
 
 /**
- * Builds a WebSocket URL that includes authentication credentials from headers
- * as query parameters. Since the browser WebSocket API does not support custom
- * request headers, this allows the host server's auth middleware to validate
- * the connection during the HTTP upgrade handshake.
+ * Copies headers into a WebSocket URL as `_header_<name>` query params.
  *
- * All configured headers are forwarded as query parameters prefixed with
- * `_header_` to avoid collisions with application-level query params.
- *
- * Accepts both static header maps and dynamic provider functions.
- *
- * **Security note:** Query parameters are visible in browser history, server
- * access logs, proxy/CDN logs, and the `Referer` header. Tokens placed in the
- * URL are therefore more exposed than those sent via HTTP headers. This is an
- * inherent limitation of the browser WebSocket API (no custom headers).
- * Server-side middleware that reads `_header_*` params should strip them from
- * logs and avoid forwarding them in redirects.
+ * **Unsafe:** query parameters are visible in browser history and in server,
+ * proxy and CDN access logs. Used only for servers configured with
+ * `unsafeHeadersInWebSocketUrl: true`; everything else goes through
+ * {@link buildServerWebSocketUrl}, which keeps headers out of the URL.
  *
  * @param wsUrl  The base WebSocket URL (may already contain query parameters)
  * @param headers  The headers provider from CliServerConfig (may include Authorization, etc.)
- * @returns The WebSocket URL with auth credentials appended as query parameters
+ * @returns The WebSocket URL with the headers appended as query parameters
  */
 declare function buildAuthenticatedWebSocketUrl(wsUrl: string, headers?: CliHeadersProvider): string;
+/** Options for {@link buildServerWebSocketUrl} and {@link resolveServerWebSocketUrl}. */
+interface CliWebSocketAuthOptions {
+    /** See `CliServerConfig.unsafeHeadersInWebSocketUrl` */
+    unsafeHeadersInWebSocketUrl?: boolean;
+}
+/** Ticket endpoint of the users plugin, relative to the server root */
+declare const CLI_WS_TICKET_PATH = "/api/v1/qcli/sessions/ws-ticket";
+/**
+ * Authenticates a WebSocket URL with headers without putting them in it:
+ * fetches a single-use ticket from `POST /api/v1/qcli/sessions/ws-ticket`
+ * with the headers and appends `?ticket=`. When no ticket can be had, the
+ * socket connects without credentials and a warning is logged once.
+ * Headers are copied into the URL only with `unsafeHeadersInWebSocketUrl`.
+ */
+declare function buildServerWebSocketUrl(wsUrl: string, headers?: CliHeadersProvider, options?: CliWebSocketAuthOptions): Promise<string>;
 /**
  * Build the WebSocket URL for a configured server. Prefers upgrade params
- * from auth providers (e.g. a single-use ticket from the users module); only
- * when no provider handles the server are headers copied into the URL
- * (legacy behaviour, see {@link buildAuthenticatedWebSocketUrl}).
+ * from auth providers (e.g. a single-use ticket from the users module);
+ * otherwise authenticates with the server's headers through
+ * {@link buildServerWebSocketUrl}.
  */
-declare function resolveServerWebSocketUrl(services: ICliServiceProvider | undefined, serverName: string, wsUrl: string, configHeaders?: CliHeadersProvider): Promise<string>;
+declare function resolveServerWebSocketUrl(services: ICliServiceProvider | undefined, serverName: string, wsUrl: string, configHeaders?: CliHeadersProvider, options?: CliWebSocketAuthOptions): Promise<string>;
 /** Append query params to a URL that may already have some. */
 declare function appendQueryParams(url: string, params: Record<string, string>): string;
 
@@ -4100,7 +4134,7 @@ interface CliThemeInfo {
 
 declare const DefaultThemeInfos: Record<string, CliThemeInfo>;
 
-declare const LIBRARY_VERSION = "2.0.0";
+declare const LIBRARY_VERSION = "2.0.1";
 declare const API_VERSION = 2;
 
 /**
@@ -4161,5 +4195,5 @@ declare class BrowserFileTransferService implements ICliFileTransferService {
     private _pickFile;
 }
 
-export { API_VERSION, BrowserFileTransferService, CANCELLATION_ERROR_MESSAGE, CLI_CONFIGURE_STORE_NAME, CancellablePromise, CliAccessDeniedError, CliBackgroundColor, CliForegroundColor, CliHttpError, CliIcon, CliKeyData, CliLogLevel, CliModuleRegistry, CliServerPermissions, CliUsersPermissions, DEFAULT_DIR_PERMISSIONS, DEFAULT_FILE_PERMISSIONS, DefaultLibraryAuthor, DefaultThemeInfos, DefaultThemes, ICliAuditService_TOKEN, ICliAuthService_TOKEN, ICliAuthorizationService_TOKEN, ICliCommandGuard_TOKEN, ICliCompletionProvider_TOKEN, ICliDragDropService_TOKEN, ICliEventBus_TOKEN, ICliFilePickerProvider_TOKEN, ICliFileTransferService_TOKEN, ICliGroupsStoreService_TOKEN, ICliHttpClient_TOKEN, ICliKeyValueStore_TOKEN, ICliPermissionRegistry_TOKEN, ICliPermissionService_TOKEN, ICliServerAuthService_TOKEN, ICliServerAuthTokenProvider_TOKEN, ICliServerManager_TOKEN, ICliSessionsService_TOKEN, ICliTranslationService_TOKEN, ICliUserEventService_TOKEN, ICliUserSessionService_TOKEN, ICliUsersStoreService_TOKEN, LIBRARY_VERSION, ObjectDescriber, ServerVersionNegotiator, appendQueryParams, bootCliModule, buildAuthenticatedWebSocketUrl, clearTerminalLine, cliAccessMetadataGuards, cliAuthorize, cliCanAccess, cliDefaultServer, cliEvaluateAccess, cliHasPermission, cliMergePermissions, cliMissingPermissions, cliPermissionMatches, cliRequireAuthGuard, cliRequiredGroupsGuard, cliRequiredPermissionsGuard, colorFirstWord, colorizeJson, compareVersions, constants, createCliToken, createWorkerService, delay, derivePanelThemeStyles, enums, formatJson, getConfigValue, getParameterValue, getPluginConfigValue, getRightOfWord, highlightTextWithBg, initializeBrowserEnvironment, isCliAccessDeniedError, joinShellWords, loadPanelPosition, nextPanelPosition, quoteShellWord, resolveConfigurationCategories, resolveHeaders, resolveServerHeaders, resolveServerWebSocketUrl, satisfiesMinVersion, satisfiesVersionRange, savePanelPosition, splitShellWords, stripAnsi, toQueryString, truncateToWidth, unquoteRawArgument, utils, visibleLength, writeExamples, writeHint, writeUsage, writeWrapped };
-export type { CliAccessAction, CliAddUser, CliBackgroundServiceStatus, CliBackgroundServiceType, CliBootOptions, CliCommandGuardResult, CliDateOptions, CliEmitOptions, CliEngineSnapshot, CliEvent, CliEventData, CliEventHandler, CliEventMap, CliEventType, CliFactoryProvider, CliFilePickerOptions, CliFileResult, CliFullScreenOptions, CliHeadersProvider, CliHelpRow, CliHttpRequestOptions, CliLineOptions, CliMultiSelectOption, CliMultiSelectOptions, CliNotification, CliNotificationLevel, CliNumberOptions, CliOptions, CliPackageSource, CliPanelConfig, CliPanelHideAlignment, CliPanelPaneState, CliPanelPosition, CliPanelState, CliPanelTabState, CliPercentageProgressBarUpdateValueOptions, CliPermissionDefinition, CliProcessCommand, CliProcessorMetadata, CliProvider, CliSelectOption, CliSelectOptions, CliServerCapabilities, CliServerCommandDescriptor, CliServerConfig, CliServerOutput, CliServerResponse, CliServiceEventHandler, CliServiceExecutionMode, CliServiceLogLevel, CliState, CliStateConfiguration, CliStateScope, CliStateStoreOptions, CliTableOptions, CliTextAnimatorOptions, CliTheme, CliThemeCategory, CliThemeInfo, CliToken, CliTypeProvider, CliUpdateUser, CliValueProvider, CliWorkerInboundMessage, CliWorkerOutboundMessage, CustomEventType, DefaultThemesType, ICliAuditEntry, ICliAuditService, ICliAuthService, ICliAuthorizationService, ICliBackgroundService, ICliBackgroundServiceInfo, ICliBackgroundServiceRegistry, ICliClipboard, ICliCommandAuthor, ICliCommandChildProcessor, ICliCommandControls, ICliCommandExecutorService, ICliCommandGuard, ICliCommandKey, ICliCommandParameterDescriptor, ICliCommandProcessor, ICliCommandProcessorRegistry, ICliCompletionContext, ICliCompletionProvider, ICliConfigurableModule, ICliConfigurationOption, ICliDragDropService, ICliEventBus, ICliExecutionContext, ICliExecutionProcess, ICliFileEntry, ICliFilePickerProvider, ICliFileTransferService, ICliGlobalParameterHandler, ICliGroup, ICliGroupsStoreService, ICliHttpClient, ICliInputReader, ICliKeyValueStore, ICliLogger, ICliManagedInterval, ICliManagedTimer, ICliModule, ICliNotifier, ICliOwnership, ICliPanelRef, ICliPercentageProgressBar, ICliPermissionRegistry, ICliPermissionService, ICliPingServerService, ICliPrincipal, ICliProcessEntry, ICliProcessRegisterOptions, ICliProcessRegistry, ICliProcessorHook, ICliProgressBar, ICliProtectedResource, ICliServerAuthService, ICliServerAuthTokenProvider, ICliServerManager, ICliServiceContext, ICliServiceEvent, ICliServiceLogEntry, ICliServiceProvider, ICliSessionInfo, ICliSessionsService, ICliSpinner, ICliStateStore, ICliTerminalWriter, ICliTextAnimator, ICliTranslationService, ICliUser, ICliUserCredentials, ICliUserEvent, ICliUserEventService, ICliUserSession, ICliUserSessionService, ICliUsersStoreService, ISyntaxHighlightRule, ISyntaxHighlighter, ISyntaxTheme, LineState, Package, ServerVersionInfo, WorkerServiceContext };
+export { API_VERSION, BrowserFileTransferService, CANCELLATION_ERROR_MESSAGE, CLI_CONFIGURE_STORE_NAME, CLI_WS_TICKET_PATH, CancellablePromise, CliAccessDeniedError, CliBackgroundColor, CliForegroundColor, CliHttpError, CliIcon, CliKeyData, CliLogLevel, CliModuleRegistry, CliServerPermissions, CliUsersPermissions, DEFAULT_DIR_PERMISSIONS, DEFAULT_FILE_PERMISSIONS, DefaultLibraryAuthor, DefaultThemeInfos, DefaultThemes, ICliAuditService_TOKEN, ICliAuthService_TOKEN, ICliAuthorizationService_TOKEN, ICliCommandGuard_TOKEN, ICliCompletionProvider_TOKEN, ICliDragDropService_TOKEN, ICliEventBus_TOKEN, ICliFilePickerProvider_TOKEN, ICliFileTransferService_TOKEN, ICliGroupsStoreService_TOKEN, ICliHttpClient_TOKEN, ICliKeyValueStore_TOKEN, ICliPermissionRegistry_TOKEN, ICliPermissionService_TOKEN, ICliServerAuthService_TOKEN, ICliServerAuthTokenProvider_TOKEN, ICliServerManager_TOKEN, ICliSessionsService_TOKEN, ICliTranslationService_TOKEN, ICliUserEventService_TOKEN, ICliUserSessionService_TOKEN, ICliUsersStoreService_TOKEN, LIBRARY_VERSION, ObjectDescriber, ServerVersionNegotiator, appendQueryParams, bootCliModule, buildAuthenticatedWebSocketUrl, buildServerWebSocketUrl, clearTerminalLine, cliAccessMetadataGuards, cliAuthorize, cliCanAccess, cliDefaultServer, cliEvaluateAccess, cliHasPermission, cliMergePermissions, cliMissingPermissions, cliPermissionMatches, cliRequireAuthGuard, cliRequiredGroupsGuard, cliRequiredPermissionsGuard, colorFirstWord, colorizeJson, compareVersions, constants, createCliToken, createWorkerService, delay, derivePanelThemeStyles, enums, formatJson, getConfigValue, getParameterValue, getPluginConfigValue, getRightOfWord, highlightTextWithBg, initializeBrowserEnvironment, isCliAccessDeniedError, joinShellWords, loadPanelPosition, nextPanelPosition, quoteShellWord, resolveConfigurationCategories, resolveHeaders, resolveServerHeaders, resolveServerWebSocketUrl, satisfiesMinVersion, satisfiesVersionRange, savePanelPosition, splitShellWords, stripAnsi, toQueryString, truncateToWidth, unquoteRawArgument, utils, visibleLength, writeExamples, writeHint, writeUsage, writeWrapped };
+export type { CliAccessAction, CliAddUser, CliBackgroundServiceStatus, CliBackgroundServiceType, CliBootOptions, CliCommandGuardResult, CliDateOptions, CliEmitOptions, CliEngineSnapshot, CliEvent, CliEventData, CliEventHandler, CliEventMap, CliEventType, CliFactoryProvider, CliFilePickerOptions, CliFileResult, CliFullScreenOptions, CliHeadersProvider, CliHelpRow, CliHttpRequestOptions, CliLineOptions, CliMultiSelectOption, CliMultiSelectOptions, CliNotification, CliNotificationLevel, CliNumberOptions, CliOptions, CliPackageSource, CliPanelConfig, CliPanelHideAlignment, CliPanelPaneState, CliPanelPosition, CliPanelState, CliPanelTabState, CliPercentageProgressBarUpdateValueOptions, CliPermissionDefinition, CliProcessCommand, CliProcessorMetadata, CliProvider, CliSelectOption, CliSelectOptions, CliServerCapabilities, CliServerCommandDescriptor, CliServerConfig, CliServerOutput, CliServerResponse, CliServerTablePage, CliServiceEventHandler, CliServiceExecutionMode, CliServiceLogLevel, CliState, CliStateConfiguration, CliStateScope, CliStateStoreOptions, CliTableOptions, CliTextAnimatorOptions, CliTheme, CliThemeCategory, CliThemeInfo, CliToken, CliTypeProvider, CliUpdateUser, CliValueProvider, CliWebSocketAuthOptions, CliWorkerInboundMessage, CliWorkerOutboundMessage, CustomEventType, DefaultThemesType, ICliAuditEntry, ICliAuditService, ICliAuthService, ICliAuthorizationService, ICliBackgroundService, ICliBackgroundServiceInfo, ICliBackgroundServiceRegistry, ICliClipboard, ICliCommandAuthor, ICliCommandChildProcessor, ICliCommandControls, ICliCommandExecutorService, ICliCommandGuard, ICliCommandKey, ICliCommandParameterDescriptor, ICliCommandProcessor, ICliCommandProcessorRegistry, ICliCompletionContext, ICliCompletionProvider, ICliConfigurableModule, ICliConfigurationOption, ICliDragDropService, ICliEventBus, ICliExecutionContext, ICliExecutionProcess, ICliFileEntry, ICliFilePickerProvider, ICliFileTransferService, ICliGlobalParameterHandler, ICliGroup, ICliGroupsStoreService, ICliHttpClient, ICliInputReader, ICliKeyValueStore, ICliLogger, ICliManagedInterval, ICliManagedTimer, ICliModule, ICliNotifier, ICliOwnership, ICliPanelRef, ICliPercentageProgressBar, ICliPermissionRegistry, ICliPermissionService, ICliPingServerService, ICliPrincipal, ICliProcessEntry, ICliProcessRegisterOptions, ICliProcessRegistry, ICliProcessorHook, ICliProgressBar, ICliProtectedResource, ICliServerAuthService, ICliServerAuthTokenProvider, ICliServerManager, ICliServiceContext, ICliServiceEvent, ICliServiceLogEntry, ICliServiceProvider, ICliSessionInfo, ICliSessionsService, ICliSpinner, ICliStateStore, ICliTerminalWriter, ICliTextAnimator, ICliTranslationService, ICliUser, ICliUserCredentials, ICliUserEvent, ICliUserEventService, ICliUserSession, ICliUserSessionService, ICliUsersStoreService, ISyntaxHighlightRule, ISyntaxHighlighter, ISyntaxTheme, LineState, Package, ServerVersionInfo, WorkerServiceContext };
