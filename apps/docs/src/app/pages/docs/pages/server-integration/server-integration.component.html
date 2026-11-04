@@ -583,6 +583,81 @@ data: &#123; "exitCode": 0 &#125;</code></pre>
 </table>
 <p>{{ 'docs.server-integration.admin-dashboard-available' | translate }}</p>
 
+<h3 id="admin-color-scheme">Color scheme</h3>
+<p>
+    Every color in the dashboard is a token, so you can match it to your own design. Set the scheme in the admin
+    plugin's options; the shape is the same on all three servers: a <code>mode</code> (<code>dark</code>, the default,
+    <code>light</code>, or <code>system</code> to follow the browser) and color overrides for the <code>dark</code> and
+    <code>light</code> schemes. Tokens you leave out keep their defaults.
+</p>
+<pre><code class="language-typescript">// Node
+new CliAdminBuilder()
+    .setTheme(&#123;
+        mode: 'system',
+        light: &#123; primary: '#2a6bba', primaryHover: '#1f5596', accent: '#2a6bba', background: '#f1f6fa',
+                 backgroundAccent: '#f1f6fa', surface: '#ffffff', border: '#d9e3ec', text: '#142231', muted: '#5d6f82' &#125;,
+        dark: &#123; primary: '#4f9be0', primaryHover: '#3f8ad3', onPrimary: '#0d1823', accent: '#4f9be0',
+                background: '#0d1823', backgroundAccent: '#0d1823', surface: '#13212f', border: '#22364a',
+                text: '#e6eef6', muted: '#93a6b9' &#125;,
+    &#125;)
+    .build(&#123; registry, eventSocketManager, builder, executor &#125;);</code></pre>
+<pre><code class="language-csharp">// .NET
+cli.AddAdmin(o =&gt;
+&#123;
+    o.Theme.Mode = AdminThemeMode.System;
+    o.Theme.Light = new AdminThemeColors &#123; Primary = "#2a6bba", Background = "#f1f6fa", Text = "#142231" &#125;;
+    o.Theme.Dark = new AdminThemeColors &#123; Primary = "#4f9be0", Background = "#0d1823", Surface = "#13212f" &#125;;
+&#125;);</code></pre>
+<pre><code class="language-python"># Python (token keys camelCase or snake_case)
+CliAdminBuilder().set_theme(&#123;
+    "mode": "system",
+    "light": &#123;"primary": "#2a6bba", "background": "#f1f6fa", "text": "#142231"&#125;,
+    "dark": &#123;"primary": "#4f9be0", "background": "#0d1823", "surface": "#13212f"&#125;,
+&#125;)</code></pre>
+<p>
+    Values must be plain CSS colors: hex (<code>#rgb</code>, <code>#rgba</code>, <code>#rrggbb</code>,
+    <code>#rrggbbaa</code>), a color function with numeric arguments (<code>rgb()</code>, <code>hsl()</code>,
+    <code>hwb()</code>, <code>lab()</code>, <code>lch()</code>, <code>oklab()</code>, <code>oklch()</code>) or a named
+    color. The server rejects anything else at startup (an unknown mode or token, <code>var()</code>, <code>url()</code>,
+    <code>;</code>&hellip;), so a theme cannot inject CSS.
+</p>
+<p>
+    The server publishes the validated scheme at <code>GET /qcli/admin/theme.json</code> (public, like the dashboard
+    files, because the sign-in page uses it too), for example
+    <code>&#123;"mode":"light","dark":&#123;&#125;,"light":&#123;"primary":"#2a6bba"&#125;&#125;</code>. The dashboard
+    loads it before its first render and sets each token as a CSS custom property (<code>--qcli-primary</code>,
+    <code>--qcli-primary-hover</code>, &hellip;). The embedded terminal keeps the CLI's own terminal theme.
+</p>
+<p>The defaults match the Qodalis CLI panel: its grays, indigo accent with the violet glow, and status colors in dark; the same palette for light backgrounds in light.</p>
+<table>
+    <thead>
+        <tr><th>Token</th><th>Used for</th><th>Dark default</th><th>Light default</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>primary</code></td><td>Primary buttons, active navigation, toggles, focus rings</td><td><code>#818cf8</code></td><td><code>#4f46e5</code></td></tr>
+        <tr><td><code>primaryHover</code></td><td>Primary buttons on hover</td><td><code>#a5b4fc</code></td><td><code>#4338ca</code></td></tr>
+        <tr><td><code>onPrimary</code></td><td>Text and icons on <code>primary</code></td><td><code>#111827</code></td><td><code>#ffffff</code></td></tr>
+        <tr><td><code>accent</code></td><td>Highlighted text: links, command names, active items</td><td><code>#a78bfa</code></td><td><code>#7c3aed</code></td></tr>
+        <tr><td><code>background</code></td><td>Page background</td><td><code>#111827</code></td><td><code>#f9fafb</code></td></tr>
+        <tr><td><code>backgroundAccent</code></td><td>Start of the page background gradient (set it to <code>background</code> for a flat page)</td><td><code>#1f2937</code></td><td><code>#eef2ff</code></td></tr>
+        <tr><td><code>sidebar</code></td><td>Sidebar background</td><td><code>#1f2937</code></td><td><code>#ffffff</code></td></tr>
+        <tr><td><code>surface</code></td><td>Cards, panels and tables</td><td><code>rgba(255, 255, 255, 0.04)</code></td><td><code>#ffffff</code></td></tr>
+        <tr><td><code>popover</code></td><td>Dialogs and dropdown menus (opaque)</td><td><code>#1f2937</code></td><td><code>#ffffff</code></td></tr>
+        <tr><td><code>control</code></td><td>Inputs, secondary buttons, chips</td><td><code>rgba(255, 255, 255, 0.06)</code></td><td><code>rgba(17, 24, 39, 0.05)</code></td></tr>
+        <tr><td><code>controlHover</code></td><td>Inputs and secondary buttons on hover</td><td><code>rgba(255, 255, 255, 0.1)</code></td><td><code>rgba(17, 24, 39, 0.1)</code></td></tr>
+        <tr><td><code>border</code></td><td>Borders and dividers</td><td><code>#374151</code></td><td><code>#e5e7eb</code></td></tr>
+        <tr><td><code>overlay</code></td><td>Backdrop behind dialogs</td><td><code>rgba(0, 0, 0, 0.6)</code></td><td><code>rgba(17, 24, 39, 0.45)</code></td></tr>
+        <tr><td><code>heading</code></td><td>Headings and values</td><td><code>#ffffff</code></td><td><code>#111827</code></td></tr>
+        <tr><td><code>text</code></td><td>Body text</td><td><code>rgba(255, 255, 255, 0.87)</code></td><td><code>#1f2937</code></td></tr>
+        <tr><td><code>muted</code></td><td>Secondary text and labels</td><td><code>rgba(255, 255, 255, 0.6)</code></td><td><code>#4b5563</code></td></tr>
+        <tr><td><code>subtle</code></td><td>Hints, placeholders, timestamps</td><td><code>rgba(255, 255, 255, 0.4)</code></td><td><code>#6b7280</code></td></tr>
+        <tr><td><code>success</code></td><td>Success states</td><td><code>#3fb950</code></td><td><code>#1a7f37</code></td></tr>
+        <tr><td><code>warning</code></td><td>Warning states</td><td><code>#f0883e</code></td><td><code>#bc4c00</code></td></tr>
+        <tr><td><code>error</code></td><td>Errors and destructive actions</td><td><code>#f85149</code></td><td><code>#cf222e</code></td></tr>
+        <tr><td><code>info</code></td><td>Informational states</td><td><code>#58a6ff</code></td><td><code>#0969da</code></td></tr>
+    </tbody>
+</table>
+
 <h2>{{ 'docs.server-integration.aws-plugin' | translate }}</h2>
 <p>{{ 'docs.server-integration.aws-plugin-desc' | translate }}</p>
 <table>
