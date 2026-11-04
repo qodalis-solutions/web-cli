@@ -3,6 +3,12 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.0.1
+
+### Server commands hidden by local commands
+
+- A server command whose name a local command or alias already has (the users module's `listusers`, alias `users`, hides a server `users`) is reported once: `Server command "users" from "ops" is hidden by local "listusers"; use "ops:users".` `server info <name>` lists the hidden commands, `help <command>` of the local command names them, and `CliServerManager.hiddenCommands` returns them.
+
 ## v2.0.0
 
 The first stable release of the 2.0 line: the same packages as 2.0.0-rc.4. Upgrading from 1.x: see [Upgrading to 2.0](https://cli.qodalis.com/docs/migration). The sections below list every change since 1.0.39.

@@ -31,6 +31,11 @@
     <li><strong>With the server as prefix</strong>: <code>node:echo hello</code> always runs on that server. Use it when a
         local command has the same name (local commands win), or to pick a server explicitly.</li>
 </ul>
+<p>
+    A server command hidden by a local command (or a local alias) is reported once at startup
+    (<code>Server command "users" from "ops" is hidden by local "listusers"; use "ops:users".</code>), listed by
+    <code>server info &lt;name&gt;</code>, and noted in <code>help</code> of the local command.
+</p>
 <table>
     <thead>
         <tr><th>Command</th><th>Aliases</th><th>What it does</th></tr>

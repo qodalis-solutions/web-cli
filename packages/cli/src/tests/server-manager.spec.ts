@@ -109,3 +109,32 @@ describe('CliServerManager bare aliases', () => {
         expect(names(registry)).toEqual(['data-explorer', 'node:status', 'status']);
     });
 });
+
+describe('CliServerManager hidden server commands', () => {
+    it('records and warns once about a server command a local alias hides', async () => {
+        const registry = new CliCommandProcessorRegistry();
+        const listusers: any = { command: 'listusers', aliases: ['users'], processCommand: async () => undefined };
+        registry.registerProcessor(listusers);
+        const connection: any = {
+            connected: true,
+            commands: [{ command: 'users', description: 'Server users' }, { command: 'stats', description: 'Stats' }],
+            connect: async () => undefined,
+            stopHealthCheck: () => undefined,
+            startHealthCheck: () => undefined,
+        };
+        const manager = new CliServerManager(registry);
+        const logger = { warn: jasmine.createSpy('warn'), info: () => undefined };
+        (manager as any)._logger = logger;
+        manager.connections.set('ratebell', connection);
+
+        await manager.reconnect('ratebell');
+        await manager.reconnect('ratebell');
+
+        expect(manager.hiddenCommands).toEqual([{ server: 'ratebell', command: 'users', localCommand: 'listusers' }]);
+        expect(logger.warn).toHaveBeenCalledOnceWith(
+            'Server command "users" from "ratebell" is hidden by local "listusers"; use "ratebell:users".',
+        );
+        expect(registry.findProcessor('users', [])).toBe(listusers);
+        expect(registry.findProcessor('ratebell:users', [])).toBeDefined();
+    });
+});

@@ -12,7 +12,10 @@ function helpContext(cols: number, processor: ICliCommandProcessor) {
                 { name: 'help', aliases: ['h'], type: 'boolean', required: false, description: 'Displays help for the command' },
             ],
         },
-        services: { getRequired: (t: any) => (t === CliProcessorsRegistry_TOKEN ? registry : undefined) },
+        services: {
+            getRequired: (t: any) => (t === CliProcessorsRegistry_TOKEN ? registry : undefined),
+            get: () => undefined,
+        },
         translator: { t: (_: string, fallback: string) => fallback },
         writer: {
             writeln: (t = '') => lines.push(t),

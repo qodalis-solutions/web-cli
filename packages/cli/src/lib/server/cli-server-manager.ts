@@ -18,6 +18,16 @@ import {
 export const CliServerManager_TOKEN =
     createCliToken<CliServerManager>('cli-server-manager');
 
+/** A server command whose bare name a local command already has */
+export interface CliHiddenServerCommand {
+    /** Server that provides the command */
+    server: string;
+    /** The server command's name */
+    command: string;
+    /** The local command that owns the name (its name, not the alias) */
+    localCommand: string;
+}
+
 export class CliServerManager implements DefaultServerProvider {
     readonly connections = new Map<string, CliServerConnection>();
     private _logger?: { warn(msg: string): void; info(msg: string): void };
@@ -26,6 +36,9 @@ export class CliServerManager implements DefaultServerProvider {
     /** Bare-name aliases this manager registered (only these are ever removed) */
     private readonly _bareAliases = new Set<ICliCommandProcessor>();
     private _backgroundServices?: ICliBackgroundServiceRegistry;
+    private _hidden: CliHiddenServerCommand[] = [];
+    /** `server:command` pairs already warned about, so each warns once */
+    private readonly _warnedHidden = new Set<string>();
 
     constructor(
         private readonly registry: ICliCommandProcessorRegistry,
@@ -155,6 +168,14 @@ export class CliServerManager implements DefaultServerProvider {
         return { success: false, commandCount: 0 };
     }
 
+    /**
+     * Server commands a local command hides: reachable only as
+     * `<server>:<command>` (see `server commands`).
+     */
+    get hiddenCommands(): readonly CliHiddenServerCommand[] {
+        return this._hidden;
+    }
+
     getConnection(name: string): CliServerConnection | undefined {
         return this.connections.get(name);
     }
@@ -229,6 +250,7 @@ export class CliServerManager implements DefaultServerProvider {
 
     private registerBareAliases(): void {
         const commandCounts = new Map<string, string[]>();
+        this._hidden = [];
 
         for (const [serverName, connection] of this.connections) {
             if (!connection.connected) continue;
@@ -243,8 +265,19 @@ export class CliServerManager implements DefaultServerProvider {
             const existingProcessor = this.registry.findProcessor(command, []);
 
             // Only register bare alias if no local processor owns this command
-            if (existingProcessor && !this._bareAliases.has(existingProcessor))
+            if (
+                existingProcessor &&
+                !this._bareAliases.has(existingProcessor)
+            ) {
+                for (const server of servers) {
+                    this.recordHidden(
+                        server,
+                        command,
+                        existingProcessor.command,
+                    );
+                }
                 continue;
+            }
 
             if (servers.length === 1) {
                 const serverName = servers[0];
@@ -284,5 +317,23 @@ export class CliServerManager implements DefaultServerProvider {
                 this._bareAliases.add(multi);
             }
         }
+    }
+
+    private recordHidden(
+        server: string,
+        command: string,
+        localCommand: string,
+    ): void {
+        this._hidden.push({ server, command, localCommand });
+        const key = `${server}:${command}`;
+        if (this._warnedHidden.has(key)) return;
+        this._warnedHidden.add(key);
+        const owner =
+            localCommand === command
+                ? `a local command of the same name`
+                : `local "${localCommand}"`;
+        this._logger?.warn(
+            `Server command "${command}" from "${server}" is hidden by ${owner}; use "${key}".`,
+        );
     }
 }

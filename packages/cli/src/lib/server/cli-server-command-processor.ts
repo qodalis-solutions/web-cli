@@ -310,6 +310,19 @@ class ServerStatusProcessor implements ICliCommandChildProcessor {
                 : {}),
         });
 
+        const hidden = manager.hiddenCommands.filter((h) => h.server === name);
+        if (connection.connected && hidden.length) {
+            writer.writeln();
+            writer.writeWarning(
+                t.t('cli.server.status.hidden_commands', 'Hidden by local commands, run them with the server prefix:'),
+            );
+            for (const h of hidden) {
+                writer.writeln(
+                    `  ${writer.wrapInColor(`${name}:${h.command}`, CliForegroundColor.Cyan)}  ${t.t('cli.server.status.hidden_by', '(local: {command})', { command: h.localCommand })}`,
+                );
+            }
+        }
+
         writer.writeln();
         if (!reachable) {
             writer.writeError(`No answer from ${connection.config.url}.`);
