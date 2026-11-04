@@ -134,6 +134,7 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
         let serverUrl: string | undefined;
         let serverName: string | undefined;
         let serverHeaders: CliHeadersProvider | undefined;
+        let unsafeHeaders: boolean | undefined;
 
         if (serverArg) {
             if (serverArg.startsWith('http://') || serverArg.startsWith('https://')) {
@@ -147,6 +148,7 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
                     serverUrl = match.url;
                     serverName = match.name;
                     serverHeaders = match.headers;
+                    unsafeHeaders = match.unsafeHeadersInWebSocketUrl;
                 } else {
                     context.writer.writeError(
                         `Server '${serverArg}' not found. Available servers: ${
@@ -161,6 +163,7 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
             serverUrl = defaultServer?.url;
             serverName = defaultServer?.name;
             serverHeaders = defaultServer?.headers;
+            unsafeHeaders = defaultServer?.unsafeHeadersInWebSocketUrl;
         }
 
         if (!serverUrl) {
@@ -185,7 +188,9 @@ class ServerLogsSubProcessor implements ICliCommandProcessor {
 
         const ws = new WebSocket(
             serverName
-                ? await resolveServerWebSocketUrl(context.services, serverName, fullUrl, serverHeaders)
+                ? await resolveServerWebSocketUrl(context.services, serverName, fullUrl, serverHeaders, {
+                      unsafeHeadersInWebSocketUrl: unsafeHeaders,
+                  })
                 : fullUrl,
         );
         const logs: string[] = [];

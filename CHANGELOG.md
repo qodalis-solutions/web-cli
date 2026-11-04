@@ -5,6 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## v2.0.1
 
+### Server WebSockets keep tokens out of URLs
+
+- Server `headers` are no longer copied into WebSocket URLs as `_header_<name>` query parameters, where tokens ended up in access, proxy and CDN logs and in browser history. When no auth module handles the server, the client fetches a single-use ticket from `POST /api/v1/qcli/sessions/ws-ticket` with the headers and connects with `?ticket=`; a server without that endpoint gets an unauthenticated socket and a one-time console warning. Applies to server events, `ssh`, `server logs` and `server jobs` (`buildServerWebSocketUrl` in `@qodalis/cli-core`).
+- **Upgrading**: a server that authorizes sockets from `_header_Authorization` (a shell token without the users plugin) needs `unsafeHeadersInWebSocketUrl: true` on its server entry. The option is deprecated; use the users plugin's tickets instead.
+
 ### Server commands hidden by local commands
 
 - A server command whose name a local command or alias already has (the users module's `listusers`, alias `users`, hides a server `users`) is reported once: `Server command "users" from "ops" is hidden by local "listusers"; use "ops:users".` `server info <name>` lists the hidden commands, `help <command>` of the local command names them, and `CliServerManager.hiddenCommands` returns them.

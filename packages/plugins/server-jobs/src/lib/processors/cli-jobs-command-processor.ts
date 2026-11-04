@@ -1197,6 +1197,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                     serverName,
                     baseUrl.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:') + '/ws/v1/qcli/events',
                     config.headers,
+                    { unsafeHeadersInWebSocketUrl: config.unsafeHeadersInWebSocketUrl },
                 );
                 // Ctrl+C while the URL was being resolved
                 if (stopped) break;
