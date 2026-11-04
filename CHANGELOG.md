@@ -14,6 +14,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - A server command whose name a local command or alias already has (the users module's `listusers`, alias `users`, hides a server `users`) is reported once: `Server command "users" from "ops" is hidden by local "listusers"; use "ops:users".` `server info <name>` lists the hidden commands, `help <command>` of the local command names them, and `CliServerManager.hiddenCommands` returns them.
 
+### Paged server output
+
+- Server tables can carry `page: { skip, take, total?, hasMore, truncated? }` (`CliServerTablePage` in `@qodalis/cli-core`). The terminal prints `Rows 51–100 of 1987 · next: <command> --skip 100` under a paged table, and a warning when the server cut a table from a command that does not page. Servers (Node, .NET, Python) add the `--skip` / `--take` convention, a paged table writer and a `maxTableRows` cap (default 200); see [Paging long results](https://cli.qodalis.com/docs/server-integration#paging).
+
 ## v2.0.0
 
 The first stable release of the 2.0 line: the same packages as 2.0.0-rc.4. Upgrading from 1.x: see [Upgrading to 2.0](https://cli.qodalis.com/docs/migration). The sections below list every change since 1.0.39.

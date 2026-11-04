@@ -4,9 +4,11 @@ import {
     CliServerCommandDescriptor,
     CliServerOutput,
     CliServerResponse,
+    CliServerTablePage,
     ICliCommandParameterDescriptor,
     ICliCommandProcessor,
     ICliExecutionContext,
+    CliForegroundColor,
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
 
@@ -16,6 +18,7 @@ import { CliServerConnection } from './cli-server-connection';
 export function renderSingleOutput(
     output: CliServerOutput,
     context: ICliExecutionContext,
+    rawCommand?: string,
 ): void {
     switch (output.type) {
         case 'text': {
@@ -33,6 +36,7 @@ export function renderSingleOutput(
         }
         case 'table':
             context.writer.writeTable(output.headers, output.rows);
+            if (output.page) writePageFooter(output.page, output.rows.length, context, rawCommand);
             break;
         case 'list':
             context.writer.writeList(output.items, {
@@ -54,14 +58,71 @@ export function renderSingleOutput(
 }
 
 /**
+ * The command line for the next rows: `rawCommand` with its `--skip` replaced
+ * (`accounts list --take 20 --skip 20` -> `... --take 20 --skip 40`).
+ */
+export function nextRowsCommand(rawCommand: string, skip: number): string {
+    const withoutSkip = rawCommand.replace(/\s--skip(?:=|\s+)\S+/g, '').trim();
+    return `${withoutSkip} --skip ${skip}`;
+}
+
+/**
+ * The line under a paged server table: `Rows 51–100 of 1987 · next: <cmd> --skip 100`,
+ * or, for a table the server cut, how many rows were left out.
+ */
+function writePageFooter(
+    page: CliServerTablePage,
+    rowCount: number,
+    context: ICliExecutionContext,
+    rawCommand?: string,
+): void {
+    const { writer } = context;
+    const t = context.translator;
+    if (page.truncated) {
+        writer.writeWarning(
+            t.t(
+                'cli.server.page.truncated',
+                'Showing the first {shown} of {total} rows: this command does not page. Narrow it down to see the rest.',
+                { shown: String(rowCount), total: String(page.total ?? '?') },
+            ),
+        );
+        return;
+    }
+    const total = page.total !== undefined ? String(page.total) : undefined;
+    const parts = [
+        rowCount === 0
+            ? total !== undefined
+                ? t.t('cli.server.page.none_of', 'No rows after {skip} of {total}', { skip: String(page.skip), total })
+                : t.t('cli.server.page.none', 'No rows after {skip}', { skip: String(page.skip) })
+            : total !== undefined
+              ? t.t('cli.server.page.rows_of', 'Rows {from}–{to} of {total}', {
+                    from: String(page.skip + 1),
+                    to: String(page.skip + rowCount),
+                    total,
+                })
+              : t.t('cli.server.page.rows', 'Rows {from}–{to}', {
+                    from: String(page.skip + 1),
+                    to: String(page.skip + rowCount),
+                }),
+    ];
+    if (page.hasMore && rawCommand) {
+        parts.push(
+            `${t.t('cli.server.page.next', 'next:')} ${writer.wrapInColor(nextRowsCommand(rawCommand, page.skip + rowCount), CliForegroundColor.Cyan)}`,
+        );
+    }
+    writer.writeln(`\x1b[2m${parts.join(' · ')}\x1b[0m`);
+}
+
+/**
  * Render a CliServerResponse to the terminal.
  */
 export function renderServerResponse(
     response: CliServerResponse,
     context: ICliExecutionContext,
+    rawCommand?: string,
 ): void {
     for (const output of response.outputs ?? []) {
-        renderSingleOutput(output, context);
+        renderSingleOutput(output, context, rawCommand);
     }
 
     if (response.exitCode !== 0) {
@@ -105,7 +166,7 @@ export async function executeOnServer(
             // Streaming mode — render outputs as they arrive
             const result = await connection.executeStream(
                 serverCommand,
-                (output) => renderSingleOutput(output, context),
+                (output) => renderSingleOutput(output, context, command.rawCommand),
             );
             if (result.exitCode !== 0) {
                 context.process.exit(result.exitCode);
@@ -115,7 +176,7 @@ export async function executeOnServer(
             context.spinner?.show('Executing on server...');
             const response = await connection.execute(serverCommand);
             context.spinner?.hide();
-            renderServerResponse(response, context);
+            renderServerResponse(response, context, command.rawCommand);
         }
     } catch (e: any) {
         context.spinner?.hide();

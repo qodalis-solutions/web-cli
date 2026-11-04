@@ -12,6 +12,34 @@ A server plugin registers command processors in a Qodalis CLI server (Node, .NET
 - Exceptions thrown by a processor become exit code 1 with `Error executing command: <message>` (style `error`). Unknown commands return `Unknown command: <name>`.
 - Servers: Node `@qodalis/cli-server-node` (default port 8047 in the demos), .NET `Qodalis.Cli` (8046), Python `qodalis-cli-server` (8048).
 
+### Paging list output (all servers)
+
+A command that can return many rows must page them: a terminal should never receive thousands of rows.
+
+- Declare the parameters: `--skip` (default 0) and `--take` (default 50, at most 500). Node `CliPaging.parameters()`, .NET `CliPaging.Parameters()` (`Qodalis.Cli.Abstractions.Helpers`), Python `CliPaging.parameters()`.
+- Read the request: Node `CliPaging.from(command)`, .NET `CliPaging.From(command)`, Python `CliPaging.from_command(command)`. It gives `skip` and `take` for the query; missing or invalid values fall back to the defaults.
+- Query those rows (and the total when it is cheap) and write it with the paged table writer: Node `writePagedTable(headers, rows, page, { total, hasMore })`, .NET `WritePagedTable(headers, rows, page, total, hasMore)`, Python `write_paged_table(headers, rows, page, total=None, has_more=None)`. Without a total, pass `hasMore` (query `take + 1` rows to find out).
+- On the wire the table carries `page: { skip, take, total?, hasMore }`. The web terminal prints `Rows 51–100 of 1987 · next: <command> --skip 100` under it; MCP text output adds `(rows 51-100 of 1987; next: skip=100)`.
+- Safety net: a table without a page that has more than the server's `maxTableRows` / `MaxTableRows` / `max_table_rows` rows (default 200, 0 = no limit) is cut to that many and marked `page.truncated`; the terminal says the command does not page. Do not rely on it: page instead.
+
+.NET example:
+
+```csharp
+public override IEnumerable<ICliCommandParameterDescriptor>? Parameters { get; set; } = CliPaging.Parameters();
+
+public async Task<ICliStructuredResponse?> HandleStructuredAsync(CliProcessCommand command, CancellationToken cancellationToken = default)
+{
+    var page = CliPaging.From(command);
+    var total = await db.Orders.CountAsync(cancellationToken);
+    var rows = await db.Orders.OrderBy(o => o.Id).Skip(page.Skip).Take(page.Take)
+        .Select(o => new[] { o.Id.ToString(), o.Customer }).ToArrayAsync(cancellationToken);
+
+    var builder = new CliResponseBuilder();
+    builder.WritePagedTable(["Id", "Customer"], rows, page, total);
+    return builder.Build();
+}
+```
+
 ### Node: minimal server processor
 
 A Node server command extends `CliCommandProcessor` from `@qodalis/cli-server-abstractions` and returns its output text from `handleAsync`.
@@ -153,8 +181,8 @@ export class CliUsersCommandProcessor extends CliCommandProcessor implements ICl
 }
 ```
 
-- `CliStructuredOutput` = `text` (`value`, `style?`) | `table` (`headers`, `rows`) | `list` (`items`, `ordered?`) | `json` (`value`) | `key-value` (`entries`). Import these types from `@qodalis/cli-server-abstractions` (the server package re-exports them as `CliServerOutput` / `CliServerResponse`).
-- `CliResponseBuilder` (from `@qodalis/cli-server-node`): `writeText(text, style?)`, `writeTable(headers, rows)`, `writeList(items, ordered?)`, `writeJson(value)`, `writeKeyValue(record)`, `setExitCode(code)`, `build()`.
+- `CliStructuredOutput` = `text` (`value`, `style?`) | `table` (`headers`, `rows`, `page?`) | `list` (`items`, `ordered?`) | `json` (`value`) | `key-value` (`entries`). Import these types from `@qodalis/cli-server-abstractions` (the server package re-exports them as `CliServerOutput` / `CliServerResponse`).
+- `CliResponseBuilder` (from `@qodalis/cli-server-node`): `writeText(text, style?)`, `writeTable(headers, rows)`, `writePagedTable(headers, rows, page, { total?, hasMore? })`, `writeList(items, ordered?)`, `writeJson(value)`, `writeKeyValue(record)`, `setExitCode(code)`, `build()`.
 - `/execute/stream` prefers `handleStreamAsync`, then `handleStructuredAsync` (each output emitted), then `handleAsync`.
 
 ### Node: permissions and MCP tools
@@ -374,8 +402,8 @@ public class CliUsersCommandProcessor : CliCommandProcessor, ICliStreamCommandPr
 }
 ```
 
-- `ICliResponseBuilder`: `WriteText(text, style?)`, `WriteTable(headers, rows)`, `WriteList(items, ordered = false)`, `WriteJson(value)`, `WriteKeyValue(dictionary)`, `SetExitCode(code)`, `Build()` -> `CliServerResponse { ExitCode, Outputs }`.
-- Output classes (`Qodalis.Cli.Models`): `TextOutput { Value, Style }`, `TableOutput { Headers, Rows }`, `ListOutput { Items, Ordered }`, `JsonOutput { Value }`, `KeyValueOutput { Entries: KeyValueEntry[] }`.
+- `ICliResponseBuilder`: `WriteText(text, style?)`, `WriteTable(headers, rows)`, `WritePagedTable(headers, rows, page, total?, hasMore?)`, `WriteList(items, ordered = false)`, `WriteJson(value)`, `WriteKeyValue(dictionary)`, `SetExitCode(code)`, `Build()` -> `CliServerResponse { ExitCode, Outputs }`.
+- Output classes (`Qodalis.Cli.Models`): `TextOutput { Value, Style }`, `TableOutput { Headers, Rows, Page? }`, `ListOutput { Items, Ordered }`, `JsonOutput { Value }`, `KeyValueOutput { Entries: KeyValueEntry[] }`.
 - The executor uses the structured result only if it is a `CliServerResponse`; an empty `HandleAsync` string produces no output.
 
 ### .NET: permissions and MCP tools
@@ -644,7 +672,7 @@ class CliUsersCommandProcessor(CliCommandProcessor, ICliStreamCommandProcessor):
 
 - Keep the `cancellation_event` parameter in every override: the executor always passes two arguments.
 - Return `self._STRUCTURED_NOT_IMPLEMENTED` from `handle_structured_async` to fall back to `handle_async`.
-- `CliResponseBuilder`: `write_text(text, style=None)`, `write_table(headers, rows)`, `write_list(items, ordered=False)`, `write_json(value)`, `write_key_value(dict)`, `set_exit_code(code)`, `build()` -> `CliServerResponse`. Output models (`qodalis_cli.models`): `CliServerTextOutput`, `CliServerTableOutput`, `CliServerListOutput`, `CliServerJsonOutput`, `CliServerKeyValueOutput`.
+- `CliResponseBuilder`: `write_text(text, style=None)`, `write_table(headers, rows)`, `write_paged_table(headers, rows, page, total=None, has_more=None)`, `write_list(items, ordered=False)`, `write_json(value)`, `write_key_value(dict)`, `set_exit_code(code)`, `build()` -> `CliServerResponse`. Output models (`qodalis_cli.models`): `CliServerTextOutput`, `CliServerTableOutput`, `CliServerListOutput`, `CliServerJsonOutput`, `CliServerKeyValueOutput`.
 
 ### Python: permissions and MCP tools
 
