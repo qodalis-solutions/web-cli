@@ -19,6 +19,7 @@ import { CliCommandProcessorRegistry } from '../lib/registry';
 import { CliExecutionProcess } from '../lib/context/cli-execution-process';
 import { CliStateStoreManager_TOKEN } from '../lib/tokens';
 import { ProcessExitedError } from '../lib/errors';
+import { CliServerManager } from '../lib/server/cli-server-manager';
 
 // ---------------------------------------------------------------------------
 // Test Fixtures
@@ -1665,4 +1666,65 @@ describe('CliCommandExecutor', () => {
             expect(processes[0].status).toBe('failed');
         });
     });
+});
+
+// ---------------------------------------------------------------------------
+// Server commands with sub-commands, through the executor
+// ---------------------------------------------------------------------------
+describe('CliCommandExecutor with server sub-commands', () => {
+    async function run(line: string, commands: any[]) {
+        const registry = new CliCommandProcessorRegistry();
+        const executor = new CliCommandExecutor(registry);
+        const writer = createStubWriter();
+        const context = createMockContext(writer);
+        (context as any).executor = executor;
+        (context as any).notifier = { info() {}, warn() {}, error() {}, clear() {} };
+        const sent: any[] = [];
+        const connection: any = {
+            connected: true,
+            capabilities: { streaming: false },
+            commands,
+            connect: async () => undefined,
+            stopHealthCheck: () => undefined,
+            startHealthCheck: () => undefined,
+            execute: async (cmd: any) => {
+                sent.push(cmd);
+                return { exitCode: 0, outputs: [] };
+            },
+        };
+        const manager = new CliServerManager(registry);
+        manager.connections.set('rb', connection);
+        await manager.reconnect('rb');
+        await executor.executeCommand(line, context);
+        return { sent };
+    }
+
+    const accounts = [
+        {
+            command: 'accounts',
+            description: 'Accounts',
+            processors: [
+                { command: 'list', description: 'List' },
+                { command: 'show', description: 'Show', parameters: [{ name: 'json', type: 'boolean', description: 'json' }] },
+            ],
+        },
+    ];
+
+    const cases: [string, string[], string[], Record<string, unknown>][] = [
+        ['rb:accounts list', ['list'], [], {}],
+        ['accounts list', ['list'], [], {}],
+        ['accounts show a@b.c', ['show'], ['a@b.c'], {}],
+        ['rb:accounts show a@b.c --json', ['show'], ['a@b.c'], { json: true }],
+        ['accounts', [], [], {}],
+    ];
+    for (const [line, chain, positionals, args] of cases) {
+        it(`sends "${line}" with its sub-command path`, async () => {
+            const { sent } = await run(line, accounts);
+            expect(sent.length).toBe(1);
+            expect(sent[0].command).toBe('accounts');
+            expect(sent[0].chainCommands).toEqual(chain);
+            expect(sent[0].positionals).toEqual(positionals);
+            expect(sent[0].args).toEqual(args);
+        });
+    }
 });
