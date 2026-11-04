@@ -11,6 +11,7 @@ import {
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { CliProcessorsRegistry_TOKEN } from '../../tokens';
 import { groupBy } from '../../utils';
+import { CliServerManager, CliServerManager_TOKEN } from '../../server/cli-server-manager';
 
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';
@@ -304,6 +305,21 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
                 const description = t.t(`cli.help.global_${param.name}`, param.description);
                 this.writeParameter({ ...param, description }, context, isNarrow(context));
             });
+        }
+
+        // ── Server commands of the same name ─────────────────────
+        const hidden = context.services
+            .get<CliServerManager>(CliServerManager_TOKEN)
+            ?.hiddenCommands.filter((h) => h.localCommand === processor.command);
+        if (hidden?.length) {
+            writer.writeln();
+            for (const h of hidden) {
+                writeWrapped(
+                    context,
+                    `${writer.wrapInColor('◇', CliForegroundColor.Magenta)} ${t.t('cli.help.hides_server_command', 'Server "{server}" also has "{command}": run it as {key}', { server: h.server, command: h.command, key: `${h.server}:${h.command}` })}`,
+                    2,
+                );
+            }
         }
 
         // ── Server notice ────────────────────────────────────────
