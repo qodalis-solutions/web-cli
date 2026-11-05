@@ -743,6 +743,51 @@ The jobs API (`/api/v1/qcli/jobs`), the `jobs_*` MCP tools, `server jobs` and th
 - `StopAsync`, `CancelAsync` and `UpdateAsync` default to `NotSupportedException` (HTTP `501`, `NOT_SUPPORTED`); the dashboard shows only the actions in `Actions`.
 - Throw `KeyNotFoundException` for an unknown job (`404`) and `InvalidOperationException` when the job's state refuses the action (`409`).
 
+### Jobs: inside a job (all servers)
+
+A job's execution context gives each run its log lines, `properties` (the run's own values, saved with the execution and returned by the API as `properties`, e.g. `items=32`) and `discard()` (leaves a completed run that found nothing to do out of the history; failed runs are always kept).
+
+- .NET: `context.Properties["synced"] = 12`, `context.Discard()`, and `context.Services`, a DI scope created for the run (for a `DbContext`).
+- Node: `context.properties.synced = 12`, `context.discard()`.
+- Python: `context.properties["synced"] = 12`, `context.discard()`.
+- Job ids are stable: the `id` option (`Id`, `id`), or the job's name (`-2`, `-3`, ... for duplicate names). The API, the history and a saved pause use the id, so keep it the same across releases. Ids may not contain `/`, `\`, `?` or `#`.
+- A saved pause or stop survives a restart; disabling a job in code (`Enabled = false`, `enabled: false`, `enabled=False`) always keeps it stopped.
+- `RunOnStart` / `runOnStart` / `run_on_start` runs a job when the server starts; an interval job keeps its rhythm across restarts (the next run is the last run plus the interval).
+- Run a job from the host's own code through the scheduler interface: `ICliJobScheduler.TriggerAsync(id)` (.NET, resolve the interface), `scheduler.triggerAsync(id)` (Node), `await scheduler.trigger(id)` (Python).
+- `GET /api/v1/qcli/jobs/executions?job=a,b&group=&status=&since=&limit=&offset=` lists the runs of several jobs (or every job), newest first. Job storage can delete old runs: `PruneAsync(before)` (.NET), `prune(before)` (Node, Python).
+
+```csharp
+public class SyncOrdersJob : ICliJob
+{
+    public async Task ExecuteAsync(ICliJobExecutionContext context, CancellationToken cancellationToken)
+    {
+        var synced = await context.Services.GetRequiredService<IOrderSync>().SyncAsync(cancellationToken);
+        if (synced == 0) { context.Discard(); return; }
+        context.Properties["synced"] = synced;
+    }
+}
+
+builder.Services.AddControllers().AddCli(cli => cli
+    .AddJob(new SyncOrdersJob(), o => { o.Id = "sync-orders"; o.Interval = TimeSpan.FromMinutes(5); o.RunOnStart = true; })
+    // history and state in your database (Qodalis.Cli.Plugin.Jobs.EfCore)
+    .AddEfCoreJobStorage(o => o.UseNpgsql(connectionString)));
+```
+
+- .NET only: `AddEfCoreJobStorage` keeps the history in any EF Core database and creates its tables (`job_executions`, `job_states`) even in a database that already has others; call `modelBuilder.ApplyJobStorageModel()` to keep them in your own migrations. Database stores return `properties` values as JSON values.
+
+### Audit log (all servers)
+
+The users plugin records sign-ins, token and group changes in its audit log, read with `audit:read` from `GET /api/v1/qcli/audit?event=&username=&actor=&limit=&offset=` (newest 100 without a `limit`, at most 1000), by the console's `audit` and by the dashboard's Audit page.
+
+- An entry has `event`, `actor`, `username` (the user it is about), `target` (what else it is about, e.g. `group:admins`), `metadata` and `properties` (the host's own values).
+- A host writes its own entries to the same log: `IAuditStore.LogAsync` (.NET), `auditStore.log(...)` (Node), `await audit_store.log(...)` (Python).
+- Old entries: `PruneAsync(before)` (.NET), `prune(before)` (Node; Python takes Unix milliseconds).
+- .NET only: `cli.AddEfCoreAuditStore(o => o.UseNpgsql(connectionString))` (`Qodalis.Cli.Plugin.Users.EfCore`) keeps the log in a database (table `audit_entries`; `modelBuilder.ApplyAuditStorageModel()` for your own migrations). It keeps every entry, failed sign-ins included: prune it from a daily job.
+
+### Installed plugins (all servers)
+
+`GET /api/v1/qcli/plugins/installed` (admin plugin) lists the server plugins the host installed (users, admin, jobs, storage providers, ...) with their package id, version and description; the dashboard's Plugins page shows them above the command modules. The built-in plugins list themselves; a plugin of your own registers with `cli.AddInstalledPlugin(assembly)` (.NET), `builder.addInstalledPlugin(...)` (Node) or `builder.add_installed_plugin(...)` (Python).
+
 ### Admin dashboard: name and icon (all servers)
 
 The dashboard is "Qodalis Cli Admin" with the Qodalis Solutions logo unless the admin plugin sets its branding: the name and icon (browser tab, sidebar, sign-in page) and the terminal's name in its welcome banner.
