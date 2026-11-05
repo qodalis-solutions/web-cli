@@ -536,6 +536,31 @@ cli.AddMcp(o =&gt; &#123; o.Exclude = ["fs_delete"]; &#125;);</code></pre>
     </tbody>
 </table>
 
+<h3 id="jobs-elsewhere">Jobs that run elsewhere (.NET)</h3>
+<p>
+    The jobs API, the <code>jobs_*</code> MCP tools, the <code>server jobs</code> commands and the dashboard's jobs
+    page work on an <code>ICliJobManager</code>. The default one runs the jobs registered with <code>AddJob</code> in
+    the server's process. When your jobs run somewhere else (a worker service, a queue, your own scheduler), implement
+    <code>ICliJobManager</code> over them and register it; the CLI and the dashboard then list and control those jobs.
+</p>
+<pre><code class="language-csharp">cli.SetJobManager&lt;MyJobManager&gt;();   // scoped: it may use the request's services
+
+public class MyJobManager : ICliJobManager
+&#123;
+    public Task&lt;IReadOnlyList&lt;CliJobInfo&gt;&gt; GetJobsAsync(CancellationToken ct) =&gt; ...;   // Actions = ["trigger", "pause", "resume"]
+    public Task TriggerAsync(string jobId, CancellationToken ct) =&gt; ...;
+    public Task PauseAsync(string jobId, CancellationToken ct) =&gt; ...;
+    public Task ResumeAsync(string jobId, CancellationToken ct) =&gt; ...;
+    public Task&lt;(IReadOnlyList&lt;JobExecution&gt; Items, int Total)&gt; GetExecutionsAsync(string jobId, int limit, int offset, string? status, CancellationToken ct) =&gt; ...;
+    public Task&lt;JobExecution?&gt; GetExecutionAsync(string jobId, string executionId, CancellationToken ct) =&gt; ...;
+&#125;</code></pre>
+<p>
+    Stopping, cancelling and changing a job's options default to <code>NotSupportedException</code>, answered with
+    <code>501</code> (<code>NOT_SUPPORTED</code>). Each job lists the actions it offers in <code>actions</code>, and the
+    dashboard shows only those buttons. Throw <code>KeyNotFoundException</code> for an unknown job (<code>404</code>)
+    and <code>InvalidOperationException</code> when the job's state refuses the action (<code>409</code>).
+</p>
+
 <h2>{{ 'docs.server-integration.sse-streaming' | translate }}</h2>
 <p>{{ 'docs.server-integration.sse-streaming-desc' | translate }}</p>
 <div class="code-block">
@@ -699,6 +724,34 @@ CliAdminBuilder().set_theme(&#123;
         <tr><td><code>info</code></td><td>Informational states</td><td><code>#58a6ff</code></td><td><code>#0969da</code></td></tr>
     </tbody>
 </table>
+
+<h3 id="admin-name-and-icon">Name and icon</h3>
+<p>
+    By default the dashboard is "Qodalis Cli Admin" with the Qodalis Solutions logo. An application that ships it
+    under its own name sets the admin plugin's branding: the name and icon of the browser tab, the sidebar and the
+    sign-in page, and the name its terminal shows in the welcome banner. Anything left out keeps the default.
+</p>
+<pre><code class="language-csharp">// .NET
+cli.AddAdmin(o =&gt; &#123; o.Branding.Name = "RateBell"; o.Branding.IconUrl = "/favicon.svg"; o.Branding.CliName = "RateBell CLI"; &#125;);</code></pre>
+<pre><code class="language-typescript">// Node
+new CliAdminBuilder().setBranding(&#123; name: 'RateBell', iconUrl: '/favicon.svg', cliName: 'RateBell CLI' &#125;);</code></pre>
+<pre><code class="language-python"># Python
+CliAdminBuilder().set_branding(&#123;"name": "RateBell", "icon_url": "/favicon.svg", "cli_name": "RateBell CLI"&#125;)</code></pre>
+<p>
+    The icon is an absolute http(s) URL, a root-relative path or a base64 <code>data:image</code> URL; the servers
+    validate the values at startup and publish them as <code>branding</code> in <code>/qcli/admin/theme.json</code>.
+    The terminal's copyright line, documentation link and <code>version</code> stay Qodalis CLI's
+    (<code>version</code> adds the name). In a web app, the same name and icon go in the CLI's
+    <a href="/docs/configuration"><code>branding</code></a> option.
+</p>
+
+<h3 id="admin-terminal-user">The terminal's user</h3>
+<p>
+    On a server with the users plugin, the dashboard's terminal is signed in as the dashboard's user: its prompt,
+    <code>whoami</code>, <code>id</code> and <code>perms</code> show that user, and <code>logout</code> signs out of
+    the dashboard. Without the users plugin (static admin password) the terminal only sends the dashboard's token
+    with its requests.
+</p>
 
 <h2>{{ 'docs.server-integration.aws-plugin' | translate }}</h2>
 <p>{{ 'docs.server-integration.aws-plugin-desc' | translate }}</p>
