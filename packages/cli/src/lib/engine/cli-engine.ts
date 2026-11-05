@@ -26,6 +26,7 @@ import { ICliStateStoreManager } from '../state/cli-state-store-manager';
 import { CliBoot } from '../services/cli-boot';
 import { CliBootLog } from '../services/cli-boot-log';
 import { LIBRARY_VERSION } from '../version';
+import { resolveCliBranding } from '../constants';
 import {
     CliWelcomeMessageConfig,
     greetingModule,
@@ -303,7 +304,7 @@ export class CliEngine {
             (s) => s.enabled !== false,
         ).length;
         bootLog.addSteps(1 + serverCount);
-        bootLog.info(`Starting Web CLI ${LIBRARY_VERSION}`);
+        bootLog.info(`Starting ${resolveCliBranding(this.options?.branding).name} ${LIBRARY_VERSION}`);
         bootLog.ok(
             `Terminal and services ready · ${this.terminal.cols}×${this.terminal.rows}`,
             bootLog.elapsedMs,

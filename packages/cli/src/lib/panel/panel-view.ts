@@ -1,4 +1,4 @@
-import { CliPanelPosition } from '@qodalis/cli-core';
+import { CliOptions, CliPanelPosition } from '@qodalis/cli-core';
 import { CliPanelController } from './cli-panel-controller';
 import { PANEL_POSITIONS } from './panel-geometry';
 import { CliPanelSnapshot, CliPanelTab, CliPanelTabStatus } from './panel-types';
@@ -26,6 +26,16 @@ export const PANEL_LABELS = {
     serversHeader: 'Server Connections',
     serversEmpty: 'No servers configured',
 } as const;
+
+/**
+ * The panel's title and icon: the host's branding (`options.branding`), or
+ * "CLI" with the terminal glyph (`iconUrl` unset).
+ */
+export function panelBranding(options?: CliOptions): { title: string; iconUrl?: string } {
+    const name = options?.branding?.name?.trim();
+    const icon = options?.branding?.icon?.trim();
+    return { title: name || PANEL_LABELS.title, iconUrl: icon || undefined };
+}
 
 export const SERVICES_ICON = '⚙';
 export const UPTIME_ICON = '↑';
@@ -83,6 +93,7 @@ export function positionDropdownItemClass(s: CliPanelSnapshot, position: CliPane
 /** Size, visibility and theme variables of the panel wrapper. */
 export function panelWrapperStyle(s: CliPanelSnapshot): Record<string, string> {
     const style: Record<string, string> = s.isHorizontal ? { width: `${s.width}px` } : { height: `${s.height}px` };
+
     if (s.hidden) style['display'] = 'none';
     return { ...style, ...s.themeStyles };
 }

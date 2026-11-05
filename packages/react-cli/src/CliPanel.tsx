@@ -11,6 +11,7 @@ import {
     HIDE_TAB_TERMINAL_ICON,
     MAXIMIZE_ICON,
     PANEL_LABELS,
+    panelBranding,
     RESTORE_ICON,
     SvgIcon,
     TERMINAL_ICON,
@@ -127,6 +128,7 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
             }),
     );
     const s = useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
+    const brand = panelBranding(options);
     const [rootElement, setRootElement] = useState<HTMLDivElement | null>(null);
 
     // Keep the controller in sync with props before the browser paints.
@@ -174,8 +176,12 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                     title={PANEL_LABELS.showCli}
                     onClick={() => controller.unhide()}
                 >
-                    <Icon icon={HIDE_TAB_TERMINAL_ICON} className="cli-panel-hide-tab-icon" />
-                    <span className="cli-panel-hide-tab-label">{PANEL_LABELS.title}</span>
+                    {brand.iconUrl ? (
+                        <img src={brand.iconUrl} alt="" className="cli-panel-hide-tab-icon cli-panel-brand-icon" />
+                    ) : (
+                        <Icon icon={HIDE_TAB_TERMINAL_ICON} className="cli-panel-hide-tab-icon" />
+                    )}
+                    <span className="cli-panel-hide-tab-label">{brand.title}</span>
                     <Icon icon={hideTabChevronIcon(s.position)} className="cli-panel-hide-tab-arrow" />
                 </button>
             )}
@@ -188,7 +194,7 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                 data-closable={String(s.closable)}
                 data-hideable={String(s.hideable)}
             >
-                <PanelHeader controller={controller} s={s} />
+                <PanelHeader controller={controller} s={s} brand={brand} />
                 {s.initialized && (
                     <div className="cli-panel-content" style={s.collapsed ? { display: 'none' } : undefined}>
                         <div className="cli-panel-tabs">
@@ -354,7 +360,15 @@ function StatusDropdown({ s }: { s: CliPanelSnapshot }) {
 
 /* ─── Header ─────────────────────────────────────────────── */
 
-function PanelHeader({ controller, s }: { controller: CliPanelController; s: CliPanelSnapshot }) {
+function PanelHeader({
+    controller,
+    s,
+    brand,
+}: {
+    controller: CliPanelController;
+    s: CliPanelSnapshot;
+    brand: ReturnType<typeof panelBranding>;
+}) {
     const indicators = statusIndicators(s);
     const openDropdown = (e: React.MouseEvent, dropdown?: 'services' | 'servers') => {
         if (!dropdown) return;
@@ -378,9 +392,9 @@ function PanelHeader({ controller, s }: { controller: CliPanelController; s: Cli
             <div className="cli-panel-header-content">
                 <p className="cli-panel-title">
                     <span className="cli-panel-title-icon">
-                        <Icon icon={TERMINAL_ICON} />
+                        {brand.iconUrl ? <img src={brand.iconUrl} alt="" className="cli-panel-brand-icon" /> : <Icon icon={TERMINAL_ICON} />}
                     </span>
-                    {PANEL_LABELS.title}
+                    {brand.title}
                 </p>
 
                 {s.showStatusIndicators && (

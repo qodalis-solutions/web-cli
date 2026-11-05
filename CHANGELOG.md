@@ -3,6 +3,12 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Your own name and icon on the CLI
+
+- `branding` option (`CliBranding` in `@qodalis/cli-core`): the `name` and `icon` an application ships the CLI under (`{ name: 'RateBell CLI', icon: '/favicon.svg' }`). The name replaces "Web CLI" and the Qodalis CLI art in the welcome banner and the startup log, and "CLI" in the panel's header and hide tab (React, Vue, Angular); the icon (an image URL) replaces the panel's terminal glyph. The copyright line, the documentation link and `version` stay Qodalis CLI's; `version` adds the name as an `App` row. Without it nothing changes.
+
 ## v2.0.1
 
 ### Server WebSockets keep tokens out of URLs

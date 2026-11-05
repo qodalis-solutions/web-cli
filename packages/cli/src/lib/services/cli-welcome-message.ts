@@ -1,5 +1,5 @@
 import { LIBRARY_VERSION } from '../version';
-import { getCliNameArt } from '../constants';
+import { resolveCliBranding } from '../constants';
 import {
     CliForegroundColor,
     ICliModule,
@@ -58,10 +58,11 @@ export const welcomeModule: ICliWelcomeModule = {
         if (config.message) {
             context.terminal.writeln(config.message);
         } else {
+            const branding = resolveCliBranding(context.options?.branding);
             const lines = [
-                `🚀 Welcome to Web CLI [Version ${context.writer.wrapInColor(LIBRARY_VERSION, CliForegroundColor.Green)}]`,
+                `🚀 Welcome to ${branding.name} [Version ${context.writer.wrapInColor(LIBRARY_VERSION, CliForegroundColor.Green)}]`,
                 `(c) ${new Date().getFullYear()} Qodalis Solutions. All rights reserved.`,
-                getCliNameArt(context.terminal.cols),
+                branding.art(context.terminal.cols),
                 '',
                 `📖 ${context.writer.wrapInColor('Documentation:', CliForegroundColor.Green)} https://cli.qodalis.com/docs/`,
                 '',

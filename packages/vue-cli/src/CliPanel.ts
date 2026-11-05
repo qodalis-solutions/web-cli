@@ -11,6 +11,7 @@ import {
     HIDE_TAB_TERMINAL_ICON,
     MAXIMIZE_ICON,
     PANEL_LABELS,
+    panelBranding,
     RESTORE_ICON,
     SvgIcon,
     TERMINAL_ICON,
@@ -83,6 +84,8 @@ export const CliPanel = defineComponent({
 
         // Merge: local props override config context
         const mergedOptions = computed(() => mergeCliOptions<CliPanelOptions>(props.options, config?.options));
+        // The panel's title and icon: the host's branding, or "CLI" with the terminal glyph
+        const branding = computed(() => panelBranding(mergedOptions.value));
         const hostConfig = computed(() => resolveCliHostConfig(props, config));
 
         const controlled = () => ({
@@ -164,7 +167,12 @@ export const CliPanel = defineComponent({
                     [h('div', { class: 'cli-panel-resize-grip' })],
                 ),
                 h('div', { class: 'cli-panel-header-content' }, [
-                    h('p', { class: 'cli-panel-title' }, [h('span', { class: 'cli-panel-title-icon' }, [icon(TERMINAL_ICON)]), PANEL_LABELS.title]),
+                    h('p', { class: 'cli-panel-title' }, [
+                        h('span', { class: 'cli-panel-title-icon' }, [
+                            branding.value.iconUrl ? h('img', { src: branding.value.iconUrl, alt: '', class: 'cli-panel-brand-icon' }) : icon(TERMINAL_ICON),
+                        ]),
+                        branding.value.title,
+                    ]),
                     s.showStatusIndicators
                         ? h(
                               'div',
@@ -450,8 +458,10 @@ export const CliPanel = defineComponent({
                               onClick: () => controller.unhide(),
                           },
                           [
-                              icon(HIDE_TAB_TERMINAL_ICON, 'cli-panel-hide-tab-icon'),
-                              h('span', { class: 'cli-panel-hide-tab-label' }, PANEL_LABELS.title),
+                              branding.value.iconUrl
+                                  ? h('img', { src: branding.value.iconUrl, alt: '', class: 'cli-panel-hide-tab-icon cli-panel-brand-icon' })
+                                  : icon(HIDE_TAB_TERMINAL_ICON, 'cli-panel-hide-tab-icon'),
+                              h('span', { class: 'cli-panel-hide-tab-label' }, branding.value.title),
                               icon(hideTabChevronIcon(s.position), 'cli-panel-hide-tab-arrow'),
                           ],
                       )

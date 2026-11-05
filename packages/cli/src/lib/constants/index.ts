@@ -1,3 +1,5 @@
+import { CliBranding } from '@qodalis/cli-core';
+
 const CLi_Name_Art_Full = `
    ____            _       _ _        _____ _      _____
   / __ \\          | |     | (_)      / ____| |    |_   _|
@@ -22,6 +24,35 @@ export const getCliNameArt = (cols: number): string => {
         return CLi_Name_Art_Compact;
     }
     return '\n  Qodalis CLI\n';
+};
+
+/** The branding with every default filled in (see `CliOptions.branding`). */
+export interface ResolvedCliBranding {
+    /** The product name ('Web CLI' by default). */
+    name: string;
+    /** True when the host set its own name. */
+    custom: boolean;
+    /** The panel's icon URL, if the host set one. */
+    icon?: string;
+    /** The welcome banner's art: Qodalis CLI's, or the host's name. */
+    art(cols: number): string;
+}
+
+export const DEFAULT_CLI_NAME = 'Web CLI';
+
+/** The CLI's name and icon: the host's `CliOptions.branding`, or Qodalis CLI's. */
+export const resolveCliBranding = (
+    branding?: CliBranding,
+): ResolvedCliBranding => {
+    const custom = branding?.name?.trim() || undefined;
+    const name = custom ?? DEFAULT_CLI_NAME;
+    const icon = branding?.icon?.trim() || undefined;
+    return {
+        name,
+        custom: !!custom,
+        icon,
+        art: (cols) => (custom ? `\n  ${custom}\n` : getCliNameArt(cols)),
+    };
 };
 
 export const hotkeysInfo = [
