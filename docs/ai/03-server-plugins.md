@@ -784,6 +784,14 @@ The audit log is a plugin of its own (.NET `Qodalis.Cli.Plugin.Audit`, Node `@qo
 - Another store: `cli.SetAuditStore<T>()` (.NET), `CliAuditBuilder.setStore(store)` (Node), `CliAuditBuilder().set_store(store)` (Python); the users plugin's audit-store option still works and does the same. The contract (`AuditEntry`, `AuditQueryOptions`, the store interface) is in each server's abstractions package. Old entries: `PruneAsync(before)` (.NET), `prune(before)` (Node; Python takes Unix milliseconds).
 - .NET only: `cli.AddEfCoreAuditStore(o => o.UseNpgsql(connectionString))` (`Qodalis.Cli.Plugin.Audit.EfCore`) keeps the log in a database (table `audit_entries`; `modelBuilder.ApplyAuditStorageModel()` for your own migrations). It keeps every entry, failed sign-ins included: prune it from a daily job.
 
+### Server logs and Seq (.NET)
+
+The dashboard's Logs page reads `GET /api/v1/qcli/logs?level=&search=&service=&from=&to=&limit=&offset=` (`logs:read`; `level` is one level or a comma list of `DEBUG`, `INFO`, `WARN`, `ERROR`; `from`/`to` ISO 8601; at most 500 per page) and tails `/ws/v1/qcli/logs` live. By default the history is the admin plugin's in-memory buffer: the latest 1000 entries of that process, gone on restart.
+
+- .NET: `cli.AddSeqLogs(seq => { seq.ServerUrl = "http://seq:5341"; seq.ApiKey = ...; seq.ServiceName = "my-api"; })` (`Qodalis.Cli.Plugin.Logs.Seq`) sends every log entry to Seq as CLEF, tagged `Service`, and makes Seq the history: it survives restarts and holds every service that writes there, filtered by service, level, text and time. A service that only writes (a worker without the admin plugin) sets `seq.ReadHistory = false`. Logging never waits for Seq or fails because of it.
+- The answer carries `store` (`memory`, `seq`), `persistent`, `services` and `hasMore`; `total` is null when the store cannot count (Seq). 502 with `{ error }` when the store is unreachable.
+- Another store: implement `ILogStore` (`Qodalis.Cli.Abstractions.Logs`) and register it as a singleton.
+
 ### Installed plugins (all servers)
 
 `GET /api/v1/qcli/plugins/installed` (admin plugin) lists the server plugins the host installed (users, admin, jobs, storage providers, ...) with their package id, version and description; the dashboard's Plugins page shows them above the command modules. The built-in plugins list themselves; a plugin of your own registers with `cli.AddInstalledPlugin(assembly)` (.NET), `builder.addInstalledPlugin(...)` (Node) or `builder.add_installed_plugin(...)` (Python).
