@@ -11,7 +11,7 @@ import {
 
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { LIBRARY_VERSION } from '../../version';
-import { getCliNameArt } from '../../constants';
+import { getCliNameArt, resolveCliBranding } from '../../constants';
 
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';
@@ -45,8 +45,13 @@ export class CliVersionCommandProcessor implements ICliCommandProcessor {
         );
 
         const framework = context.services.get<string>('cli-framework') ?? 'vanilla';
+        // Always the Qodalis CLI's art and docs; an application's own name (branding) is one more row
+        const branding = resolveCliBranding(context.options?.branding);
 
         writer.writeBox([
+            ...(branding.custom
+                ? [`${DIM}App${RESET}        ${writer.wrapInColor(branding.name, CliForegroundColor.Cyan)}`]
+                : []),
             `${DIM}CLI${RESET}        ${writer.wrapInColor(`v${LIBRARY_VERSION}`, CliForegroundColor.Green)}`,
             `${DIM}Core${RESET}       ${writer.wrapInColor(`v${CORE_VERSION}`, CliForegroundColor.Green)}`,
             `${DIM}Framework${RESET}  ${writer.wrapInColor(framework, CliForegroundColor.Cyan)}`,

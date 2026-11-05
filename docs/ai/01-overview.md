@@ -26,3 +26,15 @@ The npm, NuGet and PyPI packages a plugin author uses, by role.
 | `Qodalis.Cli.Abstractions` (NuGet) | .NET server plugin API. Server: `Qodalis.Cli`. |
 | `qodalis-cli-server-abstractions` (PyPI, import `qodalis_cli_server_abstractions`) | Python server plugin API. Server: `qodalis-cli-server` (import `qodalis_cli`). |
 | `@qodalis/mcp-cli` | MCP server for AI assistants: docs search, API lookup, plugin scaffolding, and (with `QCLI_URL`) driving a CLI server. |
+
+### Shipping the CLI under your own name
+
+`CliOptions.branding` sets the name and icon an application ships the CLI under. Anything left out keeps Qodalis CLI's.
+
+```tsx
+<CliPanel options={{ branding: { name: 'RateBell CLI', icon: '/favicon.svg' }, servers: [...] }} />
+```
+
+- `name` replaces "Web CLI" and the Qodalis CLI art in the welcome banner and the startup log, and "CLI" in the panel's header and hide tab (React, Vue, Angular).
+- `icon` (an image URL: http(s), a path, or a `data:image` URL) replaces the panel's terminal glyph.
+- The copyright line, the documentation link and `version` stay Qodalis CLI's; `version` adds the name as an `App` row.

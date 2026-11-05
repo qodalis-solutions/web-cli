@@ -28,6 +28,7 @@ import {
     HIDE_TAB_TERMINAL_ICON,
     MAXIMIZE_ICON,
     PANEL_LABELS,
+    panelBranding,
     PanelContextMenuAction,
     PanelContextMenuItem,
     PanelPositionOption,
@@ -130,6 +131,11 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     @ViewChildren('renameInput') renameInputs!: QueryList<ElementRef<HTMLInputElement>>;
 
     readonly labels = PANEL_LABELS;
+
+    /** The panel's title and icon: the host's branding, or "CLI" with the terminal glyph. */
+    get brand(): { title: string; iconUrl?: string } {
+        return panelBranding(this.options);
+    }
     readonly closeGlyph = CLOSE_GLYPH;
     readonly terminalIcon = TERMINAL_ICON;
     readonly hideTabIcon = HIDE_TAB_TERMINAL_ICON;

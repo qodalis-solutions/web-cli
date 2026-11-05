@@ -9,8 +9,19 @@
       [title]="labels.showCli"
       (click)="controller.unhide()"
     >
-      <cli-panel-icon [icon]="hideTabIcon" svgClass="cli-panel-hide-tab-icon" />
-      <span class="cli-panel-hide-tab-label">{{ labels.title }}</span>
+      @if (brand.iconUrl) {
+        <img
+          [src]="brand.iconUrl"
+          alt=""
+          class="cli-panel-hide-tab-icon cli-panel-brand-icon"
+        />
+      } @else {
+        <cli-panel-icon
+          [icon]="hideTabIcon"
+          svgClass="cli-panel-hide-tab-icon"
+        />
+      }
+      <span class="cli-panel-hide-tab-label">{{ brand.title }}</span>
       <cli-panel-icon
         [icon]="view.hideTabArrowIcon"
         svgClass="cli-panel-hide-tab-arrow"
@@ -35,10 +46,14 @@
       </div>
       <div class="cli-panel-header-content">
         <p class="cli-panel-title">
-          <span class="cli-panel-title-icon"
-            ><cli-panel-icon [icon]="terminalIcon"
-          /></span>
-          {{ labels.title }}
+          <span class="cli-panel-title-icon">
+            @if (brand.iconUrl) {
+              <img [src]="brand.iconUrl" alt="" class="cli-panel-brand-icon" />
+            } @else {
+              <cli-panel-icon [icon]="terminalIcon" />
+            }
+          </span>
+          {{ brand.title }}
         </p>
         @if (s.showStatusIndicators) {
           <div class="cli-panel-status-indicators">

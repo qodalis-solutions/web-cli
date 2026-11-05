@@ -105,6 +105,14 @@
   align-items: center;
 }
 
+/* An application's own icon (options.branding.icon) instead of the terminal glyph */
+.cli-panel-brand-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .cli-panel-action-buttons {
   display: flex;
   flex-direction: row;

@@ -64,6 +64,27 @@ export interface CliBootOptions {
 }
 
 /**
+ * The name and icon an application ships the CLI under. Anything left out
+ * keeps Qodalis CLI's; the copyright line, the docs link and `version` stay
+ * Qodalis CLI's.
+ */
+export interface CliBranding {
+    /**
+     * The product name: the welcome banner ("Welcome to RateBell CLI", shown
+     * instead of the Qodalis CLI art), the panel's title and the startup log.
+     * `version` adds it to the Qodalis CLI details.
+     * @default 'Web CLI' (panel title 'CLI')
+     */
+    name?: string;
+
+    /**
+     * The panel's icon (header and hide tab) instead of the terminal glyph:
+     * an image URL (http(s), a path, or a `data:image` URL).
+     */
+    icon?: string;
+}
+
+/**
  * Options for the CLI
  */
 export type CliOptions = Record<string, any> & {
@@ -71,6 +92,12 @@ export type CliOptions = Record<string, any> & {
      * How the CLI reports its startup (boot log, spinner).
      */
     boot?: CliBootOptions;
+
+    /**
+     * The name and icon the CLI shows (welcome banner, panel title, startup
+     * log); defaults to Qodalis CLI's.
+     */
+    branding?: CliBranding;
 
     /**
      * Custom terminal options
