@@ -1603,14 +1603,14 @@ builder.Services.AddControllers().AddCli(cli => cli
 
 - .NET only: `AddEfCoreJobStorage` keeps the history in any EF Core database and creates its tables (`job_executions`, `job_states`) even in a database that already has others; call `modelBuilder.ApplyJobStorageModel()` to keep them in your own migrations. Database stores return `properties` values as JSON values.
 
-### Audit log (all servers)
+### Audit log plugin (all servers)
 
-The users plugin records sign-ins, token and group changes in its audit log, read with `audit:read` from `GET /api/v1/qcli/audit?event=&username=&actor=&limit=&offset=` (newest 100 without a `limit`, at most 1000), by the console's `audit` and by the dashboard's Audit page.
+The audit log is a plugin of its own (.NET `Qodalis.Cli.Plugin.Audit`, Node `@qodalis/cli-server-plugin-audit`, Python `qodalis-cli-server-plugin-audit`): it keeps the entries and serves `GET /api/v1/qcli/audit?event=&username=&actor=&limit=&offset=` (`audit:read`; newest first, 100 without a `limit`, at most 1000) and `DELETE /api/v1/qcli/audit` (`audit:clear`; records `audit_cleared` with who did it), read by the console's `audit` and the dashboard's Audit page, and listed on its Plugins page. The users plugin adds it and records sign-ins, failed sign-ins, user, group, token and shell events there; a host can add it alone: .NET `cli.AddAudit()`, Node `new CliAuditBuilder().build()` mounted with `mountPlugin` (pass it to the users plugin with `setAuditPlugin` to share it), Python `CliAuditBuilder().build()` mounted with `mount_plugin` (the users plugin joins a mounted one).
 
 - An entry has `event`, `actor`, `username` (the user it is about), `target` (what else it is about, e.g. `group:admins`), `metadata` and `properties` (the host's own values).
-- A host writes its own entries to the same log: `IAuditStore.LogAsync` (.NET), `auditStore.log(...)` (Node), `await audit_store.log(...)` (Python).
-- Old entries: `PruneAsync(before)` (.NET), `prune(before)` (Node; Python takes Unix milliseconds).
-- .NET only: `cli.AddEfCoreAuditStore(o => o.UseNpgsql(connectionString))` (`Qodalis.Cli.Plugin.Users.EfCore`) keeps the log in a database (table `audit_entries`; `modelBuilder.ApplyAuditStorageModel()` for your own migrations). It keeps every entry, failed sign-ins included: prune it from a daily job.
+- A host writes its own entries to the same log through the audit store: `IAuditStore.LogAsync` (.NET, `Qodalis.Cli.Abstractions.Audit`), `auditStore.log(...)` (Node), `await audit_store.log(...)` (Python).
+- Another store: `cli.SetAuditStore<T>()` (.NET), `CliAuditBuilder.setStore(store)` (Node), `CliAuditBuilder().set_store(store)` (Python); the users plugin's audit-store option still works and does the same. The contract (`AuditEntry`, `AuditQueryOptions`, the store interface) is in each server's abstractions package. Old entries: `PruneAsync(before)` (.NET), `prune(before)` (Node; Python takes Unix milliseconds).
+- .NET only: `cli.AddEfCoreAuditStore(o => o.UseNpgsql(connectionString))` (`Qodalis.Cli.Plugin.Audit.EfCore`) keeps the log in a database (table `audit_entries`; `modelBuilder.ApplyAuditStorageModel()` for your own migrations). It keeps every entry, failed sign-ins included: prune it from a daily job.
 
 ### Installed plugins (all servers)
 
