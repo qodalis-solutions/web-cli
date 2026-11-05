@@ -734,3 +734,21 @@ async def test_greet_executor():
 ```
 
 - HTTP tests: `from fastapi.testclient import TestClient`; `with TestClient(create_cli_server(CliServerOptions(configure=...)).app) as client: client.post("/api/v1/qcli/execute", json={...})`.
+
+### .NET: jobs that run elsewhere
+
+The jobs API (`/api/v1/qcli/jobs`), the `jobs_*` MCP tools, `server jobs` and the dashboard's jobs page work on an `ICliJobManager` (`Qodalis.Cli.Abstractions.Jobs`). The default runs the jobs registered with `AddJob` in the server's process; a host whose jobs run elsewhere implements the interface and registers it with `cli.SetJobManager<T>()` (scoped).
+
+- Implement `GetJobsAsync` (each `CliJobInfo` with `Id`, `Name`, `Status`, `LastRunAt`, `LastRunStatus` and `Actions`, such as `["trigger", "pause", "resume"]`), `TriggerAsync`, `PauseAsync`, `ResumeAsync`, `GetExecutionsAsync` and `GetExecutionAsync`.
+- `StopAsync`, `CancelAsync` and `UpdateAsync` default to `NotSupportedException` (HTTP `501`, `NOT_SUPPORTED`); the dashboard shows only the actions in `Actions`.
+- Throw `KeyNotFoundException` for an unknown job (`404`) and `InvalidOperationException` when the job's state refuses the action (`409`).
+
+### Admin dashboard: name and icon (all servers)
+
+The dashboard is "Qodalis Cli Admin" with the Qodalis Solutions logo unless the admin plugin sets its branding: the name and icon (browser tab, sidebar, sign-in page) and the terminal's name in its welcome banner.
+
+- .NET: `cli.AddAdmin(o => { o.Branding.Name = "RateBell"; o.Branding.IconUrl = "/favicon.svg"; o.Branding.CliName = "RateBell CLI"; })`
+- Node: `new CliAdminBuilder().setBranding({ name: 'RateBell', iconUrl: '/favicon.svg', cliName: 'RateBell CLI' })`
+- Python: `CliAdminBuilder().set_branding({"name": "RateBell", "icon_url": "/favicon.svg", "cli_name": "RateBell CLI"})`
+- The icon is an absolute http(s) URL, a root-relative path or a base64 `data:image` URL; invalid values fail at startup. The values are served as `branding` in `/qcli/admin/theme.json`.
+- The filesystem API (`/api/qcli/fs/*`) and the dashboard's Files page exist only when the server enables the filesystem (`AddFileSystem()` in .NET); otherwise the routes answer `404`.

@@ -503,7 +503,7 @@
   "docs.server-integration.api-execute": "Execute a CLI command on the server",
   "docs.server-integration.api-events": "Server-push event streaming",
   "docs.server-integration.api-shell": "Interactive PTY shell session",
-  "docs.server-integration.api-fs": "Filesystem operations (ls, cat, stat, upload, download, mkdir, rm)",
+  "docs.server-integration.api-fs": "Filesystem operations (ls, cat, stat, upload, download, mkdir, rm); opt-in, 404 until the server enables it (AddFileSystem / filesystem options)",
   "docs.server-integration.backends": "Available Backends",
   "docs.server-integration.backends-desc": "Choose the backend that fits your stack. All three implement the same API:",
   "docs.server-integration.node-desc": "Express-based server with TypeScript support, node-pty for shell sessions.",
