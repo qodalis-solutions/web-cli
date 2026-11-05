@@ -1624,6 +1624,16 @@ The dashboard's Logs page reads `GET /api/v1/qcli/logs?level=&search=&service=&f
 
 `GET /api/v1/qcli/plugins/installed` (admin plugin) lists the server plugins the host installed (users, admin, jobs, storage providers, ...) with their package id, version and description; the dashboard's Plugins page shows them above the command modules. The built-in plugins list themselves; a plugin of your own registers with `cli.AddInstalledPlugin(assembly)` (.NET), `builder.addInstalledPlugin(...)` (Node) or `builder.add_installed_plugin(...)` (Python).
 
+### Dashboard statistics endpoints (all servers)
+
+Since 1.0.0-beta.19 every server answers read-only endpoints the admin dashboard (1.0.0-beta.15) charts; the JSON is the same on .NET, Node and Python. Times are ISO 8601 (no offset = UTC), durations milliseconds; a range is `[since, until)` cut into `buckets` equal columns (1-200, default 24; the default range is the last 24 hours) and a start not before its end answers 400.
+
+- `GET /api/v1/qcli/jobs/stats?since=&until=&buckets=&job=&group=` (jobs plugin): runs per column by result (`succeeded`, `failed` incl. timed out, `cancelled`, `running`), `totals` (`successRate` = succeeded / (succeeded + failed), `avgDuration`, `p95Duration`, `maxDuration`, `lastFailureAt`) and per job (`jobs[]` with the same totals and its 12 latest runs in `recent`). Counted over every run in the range through the store's execution query, so it works with any jobs store.
+- `GET /api/v1/qcli/logs/histogram?from=&to=&buckets=&level=&search=&service=` (admin plugin): entries per level (`DEBUG`, `INFO`, `WARN`, `ERROR`) and column with the filters of `GET /logs`, from the in-memory history or, on .NET, Seq (`ILogStore.HistogramAsync`, with a default that pages `QueryAsync`).
+- `GET /api/v1/qcli/status/history?minutes=` (admin plugin, 1-1440, default 60): the status sampled every 15 seconds for 24 hours (`memoryMb`, `cpuPercent` of one core, `activeWsConnections`, `activeShellSessions`), oldest first; in memory, gone on restart.
+- `GET /api/v1/qcli/commands/stats` (core, same access as `GET /commands`): executions, failures (non-zero exit, exception, unknown command), average duration and last run of each root command since the server started; `known` is false for commands the registry does not have.
+- `GET /api/v1/qcli/audit` takes `from` and `to` (ISO 8601 or epoch ms); a custom audit store applies them from `AuditQueryOptions`.
+
 ### Admin dashboard: name and icon (all servers)
 
 The dashboard is "Qodalis Cli Admin" with the Qodalis Solutions logo unless the admin plugin sets its branding: the name and icon (browser tab, sidebar, sign-in page) and the terminal's name in its welcome banner.
