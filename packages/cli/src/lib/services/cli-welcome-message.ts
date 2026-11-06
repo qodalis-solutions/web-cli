@@ -43,8 +43,10 @@ export const welcomeModule: ICliWelcomeModule = {
             );
             await configureStore.initialize();
             const state = configureStore.getState<Record<string, any>>();
-            if (state?.['system']?.['welcomeMessage']) {
-                showOption = state['system']['welcomeMessage'];
+            // configure stores its defaults up front, so 'always' there is not a choice and the host's option stays
+            const stored = state?.['system']?.['welcomeMessage'];
+            if (stored && stored !== 'always') {
+                showOption = stored;
             }
         }
 
@@ -59,10 +61,11 @@ export const welcomeModule: ICliWelcomeModule = {
             context.terminal.writeln(config.message);
         } else {
             const branding = resolveCliBranding(context.options?.branding);
+            const art = branding.art(context.terminal.cols);
             const lines = [
                 `🚀 Welcome to ${branding.name} [Version ${context.writer.wrapInColor(LIBRARY_VERSION, CliForegroundColor.Green)}]`,
                 `(c) ${new Date().getFullYear()} Qodalis Solutions. All rights reserved.`,
-                branding.art(context.terminal.cols),
+                art,
                 '',
                 `📖 ${context.writer.wrapInColor('Documentation:', CliForegroundColor.Green)} https://cli.qodalis.com/docs/`,
                 '',
@@ -71,7 +74,14 @@ export const welcomeModule: ICliWelcomeModule = {
             ];
 
             lines.forEach((line) => {
-                context.terminal.write(line + '\r\n');
+                // The art is drawn for the width already; text wraps at words
+                const wrapped =
+                    line === art
+                        ? [line]
+                        : wrapWelcomeLine(line, context.terminal.cols);
+                wrapped.forEach((part) =>
+                    context.terminal.write(part + '\r\n'),
+                );
             });
         }
 
@@ -126,12 +136,76 @@ export const greetingModule: ICliModule = {
             return;
         }
 
-        await context.textAnimator?.showText(getGreetingBasedOnTime(), {
+        // The animation erases itself with backspaces, which cannot go back
+        // to a previous row: the greeting must fit on the prompt's line
+        const buffer = context.terminal.buffer?.active;
+        const room = context.terminal.cols - (buffer?.cursorX ?? 0) - 1;
+        const greeting = fitGreeting(getGreetingBasedOnTime(), room);
+        if (!greeting) return;
+
+        await context.textAnimator?.showText(greeting, {
             speed: 60,
             removeAfterTyping: true,
         });
     },
 };
+
+/**
+ * The greeting cut at a word to fit `room` columns (emoji count as two), or
+ * null when even its first words do not fit.
+ */
+export function fitGreeting(text: string, room: number): string | null {
+    const width = (value: string) =>
+        Array.from(value).reduce(
+            (sum, ch) =>
+                sum +
+                (ch.codePointAt(0)! > 0xffff ||
+                /\p{Extended_Pictographic}/u.test(ch)
+                    ? 2
+                    : ch === '\ufe0f'
+                      ? 0
+                      : 1),
+            0,
+        );
+    if (width(text) <= room) return text;
+    const words = text.split(' ');
+    let fitted = '';
+    for (const word of words) {
+        const next = fitted ? `${fitted} ${word}` : word;
+        if (width(next) > room) break;
+        fitted = next;
+    }
+    // An emoji and a word or two is not worth showing
+    return fitted.split(' ').length >= 3 ? fitted.replace(/[,;:]$/, '') : null;
+}
+
+/**
+ * Welcome lines wrapped at words to the terminal width, so a narrow terminal
+ * (a phone) never breaks a word across lines. Lines that fit are unchanged.
+ */
+export function wrapWelcomeLine(line: string, cols: number): string[] {
+    const width = Math.max(20, cols - 1);
+    const visible = (value: string) =>
+        Array.from(value.replace(/\x1b\[[0-9;]*m/g, '')).reduce(
+            (sum, ch) =>
+                sum +
+                (ch.codePointAt(0)! > 0xffff ? 2 : ch === '\ufe0f' ? 0 : 1),
+            0,
+        );
+    if (visible(line) <= width) return [line];
+    const lines: string[] = [];
+    let current = '';
+    for (const word of line.split(' ')) {
+        if (current && visible(current) + 1 + visible(word) > width) {
+            lines.push(current);
+            current = word;
+        } else {
+            current = current ? `${current} ${word}` : word;
+        }
+    }
+    if (current) lines.push(current);
+    return lines;
+}
 
 function shouldDisplayWelcomeMessage(
     showOption: 'always' | 'once' | 'daily' | 'never',

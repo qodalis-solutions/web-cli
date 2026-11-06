@@ -155,6 +155,24 @@ describe('CliPanelController', () => {
             expect(snap().collapsed).toBeFalse();
         });
 
+        it('opens a panel that started hidden with its terminal, in one click', () => {
+            const hidden = createController({}, { isHidden: true, isCollapsed: true });
+            expect(hidden.getSnapshot().initialized).toBeFalse();
+            hidden.unhide();
+            expect(hidden.getSnapshot().hidden).toBeFalse();
+            expect(hidden.getSnapshot().collapsed).toBeFalse();
+            expect(hidden.getSnapshot().initialized).toBeTrue();
+            expect(hidden.getSnapshot().tabs.length).toBe(1);
+        });
+
+        it('brings a panel hidden after use back collapsed when it was', () => {
+            controller.toggle();
+            controller.toggle();
+            controller.hide();
+            controller.unhide();
+            expect(snap().collapsed).toBeTrue();
+        });
+
         it('toggleHide flips the state', () => {
             controller.toggleHide();
             expect(snap().hidden).toBeTrue();

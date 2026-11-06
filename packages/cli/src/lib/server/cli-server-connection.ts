@@ -47,6 +47,16 @@ export class CliServerConnection {
         return this._config;
     }
 
+    /**
+     * The last connect was refused for want of a sign-in (401 or 403 on the
+     * command list): the server is up, and a sign-in reconnects it.
+     */
+    get needsSignIn(): boolean {
+        return this._needsSignIn;
+    }
+
+    private _needsSignIn = false;
+
     get connected(): boolean {
         return this._connected;
     }
@@ -92,6 +102,7 @@ export class CliServerConnection {
     }
 
     async connect(): Promise<void> {
+        this._needsSignIn = false;
         try {
             const baseUrl = this.normalizeUrl(this._config.url);
 
@@ -190,6 +201,7 @@ export class CliServerConnection {
         const response = await this.httpFetch(url);
 
         if (!response.ok) {
+            if (response.status === 401 || response.status === 403) this._needsSignIn = true;
             throw new Error(
                 `Server ${this._config.name} returned ${response.status}`,
             );

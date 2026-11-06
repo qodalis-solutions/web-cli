@@ -254,7 +254,12 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     unhide(): void {
         if (!this.snapshot.hidden) return;
         this.updateHidden(false);
-        if (this.snapshot.collapsed !== this.preHideCollapsed) this.updateCollapsed(this.preHideCollapsed);
+        // A panel that started hidden opens with its terminal: the tab is how
+        // one asks for the CLI, and a bare header would need a second click.
+        // Hidden after use, it comes back as it was.
+        const collapsed = this.snapshot.initialized ? this.preHideCollapsed : false;
+        if (this.snapshot.collapsed !== collapsed) this.updateCollapsed(collapsed);
+        if (!collapsed) this.ensureInitialized();
     }
 
     toggleHide(): void {
