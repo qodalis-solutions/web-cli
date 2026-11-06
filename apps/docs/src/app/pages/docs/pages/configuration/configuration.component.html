@@ -394,10 +394,11 @@
 &lt;CliPanel options={{ '{' }}{{ '{' }} theme: dark ? 'dark' : 'light' {{ '}' }}{{ '}' }} /&gt;</code></pre>
 </div>
 <p>
-  With a theme from the app, the theme someone saved with the
-  <code>theme</code> command is not restored on the next start; the command
-  still changes the terminal for the session. Without a <code>theme</code>
-  option nothing changes: terminals keep the saved theme and the panel uses
+  The app's theme is the default. Someone who applies a theme with the
+  <code>theme</code> command (<code>theme apply dracula</code>) keeps it: it is
+  saved, wins over the app's theme and restyles the panel too, until
+  <code>theme reset</code> returns to the app's theme. Without a
+  <code>theme</code> option, terminals keep the saved theme and the panel uses
   the dark palette, or colors derived from the terminal with
   <code>syncTheme: true</code>.
 </p>
@@ -421,8 +422,9 @@
   <code>--cli-panel-text</code>, <code>--cli-panel-text-secondary</code>,
   <code>--cli-panel-accent</code>, <code>--cli-btn-hover-bg</code>,
   <code>--cli-btn-active-bg</code>, <code>--cli-panel-danger</code>,
-  <code>--cli-panel-shadow</code>, <code>--cli-panel-font</code> and
-  <code>--cli-panel-radius</code>. Inline theme values win over a stylesheet,
+  <code>--cli-panel-shadow</code>, <code>--cli-panel-font</code>,
+  <code>--cli-panel-radius</code> and <code>--cli-panel-header-size</code>
+  (the header's height, 48px). Inline theme values win over a stylesheet,
   so set either the option or the variables for a given color.
 </p>
 <h3>Phones and tablets</h3>

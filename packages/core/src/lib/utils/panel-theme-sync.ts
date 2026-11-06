@@ -68,17 +68,18 @@ export const CliPanelPalettes: Readonly<Record<CliPanelColorScheme, Readonly<Cli
         danger: '#f87171',
         shadow: 'rgba(0, 0, 0, 0.45)',
     }),
+    // Soft grey paper instead of pure white, slate text rather than black: easier on the eyes
     light: Object.freeze({
-        background: '#ffffff',
-        headerBackground: '#f8fafc',
-        border: '#e2e8f0',
-        text: '#0f172a',
-        textSecondary: '#64748b',
+        background: '#f7f8fa',
+        headerBackground: '#eceff3',
+        border: '#d9dee6',
+        text: '#1e293b',
+        textSecondary: '#5b6577',
         accent: '#4f46e5',
-        hoverBackground: 'rgba(79, 70, 229, 0.08)',
-        activeBackground: 'rgba(79, 70, 229, 0.14)',
-        danger: '#dc2626',
-        shadow: 'rgba(15, 23, 42, 0.14)',
+        hoverBackground: 'rgba(30, 41, 59, 0.06)',
+        activeBackground: 'rgba(79, 70, 229, 0.12)',
+        danger: '#c93c37',
+        shadow: 'rgba(15, 23, 42, 0.12)',
     }),
 });
 

@@ -105,9 +105,9 @@ export type CliOptions = Record<string, any> & {
 
     /**
      * Terminal colors set by the host: `'dark'`, `'light'`, `'auto'`, a terminal
-     * theme name or a {@link CliPanelTheme} (its `terminal`). When set, the theme
-     * saved with the `theme` command is not restored on start; the command still
-     * changes the theme for the session. In a panel, this is the panel's `theme`.
+     * theme name or a {@link CliPanelTheme} (its `terminal`). It is the default:
+     * a theme the user applies with the `theme` command wins over it until
+     * `theme reset`. In a panel, this is the panel's `theme`.
      */
     theme?: CliPanelThemeInput;
 
@@ -405,8 +405,9 @@ export interface CliPanelConfig {
      * - a {@link CliPanelTheme}: a base palette with your own colors, font and corners
      *
      * Changing it while the panel is open restyles the panel and its terminals, so a
-     * host can pass its own light/dark setting through. The host's theme wins over
-     * one chosen with the `theme` command on the next start.
+     * host can pass its own light/dark setting through. It is the default: a theme
+     * the user applies with the `theme` command wins over it (and restyles the
+     * panel) until `theme reset`.
      * @default 'dark'
      */
     theme?: CliPanelThemeInput;

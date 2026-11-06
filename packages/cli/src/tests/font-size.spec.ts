@@ -106,4 +106,27 @@ describe('CliFontSizeCommandProcessor', () => {
 
         expect(terminalOptions.fontSize).toBe(14);
     });
+
+    it("resets each terminal to its own host's size (the processor is shared)", async () => {
+        const fakeContext = (fontSize: number) =>
+            ({
+                state: {
+                    getState: () => ({}),
+                    updateState: () => {},
+                    select: () => of(null),
+                    persist: async () => {},
+                },
+                terminal: { options: { fontSize } },
+                writer: { writeSuccess: () => {} },
+            }) as any;
+        const small = fakeContext(13);
+        const large = fakeContext(18);
+        await processor.initialize(small);
+        await processor.initialize(large);
+
+        small.terminal.options.fontSize = 30;
+        const reset = processor.processors!.find((p) => p.command === 'reset')!;
+        await reset.processCommand!({} as any, small);
+        expect(small.terminal.options.fontSize).toBe(13);
+    });
 });

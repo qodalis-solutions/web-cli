@@ -25,6 +25,7 @@ import {
     resizedPanelSize,
 } from './panel-geometry';
 import { CliPanelStatusTracker } from './panel-status';
+import { CLI_TERMINAL_THEME_EVENT } from '../processors/theme/terminal-theme';
 import {
     CliPanelCallbacks,
     CliPanelControlledState,
@@ -67,6 +68,11 @@ interface PaneResizeDrag {
 const PANE_RESIZING_BODY_CLASS = 'cli-pane-resizing';
 
 const DARK_SCHEME_QUERY = '(prefers-color-scheme: dark)';
+
+/** The root element as an event target (view roots are elements; test doubles may not be). */
+function asEventTarget(node: ParentNode | null): EventTarget | null {
+    return node && typeof (node as Partial<EventTarget>).addEventListener === 'function' ? (node as unknown as EventTarget) : null;
+}
 
 /** Whether a theme input follows the system's color scheme. */
 function followsSystem(input: CliPanelThemeInput | undefined): boolean {
@@ -228,7 +234,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             return;
         }
         this.commit(fields);
-        if (fields.syncTheme) this.startThemeSync();
+        if (this.followsTerminalTheme) this.startThemeSync();
         else this.stopThemeSync();
     }
 
@@ -240,6 +246,16 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         this.themeInput = theme;
         this.watchSystemScheme();
         this.applyTheme();
+        if (this.followsTerminalTheme) this.startThemeSync();
+        else this.stopThemeSync();
+    }
+
+    /**
+     * Whether the panel's colors follow its first terminal: with `syncTheme`, or
+     * with a host theme so a theme the user applies restyles the panel too.
+     */
+    private get followsTerminalTheme(): boolean {
+        return this.snapshot.syncTheme || this.themeInput !== undefined;
     }
 
     /** Replace the change callbacks (wrappers call this when their props change). */
@@ -258,8 +274,11 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
 
     /** Element containing the terminals, used for theme sync. */
     setRootElement(element: ParentNode | null): void {
+        if (element === this.rootElement) return;
+        asEventTarget(this.rootElement)?.removeEventListener(CLI_TERMINAL_THEME_EVENT, this.onTerminalTheme);
         this.rootElement = element;
-        if (element && this.snapshot.syncTheme) this.startThemeSync();
+        asEventTarget(element)?.addEventListener(CLI_TERMINAL_THEME_EVENT, this.onTerminalTheme);
+        if (element && this.followsTerminalTheme) this.startThemeSync();
     }
 
     /**
@@ -526,10 +545,12 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     /** Called by the view once a pane's terminal engine is running. */
     registerEngine(tabId: number, paneId: number, engine: CliEngine): void {
         if (!this.findTab(tabId)) return;
+        // Views may report the same engine again when they re-render
+        const known = this.engines.get(paneId) === engine;
         this.engines.set(paneId, engine);
         this.tracker.registerEngine(tabId, paneId, engine);
-        if (this.snapshot.terminalTheme) engine.setTheme(this.snapshot.terminalTheme);
-        if (this.snapshot.syncTheme) this.startThemeSync();
+        if (this.snapshot.terminalTheme && !known) engine.setTheme(this.snapshot.terminalTheme);
+        if (this.followsTerminalTheme) this.startThemeSync();
     }
 
     getEngine(paneId?: number): CliEngine | undefined {
@@ -735,11 +756,12 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
 
     /* ─── Theme sync ────────────────────────────────────────── */
 
-    /** Read the first terminal's theme and derive the panel colours from it. */
-    syncThemeFromEngine(): void {
-        const engine = this.engines.values().next().value as CliEngine | undefined;
-        if (!engine) return;
-        const theme = engine.getTerminal().options.theme;
+    /** Read the first terminal's theme (or use `theme`) and derive the panel colours from it. */
+    syncThemeFromEngine(theme?: ITheme): void {
+        if (!theme) {
+            const engine = this.engines.values().next().value as CliEngine | undefined;
+            theme = engine?.getTerminal().options.theme;
+        }
         if (!theme) return;
         // The host's own terminal theme keeps the host's panel colors
         const styles = sameTerminalTheme(theme, this.resolvedTheme.terminal)
@@ -771,7 +793,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         const themeStyles = this.themeInput === undefined ? {} : resolved.styles;
         this.commit({ themeStyles, scheme: resolved.scheme, terminalTheme });
         if (terminalChanged) this.engines.forEach((engine) => engine.setTheme(terminalTheme!));
-        if (this.snapshot.syncTheme) this.syncThemeFromEngine();
+        if (this.followsTerminalTheme) this.syncThemeFromEngine();
     }
 
     /** Follow the system's light/dark setting while the theme is 'auto'. */
@@ -787,6 +809,14 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     }
 
     private readonly onSystemSchemeChange = (): void => this.applyTheme();
+
+    /** A terminal in the panel changed theme: follow the first one. */
+    private readonly onTerminalTheme = (event: Event): void => {
+        if (!this.followsTerminalTheme) return;
+        const first = this.rootElement?.querySelector('.terminal-container');
+        if (event.target !== first) return;
+        this.syncThemeFromEngine((event as CustomEvent<ITheme>).detail);
+    };
 
     /* ─── On-screen keyboard ────────────────────────────────── */
 
@@ -899,7 +929,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             this.stopThemeSync();
             // Wait for the view to remove the closed pane's DOM first.
             setTimeout(() => {
-                if (this.snapshot.syncTheme && !this.themeObserver) this.startThemeSync();
+                if (this.followsTerminalTheme && !this.themeObserver) this.startThemeSync();
             }, 0);
         }
         try {
