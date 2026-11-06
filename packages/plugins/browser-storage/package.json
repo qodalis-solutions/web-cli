@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-browser-storage",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "@qodalis/cli extension for managing browser storage (localStorage, sessionStorage, cookies).",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

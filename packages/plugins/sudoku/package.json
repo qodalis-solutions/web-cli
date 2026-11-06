@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-sudoku",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "@qodalis/cli extension for playing Sudoku in the terminal.",
   "author": "Qodalis Solutions",
   "license": "MIT",
