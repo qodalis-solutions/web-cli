@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-string",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "@qodalis/cli extension for string manipulation and transformation utilities.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

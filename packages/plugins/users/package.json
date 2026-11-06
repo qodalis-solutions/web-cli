@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-users",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "@qodalis/cli extension for user management commands (whoami, adduser, listusers, su).",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
