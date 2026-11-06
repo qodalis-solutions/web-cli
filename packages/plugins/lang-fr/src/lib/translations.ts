@@ -496,6 +496,7 @@ export const frTranslations: Record<string, string> = {
         'Ce que la dernière exécution de cleanup a affiché',
     'cli.server.jobs.edit.help.change_job_step_step':
         'Modifier une tâche pas à pas : description, groupe, planification cron ou intervalle, nombre maximal de tentatives, délai d\'expiration et politique de chevauchement (skip, queue ou cancel). Appuyez sur Entrée pour conserver une valeur et sur Ctrl+C ou Échap pour annuler ; rien ne change avant votre confirmation. Une tâche présente sur plusieurs serveurs nécessite --server.',
+    'cli.server.jobs.edit.help.max_concurrent_runs': 'Exécutions simultanées max. : combien d’exécutions de la tâche peuvent tourner en même temps (1 par défaut). Quand ce nombre est atteint, la politique de chevauchement décide du sort de la suivante.',
     'cli.server.jobs.edit.help.edit_cleanup_server_has':
         'Modifier cleanup sur le serveur qui la possède',
     'cli.server.jobs.watch.help.follow_job_events_they':

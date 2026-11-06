@@ -222,7 +222,7 @@ describe('server jobs sub-commands', () => {
         expect(out.lines).toContain('Server: two');
         expect(out.tables.length).toBe(1);
         expect(out.tables[0].rows.map((r) => r[0])).toEqual(['Cleanup', 'Report']);
-        expect(out.tables[0].rows[1][3]).toBe('every 60000ms');
+        expect(out.tables[0].rows[1][3]).toBe('every 1m');
         expect(out.info).toContain('  No jobs found.');
     });
 
@@ -536,6 +536,48 @@ describe('server jobs sub-commands', () => {
             overlapPolicy: 'queue',
         });
         expect(out.success).toEqual(['Job "Cleanup" updated successfully.']);
+    });
+
+    it('edit sets max concurrent runs', async () => {
+        // description, group, schedule, interval, retries, timeout, overlap policy, max concurrent runs
+        const calls = installFetch({ [`GET ${BASE}`]: { body: [JOB] }, [`PUT ${BASE}/job-1`]: {} });
+        const { context } = createContext(
+            [{ name: 'one', url: 'http://srv1.test' }],
+            { readLines: ['', '', '', '', '', '', '', '3'], confirm: true },
+        );
+        await run('edit', context, 'Cleanup');
+        expect(calls.find((c) => c.method === 'PUT')!.body).toEqual({ maxConcurrentRuns: 3 });
+    });
+
+    it('edit keeps max concurrent runs when the answer is not a whole number of at least 1', async () => {
+        const calls2 = installFetch({ [`GET ${BASE}`]: { body: [JOB] } });
+        const { context: ctx2, out: out2 } = createContext(
+            [{ name: 'one', url: 'http://srv1.test' }],
+            { readLines: ['', '', '', '', '', '', '', '0'], confirm: true },
+        );
+        await run('edit', ctx2, 'Cleanup');
+        expect(out2.info.join('\n')).toContain('Max concurrent runs must be a whole number of at least 1');
+        expect(out2.info).toContain('No changes made.');
+        expect(calls2.some((c) => c.method === 'PUT')).toBeFalse();
+    });
+
+    it('info shows intervals and timeouts in either form, and the runs going now', async () => {
+        installFetch({
+            [`GET ${BASE}`]: {
+                body: [
+                    { ...JOB, schedule: undefined, interval: 300000, timeout: '2m', maxConcurrentRuns: 3, currentExecutionId: 'e2', runningExecutionIds: ['e1', 'e2'], queued: true },
+                    { ...OTHER, schedule: undefined, interval: '30s' },
+                ],
+            },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('info', context, 'cleanup');
+        const text = out.lines.join('\n');
+        expect(text).toContain('every 5m');
+        expect(text).toContain('2m');
+        expect(text).not.toContain('ms');
+        expect(text).toMatch(/Max Concurrent Runs\s+3/);
+        expect(text).toContain('2/3 running, 1 queued: e1, e2');
     });
 
     it('edit makes no request when nothing changed or the user declines', async () => {

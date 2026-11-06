@@ -495,6 +495,7 @@ export const esTranslations: Record<string, string> = {
         'Lo que mostró la última ejecución de cleanup',
     'cli.server.jobs.edit.help.change_job_step_step':
         'Cambia una tarea paso a paso: descripción, grupo, programación cron o intervalo, reintentos máximos, tiempo límite y política de solapamiento (skip, queue o cancel). Pulse Enter para conservar un valor y Ctrl+C o Escape para cancelar; no cambia nada hasta que confirme. Una tarea en varios servidores necesita --server.',
+    'cli.server.jobs.edit.help.max_concurrent_runs': 'Máximo de ejecuciones simultáneas: cuántas ejecuciones de la tarea pueden ir a la vez (1 por defecto). Cuando se alcanzan, la política de solapamiento decide qué pasa con la siguiente.',
     'cli.server.jobs.edit.help.edit_cleanup_server_has':
         'Editar cleanup en el servidor que la tiene',
     'cli.server.jobs.watch.help.follow_job_events_they':

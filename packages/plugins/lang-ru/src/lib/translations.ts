@@ -389,6 +389,7 @@ export const ruTranslations: Record<string, string> = {
     'cli.server.jobs.logs.help.what_last_cleanup_run': 'Что вывел последний запуск cleanup',
     'cli.server.jobs.edit.help.change_job_step_step':
         'Изменить задание шаг за шагом: описание, группа, расписание cron или интервал, максимум повторов, тайм-аут и политика перекрытия (skip, queue или cancel). Нажмите Enter, чтобы оставить значение, и Ctrl+C или Escape для отмены; ничего не меняется, пока вы не подтвердите. Для задания на нескольких серверах нужен --server.',
+    'cli.server.jobs.edit.help.max_concurrent_runs': 'Максимум одновременных запусков: сколько запусков задания может идти одновременно (по умолчанию 1). Когда столько уже идёт, политика перекрытия решает, что делать со следующим.',
     'cli.server.jobs.edit.help.edit_cleanup_server_has':
         'Изменить cleanup на сервере, где оно есть',
     'cli.server.jobs.watch.help.follow_job_events_they':

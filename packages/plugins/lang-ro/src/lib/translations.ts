@@ -392,6 +392,7 @@ export const roTranslations: Record<string, string> = {
     'cli.server.jobs.logs.help.what_last_cleanup_run': 'Ce a afișat ultima rulare cleanup',
     'cli.server.jobs.edit.help.change_job_step_step':
         'Modifică un job pas cu pas: descriere, grup, program cron sau interval, număr maxim de reîncercări, timp limită și politică de suprapunere (skip, queue sau cancel). Apăsați Enter pentru a păstra o valoare și Ctrl+C sau Escape pentru a anula; nimic nu se schimbă până nu confirmați. Un job aflat pe mai multe servere necesită --server.',
+    'cli.server.jobs.edit.help.max_concurrent_runs': 'Număr maxim de rulări simultane: câte rulări ale jobului pot merge în același timp (implicit 1). Când rulează atâtea, politica de suprapunere decide ce se întâmplă cu următoarea.',
     'cli.server.jobs.edit.help.edit_cleanup_server_has': 'Editează cleanup pe serverul care îl are',
     'cli.server.jobs.watch.help.follow_job_events_they':
         'Urmărește evenimentele joburilor pe măsură ce apar (pornit, terminat, eșuat etc.) pe toate serverele conectate, o linie pe eveniment. Apăsați Ctrl+C pentru a opri.',

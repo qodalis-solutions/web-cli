@@ -156,6 +156,31 @@ function formatRelativeTime(isoString?: string): string {
     return `${Math.round(diff / 86_400_000)}d ago`;
 }
 
+/**
+ * An interval or timeout as servers send it: milliseconds (.NET, Node) or a
+ * span such as `30s` (Python), shown as `30s`, `5m`, `1h`.
+ */
+export function formatSpan(value?: number | string | null): string | null {
+    if (value === null || value === undefined || value === '') return null;
+    if (typeof value === 'string') return value;
+    if (!Number.isFinite(value) || value < 0) return null;
+    const units: [number, string][] = [[86_400_000, 'd'], [3_600_000, 'h'], [60_000, 'm'], [1000, 's']];
+    for (const [size, unit] of units) {
+        if (value >= size && value % size === 0) return `${value / size}${unit}`;
+    }
+    return value >= 1000 ? `${(value / 1000).toFixed(1)}s` : `${value}ms`;
+}
+
+/** Runs going now, when more than one may run: `2/3 running`, `1/3 running, 1 queued`. */
+export function formatRunning(job: JobDto): string | null {
+    const running = job.runningExecutionIds?.length ?? (job.currentExecutionId ? 1 : 0);
+    const max = job.maxConcurrentRuns ?? 1;
+    if (running === 0 && !job.queued) return null;
+    const parts = [max > 1 ? `${running}/${max} running` : `${running} running`];
+    if (job.queued) parts.push('1 queued');
+    return parts.join(', ');
+}
+
 function formatDuration(ms?: number): string {
     if (ms == null) return '-';
     if (ms < 1000) return `${ms}ms`;
@@ -560,6 +585,11 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                     t.t('cli.server.jobs.edit.help.change_job_step_step', 'Change a job step by step: description, group, cron schedule or interval, max retries, timeout and overlap policy (skip, queue or cancel). Press Enter to keep a value and Ctrl+C or Escape to cancel; nothing changes until you confirm. A job on several servers needs --server.'),
                 );
                 context.writer.writeln();
+                writeWrapped(
+                    context,
+                    t.t('cli.server.jobs.edit.help.max_concurrent_runs', 'Max concurrent runs: how many runs of the job may go at the same time (1 by default). When that many are running, the overlap policy decides what happens to the next one.'),
+                );
+                context.writer.writeln();
                 writeUsage(context, [
                     ['server jobs edit <name|id>', ''],
                 ]);
@@ -677,7 +707,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                     j.name,
                     j.group ?? '-',
                     statusColor(j.status, context.writer),
-                    j.schedule ?? (j.interval ? `every ${j.interval}ms` : '-'),
+                    j.schedule ?? (formatSpan(j.interval) ? `every ${formatSpan(j.interval)}` : '-'),
                     formatRelativeTime(j.lastRunAt),
                     formatRelativeTime(j.nextRunAt),
                     formatDuration(j.lastRunDuration),
@@ -725,12 +755,20 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 [
                     'Schedule',
                     job.schedule ??
-                        (job.interval ? `every ${job.interval}ms` : '-'),
+                        (formatSpan(job.interval) ? `every ${formatSpan(job.interval)}` : '-'),
                 ],
                 ['Max Retries', String(job.maxRetries)],
-                ['Timeout', job.timeout ? `${job.timeout}ms` : 'none'],
+                ['Timeout', formatSpan(job.timeout) ?? 'none'],
                 ['Overlap Policy', job.overlapPolicy],
-                ['Current Execution', job.currentExecutionId ?? 'none'],
+                ['Max Concurrent Runs', String(job.maxConcurrentRuns ?? 1)],
+                [
+                    'Running',
+                    job.runningExecutionIds && job.runningExecutionIds.length > 1
+                        ? `${formatRunning(job)}: ${job.runningExecutionIds.join(', ')}`
+                        : formatRunning(job) && job.currentExecutionId
+                          ? `${formatRunning(job)} (${job.currentExecutionId})`
+                          : (formatRunning(job) ?? 'none'),
+                ],
                 ['Next Run', formatRelativeTime(job.nextRunAt)],
                 ['Last Run', formatRelativeTime(job.lastRunAt)],
                 [
@@ -1035,7 +1073,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             // Schedule
             const currentSchedule =
                 job.schedule ??
-                (job.interval ? `interval: ${job.interval}ms` : 'none');
+                (formatSpan(job.interval) ? `interval: ${formatSpan(job.interval)}` : 'none');
             const newSchedule = await ask(
                 `Cron schedule [${currentSchedule}]: `,
             );
@@ -1045,7 +1083,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             // Interval
             if (!newSchedule) {
                 const newInterval = await ask(
-                    `Interval (e.g. 30s, 5m) [${job.interval ? `${job.interval}ms` : 'none'}]: `,
+                    `Interval (e.g. 30s, 5m) [${formatSpan(job.interval) ?? 'none'}]: `,
                 );
                 if (newInterval == null) return cancelled();
                 if (newInterval) update.interval = newInterval;
@@ -1063,7 +1101,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
 
             // Timeout
             const newTimeout = await ask(
-                `Timeout (e.g. 5m, 1h) [${job.timeout ? `${job.timeout}ms` : 'none'}]: `,
+                `Timeout (e.g. 5m, 1h) [${formatSpan(job.timeout) ?? 'none'}]: `,
             );
             if (newTimeout == null) return cancelled();
             if (newTimeout) update.timeout = newTimeout;
@@ -1078,6 +1116,22 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 ['skip', 'queue', 'cancel'].includes(newOverlap.toLowerCase())
             ) {
                 update.overlapPolicy = newOverlap.toLowerCase();
+            }
+
+            // Max concurrent runs
+            const newMax = await ask(
+                `Max concurrent runs [${job.maxConcurrentRuns ?? 1}]: `,
+            );
+            if (newMax == null) return cancelled();
+            if (newMax) {
+                const parsed = Number(newMax);
+                if (Number.isInteger(parsed) && parsed >= 1) {
+                    update.maxConcurrentRuns = parsed;
+                } else {
+                    context.writer.writeWarning(
+                        'Max concurrent runs must be a whole number of at least 1; kept as it was.',
+                    );
+                }
             }
 
             // Check if anything changed

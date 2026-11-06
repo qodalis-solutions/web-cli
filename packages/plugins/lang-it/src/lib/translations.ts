@@ -389,6 +389,7 @@ export const itTranslations: Record<string, string> = {
         'Cosa ha stampato l\'ultima esecuzione di cleanup',
     'cli.server.jobs.edit.help.change_job_step_step':
         'Modifica un job passo dopo passo: descrizione, gruppo, pianificazione cron o intervallo, tentativi massimi, timeout e politica di sovrapposizione (skip, queue o cancel). Premi Invio per mantenere un valore e Ctrl+C o Esc per annullare; nulla cambia finché non confermi. Un job presente su più server richiede --server.',
+    'cli.server.jobs.edit.help.max_concurrent_runs': 'Esecuzioni simultanee massime: quante esecuzioni del job possono andare contemporaneamente (1 per impostazione predefinita). Quando sono tutte in corso, la politica di sovrapposizione decide cosa succede alla successiva.',
     'cli.server.jobs.edit.help.edit_cleanup_server_has': 'Modificare cleanup sul server che lo ha',
     'cli.server.jobs.watch.help.follow_job_events_they':
         'Segue gli eventi dei job man mano che avvengono (avviato, completato, fallito e così via) su ogni server connesso, una riga per evento. Premi Ctrl+C per fermarsi.',
