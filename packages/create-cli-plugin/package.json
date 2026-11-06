@@ -1,6 +1,6 @@
 {
     "name": "@qodalis/create-cli-plugin",
-    "version": "2.2.0",
+    "version": "2.3.0",
     "description": "CLI tool to scaffold Qodalis CLI plugins",
     "author": "Nicolae Lupei, Qodalis Solutions",
     "license": "MIT",
