@@ -38,3 +38,42 @@ The npm, NuGet and PyPI packages a plugin author uses, by role.
 - `name` replaces "Web CLI" and the Qodalis CLI art in the welcome banner and the startup log, and "CLI" in the panel's header and hide tab (React, Vue, Angular).
 - `icon` (an image URL: http(s), a path, or a `data:image` URL) replaces the panel's terminal glyph.
 - The copyright line, the documentation link and `version` stay Qodalis CLI's; `version` adds the name as an `App` row.
+
+### Panel and terminal themes
+
+`theme` (on `CliPanelOptions`, and on `CliOptions` for a plain `<Cli>`) sets the look of the panel and of every terminal in it:
+
+| Value | Result |
+|---|---|
+| `'dark'` (default) | Built-in dark palette, terminal theme `default` |
+| `'light'` | Built-in light palette, terminal theme `light` |
+| `'auto'` | Light or dark, following the system's `prefers-color-scheme`, live |
+| a terminal theme name (`'dracula'`, `'nord'`, `'solarizedLight'`, ... see `theme list`) | That terminal theme; the panel's colors are derived from it |
+| a `CliPanelTheme` object | `base` (`'light'`/`'dark'`/`'auto'`), `terminal` (name or xterm colors), `colors` (any of `background`, `headerBackground`, `border`, `text`, `textSecondary`, `accent`, `hoverBackground`, `activeBackground`, `danger`, `shadow`), `fontFamily`, `radius` |
+
+Pass the host's own setting through, and the panel follows when it changes (React re-render, Vue reactivity, a new `options` object in Angular, or `panelRef.setTheme(theme)`):
+
+```tsx
+const { dark } = useAppSettings();
+<CliPanel options={{
+    theme: {
+        base: dark ? 'dark' : 'light',
+        colors: { accent: dark ? '#4f9be0' : '#2a6bba', headerBackground: dark ? '#13212f' : '#ffffff' },
+        fontFamily: 'Onest Variable, sans-serif',
+    },
+}} />
+```
+
+- With a host `theme`, the theme saved with the `theme` command is not restored on start (the command still changes the terminal for the session). Without one, nothing changes: the terminals keep the user's saved theme and the panel uses the dark palette (or, with `syncTheme: true`, colors derived from the terminal).
+- The dropdowns and the context menu use the theme too. Stylesheets can override the CSS variables (`--cli-panel-bg`, `--cli-panel-accent`, `--cli-panel-font`, `--cli-panel-radius`, ... listed at the top of `@qodalis/cli/assets/cli-panel.css`).
+- `resolvePanelTheme(theme, prefersDark)` and `CliPanelPalettes` (from `@qodalis/cli-core`) give the resolved CSS variables and terminal theme, for hosts that style other parts of the page to match.
+
+### Phones
+
+The panel resizes with touch (pointer events on the grip, a bigger grip on touch screens), stays above the on-screen keyboard (it follows `visualViewport`, so the prompt stays visible while typing), is never taller than the visible area and stays below the status bar of apps that draw under it (`safe-area-inset-top`). On screens up to 600px wide the header keeps the title, the run state and the buttons on one line.
+
+An app with its own bottom bar docks the panel above it with a CSS variable, never by overriding `bottom` (that would stop the panel from moving above the keyboard):
+
+```css
+:root { --cli-panel-bottom-offset: var(--tab-bar-height, 0px); }
+```

@@ -1,36 +1,66 @@
-/* Qodalis CLI Panel — shared styles for React, Vue, and vanilla JS
+/* Qodalis CLI Panel — shared styles for React, Vue, Angular and vanilla JS
  *
- * Override with CSS custom properties:
- *   --cli-panel-bg: #111827
- *   --cli-panel-header-bg: #1f2937
- *   --cli-panel-border: #374151
- *   --cli-panel-text: rgba(255, 255, 255, 0.87)
- *   --cli-panel-text-secondary: rgba(255, 255, 255, 0.6)
- *   --cli-panel-accent: #818cf8
- *   --cli-btn-hover-bg: rgba(129, 140, 248, 0.12)
- *   --cli-btn-active-bg: rgba(129, 140, 248, 0.2)
+ * Colors, font and corners come from these custom properties; the fallbacks
+ * below are the dark palette. The panel's `theme` option sets them inline on the
+ * panel, its hide tab, dropdowns and context menu (see CliPanelConfig.theme).
+ * Without that option a stylesheet can set them on `.cli-panel-wrapper,
+ * .cli-panel-hide-tab, .cli-panel-context-menu, .cli-panel-services-dropdown`:
+ *   --cli-panel-bg                 panel background behind the terminals
+ *   --cli-panel-header-bg          header, tab bar and menus
+ *   --cli-panel-border             borders and separators
+ *   --cli-panel-text               text
+ *   --cli-panel-text-secondary     labels, inactive tabs, icons
+ *   --cli-panel-accent             active tab, focus rings, highlights
+ *   --cli-btn-hover-bg             buttons and menu items under the pointer
+ *   --cli-btn-active-bg            pressed buttons, selected items
+ *   --cli-panel-danger             destructive items and errors
+ *   --cli-panel-shadow             shadow color of the panel, menus and hide tab
+ *   --cli-panel-font               font of the chrome (not the terminal)
+ *   --cli-panel-radius             corner radius of buttons, tabs and menus (6px)
  */
 
 /* ─── Wrapper ────────────────────────────────────────────── */
 
+/* Docking above a host's own bottom bar: set --cli-panel-bottom-offset (e.g. the
+ * bar's height) on any ancestor instead of overriding `bottom`. The panel then
+ * sits on the bar, or on the on-screen keyboard while it is open (the panel sets
+ * --cli-panel-keyboard-inset and --cli-panel-visible-height from the visual
+ * viewport), and is never taller than the space above it. */
 .cli-panel-wrapper {
+  --cli-panel-bottom: max(
+    var(--cli-panel-bottom-offset, 0px),
+    var(--cli-panel-keyboard-inset, 0px)
+  );
   position: fixed;
-  bottom: 0;
+  bottom: var(--cli-panel-bottom);
+  /* below the status bar of apps that draw under it (safe-area-inset-top) */
+  max-height: calc(
+    var(--cli-panel-visible-height, 100vh) +
+      var(--cli-panel-keyboard-inset, 0px) - var(--cli-panel-bottom) -
+      env(safe-area-inset-top, 0px)
+  );
   left: 0;
   right: 0;
   width: 100vw;
   transform: translateY(0);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background-color: var(--cli-panel-bg, #111827);
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
-  border-top: 1px solid var(--cli-panel-border, #374151);
+  background-color: var(--cli-panel-bg, #070b14);
+  color: var(--cli-panel-text, #e2e8f0);
+  border-top: 1px solid var(--cli-panel-border, #1e293b);
   display: flex;
   flex-direction: column;
   z-index: 1000;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-    sans-serif;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25);
+  font-family: var(
+    --cli-panel-font,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  box-shadow: 0 -4px 20px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
 }
 
 .cli-panel-wrapper.collapsed {
@@ -45,7 +75,7 @@
 /* ─── Header ─────────────────────────────────────────────── */
 
 .cli-panel-header {
-  background-color: var(--cli-panel-header-bg, #1f2937);
+  background-color: var(--cli-panel-header-bg, #0f1623);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -84,7 +114,7 @@
   flex-direction: row;
   gap: 1rem;
   align-items: center;
-  border-bottom: 1px solid var(--cli-panel-border, #374151);
+  border-bottom: 1px solid var(--cli-panel-border, #1e293b);
   padding: 0 1rem;
 }
 
@@ -98,7 +128,7 @@
   align-items: center;
   margin: 0;
   font-weight: 600;
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
+  color: var(--cli-panel-text, #e2e8f0);
 }
 
 .cli-panel-title-icon {
@@ -126,7 +156,7 @@
   appearance: none;
   background: transparent;
   border: none;
-  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6));
+  color: var(--cli-panel-text-secondary, #94a3b8);
   cursor: pointer;
   width: 40px;
   height: 40px;
@@ -145,7 +175,7 @@
 }
 
 .cli-panel-btn:hover:not(:disabled) {
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
+  color: var(--cli-panel-text, #e2e8f0);
   background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12));
 }
 
@@ -171,13 +201,13 @@
 /* ─── Tabs ───────────────────────────────────────────────── */
 
 .cli-panel-tabs {
-  background-color: var(--cli-panel-header-bg, #1f2937);
+  background-color: var(--cli-panel-header-bg, #0f1623);
   display: flex;
   align-items: center;
   height: 38px;
   padding: 0 8px;
   gap: 4px;
-  border-bottom: 1px solid var(--cli-panel-border, #374151);
+  border-bottom: 1px solid var(--cli-panel-border, #1e293b);
   overflow-x: auto;
   overflow-y: hidden;
   flex-shrink: 0;
@@ -212,7 +242,7 @@
   background: transparent;
   border: none;
   border-top: 2px solid transparent;
-  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6));
+  color: var(--cli-panel-text-secondary, #94a3b8);
   font-size: 0.8rem;
   font-family: inherit;
   white-space: nowrap;
@@ -225,12 +255,12 @@
 
 .cli-panel-tab:hover:not(.active) {
   background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12));
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
+  color: var(--cli-panel-text, #e2e8f0);
 }
 
 .cli-panel-tab.active {
-  background-color: var(--cli-panel-bg, #111827);
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
+  background-color: var(--cli-panel-bg, #070b14);
+  color: var(--cli-panel-text, #e2e8f0);
   border-top-color: var(--cli-panel-accent, #818cf8);
 }
 
@@ -240,13 +270,13 @@
 
 .cli-panel-tab-rename-input {
   appearance: none;
-  background: var(--cli-panel-bg, #111827);
+  background: var(--cli-panel-bg, #070b14);
   border: 1px solid var(--cli-panel-accent, #818cf8);
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
+  color: var(--cli-panel-text, #e2e8f0);
   font-size: 0.8rem;
   font-family: inherit;
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: var(--cli-panel-radius, 3px);
   outline: none;
   width: 120px;
   height: 22px;
@@ -261,15 +291,15 @@
   font-size: 1rem;
   line-height: 1;
   padding: 0 2px;
-  border-radius: 3px;
+  border-radius: var(--cli-panel-radius, 3px);
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
 }
 
 .cli-panel-tab-close-btn:hover {
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
-  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--cli-panel-text, #e2e8f0);
+  background-color: var(--cli-btn-hover-bg, rgba(255, 255, 255, 0.1));
 }
 
 .cli-panel-add-tab {
@@ -282,7 +312,7 @@
   line-height: 1;
   width: 28px;
   height: 24px;
-  border-radius: 4px;
+  border-radius: var(--cli-panel-radius, 4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -295,7 +325,7 @@
 
 .cli-panel-add-tab:hover {
   background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12));
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
+  color: var(--cli-panel-text, #e2e8f0);
   border-color: var(--cli-panel-text, rgba(255, 255, 255, 0.5));
 }
 
@@ -304,20 +334,30 @@
 .cli-panel-context-menu {
   position: fixed;
   z-index: 1100;
-  background-color: var(--cli-panel-header-bg, #1f2937);
-  border: 1px solid var(--cli-panel-border, #374151);
-  border-radius: 6px;
+  background-color: var(--cli-panel-header-bg, #0f1623);
+  border: 1px solid var(--cli-panel-border, #1e293b);
+  border-radius: var(--cli-panel-radius, 6px);
   padding: 4px 0;
   min-width: 180px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  font-family: inherit;
+  box-shadow: 0 4px 16px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
+  color: var(--cli-panel-text, #e2e8f0);
+  font-family: var(
+    --cli-panel-font,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
 }
 
 .cli-panel-context-menu-item {
   appearance: none;
   background: transparent;
   border: none;
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
+  color: var(--cli-panel-text, #e2e8f0);
   cursor: pointer;
   display: block;
   width: 100%;
@@ -338,15 +378,15 @@
 }
 
 .cli-panel-context-menu-item.destructive {
-  color: #f87171;
+  color: var(--cli-panel-danger, #f87171);
 }
 .cli-panel-context-menu-item.destructive:hover:not(:disabled) {
-  background-color: rgba(248, 113, 113, 0.12);
+  background-color: color-mix(in srgb, var(--cli-panel-danger, #f87171) 12%, transparent);
 }
 
 .cli-panel-context-menu-separator {
   height: 1px;
-  background-color: var(--cli-panel-border, #374151);
+  background-color: var(--cli-panel-border, #1e293b);
   margin: 4px 0;
 }
 
@@ -394,15 +434,15 @@
   top: 4px;
   right: 4px;
   z-index: 10;
-  background: var(--cli-panel-header-bg, #1f2937);
-  border: 1px solid var(--cli-panel-border, #374151);
-  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6));
+  background: var(--cli-panel-header-bg, #0f1623);
+  border: 1px solid var(--cli-panel-border, #1e293b);
+  color: var(--cli-panel-text-secondary, #94a3b8);
   cursor: pointer;
   font-size: 0.9rem;
   line-height: 1;
   width: 22px;
   height: 22px;
-  border-radius: 3px;
+  border-radius: var(--cli-panel-radius, 3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -414,8 +454,8 @@
 }
 
 .cli-panel-pane-close-btn:hover {
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
-  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--cli-panel-text, #e2e8f0);
+  background-color: var(--cli-btn-hover-bg, rgba(255, 255, 255, 0.1));
 }
 
 /* ─── Pane divider ───────────────────────────────────────── */
@@ -444,7 +484,7 @@
 }
 
 .cli-panel-pane-divider:hover .cli-panel-pane-divider-grip {
-  background-color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
+  background-color: var(--cli-panel-text, #e2e8f0);
 }
 
 /* ─── Position: top ─────────────────────────────────────── */
@@ -452,10 +492,13 @@
 /* Header at BOTTOM (column-reverse) so it stays visible when collapsed upward */
 .cli-panel-wrapper[data-position="top"] {
   bottom: auto;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
+  max-height: calc(
+    var(--cli-panel-visible-height, 100vh) - env(safe-area-inset-top, 0px)
+  );
   border-top: none;
-  border-bottom: 1px solid var(--cli-panel-border, #374151);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid var(--cli-panel-border, #1e293b);
+  box-shadow: 0 4px 20px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
   flex-direction: column-reverse;
 }
 
@@ -465,7 +508,7 @@
 
 .cli-panel-wrapper[data-position="top"] .cli-panel-header-content {
   border-bottom: none;
-  border-top: 1px solid var(--cli-panel-border, #374151);
+  border-top: 1px solid var(--cli-panel-border, #1e293b);
 }
 
 .cli-panel-wrapper[data-position="top"] .cli-panel-resize-bar {
@@ -478,15 +521,15 @@
 
 /* Header at RIGHT (row-reverse) so it stays visible when collapsed leftward */
 .cli-panel-wrapper[data-position="left"] {
-  bottom: 0;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   left: 0;
   right: auto;
   width: auto;
-  height: 100vh !important;
+  height: auto !important;
+  max-height: none;
   border-top: none;
-  border-right: 1px solid var(--cli-panel-border, #374151);
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
+  border-right: 1px solid var(--cli-panel-border, #1e293b);
+  box-shadow: 4px 0 20px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
   flex-direction: row-reverse;
 }
 
@@ -506,7 +549,7 @@
   flex-direction: column;
   padding: 1rem 0;
   border-bottom: none;
-  border-left: 1px solid var(--cli-panel-border, #374151);
+  border-left: 1px solid var(--cli-panel-border, #1e293b);
 }
 
 .cli-panel-wrapper[data-position="left"] .cli-panel-title {
@@ -545,15 +588,15 @@
 
 /* Header at LEFT (row) so it stays visible when collapsed rightward */
 .cli-panel-wrapper[data-position="right"] {
-  bottom: 0;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   left: auto;
   right: 0;
   width: auto;
-  height: 100vh !important;
+  height: auto !important;
+  max-height: none;
   border-top: none;
-  border-left: 1px solid var(--cli-panel-border, #374151);
-  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.25);
+  border-left: 1px solid var(--cli-panel-border, #1e293b);
+  box-shadow: -4px 0 20px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
   flex-direction: row;
 }
 
@@ -573,7 +616,7 @@
   flex-direction: column;
   padding: 1rem 0;
   border-bottom: none;
-  border-right: 1px solid var(--cli-panel-border, #374151);
+  border-right: 1px solid var(--cli-panel-border, #1e293b);
 }
 
 .cli-panel-wrapper[data-position="right"] .cli-panel-title {
@@ -626,9 +669,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: var(--cli-panel-header-bg, #1f2937);
-  border: 1px solid var(--cli-panel-border, #374151);
-  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6));
+  background-color: var(--cli-panel-header-bg, #0f1623);
+  border: 1px solid var(--cli-panel-border, #1e293b);
+  color: var(--cli-panel-text-secondary, #94a3b8);
   cursor: pointer;
   padding: 6px 12px;
   appearance: none;
@@ -636,16 +679,16 @@
   font-size: 0.8rem;
   font-weight: 600;
   transition: transform 0.2s ease, opacity 0.2s ease, color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
   opacity: 0.85;
 }
 
 .cli-panel-hide-tab:hover {
   transform: scale(1.05);
   opacity: 1;
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
-  background-color: var(--cli-panel-bg, #111827);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  color: var(--cli-panel-text, #e2e8f0);
+  background-color: var(--cli-panel-bg, #070b14);
+  box-shadow: 0 4px 16px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
 }
 
 .cli-panel-hide-tab:active {
@@ -696,6 +739,22 @@
     display: none;
   }
 
+  /* Only the run state fits next to the title; the rest would squeeze it */
+  .cli-panel-status-indicators {
+    /* gives way before the title does */
+    flex-shrink: 100;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .cli-panel-status-indicators > .cli-panel-status-item:not(:first-child) {
+    display: none;
+  }
+
+  .cli-panel-title-icon {
+    flex-shrink: 0;
+  }
+
   .cli-panel-hide-tab {
     padding: 6px 8px;
   }
@@ -729,7 +788,7 @@
 /* ─── Hide tab: bottom position ─────────────────────────── */
 
 .cli-panel-hide-tab[data-position="bottom"] {
-  bottom: 0;
+  bottom: var(--cli-panel-bottom-offset, 0px);
   border-bottom: none;
   border-radius: 8px 8px 0 0;
 }
@@ -796,10 +855,10 @@
   top: auto;
   right: 0;
   left: auto;
-  background-color: var(--cli-panel-header-bg, #1f2937);
-  border: 1px solid var(--cli-panel-border, #374151);
-  border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background-color: var(--cli-panel-header-bg, #0f1623);
+  border: 1px solid var(--cli-panel-border, #1e293b);
+  border-radius: var(--cli-panel-radius, 6px);
+  box-shadow: 0 8px 24px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
   z-index: 1100;
   min-width: 120px;
   overflow: hidden;
@@ -811,7 +870,7 @@
   appearance: none;
   background: transparent;
   border: none;
-  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6));
+  color: var(--cli-panel-text-secondary, #94a3b8);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -826,7 +885,7 @@
 
 .cli-panel-position-dropdown-item:hover {
   background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12));
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
+  color: var(--cli-panel-text, #e2e8f0);
 }
 
 .cli-panel-position-dropdown-item.active {
@@ -875,7 +934,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6));
+  color: var(--cli-panel-text-secondary, #94a3b8);
 }
 
 .cli-panel-status-dot {
@@ -946,7 +1005,7 @@
 
 .cli-panel-status-item.status-clickable {
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--cli-panel-radius, 4px);
   padding: 2px 6px;
   margin: -2px -6px;
   transition: background-color 0.15s ease;
@@ -978,13 +1037,13 @@
   width: 20px;
   height: 20px;
   cursor: default;
-  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.6));
+  color: var(--cli-panel-text-secondary, #94a3b8);
   font-size: 12px;
 }
 
 .cli-panel-status-compact-item.status-clickable {
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--cli-panel-radius, 4px);
 }
 
 .cli-panel-status-compact-item.status-clickable:hover {
@@ -1041,15 +1100,25 @@
 
 .cli-panel-services-dropdown {
   position: fixed;
-  background-color: var(--cli-panel-header-bg, #1f2937);
-  border: 1px solid var(--cli-panel-border, #374151);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background-color: var(--cli-panel-header-bg, #0f1623);
+  border: 1px solid var(--cli-panel-border, #1e293b);
+  border-radius: calc(var(--cli-panel-radius, 6px) + 2px);
+  box-shadow: 0 8px 24px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
   z-index: 1100;
   min-width: 260px;
   max-width: 380px;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--cli-panel-text, #e2e8f0);
+  font-family: var(
+    --cli-panel-font,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
 }
 
 .cli-panel-services-dropdown-header {
@@ -1059,7 +1128,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.5));
-  border-bottom: 1px solid var(--cli-panel-border, #374151);
+  border-bottom: 1px solid var(--cli-panel-border, #1e293b);
 }
 
 .cli-panel-services-dropdown-list {
@@ -1079,7 +1148,7 @@
 
 .cli-panel-services-dropdown-list::-webkit-scrollbar-thumb {
   background: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.2));
-  border-radius: 3px;
+  border-radius: var(--cli-panel-radius, 3px);
 }
 
 .cli-panel-services-dropdown-list::-webkit-scrollbar-thumb:hover {
@@ -1091,7 +1160,7 @@
   align-items: flex-start;
   gap: 10px;
   padding: 10px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--cli-panel-border, rgba(255, 255, 255, 0.04));
   transition: background-color 0.15s ease;
 }
 
@@ -1130,7 +1199,7 @@
 .cli-panel-svc-name {
   font-size: 13px;
   font-weight: 500;
-  color: var(--cli-panel-text, rgba(255, 255, 255, 0.87));
+  color: var(--cli-panel-text, #e2e8f0);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1174,7 +1243,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), #a78bfa, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), transparent);
+  background: linear-gradient(90deg, transparent, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), color-mix(in srgb, var(--cli-panel-accent, #818cf8) 60%, #c4b5fd), var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), transparent);
   background-size: 200% 100%;
   opacity: 0.4;
   animation: cliGlowShift 8s ease-in-out infinite;
@@ -1195,7 +1264,7 @@
   right: 0;
   width: 2px;
   height: 100%;
-  background: linear-gradient(180deg, transparent, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), #a78bfa, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), transparent);
+  background: linear-gradient(180deg, transparent, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), color-mix(in srgb, var(--cli-panel-accent, #818cf8) 60%, #c4b5fd), var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), transparent);
   background-size: 100% 200%;
 }
 
@@ -1206,7 +1275,7 @@
   right: auto;
   width: 2px;
   height: 100%;
-  background: linear-gradient(180deg, transparent, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), #a78bfa, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), transparent);
+  background: linear-gradient(180deg, transparent, var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), color-mix(in srgb, var(--cli-panel-accent, #818cf8) 60%, #c4b5fd), var(--cli-status-glow, var(--cli-panel-accent, #818cf8)), transparent);
   background-size: 100% 200%;
 }
 
@@ -1243,12 +1312,12 @@
 }
 
 .cli-panel-wrapper .xterm .xterm-viewport::-webkit-scrollbar-thumb {
-  background: #444;
-  border-radius: 4px;
+  background: var(--cli-panel-border, #444);
+  border-radius: var(--cli-panel-radius, 4px);
 }
 
 .cli-panel-wrapper .xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
-  background: #666;
+  background: var(--cli-panel-text-secondary, #666);
 }
 
 /* ─── Global helper ──────────────────────────────────────── */
@@ -1256,4 +1325,52 @@
 body.cli-pane-resizing {
   user-select: none;
   cursor: ew-resize;
+}
+
+/* ─── Touch ──────────────────────────────────────────────── */
+
+/* Drags on the handles resize the panel instead of scrolling the page */
+.cli-panel-resize-bar,
+.cli-panel-pane-divider {
+  touch-action: none;
+}
+
+/* Fingers need bigger handles, and a grip that shows without hovering */
+@media (pointer: coarse) {
+  .cli-panel-resize-bar {
+    top: -14px;
+    height: 28px;
+  }
+
+  .cli-panel-wrapper[data-position="top"] .cli-panel-resize-bar {
+    top: auto;
+    bottom: -14px;
+  }
+
+  .cli-panel-wrapper[data-position="left"] .cli-panel-resize-bar {
+    right: -14px;
+    width: 28px;
+  }
+
+  .cli-panel-wrapper[data-position="right"] .cli-panel-resize-bar {
+    left: -14px;
+    width: 28px;
+  }
+
+  .cli-panel-wrapper:not(.collapsed) .cli-panel-resize-grip {
+    opacity: 0.5;
+  }
+
+  .cli-panel-wrapper:is([data-position="bottom"], [data-position="top"]) .cli-panel-resize-grip {
+    width: 40px;
+  }
+
+  .cli-panel-wrapper.resizing .cli-panel-resize-grip {
+    opacity: 1;
+    background: var(--cli-panel-accent, #818cf8);
+  }
+
+  .cli-panel-pane-divider {
+    width: 14px;
+  }
 }

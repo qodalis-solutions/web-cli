@@ -42,6 +42,17 @@ import { CliConfigProvider, CliPanel } from '@qodalis/react-cli';
 </CliConfigProvider>;
 ```
 
+### Themes
+
+`theme` styles the panel and its terminals: `'dark'` (default), `'light'`, `'auto'` (follows the system), a terminal theme name such as `'dracula'`, or your own colors over a base palette. Pass your app's setting through and the panel follows it:
+
+```tsx
+<CliPanel options={{ theme: dark ? 'dark' : 'light' }} />
+<CliPanel options={{ theme: { base: 'light', colors: { accent: '#0f766e' }, radius: '10px' } }} />
+```
+
+See [Panel themes](https://cli.qodalis.com/docs/configuration#panel-themes).
+
 ## Exports
 
 | Export | Purpose |

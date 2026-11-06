@@ -13,7 +13,14 @@ import {
     QueryList,
     ViewChildren,
 } from '@angular/core';
-import { CliPanelConfig, CliPanelPosition, CliPanelState, ICliModule, ICliPanelRef } from '@qodalis/cli-core';
+import {
+    CliPanelConfig,
+    CliPanelPosition,
+    CliPanelState,
+    CliPanelThemeInput,
+    ICliModule,
+    ICliPanelRef,
+} from '@qodalis/cli-core';
 import {
     CliEngine,
     CliEngineOptions,
@@ -310,6 +317,10 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     }
     setPosition(position: CliPanelPosition): void {
         this.controller.setPosition(position);
+    }
+
+    setTheme(theme: CliPanelThemeInput | undefined): void {
+        this.controller.setTheme(theme);
     }
     addTab(title?: string): number {
         return this.controller.addTab(title);

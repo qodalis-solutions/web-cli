@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Cli,
   CliConfigProvider,
@@ -166,16 +166,34 @@ const options: CliOptions = {
   ],
 };
 
-const panelOptions: CliPanelOptions = {
-  position: "right",
-  isHidden: true,
+// The panel's theme comes from the page (a host setting): ?theme=light|dark|auto|<terminal theme>|custom
+const customTheme: CliPanelOptions["theme"] = {
+  base: "light",
+  colors: { accent: "#0f766e", headerBackground: "#f0fdfa", border: "#99f6e4" },
+  radius: "10px",
 };
+const demoThemes = ["dark", "light", "auto", "dracula", "nord", "solarizedLight", "custom"];
+const params = new URLSearchParams(location.search);
 
 function App() {
   useEffect(() => mountUsersModeSwitcher(), []);
+  const [theme, setTheme] = useState(params.get("theme") ?? "dark");
+  const panelOptions: CliPanelOptions = {
+    position: (params.get("position") as CliPanelOptions["position"]) ?? "right",
+    isHidden: true,
+    theme: theme === "custom" ? customTheme : theme,
+  };
   return (
     <CliConfigProvider modules={modules} options={options}>
       <Cli />
+      <label className="demo-theme-picker">
+        Panel theme
+        <select value={theme} onChange={(e) => setTheme(e.target.value)}>
+          {demoThemes.map((t) => (
+            <option key={t}>{t}</option>
+          ))}
+        </select>
+      </label>
       <CliPanel options={panelOptions} />
     </CliConfigProvider>
   );

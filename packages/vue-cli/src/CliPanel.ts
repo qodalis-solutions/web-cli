@@ -47,7 +47,7 @@ export interface CliPanelOptions extends CliEngineOptions, CliPanelConfig {}
 /** The methods exposed through a template ref. */
 const PANEL_REF_METHODS: Array<keyof ICliPanelRef<CliEngine>> = [
     'open', 'collapse', 'toggleCollapse', 'hide', 'unhide', 'toggleHide', 'close',
-    'maximize', 'restore', 'toggleMaximize', 'resize', 'setPosition',
+    'maximize', 'restore', 'toggleMaximize', 'resize', 'setPosition', 'setTheme',
     'addTab', 'closeTab', 'selectTab', 'renameTab', 'splitPane', 'closePane', 'getEngine', 'getState',
 ];
 
@@ -158,7 +158,7 @@ export const CliPanel = defineComponent({
                     'div',
                     {
                         class: 'cli-panel-resize-bar',
-                        onMousedown: (e: MouseEvent) => {
+                        onPointerdown: (e: PointerEvent) => {
                             if (!s.resizable) return;
                             e.preventDefault();
                             controller.startPanelResize(e.clientX, e.clientY);
@@ -346,7 +346,7 @@ export const CliPanel = defineComponent({
                                           {
                                               key: `divider-${pane.id}`,
                                               class: 'cli-panel-pane-divider',
-                                              onMousedown: (e: MouseEvent) => {
+                                              onPointerdown: (e: PointerEvent) => {
                                                   e.preventDefault();
                                                   controller.startPaneResize(tab.id, i - 1, e.clientX, panesContainerWidth(e.target));
                                               },

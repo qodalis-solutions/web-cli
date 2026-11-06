@@ -295,6 +295,12 @@
       <td><code>false</code></td>
       <td>Auto-sync panel chrome colors with the active terminal theme</td>
     </tr>
+    <tr>
+      <td><code>theme</code></td>
+      <td><code>'dark' | 'light' | 'auto' | string | CliPanelTheme</code></td>
+      <td><code>'dark'</code></td>
+      <td>Look of the panel and its terminals; see <a href="#panel-themes">Panel themes</a></td>
+    </tr>
   </tbody>
 </table>
 <div class="code-block">
@@ -308,6 +314,140 @@
     hideAlignment: 'end',
 &#125;;</code></pre>
 </div>
+
+<h2 id="panel-themes">Panel themes</h2>
+<p>
+  <code>theme</code> sets the look of the panel (header, tabs, menus, hide tab)
+  and of every terminal in it. A plain <code>&lt;cli&gt;</code> takes the same
+  option for its terminal.
+</p>
+<table>
+  <thead>
+    <tr>
+      <th>Value</th>
+      <th>Result</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>'dark'</code> (default)</td>
+      <td>Built-in dark palette with the <code>default</code> terminal theme</td>
+    </tr>
+    <tr>
+      <td><code>'light'</code></td>
+      <td>Built-in light palette with the <code>light</code> terminal theme</td>
+    </tr>
+    <tr>
+      <td><code>'auto'</code></td>
+      <td>
+        Light or dark, following the system's
+        <code>prefers-color-scheme</code>; switches live
+      </td>
+    </tr>
+    <tr>
+      <td>A terminal theme name</td>
+      <td>
+        <code>'dracula'</code>, <code>'nord'</code>,
+        <code>'solarizedLight'</code>, ... (see <code>theme list</code>): the
+        terminals use it and the panel's colors are derived from it
+      </td>
+    </tr>
+    <tr>
+      <td><code>CliPanelTheme</code></td>
+      <td>
+        Your own colors over a base palette: <code>base</code>
+        (<code>'light'</code>, <code>'dark'</code> or <code>'auto'</code>),
+        <code>terminal</code> (a theme name or xterm colors),
+        <code>colors</code>, <code>fontFamily</code>, <code>radius</code>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p>
+  <code>colors</code> takes any of <code>background</code>,
+  <code>headerBackground</code>, <code>border</code>, <code>text</code>,
+  <code>textSecondary</code>, <code>accent</code>,
+  <code>hoverBackground</code>, <code>activeBackground</code>,
+  <code>danger</code> and <code>shadow</code>; the ones left out come from the
+  base palette.
+</p>
+<div class="code-block">
+  <pre><code>const panelOptions: CliPanelOptions = &#123;
+    theme: &#123;
+        base: 'light',
+        colors: &#123; accent: '#0f766e', headerBackground: '#f0fdfa', border: '#99f6e4' &#125;,
+        fontFamily: 'Inter, sans-serif',
+        radius: '10px',
+    &#125;,
+&#125;;</code></pre>
+</div>
+<h3>Following the app's own theme</h3>
+<p>
+  Pass the app's light/dark setting through <code>theme</code>: the panel and
+  its open terminals restyle when it changes. In React and Vue a re-render is
+  enough; in Angular pass a new <code>options</code> object. Any framework can
+  also call <code>setTheme(theme)</code> on the panel ref.
+</p>
+<div class="code-block">
+  <span class="code-label">React</span>
+  <pre><code>const &#123; dark &#125; = useAppSettings();
+&lt;CliPanel options=&#123;&#123; theme: dark ? 'dark' : 'light' &#125;&#125; /&gt;</code></pre>
+</div>
+<p>
+  With a theme from the app, the theme someone saved with the
+  <code>theme</code> command is not restored on the next start; the command
+  still changes the terminal for the session. Without a <code>theme</code>
+  option nothing changes: terminals keep the saved theme and the panel uses
+  the dark palette, or colors derived from the terminal with
+  <code>syncTheme: true</code>.
+</p>
+<h3>CSS variables</h3>
+<p>
+  The theme is applied as CSS custom properties on the panel, its hide tab,
+  its dropdowns and its context menu, so a stylesheet can also override them:
+</p>
+<div class="code-block">
+  <pre><code>.cli-panel-wrapper,
+.cli-panel-hide-tab,
+.cli-panel-context-menu,
+.cli-panel-services-dropdown &#123;
+    --cli-panel-accent: #e11d48;
+    --cli-panel-radius: 0;
+&#125;</code></pre>
+</div>
+<p>
+  The variables: <code>--cli-panel-bg</code>,
+  <code>--cli-panel-header-bg</code>, <code>--cli-panel-border</code>,
+  <code>--cli-panel-text</code>, <code>--cli-panel-text-secondary</code>,
+  <code>--cli-panel-accent</code>, <code>--cli-btn-hover-bg</code>,
+  <code>--cli-btn-active-bg</code>, <code>--cli-panel-danger</code>,
+  <code>--cli-panel-shadow</code>, <code>--cli-panel-font</code> and
+  <code>--cli-panel-radius</code>. Inline theme values win over a stylesheet,
+  so set either the option or the variables for a given color.
+</p>
+<h3>Phones and tablets</h3>
+<ul>
+  <li>
+    The resize grip works with touch and is larger on touch screens; it stays
+    visible while the panel is open.
+  </li>
+  <li>
+    When the on-screen keyboard opens, the panel moves above it and shrinks to
+    the visible area, so the prompt stays in view while typing. It is never
+    taller than the space it has and stays below the status bar of apps that
+    draw under it.
+  </li>
+  <li>
+    An app with its own bottom bar (tabs, a toolbar) docks the panel above it
+    with <code>--cli-panel-bottom-offset</code> instead of overriding
+    <code>bottom</code>, so the panel still moves above the keyboard:
+    <code>:root &#123; --cli-panel-bottom-offset: 64px; &#125;</code>
+  </li>
+  <li>
+    Up to 600px wide, the header keeps the title, the run state and the
+    buttons on one line.
+  </li>
+</ul>
 
 <!-- Angular Configuration -->
 <h2>{{ "docs.configuration.framework-config" | translate }}</h2>

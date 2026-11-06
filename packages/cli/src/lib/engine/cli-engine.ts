@@ -1,6 +1,7 @@
 import {
     ITerminalOptions,
     ITerminalInitOnlyOptions,
+    ITheme,
     Terminal,
 } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
@@ -12,6 +13,8 @@ import {
     ICliModule,
     ICliServerAuthService_TOKEN,
     ICliEventBus_TOKEN,
+    prefersDarkScheme,
+    resolvePanelTheme,
 } from '@qodalis/cli-core';
 import { CliServerAuthService } from '../services/cli-server-auth.service';
 import { CliCommandExecutor } from '../executor/cli-command-executor';
@@ -229,6 +232,10 @@ export class CliEngine {
         this.terminalOptions = getTerminalOptions(
             this.options?.terminalOptions,
         );
+        // The host's theme, unless terminalOptions names the colors itself
+        if (this.options?.theme !== undefined && !this.options?.terminalOptions?.theme) {
+            this.terminalOptions.theme = resolvePanelTheme(this.options.theme, prefersDarkScheme()).terminal;
+        }
         const setup = initializeTerminal(
             this.container,
             this.terminalOptions,
@@ -528,6 +535,15 @@ export class CliEngine {
             this.safeFit();
             this.terminal?.focus();
         });
+    }
+
+    /**
+     * Restyle the terminal: its colors and the background around it.
+     * The `theme` command can still change it afterwards.
+     */
+    setTheme(theme: ITheme): void {
+        if (this.terminal) this.terminal.options.theme = theme;
+        this.container.style.background = theme.background ?? '';
     }
 
     /**

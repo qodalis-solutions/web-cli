@@ -2,11 +2,16 @@ import {
     CliPanelConfig,
     CliPanelPosition,
     CliPanelState,
+    CliPanelThemeInput,
+    CliResolvedPanelTheme,
     ICliPanelRef,
     derivePanelThemeStyles,
+    prefersDarkScheme,
+    resolvePanelTheme,
     loadPanelPosition,
     savePanelPosition,
 } from '@qodalis/cli-core';
+import type { ITheme } from '@xterm/xterm';
 import { CliEngine } from '../engine';
 import {
     DEFAULT_PANEL_HEIGHT,
@@ -61,6 +66,32 @@ interface PaneResizeDrag {
 
 const PANE_RESIZING_BODY_CLASS = 'cli-pane-resizing';
 
+const DARK_SCHEME_QUERY = '(prefers-color-scheme: dark)';
+
+/** Whether a theme input follows the system's color scheme. */
+function followsSystem(input: CliPanelThemeInput | undefined): boolean {
+    return input === 'auto' || (typeof input === 'object' && input !== null && input.base === 'auto');
+}
+
+function themeKey(input: CliPanelThemeInput | undefined): string {
+    return input === undefined ? '' : JSON.stringify(input);
+}
+
+function sameTerminalTheme(a: ITheme | undefined, b: ITheme | undefined): boolean {
+    return !!a && !!b && a.background === b.background && a.foreground === b.foreground && a.cursor === b.cursor;
+}
+
+/** Smaller gaps are browser toolbars sliding, not a keyboard. */
+const MIN_KEYBOARD_INSET = 80;
+
+/** Keyboard inset and visible height from the visual viewport. */
+function visualViewportFields(): { keyboardInset: number; visibleHeight: number } {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    if (!vv) return { keyboardInset: 0, visibleHeight: 0 };
+    const inset = Math.round(window.innerHeight - vv.height - vv.offsetTop);
+    return { keyboardInset: inset >= MIN_KEYBOARD_INSET ? inset : 0, visibleHeight: Math.round(vv.height) };
+}
+
 function defaultViewport(): CliPanelViewport {
     if (typeof window === 'undefined') return { width: 0, height: 0 };
     return { width: window.innerWidth, height: window.innerHeight };
@@ -99,6 +130,11 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     private documentListenersAttached = false;
     private rootElement: ParentNode | null = null;
     private themeObserver?: MutationObserver;
+    /** The host's theme (`config.theme`); undefined leaves the terminals' own theme alone. */
+    private themeInput?: CliPanelThemeInput;
+    private resolvedTheme: CliResolvedPanelTheme;
+    private schemeQuery?: MediaQueryList;
+    private visualViewport?: VisualViewport;
 
     constructor(options: CliPanelControllerOptions = {}) {
         const config = options.config ?? {};
@@ -106,6 +142,10 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         this.controlled = options.controlled ?? {};
         this.viewport = options.viewport ?? defaultViewport;
         this.persistPosition = options.persistPosition ?? true;
+        this.themeInput = config.theme;
+        this.resolvedTheme = resolvePanelTheme(config.theme, prefersDarkScheme());
+        this.watchSystemScheme();
+        this.watchVisualViewport();
 
         this.internal = {
             collapsed: config.isCollapsed ?? true,
@@ -135,7 +175,11 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             isHorizontal: false,
             showStatusIndicators: true,
             panelResizing: false,
-            themeStyles: {},
+            // Without a host theme the stylesheet's colors (and its overrides) apply
+            themeStyles: config.theme === undefined ? {} : this.resolvedTheme.styles,
+            scheme: this.resolvedTheme.scheme,
+            terminalTheme: config.theme === undefined ? undefined : this.resolvedTheme.terminal,
+            ...visualViewportFields(),
             ...this.configFields(config),
             tabs: [],
             activeTabId: 0,
@@ -158,6 +202,10 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
 
     readonly subscribe = (listener: () => void): (() => void) => {
         this.listeners.add(listener);
+        // A view remounted after destroy() reuses the controller: follow the viewport and system scheme again
+        this.watchSystemScheme();
+        this.watchVisualViewport();
+        this.onVisualViewportChange();
         return () => {
             this.listeners.delete(listener);
         };
@@ -165,8 +213,9 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
 
     readonly getSnapshot = (): CliPanelSnapshot => this.snapshot;
 
-    /** Apply a new panel configuration (chrome buttons, theme sync). */
+    /** Apply a new panel configuration (chrome buttons, theme, theme sync). */
     setOptions(config: CliPanelConfig | undefined): void {
+        if (themeKey(config?.theme) !== themeKey(this.themeInput)) this.setTheme(config?.theme);
         const fields = this.configFields(config ?? {});
         const s = this.snapshot;
         if (
@@ -181,6 +230,16 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         this.commit(fields);
         if (fields.syncTheme) this.startThemeSync();
         else this.stopThemeSync();
+    }
+
+    /**
+     * Restyle the panel and every terminal in it (see `CliPanelConfig.theme`).
+     * `undefined` returns to the default palette and leaves the terminals' theme alone.
+     */
+    setTheme(theme: CliPanelThemeInput | undefined): void {
+        this.themeInput = theme;
+        this.watchSystemScheme();
+        this.applyTheme();
     }
 
     /** Replace the change callbacks (wrappers call this when their props change). */
@@ -211,6 +270,9 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     destroy(): void {
         this.tracker.destroy();
         this.stopThemeSync();
+        this.schemeQuery?.removeEventListener('change', this.onSystemSchemeChange);
+        this.schemeQuery = undefined;
+        this.unwatchVisualViewport();
         this.endPanelResize();
         this.endPaneResize();
         this.detachDocumentListeners();
@@ -466,6 +528,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         if (!this.findTab(tabId)) return;
         this.engines.set(paneId, engine);
         this.tracker.registerEngine(tabId, paneId, engine);
+        if (this.snapshot.terminalTheme) engine.setTheme(this.snapshot.terminalTheme);
         if (this.snapshot.syncTheme) this.startThemeSync();
     }
 
@@ -554,7 +617,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
 
     /* ─── Drag resizing ─────────────────────────────────────── */
 
-    /** Mouse down on the panel's resize bar. */
+    /** Pointer (mouse, touch or pen) down on the panel's resize bar. */
     startPanelResize(clientX: number, clientY: number): void {
         if (!this.snapshot.resizable || typeof document === 'undefined') return;
         if (this.snapshot.collapsed) this.toggle();
@@ -565,11 +628,12 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             startHeight: this.snapshot.height,
         };
         this.commit({ panelResizing: true });
-        document.addEventListener('mousemove', this.onPanelResizeMove);
-        document.addEventListener('mouseup', this.onPanelResizeEnd);
+        document.addEventListener('pointermove', this.onPanelResizeMove);
+        document.addEventListener('pointerup', this.onPanelResizeEnd);
+        document.addEventListener('pointercancel', this.onPanelResizeEnd);
     }
 
-    /** Mouse down on the divider before pane `dividerIndex + 1` of a tab. */
+    /** Pointer down on the divider before pane `dividerIndex + 1` of a tab. */
     startPaneResize(tabId: number, dividerIndex: number, clientX: number, containerWidth: number): void {
         const tab = this.findTab(tabId);
         if (!tab || typeof document === 'undefined') return;
@@ -582,11 +646,12 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         };
         this.commit({ paneResizing: true });
         document.body.classList.add(PANE_RESIZING_BODY_CLASS);
-        document.addEventListener('mousemove', this.onPaneResizeMove);
-        document.addEventListener('mouseup', this.onPaneResizeEnd);
+        document.addEventListener('pointermove', this.onPaneResizeMove);
+        document.addEventListener('pointerup', this.onPaneResizeEnd);
+        document.addEventListener('pointercancel', this.onPaneResizeEnd);
     }
 
-    private readonly onPanelResizeMove = (event: MouseEvent): void => {
+    private readonly onPanelResizeMove = (event: PointerEvent | MouseEvent): void => {
         const drag = this.panelDrag;
         if (!drag) return;
         const size = resizedPanelSize(
@@ -605,12 +670,13 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     private endPanelResize(): void {
         if (!this.panelDrag) return;
         this.panelDrag = undefined;
-        document.removeEventListener('mousemove', this.onPanelResizeMove);
-        document.removeEventListener('mouseup', this.onPanelResizeEnd);
+        document.removeEventListener('pointermove', this.onPanelResizeMove);
+        document.removeEventListener('pointerup', this.onPanelResizeEnd);
+        document.removeEventListener('pointercancel', this.onPanelResizeEnd);
         this.commit({ panelResizing: false });
     }
 
-    private readonly onPaneResizeMove = (event: MouseEvent): void => {
+    private readonly onPaneResizeMove = (event: PointerEvent | MouseEvent): void => {
         const drag = this.paneDrag;
         if (!drag) return;
         const tab = this.findTab(drag.tabId);
@@ -626,8 +692,9 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         if (!this.paneDrag) return;
         this.paneDrag = undefined;
         document.body.classList.remove(PANE_RESIZING_BODY_CLASS);
-        document.removeEventListener('mousemove', this.onPaneResizeMove);
-        document.removeEventListener('mouseup', this.onPaneResizeEnd);
+        document.removeEventListener('pointermove', this.onPaneResizeMove);
+        document.removeEventListener('pointerup', this.onPaneResizeEnd);
+        document.removeEventListener('pointercancel', this.onPaneResizeEnd);
         this.commit({ paneResizing: false });
     }
 
@@ -674,7 +741,10 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         if (!engine) return;
         const theme = engine.getTerminal().options.theme;
         if (!theme) return;
-        const styles = derivePanelThemeStyles(theme);
+        // The host's own terminal theme keeps the host's panel colors
+        const styles = sameTerminalTheme(theme, this.resolvedTheme.terminal)
+            ? this.resolvedTheme.styles
+            : derivePanelThemeStyles(theme);
         if (sameRecord(styles, this.snapshot.themeStyles)) return;
         this.commit({ themeStyles: styles });
     }
@@ -692,6 +762,58 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         this.themeObserver = new MutationObserver(() => this.syncThemeFromEngine());
         this.themeObserver.observe(container, { attributes: true, attributeFilter: ['style'] });
     }
+
+    private applyTheme(): void {
+        const resolved = resolvePanelTheme(this.themeInput, prefersDarkScheme());
+        this.resolvedTheme = resolved;
+        const terminalTheme = this.themeInput === undefined ? undefined : resolved.terminal;
+        const terminalChanged = !!terminalTheme && !sameTerminalTheme(terminalTheme, this.snapshot.terminalTheme);
+        const themeStyles = this.themeInput === undefined ? {} : resolved.styles;
+        this.commit({ themeStyles, scheme: resolved.scheme, terminalTheme });
+        if (terminalChanged) this.engines.forEach((engine) => engine.setTheme(terminalTheme!));
+        if (this.snapshot.syncTheme) this.syncThemeFromEngine();
+    }
+
+    /** Follow the system's light/dark setting while the theme is 'auto'. */
+    private watchSystemScheme(): void {
+        const follow = followsSystem(this.themeInput) && typeof window !== 'undefined' && !!window.matchMedia;
+        if (follow && !this.schemeQuery) {
+            this.schemeQuery = window.matchMedia(DARK_SCHEME_QUERY);
+            this.schemeQuery.addEventListener?.('change', this.onSystemSchemeChange);
+        } else if (!follow && this.schemeQuery) {
+            this.schemeQuery.removeEventListener?.('change', this.onSystemSchemeChange);
+            this.schemeQuery = undefined;
+        }
+    }
+
+    private readonly onSystemSchemeChange = (): void => this.applyTheme();
+
+    /* ─── On-screen keyboard ────────────────────────────────── */
+
+    /**
+     * Phone browsers open the keyboard over the page and shrink only the visual
+     * viewport; follow it so the panel stays above the keyboard.
+     */
+    private watchVisualViewport(): void {
+        const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+        if (!vv || this.visualViewport) return;
+        this.visualViewport = vv;
+        vv.addEventListener('resize', this.onVisualViewportChange);
+        vv.addEventListener('scroll', this.onVisualViewportChange);
+    }
+
+    private unwatchVisualViewport(): void {
+        this.visualViewport?.removeEventListener('resize', this.onVisualViewportChange);
+        this.visualViewport?.removeEventListener('scroll', this.onVisualViewportChange);
+        this.visualViewport = undefined;
+    }
+
+    private readonly onVisualViewportChange = (): void => {
+        const fields = visualViewportFields();
+        const s = this.snapshot;
+        if (fields.keyboardInset === s.keyboardInset && fields.visibleHeight === s.visibleHeight) return;
+        this.commit(fields);
+    };
 
     private stopThemeSync(): void {
         this.themeObserver?.disconnect();

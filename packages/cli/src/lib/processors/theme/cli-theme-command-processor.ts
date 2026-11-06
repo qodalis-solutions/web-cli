@@ -585,6 +585,8 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
 
     async initialize(context: ICliExecutionContext): Promise<void> {
         this.defaultTheme = context.terminal.options.theme!;
+        // The host owns the theme: a saved one would replace it (and follow other tabs)
+        if (context.options?.theme !== undefined) return;
         this.applySavedTheme(context, false);
 
         // A theme applied in another tab or terminal is applied here too
