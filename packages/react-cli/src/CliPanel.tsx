@@ -103,7 +103,14 @@ const focusAndSelect = (input: HTMLInputElement | null) => {
     }
 };
 
-const asStyle = (style: Record<string, string>) => style as React.CSSProperties;
+/** React wants camelCase style keys (`colorScheme`); custom properties keep theirs. */
+const asStyle = (style: Record<string, string>): React.CSSProperties => {
+    const out: Record<string, string> = {};
+    for (const [key, value] of Object.entries(style)) {
+        out[key.startsWith('--') ? key : key.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())] = value;
+    }
+    return out as React.CSSProperties;
+};
 
 /* ─── Component ──────────────────────────────────────────── */
 

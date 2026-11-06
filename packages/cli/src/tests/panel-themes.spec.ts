@@ -11,6 +11,7 @@ import {
     openStatusDropdown,
     panelWrapperStyle,
 } from '../lib/panel';
+import { CLI_TERMINAL_THEME_EVENT } from '../lib/processors/theme/terminal-theme';
 
 function fakeEngine(theme: object = DefaultThemes.default) {
     const options = { theme };
@@ -198,6 +199,38 @@ describe('panel theme', () => {
         dark = true;
         listeners.forEach((fn) => fn());
         expect(c.getSnapshot().scheme).toBe('dark');
+        c.destroy();
+    });
+
+    it("doesn't restyle a terminal again when a view re-registers it", () => {
+        const c = panel({ theme: 'light' });
+        const engine = fakeEngine();
+        c.toggle();
+        c.registerEngine(1, 1, engine);
+        c.registerEngine(1, 1, engine);
+        expect(engine.setTheme).toHaveBeenCalledTimes(1);
+        c.destroy();
+    });
+
+    it('follows a theme the user applies in its first terminal', () => {
+        const c = panel({ theme: 'light' });
+        const root = document.createElement('div');
+        const container = document.createElement('div');
+        container.className = 'terminal-container';
+        root.appendChild(container);
+        c.setRootElement(root);
+        c.toggle();
+
+        container.dispatchEvent(
+            new CustomEvent(CLI_TERMINAL_THEME_EVENT, { bubbles: true, detail: DefaultThemes.dracula }),
+        );
+        expect(c.getSnapshot().themeStyles['--cli-panel-bg']).toBe(DefaultThemes.dracula.background!);
+
+        // Back to the host's terminal theme: the host's panel colors again
+        container.dispatchEvent(
+            new CustomEvent(CLI_TERMINAL_THEME_EVENT, { bubbles: true, detail: DefaultThemes.light }),
+        );
+        expect(c.getSnapshot().themeStyles['--cli-panel-bg']).toBe(CliPanelPalettes.light.background);
         c.destroy();
     });
 

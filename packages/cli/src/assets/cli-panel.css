@@ -16,7 +16,8 @@
  *   --cli-panel-danger             destructive items and errors
  *   --cli-panel-shadow             shadow color of the panel, menus and hide tab
  *   --cli-panel-font               font of the chrome (not the terminal)
- *   --cli-panel-radius             corner radius of buttons, tabs and menus (6px)
+ *   --cli-panel-radius             corner radius of buttons, tabs and menus (8px)
+ *   --cli-panel-header-size        height of the header (its width when docked left or right)
  */
 
 /* ─── Wrapper ────────────────────────────────────────────── */
@@ -27,6 +28,7 @@
  * --cli-panel-keyboard-inset and --cli-panel-visible-height from the visual
  * viewport), and is never taller than the space above it. */
 .cli-panel-wrapper {
+  --cli-panel-header-size: 48px;
   --cli-panel-bottom: max(
     var(--cli-panel-bottom-offset, 0px),
     var(--cli-panel-keyboard-inset, 0px)
@@ -60,11 +62,13 @@
     Arial,
     sans-serif
   );
-  box-shadow: 0 -4px 20px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
+  box-shadow: 0 -8px 32px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
+  /* rounded on the edge facing the page; the header follows the corners */
+  border-radius: 12px 12px 0 0;
 }
 
 .cli-panel-wrapper.collapsed {
-  transform: translateY(calc(100% - 60px));
+  transform: translateY(calc(100% - var(--cli-panel-header-size)));
 }
 
 .cli-panel-wrapper.resizing {
@@ -75,6 +79,7 @@
 /* ─── Header ─────────────────────────────────────────────── */
 
 .cli-panel-header {
+  border-radius: inherit;
   background-color: var(--cli-panel-header-bg, #0f1623);
   display: flex;
   flex-direction: column;
@@ -109,21 +114,21 @@
 }
 
 .cli-panel-header-content {
-  height: 60px;
+  height: var(--cli-panel-header-size);
   display: flex;
   flex-direction: row;
-  gap: 1rem;
+  gap: 12px;
   align-items: center;
-  border-bottom: 1px solid var(--cli-panel-border, #1e293b);
-  padding: 0 1rem;
+  padding: 0 8px 0 12px;
 }
 
 .cli-panel-title {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
+  letter-spacing: -0.01em;
   white-space: nowrap;
   min-width: 0;
   display: flex;
-  gap: 0.5rem;
+  gap: 10px;
   justify-content: center;
   align-items: center;
   margin: 0;
@@ -131,10 +136,22 @@
   color: var(--cli-panel-text, #e2e8f0);
 }
 
+/* The terminal glyph sits on a tile of the accent color */
 .cli-panel-title-icon {
   color: var(--cli-panel-accent, #818cf8);
+  background: color-mix(in srgb, var(--cli-panel-accent, #818cf8) 16%, transparent);
+  border-radius: var(--cli-panel-radius, 8px);
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
+}
+
+.cli-panel-title-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* An application's own icon (options.branding.icon) instead of the terminal glyph */
@@ -148,7 +165,7 @@
 .cli-panel-action-buttons {
   display: flex;
   flex-direction: row;
-  gap: 0.35rem;
+  gap: 2px;
   margin-left: auto;
 }
 
@@ -158,9 +175,9 @@
   border: none;
   color: var(--cli-panel-text-secondary, #94a3b8);
   cursor: pointer;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--cli-panel-radius, 8px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -172,6 +189,16 @@
 
 .cli-panel-btn svg {
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.cli-panel-btn:focus-visible,
+.cli-panel-tab:focus-visible,
+.cli-panel-add-tab:focus-visible,
+.cli-panel-hide-tab:focus-visible {
+  outline: 2px solid var(--cli-panel-accent, #818cf8);
+  outline-offset: 1px;
 }
 
 .cli-panel-btn:hover:not(:disabled) {
@@ -186,6 +213,11 @@
 .cli-panel-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.cli-panel-btn-close:hover:not(:disabled) {
+  color: var(--cli-panel-danger, #f87171);
+  background-color: color-mix(in srgb, var(--cli-panel-danger, #f87171) 14%, transparent);
 }
 
 /* ─── Content ────────────────────────────────────────────── */
@@ -204,23 +236,18 @@
   background-color: var(--cli-panel-header-bg, #0f1623);
   display: flex;
   align-items: center;
-  height: 38px;
-  padding: 0 8px;
-  gap: 4px;
+  height: 40px;
+  padding: 0 8px 0 10px;
+  gap: 6px;
   border-bottom: 1px solid var(--cli-panel-border, #1e293b);
   overflow-x: auto;
   overflow-y: hidden;
   flex-shrink: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.3)) transparent;
+  scrollbar-width: none;
 }
 
 .cli-panel-tabs::-webkit-scrollbar {
-  height: 2px;
-}
-.cli-panel-tabs::-webkit-scrollbar-thumb {
-  background: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.3));
-  border-radius: 1px;
+  display: none;
 }
 
 .cli-panel-tab-list {
@@ -228,29 +255,30 @@
   margin: 0;
   padding: 0;
   display: flex;
-  gap: 2px;
-  align-items: stretch;
+  gap: 4px;
+  align-items: center;
   height: 100%;
 }
 
+/* Tabs are chips; the active one is cut from the terminal's own background */
 .cli-panel-tab {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 12px;
+  gap: 8px;
+  height: 28px;
+  padding: 0 6px 0 10px;
   cursor: pointer;
   background: transparent;
-  border: none;
-  border-top: 2px solid transparent;
+  border: 1px solid transparent;
+  border-radius: var(--cli-panel-radius, 8px);
   color: var(--cli-panel-text-secondary, #94a3b8);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-family: inherit;
   white-space: nowrap;
   transition:
     background-color 0.15s ease,
     color 0.15s ease,
     border-color 0.15s ease;
-  height: 100%;
 }
 
 .cli-panel-tab:hover:not(.active) {
@@ -260,8 +288,10 @@
 
 .cli-panel-tab.active {
   background-color: var(--cli-panel-bg, #070b14);
+  border-color: var(--cli-panel-border, #1e293b);
   color: var(--cli-panel-text, #e2e8f0);
-  border-top-color: var(--cli-panel-accent, #818cf8);
+  font-weight: 500;
+  box-shadow: 0 1px 2px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
 }
 
 .cli-panel-tab-title {
@@ -273,10 +303,10 @@
   background: var(--cli-panel-bg, #070b14);
   border: 1px solid var(--cli-panel-accent, #818cf8);
   color: var(--cli-panel-text, #e2e8f0);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-family: inherit;
   padding: 2px 6px;
-  border-radius: var(--cli-panel-radius, 3px);
+  border-radius: calc(var(--cli-panel-radius, 8px) - 2px);
   outline: none;
   width: 120px;
   height: 22px;
@@ -288,13 +318,27 @@
   border: none;
   color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.4));
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.95rem;
   line-height: 1;
-  padding: 0 2px;
-  border-radius: var(--cli-panel-radius, 3px);
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(var(--cli-panel-radius, 8px) - 3px);
+  opacity: 0;
   transition:
+    opacity 0.15s ease,
     background-color 0.15s ease,
     color 0.15s ease;
+}
+
+/* The close button shows on the active tab and under the pointer */
+.cli-panel-tab.active .cli-panel-tab-close-btn,
+.cli-panel-tab:hover .cli-panel-tab-close-btn,
+.cli-panel-tab-close-btn:focus-visible {
+  opacity: 1;
 }
 
 .cli-panel-tab-close-btn:hover {
@@ -305,28 +349,27 @@
 .cli-panel-add-tab {
   appearance: none;
   background: transparent;
-  border: 1px dashed var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.3));
-  color: var(--cli-panel-text-secondary, rgba(255, 255, 255, 0.5));
+  border: none;
+  color: var(--cli-panel-text-secondary, #94a3b8);
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  font-family: inherit;
   line-height: 1;
   width: 28px;
-  height: 24px;
-  border-radius: var(--cli-panel-radius, 4px);
+  height: 28px;
+  border-radius: var(--cli-panel-radius, 8px);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   transition:
     background-color 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
+    color 0.15s ease;
 }
 
 .cli-panel-add-tab:hover {
   background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12));
   color: var(--cli-panel-text, #e2e8f0);
-  border-color: var(--cli-panel-text, rgba(255, 255, 255, 0.5));
 }
 
 /* ─── Context menu ───────────────────────────────────────── */
@@ -419,9 +462,18 @@
   overflow: hidden;
 }
 
-.cli-panel-pane.active-pane {
-  outline: 1px solid var(--cli-panel-accent, #818cf8);
-  outline-offset: -1px;
+.cli-panel-pane .xterm {
+  padding: 8px 4px 4px 14px;
+}
+
+/* xterm's viewport is black by default; the padding shows the theme's background instead */
+.cli-panel-pane .xterm .xterm-viewport {
+  background-color: transparent !important;
+}
+
+/* Split panes: the active one is marked; a single pane needs no frame */
+.cli-panel-pane.active-pane:not(:only-child) {
+  box-shadow: inset 0 2px 0 var(--cli-panel-accent, #818cf8);
 }
 
 .cli-panel-pane:hover .cli-panel-pane-close-btn {
@@ -498,12 +550,13 @@
   );
   border-top: none;
   border-bottom: 1px solid var(--cli-panel-border, #1e293b);
-  box-shadow: 0 4px 20px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
+  box-shadow: 0 8px 32px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
+  border-radius: 0 0 12px 12px;
   flex-direction: column-reverse;
 }
 
 .cli-panel-wrapper[data-position="top"].collapsed {
-  transform: translateY(calc(-100% + 60px));
+  transform: translateY(calc(-100% + var(--cli-panel-header-size)));
 }
 
 .cli-panel-wrapper[data-position="top"] .cli-panel-header-content {
@@ -529,16 +582,17 @@
   max-height: none;
   border-top: none;
   border-right: 1px solid var(--cli-panel-border, #1e293b);
-  box-shadow: 4px 0 20px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
+  box-shadow: 8px 0 32px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
+  border-radius: 0 12px 12px 0;
   flex-direction: row-reverse;
 }
 
 .cli-panel-wrapper[data-position="left"].collapsed {
-  transform: translateX(calc(-100% + 60px));
+  transform: translateX(calc(-100% + var(--cli-panel-header-size)));
 }
 
 .cli-panel-wrapper[data-position="left"] .cli-panel-header {
-  width: 60px;
+  width: var(--cli-panel-header-size);
   flex-shrink: 0;
   flex-direction: column;
 }
@@ -596,16 +650,17 @@
   max-height: none;
   border-top: none;
   border-left: 1px solid var(--cli-panel-border, #1e293b);
-  box-shadow: -4px 0 20px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
+  box-shadow: -8px 0 32px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
+  border-radius: 12px 0 0 12px;
   flex-direction: row;
 }
 
 .cli-panel-wrapper[data-position="right"].collapsed {
-  transform: translateX(calc(100% - 60px));
+  transform: translateX(calc(100% - var(--cli-panel-header-size)));
 }
 
 .cli-panel-wrapper[data-position="right"] .cli-panel-header {
-  width: 60px;
+  width: var(--cli-panel-header-size);
   flex-shrink: 0;
   flex-direction: column;
 }
@@ -920,21 +975,32 @@
 
 /* ─── Status indicators ──────────────────────────────────── */
 
+/* The status reads as one capsule, its items split by thin rules */
 .cli-panel-status-indicators {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-left: 24px;
+  margin-left: 4px;
+  height: 26px;
+  padding: 0 4px;
+  border-radius: 999px;
+  border: 1px solid var(--cli-panel-border, #1e293b);
+  background: var(--cli-panel-bg, #070b14);
   font-size: 12px;
   overflow: hidden;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .cli-panel-status-item {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  padding: 0 8px;
   color: var(--cli-panel-text-secondary, #94a3b8);
+}
+
+.cli-panel-status-item + .cli-panel-status-item {
+  border-left: 1px solid var(--cli-panel-border, #1e293b);
 }
 
 .cli-panel-status-dot {
@@ -1005,14 +1071,11 @@
 
 .cli-panel-status-item.status-clickable {
   cursor: pointer;
-  border-radius: var(--cli-panel-radius, 4px);
-  padding: 2px 6px;
-  margin: -2px -6px;
-  transition: background-color 0.15s ease;
+  transition: color 0.15s ease;
 }
 
 .cli-panel-status-item.status-clickable:hover {
-  background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12));
+  color: var(--cli-panel-text, #e2e8f0);
 }
 
 /* ─── Compact status indicators (vertical positions) ───── */

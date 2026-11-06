@@ -1,3 +1,4 @@
+import type { Terminal } from '@xterm/xterm';
 import { skip } from 'rxjs/operators';
 import {
     ICliCommandProcessor,
@@ -23,6 +24,12 @@ interface FontSizeState {
     /** Set only after the user picks a size; until then the host's font size stays. */
     fontSize?: number;
 }
+
+/**
+ * The size each terminal's host configured (or the built-in default), restored
+ * by `font-size reset`. The processor is shared by every engine on a page.
+ */
+const hostFontSizes = new WeakMap<Terminal, number | undefined>();
 
 export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
     command = 'font-size';
@@ -78,11 +85,10 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
         },
     ];
 
-    /** The size the host configured (or the built-in default), restored by `font-size reset`. */
-    private hostFontSize?: number;
-
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.hostFontSize = context.terminal?.options?.fontSize as number | undefined;
+        if (context.terminal) {
+            hostFontSizes.set(context.terminal, context.terminal.options?.fontSize as number | undefined);
+        }
         const state = context.state.getState<FontSizeState>();
         if (state?.fontSize != null && context.terminal?.options) {
             context.terminal.options.fontSize = state.fontSize;
@@ -95,7 +101,7 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
             .subscribe((fontSize) => {
                 if (!context.terminal?.options) return;
                 context.terminal.options.fontSize =
-                    fontSize ?? this.hostFontSize ?? context.terminal.options.fontSize;
+                    fontSize ?? this.getDefault(context);
             });
     }
 
@@ -114,7 +120,7 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
             `  ${context.writer.wrapInColor('font-size set <n>', CliForegroundColor.Cyan)}    Set to exact size`,
         );
         context.writer.writeln(
-            `  ${context.writer.wrapInColor('font-size reset', CliForegroundColor.Cyan)}      Reset to default (${this.getDefault()}px)`,
+            `  ${context.writer.wrapInColor('font-size reset', CliForegroundColor.Cyan)}      Reset to default (${this.getDefault(context)}px)`,
         );
     }
 
@@ -149,15 +155,15 @@ export class CliFontSizeCommandProcessor implements ICliCommandProcessor {
             return fromTerminal;
         }
         const state = context.state.getState<FontSizeState>();
-        return state?.fontSize ?? this.getDefault();
+        return state?.fontSize ?? this.getDefault(context);
     }
 
-    private getDefault(): number {
-        return this.hostFontSize ?? defaultFontSize();
+    private getDefault(context: ICliExecutionContext): number {
+        return (context.terminal && hostFontSizes.get(context.terminal)) ?? defaultFontSize();
     }
 
     private async resetFontSize(context: ICliExecutionContext): Promise<void> {
-        const size = this.getDefault();
+        const size = this.getDefault(context);
         if (context.terminal?.options) {
             context.terminal.options.fontSize = size;
         }

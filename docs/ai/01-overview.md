@@ -64,7 +64,7 @@ const { dark } = useAppSettings();
 }} />
 ```
 
-- With a host `theme`, the theme saved with the `theme` command is not restored on start (the command still changes the terminal for the session). Without one, nothing changes: the terminals keep the user's saved theme and the panel uses the dark palette (or, with `syncTheme: true`, colors derived from the terminal).
+- The host's `theme` is the default. A theme the user applies with the `theme` command (`theme apply dracula`, `theme set`, `theme import`) wins over it, is saved, and restyles the panel too; `theme reset` returns to the host's theme, which follows the host again from then on. Without a host `theme`, the terminals keep the user's saved theme and the panel uses the dark palette (or, with `syncTheme: true`, colors derived from the terminal).
 - The dropdowns and the context menu use the theme too. Stylesheets can override the CSS variables (`--cli-panel-bg`, `--cli-panel-accent`, `--cli-panel-font`, `--cli-panel-radius`, ... listed at the top of `@qodalis/cli/assets/cli-panel.css`).
 - `resolvePanelTheme(theme, prefersDark)` and `CliPanelPalettes` (from `@qodalis/cli-core`) give the resolved CSS variables and terminal theme, for hosts that style other parts of the page to match.
 

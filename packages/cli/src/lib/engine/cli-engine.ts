@@ -19,6 +19,7 @@ import {
 import { CliServerAuthService } from '../services/cli-server-auth.service';
 import { CliCommandExecutor } from '../executor/cli-command-executor';
 import { CliCommandProcessorRegistry } from '../registry/cli-command-processor-registry';
+import { setHostTerminalTheme } from '../processors/theme/terminal-theme';
 import { CliExecutionContext } from '../context/cli-execution-context';
 import {
     CliEnvironment,
@@ -538,12 +539,13 @@ export class CliEngine {
     }
 
     /**
-     * Restyle the terminal: its colors and the background around it.
-     * The `theme` command can still change it afterwards.
+     * The host's theme for this terminal: its colors and the background around it.
+     * A theme the user chose with the `theme` command stays until `theme reset`,
+     * which returns to this one.
      */
     setTheme(theme: ITheme): void {
-        if (this.terminal) this.terminal.options.theme = theme;
-        this.container.style.background = theme.background ?? '';
+        if (this.terminal) setHostTerminalTheme(this.terminal, theme);
+        else this.container.style.background = theme.background ?? '';
     }
 
     /**
@@ -678,6 +680,10 @@ export class CliEngine {
 
         this.resizeObserver = new ResizeObserver(() => this.safeFit());
         this.resizeObserver.observe(this.container);
+        // The screen changes size when the cells do (font size, a web font
+        // arriving late), while the container stays the same: refit then too
+        const screen = this.terminal?.element?.querySelector('.xterm-screen');
+        if (screen) this.resizeObserver.observe(screen);
     }
 
     /**

@@ -14,6 +14,13 @@ import {
 import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { ITheme } from '@xterm/xterm';
 import { themes, ThemeState, themeInfos } from './types';
+import {
+    applyUserTerminalTheme,
+    initTerminalTheme,
+    paintTerminalBackground,
+    previewTerminalTheme,
+    resetTerminalTheme,
+} from './terminal-theme';
 
 /** Convert a hex color string (#RRGGBB) to {r, g, b}. Returns null on invalid input. */
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
@@ -87,8 +94,6 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
     };
 
     private themeOptions: string[] = Object.keys(themeOptions);
-
-    private defaultTheme!: ITheme;
 
     constructor() {
         this.processors = [
@@ -270,9 +275,10 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                                 onChange: (value) => {
                                     // Live preview: apply theme as user navigates
                                     if (themes[value]) {
-                                        context.terminal.options.theme =
-                                            themes[value];
-                                        this.applyStyles(context);
+                                        previewTerminalTheme(
+                                            context.terminal,
+                                            themes[value],
+                                        );
                                     }
                                 },
                             },
@@ -280,8 +286,10 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
 
                         if (!selected) {
                             // Cancelled — restore original theme
-                            context.terminal.options.theme = originalTheme;
-                            this.applyStyles(context);
+                            previewTerminalTheme(
+                                context.terminal,
+                                originalTheme,
+                            );
                             context.writer.writeInfo(
                                 'Theme selection cancelled',
                             );
@@ -297,7 +305,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                         return;
                     }
 
-                    context.terminal.options.theme = themes[themeName];
+                    applyUserTerminalTheme(context.terminal, themes[themeName]);
 
                     context.state.updateState({
                         selectedTheme: themeName,
@@ -305,8 +313,6 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     });
 
                     await context.state.persist();
-
-                    this.applyStyles(context);
 
                     context.writer.writeSuccess(`Theme "${themeName}" applied`);
                 },
@@ -349,10 +355,10 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                         return;
                     }
 
-                    context.terminal.options.theme = {
+                    applyUserTerminalTheme(context.terminal, {
                         ...context.terminal.options.theme,
                         [key]: value,
-                    };
+                    });
 
                     context.state.updateState({
                         selectedTheme: null,
@@ -363,8 +369,6 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     context.writer.writeSuccess(
                         `Set ${key} to ${swatch} ${value}`,
                     );
-
-                    this.applyStyles(context);
 
                     if (command.args['save']) {
                         await this.saveTheme(context);
@@ -401,10 +405,9 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     _: CliProcessCommand,
                     context: ICliExecutionContext,
                 ) => {
-                    context.terminal.options.theme = { ...this.defaultTheme };
+                    resetTerminalTheme(context.terminal);
                     context.state.reset();
                     await context.state.persist();
-                    this.applyStyles(context);
                     context.writer.writeSuccess('Theme reset to default');
                 },
             },
@@ -486,7 +489,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                             Math.floor(Math.random() * candidates.length)
                         ];
 
-                    context.terminal.options.theme = info.theme;
+                    applyUserTerminalTheme(context.terminal, info.theme);
 
                     context.state.updateState({
                         selectedTheme: name,
@@ -494,7 +497,6 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     });
 
                     await context.state.persist();
-                    this.applyStyles(context);
 
                     context.writer.writeSuccess(
                         `Random theme "${name}" applied`,
@@ -565,7 +567,7 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                         return;
                     }
 
-                    context.terminal.options.theme = imported;
+                    applyUserTerminalTheme(context.terminal, imported);
 
                     context.state.updateState({
                         selectedTheme: null,
@@ -573,7 +575,6 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     });
 
                     await context.state.persist();
-                    this.applyStyles(context);
 
                     context.writer.writeSuccess(
                         'Custom theme imported and applied',
@@ -584,9 +585,9 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
     }
 
     async initialize(context: ICliExecutionContext): Promise<void> {
-        this.defaultTheme = context.terminal.options.theme!;
-        // The host owns the theme: a saved one would replace it (and follow other tabs)
-        if (context.options?.theme !== undefined) return;
+        // The theme the terminal starts with (the host's, if it set one) is the base
+        initTerminalTheme(context.terminal);
+        // A theme the user saved wins over the host's until `theme reset`
         this.applySavedTheme(context, false);
 
         // A theme applied in another tab or terminal is applied here too
@@ -605,18 +606,18 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
     private applySavedTheme(context: ICliExecutionContext, reset: boolean): void {
         const state = context.state.getState<ThemeState>();
 
-        if (state.selectedTheme && state.selectedTheme !== 'default') {
-            const theme = themes[state.selectedTheme];
-            if (theme) {
-                context.terminal.options.theme = theme;
-            }
-        } else if (state.customOptions) {
-            context.terminal.options.theme = state.customOptions;
-        } else if (reset) {
-            context.terminal.options.theme = { ...this.defaultTheme };
-        }
+        const saved =
+            state.selectedTheme && state.selectedTheme !== 'default'
+                ? themes[state.selectedTheme]
+                : state.customOptions;
 
-        this.applyStyles(context);
+        if (saved) {
+            applyUserTerminalTheme(context.terminal, saved);
+        } else if (reset) {
+            resetTerminalTheme(context.terminal);
+        } else {
+            paintTerminalBackground(context.terminal);
+        }
     }
 
     async processCommand(
@@ -713,16 +714,6 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
             writer.writeln(
                 `  ${colorSwatch(theme.cursor as string)} cursor      ${theme.cursor}`,
             );
-        }
-    }
-
-    private applyStyles(context: ICliExecutionContext) {
-        const parents = document.getElementsByClassName('terminal-container');
-
-        for (const parent of Array.from(parents)) {
-            (parent as HTMLElement).style.background =
-                context.terminal.options.theme?.background ||
-                this.defaultTheme.background!;
         }
     }
 

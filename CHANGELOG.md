@@ -3,6 +3,32 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.3.0
+
+### The `theme` command works with a host theme
+
+- `theme apply`, `theme random`, `theme set` and `theme import` now work in a panel or terminal whose host sets a `theme`. In React the panel re-applied the host theme on every re-render, so the chosen theme was undone at the next status update.
+- The host's theme is the default, and a theme the user applies wins over it: it is saved and restored on the next start, and the panel's header, tabs and menus take its colors. `theme reset` returns to the host's theme, which follows the host's light/dark setting again. Before, a host theme kept the saved theme from being restored.
+- The panel picks up the user's saved theme as soon as the terminal opens; before, it waited until the terminal had connected to its servers.
+- `theme` and `font-size` keep each terminal's own default. Both commands are shared by every terminal on a page, so `theme reset` and `font-size reset` could return to another terminal's theme or size. The `theme` command also repainted the background of every terminal on the page instead of only its own.
+
+### A new look for the panel
+
+- The header is one compact 48px bar: the terminal glyph sits on an accent tile, the status (run state, services, last command, servers, uptime) reads as one capsule, and the buttons are rounded squares; the close button turns red under the pointer.
+- Tabs are chips: the active tab takes the terminal's background, and a tab's close button shows on the active tab and under the pointer. The `+` button is a plain icon button.
+- The terminal has room to breathe: padding around the text, and xterm's black viewport no longer shows through it. The active pane is marked only when a tab is split.
+- The panel has rounded corners on the side facing the page and a softer, deeper shadow; buttons and tabs show a focus ring for keyboard users.
+- `--cli-panel-header-size` sets the header's height (its width when docked left or right); `--cli-panel-radius` defaults to 8px.
+
+### A light theme that is easier on the eyes
+
+- The `light` terminal theme and the light panel palette use a soft grey background (`#f7f8fa`) instead of pure white, slate text instead of near-black, and calmer colors; every color reads at 4.5:1 or more on the background, so yellow warnings and dim hints stay legible.
+
+### Fixes
+
+- The terminal no longer starts wider than its panel when a saved font size (`font-size set`) is restored: the terminal refits whenever its cells change size, also when a web font arrives late.
+- React: the panel's `color-scheme` (light or dark scrollbars and form controls) is applied; React dropped the kebab-case style key with a warning.
+
 ## v2.2.0
 
 ### Panel themes: light, dark, auto and your own colors
