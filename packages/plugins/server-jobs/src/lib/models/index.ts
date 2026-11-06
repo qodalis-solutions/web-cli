@@ -5,11 +5,20 @@ export interface JobDto {
     group?: string;
     status: 'active' | 'paused' | 'stopped';
     schedule?: string;
-    interval?: number;
+    /** Milliseconds (.NET, Node) or a span such as `30s` (Python). */
+    interval?: number | string;
     maxRetries: number;
-    timeout?: number;
+    /** Milliseconds (.NET, Node) or a span such as `5m` (Python). */
+    timeout?: number | string;
     overlapPolicy: string;
+    /** Runs of the job that may go at the same time (servers 1.0.0-beta.23; 1 before). */
+    maxConcurrentRuns?: number;
+    /** The newest running run. */
     currentExecutionId?: string;
+    /** Every running run, oldest first (servers 1.0.0-beta.23). */
+    runningExecutionIds?: string[];
+    /** A run waits for a free slot (overlap policy `queue`). */
+    queued?: boolean;
     nextRunAt?: string;
     lastRunAt?: string;
     lastRunStatus?: string;
@@ -51,4 +60,5 @@ export interface UpdateJobRequest {
     maxRetries?: number;
     timeout?: string;
     overlapPolicy?: string;
+    maxConcurrentRuns?: number;
 }

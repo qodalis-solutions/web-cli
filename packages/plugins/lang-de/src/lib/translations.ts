@@ -494,6 +494,7 @@ export const deTranslations: Record<string, string> = {
         'Was die letzte Ausführung von cleanup ausgegeben hat',
     'cli.server.jobs.edit.help.change_job_step_step':
         'Einen Job Schritt für Schritt ändern: Beschreibung, Gruppe, Cron-Zeitplan oder Intervall, maximale Wiederholungen, Timeout und Überlappungsrichtlinie (skip, queue oder cancel). Drücken Sie Enter, um einen Wert beizubehalten, und Ctrl+C oder Escape zum Abbrechen; nichts ändert sich, bis Sie bestätigen. Ein Job auf mehreren Servern benötigt --server.',
+    'cli.server.jobs.edit.help.max_concurrent_runs': 'Maximale gleichzeitige Ausführungen: wie viele Ausführungen des Jobs gleichzeitig laufen dürfen (standardmäßig 1). Laufen so viele, entscheidet die Überlappungsrichtlinie, was mit der nächsten geschieht.',
     'cli.server.jobs.edit.help.edit_cleanup_server_has':
         'cleanup auf dem Server bearbeiten, der ihn hat',
     'cli.server.jobs.watch.help.follow_job_events_they':

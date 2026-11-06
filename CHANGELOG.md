@@ -11,6 +11,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `--server <name>` keeps one server's events, `--local` only the terminal's own. `server:*` still matches every server event.
 - Server events stay wrapped in `server:event` on the bus, so a server's `user:*` or `session:*` events never reach plugins that listen for the terminal's own. Each server sends only the events the signed-in user may see (servers 1.0.0-beta.23).
 
+### `server jobs`: max concurrent runs
+
+- `server jobs info` shows a job's max concurrent runs and the runs going now (`2/3 running, 1 queued: <ids>`); `server jobs edit` asks for it (a whole number of at least 1). Servers 1.0.0-beta.23 run up to that many runs of a job at once; the overlap policy decides when they are all busy.
+- Intervals and timeouts show as `30s`, `5m`, `1h` whatever form the server sends: Python sends spans such as `30s`, which `info`, `list` and `edit` showed as `30sms`.
+
 ## v2.3.0
 
 ### The `theme` command works with a host theme

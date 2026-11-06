@@ -492,6 +492,7 @@ export const ptTranslations: Record<string, string> = {
     'cli.server.jobs.logs.help.what_last_cleanup_run': 'O que a última execução de cleanup exibiu',
     'cli.server.jobs.edit.help.change_job_step_step':
         'Altera um job passo a passo: descrição, grupo, agenda cron ou intervalo, máximo de novas tentativas, tempo limite e política de sobreposição (skip, queue ou cancel). Pressione Enter para manter um valor e Ctrl+C ou Escape para cancelar; nada muda até você confirmar. Um job em vários servidores precisa de --server.',
+    'cli.server.jobs.edit.help.max_concurrent_runs': 'Máximo de execuções simultâneas: quantas execuções do job podem rodar ao mesmo tempo (1 por padrão). Quando todas estão rodando, a política de sobreposição decide o que acontece com a próxima.',
     'cli.server.jobs.edit.help.edit_cleanup_server_has': 'Editar cleanup no servidor que o tem',
     'cli.server.jobs.watch.help.follow_job_events_they':
         'Acompanha eventos de jobs conforme acontecem (iniciado, concluído, com falha e assim por diante) em todos os servidores conectados, uma linha por evento. Pressione Ctrl+C para parar.',

@@ -376,6 +376,7 @@ export const koTranslations: Record<string, string> = {
     'cli.server.jobs.logs.help.what_last_cleanup_run': '마지막 cleanup 실행이 출력한 내용',
     'cli.server.jobs.edit.help.change_job_step_step':
         '작업을 단계별로 변경합니다: 설명, 그룹, cron 일정 또는 간격, 최대 재시도 횟수, 제한 시간, 중복 실행 정책(skip, queue 또는 cancel). 값을 유지하려면 Enter, 취소하려면 Ctrl+C 또는 Escape를 누르세요. 확인하기 전에는 아무것도 변경되지 않습니다. 여러 서버에 있는 작업은 --server가 필요합니다',
+    'cli.server.jobs.edit.help.max_concurrent_runs': '최대 동시 실행 수: 작업을 동시에 몇 개까지 실행할 수 있는지(기본값 1). 그만큼 실행 중이면 겹침 정책이 다음 실행을 어떻게 할지 정합니다.',
     'cli.server.jobs.edit.help.edit_cleanup_server_has': 'cleanup이 있는 서버에서 편집',
     'cli.server.jobs.watch.help.follow_job_events_they':
         '연결된 모든 서버의 작업 이벤트(시작, 완료, 실패 등)를 발생하는 대로 한 줄씩 표시합니다. 중지하려면 Ctrl+C를 누르세요',

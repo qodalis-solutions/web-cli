@@ -375,6 +375,7 @@ export const jaTranslations: Record<string, string> = {
     'cli.server.jobs.logs.help.what_last_cleanup_run': 'cleanup の前回の実行で出力された内容',
     'cli.server.jobs.edit.help.change_job_step_step':
         'ジョブを順を追って変更します。説明、グループ、cron スケジュールまたは間隔、最大再試行回数、タイムアウト、重複ポリシー（skip、queue、cancel）が対象です。Enter で値を保持し、Ctrl+C または Escape でキャンセルします。確定するまで何も変更されません。複数のサーバーにあるジョブには --server が必要です。',
+    'cli.server.jobs.edit.help.max_concurrent_runs': '最大同時実行数: ジョブを同時にいくつ実行できるか (既定は 1)。その数が実行中のときは、重複ポリシーが次の実行の扱いを決めます。',
     'cli.server.jobs.edit.help.edit_cleanup_server_has': 'cleanup をそれを持つサーバーで編集',
     'cli.server.jobs.watch.help.follow_job_events_they':
         'ジョブイベント（開始、完了、失敗など）を、接続中のすべてのサーバーで発生順に 1 イベント 1 行で表示します。Ctrl+C で停止します。',

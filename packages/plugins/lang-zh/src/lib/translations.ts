@@ -370,6 +370,7 @@ export const zhTranslations: Record<string, string> = {
     'cli.server.jobs.logs.help.what_last_cleanup_run': '上次 cleanup 运行输出的内容',
     'cli.server.jobs.edit.help.change_job_step_step':
         '逐步更改作业：描述、分组、cron 计划或间隔、最大重试次数、超时和重叠策略（skip、queue 或 cancel）。按 Enter 保留当前值，按 Ctrl+C 或 Escape 取消；确认之前不会有任何更改。位于多个服务器上的作业需要 --server。',
+    'cli.server.jobs.edit.help.max_concurrent_runs': '最大并发运行数：该作业可同时进行的运行数（默认 1）。达到该数量时，由重叠策略决定下一次运行如何处理。',
     'cli.server.jobs.edit.help.edit_cleanup_server_has': '在拥有 cleanup 的服务器上编辑它',
     'cli.server.jobs.watch.help.follow_job_events_they':
         '实时跟踪每个已连接服务器上的作业事件（已开始、已完成、失败等），每个事件一行。按 Ctrl+C 停止。',
