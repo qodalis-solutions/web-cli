@@ -116,6 +116,13 @@ export class CliServerManager implements DefaultServerProvider {
                 );
                 this.registerProxyProcessors(connection, config.name);
                 this.emitConnected(connection, false);
+            } else if (connection.needsSignIn) {
+                // Up, but its commands need a sign-in: the users plugin (or a
+                // `server reconnect` after `login`) connects it then. Often the
+                // sign-in is already there and only boots after this request.
+                logger?.info(
+                    `Server '${config.name}' needs a sign-in; its commands load once you are signed in.`,
+                );
             } else {
                 logger?.warn(
                     `Could not connect to server '${config.name}' at ${config.url}. Commands from this server will not be available.`,

@@ -90,6 +90,8 @@
 
 .cli-panel-title {
   font-size: 0.95rem;
+  white-space: nowrap;
+  min-width: 0;
   display: flex;
   gap: 0.5rem;
   justify-content: center;
@@ -668,6 +670,32 @@
 
 /* Phones: icon only, so the tab covers as little of the page as possible */
 @media (max-width: 600px) {
+  /* The header keeps the title on one line; moving the panel to another
+     edge makes no sense on a phone */
+  .cli-panel-header-content {
+    gap: 0.5rem;
+    padding: 0 0.5rem 0 0.75rem;
+  }
+
+  .cli-panel-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cli-panel-action-buttons {
+    gap: 0.15rem;
+    flex-shrink: 0;
+  }
+
+  .cli-panel-action-buttons .cli-panel-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .cli-panel-btn-position-wrapper {
+    display: none;
+  }
+
   .cli-panel-hide-tab {
     padding: 6px 8px;
   }
