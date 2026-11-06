@@ -508,7 +508,7 @@ export const ptTranslations: Record<string, string> = {
     'cli.ssh.help.interactive_shell_node': 'Shell interativo em node',
     'cli.ssh.help.one_command_node': 'Um comando em node',
     'cli.ssh.help.same_ssh_2': 'Igual a ssh',
-    'cli.events.description': 'Observar, listar e emitir eventos do barramento de eventos',
+    'cli.events.description': 'Observar, listar e emitir eventos do terminal e dos servidores conectados',
     'cli.events.watch.description': 'Mostrar os eventos assim que acontecem (Ctrl+C para parar)',
     'cli.events.log.description': 'Mostrar eventos recentes (em memória, não salvos)',
     'cli.events.emit.description': 'Emitir um evento: events emit <tipo> [json]',
@@ -516,9 +516,12 @@ export const ptTranslations: Record<string, string> = {
     'cli.events.watch.help.every_event': 'Todos os eventos',
     'cli.events.watch.help.namespace': 'Um namespace',
     'cli.events.watch.help.one_type': 'Um tipo',
+    'cli.events.watch.help.server_jobs': 'Eventos de jobs do servidor node',
+    'cli.events.watch.help.local_only': 'Apenas os eventos do próprio terminal',
     'cli.events.log.help.intro': 'Mostra os eventos mais recentes, do mais antigo ao mais novo',
     'cli.events.log.help.last_20': 'Últimos 20 eventos',
     'cli.events.log.help.last_50_server': 'Últimos 50 eventos do servidor',
+    'cli.events.log.help.failed_jobs': 'Execuções de jobs com falha recentes, em todos os servidores',
     'cli.events.emit.help.intro': 'Emite um evento, por exemplo para testar um plugin que o escuta',
     'cli.events.help.commands': 'Comandos:',
     'cli.events.help.print_live': 'Exibir eventos ao vivo',
@@ -526,6 +529,7 @@ export const ptTranslations: Record<string, string> = {
     'cli.events.help.emit': 'Emitir um evento',
     'cli.events.help.patterns':
         'Padrões: um tipo exato (package:installed), um namespace (package:*) ou * para todos.',
+    'cli.events.help.servers': 'Os eventos dos servidores conectados (execuções de jobs, alterações de usuários, tokens e arquivos, ...) aparecem com o nome do servidor; cada servidor envia apenas os eventos que você pode ver. Filtre com --server <nome>, ou --local para os eventos do próprio terminal.',
     'cli.events.help.in_memory':
         'Os eventos ficam na memória somente deste terminal; nada é persistido.',
 
