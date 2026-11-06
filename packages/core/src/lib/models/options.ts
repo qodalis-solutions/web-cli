@@ -1,4 +1,8 @@
-import { ITerminalInitOnlyOptions, ITerminalOptions } from '@xterm/xterm';
+import {
+    ITerminalInitOnlyOptions,
+    ITerminalOptions,
+    ITheme,
+} from '@xterm/xterm';
 import { CliIcon } from './icons';
 import { CliServerConfig } from './server';
 
@@ -98,6 +102,14 @@ export type CliOptions = Record<string, any> & {
      * log); defaults to Qodalis CLI's.
      */
     branding?: CliBranding;
+
+    /**
+     * Terminal colors set by the host: `'dark'`, `'light'`, `'auto'`, a terminal
+     * theme name or a {@link CliPanelTheme} (its `terminal`). When set, the theme
+     * saved with the `theme` command is not restored on start; the command still
+     * changes the theme for the session. In a panel, this is the panel's `theme`.
+     */
+    theme?: CliPanelThemeInput;
 
     /**
      * Custom terminal options
@@ -383,4 +395,72 @@ export interface CliPanelConfig {
      * @default false
      */
     syncTheme?: boolean;
+
+    /**
+     * The look of the panel and of every terminal in it:
+     * - `'dark'` (default) or `'light'`: the built-in palettes
+     * - `'auto'`: light or dark, following the system's `prefers-color-scheme`
+     * - the name of a terminal theme (`'dracula'`, `'nord'`, ... see `theme list`):
+     *   the terminals use it and the panel's colors are derived from it
+     * - a {@link CliPanelTheme}: a base palette with your own colors, font and corners
+     *
+     * Changing it while the panel is open restyles the panel and its terminals, so a
+     * host can pass its own light/dark setting through. The host's theme wins over
+     * one chosen with the `theme` command on the next start.
+     * @default 'dark'
+     */
+    theme?: CliPanelThemeInput;
+}
+
+/** The built-in panel palettes. */
+export type CliPanelColorScheme = 'light' | 'dark';
+
+/** What {@link CliPanelConfig.theme} accepts. */
+export type CliPanelThemeInput =
+    CliPanelColorScheme | 'auto' | (string & {}) | CliPanelTheme;
+
+/** Colors of the panel's chrome (header, tabs, menus, hide tab). Any CSS color. */
+export interface CliPanelColors {
+    /** Panel background behind the terminals. */
+    background: string;
+    /** Header, tab bar and menus. */
+    headerBackground: string;
+    border: string;
+    text: string;
+    /** Labels, inactive tabs and icons. */
+    textSecondary: string;
+    /** Active tab, focus rings and highlights. */
+    accent: string;
+    /** Buttons and menu items under the pointer. */
+    hoverBackground: string;
+    /** Buttons while pressed, the selected menu item. */
+    activeBackground: string;
+    /** Destructive menu items and error states. */
+    danger: string;
+    /** Shadow of the panel, menus and the hide tab (a CSS box-shadow color). */
+    shadow: string;
+}
+
+/** A custom panel theme. Every field is optional; unset ones come from `base`. */
+export interface CliPanelTheme {
+    /**
+     * The palette this theme starts from. With a `terminal` theme and no base, it is
+     * chosen from the terminal's background (light or dark).
+     * @default 'dark'
+     */
+    base?: CliPanelColorScheme | 'auto';
+    /**
+     * Terminal colors: a terminal theme name (`'dracula'`) or xterm theme colors.
+     * Defaults to the base palette's terminal theme.
+     */
+    terminal?: string | ITheme;
+    /**
+     * Panel colors. Unset colors come from the base palette, or are derived from
+     * `terminal` when it is given.
+     */
+    colors?: Partial<CliPanelColors>;
+    /** Font of the panel's chrome (the terminal font is `terminalOptions.fontFamily`). */
+    fontFamily?: string;
+    /** Corner radius of buttons, tabs and menus, e.g. `'4px'`; `'0'` for square corners. */
+    radius?: string;
 }

@@ -8,6 +8,12 @@ export const DefaultThemeInfos: Record<string, CliThemeInfo> = {
         tags: ['built-in'],
         description: 'Dark indigo theme with soft pastels',
     },
+    light: {
+        theme: DefaultThemes.light,
+        category: 'light',
+        tags: ['built-in'],
+        description: 'Light counterpart of the default theme',
+    },
     classic: {
         theme: DefaultThemes.classic,
         category: 'dark',

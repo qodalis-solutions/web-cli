@@ -40,7 +40,7 @@
     <div class="cli-panel-header">
       <div
         class="cli-panel-resize-bar"
-        (mousedown)="onPanelResizeStart($event)"
+        (pointerdown)="onPanelResizeStart($event)"
       >
         <div class="cli-panel-resize-grip"></div>
       </div>
@@ -232,7 +232,7 @@
                   @if (i > 0) {
                     <div
                       class="cli-panel-pane-divider"
-                      (mousedown)="onPaneResizeStart($event, tab.id, i - 1)"
+                      (pointerdown)="onPaneResizeStart($event, tab.id, i - 1)"
                     >
                       <div class="cli-panel-pane-divider-grip"></div>
                     </div>

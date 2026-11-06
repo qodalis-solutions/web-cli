@@ -39,6 +39,7 @@ function fakeEngine(overrides: Partial<{ context: any; startedAt: number; option
         focus,
         snapshot: () => ({ lines: ['copied'] }),
         getTerminal: () => ({ options: { theme: { background: '#000000', foreground: '#ffffff' } } }),
+        setTheme: jasmine.createSpy('setTheme'),
         startedAt: overrides.startedAt,
         options: overrides.options,
     } as unknown as CliEngine;
@@ -481,12 +482,12 @@ describe('CliPanelController', () => {
             controller.startPanelResize(0, 500);
             expect(snap().collapsed).toBeFalse();
             expect(snap().panelResizing).toBeTrue();
-            document.dispatchEvent(new MouseEvent('mousemove', { clientX: 0, clientY: 450 }));
+            document.dispatchEvent(new PointerEvent('pointermove', { clientX: 0, clientY: 450 }));
             expect(snap().height).toBe(650);
             expect(onHeightChange).toHaveBeenCalledWith(650);
-            document.dispatchEvent(new MouseEvent('mouseup'));
+            document.dispatchEvent(new PointerEvent('pointerup'));
             expect(snap().panelResizing).toBeFalse();
-            document.dispatchEvent(new MouseEvent('mousemove', { clientX: 0, clientY: 0 }));
+            document.dispatchEvent(new PointerEvent('pointermove', { clientX: 0, clientY: 0 }));
             expect(snap().height).toBe(650);
         });
 
@@ -502,9 +503,9 @@ describe('CliPanelController', () => {
             controller.splitPane();
             controller.startPaneResize(1, 0, 100, 1000);
             expect(document.body.classList.contains('cli-pane-resizing')).toBeTrue();
-            document.dispatchEvent(new MouseEvent('mousemove', { clientX: 200 }));
+            document.dispatchEvent(new PointerEvent('pointermove', { clientX: 200 }));
             expect(snap().tabs[0].panes.map((p) => p.widthPercent)).toEqual([60, 40]);
-            document.dispatchEvent(new MouseEvent('mouseup'));
+            document.dispatchEvent(new PointerEvent('pointerup'));
             expect(snap().paneResizing).toBeFalse();
             expect(document.body.classList.contains('cli-pane-resizing')).toBeFalse();
         });

@@ -1,3 +1,4 @@
+import type { ITheme } from '@xterm/xterm';
 import {
     CliEngineSnapshot,
     CliNotification,
@@ -145,7 +146,19 @@ export interface CliPanelSnapshot {
     /** Status text is shown in the header for top/bottom, compact dots otherwise. */
     showStatusIndicators: boolean;
     panelResizing: boolean;
+    /** CSS custom properties of the theme, for the wrapper and the hide tab. */
     themeStyles: Record<string, string>;
+    /** Whether the panel is light or dark. */
+    scheme: 'light' | 'dark';
+    /** Theme the host set for the terminals; undefined leaves them alone. */
+    terminalTheme?: ITheme;
+    /**
+     * Height of the on-screen keyboard over the page (0 when closed), from the
+     * visual viewport: the panel moves above it.
+     */
+    keyboardInset: number;
+    /** Height of the visible area (visual viewport), 0 when unknown; caps the panel's height. */
+    visibleHeight: number;
 
     // ── Config ──
     closable: boolean;

@@ -255,7 +255,7 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                                                 {i > 0 && (
                                                     <div
                                                         className="cli-panel-pane-divider"
-                                                        onMouseDown={(e) => {
+                                                        onPointerDown={(e) => {
                                                             e.preventDefault();
                                                             controller.startPaneResize(tab.id, i - 1, e.clientX, panesContainerWidth(e.target));
                                                         }}
@@ -381,7 +381,7 @@ function PanelHeader({
         <div className="cli-panel-header">
             <div
                 className="cli-panel-resize-bar"
-                onMouseDown={(e) => {
+                onPointerDown={(e) => {
                     if (!s.resizable) return;
                     e.preventDefault();
                     controller.startPanelResize(e.clientX, e.clientY);

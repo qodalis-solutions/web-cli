@@ -94,6 +94,11 @@ export function positionDropdownItemClass(s: CliPanelSnapshot, position: CliPane
 export function panelWrapperStyle(s: CliPanelSnapshot): Record<string, string> {
     const style: Record<string, string> = s.isHorizontal ? { width: `${s.width}px` } : { height: `${s.height}px` };
 
+    // The stylesheet places the panel above the on-screen keyboard (or the host's
+    // --cli-panel-bottom-offset) and caps it to the visible area, so the header stays reachable
+    if (s.keyboardInset > 0) style['--cli-panel-keyboard-inset'] = `${s.keyboardInset}px`;
+    if (s.visibleHeight > 0) style['--cli-panel-visible-height'] = `${s.visibleHeight}px`;
+
     if (s.hidden) style['display'] = 'none';
     return { ...style, ...s.themeStyles };
 }
@@ -102,8 +107,9 @@ export function paneStyle(widthPercent: number): Record<string, string> {
     return { flex: `${widthPercent} 1 0` };
 }
 
+/** Menus render outside the panel element, so they carry the theme's variables themselves. */
 export function contextMenuStyle(s: CliPanelSnapshot): Record<string, string> {
-    return { left: `${s.contextMenu.x}px`, top: `${s.contextMenu.y}px` };
+    return { ...s.themeStyles, left: `${s.contextMenu.x}px`, top: `${s.contextMenu.y}px` };
 }
 
 /* ─── Header ────────────────────────────────────────────────── */
@@ -307,7 +313,7 @@ export function openStatusDropdown(s: CliPanelSnapshot): PanelStatusDropdown | n
             kind: 'services',
             header: PANEL_LABELS.servicesHeader,
             emptyText: PANEL_LABELS.servicesEmpty,
-            style: s.servicesDropdownStyle,
+            style: { ...s.themeStyles, ...s.servicesDropdownStyle },
             rows: s.global.serviceDetails.map((svc, i) => ({
                 key: `${i}-${svc.name}`,
                 dotClass: joinClasses('cli-panel-svc-dot', svc.status === 'running' ? 'svc-running' : 'svc-stopped'),
@@ -323,7 +329,7 @@ export function openStatusDropdown(s: CliPanelSnapshot): PanelStatusDropdown | n
             kind: 'servers',
             header: PANEL_LABELS.serversHeader,
             emptyText: PANEL_LABELS.serversEmpty,
-            style: s.serversDropdownStyle,
+            style: { ...s.themeStyles, ...s.serversDropdownStyle },
             rows: s.global.serverDetails.map((srv, i) => ({
                 key: `${i}-${srv.name}`,
                 dotClass: joinClasses('cli-panel-svc-dot', srv.connected ? 'svc-running' : 'svc-stopped'),

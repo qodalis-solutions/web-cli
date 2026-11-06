@@ -1,4 +1,4 @@
-import { CliPanelPosition } from '../models/options';
+import { CliPanelPosition, CliPanelThemeInput } from '../models/options';
 
 /**
  * Framework-agnostic interface for programmatic control of the CLI panel.
@@ -31,6 +31,11 @@ export interface ICliPanelRef<TEngine = unknown> {
      */
     resize(dimensions: { height?: number; width?: number }): void;
     setPosition(position: CliPanelPosition): void;
+    /**
+     * Restyle the panel and its terminals (see `CliPanelConfig.theme`), e.g. when
+     * the host app switches between light and dark.
+     */
+    setTheme(theme: CliPanelThemeInput | undefined): void;
 
     // ── Tabs ──
 

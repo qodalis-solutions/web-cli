@@ -38,6 +38,7 @@ await engine.start();
 | `start()` | Boots the modules and opens the terminal |
 | `execute(command)` | Runs a command line as if typed |
 | `focus()`, `getTerminal()`, `getContext()` | Focus, the xterm.js `Terminal`, the execution context |
+| `setTheme(theme)` | Restyles the terminal (xterm colors) and the background around it |
 | `snapshot()` | Captures the terminal state (restore it with the `snapshot` option) |
 | `destroy()` | Disposes the terminal, background services and listeners |
 
@@ -49,7 +50,8 @@ Tests can run commands without a browser terminal through `CliTestHarness`.
 - Built-in commands: `help`, `theme`, `pkg`, `history`, `alias`, `json`, `diff`, `random`, `timestamp`, `convert`, `color`, `clipboard`, `ps`, `kill`, `htop`, `nano` and more ([full list](https://cli.qodalis.com/docs/built-in-commands)).
 - `pkg`: installs plugins from npm at runtime.
 - Server connections (`servers` option): remote commands, streamed output, `ssh` shell sessions.
-- The dockable panel with tabs and split panes used by the wrappers.
+- The dockable panel with tabs and split panes used by the wrappers: light, dark, `auto` and custom themes (`theme` option), touch resizing, and it stays above the on-screen keyboard on phones.
+- `theme` option: `'dark'`, `'light'`, `'auto'`, a terminal theme name or a `CliPanelTheme`; it wins over the theme saved with the `theme` command.
 
 ## Documentation
 

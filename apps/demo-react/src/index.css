@@ -14,3 +14,20 @@ body,
   overflow: hidden;
   background-color: #000;
 }
+
+.demo-theme-picker {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 900;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font:
+    12px system-ui,
+    sans-serif;
+}

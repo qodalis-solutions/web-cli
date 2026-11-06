@@ -4,6 +4,7 @@ export type CliTheme = ITheme;
 
 export type DefaultThemesType = {
     default: CliTheme;
+    light: CliTheme;
     classic: CliTheme;
     dracula: CliTheme;
     monokai: CliTheme;

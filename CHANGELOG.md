@@ -3,6 +3,26 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.2.0
+
+### Panel themes: light, dark, auto and your own colors
+
+- `theme` option on the panel (`CliPanelConfig.theme`) and on any terminal (`CliOptions.theme`): `'dark'` (default), `'light'`, `'auto'` (follows `prefers-color-scheme`, live), the name of a terminal theme (`'dracula'`, `'nord'`, ...; the panel's colors are derived from it) or a `CliPanelTheme`: a `base` palette with your own `colors` (background, header, border, text, secondary text, accent, hover, active, danger, shadow), `terminal` colors, `fontFamily` and corner `radius`. It styles the header, tabs, hide tab, dropdowns, context menu and every terminal in the panel.
+- The host can change it at any time: a re-render (React), reactivity (Vue), a new `options` object (Angular) or `setTheme(theme)` on the panel ref (`ICliPanelRef.setTheme`) restyles the panel and its open terminals, so the panel follows an app's own light/dark setting. With a host theme, the theme saved with the `theme` command is not restored on start (the command still works for the session).
+- New built-in terminal theme `light`, the counterpart of `default`; `CliEngine.setTheme(theme)` restyles one terminal.
+- `resolvePanelTheme`, `derivePanelColors`, `CliPanelPalettes` and `colorSchemeOf` in `@qodalis/cli-core` for hosts that style other parts of the page to match.
+- The default (dark) look is refreshed: the panel's background matches the terminal, quieter borders and secondary text. Every color, the chrome font (`--cli-panel-font`) and the corners (`--cli-panel-radius`) are CSS variables now, including the danger color and shadows; without a `theme` option, stylesheet overrides of the variables keep working.
+- The context menu and the services/servers dropdowns, which render outside the panel, now take the panel's colors and font instead of staying dark.
+
+### The panel on phones and tablets
+
+- The panel resizes with touch: dragging the grip uses pointer events (it only listened to the mouse before), the grip is larger on touch screens and shows while the panel is open. Pane dividers work with touch too.
+- With the on-screen keyboard open, the panel moves above it and fits the visible area (it follows `visualViewport`), so the prompt stays in view while typing. Before, browsers that open the keyboard over the page hid the bottom of the panel. In app WebViews that resize instead, the panel shrinks with the page.
+- The panel is never taller than the space it has, and stays below the status bar of apps that draw under it (`safe-area-inset-top`).
+- `--cli-panel-bottom-offset`: a host that docks the panel above its own bottom bar sets this variable (e.g. to the bar's height) instead of overriding `bottom`; the panel and its hide tab sit on the bar, move above the keyboard when it opens, and size to the space between. **Upgrading**: replace a `bottom` override of `.cli-panel-wrapper` / `.cli-panel-hide-tab` with the variable, or the panel can no longer avoid the keyboard.
+- Up to 600px wide, the header shows only the run state next to the title, so the title is no longer squeezed by the other status items.
+- A panel remounted with the same controller (React StrictMode) follows the viewport and the system color scheme again.
+
 ## v2.1.1
 
 ### The panel on phones and in apps that sign in
