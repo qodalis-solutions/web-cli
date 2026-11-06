@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-guid",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "@qodalis/cli extension for generating and validating GUIDs.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

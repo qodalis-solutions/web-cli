@@ -3,6 +3,16 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.1.1
+
+### The panel on phones and in apps that sign in
+
+- A panel that starts hidden (`isHidden: true`) opens with its terminal on the first click of its tab; it used to open collapsed and needed a second click. A panel hidden after use still comes back the way it was.
+- On screens up to 600px wide the panel header stays on one line: a long title ends in an ellipsis, the buttons are smaller and the position button is left out.
+- The welcome banner wraps at words on a narrow terminal instead of breaking words at the edge, and the greeting typed after the prompt is cut to the line, so its backspaces no longer leave text behind on the next row.
+- `welcome: { show: 'once' }` (and `'daily'`, `'never'`) works again: the default that `configure` stores, `'always'`, no longer overrides the host's option. A value chosen with `configure set system.welcomeMessage` still wins.
+- A server that answers `/commands` with 401 or 403 before the app's sign-in has given the CLI a token is reported as "needs a sign-in" in the log, not as an unavailable server with a warning; its commands load once the users plugin reconnects with the token (`CliServerConnection.needsSignIn`).
+
 ## v2.1.0
 
 ### Your own name and icon on the CLI
