@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-speed-test",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "@qodalis/cli extension for running network speed tests.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

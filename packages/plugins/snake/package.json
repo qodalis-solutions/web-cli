@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-snake",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "@qodalis/cli extension for playing Snake in the terminal.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
