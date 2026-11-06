@@ -406,7 +406,7 @@ export const ruTranslations: Record<string, string> = {
     'cli.ssh.help.interactive_shell_node': 'Интерактивная оболочка на node',
     'cli.ssh.help.one_command_node': 'Одна команда на node',
     'cli.ssh.help.same_ssh_2': 'То же, что ssh',
-    'cli.events.description': 'Отслеживать, просматривать и отправлять события шины событий',
+    'cli.events.description': 'Просмотр, список и отправка событий терминала и подключённых серверов',
     'cli.events.watch.description': 'Показывать события по мере появления (Ctrl+C для остановки)',
     'cli.events.log.description': 'Показать недавние события (в памяти, не сохраняются)',
     'cli.events.emit.description': 'Отправить событие: events emit <тип> [json]',
@@ -414,9 +414,12 @@ export const ruTranslations: Record<string, string> = {
     'cli.events.watch.help.every_event': 'Все события',
     'cli.events.watch.help.namespace': 'Пространство имён',
     'cli.events.watch.help.one_type': 'Один тип',
+    'cli.events.watch.help.server_jobs': 'События заданий сервера node',
+    'cli.events.watch.help.local_only': 'Только собственные события терминала',
     'cli.events.log.help.intro': 'Показать последние события, сначала старые',
     'cli.events.log.help.last_20': 'Последние 20 событий',
     'cli.events.log.help.last_50_server': 'Последние 50 событий сервера',
+    'cli.events.log.help.failed_jobs': 'Недавние неудачные запуски заданий на всех серверах',
     'cli.events.emit.help.intro':
         'Отправить событие, например, чтобы проверить плагин, который его слушает',
     'cli.events.help.commands': 'Команды:',
@@ -425,6 +428,7 @@ export const ruTranslations: Record<string, string> = {
     'cli.events.help.emit': 'Отправить событие',
     'cli.events.help.patterns':
         'Шаблоны: точный тип (package:installed), пространство имён (package:*) или * для всех.',
+    'cli.events.help.servers': 'События подключённых серверов (запуски заданий, изменения пользователей, токенов и файлов, ...) показываются с именем сервера; каждый сервер отправляет только те события, которые вам разрешено видеть. Фильтр: --server <имя>, или --local для собственных событий терминала.',
     'cli.events.help.in_memory':
         'События хранятся в памяти только для этого терминала; ничего не сохраняется.',
 

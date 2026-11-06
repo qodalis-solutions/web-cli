@@ -2601,11 +2601,31 @@ context.events?.emit('todo:refresh');</code></pre>
         </tr>
       </thead>
       <tbody>
-        <tr><td><code>events watch [pattern]</code></td><td>Print events as they happen, until Ctrl+C</td></tr>
-        <tr><td><code>events log [pattern] [-n N]</code></td><td>Show recent events</td></tr>
+        <tr><td><code>events watch [pattern] [--server name | --local]</code></td><td>Print events as they happen, until Ctrl+C</td></tr>
+        <tr><td><code>events log [pattern] [-n N] [--server name | --local]</code></td><td>Show recent events</td></tr>
         <tr><td><code>events emit &lt;type&gt; [json]</code></td><td>Emit an event, e.g. to test a plugin (needs <code>system:events</code> when the users plugin is loaded)</td></tr>
       </tbody>
     </table>
+
+    <h2>Server events</h2>
+    <p>
+      The events of the connected servers show in the same command: job runs,
+      changes to users, groups, tokens and files, sign-ins and more. They match
+      by the type the server gave them, so <code>events watch job:*</code>
+      follows the jobs of every server, and each line names the server it came
+      from. <code>--server node</code> keeps one server's events,
+      <code>--local</code> only the terminal's own, and <code>server:*</code>
+      still matches every server event.
+    </p>
+    <p>
+      On the bus they stay wrapped in <code>server:event</code>
+      (<code>server, type, data</code>): a server's <code>session:closed</code>
+      or <code>user:deleted</code> never reaches a plugin listening for the
+      terminal's own <code>session:*</code> or <code>user:*</code> events, and
+      <code>events emit</code> cannot fake them. Each server sends a terminal
+      only the events its user may see (for example <code>job:*</code> needs
+      <code>jobs:read</code>); the server catalog is in the server docs.
+    </p>
 
     <h2>When to use it</h2>
     <ul>

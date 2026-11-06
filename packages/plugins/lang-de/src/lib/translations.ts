@@ -512,7 +512,7 @@ export const deTranslations: Record<string, string> = {
     'cli.ssh.help.interactive_shell_node': 'Interaktive Shell auf node',
     'cli.ssh.help.one_command_node': 'Ein Befehl auf node',
     'cli.ssh.help.same_ssh_2': 'Wie ssh',
-    'cli.events.description': 'Ereignisse des Ereignisbusses beobachten, auflisten und senden',
+    'cli.events.description': 'Ereignisse des Terminals und der verbundenen Server beobachten, auflisten und senden',
     'cli.events.watch.description': 'Ereignisse anzeigen, sobald sie eintreten (Strg+C zum Beenden)',
     'cli.events.log.description': 'Letzte Ereignisse anzeigen (im Speicher, nicht gespeichert)',
     'cli.events.emit.description': 'Ein Ereignis senden: events emit <typ> [json]',
@@ -520,9 +520,12 @@ export const deTranslations: Record<string, string> = {
     'cli.events.watch.help.every_event': 'Jedes Ereignis',
     'cli.events.watch.help.namespace': 'Ein Namespace',
     'cli.events.watch.help.one_type': 'Ein Typ',
+    'cli.events.watch.help.server_jobs': 'Job-Ereignisse des Servers node',
+    'cli.events.watch.help.local_only': 'Nur die eigenen Ereignisse des Terminals',
     'cli.events.log.help.intro': 'Die neuesten Ereignisse anzeigen, älteste zuerst',
     'cli.events.log.help.last_20': 'Letzte 20 Ereignisse',
     'cli.events.log.help.last_50_server': 'Letzte 50 Server-Ereignisse',
+    'cli.events.log.help.failed_jobs': 'Letzte fehlgeschlagene Job-Läufe auf allen Servern',
     'cli.events.emit.help.intro':
         'Ein Ereignis auslösen, z. B. um ein Plugin zu testen, das darauf wartet',
     'cli.events.help.commands': 'Befehle:',
@@ -531,6 +534,7 @@ export const deTranslations: Record<string, string> = {
     'cli.events.help.emit': 'Ein Ereignis auslösen',
     'cli.events.help.patterns':
         'Muster: ein genauer Typ (package:installed), ein Namespace (package:*) oder * für alle.',
+    'cli.events.help.servers': 'Ereignisse der verbundenen Server (Job-Läufe, Änderungen an Benutzern, Tokens und Dateien, ...) werden mit dem Servernamen angezeigt; jeder Server sendet nur die Ereignisse, die Sie sehen dürfen. Filtern mit --server <name> oder --local für die eigenen Ereignisse des Terminals.',
     'cli.events.help.in_memory':
         'Ereignisse werden nur für dieses Terminal im Arbeitsspeicher gehalten; nichts wird dauerhaft gespeichert.',
 

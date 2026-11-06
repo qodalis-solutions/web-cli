@@ -513,7 +513,7 @@ export const frTranslations: Record<string, string> = {
     'cli.ssh.help.interactive_shell_node': 'Shell interactif sur node',
     'cli.ssh.help.one_command_node': 'Une commande sur node',
     'cli.ssh.help.same_ssh_2': 'Identique à ssh',
-    'cli.events.description': 'Observer, lister et émettre des événements du bus d’événements',
+    'cli.events.description': 'Surveiller, lister et émettre les événements du terminal et des serveurs connectés',
     'cli.events.watch.description': 'Afficher les événements dès qu’ils se produisent (Ctrl+C pour arrêter)',
     'cli.events.log.description': 'Afficher les événements récents (en mémoire, non enregistrés)',
     'cli.events.emit.description': 'Émettre un événement : events emit <type> [json]',
@@ -521,10 +521,13 @@ export const frTranslations: Record<string, string> = {
     'cli.events.watch.help.every_event': 'Tous les événements',
     'cli.events.watch.help.namespace': 'Un espace de noms',
     'cli.events.watch.help.one_type': 'Un seul type',
+    'cli.events.watch.help.server_jobs': 'Événements de tâches du serveur node',
+    'cli.events.watch.help.local_only': 'Uniquement les événements propres au terminal',
     'cli.events.log.help.intro':
         'Afficher les événements les plus récents, du plus ancien au plus récent',
     'cli.events.log.help.last_20': 'Les 20 derniers événements',
     'cli.events.log.help.last_50_server': 'Les 50 derniers événements du serveur',
+    'cli.events.log.help.failed_jobs': 'Exécutions de tâches échouées récentes, sur tous les serveurs',
     'cli.events.emit.help.intro':
         'Émettre un événement, par ex. pour tester un plugin qui l\'écoute',
     'cli.events.help.commands': 'Commandes :',
@@ -533,6 +536,7 @@ export const frTranslations: Record<string, string> = {
     'cli.events.help.emit': 'Émettre un événement',
     'cli.events.help.patterns':
         'Motifs : un type exact (package:installed), un espace de noms (package:*) ou * pour tout.',
+    'cli.events.help.servers': 'Les événements des serveurs connectés (exécutions de tâches, modifications des utilisateurs, jetons et fichiers, ...) sont affichés avec le nom du serveur ; chaque serveur n’envoie que les événements que vous pouvez voir. Filtrez avec --server <nom>, ou --local pour les événements propres au terminal.',
     'cli.events.help.in_memory':
         'Les événements sont conservés en mémoire pour ce terminal uniquement ; rien n\'est enregistré durablement.',
 

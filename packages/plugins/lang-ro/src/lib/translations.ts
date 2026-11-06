@@ -408,7 +408,7 @@ export const roTranslations: Record<string, string> = {
     'cli.ssh.help.interactive_shell_node': 'Shell interactiv pe node',
     'cli.ssh.help.one_command_node': 'O comandă pe node',
     'cli.ssh.help.same_ssh_2': 'La fel ca ssh',
-    'cli.events.description': 'Urmărește, listează și emite evenimente pe magistrala de evenimente',
+    'cli.events.description': 'Urmărește, listează și emite evenimente ale terminalului și ale serverelor conectate',
     'cli.events.watch.description': 'Afișează evenimentele pe măsură ce apar (Ctrl+C pentru oprire)',
     'cli.events.log.description': 'Afișează evenimentele recente (în memorie, nesalvate)',
     'cli.events.emit.description': 'Emite un eveniment: events emit <tip> [json]',
@@ -416,9 +416,12 @@ export const roTranslations: Record<string, string> = {
     'cli.events.watch.help.every_event': 'Toate evenimentele',
     'cli.events.watch.help.namespace': 'Un spațiu de nume',
     'cli.events.watch.help.one_type': 'Un singur tip',
+    'cli.events.watch.help.server_jobs': 'Evenimentele joburilor serverului node',
+    'cli.events.watch.help.local_only': 'Doar evenimentele proprii ale terminalului',
     'cli.events.log.help.intro': 'Afișează cele mai recente evenimente, cele mai vechi primele',
     'cli.events.log.help.last_20': 'Ultimele 20 de evenimente',
     'cli.events.log.help.last_50_server': 'Ultimele 50 de evenimente de server',
+    'cli.events.log.help.failed_jobs': 'Rulări de joburi eșuate recent, pe toate serverele',
     'cli.events.emit.help.intro':
         'Emite un eveniment, de ex. pentru a testa un plugin care îl ascultă',
     'cli.events.help.commands': 'Comenzi:',
@@ -427,6 +430,7 @@ export const roTranslations: Record<string, string> = {
     'cli.events.help.emit': 'Emite un eveniment',
     'cli.events.help.patterns':
         'Modele: un tip exact (package:installed), un spațiu de nume (package:*) sau * pentru toate.',
+    'cli.events.help.servers': 'Evenimentele serverelor conectate (rulări de joburi, modificări de utilizatori, tokenuri și fișiere, ...) apar cu numele serverului; fiecare server trimite doar evenimentele pe care le poți vedea. Filtrează cu --server <nume> sau --local pentru evenimentele proprii ale terminalului.',
     'cli.events.help.in_memory':
         'Evenimentele sunt păstrate în memorie doar pentru acest terminal; nimic nu este salvat permanent.',
 
