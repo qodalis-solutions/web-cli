@@ -83,26 +83,6 @@ export default defineConfig({
                 import.meta.dirname,
                 '../../dist/files/public-api.mjs',
             ),
-            '@qodalis/cli-snake': path.resolve(
-                import.meta.dirname,
-                '../../dist/snake/public-api.mjs',
-            ),
-            '@qodalis/cli-tetris': path.resolve(
-                import.meta.dirname,
-                '../../dist/tetris/public-api.mjs',
-            ),
-            '@qodalis/cli-2048': path.resolve(
-                import.meta.dirname,
-                '../../dist/2048/public-api.mjs',
-            ),
-            '@qodalis/cli-minesweeper': path.resolve(
-                import.meta.dirname,
-                '../../dist/minesweeper/public-api.mjs',
-            ),
-            '@qodalis/cli-wordle': path.resolve(
-                import.meta.dirname,
-                '../../dist/wordle/public-api.mjs',
-            ),
             '@qodalis/cli-scp': path.resolve(
                 import.meta.dirname,
                 '../../dist/scp/public-api.mjs',
@@ -110,10 +90,6 @@ export default defineConfig({
             '@qodalis/cli-wget': path.resolve(
                 import.meta.dirname,
                 '../../dist/wget/public-api.mjs',
-            ),
-            '@qodalis/cli-sudoku': path.resolve(
-                import.meta.dirname,
-                '../../dist/sudoku/public-api.mjs',
             ),
             '@qodalis/cli-lang-es': path.resolve(
                 import.meta.dirname,

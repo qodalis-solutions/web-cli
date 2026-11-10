@@ -38,3 +38,13 @@ overrides:
   'dompurify': '>=3.4.17'
   # @angular/build 22.2 pins vite 8.3.0; the vite/launch-editor advisories are fixed in 8.3.3.
   '@angular/build>vite': '^8.3.3'
+  # The game plugins (qodalis-solutions/cli-games) come from npm and ask for @qodalis/cli-core as a peer:
+  # resolve it to the workspace package so the demos and docs never carry a second copy of core.
+  '@qodalis/cli-core': 'workspace:*'
+minimumReleaseAgeExclude:
+  - '@qodalis/cli-2048@2.4.1'
+  - '@qodalis/cli-minesweeper@2.4.1'
+  - '@qodalis/cli-snake@2.4.1'
+  - '@qodalis/cli-sudoku@2.4.1'
+  - '@qodalis/cli-tetris@2.4.1'
+  - '@qodalis/cli-wordle@2.4.1'
