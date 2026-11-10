@@ -555,7 +555,7 @@ await context.backgroundServices.startJob('export', async (ctx) => {
 
 ### Full-screen mode and raw input
 
-A processor can take over the terminal (games, editors, pagers) with `enterFullScreenMode`, receiving every keystroke in `onData`.
+A processor can take over the terminal (games, editors, pagers) with `enterFullScreenMode`, receiving every keystroke in `onData`. The game plugins in [qodalis-solutions/cli-games](https://github.com/qodalis-solutions/cli-games) are complete examples.
 
 ```typescript
 export class CliClockCommandProcessor implements ICliCommandProcessor {

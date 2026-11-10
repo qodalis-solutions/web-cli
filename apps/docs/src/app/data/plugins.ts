@@ -446,7 +446,7 @@ export const PLUGINS: PluginData[] = [
         tryItDeps: ['filesModule'],
     },
 
-    // ===== Games (6) =====
+    // ===== Games (6) — source: https://github.com/qodalis-solutions/cli-games =====
     {
         id: 'snake',
         name: 'Snake',

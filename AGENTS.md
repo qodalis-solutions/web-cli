@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guide for AI coding agents working in the web-cli monorepo: the Qodalis CLI engine, its Angular/React/Vue/Electron wrappers and 40 plugins. The plugin API reference is at https://cli.qodalis.com/llms-full.txt. Its source is `docs/ai/`.
+Guide for AI coding agents working in the web-cli monorepo: the Qodalis CLI engine, its Angular/React/Vue/Electron wrappers and 34 plugins (the six game plugins live in `qodalis-solutions/cli-games` and are published under the same `@qodalis/cli-<game>` names). The plugin API reference is at https://cli.qodalis.com/llms-full.txt. Its source is `docs/ai/`.
 
 ## Setup and commands
 

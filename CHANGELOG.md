@@ -3,6 +3,12 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### The game plugins moved to their own repository
+
+- `@qodalis/cli-2048`, `-minesweeper`, `-snake`, `-tetris`, `-wordle` and `-sudoku` are now built, tested and published from [qodalis-solutions/cli-games](https://github.com/qodalis-solutions/cli-games), with their history. The npm names, module exports and commands are unchanged; the games take `@qodalis/cli-core` as a peer dependency. The demos and the docs site install them from npm. web-cli builds 34 plugins, so its builds and CI runs are shorter.
+
 ## v2.4.1
 
 ### Stop background services from the panel
