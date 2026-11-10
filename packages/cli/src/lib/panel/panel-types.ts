@@ -31,6 +31,8 @@ export interface CliPanelContextMenu {
 }
 
 export interface CliPanelServiceDetail {
+    /** Process id in the engine's process registry (`ps`), the handle of the stop button. */
+    pid?: number;
     name: string;
     status: string;
     description?: string;

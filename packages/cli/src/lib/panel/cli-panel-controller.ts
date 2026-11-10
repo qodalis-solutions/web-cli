@@ -24,7 +24,7 @@ import {
     resizePaneWidths,
     resizedPanelSize,
 } from './panel-geometry';
-import { CliPanelStatusTracker } from './panel-status';
+import { CliPanelStatusTracker, killProcess } from './panel-status';
 import { CLI_TERMINAL_THEME_EVENT } from '../processors/theme/terminal-theme';
 import {
     CliPanelCallbacks,
@@ -599,6 +599,17 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
         });
+    }
+
+    /**
+     * Stop a running background service listed in the services dropdown, as
+     * `kill <pid>` does; the list refreshes. False when nothing was running
+     * under that pid.
+     */
+    killProcess(pid: number): boolean {
+        const killed = killProcess(this.tracker.globalEngine, pid);
+        if (killed) this.tracker.refresh();
+        return killed;
     }
 
     /** `anchor` is the clicked status item; the dropdown is placed next to it. */

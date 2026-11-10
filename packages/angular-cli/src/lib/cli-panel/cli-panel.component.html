@@ -320,6 +320,16 @@
               </div>
             } @else {
               <span class="cli-panel-svc-status">{{ row.status }}</span>
+              @if (row.stop; as stop) {
+                <button
+                  type="button"
+                  class="cli-panel-svc-stop"
+                  [title]="stop.title"
+                  (click)="onStopService($event, stop.pid)"
+                >
+                  {{ stop.label }}
+                </button>
+              }
             }
           </div>
         }

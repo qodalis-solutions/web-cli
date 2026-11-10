@@ -13,6 +13,8 @@ import {
     EXEC_POLL_MS,
     GLOBAL_POLL_MS,
 } from '../lib/panel';
+import { CliProcessRegistry, CliProcessRegistry_TOKEN } from '../lib/services/cli-process-registry';
+import { CliBackgroundServiceRegistry } from '../lib/services/background/cli-background-service-registry';
 
 interface FakeEngine {
     engine: CliEngine;
@@ -591,6 +593,79 @@ describe('CliPanelController', () => {
             const servers = openStatusDropdown(snap())!;
             expect(servers.kind).toBe('servers');
             expect(servers.rows[0]).toEqual(jasmine.objectContaining({ status: 'connected', description: 'u', meta: ['v2', '2 cmds'] }));
+        });
+
+        it('exposes the pid of each service for the stop button', () => {
+            const fake = fakeEngine({
+                context: {
+                    backgroundServices: {
+                        list: () => [{ pid: 7, name: 'clock', status: 'running' }],
+                        on: () => () => undefined,
+                    },
+                },
+            });
+            const g = computeGlobalStatus(fake.engine);
+            expect(g.serviceDetails[0]).toEqual({ pid: 7, name: 'clock', status: 'running', description: undefined });
+        });
+
+        it('offers to stop only the running services that have a pid', () => {
+            const fake = fakeEngine({
+                context: {
+                    services: { get: () => ({ connections: new Map([['a', { connected: true, config: { url: 'u' } }]]) }) },
+                    backgroundServices: {
+                        list: () => [
+                            { pid: 7, name: 'clock', status: 'running' },
+                            { pid: 8, name: 'sync', status: 'stopped' },
+                            { name: 'pending', status: 'running' },
+                        ],
+                        on: () => () => undefined,
+                    },
+                },
+            });
+            controller.registerEngine(1, 1, fake.engine);
+            controller.toggleServicesDropdown();
+            const rows = openStatusDropdown(snap())!.rows;
+            expect(rows[0].stop).toEqual({ pid: 7, label: 'Stop', title: 'Stop clock (kill 7)' });
+            expect(rows[1].stop).toBeUndefined();
+            expect(rows[2].stop).toBeUndefined();
+
+            controller.toggleServersDropdown();
+            expect(openStatusDropdown(snap())!.rows[0].stop).toBeUndefined();
+        });
+
+        it('kills a service from the panel as kill <pid> does', async () => {
+            const processes = new CliProcessRegistry();
+            const services = { get: (token: string) => (token === CliProcessRegistry_TOKEN ? processes : undefined) };
+            const backgroundServices = new CliBackgroundServiceRegistry({} as any, services as any);
+            backgroundServices.setProcessRegistry(processes);
+            const stopped = jasmine.createSpy('onStop');
+            backgroundServices.register({
+                name: 'clock',
+                type: 'daemon',
+                onStart: (ctx) => new Promise<void>((resolve) => ctx.signal.addEventListener('abort', () => resolve())),
+                onStop: stopped,
+            });
+            await backgroundServices.start('clock');
+            const fake = fakeEngine({ context: { services, backgroundServices } });
+            controller.registerEngine(1, 1, fake.engine);
+            controller.toggleServicesDropdown();
+            const row = openStatusDropdown(snap())!.rows[0];
+            expect(row.status).toBe('running');
+            const pid = row.stop!.pid;
+
+            expect(controller.killProcess(pid)).toBeTrue();
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(stopped).toHaveBeenCalled();
+            expect(processes.list().find((p) => p.pid === pid)).toEqual(jasmine.objectContaining({ status: 'killed', exitCode: -9 }));
+            const after = openStatusDropdown(snap())!.rows[0];
+            expect(after.status).toBe('stopped');
+            expect(after.stop).toBeUndefined();
+            expect(snap().servicesDropdownOpen).toBeTrue();
+
+            expect(controller.killProcess(pid)).toBeFalse();
+            expect(controller.killProcess(999)).toBeFalse();
         });
 
         it('treats a context processor as running', () => {

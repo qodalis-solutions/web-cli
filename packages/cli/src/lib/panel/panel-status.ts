@@ -1,5 +1,6 @@
-import { CliNotification } from '@qodalis/cli-core';
+import { CliNotification, ICliProcessRegistry } from '@qodalis/cli-core';
 import { CliEngine } from '../engine';
+import { CliProcessRegistry_TOKEN } from '../services/cli-process-registry';
 import {
     CliPanelGlobalStatus,
     CliPanelServerDetail,
@@ -64,6 +65,7 @@ export function computeGlobalStatus(
             total: services.length,
         };
         serviceDetails = services.map((s) => ({
+            pid: s.pid,
             name: s.name,
             status: s.status,
             description: s.description,
@@ -120,6 +122,25 @@ export function computeGlobalStatus(
 
     const uptime = engine.startedAt ? now - engine.startedAt : 0;
     return { serviceCount, serviceDetails, serverState, serverDetails, uptime };
+}
+
+/**
+ * Kill process `pid` of the engine, as `kill <pid>` does: a background
+ * service is stopped (and shows as killed in `ps`). False when the engine
+ * has no process registry or no running process with that pid.
+ */
+export function killProcess(
+    engine: CliEngine | undefined,
+    pid: number,
+): boolean {
+    const context = engine?.getContext() as any;
+    let registry: ICliProcessRegistry | undefined;
+    try {
+        registry = context?.services?.get?.(CliProcessRegistry_TOKEN);
+    } catch {
+        /* token not registered */
+    }
+    return registry?.kill(pid) ?? false;
 }
 
 interface TabEntry {
@@ -214,6 +235,15 @@ export class CliPanelStatusTracker {
         this.refreshGlobal();
     }
 
+    /** The engine the global status (services, servers) is computed from: the first pane of the active tab. */
+    get globalEngine(): CliEngine | undefined {
+        const entry =
+            this.activeTabId != null
+                ? this.tabs.get(this.activeTabId)
+                : undefined;
+        return entry?.engines.values().next().value as CliEngine | undefined;
+    }
+
     /** Recompute everything now. */
     refresh(): void {
         for (const tabId of this.tabs.keys()) this.refreshTab(tabId);
@@ -255,13 +285,7 @@ export class CliPanelStatusTracker {
     }
 
     private refreshGlobal(): void {
-        const entry =
-            this.activeTabId != null
-                ? this.tabs.get(this.activeTabId)
-                : undefined;
-        const engine = entry?.engines.values().next().value as
-            CliEngine | undefined;
-        const next = computeGlobalStatus(engine);
+        const next = computeGlobalStatus(this.globalEngine);
         if (sameJson(next, this.globalStatus)) return;
         this.globalStatus = next;
         this.listener.onGlobalStatus(next);
