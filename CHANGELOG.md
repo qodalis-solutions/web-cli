@@ -3,6 +3,16 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.4.1
+
+### Stop background services from the panel
+
+- The panel's Background Services dropdown shows a **Stop** button on every running service. It stops the service the way `kill <pid>` does, the list updates in place and the dropdown stays open. On a phone, where there is no Ctrl+C, the services indicator opens the dropdown on a tap and the button is sized for touch. The button comes from the shared panel rows, so the Angular, React and Vue panels all have it.
+
+### Fixes
+
+- A skipped welcome banner (`once` or `daily` after the first time, `never`, or `welcome: false`) left two empty rows above the first prompt, and a shown banner started two rows down. The boot hid a spinner it had never shown, and the boot log replayed the clear-line control codes as output written during boot.
+
 ## v2.4.0
 
 ### Server events in the `events` command

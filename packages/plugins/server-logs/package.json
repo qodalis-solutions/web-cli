@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-server-logs",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "@qodalis/cli extension for streaming and viewing server logs via WebSocket.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",
