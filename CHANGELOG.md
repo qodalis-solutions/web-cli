@@ -3,7 +3,12 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## v2.4.2
+
+### Stop the running command from the panel
+
+- While a command runs, the panel's status shows a **Stop** button next to "running" (the compact side-position indicator stops it on a tap). It interrupts the command exactly as Ctrl+C does: a watch such as `events watch` ends, `Ctrl+C` is written and the prompt returns. Hosts on a phone browser had no way to send Ctrl+C; the Android app's `^C` key already did. Rendered by the Angular, React and Vue panels.
+- `ICliExecutionContext.interrupt()` runs the same Ctrl+C path from code.
 
 ### The game plugins moved to their own repository
 
