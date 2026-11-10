@@ -1283,6 +1283,42 @@
   margin-top: 1px;
 }
 
+/* Stop button of a running service: a finger-sized target on touch screens */
+.cli-panel-svc-stop {
+  appearance: none;
+  flex-shrink: 0;
+  align-self: center;
+  min-width: 44px;
+  min-height: 32px;
+  margin: -6px 0;
+  padding: 0 10px;
+  background: transparent;
+  border: 1px solid var(--cli-panel-border, rgba(255, 255, 255, 0.12));
+  border-radius: calc(var(--cli-panel-radius, 8px) - 2px);
+  color: var(--cli-panel-text-secondary, #94a3b8);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.cli-panel-svc-stop:hover,
+.cli-panel-svc-stop:focus-visible {
+  color: var(--cli-panel-danger, #f87171);
+  border-color: var(--cli-panel-danger, #f87171);
+  background-color: color-mix(in srgb, var(--cli-panel-danger, #f87171) 14%, transparent);
+}
+
+.cli-panel-svc-stop:focus-visible {
+  outline: 2px solid var(--cli-panel-accent, #818cf8);
+  outline-offset: 1px;
+}
+
 .cli-panel-srv-meta {
   display: flex;
   flex-direction: column;

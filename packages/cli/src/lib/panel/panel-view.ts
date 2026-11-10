@@ -23,6 +23,7 @@ export const PANEL_LABELS = {
     closePane: 'Close pane',
     servicesHeader: 'Background Services',
     servicesEmpty: 'No services registered',
+    stopService: 'Stop',
     serversHeader: 'Server Connections',
     serversEmpty: 'No servers configured',
 } as const;
@@ -296,6 +297,8 @@ export interface PanelDropdownRow {
     status: string;
     /** Extra lines under the status (servers: API version, command count). */
     meta: string[];
+    /** Stop button of a running service (`controller.killProcess(pid)`); absent for stopped services and servers. */
+    stop?: { pid: number; label: string; title: string };
 }
 
 export interface PanelStatusDropdown {
@@ -321,6 +324,10 @@ export function openStatusDropdown(s: CliPanelSnapshot): PanelStatusDropdown | n
                 description: svc.description,
                 status: svc.status,
                 meta: [],
+                stop:
+                    svc.status === 'running' && svc.pid !== undefined
+                        ? { pid: svc.pid, label: PANEL_LABELS.stopService, title: `${PANEL_LABELS.stopService} ${svc.name} (kill ${svc.pid})` }
+                        : undefined,
             })),
         };
     }

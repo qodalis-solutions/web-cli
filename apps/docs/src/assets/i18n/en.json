@@ -690,7 +690,7 @@
   "docs.panel-api.indicator-execution": "Execution State",
   "docs.panel-api.indicator-execution-desc": "Shows 'idle' or 'running' with an animated dot when a command is executing or a fullscreen processor (e.g. a game) is active.",
   "docs.panel-api.indicator-services": "Background Services",
-  "docs.panel-api.indicator-services-desc": "Displays 'X/Y services' count. Click to open a dropdown showing each service name, status, and description.",
+  "docs.panel-api.indicator-services-desc": "Displays 'X/Y services' count. Click to open a dropdown showing each service name, status, and description; a Stop button next to each running service stops it, as kill <pid> does.",
   "docs.panel-api.indicator-last-command": "Last Command",
   "docs.panel-api.indicator-last-command-desc": "Shows the name of the last executed command with a checkmark (success) or cross (error) icon.",
   "docs.panel-api.indicator-servers": "Server Connections",

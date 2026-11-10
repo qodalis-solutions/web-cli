@@ -244,6 +244,12 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         this.controller.startPaneResize(tabId, dividerIndex, event.clientX, panesContainerWidth(event.target));
     }
 
+    /** The Stop button of a service in the dropdown: the dropdown stays open. */
+    onStopService(event: MouseEvent, pid: number): void {
+        event.stopPropagation();
+        this.controller.killProcess(pid);
+    }
+
     onIndicatorClick(event: MouseEvent, item: PanelStatusIndicator): void {
         if (!item.dropdown) return;
         event.stopPropagation();

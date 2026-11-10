@@ -431,7 +431,21 @@ export const CliPanel = defineComponent({
                                       h('span', { class: 'cli-panel-svc-status' }, row.status),
                                       ...row.meta.map((m) => h('span', { key: m, class: 'cli-panel-svc-desc' }, m)),
                                   ])
-                                : h('span', { class: 'cli-panel-svc-status' }, row.status),
+                                : [
+                                      h('span', { class: 'cli-panel-svc-status' }, row.status),
+                                      row.stop
+                                          ? h(
+                                                'button',
+                                                {
+                                                    type: 'button',
+                                                    class: 'cli-panel-svc-stop',
+                                                    title: row.stop.title,
+                                                    onClick: () => controller.killProcess(row.stop!.pid),
+                                                },
+                                                row.stop.label,
+                                            )
+                                          : null,
+                                  ],
                         ]),
                     ),
                 ),

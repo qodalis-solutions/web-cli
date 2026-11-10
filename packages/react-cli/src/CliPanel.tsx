@@ -355,7 +355,19 @@ function StatusDropdown({ s }: { s: CliPanelSnapshot }) {
                                 ))}
                             </div>
                         ) : (
-                            <span className="cli-panel-svc-status">{row.status}</span>
+                            <>
+                                <span className="cli-panel-svc-status">{row.status}</span>
+                                {row.stop && (
+                                    <button
+                                        type="button"
+                                        className="cli-panel-svc-stop"
+                                        title={row.stop.title}
+                                        onClick={() => controller.killProcess(row.stop!.pid)}
+                                    >
+                                        {row.stop.label}
+                                    </button>
+                                )}
+                            </>
                         )}
                     </div>
                 ))}
