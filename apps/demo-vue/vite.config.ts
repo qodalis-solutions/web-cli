@@ -18,6 +18,18 @@ export default defineConfig({
             },
         },
     },
+    // The game plugins come from npm (qodalis-solutions/cli-games) and import @qodalis/cli-core, which the alias
+    // below points at dist/core. Pre-bundling them would give them their own copy of core in dev mode.
+    optimizeDeps: {
+        exclude: [
+            '@qodalis/cli-2048',
+            '@qodalis/cli-minesweeper',
+            '@qodalis/cli-snake',
+            '@qodalis/cli-sudoku',
+            '@qodalis/cli-tetris',
+            '@qodalis/cli-wordle',
+        ],
+    },
     resolve: {
         preserveSymlinks: true,
         alias: {

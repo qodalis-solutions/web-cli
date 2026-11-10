@@ -41,10 +41,6 @@ overrides:
   # The game plugins (qodalis-solutions/cli-games) come from npm and ask for @qodalis/cli-core as a peer:
   # resolve it to the workspace package so the demos and docs never carry a second copy of core.
   '@qodalis/cli-core': 'workspace:*'
+# Our own packages (the games come from qodalis-solutions/cli-games) are not held back by the release-age gate.
 minimumReleaseAgeExclude:
-  - '@qodalis/cli-2048@2.4.1'
-  - '@qodalis/cli-minesweeper@2.4.1'
-  - '@qodalis/cli-snake@2.4.1'
-  - '@qodalis/cli-sudoku@2.4.1'
-  - '@qodalis/cli-tetris@2.4.1'
-  - '@qodalis/cli-wordle@2.4.1'
+  - '@qodalis/*'

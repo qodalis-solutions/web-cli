@@ -58,23 +58,23 @@ importers:
         specifier: ^18.0.0
         version: 18.0.0(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(@ngx-translate/core@18.0.0(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))
       '@qodalis/cli-2048':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-minesweeper':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-snake':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-sudoku':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-tetris':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-wordle':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@types/prismjs':
         specifier: ^1.26.6
         version: 1.26.6
@@ -209,8 +209,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/cli
       '@qodalis/cli-2048':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-browser-storage':
         specifier: workspace:*
         version: link:../../packages/plugins/browser-storage
@@ -227,8 +227,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/guid
       '@qodalis/cli-minesweeper':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-password-generator':
         specifier: workspace:*
         version: link:../../packages/plugins/password-generator
@@ -245,8 +245,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/server-logs
       '@qodalis/cli-snake':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-speed-test':
         specifier: workspace:*
         version: link:../../packages/plugins/speed-test
@@ -254,8 +254,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/string
       '@qodalis/cli-tetris':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-text-to-image':
         specifier: workspace:*
         version: link:../../packages/plugins/text-to-image
@@ -269,8 +269,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/wget
       '@qodalis/cli-wordle':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-yesno':
         specifier: workspace:*
         version: link:../../packages/plugins/yesno
@@ -358,8 +358,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/cli
       '@qodalis/cli-2048':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-browser-storage':
         specifier: workspace:*
         version: link:../../packages/plugins/browser-storage
@@ -415,8 +415,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/markdown
       '@qodalis/cli-minesweeper':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-password-generator':
         specifier: workspace:*
         version: link:../../packages/plugins/password-generator
@@ -436,8 +436,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/server-logs
       '@qodalis/cli-snake':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-speed-test':
         specifier: workspace:*
         version: link:../../packages/plugins/speed-test
@@ -445,11 +445,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/string
       '@qodalis/cli-sudoku':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-tetris':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-text-to-image':
         specifier: workspace:*
         version: link:../../packages/plugins/text-to-image
@@ -463,8 +463,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/wget
       '@qodalis/cli-wordle':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-yesno':
         specifier: workspace:*
         version: link:../../packages/plugins/yesno
@@ -540,8 +540,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/cli
       '@qodalis/cli-2048':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-browser-storage':
         specifier: workspace:*
         version: link:../../packages/plugins/browser-storage
@@ -597,8 +597,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/markdown
       '@qodalis/cli-minesweeper':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-password-generator':
         specifier: workspace:*
         version: link:../../packages/plugins/password-generator
@@ -618,8 +618,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/server-logs
       '@qodalis/cli-snake':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-speed-test':
         specifier: workspace:*
         version: link:../../packages/plugins/speed-test
@@ -627,11 +627,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/string
       '@qodalis/cli-sudoku':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-tetris':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-text-to-image':
         specifier: workspace:*
         version: link:../../packages/plugins/text-to-image
@@ -645,8 +645,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/wget
       '@qodalis/cli-wordle':
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.4.2
+        version: 2.4.2(@qodalis/cli-core@packages+core)
       '@qodalis/cli-yesno':
         specifier: workspace:*
         version: link:../../packages/plugins/yesno
@@ -3593,23 +3593,35 @@ packages:
     resolution: {integrity: sha512-C2Xj8FZ0uHWeCXXqX5B4/gVFQmtSkiuOolzAgutjTfseNOHT3pUjljDZsTSxXFGgio54bCzVFqmEOUrIVk8RDA==}
     engines: {node: '>=20.0.0'}
 
-  '@qodalis/cli-2048@2.4.1':
-    resolution: {integrity: sha512-AUfjQA7ZonDQPvNq7iIpVD5nZE5s8acmx3C+EyZwfHbxg2kMZRJN4zWBw9804ALZm5KsAqIqGuGpmEp+w1XTNA==}
+  '@qodalis/cli-2048@2.4.2':
+    resolution: {integrity: sha512-Mq9BMBuvQ8SRV4TSOAHmd3kmK5qDlfu515AFX2AkiuRrL4TK67+c5diX/8g7RMyNh7fTLBu/pvEqJHtMG67olA==}
+    peerDependencies:
+      '@qodalis/cli-core': workspace:*
 
-  '@qodalis/cli-minesweeper@2.4.1':
-    resolution: {integrity: sha512-V+8w+jFumlIiEB1FmBBOWkTc3rkUPQGzDi74WdBP2NemKEPIF8QBO96nrlWGLSg1Sx5JUbxIwVdVjEg7V9LZNg==}
+  '@qodalis/cli-minesweeper@2.4.2':
+    resolution: {integrity: sha512-+LJYBHLAHRTauo3srdp0Hbl4kp8RzjWK+hwn5GJS0oNTkBxYZ5rU5Ocp/3XGRsvWLBAkWN1nhZrpSk05UFmN5g==}
+    peerDependencies:
+      '@qodalis/cli-core': workspace:*
 
-  '@qodalis/cli-snake@2.4.1':
-    resolution: {integrity: sha512-wpg0vzHNbnOmTOGQR6e63Airc/jCWwVhkX5lOZwEPivJVUiz92Sgjtv8XVvV1902qDTN+2o+pjIYGNF6C1G1Vg==}
+  '@qodalis/cli-snake@2.4.2':
+    resolution: {integrity: sha512-8DqZNJeDgvFmnVUwtbUXJb4DX3m/CQCZbCMnCODSCd8yEcB7CupFnO/cPmpJnn4Z2R1mI/SodJDaJmdPhCeYlg==}
+    peerDependencies:
+      '@qodalis/cli-core': workspace:*
 
-  '@qodalis/cli-sudoku@2.4.1':
-    resolution: {integrity: sha512-R6nd2pLLOxS4bLsrBZBqwRV0irm+k1unbXY4WGufKIaItLblea+7sGP/P7PAYWQsOQ6qkfGccpgZD7sk5fkEVA==}
+  '@qodalis/cli-sudoku@2.4.2':
+    resolution: {integrity: sha512-MmBr/x6B+0gNsuJkmYhTR3S78MEQuZTjht8OKElcF+afL8iOOF+cupO+qd5MDFyU5TJhoBCPVzkPMGOIfu93aw==}
+    peerDependencies:
+      '@qodalis/cli-core': workspace:*
 
-  '@qodalis/cli-tetris@2.4.1':
-    resolution: {integrity: sha512-fDRysRLXJzIBbtzRgvtRFzeyk8CBPduq4uSIicQ+Jsqr06c5RLA1PAgrT7yMilHmbu/c53/ewRjbA13ajKwVYw==}
+  '@qodalis/cli-tetris@2.4.2':
+    resolution: {integrity: sha512-S+dC61CutCx1LIX5Uc9+80tA8Zu91elsC9M7UgyqPInmi28EGVwHn+s3j71U3r/DAjThw8T85E0oosfmBrHtHw==}
+    peerDependencies:
+      '@qodalis/cli-core': workspace:*
 
-  '@qodalis/cli-wordle@2.4.1':
-    resolution: {integrity: sha512-oB/52sG9s7xXb27YYzoH7NRKBd8x6G+Hn/sBFMkbpW8sl3CSRbEDEhQHMSYbE5onSiheAMGJIo04wHW2zcNqWw==}
+  '@qodalis/cli-wordle@2.4.2':
+    resolution: {integrity: sha512-bho2qcNjUnIHHIWUSrTLRX/ONBnkfWM+sHGslr6Beiqr1E/ymHdzd+IAcYcopZ70w9sPBQz32kJLmU+vK1U4ow==}
+    peerDependencies:
+      '@qodalis/cli-core': workspace:*
 
   '@rolldown/binding-android-arm-eabi@1.2.14':
     resolution: {integrity: sha512-aWR+XKH9+rW7m5fWq/5360J3mHycrx/o6xZM2DQFdJnTMdyP7/WzxPjhtLbVWdKo2y612/4U1bWqb3HQhiF7vg==}
@@ -10498,27 +10510,27 @@ snapshots:
       tslib: 2.8.1
       tsyringe: 4.10.0
 
-  '@qodalis/cli-2048@2.4.1':
+  '@qodalis/cli-2048@2.4.2(@qodalis/cli-core@packages+core)':
     dependencies:
       '@qodalis/cli-core': link:packages/core
 
-  '@qodalis/cli-minesweeper@2.4.1':
+  '@qodalis/cli-minesweeper@2.4.2(@qodalis/cli-core@packages+core)':
     dependencies:
       '@qodalis/cli-core': link:packages/core
 
-  '@qodalis/cli-snake@2.4.1':
+  '@qodalis/cli-snake@2.4.2(@qodalis/cli-core@packages+core)':
     dependencies:
       '@qodalis/cli-core': link:packages/core
 
-  '@qodalis/cli-sudoku@2.4.1':
+  '@qodalis/cli-sudoku@2.4.2(@qodalis/cli-core@packages+core)':
     dependencies:
       '@qodalis/cli-core': link:packages/core
 
-  '@qodalis/cli-tetris@2.4.1':
+  '@qodalis/cli-tetris@2.4.2(@qodalis/cli-core@packages+core)':
     dependencies:
       '@qodalis/cli-core': link:packages/core
 
-  '@qodalis/cli-wordle@2.4.1':
+  '@qodalis/cli-wordle@2.4.2(@qodalis/cli-core@packages+core)':
     dependencies:
       '@qodalis/cli-core': link:packages/core
 
