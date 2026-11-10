@@ -20,7 +20,7 @@
 
 ![Help command](https://raw.githubusercontent.com/qodalis-solutions/web-cli/main/assets/help_command.gif)
 
-Qodalis CLI renders an [xterm.js](https://xtermjs.org/) terminal in your app with a shell-like command line, built-in commands, themes and a runtime package manager. You add commands as **modules** (`ICliModule`): the 40 official plugins, your own commands, or packages installed at runtime with `pkg add`. It can also connect to a Node.js, .NET or Python backend to run server-side commands.
+Qodalis CLI renders an [xterm.js](https://xtermjs.org/) terminal in your app with a shell-like command line, built-in commands, themes and a runtime package manager. You add commands as **modules** (`ICliModule`): the 40 official plugins (34 here, 6 games in [cli-games](https://github.com/qodalis-solutions/cli-games)), your own commands, or packages installed at runtime with `pkg add`. It can also connect to a Node.js, .NET or Python backend to run server-side commands.
 
 ## Try it online
 
@@ -210,7 +210,7 @@ Install from npm and pass the module, or run `pkg add <name>` in the terminal.
 | [`@qodalis/cli-wget`](https://www.npmjs.com/package/@qodalis/cli-wget) | `wgetModule` | `wget` |
 | [`@qodalis/cli-yesno`](https://www.npmjs.com/package/@qodalis/cli-yesno) | `yesnoModule` | `yesno` |
 
-**Games**: [`@qodalis/cli-2048`](https://www.npmjs.com/package/@qodalis/cli-2048) (`game2048Module`), [`@qodalis/cli-minesweeper`](https://www.npmjs.com/package/@qodalis/cli-minesweeper), [`@qodalis/cli-snake`](https://www.npmjs.com/package/@qodalis/cli-snake), [`@qodalis/cli-sudoku`](https://www.npmjs.com/package/@qodalis/cli-sudoku), [`@qodalis/cli-tetris`](https://www.npmjs.com/package/@qodalis/cli-tetris), [`@qodalis/cli-wordle`](https://www.npmjs.com/package/@qodalis/cli-wordle).
+**Games** ([cli-games](https://github.com/qodalis-solutions/cli-games), same `@qodalis/cli-<game>` names): [`@qodalis/cli-2048`](https://www.npmjs.com/package/@qodalis/cli-2048) (`game2048Module`), [`@qodalis/cli-minesweeper`](https://www.npmjs.com/package/@qodalis/cli-minesweeper), [`@qodalis/cli-snake`](https://www.npmjs.com/package/@qodalis/cli-snake), [`@qodalis/cli-sudoku`](https://www.npmjs.com/package/@qodalis/cli-sudoku), [`@qodalis/cli-tetris`](https://www.npmjs.com/package/@qodalis/cli-tetris), [`@qodalis/cli-wordle`](https://www.npmjs.com/package/@qodalis/cli-wordle).
 
 **Language packs**: `@qodalis/cli-lang-<code>` for `de`, `es`, `fr`, `it`, `ja`, `ko`, `pt`, `ro`, `ru`, `zh` (`langDeModule`, ...).
 
@@ -220,6 +220,7 @@ Details and examples for each plugin: [Plugins](https://cli.qodalis.com/docs/plu
 
 | Repository | What it is |
 | --- | --- |
+| [cli-games](https://github.com/qodalis-solutions/cli-games) | The six game plugins (`@qodalis/cli-2048`, `-minesweeper`, `-snake`, `-sudoku`, `-tetris`, `-wordle`) |
 | [cli-server-node](https://github.com/qodalis-solutions/cli-server-node) | Node.js server (`@qodalis/cli-server-node`): server commands, shell, filesystem, data explorer, jobs, MCP |
 | [cli-server-dotnet](https://github.com/qodalis-solutions/cli-server-dotnet) | The same server for ASP.NET Core (NuGet `Qodalis.Cli`) |
 | [cli-server-python](https://github.com/qodalis-solutions/cli-server-python) | The same server for FastAPI (PyPI `qodalis-cli-server`) |
@@ -263,7 +264,7 @@ pnpm run create-plugin -- --name <name> --description "<desc>" --processor-name 
 | `packages/cli` | `@qodalis/cli`: the engine and built-in commands |
 | `packages/angular-cli`, `react-cli`, `vue-cli`, `electron-cli` | Framework wrappers |
 | `packages/create-cli-plugin` | Plugin scaffolder |
-| `packages/plugins/*` | The 40 plugins |
+| `packages/plugins/*` | The 34 plugins (the 6 games live in [cli-games](https://github.com/qodalis-solutions/cli-games)) |
 | `apps/` | Docs site and demo apps |
 
 [CONTRIBUTING.md](https://github.com/qodalis-solutions/web-cli/blob/main/CONTRIBUTING.md) covers branches and pull requests, [DEVELOPER.md](https://github.com/qodalis-solutions/web-cli/blob/main/DEVELOPER.md) the architecture and build details.

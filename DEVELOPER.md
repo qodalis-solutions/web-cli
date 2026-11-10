@@ -42,7 +42,7 @@ web-cli/
     vue-cli/               # @qodalis/vue-cli — Vue 3 wrapper
     electron-cli/          # @qodalis/electron-cli — Electron integration
     create-cli-plugin/     # @qodalis/create-cli-plugin — plugin scaffolding tool
-    plugins/               # 40 CLI plugins (tools, games, language packs)
+    plugins/               # 34 CLI plugins (tools, language packs; the games are in qodalis-solutions/cli-games)
   apps/
     demo-angular/          # Angular demo app
     demo-react/            # React demo app (Vite)
@@ -317,7 +317,7 @@ pnpm test
 # Run tests for a single plugin
 npx nx test guid
 npx nx test files
-npx nx test snake
+npx nx test regex
 ```
 
 ## Working with Nx
