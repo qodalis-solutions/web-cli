@@ -2624,6 +2624,12 @@ interface ICliExecutionContext {
      */
     readonly isBooted?: boolean;
     /**
+     * What pressing Ctrl+C does: the current input (a running command, a
+     * prompt, a context) is interrupted. Hosts call it from a button where
+     * there is no keyboard (a phone).
+     */
+    interrupt?(): void;
+    /**
      * A subject that emits when the command is aborted
      */
     onAbort: Subject<void>;
@@ -4260,7 +4266,7 @@ interface CliThemeInfo {
 
 declare const DefaultThemeInfos: Record<string, CliThemeInfo>;
 
-declare const LIBRARY_VERSION = "2.4.1";
+declare const LIBRARY_VERSION = "2.4.2";
 declare const API_VERSION = 2;
 
 /**
