@@ -74,6 +74,16 @@
                   >
                 }
                 <span class="cli-panel-status-label">{{ item.label }}</span>
+                @if (item.stop; as stop) {
+                  <button
+                    type="button"
+                    class="cli-panel-status-stop"
+                    [title]="stop.title"
+                    (click)="onStopCommand($event)"
+                  >
+                    {{ stop.label }}
+                  </button>
+                }
               </span>
             }
           </div>

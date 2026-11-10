@@ -688,7 +688,7 @@
   "docs.panel-api.status-bar-indicators": "Indicators",
   "docs.panel-api.th-indicator": "Indicator",
   "docs.panel-api.indicator-execution": "Execution State",
-  "docs.panel-api.indicator-execution-desc": "Shows 'idle' or 'running' with an animated dot when a command is executing or a fullscreen processor (e.g. a game) is active.",
+  "docs.panel-api.indicator-execution-desc": "Shows 'idle' or 'running' with an animated dot when a command is executing or a fullscreen processor (e.g. a game) is active. While running, a Stop button stops the command as Ctrl+C does (on the side positions, clicking the indicator does).",
   "docs.panel-api.indicator-services": "Background Services",
   "docs.panel-api.indicator-services-desc": "Displays 'X/Y services' count. Click to open a dropdown showing each service name, status, and description; a Stop button next to each running service stops it, as kill <pid> does.",
   "docs.panel-api.indicator-last-command": "Last Command",

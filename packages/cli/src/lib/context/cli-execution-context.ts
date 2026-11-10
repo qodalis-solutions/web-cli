@@ -589,6 +589,20 @@ export class CliExecutionContext
         );
     }
 
+    /**
+     * What pressing Ctrl+C does: the current input mode handles the key, so a
+     * running command is aborted, a prompt cancelled or a context left exactly
+     * as with the keyboard.
+     */
+    public interrupt(): void {
+        const event = new KeyboardEvent('keydown', {
+            key: 'c',
+            code: 'KeyC',
+            ctrlKey: true,
+        });
+        this.currentMode?.handleKeyEvent(event);
+    }
+
     public abort(): void {
         if (this.progressBar.isRunning) {
             this.progressBar.complete();

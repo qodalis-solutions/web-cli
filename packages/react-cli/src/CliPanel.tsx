@@ -38,6 +38,7 @@ import {
     runContextMenuAction,
     statusIndicators,
     svgAttrs,
+    PanelStatusIndicator,
 } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliContext } from './CliContext';
@@ -389,6 +390,15 @@ function PanelHeader({
     brand: ReturnType<typeof panelBranding>;
 }) {
     const indicators = statusIndicators(s);
+    const onIndicatorClick = (e: React.MouseEvent, item: PanelStatusIndicator) => {
+        if (item.stop) {
+            // The compact item (side positions) has no room for the button
+            e.stopPropagation();
+            controller.stopCommand();
+            return;
+        }
+        openDropdown(e, item.dropdown);
+    };
     const openDropdown = (e: React.MouseEvent, dropdown?: 'services' | 'servers') => {
         if (!dropdown) return;
         e.stopPropagation();
@@ -427,6 +437,19 @@ function PanelHeader({
                                 {item.dotClass && <span className={`cli-panel-status-dot ${item.dotClass}`} />}
                                 {item.icon && <span className={joinClasses('cli-panel-status-icon', item.iconClass)}>{item.icon}</span>}
                                 <span className="cli-panel-status-label">{item.label}</span>
+                                {item.stop && (
+                                    <button
+                                        type="button"
+                                        className="cli-panel-status-stop"
+                                        title={item.stop.title}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            controller.stopCommand();
+                                        }}
+                                    >
+                                        {item.stop.label}
+                                    </button>
+                                )}
                             </span>
                         ))}
                     </div>
@@ -439,7 +462,7 @@ function PanelHeader({
                             key={item.key}
                             className={joinClasses('cli-panel-status-compact-item', item.compactClass)}
                             title={item.title}
-                            onClick={item.dropdown ? (e) => openDropdown(e, item.dropdown) : undefined}
+                            onClick={item.dropdown || item.stop ? (e) => onIndicatorClick(e, item) : undefined}
                         >
                             {item.compactDotClass && <span className={item.compactDotClass} />}
                             {item.dotClass && <span className={`cli-panel-status-dot ${item.dotClass}`} />}

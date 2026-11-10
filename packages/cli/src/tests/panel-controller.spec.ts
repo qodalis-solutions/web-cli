@@ -595,6 +595,39 @@ describe('CliPanelController', () => {
             expect(servers.rows[0]).toEqual(jasmine.objectContaining({ status: 'connected', description: 'u', meta: ['v2', '2 cmds'] }));
         });
 
+        it('offers to stop the running command', () => {
+            const fake = fakeEngine({ context: { isExecuting: true } });
+            controller.registerEngine(1, 1, fake.engine);
+            const execution = statusIndicators(snap()).find((i) => i.key === 'execution')!;
+            expect(execution.stop).toEqual({ label: 'Stop', title: 'Stop the running command (Ctrl+C)' });
+            expect(execution.compactClass).toContain('status-clickable');
+
+            fake.context.isExecuting = false;
+            jasmine.clock().tick(EXEC_POLL_MS);
+            const idle = statusIndicators(snap()).find((i) => i.key === 'execution')!;
+            expect(idle.stop).toBeUndefined();
+            expect(idle.compactClass).not.toContain('status-clickable');
+        });
+
+        it('stops the running command as Ctrl+C does', () => {
+            const fake = fakeEngine({ context: { isExecuting: true } });
+            fake.context.interrupt = jasmine.createSpy('interrupt').and.callFake(() => {
+                fake.context.isExecuting = false;
+            });
+            const idle = fakeEngine();
+            idle.context.interrupt = jasmine.createSpy('interrupt');
+            controller.registerEngine(1, 1, fake.engine);
+            controller.registerEngine(1, 2, idle.engine);
+            expect(snap().status.executionState).toBe('running');
+
+            expect(controller.stopCommand()).toBeTrue();
+
+            expect(fake.context.interrupt).toHaveBeenCalledTimes(1);
+            expect(idle.context.interrupt).not.toHaveBeenCalled();
+            expect(snap().status.executionState).toBe('idle');
+            expect(controller.stopCommand()).toBeFalse();
+        });
+
         it('exposes the pid of each service for the stop button', () => {
             const fake = fakeEngine({
                 context: {

@@ -24,7 +24,7 @@ import {
     resizePaneWidths,
     resizedPanelSize,
 } from './panel-geometry';
-import { CliPanelStatusTracker, killProcess } from './panel-status';
+import { CliPanelStatusTracker, interruptCommand, killProcess } from './panel-status';
 import { CLI_TERMINAL_THEME_EVENT } from '../processors/theme/terminal-theme';
 import {
     CliPanelCallbacks,
@@ -599,6 +599,16 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
         });
+    }
+
+    /**
+     * Stop the command running in the active tab, as Ctrl+C does. False when
+     * no command runs there.
+     */
+    stopCommand(): boolean {
+        const stopped = interruptCommand(this.tracker.activeTabEngines);
+        if (stopped) this.tracker.refresh();
+        return stopped;
     }
 
     /**

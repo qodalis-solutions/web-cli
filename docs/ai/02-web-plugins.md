@@ -301,6 +301,7 @@ export const deployModule: ICliModule = {
 | `executor: ICliCommandExecutorService` | `showHelp(command, context)`, `executeCommand(line, context)`. |
 | `process: ICliExecutionProcess` | `exit(code?, { silent? })` ends the command (it throws to unwind unless `silent`), `output(data)` sets pipe data. |
 | `signal?: AbortSignal` / `onAbort: Subject<void>` | Ctrl+C / kill; check for cooperative cancellation. |
+| `interrupt?(): void` | What Ctrl+C does: aborts the running command, cancels a prompt, leaves a context. For a host's Stop button (no keyboard on a phone). |
 | `backgroundServices: ICliBackgroundServiceRegistry` | Register/start daemons and jobs. |
 | `events?: ICliEventBus` | Terminal event bus. |
 | `logger: ICliLogger` | `log`, `info`, `warn`, `error`, `debug`. |

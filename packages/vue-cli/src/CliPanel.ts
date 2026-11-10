@@ -38,6 +38,7 @@ import {
     runContextMenuAction,
     statusIndicators,
     svgAttrs,
+    PanelStatusIndicator,
 } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliConfigKey } from './CliConfigProvider';
@@ -143,6 +144,15 @@ export const CliPanel = defineComponent({
 
         /* ─── Render helpers ─────────────────────────────── */
 
+        const onIndicatorClick = (e: MouseEvent, item: PanelStatusIndicator) => {
+            if (item.stop) {
+                // The compact item (side positions) has no room for the button
+                e.stopPropagation();
+                controller.stopCommand();
+                return;
+            }
+            openDropdown(e, item.dropdown);
+        };
         const openDropdown = (e: MouseEvent, dropdown?: 'services' | 'servers') => {
             if (!dropdown) return;
             e.stopPropagation();
@@ -189,6 +199,21 @@ export const CliPanel = defineComponent({
                                           item.dotClass ? h('span', { class: `cli-panel-status-dot ${item.dotClass}` }) : null,
                                           item.icon ? h('span', { class: joinClasses('cli-panel-status-icon', item.iconClass) }, item.icon) : null,
                                           h('span', { class: 'cli-panel-status-label' }, item.label),
+                                          item.stop
+                                              ? h(
+                                                    'button',
+                                                    {
+                                                        type: 'button',
+                                                        class: 'cli-panel-status-stop',
+                                                        title: item.stop.title,
+                                                        onClick: (e: MouseEvent) => {
+                                                            e.stopPropagation();
+                                                            controller.stopCommand();
+                                                        },
+                                                    },
+                                                    item.stop.label,
+                                                )
+                                              : null,
                                       ],
                                   ),
                               ),
@@ -205,7 +230,7 @@ export const CliPanel = defineComponent({
                                     key: item.key,
                                     class: joinClasses('cli-panel-status-compact-item', item.compactClass),
                                     title: item.title,
-                                    onClick: item.dropdown ? (e: MouseEvent) => openDropdown(e, item.dropdown) : undefined,
+                                    onClick: item.dropdown || item.stop ? (e: MouseEvent) => onIndicatorClick(e, item) : undefined,
                                 },
                                 [
                                     item.compactDotClass ? h('span', { class: item.compactDotClass }) : null,

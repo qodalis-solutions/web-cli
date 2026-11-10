@@ -24,6 +24,8 @@ export const PANEL_LABELS = {
     servicesHeader: 'Background Services',
     servicesEmpty: 'No services registered',
     stopService: 'Stop',
+    stopCommand: 'Stop',
+    stopCommandTitle: 'Stop the running command (Ctrl+C)',
     serversHeader: 'Server Connections',
     serversEmpty: 'No servers configured',
 } as const;
@@ -133,6 +135,8 @@ export interface PanelStatusIndicator {
     compactDotClass?: string;
     /** Which dropdown a click opens. */
     dropdown?: 'services' | 'servers';
+    /** Stop button of the running command (`controller.stopCommand()`); the compact item stops it on click. */
+    stop?: { label: string; title: string };
 }
 
 /** Items of the header status bar, in display order. */
@@ -142,10 +146,11 @@ export function statusIndicators(s: CliPanelSnapshot): PanelStatusIndicator[] {
     items.push({
         key: 'execution',
         itemClass: running ? 'status-running' : '',
-        compactClass: '',
+        compactClass: running ? 'status-clickable' : '',
         dotClass: running ? 'dot-running' : 'dot-idle',
         label: s.status.executionState,
-        title: s.status.executionState,
+        title: running ? PANEL_LABELS.stopCommandTitle : s.status.executionState,
+        stop: running ? { label: PANEL_LABELS.stopCommand, title: PANEL_LABELS.stopCommandTitle } : undefined,
     });
 
     if (s.global.serviceCount.total > 0) {
