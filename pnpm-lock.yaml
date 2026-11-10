@@ -21,6 +21,7 @@ overrides:
   sockjs>uuid: ^11.1.1
   dompurify: '>=3.4.17'
   '@angular/build>vite': ^8.3.3
+  '@qodalis/cli-core': workspace:*
 
 importers:
 
@@ -56,6 +57,24 @@ importers:
       '@ngx-translate/http-loader':
         specifier: ^18.0.0
         version: 18.0.0(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(@ngx-translate/core@18.0.0(@angular/common@22.2.3(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(@angular/core@22.2.3(@angular/compiler@22.2.3)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))
+      '@qodalis/cli-2048':
+        specifier: ^2.4.1
+        version: 2.4.1
+      '@qodalis/cli-minesweeper':
+        specifier: ^2.4.1
+        version: 2.4.1
+      '@qodalis/cli-snake':
+        specifier: ^2.4.1
+        version: 2.4.1
+      '@qodalis/cli-sudoku':
+        specifier: ^2.4.1
+        version: 2.4.1
+      '@qodalis/cli-tetris':
+        specifier: ^2.4.1
+        version: 2.4.1
+      '@qodalis/cli-wordle':
+        specifier: ^2.4.1
+        version: 2.4.1
       '@types/prismjs':
         specifier: ^1.26.6
         version: 1.26.6
@@ -190,8 +209,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/cli
       '@qodalis/cli-2048':
-        specifier: workspace:*
-        version: link:../../packages/plugins/2048
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-browser-storage':
         specifier: workspace:*
         version: link:../../packages/plugins/browser-storage
@@ -208,8 +227,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/guid
       '@qodalis/cli-minesweeper':
-        specifier: workspace:*
-        version: link:../../packages/plugins/minesweeper
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-password-generator':
         specifier: workspace:*
         version: link:../../packages/plugins/password-generator
@@ -226,8 +245,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/server-logs
       '@qodalis/cli-snake':
-        specifier: workspace:*
-        version: link:../../packages/plugins/snake
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-speed-test':
         specifier: workspace:*
         version: link:../../packages/plugins/speed-test
@@ -235,8 +254,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/string
       '@qodalis/cli-tetris':
-        specifier: workspace:*
-        version: link:../../packages/plugins/tetris
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-text-to-image':
         specifier: workspace:*
         version: link:../../packages/plugins/text-to-image
@@ -250,8 +269,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/wget
       '@qodalis/cli-wordle':
-        specifier: workspace:*
-        version: link:../../packages/plugins/wordle
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-yesno':
         specifier: workspace:*
         version: link:../../packages/plugins/yesno
@@ -339,8 +358,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/cli
       '@qodalis/cli-2048':
-        specifier: workspace:*
-        version: link:../../packages/plugins/2048
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-browser-storage':
         specifier: workspace:*
         version: link:../../packages/plugins/browser-storage
@@ -396,8 +415,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/markdown
       '@qodalis/cli-minesweeper':
-        specifier: workspace:*
-        version: link:../../packages/plugins/minesweeper
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-password-generator':
         specifier: workspace:*
         version: link:../../packages/plugins/password-generator
@@ -417,8 +436,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/server-logs
       '@qodalis/cli-snake':
-        specifier: workspace:*
-        version: link:../../packages/plugins/snake
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-speed-test':
         specifier: workspace:*
         version: link:../../packages/plugins/speed-test
@@ -426,11 +445,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/string
       '@qodalis/cli-sudoku':
-        specifier: workspace:*
-        version: link:../../packages/plugins/sudoku
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-tetris':
-        specifier: workspace:*
-        version: link:../../packages/plugins/tetris
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-text-to-image':
         specifier: workspace:*
         version: link:../../packages/plugins/text-to-image
@@ -444,8 +463,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/wget
       '@qodalis/cli-wordle':
-        specifier: workspace:*
-        version: link:../../packages/plugins/wordle
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-yesno':
         specifier: workspace:*
         version: link:../../packages/plugins/yesno
@@ -521,8 +540,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/cli
       '@qodalis/cli-2048':
-        specifier: workspace:*
-        version: link:../../packages/plugins/2048
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-browser-storage':
         specifier: workspace:*
         version: link:../../packages/plugins/browser-storage
@@ -578,8 +597,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/markdown
       '@qodalis/cli-minesweeper':
-        specifier: workspace:*
-        version: link:../../packages/plugins/minesweeper
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-password-generator':
         specifier: workspace:*
         version: link:../../packages/plugins/password-generator
@@ -599,8 +618,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/server-logs
       '@qodalis/cli-snake':
-        specifier: workspace:*
-        version: link:../../packages/plugins/snake
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-speed-test':
         specifier: workspace:*
         version: link:../../packages/plugins/speed-test
@@ -608,11 +627,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/string
       '@qodalis/cli-sudoku':
-        specifier: workspace:*
-        version: link:../../packages/plugins/sudoku
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-tetris':
-        specifier: workspace:*
-        version: link:../../packages/plugins/tetris
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-text-to-image':
         specifier: workspace:*
         version: link:../../packages/plugins/text-to-image
@@ -626,8 +645,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugins/wget
       '@qodalis/cli-wordle':
-        specifier: workspace:*
-        version: link:../../packages/plugins/wordle
+        specifier: ^2.4.1
+        version: 2.4.1
       '@qodalis/cli-yesno':
         specifier: workspace:*
         version: link:../../packages/plugins/yesno
@@ -669,7 +688,7 @@ importers:
         specifier: workspace:^
         version: link:../cli
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../core
       tslib:
         specifier: ^2.3.0
@@ -678,7 +697,7 @@ importers:
   packages/cli:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../core
       '@xterm/addon-fit':
         specifier: ^0.11.0
@@ -717,7 +736,7 @@ importers:
   packages/electron-cli:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../core
     devDependencies:
       electron:
@@ -730,148 +749,136 @@ importers:
         specifier: ^6.0.0
         version: 6.0.3
 
-  packages/plugins/2048:
-    dependencies:
-      '@qodalis/cli-core':
-        specifier: workspace:^
-        version: link:../../core
-
   packages/plugins/browser-storage:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/chart:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/cron:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/csv:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/curl:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/data-explorer:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/encode:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/files:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/guid:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/lang-de:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/lang-es:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/lang-fr:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/lang-it:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/lang-ja:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/lang-ko:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/lang-pt:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/lang-ro:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/lang-ru:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/lang-zh:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/markdown:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
-        version: link:../../core
-
-  packages/plugins/minesweeper:
-    dependencies:
-      '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/password-generator:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/qr:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
       qr-code-styling:
         specifier: ^1.9.1
@@ -884,49 +891,43 @@ importers:
   packages/plugins/regex:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/scp:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/server-jobs:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/server-logs:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
-        version: link:../../core
-
-  packages/plugins/snake:
-    dependencies:
-      '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/speed-test:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/stopwatch:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/string:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
       '@types/lodash':
         specifier: ^4.17.27
@@ -935,52 +936,34 @@ importers:
         specifier: ^4.17.21
         version: 4.18.1
 
-  packages/plugins/sudoku:
-    dependencies:
-      '@qodalis/cli-core':
-        specifier: workspace:^
-        version: link:../../core
-
-  packages/plugins/tetris:
-    dependencies:
-      '@qodalis/cli-core':
-        specifier: workspace:^
-        version: link:../../core
-
   packages/plugins/text-to-image:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/todo:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/users:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/wget:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
-        version: link:../../core
-
-  packages/plugins/wordle:
-    dependencies:
-      '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/plugins/yesno:
     dependencies:
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../core
 
   packages/react-cli:
@@ -989,7 +972,7 @@ importers:
         specifier: workspace:^
         version: link:../cli
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../core
       react:
         specifier: ^18.0.0 || ^19.0.0
@@ -1014,7 +997,7 @@ importers:
         specifier: workspace:^
         version: link:../cli
       '@qodalis/cli-core':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../core
     devDependencies:
       tsup:
@@ -1267,6 +1250,7 @@ packages:
   '@angular/platform-browser-dynamic@22.2.3':
     resolution: {integrity: sha512-+WBe2JjaEeK0NpMlBzV7UBkO+ltUBYTDtMfGYkew2xHdIviITnzXX7yUXijB1Y6jxALgz3jEuJa9iLid8s11rg==}
     engines: {node: ^22.22.3 || ^24.15.0 || >=26.0.0}
+    deprecated: '@angular/platform-browser-dynamic is deprecated. Use `@angular/platform-browser` instead.'
     peerDependencies:
       '@angular/common': 22.2.3
       '@angular/compiler': 22.2.3
@@ -3609,6 +3593,24 @@ packages:
     resolution: {integrity: sha512-C2Xj8FZ0uHWeCXXqX5B4/gVFQmtSkiuOolzAgutjTfseNOHT3pUjljDZsTSxXFGgio54bCzVFqmEOUrIVk8RDA==}
     engines: {node: '>=20.0.0'}
 
+  '@qodalis/cli-2048@2.4.1':
+    resolution: {integrity: sha512-AUfjQA7ZonDQPvNq7iIpVD5nZE5s8acmx3C+EyZwfHbxg2kMZRJN4zWBw9804ALZm5KsAqIqGuGpmEp+w1XTNA==}
+
+  '@qodalis/cli-minesweeper@2.4.1':
+    resolution: {integrity: sha512-V+8w+jFumlIiEB1FmBBOWkTc3rkUPQGzDi74WdBP2NemKEPIF8QBO96nrlWGLSg1Sx5JUbxIwVdVjEg7V9LZNg==}
+
+  '@qodalis/cli-snake@2.4.1':
+    resolution: {integrity: sha512-wpg0vzHNbnOmTOGQR6e63Airc/jCWwVhkX5lOZwEPivJVUiz92Sgjtv8XVvV1902qDTN+2o+pjIYGNF6C1G1Vg==}
+
+  '@qodalis/cli-sudoku@2.4.1':
+    resolution: {integrity: sha512-R6nd2pLLOxS4bLsrBZBqwRV0irm+k1unbXY4WGufKIaItLblea+7sGP/P7PAYWQsOQ6qkfGccpgZD7sk5fkEVA==}
+
+  '@qodalis/cli-tetris@2.4.1':
+    resolution: {integrity: sha512-fDRysRLXJzIBbtzRgvtRFzeyk8CBPduq4uSIicQ+Jsqr06c5RLA1PAgrT7yMilHmbu/c53/ewRjbA13ajKwVYw==}
+
+  '@qodalis/cli-wordle@2.4.1':
+    resolution: {integrity: sha512-oB/52sG9s7xXb27YYzoH7NRKBd8x6G+Hn/sBFMkbpW8sl3CSRbEDEhQHMSYbE5onSiheAMGJIo04wHW2zcNqWw==}
+
   '@rolldown/binding-android-arm-eabi@1.2.14':
     resolution: {integrity: sha512-aWR+XKH9+rW7m5fWq/5360J3mHycrx/o6xZM2DQFdJnTMdyP7/WzxPjhtLbVWdKo2y612/4U1bWqb3HQhiF7vg==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -5791,8 +5793,11 @@ packages:
     resolution: {integrity: sha512-771TFWFD70G1wLTC4oU2Cw4qvtmNrIw+wRvBtn+okgHl7slJVi7zfNcdmqDL72BojM30VNJ2UHylr1o77U37Jw==}
     peerDependencies:
       webpack: '*'
+      webpack-sources: '*'
     peerDependenciesMeta:
       webpack:
+        optional: true
+      webpack-sources:
         optional: true
 
   lightningcss-android-arm64@1.33.0:
@@ -7825,7 +7830,7 @@ snapshots:
   '@angular-devkit/core@22.2.3(chokidar@5.0.0)':
     dependencies:
       ajv: 8.20.0
-      ajv-formats: 3.0.1(ajv@8.20.0)
+      ajv-formats: 3.0.1
       jsonc-parser: 3.3.1
       picomatch: 4.0.7
       rxjs: 7.8.2
@@ -7836,7 +7841,7 @@ snapshots:
   '@angular-devkit/core@22.2.4(chokidar@5.0.0)':
     dependencies:
       ajv: 8.20.0
-      ajv-formats: 3.0.1(ajv@8.20.0)
+      ajv-formats: 3.0.1
       jsonc-parser: 3.3.1
       picomatch: 4.0.7
       rxjs: 7.8.2
@@ -10493,6 +10498,30 @@ snapshots:
       tslib: 2.8.1
       tsyringe: 4.10.0
 
+  '@qodalis/cli-2048@2.4.1':
+    dependencies:
+      '@qodalis/cli-core': link:packages/core
+
+  '@qodalis/cli-minesweeper@2.4.1':
+    dependencies:
+      '@qodalis/cli-core': link:packages/core
+
+  '@qodalis/cli-snake@2.4.1':
+    dependencies:
+      '@qodalis/cli-core': link:packages/core
+
+  '@qodalis/cli-sudoku@2.4.1':
+    dependencies:
+      '@qodalis/cli-core': link:packages/core
+
+  '@qodalis/cli-tetris@2.4.1':
+    dependencies:
+      '@qodalis/cli-core': link:packages/core
+
+  '@qodalis/cli-wordle@2.4.1':
+    dependencies:
+      '@qodalis/cli-core': link:packages/core
+
   '@rolldown/binding-android-arm-eabi@1.2.14':
     optional: true
 
@@ -11218,8 +11247,8 @@ snapshots:
 
   agent-base@9.0.0: {}
 
-  ajv-formats@3.0.1(ajv@8.20.0):
-    optionalDependencies:
+  ajv-formats@3.0.1:
+    dependencies:
       ajv: 8.20.0
 
   ajv-keywords@5.1.0(ajv@8.20.0):
@@ -13944,7 +13973,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.20.0
-      ajv-formats: 3.0.1(ajv@8.20.0)
+      ajv-formats: 3.0.1
       ajv-keywords: 5.1.0(ajv@8.20.0)
 
   selfsigned@5.5.0:
