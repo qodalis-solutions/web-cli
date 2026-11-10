@@ -53,29 +53,11 @@
       "@qodalis/cli-files": [
         "./dist/files"
       ],
-      "@qodalis/cli-snake": [
-        "./dist/snake"
-      ],
-      "@qodalis/cli-tetris": [
-        "./dist/tetris"
-      ],
-      "@qodalis/cli-2048": [
-        "./dist/2048"
-      ],
-      "@qodalis/cli-minesweeper": [
-        "./dist/minesweeper"
-      ],
-      "@qodalis/cli-wordle": [
-        "./dist/wordle"
-      ],
       "@qodalis/cli-scp": [
         "./dist/scp"
       ],
       "@qodalis/cli-wget": [
         "./dist/wget"
-      ],
-      "@qodalis/cli-sudoku": [
-        "./dist/sudoku"
       ],
       "@qodalis/electron-cli": [
         "./dist/electron-cli"

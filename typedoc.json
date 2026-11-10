@@ -23,13 +23,7 @@
     "packages/plugins/markdown/src/public-api.ts",
     "packages/plugins/scp/src/public-api.ts",
     "packages/plugins/stopwatch/src/public-api.ts",
-    "packages/plugins/wget/src/public-api.ts",
-    "packages/plugins/snake/src/public-api.ts",
-    "packages/plugins/tetris/src/public-api.ts",
-    "packages/plugins/2048/src/public-api.ts",
-    "packages/plugins/minesweeper/src/public-api.ts",
-    "packages/plugins/wordle/src/public-api.ts",
-    "packages/plugins/sudoku/src/public-api.ts"
+    "packages/plugins/wget/src/public-api.ts"
   ],
   "out": "docs",
   "name": "Qodalis CLI",
