@@ -687,8 +687,10 @@ describe('CliPanelController', () => {
             const pid = row.stop!.pid;
 
             expect(controller.killProcess(pid)).toBeTrue();
-            await Promise.resolve();
-            await Promise.resolve();
+            // The service stops after a few microtasks (stop awaits onStop); no timers are involved
+            for (let i = 0; i < 20 && backgroundServices.getStatus('clock')?.status === 'running'; i++) {
+                await Promise.resolve();
+            }
 
             expect(stopped).toHaveBeenCalled();
             expect(processes.list().find((p) => p.pid === pid)).toEqual(jasmine.objectContaining({ status: 'killed', exitCode: -9 }));
