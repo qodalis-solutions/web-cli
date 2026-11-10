@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-wget",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "Download files from any HTTP/HTTPS URL",
   "author": "Qodalis Solutions",
   "license": "MIT",

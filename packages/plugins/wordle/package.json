@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-wordle",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "@qodalis/cli extension for playing Wordle in the terminal.",
   "author": "Nicolae Lupei, Qodalis Solutions",
   "license": "MIT",

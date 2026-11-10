@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-cron",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "Schedule commands to run on a repeating interval",
   "author": "Qodalis Solutions",
   "license": "MIT",
