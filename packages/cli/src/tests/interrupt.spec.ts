@@ -10,10 +10,12 @@ function bufferText(engine: CliEngine): string {
     return lines.join('\n');
 }
 
-const until = async (condition: () => boolean, timeoutMs = 5000) => {
-    const deadline = Date.now() + timeoutMs;
+/** Polls `condition` (xterm writes asynchronously), well within Jasmine's 5 s. */
+const until = async (condition: () => boolean, what: string) => {
+    const deadline = Date.now() + 3000;
     while (!condition()) {
-        if (Date.now() > deadline) throw new Error('timeout');
+        if (Date.now() > deadline)
+            throw new Error(`Timed out waiting for ${what}`);
         await new Promise((r) => setTimeout(r, 10));
     }
 };
@@ -37,21 +39,30 @@ describe('CliExecutionContext.interrupt', () => {
     });
 
     it('stops the running command as Ctrl+C does', async () => {
-        engine = new CliEngine(container, { welcome: false });
-        await engine.start();
-        const context = engine.getContext();
+        const cli = (engine = new CliEngine(container, { welcome: false }));
+        await cli.start();
+        const context = cli.getContext();
 
         const done = engine.execute('events watch');
-        await until(() => context.isExecuting);
-        expect(bufferText(engine)).toContain('press Ctrl+C to stop');
+        // The command is waiting for Ctrl+C once its first line is on screen
+        await until(
+            () => bufferText(cli).includes('press Ctrl+C to stop'),
+            'events watch to start',
+        );
+        expect(context.isExecuting).toBeTrue();
 
         context.interrupt!();
         await done;
         expect(context.isExecuting).toBeFalse();
 
-        // xterm writes asynchronously: the Ctrl+C line and the prompt land next
-        await new Promise((r) => setTimeout(r, 50));
-        expect(bufferText(engine)).toMatch(/^Ctrl\+C$/m);
-        expect(bufferText(engine).trimEnd()).toMatch(/\$$/);
+        // The Ctrl+C line and the prompt land once xterm has flushed them
+        await until(
+            () =>
+                /^Ctrl\+C$/m.test(bufferText(cli)) &&
+                /\$$/.test(bufferText(cli).trimEnd()),
+            'the Ctrl+C line and the prompt',
+        );
+        expect(bufferText(cli)).toMatch(/^Ctrl\+C$/m);
+        expect(bufferText(cli).trimEnd()).toMatch(/\$$/);
     });
 });
