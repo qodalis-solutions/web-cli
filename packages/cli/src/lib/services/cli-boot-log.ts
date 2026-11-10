@@ -190,12 +190,13 @@ export class CliBootLog {
         if (this.problems.length > 0) {
             this.terminal.write('\r\n');
         }
-        if (this.captured.length > 0) {
-            // One blank line between this output and the welcome screen
-            // (trailing line breaks and style codes are normalized)
-            const output = this.captured
-                .join('')
-                .replace(/(?:\s|\x1b\[[0-9;?]*[A-Za-z])+$/, '');
+        // One blank line between this output and the welcome screen
+        // (trailing line breaks and style codes are normalized; output
+        // that is only control codes, e.g. a cleared line, leaves no row)
+        const output = this.captured
+            .join('')
+            .replace(/(?:\s|\x1b\[[0-9;?]*[A-Za-z])+$/, '');
+        if (output) {
             this.terminal.write(output + RESET + '\r\n\r\n');
         }
     }

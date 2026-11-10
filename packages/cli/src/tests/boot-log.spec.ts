@@ -120,6 +120,20 @@ describe('CliBootLog', () => {
         expect(mixed.raw()).not.toMatch(/%[^\r\n]*users: default/);
     });
 
+    it('adds no blank lines for output that is only control codes', async () => {
+        const t = fakeTerminal();
+        const log = new CliBootLog(t.terminal, true);
+        log.addSteps(1);
+        log.ok('Set up core');
+        t.terminal.write('\x1b[2K'); // a line cleared, nothing printed
+        t.terminal.write('\r');
+        log.completeStep();
+        await log.finish('Ready');
+
+        const afterClear = t.raw().split('\x1b[2J').pop()!;
+        expect(afterClear).not.toContain('\r\n');
+    });
+
     it('does not draw the bar over a line still being written (prompt)', () => {
         const prompt = fakeTerminal();
         const log = new CliBootLog(prompt.terminal, true);
