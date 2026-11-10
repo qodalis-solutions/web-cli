@@ -1069,6 +1069,41 @@
   color: var(--cli-status-running, #f0883e);
 }
 
+/* Stop button of the running command: a finger-sized target on touch screens */
+.cli-panel-status-stop {
+  appearance: none;
+  flex-shrink: 0;
+  min-width: 44px;
+  min-height: 28px;
+  margin: -4px 0;
+  padding: 0 8px;
+  background: transparent;
+  border: 1px solid var(--cli-status-running, #f0883e);
+  border-radius: calc(var(--cli-panel-radius, 8px) - 2px);
+  color: var(--cli-status-running, #f0883e);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.cli-panel-status-stop:hover,
+.cli-panel-status-stop:focus-visible {
+  color: var(--cli-panel-danger, #f87171);
+  border-color: var(--cli-panel-danger, #f87171);
+  background-color: color-mix(in srgb, var(--cli-panel-danger, #f87171) 14%, transparent);
+}
+
+.cli-panel-status-stop:focus-visible {
+  outline: 2px solid var(--cli-panel-accent, #818cf8);
+  outline-offset: 1px;
+}
+
 .cli-panel-status-item.status-clickable {
   cursor: pointer;
   transition: color 0.15s ease;

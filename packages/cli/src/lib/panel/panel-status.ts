@@ -143,6 +143,23 @@ export function killProcess(
     return registry?.kill(pid) ?? false;
 }
 
+/**
+ * Interrupt the command running in any of the engines, as Ctrl+C does (the
+ * prompt comes back once the command has stopped). False when none runs.
+ */
+export function interruptCommand(engines: Iterable<CliEngine>): boolean {
+    let interrupted = false;
+    for (const engine of engines) {
+        const context = engine.getContext() as any;
+        if (!context?.interrupt) continue;
+        if (context.isExecuting || context.contextProcessor) {
+            context.interrupt();
+            interrupted = true;
+        }
+    }
+    return interrupted;
+}
+
 interface TabEntry {
     engines: Map<number, CliEngine>;
     status: CliPanelTabStatus;
@@ -242,6 +259,15 @@ export class CliPanelStatusTracker {
                 ? this.tabs.get(this.activeTabId)
                 : undefined;
         return entry?.engines.values().next().value as CliEngine | undefined;
+    }
+
+    /** The engines of the active tab, one per pane. */
+    get activeTabEngines(): CliEngine[] {
+        const entry =
+            this.activeTabId != null
+                ? this.tabs.get(this.activeTabId)
+                : undefined;
+        return entry ? [...entry.engines.values()] : [];
     }
 
     /** Recompute everything now. */

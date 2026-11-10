@@ -250,7 +250,19 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         this.controller.killProcess(pid);
     }
 
+    /** The Stop button of the running command. */
+    onStopCommand(event: MouseEvent): void {
+        event.stopPropagation();
+        this.controller.stopCommand();
+    }
+
     onIndicatorClick(event: MouseEvent, item: PanelStatusIndicator): void {
+        if (item.stop) {
+            // The compact item (side positions) has no room for the button
+            event.stopPropagation();
+            this.controller.stopCommand();
+            return;
+        }
         if (!item.dropdown) return;
         event.stopPropagation();
         const anchor = event.currentTarget as Element;
