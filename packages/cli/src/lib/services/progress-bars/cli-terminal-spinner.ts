@@ -85,6 +85,8 @@ export class CliTerminalSpinner implements ICliSpinner {
     }
 
     public hide(): void {
+        // Nothing was drawn: leave the line (e.g. a prompt) alone
+        if (!this.isRunning) return;
         this.isRunning = false;
         if (this.spinnerInterval) {
             clearInterval(this.spinnerInterval);

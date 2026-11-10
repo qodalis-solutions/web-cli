@@ -81,6 +81,29 @@ describe('CliEngine boot', () => {
         }
     });
 
+    it('starts the welcome banner on the first row', async () => {
+        engine = new CliEngine(container);
+        await engine.start();
+        await new Promise((r) => setTimeout(r, 50));
+
+        const buffer = engine.getTerminal().buffer.active;
+        expect(buffer.getLine(0)?.translateToString(true)).toContain('Welcome to Web CLI');
+    });
+
+    for (const show of ['once', 'daily', 'never'] as const) {
+        it(`starts with the prompt on the first row when the banner is skipped (${show})`, async () => {
+            localStorage.setItem('cliWelcomeMessageLastDisplayed', new Date().toISOString());
+            engine = new CliEngine(container, { welcome: { show } });
+            await engine.start();
+            await new Promise((r) => setTimeout(r, 50));
+
+            const buffer = engine.getTerminal().buffer.active;
+            expect(buffer.getLine(0)?.translateToString(true)).toMatch(/\$ $/);
+            expect(buffer.baseY + buffer.cursorY).toBe(0);
+            expect(bufferText(engine)).not.toContain('Welcome to Web CLI');
+        });
+    }
+
     it('shows a custom welcome message', async () => {
         engine = new CliEngine(container, { welcome: { message: 'Hello from the docs' } });
         await engine.start();
