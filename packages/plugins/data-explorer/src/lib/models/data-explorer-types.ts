@@ -35,6 +35,10 @@ export interface DataExplorerSourceInfo {
     defaultOutputFormat: DataExplorerOutputFormat;
     templates: DataExplorerTemplate[];
     parameters: DataExplorerParameterDescriptor[];
+    /** The server refuses queries that write (servers from 1.0.0-beta.25). */
+    readOnly?: boolean;
+    /** False when the caller may not export results (json/csv output). */
+    canExport?: boolean;
 }
 
 export interface DataExplorerResult {
@@ -48,6 +52,8 @@ export interface DataExplorerResult {
     rowCount: number;
     truncated: boolean;
     error: string | null;
+    /** Why the server refused the query: forbidden, rate_limited, read_only, object_not_allowed, unknown_source. */
+    errorCode?: string;
 }
 
 export interface DataExplorerSchemaColumn {

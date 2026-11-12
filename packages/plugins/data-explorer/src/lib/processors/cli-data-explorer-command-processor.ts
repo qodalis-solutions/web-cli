@@ -134,7 +134,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             const choice = await context.reader.readSelect(
                 'Select a data source:',
                 sources.map((s) => ({
-                    label: s.name,
+                    label: s.readOnly ? `${s.name} (read-only)` : s.name,
                     value: s.name,
                     description: s.description,
                 })),
@@ -147,7 +147,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         }
 
         this.source = selectedSource;
-        this.outputFormat = selectedSource.defaultOutputFormat;
+        this.outputFormat = initialOutputFormat(selectedSource);
         this.resetInput();
         this.historyIndex = -1;
         this.executing = false;
@@ -522,8 +522,13 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             context.spinner?.hide();
 
             if (!response.ok) {
+                // 403 (source permissions) and 429 (rate limit) carry { error }
+                const body = (await response
+                    .json()
+                    .catch(() => null)) as { error?: string } | null;
                 context.writer.writeError(
-                    `Server error: ${response.status} ${response.statusText}`,
+                    body?.error ??
+                        `Server error: ${response.status} ${response.statusText}`,
                 );
                 this.executing = false;
                 return;
@@ -641,6 +646,12 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 if (!valid.includes(fmt)) {
                     context.writer.writeError(
                         `Invalid format. Available: ${valid.join(', ')}`,
+                    );
+                    return;
+                }
+                if (this.source && !canUseFormat(this.source, fmt)) {
+                    context.writer.writeError(
+                        'Export is not allowed on this source',
                     );
                     return;
                 }
@@ -1083,7 +1094,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 `[${this.source.name}]`,
                 CliForegroundColor.Cyan,
             ) +
-                ` (${this.source.language}) | format: ${this.outputFormat} | \\help for commands`,
+                ` (${this.source.language})${this.source.readOnly ? ' | read-only' : ''} | format: ${this.outputFormat} | \\help for commands`,
         );
         writer.writeln('');
     }
@@ -1175,4 +1186,27 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         context.exitFullScreenMode();
         this.context = null;
     }
+}
+
+/** Output formats that export results (refused when the source says `canExport: false`). */
+const EXPORT_FORMATS: readonly string[] = [
+    DataExplorerOutputFormat.Json,
+    DataExplorerOutputFormat.Csv,
+];
+
+/** Whether results of `source` may be shown in `format` (older servers send no `canExport`). */
+export function canUseFormat(
+    source: Pick<DataExplorerSourceInfo, 'canExport'>,
+    format: string,
+): boolean {
+    return source.canExport !== false || !EXPORT_FORMATS.includes(format);
+}
+
+/** The source's default output format, or table when the source does not allow exports. */
+export function initialOutputFormat(
+    source: Pick<DataExplorerSourceInfo, 'canExport' | 'defaultOutputFormat'>,
+): DataExplorerOutputFormat {
+    return canUseFormat(source, source.defaultOutputFormat)
+        ? source.defaultOutputFormat
+        : DataExplorerOutputFormat.Table;
 }

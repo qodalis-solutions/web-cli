@@ -1,4 +1,8 @@
-import { CliDataExplorerCommandProcessor } from '../lib/processors/cli-data-explorer-command-processor';
+import {
+    CliDataExplorerCommandProcessor,
+    canUseFormat,
+    initialOutputFormat,
+} from '../lib/processors/cli-data-explorer-command-processor';
 import {
     DataExplorerOutputFormat,
     DataExplorerLanguage,
@@ -248,6 +252,36 @@ describe('CliDataExplorerModule', () => {
         it('should return a function for Raw format', () => {
             const formatter = getFormatter(DataExplorerOutputFormat.Raw);
             expect(typeof formatter).toBe('function');
+        });
+    });
+
+    describe('Export permission', () => {
+        it('refuses json and csv when the source does not allow exports', () => {
+            const source = { canExport: false };
+            expect(canUseFormat(source, DataExplorerOutputFormat.Json)).toBeFalse();
+            expect(canUseFormat(source, DataExplorerOutputFormat.Csv)).toBeFalse();
+            expect(canUseFormat(source, DataExplorerOutputFormat.Table)).toBeTrue();
+            expect(canUseFormat(source, DataExplorerOutputFormat.Raw)).toBeTrue();
+        });
+
+        it('allows every format when canExport is true or missing (older servers)', () => {
+            expect(canUseFormat({ canExport: true }, DataExplorerOutputFormat.Csv)).toBeTrue();
+            expect(canUseFormat({}, DataExplorerOutputFormat.Json)).toBeTrue();
+        });
+
+        it('starts in table output when the default format is an export', () => {
+            expect(
+                initialOutputFormat({
+                    canExport: false,
+                    defaultOutputFormat: DataExplorerOutputFormat.Json,
+                }),
+            ).toBe(DataExplorerOutputFormat.Table);
+            expect(
+                initialOutputFormat({
+                    canExport: true,
+                    defaultOutputFormat: DataExplorerOutputFormat.Json,
+                }),
+            ).toBe(DataExplorerOutputFormat.Json);
         });
     });
 });
