@@ -39,6 +39,8 @@ export class CliServerManager implements DefaultServerProvider {
     private readonly _bareAliases = new Set<ICliCommandProcessor>();
     private _backgroundServices?: ICliBackgroundServiceRegistry;
     private _hidden: CliHiddenServerCommand[] = [];
+    /** Servers the user linked (`server add`), as opposed to the host's */
+    private readonly _linked = new Set<string>();
     /** `server:command` pairs already warned about, so each warns once */
     private readonly _warnedHidden = new Set<string>();
 
@@ -47,6 +49,11 @@ export class CliServerManager implements DefaultServerProvider {
         private readonly authService?: ICliServerAuthService,
         private readonly events?: ICliEventBus,
     ) {}
+
+    /** Whether the user linked this server (`server add`): only those can be removed or edited. */
+    isLinked(name: string): boolean {
+        return this._linked.has(name);
+    }
 
     get defaultServer(): string | null {
         return this._defaultServer;
@@ -75,68 +82,122 @@ export class CliServerManager implements DefaultServerProvider {
         this.registerBareAliases();
     }
 
+    /** Where connections report and run (set once at boot, before any server connects). */
+    configure(
+        logger?: { warn(msg: string): void; info(msg: string): void },
+        backgroundServices?: ICliBackgroundServiceRegistry,
+        cliLogger?: ICliLogger,
+    ): void {
+        this._logger = logger;
+        this._cliLogger = cliLogger;
+        this._backgroundServices = backgroundServices;
+    }
+
     async connectAll(
         servers: CliServerConfig[],
         logger?: { warn(msg: string): void; info(msg: string): void },
         backgroundServices?: ICliBackgroundServiceRegistry,
         cliLogger?: ICliLogger,
     ): Promise<void> {
-        this._logger = logger;
-        this._cliLogger = cliLogger;
-        this._backgroundServices = backgroundServices;
+        this.configure(logger, backgroundServices, cliLogger);
 
         for (const config of servers) {
             if (config.enabled === false) continue;
-
-            const connection = new CliServerConnection(
-                config,
-                backgroundServices,
-                cliLogger,
-                this.authService,
-            );
-            this.connections.set(config.name, connection);
-
-            connection.onDisconnect = () => {
-                this.handleDisconnect(config.name);
-            };
-
-            connection.onReconnected = () => {
-                logger?.info(
-                    `Server '${config.name}' reconnected (${connection.commands.length} commands, API v${connection.apiVersion}).`,
-                );
-                this.emitConnected(connection, true);
-                this.registerProxyProcessors(connection, config.name);
-                this.unregisterBareAliases();
-                this.registerBareAliases();
-            };
-
-            await connection.connect();
-
-            if (connection.connected) {
-                logger?.info(
-                    `Connected to server '${config.name}' (${connection.commands.length} commands)`,
-                );
-                this.registerProxyProcessors(connection, config.name);
-                this.emitConnected(connection, false);
-            } else if (connection.needsSignIn) {
-                // Up, but its commands need a sign-in: the users plugin (or a
-                // `server reconnect` after `login`) connects it then. Often the
-                // sign-in is already there and only boots after this request.
-                logger?.info(
-                    `Server '${config.name}' needs a sign-in; its commands load once you are signed in.`,
-                );
-            } else {
-                logger?.warn(
-                    `Could not connect to server '${config.name}' at ${config.url}. Commands from this server will not be available.`,
-                );
-                this.events?.emit('server:unavailable', {
-                    name: config.name,
-                    url: config.url,
-                });
-            }
+            await this.connectServer(config);
         }
 
         this.registerBareAliases();
+    }
+
+    /**
+     * Connects one server and registers its commands (without the bare
+     * aliases: callers refresh them once every server is connected).
+     */
+    private async connectServer(config: CliServerConfig): Promise<CliServerConnection> {
+        const logger = this._logger;
+        const connection = new CliServerConnection(
+            config,
+            this._backgroundServices,
+            this._cliLogger,
+            this.authService,
+        );
+        this.connections.set(config.name, connection);
+
+        connection.onDisconnect = () => {
+            this.handleDisconnect(config.name);
+        };
+
+        connection.onReconnected = () => {
+            logger?.info(
+                `Server '${config.name}' reconnected (${connection.commands.length} commands, API v${connection.apiVersion}).`,
+            );
+            this.emitConnected(connection, true);
+            this.registerProxyProcessors(connection, config.name);
+            this.unregisterBareAliases();
+            this.registerBareAliases();
+        };
+
+        await connection.connect();
+
+        if (connection.connected) {
+            logger?.info(
+                `Connected to server '${config.name}' (${connection.commands.length} commands)`,
+            );
+            this.registerProxyProcessors(connection, config.name);
+            this.emitConnected(connection, false);
+        } else if (connection.needsSignIn) {
+            // Up, but its commands need a sign-in: the users plugin (or a
+            // `server reconnect` after `login`) connects it then. Often the
+            // sign-in is already there and only boots after this request.
+            logger?.info(
+                `Server '${config.name}' needs a sign-in; its commands load once you are signed in.`,
+            );
+        } else {
+            logger?.warn(
+                `Could not connect to server '${config.name}' at ${config.url}. Commands from this server will not be available.`,
+            );
+            this.events?.emit('server:unavailable', {
+                name: config.name,
+                url: config.url,
+            });
+        }
+        return connection;
+    }
+
+    /**
+     * Connects a server added while the terminal runs (`server add`): its
+     * commands are available at once. Throws when the name is taken.
+     */
+    async addServer(
+        config: CliServerConfig,
+        options: { linked?: boolean } = {},
+    ): Promise<CliServerConnection> {
+        if (this.connections.has(config.name)) {
+            throw new Error(`Server '${config.name}' already exists`);
+        }
+        if (options.linked) this._linked.add(config.name);
+        const connection = await this.connectServer(config);
+        this.unregisterBareAliases();
+        this.registerBareAliases();
+        return connection;
+    }
+
+    /**
+     * Disconnects a server and forgets it (`server remove`): its commands go
+     * away. False when there is no such server.
+     */
+    removeServer(name: string): boolean {
+        const connection = this.connections.get(name);
+        if (!connection) return false;
+        connection.onDisconnect = undefined;
+        connection.onReconnected = undefined;
+        connection.disconnect();
+        this.connections.delete(name);
+        this._linked.delete(name);
+        if (this._defaultServer === name) this._defaultServer = null;
+        this.unregisterServerProcessors(name);
+        this.events?.emit('server:disconnected', { name });
+        return true;
     }
 
     async reconnect(

@@ -47,6 +47,7 @@
         <tr><td><code>server commands [name]</code></td><td><code>server cmds</code></td><td>The commands each server provides, with the name to type: <code>node:echo</code> when a local command has the same name, ◆ when several servers share it</td></tr>
         <tr><td><code>server reconnect [name]</code></td><td><code>server rc</code>, <code>server connect</code></td><td>Connect again and reload the commands. Without a name, the unreachable servers are retried; <code>--all</code> reconnects every server</td></tr>
         <tr><td><code>server default [name]</code></td><td><code>server use</code></td><td>Show or set the default server, which runs commands several servers have and commands that need one server (<code>server logs</code>, <code>scp</code>). Remembered across reloads; <code>--clear</code> removes it</td></tr>
+        <tr><td><code>server add [name] [url]</code></td><td><code>server link</code></td><td>Link a server to this terminal (see <a href="#connect-your-own-server">Connect your own server</a>); <code>server edit</code>, <code>server remove</code> and <code>server forget-all</code> change and unlink linked servers</td></tr>
         <tr><td><code>ssh [name] [command]</code></td><td><code>shell</code></td><td>Interactive shell on a server, or one command with its output (servers that enable the shell; see below)</td></tr>
     </tbody>
 </table>
@@ -54,6 +55,40 @@
     Server names are not case-sensitive, a mistyped name gets a suggestion (<code>Did you mean 'node'?</code>), and
     <code>help server &lt;subcommand&gt;</code> shows each command with examples. Plugins add more:
     <code>server logs</code> (server-logs) and <code>server jobs</code> (server-jobs).
+</p>
+<h3 id="connect-your-own-server">Connect your own server</h3>
+<p>
+    Users can link their own Node, .NET or Python server from the terminal, in any app (the Android app, the docs site,
+    a page that configures no servers). <code>server add</code> asks for the URL, checks that it is a Qodalis CLI server,
+    then offers three ways to sign in:
+</p>
+<ul>
+    <li><strong>Approve in the browser</strong> (recommended): the terminal prints a link to the server's page
+        <code>/qcli/admin/link?code=ABCD-2345</code> and opens it. Sign in there, check that the code matches and approve:
+        the terminal receives an API token for your account and connects. Needs the users and admin plugins on the server
+        (1.0.0-beta.25 or later).</li>
+    <li><strong>Paste an API token</strong> created with <code>token create &lt;name&gt;</code> (hidden input), or
+        <code>server add home https://cli.example.com --token qcli_pat_…</code> in scripts.</li>
+    <li><strong>User and password</strong>: the terminal signs in once, creates an API token for this device and signs
+        the session out.</li>
+</ul>
+<pre><code class="language-bash">server add                                # asks for everything
+server add https://cli.example.com        # approve in the browser
+server edit home --token                  # paste a new token
+server remove home                        # unlink it and delete its token
+server forget-all                         # unlink every linked server</code></pre>
+<p>
+    Linked servers are kept across reloads and marked <code>linked</code> in <code>server list</code>. Their tokens are
+    encrypted with a Web Crypto key that cannot be read out (IndexedDB), never shown again, never written to the command
+    history and never put in WebSocket URLs. Only <code>https</code> servers can be linked; <code>http</code> is accepted
+    for localhost and private addresses after a confirmation. Revoke a token on the server with
+    <code>token revoke</code>: the terminal then says to link the server again.
+</p>
+<p>
+    Apps decide whether users may link servers with the <code>userServers</code> option: <code>false</code> turns it off,
+    <code>&#123; allowedOrigins: ['https://*.example.com'] &#125;</code> accepts only matching servers. The app's own
+    servers cannot be removed or replaced from the terminal. To keep tokens in the platform's secure storage (Android
+    Keystore, Keychain, Electron <code>safeStorage</code>), provide <code>ICliSecretStore_TOKEN</code>.
 </p>
 <h3 id="troubleshooting">When a server is unreachable</h3>
 <p><code>server status &lt;name&gt;</code> lists what to check. The usual causes:</p>

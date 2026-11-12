@@ -51,7 +51,7 @@ describe('server command', () => {
             const table = result.tables[0];
             expect(table).withContext(line).toBeDefined();
             expect(table.headers).toEqual([
-                'Name', 'Status', 'URL', 'Version', 'API', 'Commands', 'Shell',
+                'Name', 'Status', 'URL', 'Version', 'API', 'Commands', 'Shell', 'Source',
             ]);
             expect(table.rows.map((r) => r[0])).toEqual(['node', 'dotnet']);
             expect(table.rows[0][3]).toBe('2.0.0');

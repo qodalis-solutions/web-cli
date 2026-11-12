@@ -138,6 +138,16 @@ export type CliOptions = Record<string, any> & {
     };
 
     /**
+     * Servers the user links from the terminal (`server add`): `true` (default),
+     * `false` (no linking: `server add` is refused and linked servers are not
+     * restored), or `{ allowedOrigins }` to accept only servers whose origin
+     * matches one of them (`https://*.example.com`; `*` matches within the host
+     * name). Host servers (`servers`) can never be removed or replaced from the
+     * terminal.
+     */
+    userServers?: boolean | { allowedOrigins: string[] };
+
+    /**
      * Remote CLI servers to connect to.
      * Commands from each server are discovered and registered as proxy processors.
      */

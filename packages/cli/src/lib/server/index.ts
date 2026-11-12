@@ -5,3 +5,7 @@ export * from './cli-server-manager';
 export * from './cli-server-module';
 export * from './cli-server-command-processor';
 export * from './cli-ssh-command-processor';
+export * from './linked/cli-linked-servers';
+export * from './linked/cli-web-crypto-secret-store';
+export * from './linked/cli-server-link-client';
+export { restoreLinkedServers, linkedServersOf, secretStoreOf } from './linked/cli-linked-servers-runtime';

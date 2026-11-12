@@ -9,6 +9,7 @@ export * from './process-registry';
 export * from './execution-process';
 
 export * from './state-store';
+export * from './secret-store';
 
 export * from './services';
 

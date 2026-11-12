@@ -39,6 +39,7 @@ import { CliTerminalProgressBar } from '../services/progress-bars/cli-terminal-p
 import { CliTerminalTextAnimator } from '../services/progress-bars/cli-terminal-text-animator';
 import { CliClipboard } from '../services/cli-clipboard';
 import { CliCommandHistory } from '../services/cli-command-history';
+import { redactSecrets } from '../server/linked/cli-linked-servers';
 import { CliExecutionProcess } from './cli-execution-process';
 import { CliStateStoreManager } from '../state/cli-state-store-manager';
 import { CliInputReader } from '../services/cli-input-reader';
@@ -470,7 +471,8 @@ export class CliExecutionContext
             const startedAt = Date.now();
             await this.executor.executeCommand(command, this);
             this.events?.emit('command:executed', {
-                command,
+                // As in the history: `--token`/`--password` values never leave
+                command: redactSecrets(command),
                 exitCode:
                     (this.executor as { exitStatus?: number }).exitStatus ?? 0,
                 durationMs: Date.now() - startedAt,
