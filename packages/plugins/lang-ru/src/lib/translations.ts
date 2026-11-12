@@ -21,6 +21,8 @@ export const ruTranslations: Record<string, string> = {
     'cli.help.global_help': 'Показывает справку по команде',
     'cli.help.global_context': 'Делает команду активным контекстом',
     'cli.help.requires_server': 'Требуется подключённый сервер',
+    'cli.help.runs_on_server': 'Выполняется на сервере {server}',
+    'cli.help.one_of': 'одно из:',
     'cli.help.aliases': 'Псевдонимы:',
     'cli.help.required': '(обязательно)',
     'cli.help.show_all': 'Показать все доступные команды',

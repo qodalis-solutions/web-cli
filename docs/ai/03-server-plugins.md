@@ -40,6 +40,41 @@ public async Task<ICliStructuredResponse?> HandleStructuredAsync(CliProcessComma
 }
 ```
 
+### Help for server commands (all servers)
+
+A server command can carry the same help as a web command: examples, longer documentation, aliases, its own module and icon, and the allowed values of a parameter. All are optional; the web terminal shows them with `help <command>` and older servers simply send none.
+
+- Command members: Node `aliases`, `examples` (`{ command, description? }[]`), `documentation`, `module`, `icon`; .NET `Aliases`, `Examples` (`new CliCommandExample("cmd", "what it does")`), `Documentation`, `Module`, `Icon`; Python properties `aliases`, `examples` (`CliCommandExample("cmd", "what it does")`), `documentation`, `module`, `icon`.
+- Parameter member: Node `allowedValues` (7th constructor argument of `CliCommandParameterDescriptor`), .NET `AllowedValues`, Python `allowed_values`. The terminal lists them in help, completes them with Tab (`--format ` and `--format=`) and refuses other values before sending (ignoring case); MCP tools list them as an `enum`.
+- `documentation` is plain text; separate paragraphs with a blank line. Examples are command lines as the user types them.
+- Aliases work on root commands and sub-commands, on the server too (execution and permission checks). In the terminal `node:base64` also answers to `node:b64`, and the bare alias `b64` is registered unless a local command owns that name.
+- `module` and `icon` place the command in `help`'s list (default: the server's group, `Server (node)`, and 🖥); help still says which server the command runs on.
+- Wire format in `GET /api/v1/qcli/commands`: `aliases`, `examples`, `documentation`, `module`, `icon` on each command and `allowedValues` on each parameter, left out when unset.
+
+Node example:
+
+```typescript
+class ExportProcessor extends CliCommandProcessor {
+    command = 'export';
+    description = 'Exports the orders';
+    aliases = ['exp'];
+    module = 'orders';
+    icon = '📦';
+    documentation = 'Writes the orders of a day in the chosen format.\n\nLarge days are paged: see --skip and --take.';
+    examples = [
+        { command: 'export --format csv', description: "Today's orders as CSV" },
+        { command: 'export --day 2026-11-01 --format json', description: 'One day as JSON' },
+    ];
+    parameters = [
+        new CliCommandParameterDescriptor('format', 'Output format', false, 'string', ['f'], 'csv', ['csv', 'json']),
+        new CliCommandParameterDescriptor('day', 'Day (YYYY-MM-DD), default today', false, 'string'),
+    ];
+    async handleAsync(command: CliProcessCommand): Promise<string> { /* ... */ }
+}
+```
+
+.NET: `public override IEnumerable<CliCommandExample>? Examples { get; set; } = [new("export --format csv", "Today's orders as CSV")];` and `AllowedValues = ["csv", "json"]` in the parameter's object initializer. Python: `@property def examples(self): return [CliCommandExample("export --format csv", "Today's orders as CSV")]` and `allowed_values=["csv", "json"]`.
+
 ### Node: minimal server processor
 
 A Node server command extends `CliCommandProcessor` from `@qodalis/cli-server-abstractions` and returns its output text from `handleAsync`.
@@ -72,7 +107,7 @@ const { app } = createCliServer({
 app.listen(8047);
 ```
 
-- `ICliCommandProcessor` members: `command`, `description`, `author` (default `DefaultLibraryAuthor`), `version` (default `'1.0.0'`), `allowUnlistedCommands?`, `valueRequired?`, `acceptsValue?`, `processors?`, `parameters?`, `requiredPermissions?`, `handleAsync(command, signal?) => Promise<string>`, `handleStructuredAsync?(command, signal?) => Promise<CliStructuredResponse>` (takes precedence when present).
+- `ICliCommandProcessor` members: `command`, `description`, `author` (default `DefaultLibraryAuthor`), `version` (default `'1.0.0'`), `allowUnlistedCommands?`, `valueRequired?`, `acceptsValue?`, `processors?`, `parameters?`, `requiredPermissions?`, `aliases?`, `examples?`, `documentation?`, `module?`, `icon?` (see "Help for server commands"), `handleAsync(command, signal?) => Promise<string>`, `handleStructuredAsync?(command, signal?) => Promise<CliStructuredResponse>` (takes precedence when present).
 - `CliProcessCommand`: `command`, `chainCommands: string[]`, `rawCommand`, `value?` (as typed), `positionals?: string[]` (shell-split; sent by current browsers), `args: Record<string, any>`, `data?`. Helpers: `getPositionals(command)` (falls back to splitting `value`), `getPositionalText(command)`, `splitShellWords`, `joinShellWords`, `quoteShellWord`.
 - `signal` is aborted when the HTTP client disconnects.
 - Packages: `npm install @qodalis/cli-server-abstractions` for plugins; `@qodalis/cli-server-node` for the host.
@@ -617,7 +652,7 @@ class WeatherModule(CliModule):
 # host: create_cli_server(CliServerOptions(configure=lambda b: b.add_module(WeatherModule())))
 ```
 
-- `CliCommandParameterDescriptor(name, description, required=False, type="string", aliases=None, default_value=None)`.
+- `CliCommandParameterDescriptor(name, description, required=False, type="string", aliases=None, default_value=None, allowed_values=None)`.
 - Dispatch: root by `command.lower()`, then each `chain_commands` word against `processors`; if a word matches no child, the current processor handles it only when `allow_unlisted_commands` is truthy, else `Unknown command`. Only the resolved processor runs.
 - `CliBuilder` (chainable): `add_processor`, `add_module`, `set_file_storage_provider`, `add_data_explorer_provider`, `add_filesystem` (legacy). Registering the same command twice replaces the first.
 - `CliServerOptions`: `base_path` (`"/api/qcli"`), `cors`, `cors_origins`, `allowed_origins`, `enable_shell`, `shell`, `mcp` (`True`, dict or `CliMcpOptions`), `configure`. `create_cli_server` returns `CliServerResult` with `app`, `registry`, `builder`, `executor`, `mcp`, `mount_plugin(plugin)`, ...

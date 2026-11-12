@@ -207,6 +207,11 @@ export type CliProcessorMetadata = Record<string, any> & {
     requireServer?: boolean;
 
     /**
+     * The connected server the command runs on (server commands); help names it.
+     */
+    server?: string;
+
+    /**
      * The module the processor belongs to
      */
     module?: string;

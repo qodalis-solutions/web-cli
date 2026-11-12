@@ -161,6 +161,35 @@ builder.write_paged_table(["Id", "Name"], rows, page, total=total)</code></pre>
     says the rest was left out. Raise the limit only for commands you control; paging is the fix.
 </p>
 
+<h2 id="command-help">Help for server commands</h2>
+<p>
+    Server commands can carry the same help as web commands. Every field is optional, and older servers send none of
+    them. <code>help &lt;command&gt;</code> then shows the documentation and examples, and lists the allowed values of
+    each parameter. Tab completes those values, and the terminal refuses others before sending.
+</p>
+<pre><code class="language-typescript">// Node
+aliases = ['exp'];
+module = 'orders';
+icon = '📦';
+documentation = 'Writes the orders of a day.\n\nLarge days are paged.';
+examples = [&#123; command: 'export --format csv', description: "Today's orders as CSV" &#125;];
+parameters = [new CliCommandParameterDescriptor('format', 'Output format', false, 'string', ['f'], 'csv', ['csv', 'json'])];</code></pre>
+<pre><code class="language-csharp">// .NET
+public override IEnumerable&lt;string&gt;? Aliases &#123; get; set; &#125; = ["exp"];
+public override IEnumerable&lt;CliCommandExample&gt;? Examples &#123; get; set; &#125; = [new("export --format csv", "Today's orders as CSV")];
+// in the parameter: AllowedValues = ["csv", "json"]</code></pre>
+<pre><code class="language-python"># Python
+&#64;property
+def examples(self):
+    return [CliCommandExample("export --format csv", "Today's orders as CSV")]
+# in the parameter: allowed_values=["csv", "json"]</code></pre>
+<p>
+    Aliases work on commands and sub-commands, and the server resolves them too. In the terminal, <code>node:export</code>
+    also answers to <code>node:exp</code>, and the bare alias <code>exp</code> is added unless a local command owns that
+    name. <code>module</code> and <code>icon</code> place the command in the <code>help</code> list. Help always names
+    the server the command runs on.
+</p>
+
 <h2 id="shell-security">Remote shell security</h2>
 <p>
     The <code>ssh</code> command opens a PTY shell on the server (<code>/ws/v1/qcli/shell</code>). That is OS-level

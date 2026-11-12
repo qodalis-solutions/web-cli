@@ -306,7 +306,7 @@ export class CliServerManager implements DefaultServerProvider {
                     serverName,
                 );
                 alias.command = command;
-                alias.aliases = [namespacedCommand];
+                alias.aliases = [namespacedCommand, ...this.freeAliases(descriptor.aliases)];
 
                 this.registry.registerProcessor(alias);
                 this._bareAliases.add(alias);
@@ -320,10 +320,20 @@ export class CliServerManager implements DefaultServerProvider {
                     return { serverName, connection, descriptor };
                 });
                 const multi = new CliServerMultiProxyProcessor(entries, this);
+                const aliases = this.freeAliases(entries[0].descriptor.aliases);
+                if (aliases.length) multi.aliases = aliases;
                 this.registry.registerProcessor(multi);
                 this._bareAliases.add(multi);
             }
         }
+    }
+
+    /**
+     * The server's aliases of a command that no registered command answers
+     * to yet: a local command (or an earlier server alias) keeps its name.
+     */
+    private freeAliases(aliases: string[] | undefined): string[] {
+        return (aliases ?? []).filter((a) => a && !this.registry.findProcessor(a, []));
     }
 
     private recordHidden(

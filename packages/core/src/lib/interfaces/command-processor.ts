@@ -54,6 +54,13 @@ export interface ICliCommandParameterDescriptor {
     defaultValue?: any;
 
     /**
+     * The only values the parameter takes. Help lists them and Tab completes
+     * them after `--name ` and `--name=`. Add a `validator` to refuse other
+     * values (server commands get one that ignores case).
+     */
+    allowedValues?: string[];
+
+    /**
      * A validator function that validates the value of the parameter
      * @param value The value to validate
      * @returns An object with a valid property that indicates if the value is valid and an optional message property that contains a message to display if the value is not valid

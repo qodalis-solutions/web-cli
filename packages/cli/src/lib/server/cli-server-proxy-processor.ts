@@ -11,6 +11,11 @@ import {
     CliForegroundColor,
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
+import {
+    serverCommandMetadata,
+    serverCommandParameters,
+    serverCommandWriteDescription,
+} from './cli-server-command-metadata';
 
 /**
  * Render a single CliServerOutput to the terminal.
@@ -202,6 +207,7 @@ export class CliServerProxyProcessor implements ICliCommandProcessor {
     parameters?: ICliCommandParameterDescriptor[];
     processors?: ICliCommandProcessor[];
     acceptsRawInput?: boolean;
+    writeDescription?: (context: ICliExecutionContext) => void;
     /** Full command path from root to this processor (e.g. ["aws", "lambda", "list"]) */
     private readonly commandPath: string[];
 
@@ -218,19 +224,14 @@ export class CliServerProxyProcessor implements ICliCommandProcessor {
             : `${serverName}:${descriptor.command}`;
         this.description = descriptor.description;
         this.version = descriptor.version;
-        this.metadata = {
-            module: `server:${serverName}`,
-            icon: '\u{1F5A5}',
-            requireServer: true,
-        };
-        this.parameters = descriptor.parameters?.map((p) => ({
-            name: p.name,
-            aliases: p.aliases,
-            description: p.description,
-            required: p.required,
-            type: p.type,
-            defaultValue: p.defaultValue,
-        }));
+        // Server aliases: as they are on sub-commands, namespaced (`node:b64`) on the root
+        const aliases = descriptor.aliases?.filter(Boolean) ?? [];
+        if (aliases.length) {
+            this.aliases = isNested ? [...aliases] : aliases.map((a) => `${serverName}:${a}`);
+        }
+        this.metadata = serverCommandMetadata(descriptor, `server:${serverName}`, serverName);
+        this.parameters = serverCommandParameters(descriptor);
+        this.writeDescription = serverCommandWriteDescription(descriptor);
         this.processors = descriptor.processors?.map(
             (sub) =>
                 new CliServerProxyProcessor(connection, sub, serverName, true, this.commandPath),

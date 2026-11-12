@@ -48,7 +48,9 @@ export function writeExamples(
         rows,
         (cmd) => cmd,
         (comment) =>
-            writer.wrapInColor(`# ${comment}`, CliForegroundColor.Green),
+            comment
+                ? writer.wrapInColor(`# ${comment}`, CliForegroundColor.Green)
+                : '',
     );
 }
 

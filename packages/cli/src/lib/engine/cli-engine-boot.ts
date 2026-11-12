@@ -14,6 +14,7 @@ import { CliExecutionContext } from '../context/cli-execution-context';
 import { InitializeServicesResult } from './cli-service-initializer';
 import { CliCommandCompletionProvider } from '../completion/cli-command-completion-provider';
 import { CliParameterCompletionProvider } from '../completion/cli-parameter-completion-provider';
+import { CliParameterValueCompletionProvider } from '../completion/cli-parameter-value-completion-provider';
 import { CliServiceNameCompletionProvider } from '../completion/cli-service-name-completion-provider';
 import { CliPackageNameCompletionProvider } from '../completion/cli-package-name-completion-provider';
 import { CliThemeNameCompletionProvider } from '../completion/cli-theme-name-completion-provider';
@@ -96,6 +97,7 @@ export function createCompletionProviders(deps: {
         new CliServerNameCompletionProvider(serverManager),
         new CliConfigKeyCompletionProvider(registry),
         new CliCommandCompletionProvider(registry),
+        new CliParameterValueCompletionProvider(registry),
         new CliParameterCompletionProvider(registry, executor),
     ];
 
