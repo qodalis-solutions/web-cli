@@ -522,13 +522,15 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             context.spinner?.hide();
 
             if (!response.ok) {
-                // 403 (source permissions) and 429 (rate limit) carry { error }
+                // 403 (source permissions) and 429 (rate limit) carry { error, errorCode }
                 const body = (await response
                     .json()
-                    .catch(() => null)) as { error?: string } | null;
-                context.writer.writeError(
+                    .catch(() => null)) as Partial<DataExplorerResult> | null;
+                writeQueryError(
+                    context,
                     body?.error ??
                         `Server error: ${response.status} ${response.statusText}`,
+                    body?.errorCode,
                 );
                 this.executing = false;
                 return;
@@ -537,7 +539,7 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
             const result = (await response.json()) as DataExplorerResult;
 
             if (!result.success) {
-                context.writer.writeError(result.error ?? 'Query failed');
+                writeQueryError(context, result.error ?? 'Query failed', result.errorCode);
                 this.executing = false;
                 return;
             }
@@ -1186,6 +1188,27 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
         context.exitFullScreenMode();
         this.context = null;
     }
+}
+
+/** What to do about a refused query, for the codes where the error alone does not say. */
+export function queryErrorHint(code: string | null | undefined): string | null {
+    switch (code) {
+        case 'masked_column':
+            return 'Select masked columns by their own name, or use SELECT *';
+        default:
+            return null;
+    }
+}
+
+/** A failed or refused query: the server's error, then a hint for its code. */
+function writeQueryError(
+    context: ICliExecutionContext,
+    error: string,
+    code: string | null | undefined,
+): void {
+    context.writer.writeError(error);
+    const hint = queryErrorHint(code);
+    if (hint) context.writer.writeInfo(hint);
 }
 
 /** Output formats that export results (refused when the source says `canExport: false`). */
