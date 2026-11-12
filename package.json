@@ -1,6 +1,6 @@
 {
   "name": "qodalis-cli-workspace",
-  "version": "2.4.2",
+  "version": "2.5.0",
   "scripts": {
     "build": "nx run-many -t build",
     "release": "bash tools/release.sh",
