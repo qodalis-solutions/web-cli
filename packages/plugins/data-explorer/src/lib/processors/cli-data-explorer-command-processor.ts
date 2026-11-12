@@ -544,6 +544,9 @@ export class CliDataExplorerCommandProcessor implements ICliCommandProcessor {
                 return;
             }
 
+            if (result.executedQuery) {
+                context.writer.writeInfo(`Ran as: ${result.executedQuery}`);
+            }
             this.writeResult(result, context);
         } catch (err: unknown) {
             context.spinner?.hide();

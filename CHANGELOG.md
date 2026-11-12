@@ -10,6 +10,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Adding a server the app already configures (the same URL, whatever the name) stops with `… is already configured by the app as '<name>'`.
 - Adding a server that is already linked says `… is already linked as '<name>'` and links it again only when you confirm, replacing the old entry and its token (keeping its name when you give none). URLs are compared normalized (scheme and host case, a trailing slash).
 
+### Data explorer shows the query the server ran
+
+- When the server ran a query with a name quoted for its case (servers 1.0.0-beta.27 run `select * from Users` as `select * from "Users"` on PostgreSQL), `data-explorer` prints `Ran as: <query>` above the results.
+
 ## v2.5.1
 
 ### Panel scrolling on phones and over the panel chrome
