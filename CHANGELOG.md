@@ -20,6 +20,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - The `data-explorer` source list and header show `read-only` for sources the server marks read-only (servers from 1.0.0-beta.25 make every source read-only unless it sets `readOnly: false`).
 - `\format json` and `\format csv` print `Export is not allowed on this source` when the server reports `canExport: false` for the user, and such a source starts in table output.
 - Refused queries show the server's message (missing source permission, too many queries) instead of the HTTP status.
+- A query that uses a masked column other than by its own name (`masked_column`) shows the server's message and the hint `Select masked columns by their own name, or use SELECT *`.
 
 ## v2.4.2
 

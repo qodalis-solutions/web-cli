@@ -41,6 +41,15 @@ export interface DataExplorerSourceInfo {
     canExport?: boolean;
 }
 
+/** Why a server refused a query (`errorCode`); newer servers may send others. */
+export type DataExplorerErrorCode =
+    | 'forbidden'
+    | 'rate_limited'
+    | 'read_only'
+    | 'object_not_allowed'
+    | 'unknown_source'
+    | 'masked_column';
+
 export interface DataExplorerResult {
     success: boolean;
     source: string;
@@ -52,8 +61,8 @@ export interface DataExplorerResult {
     rowCount: number;
     truncated: boolean;
     error: string | null;
-    /** Why the server refused the query: forbidden, rate_limited, read_only, object_not_allowed, unknown_source. */
-    errorCode?: string;
+    /** Why the server refused the query (shown with a hint for some codes). */
+    errorCode?: DataExplorerErrorCode | (string & {});
 }
 
 export interface DataExplorerSchemaColumn {

@@ -2,6 +2,7 @@ import {
     CliDataExplorerCommandProcessor,
     canUseFormat,
     initialOutputFormat,
+    queryErrorHint,
 } from '../lib/processors/cli-data-explorer-command-processor';
 import {
     DataExplorerOutputFormat,
@@ -252,6 +253,17 @@ describe('CliDataExplorerModule', () => {
         it('should return a function for Raw format', () => {
             const formatter = getFormatter(DataExplorerOutputFormat.Raw);
             expect(typeof formatter).toBe('function');
+        });
+    });
+
+    describe('Refused queries', () => {
+        it('hints how to select a masked column', () => {
+            expect(queryErrorHint('masked_column')).toContain('by their own name');
+        });
+
+        it('has no hint for codes whose error says it all', () => {
+            expect(queryErrorHint('forbidden')).toBeNull();
+            expect(queryErrorHint(undefined)).toBeNull();
         });
     });
 
