@@ -16,7 +16,7 @@ import {
     writeWrapped,
     joinShellWords,
 } from '@qodalis/cli-core';
-import { CliJobsService } from '../services/cli-jobs-service';
+import { CliJobsService, parseTagArgs } from '../services/cli-jobs-service';
 import { JobDto, JobExecutionDto, UpdateJobRequest } from '../models';
 
 /**
@@ -181,6 +181,11 @@ export function formatRunning(job: JobDto): string | null {
     return parts.join(', ');
 }
 
+/** A job's tags for a table cell, or `-` when it has none. */
+function formatTags(tags?: string[]): string {
+    return tags && tags.length > 0 ? tags.join(', ') : '-';
+}
+
 function formatDuration(ms?: number): string {
     if (ms == null) return '-';
     if (ms < 1000) return `${ms}ms`;
@@ -291,11 +296,13 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 writeUsage(context, [
                     ['server jobs list', t.t('cli.server.jobs.list.help.jobs_all_connected_servers', 'Jobs on all connected servers')],
                     ['server jobs ls --group <name>', t.t('cli.server.jobs.list.help.only_one_group', 'Only one group')],
+                    ['server jobs ls --tag <tag> [--tag <tag>]', t.t('cli.server.jobs.list.help.only_tagged', 'Only the jobs that have every tag given')],
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
                     ['server jobs ls --server node', t.t('cli.server.jobs.list.help.jobs_node_server', 'Jobs on the node server')],
                     ['server jobs list --group reports', t.t('cli.server.jobs.list.help.jobs_reports_group', 'Jobs in the reports group')],
+                    ['server jobs list --tag country:ro --tag bank', t.t('cli.server.jobs.list.help.jobs_tagged', 'Jobs tagged both country:ro and bank')],
                 ]);
             },
             aliases: ['ls'],
@@ -306,6 +313,12 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                     description: 'Filter jobs by group',
                     required: false,
                     type: 'string',
+                },
+                {
+                    name: 'tag',
+                    description: 'Only jobs that have this tag (repeatable or comma-separated; every tag must match)',
+                    required: false,
+                    type: 'array',
                 },
             ],
             processCommand: async (
@@ -667,11 +680,12 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         }
 
         const groupFilter = cmd.args['group'] as string | undefined;
+        const tagFilter = parseTagArgs(cmd.args['tag']);
         const multiServer = services.length > 1;
 
         for (const { name, service } of services) {
             try {
-                let jobs = await service.listJobs();
+                let jobs = await service.listJobs(tagFilter);
                 if (groupFilter) {
                     jobs = jobs.filter(
                         (j) =>
@@ -694,9 +708,12 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                     continue;
                 }
 
+                // The Tags column only when a job has tags (older servers send none)
+                const showTags = jobs.some((j) => (j.tags?.length ?? 0) > 0);
                 const headers = [
                     'Name',
                     'Group',
+                    ...(showTags ? ['Tags'] : []),
                     'Status',
                     'Schedule',
                     'Last Run',
@@ -706,6 +723,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 const rows: string[][] = jobs.map((j) => [
                     j.name,
                     j.group ?? '-',
+                    ...(showTags ? [formatTags(j.tags)] : []),
                     statusColor(j.status, context.writer),
                     j.schedule ?? (formatSpan(j.interval) ? `every ${formatSpan(j.interval)}` : '-'),
                     formatRelativeTime(j.lastRunAt),
@@ -751,6 +769,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 ['Name', job.name],
                 ['Description', job.description],
                 ['Group', job.group ?? '-'],
+                ['Tags', formatTags(job.tags)],
                 ['Status', statusColor(job.status, context.writer)],
                 [
                     'Schedule',
@@ -1069,6 +1088,12 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
             const newGroup = await ask(`Group [${job.group ?? 'none'}]: `);
             if (newGroup == null) return cancelled();
             if (newGroup) update.group = newGroup;
+
+            // Tags (comma-separated; "-" clears them)
+            const newTags = await ask(`Tags, comma-separated, - for none [${formatTags(job.tags)}]: `);
+            if (newTags == null) return cancelled();
+            if (newTags.trim() === '-') update.tags = null;
+            else if (newTags.trim()) update.tags = parseTagArgs(newTags);
 
             // Schedule
             const currentSchedule =

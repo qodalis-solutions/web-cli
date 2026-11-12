@@ -353,6 +353,8 @@ export const itTranslations: Record<string, string> = {
     'cli.server.jobs.list.help.only_one_group': 'Solo un gruppo',
     'cli.server.jobs.list.help.jobs_node_server': 'Job sul server node',
     'cli.server.jobs.list.help.jobs_reports_group': 'Job nel gruppo reports',
+    'cli.server.jobs.list.help.only_tagged': 'Solo i job che hanno tutti i tag indicati',
+    'cli.server.jobs.list.help.jobs_tagged': 'Job con i tag country:ro e bank',
     'cli.server.jobs.info.help.show_everything_about_one':
         'Mostra tutto su un job: pianificazione, tentativi, timeout, politica di sovrapposizione, l\'esecuzione in corso e il risultato dell\'ultima. Il job si trova per nome (maiuscole o minuscole) o per ID.',
     'cli.server.jobs.info.help.details_cleanup_job': 'Dettagli del job cleanup',

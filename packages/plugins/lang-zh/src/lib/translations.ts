@@ -341,6 +341,8 @@ export const zhTranslations: Record<string, string> = {
     'cli.server.jobs.list.help.only_one_group': '仅一个分组',
     'cli.server.jobs.list.help.jobs_node_server': 'node 服务器上的作业',
     'cli.server.jobs.list.help.jobs_reports_group': 'reports 分组中的作业',
+    'cli.server.jobs.list.help.only_tagged': '仅显示具有所有指定标签的作业',
+    'cli.server.jobs.list.help.jobs_tagged': '同时带有 country:ro 和 bank 标签的作业',
     'cli.server.jobs.info.help.show_everything_about_one':
         '显示作业的全部信息：计划、重试、超时、重叠策略、当前正在运行的执行以及上次运行的结果。作业按名称（不区分大小写）或 ID 查找。',
     'cli.server.jobs.info.help.details_cleanup_job': 'cleanup 作业的详细信息',

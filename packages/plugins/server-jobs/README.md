@@ -59,13 +59,14 @@ A job is picked by name (any case) or ID and looked up on every connected server
 | `server jobs cancel <name\|id>` | | Cancel the run in progress; the job stays scheduled |
 | `server jobs history <name\|id>` | | List past runs: status, start, duration, attempt, error |
 | `server jobs logs <name\|id>` | | Print the log entries of the latest run, or of one run |
-| `server jobs edit <name\|id>` | | Interactively edit description, group, cron schedule or interval, max retries, timeout and overlap policy (`skip`, `queue`, `cancel`) |
+| `server jobs edit <name\|id>` | | Interactively edit description, group, tags (comma-separated, `-` clears them), cron schedule or interval, max retries, timeout and overlap policy (`skip`, `queue`, `cancel`) |
 | `server jobs watch` | | Follow job events live; Ctrl+C stops |
 
 | Flag | Applies to | Default | Description |
 |---|---|---|---|
 | `--server` | all | all connected servers | Target one server by name |
 | `--group` | `list` | | Only jobs in this group |
+| `--tag` | `list` | | Only jobs that have this tag; repeat it (`--tag a --tag b`) or separate tags with commas, and a job must have every one (ignoring case). `list` shows a Tags column and `info` a Tags row when jobs have tags (servers with job tags) |
 | `--limit` | `history` | `20` | Number of runs to show |
 | `--offset` | `history` | `0` | Offset for paging through older runs |
 | `--status` | `history` | | Only runs with this status (`running`, `completed`, `failed`, `cancelled`, `timed_out`) |
@@ -77,6 +78,7 @@ A job is picked by name (any case) or ID and looked up on every connected server
 server jobs
 server jobs ls --server=node
 server jobs list --group=reports
+server jobs list --tag country:ro --tag bank
 server jobs info cleanup
 server jobs trigger cleanup
 server jobs logs cleanup

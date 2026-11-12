@@ -3,6 +3,8 @@ export interface JobDto {
     name: string;
     description: string;
     group?: string;
+    /** Free-form labels to filter jobs by (servers with job tags; missing on older servers). */
+    tags?: string[];
     status: 'active' | 'paused' | 'stopped';
     schedule?: string;
     /** Milliseconds (.NET, Node) or a span such as `30s` (Python). */
@@ -55,6 +57,8 @@ export interface JobHistoryResponse {
 export interface UpdateJobRequest {
     description?: string;
     group?: string;
+    /** Replaces the job's tags; `null` clears them. */
+    tags?: string[] | null;
     schedule?: string;
     interval?: string;
     maxRetries?: number;

@@ -345,6 +345,8 @@ export const koTranslations: Record<string, string> = {
     'cli.server.jobs.list.help.only_one_group': '하나의 그룹만',
     'cli.server.jobs.list.help.jobs_node_server': 'node 서버의 작업',
     'cli.server.jobs.list.help.jobs_reports_group': 'reports 그룹의 작업',
+    'cli.server.jobs.list.help.only_tagged': '지정한 모든 태그가 있는 작업만',
+    'cli.server.jobs.list.help.jobs_tagged': 'country:ro와 bank 태그가 모두 있는 작업',
     'cli.server.jobs.info.help.show_everything_about_one':
         '작업 하나에 대한 모든 정보를 표시합니다: 일정, 재시도, 제한 시간, 중복 실행 정책, 현재 실행 중인 항목, 마지막 실행 결과. 작업은 이름(대소문자 무관) 또는 ID로 찾습니다',
     'cli.server.jobs.info.help.details_cleanup_job': 'cleanup 작업의 세부 정보',

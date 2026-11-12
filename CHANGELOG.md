@@ -3,6 +3,13 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Job tags in `server jobs`
+
+- `server jobs list --tag <tag>` (repeatable or comma-separated) lists only the jobs that have every tag, ignoring case. The tags go to the server as `?tag=`; the list is filtered in the CLI too, so a server without job tags lists nothing for a tag instead of every job.
+- `list` shows a Tags column when a job has tags, `info` a Tags row, and `edit` asks for the tags (comma-separated, `-` clears them). Needs servers with job tags (the next server release).
+
 ## v2.4.2
 
 ### Stop the running command from the panel

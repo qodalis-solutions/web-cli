@@ -344,6 +344,8 @@ export const jaTranslations: Record<string, string> = {
     'cli.server.jobs.list.help.only_one_group': '1 つのグループのみ',
     'cli.server.jobs.list.help.jobs_node_server': 'node サーバーのジョブ',
     'cli.server.jobs.list.help.jobs_reports_group': 'reports グループのジョブ',
+    'cli.server.jobs.list.help.only_tagged': '指定したすべてのタグを持つジョブのみ',
+    'cli.server.jobs.list.help.jobs_tagged': 'タグ country:ro と bank の両方を持つジョブ',
     'cli.server.jobs.info.help.show_everything_about_one':
         '1 つのジョブのすべてを表示します。スケジュール、再試行、タイムアウト、重複ポリシー、現在実行中の処理、前回の実行結果が表示されます。ジョブは名前（大文字小文字は問わない）または ID で検索されます。',
     'cli.server.jobs.info.help.details_cleanup_job': 'cleanup ジョブの詳細',

@@ -459,6 +459,8 @@ export const frTranslations: Record<string, string> = {
     'cli.server.jobs.list.help.only_one_group': 'Un seul groupe',
     'cli.server.jobs.list.help.jobs_node_server': 'Tâches du serveur node',
     'cli.server.jobs.list.help.jobs_reports_group': 'Tâches du groupe reports',
+    'cli.server.jobs.list.help.only_tagged': 'Seulement les tâches qui ont toutes les étiquettes données',
+    'cli.server.jobs.list.help.jobs_tagged': 'Tâches étiquetées country:ro et bank',
     'cli.server.jobs.info.help.show_everything_about_one':
         'Afficher tout sur une tâche : planification, tentatives, délai d\'expiration, politique de chevauchement, l\'exécution en cours et le résultat de la dernière exécution. La tâche est trouvée par nom (sans tenir compte de la casse) ou par ID.',
     'cli.server.jobs.info.help.details_cleanup_job': 'Détails de la tâche cleanup',

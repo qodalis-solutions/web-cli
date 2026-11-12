@@ -357,6 +357,8 @@ export const roTranslations: Record<string, string> = {
     'cli.server.jobs.list.help.only_one_group': 'Doar un grup',
     'cli.server.jobs.list.help.jobs_node_server': 'Joburile de pe serverul node',
     'cli.server.jobs.list.help.jobs_reports_group': 'Joburile din grupul reports',
+    'cli.server.jobs.list.help.only_tagged': 'Doar joburile care au toate etichetele date',
+    'cli.server.jobs.list.help.jobs_tagged': 'Joburile etichetate country:ro și bank',
     'cli.server.jobs.info.help.show_everything_about_one':
         'Afișează tot despre un job: programul, reîncercările, timpul limită, politica de suprapunere, execuția curentă și rezultatul ultimei rulări. Jobul este găsit după nume (indiferent de majuscule) sau ID.',
     'cli.server.jobs.info.help.details_cleanup_job': 'Detaliile jobului cleanup',
