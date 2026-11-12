@@ -1,5 +1,6 @@
 import { createCliToken } from '@qodalis/cli-core';
 import {
+    CliServerCommandDescriptor,
     CliServerConfig,
     ICliBackgroundServiceRegistry,
     ICliCommandProcessor,
@@ -14,6 +15,7 @@ import {
     CliServerMultiProxyProcessor,
     DefaultServerProvider,
 } from './cli-server-multi-proxy-processor';
+import { serverCommandAliases } from './cli-server-command-metadata';
 
 export const CliServerManager_TOKEN =
     createCliToken<CliServerManager>('cli-server-manager');
@@ -306,7 +308,7 @@ export class CliServerManager implements DefaultServerProvider {
                     serverName,
                 );
                 alias.command = command;
-                alias.aliases = [namespacedCommand, ...this.freeAliases(descriptor.aliases)];
+                alias.aliases = [namespacedCommand, ...this.freeAliases(descriptor)];
 
                 this.registry.registerProcessor(alias);
                 this._bareAliases.add(alias);
@@ -320,7 +322,7 @@ export class CliServerManager implements DefaultServerProvider {
                     return { serverName, connection, descriptor };
                 });
                 const multi = new CliServerMultiProxyProcessor(entries, this);
-                const aliases = this.freeAliases(entries[0].descriptor.aliases);
+                const aliases = this.freeAliases(entries[0].descriptor);
                 if (aliases.length) multi.aliases = aliases;
                 this.registry.registerProcessor(multi);
                 this._bareAliases.add(multi);
@@ -332,8 +334,8 @@ export class CliServerManager implements DefaultServerProvider {
      * The server's aliases of a command that no registered command answers
      * to yet: a local command (or an earlier server alias) keeps its name.
      */
-    private freeAliases(aliases: string[] | undefined): string[] {
-        return (aliases ?? []).filter((a) => a && !this.registry.findProcessor(a, []));
+    private freeAliases(descriptor: CliServerCommandDescriptor): string[] {
+        return serverCommandAliases(descriptor).filter((a) => !this.registry.findProcessor(a, []));
     }
 
     private recordHidden(

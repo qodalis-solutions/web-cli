@@ -159,6 +159,8 @@ export type CliServerCommandDescriptor = {
         defaultValue?: any;
         /** The only values the parameter takes */
         allowedValues?: string[];
+        /** Example values */
+        examples?: string[];
     }[];
     processors?: CliServerCommandDescriptor[];
 };

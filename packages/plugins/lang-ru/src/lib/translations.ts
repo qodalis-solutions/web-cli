@@ -23,6 +23,7 @@ export const ruTranslations: Record<string, string> = {
     'cli.help.requires_server': 'Требуется подключённый сервер',
     'cli.help.runs_on_server': 'Выполняется на сервере {server}',
     'cli.help.one_of': 'одно из:',
+    'cli.help.for_example': 'напр.',
     'cli.help.aliases': 'Псевдонимы:',
     'cli.help.required': '(обязательно)',
     'cli.help.show_all': 'Показать все доступные команды',

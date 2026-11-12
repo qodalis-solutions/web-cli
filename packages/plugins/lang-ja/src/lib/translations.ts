@@ -23,6 +23,7 @@ export const jaTranslations: Record<string, string> = {
     'cli.help.requires_server': '接続されたサーバーが必要です',
     'cli.help.runs_on_server': 'サーバー {server} で実行されます',
     'cli.help.one_of': '次のいずれか:',
+    'cli.help.for_example': '例:',
     'cli.help.aliases': 'エイリアス：',
     'cli.help.required': '(必須)',
     'cli.help.show_all': '全コマンドを表示',

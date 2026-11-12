@@ -23,6 +23,7 @@ export const koTranslations: Record<string, string> = {
     'cli.help.requires_server': '연결된 서버가 필요합니다',
     'cli.help.runs_on_server': '서버 {server}에서 실행됩니다',
     'cli.help.one_of': '다음 중 하나:',
+    'cli.help.for_example': '예:',
     'cli.help.aliases': '별칭:',
     'cli.help.required': '(필수)',
     'cli.help.show_all': '모든 사용 가능한 명령어 표시',

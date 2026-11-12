@@ -61,6 +61,12 @@ export interface ICliCommandParameterDescriptor {
     allowedValues?: string[];
 
     /**
+     * Example values of the parameter (e.g. `Paris`, `New York`). Help lists
+     * them after the description.
+     */
+    examples?: string[];
+
+    /**
      * A validator function that validates the value of the parameter
      * @param value The value to validate
      * @returns An object with a valid property that indicates if the value is valid and an optional message property that contains a message to display if the value is not valid

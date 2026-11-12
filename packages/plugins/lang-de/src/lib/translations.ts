@@ -26,6 +26,7 @@ export const deTranslations: Record<string, string> = {
     'cli.help.requires_server': 'Erfordert einen verbundenen Server',
     'cli.help.runs_on_server': 'Läuft auf dem Server {server}',
     'cli.help.one_of': 'eines von:',
+    'cli.help.for_example': 'z. B.',
     'cli.help.aliases': 'Aliase:',
     'cli.help.required': '(erforderlich)',
     'cli.help.show_all': 'Alle verfügbaren Befehle anzeigen',

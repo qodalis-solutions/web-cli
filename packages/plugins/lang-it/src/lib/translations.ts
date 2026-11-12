@@ -23,6 +23,7 @@ export const itTranslations: Record<string, string> = {
     'cli.help.requires_server': 'Richiede un server connesso',
     'cli.help.runs_on_server': 'Viene eseguito sul server {server}',
     'cli.help.one_of': 'uno tra:',
+    'cli.help.for_example': 'ad es.',
     'cli.help.aliases': 'Alias:',
     'cli.help.required': '(obbligatorio)',
     'cli.help.show_all': 'Mostra tutti i comandi disponibili',

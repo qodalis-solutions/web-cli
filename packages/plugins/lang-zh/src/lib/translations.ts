@@ -23,6 +23,7 @@ export const zhTranslations: Record<string, string> = {
     'cli.help.requires_server': '需要连接的服务器',
     'cli.help.runs_on_server': '在服务器 {server} 上运行',
     'cli.help.one_of': '可选值：',
+    'cli.help.for_example': '例如:',
     'cli.help.aliases': '别名：',
     'cli.help.required': '（必填）',
     'cli.help.show_all': '显示所有可用命令',

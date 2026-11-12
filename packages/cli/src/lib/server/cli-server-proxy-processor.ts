@@ -12,6 +12,8 @@ import {
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
 import {
+    plainText,
+    serverCommandAliases,
     serverCommandMetadata,
     serverCommandParameters,
     serverCommandWriteDescription,
@@ -222,10 +224,10 @@ export class CliServerProxyProcessor implements ICliCommandProcessor {
         this.command = isNested
             ? descriptor.command
             : `${serverName}:${descriptor.command}`;
-        this.description = descriptor.description;
+        this.description = descriptor.description === undefined ? undefined : plainText(descriptor.description);
         this.version = descriptor.version;
         // Server aliases: as they are on sub-commands, namespaced (`node:b64`) on the root
-        const aliases = descriptor.aliases?.filter(Boolean) ?? [];
+        const aliases = serverCommandAliases(descriptor);
         if (aliases.length) {
             this.aliases = isNested ? [...aliases] : aliases.map((a) => `${serverName}:${a}`);
         }
