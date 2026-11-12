@@ -534,6 +534,9 @@ export const esTranslations: Record<string, string> = {
     'cli.server.link.host_server':
         '\'{name}\' está configurado por la aplicación y no se puede reemplazar.',
     'cli.server.link.replace_confirm': 'Ya existe un servidor vinculado \'{name}\'. ¿Reemplazarlo?',
+    'cli.server.link.same_as_app_server': '{url} ya está configurado por la aplicación como \'{name}\'.',
+    'cli.server.link.already_linked': '{url} ya está vinculado como \'{name}\'.',
+    'cli.server.link.link_again': '¿Vincularlo de nuevo? Sustituye a \'{name}\' (token nuevo)',
     'cli.server.link.method_browser': 'Abrir el servidor en el navegador y aprobar (recomendado)',
     'cli.server.link.method_token': 'Pegar un token de API',
     'cli.server.link.method_password': 'Iniciar sesión con usuario y contraseña',

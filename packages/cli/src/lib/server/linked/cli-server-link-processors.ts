@@ -17,6 +17,7 @@ import {
     checkServerUrl,
     linkedServerConfig,
     maskToken,
+    normalizeServerUrl,
     suggestServerName,
     userServersAllow,
     userServersEnabled,
@@ -74,6 +75,36 @@ type LinkMethod = 'browser' | 'token' | 'password' | 'none';
  * Connects a linked server, replacing a linked connection of the same name
  * (any case); it stays the default server when it was.
  */
+/** Same server: the same normalized URL, ignoring case; an app server's relative URL ('' or '/api') is on the page's origin. */
+function sameServerUrl(a: string, b: string): boolean {
+    const key = (url: string) => normalizeServerUrl(absoluteUrl(url))?.toLowerCase();
+    const left = key(a);
+    return !!left && left === key(b);
+}
+
+function absoluteUrl(url: string): string {
+    const origin = (globalThis as { location?: Location }).location?.origin;
+    if (!origin || /^[a-z][a-z0-9+.-]*:\/\//i.test(url.trim())) return url;
+    try {
+        return new URL(url.trim() || '/', origin).href;
+    } catch {
+        return url;
+    }
+}
+
+/** The server already at `url`: one the user linked, or one the app configures (`byApp`). */
+async function serverAt(
+    manager: CliServerManager,
+    linked: CliLinkedServers,
+    url: string,
+): Promise<{ name: string; byApp: boolean } | undefined> {
+    for (const [name, connection] of manager.connections) {
+        if (!manager.isLinked(name) && sameServerUrl(connection.config.url, url)) return { name, byApp: true };
+    }
+    const saved = (await linked.list()).find((server) => sameServerUrl(server.url, url));
+    return saved ? { name: saved.name, byApp: false } : undefined;
+}
+
 async function replaceConnection(manager: CliServerManager, config: CliServerConfig) {
     const current = [...manager.connections.keys()].find((n) => n.toLowerCase() === config.name.toLowerCase());
     const wasDefault = !!current && manager.defaultServer === current;
@@ -124,6 +155,19 @@ export class ServerAddProcessor implements ICliCommandChildProcessor {
             writer.writeWarning(t.t('cli.server.link.mixed_content', 'This page is served over https: the browser may block requests to an http server.'));
         }
 
+        // The same server under another name would only be a second copy: say so, and link it again only if asked
+        const same = await serverAt(manager, linked, url);
+        if (same?.byApp) {
+            writer.writeError(t.t('cli.server.link.same_as_app_server', "{url} is already configured by the app as '{name}'.", { url, name: same.name }));
+            return;
+        }
+        if (same) {
+            writer.writeWarning(t.t('cli.server.link.already_linked', "{url} is already linked as '{name}'.", { url, name: same.name }));
+            const again = await reader.readConfirm(t.t('cli.server.link.link_again', "Link it again? It replaces '{name}' (a new token)", { name: same.name }), false);
+            if (!again) return;
+        }
+        const replacing = same?.name;
+
         // 2. Is it a Qodalis CLI server?
         let probe: CliServerProbe;
         context.spinner?.show(t.t('cli.server.link.checking', 'Checking {url}…', { url }));
@@ -143,9 +187,9 @@ export class ServerAddProcessor implements ICliCommandChildProcessor {
             if (!go) return;
         }
 
-        // 3. Name (a linked server of that name is replaced after a confirmation)
-        let name = args.name;
-        if (name) {
+        // 3. Name (a linked server of that name is replaced after a confirmation; linking the same server again keeps its name)
+        let name = args.name ?? replacing;
+        if (name && name !== replacing) {
             if (!(await this.nameAvailable(context, manager, linked, name))) return;
         }
 
@@ -206,6 +250,11 @@ export class ServerAddProcessor implements ICliCommandChildProcessor {
         const server = { name, url, addedAt: Date.now() };
         const previous = (await linked.get(name))?.name;
         if (previous && previous !== name) await linked.remove(previous);
+        if (replacing && replacing.toLowerCase() !== name.toLowerCase()) {
+            // Linked again under a new name: the old entry and its token go
+            await linked.remove(replacing);
+            if (manager.isLinked(replacing)) manager.removeServer(replacing);
+        }
         await linked.save(server, token);
         const connection = await replaceConnection(manager, linkedServerConfig(server, token));
         if (connection.connected) {

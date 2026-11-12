@@ -530,6 +530,9 @@ export const ptTranslations: Record<string, string> = {
     'cli.server.link.host_server':
         '\'{name}\' é configurado pelo aplicativo e não pode ser substituído.',
     'cli.server.link.replace_confirm': 'Já existe um servidor vinculado \'{name}\'. Substituí-lo?',
+    'cli.server.link.same_as_app_server': '{url} já está configurado pela aplicação como \'{name}\'.',
+    'cli.server.link.already_linked': '{url} já está ligado como \'{name}\'.',
+    'cli.server.link.link_again': 'Ligá-lo novamente? Substitui \'{name}\' (novo token)',
     'cli.server.link.method_browser': 'Abrir o servidor no navegador e aprovar (recomendado)',
     'cli.server.link.method_token': 'Colar um token de API',
     'cli.server.link.method_password': 'Entrar com usuário e senha',

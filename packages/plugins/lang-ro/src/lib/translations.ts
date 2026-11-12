@@ -431,6 +431,9 @@ export const roTranslations: Record<string, string> = {
     'cli.server.link.host_server':
         '\'{name}\' este configurat de aplicație și nu poate fi înlocuit.',
     'cli.server.link.replace_confirm': 'Există deja un server asociat \'{name}\'. Îl înlocuiești?',
+    'cli.server.link.same_as_app_server': '{url} este deja configurat de aplicație ca \'{name}\'.',
+    'cli.server.link.already_linked': '{url} este deja conectat ca \'{name}\'.',
+    'cli.server.link.link_again': 'Îl conectezi din nou? Înlocuiește \'{name}\' (token nou)',
     'cli.server.link.method_browser': 'Deschide serverul în browser și aprobă (recomandat)',
     'cli.server.link.method_token': 'Lipește un token API',
     'cli.server.link.method_password': 'Autentificare cu utilizator și parolă',
