@@ -535,6 +535,9 @@ export const frTranslations: Record<string, string> = {
     'cli.server.link.host_server':
         '\'{name}\' est configuré par l\'application et ne peut pas être remplacé.',
     'cli.server.link.replace_confirm': 'Un serveur lié \'{name}\' existe déjà. Le remplacer ?',
+    'cli.server.link.same_as_app_server': '{url} est déjà configuré par l\'application sous le nom \'{name}\'.',
+    'cli.server.link.already_linked': '{url} est déjà lié sous le nom \'{name}\'.',
+    'cli.server.link.link_again': 'Le lier à nouveau ? Remplace \'{name}\' (nouveau jeton)',
     'cli.server.link.method_browser':
         'Ouvrir le serveur dans le navigateur et approuver (recommandé)',
     'cli.server.link.method_token': 'Coller un jeton d\'API',

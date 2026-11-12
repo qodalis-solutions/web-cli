@@ -3,6 +3,13 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### `server add` knows servers it already has
+
+- Adding a server the app already configures (the same URL, whatever the name) stops with `… is already configured by the app as '<name>'`.
+- Adding a server that is already linked says `… is already linked as '<name>'` and links it again only when you confirm, replacing the old entry and its token (keeping its name when you give none). URLs are compared normalized (scheme and host case, a trailing slash).
+
 ## v2.5.1
 
 ### Panel scrolling on phones and over the panel chrome

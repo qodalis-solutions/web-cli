@@ -534,6 +534,9 @@ export const deTranslations: Record<string, string> = {
         '\'{name}\' wird von der App konfiguriert und kann nicht ersetzt werden.',
     'cli.server.link.replace_confirm':
         'Ein verknüpfter Server \'{name}\' existiert bereits. Ersetzen?',
+    'cli.server.link.same_as_app_server': '{url} ist bereits von der App als \'{name}\' eingerichtet.',
+    'cli.server.link.already_linked': '{url} ist bereits als \'{name}\' verknüpft.',
+    'cli.server.link.link_again': 'Erneut verknüpfen? Ersetzt \'{name}\' (neues Token)',
     'cli.server.link.method_browser': 'Den Server im Browser öffnen und bestätigen (empfohlen)',
     'cli.server.link.method_token': 'Ein API-Token einfügen',
     'cli.server.link.method_password': 'Mit Benutzer und Passwort anmelden',

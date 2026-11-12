@@ -426,6 +426,9 @@ export const itTranslations: Record<string, string> = {
     'cli.server.link.host_server':
         '\'{name}\' è configurato dall\'app e non può essere sostituito.',
     'cli.server.link.replace_confirm': 'Esiste già un server collegato \'{name}\'. Sostituirlo?',
+    'cli.server.link.same_as_app_server': '{url} è già configurato dall\'app come \'{name}\'.',
+    'cli.server.link.already_linked': '{url} è già collegato come \'{name}\'.',
+    'cli.server.link.link_again': 'Collegarlo di nuovo? Sostituisce \'{name}\' (nuovo token)',
     'cli.server.link.method_browser': 'Apri il server nel browser e approva (consigliato)',
     'cli.server.link.method_token': 'Incolla un token API',
     'cli.server.link.method_password': 'Accedi con utente e password',

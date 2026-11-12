@@ -427,6 +427,9 @@ export const ruTranslations: Record<string, string> = {
     'cli.server.link.host_server': '\'{name}\' настроен приложением и не может быть заменён.',
     'cli.server.link.replace_confirm':
         'Привязанный сервер \'{name}\' уже существует. Заменить его?',
+    'cli.server.link.same_as_app_server': '{url} уже настроен приложением как \'{name}\'.',
+    'cli.server.link.already_linked': '{url} уже подключён как \'{name}\'.',
+    'cli.server.link.link_again': 'Подключить снова? Заменит \'{name}\' (новый токен)',
     'cli.server.link.method_browser': 'Открыть сервер в браузере и подтвердить (рекомендуется)',
     'cli.server.link.method_token': 'Вставить API-токен',
     'cli.server.link.method_password': 'Войти с именем пользователя и паролем',

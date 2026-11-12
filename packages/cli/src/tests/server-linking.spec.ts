@@ -394,6 +394,38 @@ describe('server add / edit / remove / forget-all', () => {
         expect(manager.connections.has('node')).toBeTrue();
     });
 
+    it('does not link a server the app already configures, under any name', async () => {
+        const result = await harness.execute('server add mine http://LOCALHOST/node/ --token t');
+        expect(result.stderr.join()).toContain("http://localhost/node is already configured by the app as 'node'.");
+        expect(added).toEqual([]);
+    });
+
+    it('says a server is already linked, and links it again only when asked, replacing the old entry', async () => {
+        await harness.execute('server add home https://cli.example.com --token qcli_pat_one');
+
+        harness.setReaderResponses(false);
+        const declined = await harness.execute('server add other https://CLI.example.com/ --token qcli_pat_two');
+        expect(declined.output + declined.stderr.join()).toContain("https://cli.example.com is already linked as 'home'.");
+        expect(manager.connections.has('other')).toBeFalse();
+        expect(secrets.data.get('server-token:home')).toBe('qcli_pat_one');
+
+        harness.setReaderResponses(true);
+        const renamed = await harness.execute('server add other https://cli.example.com --token qcli_pat_two');
+        expect(renamed.output).toContain('Linked other');
+        expect(manager.connections.has('home')).toBeFalse();
+        expect(secrets.data.has('server-token:home')).toBeFalse();
+        expect(secrets.data.get('server-token:other')).toBe('qcli_pat_two');
+    });
+
+    it('links the same server again under its name when no name is given', async () => {
+        await harness.execute('server add home https://cli.example.com --token qcli_pat_one');
+        harness.setReaderResponses(true);
+        const again = await harness.execute('server add https://cli.example.com --token qcli_pat_new');
+        expect(again.output).toContain('Linked home');
+        expect(secrets.data.get('server-token:home')).toBe('qcli_pat_new');
+        expect([...manager.connections.keys()].filter((n) => n !== 'node')).toEqual(['home']);
+    });
+
     it('asks before linking a private http server', async () => {
         harness.setReaderResponses(false);
         const result = await harness.execute('server add lan http://192.168.1.20:8047 --token t');
