@@ -58,6 +58,46 @@ function createController(callbacks: CliPanelCallbacks = {}, config = {}) {
 }
 
 describe('CliPanelController', () => {
+    describe('wheel over the panel', () => {
+        function wheel(target: Element): WheelEvent {
+            const event = new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true });
+            target.dispatchEvent(event);
+            return event;
+        }
+
+        it('keeps the page from scrolling under the panel chrome', () => {
+            const root = document.createElement('div');
+            const header = document.createElement('div');
+            root.appendChild(header);
+            document.body.appendChild(root);
+            const c = createController();
+            c.setRootElement(root);
+            expect(wheel(header).defaultPrevented).toBeTrue();
+            c.setRootElement(null);
+            expect(wheel(header).defaultPrevented).toBeFalse();
+            c.destroy();
+            root.remove();
+        });
+
+        it('lets a scrollable list inside the panel take the wheel', () => {
+            const root = document.createElement('div');
+            const list = document.createElement('div');
+            list.style.cssText = 'height: 20px; overflow-y: auto';
+            const item = document.createElement('div');
+            item.style.height = '200px';
+            list.appendChild(item);
+            root.appendChild(list);
+            document.body.appendChild(root);
+            const c = createController();
+            c.setRootElement(root);
+            expect(wheel(item).defaultPrevented).toBeFalse();
+            list.scrollTop = 1000;
+            expect(wheel(item).defaultPrevented).toBeTrue();
+            c.destroy();
+            root.remove();
+        });
+    });
+
     let controller: CliPanelController;
     let changes: number;
 

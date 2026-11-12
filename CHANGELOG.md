@@ -3,6 +3,13 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Panel scrolling on phones and over the panel chrome
+
+- A finger drag over a terminal scrolls its scrollback and glides on after a swipe; the page behind no longer scrolls instead (xterm.js has no touch scrolling, so in the panel on a phone the page moved and the terminal never did). A tap still focuses the terminal and opens the keyboard; a scroll never opens it. Paused while a full-screen command runs. `CliEngineOptions.touchScroll: false` turns it off for hosts that scroll the terminal themselves.
+- The mouse wheel over the panel header, icon strip and tab bar no longer scrolls the page; the tab bar and menus still scroll themselves.
+
 ## v2.5.0
 
 ### Job tags in `server jobs`
