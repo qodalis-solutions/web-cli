@@ -509,6 +509,76 @@ export const frTranslations: Record<string, string> = {
     'cli.server.jobs.watch.help.events_all_connected_servers':
         'Événements de tous les serveurs connectés',
     'cli.server.jobs.watch.help.only_events_node': 'Seulement les événements de node',
+    'cli.server.link.url_prompt': 'URL du serveur : ',
+    'cli.server.link.origin_not_allowed': 'Cette application ne permet pas de lier {url}.',
+    'cli.server.link.http_warning':
+        '{url} n\'est pas chiffré (http) : son jeton circule en clair sur le réseau.',
+    'cli.server.link.http_confirm': 'Le lier quand même ?',
+    'cli.server.link.mixed_content':
+        'Cette page est servie en https : le navigateur peut bloquer les requêtes vers un serveur http.',
+    'cli.server.link.checking': 'Vérification de {url}…',
+    'cli.server.link.no_secret_store':
+        'Les jetons ne peuvent pas être conservés en sécurité sur cette page (pas de Web Crypto : servez-la en https). Le serveur n\'a pas été lié.',
+    'cli.server.link.token_prompt': 'Jeton d\'API : ',
+    'cli.server.link.username_prompt': 'Nom d\'utilisateur : ',
+    'cli.server.link.password_prompt': 'Mot de passe : ',
+    'cli.server.link.name_prompt': 'Nom de ce serveur : ',
+    'cli.server.link.invalid_name':
+        'Lettres, chiffres, - et _ (32 au maximum), commençant par une lettre ou un chiffre',
+    'cli.server.link.linked': '{name} lié : {count} commandes{user}.',
+    'cli.server.link.as_user': ' en tant que {user}',
+    'cli.server.link.needs_sign_in':
+        '{name} lié, mais ses commandes nécessitent une connexion : liez-le avec un jeton ou via le navigateur.',
+    'cli.server.link.unreachable':
+        '{name} lié, mais il est injoignable pour le moment : ses commandes se chargeront à son retour.',
+    'cli.server.link.now_default': '  {name} est le serveur par défaut.',
+    'cli.server.link.host_server':
+        '\'{name}\' est configuré par l\'application et ne peut pas être remplacé.',
+    'cli.server.link.replace_confirm': 'Un serveur lié \'{name}\' existe déjà. Le remplacer ?',
+    'cli.server.link.method_browser':
+        'Ouvrir le serveur dans le navigateur et approuver (recommandé)',
+    'cli.server.link.method_token': 'Coller un jeton d\'API',
+    'cli.server.link.method_password': 'Se connecter avec un utilisateur et un mot de passe',
+    'cli.server.link.method_none': 'Sans connexion (serveur ouvert)',
+    'cli.server.link.method_prompt': 'Comment voulez-vous le lier ?',
+    'cli.server.link.no_browser_link':
+        'Ce serveur ne peut pas être lié via le navigateur (il nécessite le plugin users, 1.0.0-beta.25 ou ultérieur). Utilisez server add --no-browser.',
+    'cli.server.link.open_page': '  Ouvrez cette page, connectez-vous et approuvez :',
+    'cli.server.link.compare_code': '  Vérifiez qu\'elle affiche le code {code}',
+    'cli.server.link.waiting': 'En attente de l\'approbation… (Ctrl+C pour annuler)',
+    'cli.server.link.denied': 'La demande de liaison a été refusée.',
+    'cli.server.link.expired': 'La demande de liaison a expiré. Relancez server add.',
+    'cli.server.add.help.description':
+        'Lie un serveur Node, .NET ou Python à ce terminal : ses commandes sont disponibles immédiatement et après chaque rechargement. Demande ce qui manque : l\'URL, le mode de connexion (approuver dans le navigateur, coller un jeton d\'API, ou un utilisateur et un mot de passe) et un nom. Les jetons sont conservés chiffrés et ne sont plus jamais affichés ; seuls les serveurs https peuvent être liés (http pour localhost et les adresses privées).',
+    'cli.server.add.help.interactive': 'Demande tout',
+    'cli.server.add.help.url': 'Lier ce serveur',
+    'cli.server.add.help.token': 'Lier avec un jeton d\'API (scripts)',
+    'cli.server.add.help.example_browser': 'Approuver dans le navigateur',
+    'cli.server.add.help.example_lan': 'Un serveur sur le réseau local',
+    'cli.server.link.cannot_remove_host':
+        '\'{name}\' est configuré par l\'application et ne peut pas être supprimé.',
+    'cli.server.link.unknown_linked': 'Aucun serveur lié \'{name}\'. Voir server list.',
+    'cli.server.link.removed': '{name} délié ; son jeton est supprimé de cet appareil.',
+    'cli.server.link.revoke_hint':
+        '  Le jeton reste valide sur le serveur jusqu\'à son expiration : révoquez-le là-bas avec token revoke.',
+    'cli.server.link.cannot_edit_host':
+        '\'{name}\' est configuré par l\'application et ne peut pas être modifié.',
+    'cli.server.link.edit_nothing': 'Indiquez --url <url> et/ou --token.',
+    'cli.server.link.updated': '{name} mis à jour : {count} commandes.',
+    'cli.server.link.updated_unreachable':
+        '{name} mis à jour, mais il est injoignable pour le moment.',
+    'cli.server.link.cancelled': 'Annulé. La demande expire sur le serveur dans {minutes} min.',
+    'cli.server.link.none_linked': 'Aucun serveur lié. Liez-en un avec server add.',
+    'cli.server.link.forget_all_confirm':
+        'Délier {count} serveurs et supprimer tous les jetons enregistrés ?',
+    'cli.server.link.forgot_all': 'Tous les serveurs liés et jetons enregistrés ont été supprimés.',
+    'cli.server.help.add': 'Lier un serveur à ce terminal (conservé entre les rechargements)',
+    'cli.server.help.edit': 'Modifier un serveur lié',
+    'cli.server.help.remove': 'Délier un serveur et supprimer son jeton',
+    'cli.server.help.forget_all': 'Délier tous les serveurs liés',
+    'cli.server.link.disabled':
+        'Cette application ne permet pas de lier des serveurs depuis le terminal.',
+    'cli.server.link.found': 'Serveur Qodalis CLI',
     'cli.ssh.description': 'Ouvrir une session shell distante sur un serveur',
     'cli.ssh.help.open_interactive_shell_server':
         'Ouvrir un shell interactif sur un serveur, dans ce terminal, ou y exécuter une commande et afficher sa sortie. Seuls les serveurs qui activent leur shell peuvent être utilisés ; avec le plugin users, il faut la permission shell:execute. Sans nom, ssh utilise l\'unique serveur avec shell, sinon le serveur par défaut, sinon demande lequel.',

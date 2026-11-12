@@ -507,6 +507,79 @@ export const deTranslations: Record<string, string> = {
     'cli.server.jobs.watch.help.events_all_connected_servers':
         'Ereignisse von allen verbundenen Servern',
     'cli.server.jobs.watch.help.only_events_node': 'Nur Ereignisse von node',
+    'cli.server.link.url_prompt': 'Server-URL: ',
+    'cli.server.link.origin_not_allowed': 'Diese App erlaubt das Verknüpfen von {url} nicht.',
+    'cli.server.link.http_warning':
+        '{url} ist nicht verschlüsselt (http): sein Token wird im Klartext über das Netzwerk übertragen.',
+    'cli.server.link.http_confirm': 'Trotzdem verknüpfen?',
+    'cli.server.link.mixed_content':
+        'Diese Seite wird über https ausgeliefert: der Browser blockiert möglicherweise Anfragen an einen http-Server.',
+    'cli.server.link.checking': '{url} wird geprüft…',
+    'cli.server.link.no_secret_store':
+        'Tokens können auf dieser Seite nicht sicher gespeichert werden (kein Web Crypto: liefern Sie die Seite über https aus). Der Server wurde nicht verknüpft.',
+    'cli.server.link.token_prompt': 'API-Token: ',
+    'cli.server.link.username_prompt': 'Benutzername: ',
+    'cli.server.link.password_prompt': 'Passwort: ',
+    'cli.server.link.name_prompt': 'Name für diesen Server: ',
+    'cli.server.link.invalid_name':
+        'Buchstaben, Ziffern, - und _ (höchstens 32), beginnend mit einem Buchstaben oder einer Ziffer',
+    'cli.server.link.linked': '{name} verknüpft: {count} Befehle{user}.',
+    'cli.server.link.as_user': ' als {user}',
+    'cli.server.link.needs_sign_in':
+        '{name} verknüpft, aber seine Befehle erfordern eine Anmeldung: verknüpfen Sie ihn mit einem Token oder über den Browser.',
+    'cli.server.link.unreachable':
+        '{name} verknüpft, aber er ist derzeit nicht erreichbar: seine Befehle werden geladen, sobald er wieder da ist.',
+    'cli.server.link.now_default': '  {name} ist der Standardserver.',
+    'cli.server.link.host_server':
+        '\'{name}\' wird von der App konfiguriert und kann nicht ersetzt werden.',
+    'cli.server.link.replace_confirm':
+        'Ein verknüpfter Server \'{name}\' existiert bereits. Ersetzen?',
+    'cli.server.link.method_browser': 'Den Server im Browser öffnen und bestätigen (empfohlen)',
+    'cli.server.link.method_token': 'Ein API-Token einfügen',
+    'cli.server.link.method_password': 'Mit Benutzer und Passwort anmelden',
+    'cli.server.link.method_none': 'Keine Anmeldung (offener Server)',
+    'cli.server.link.method_prompt': 'Wie möchten Sie ihn verknüpfen?',
+    'cli.server.link.no_browser_link':
+        'Dieser Server kann nicht über den Browser verknüpft werden (er benötigt das Users-Plugin, 1.0.0-beta.25 oder neuer). Verwenden Sie server add --no-browser.',
+    'cli.server.link.open_page': '  Öffnen Sie diese Seite, melden Sie sich an und bestätigen Sie:',
+    'cli.server.link.compare_code': '  Prüfen Sie, dass sie den Code {code} anzeigt',
+    'cli.server.link.waiting': 'Warten auf die Bestätigung… (Ctrl+C zum Abbrechen)',
+    'cli.server.link.denied': 'Die Verknüpfungsanfrage wurde abgelehnt.',
+    'cli.server.link.expired':
+        'Die Verknüpfungsanfrage ist abgelaufen. Führen Sie server add erneut aus.',
+    'cli.server.add.help.description':
+        'Verknüpft einen Node-, .NET- oder Python-Server mit diesem Terminal: seine Befehle sind sofort und nach jedem Neuladen verfügbar. Fragt nach allem, was fehlt: der URL, der Anmeldung (im Browser bestätigen, ein API-Token einfügen oder Benutzer und Passwort) und einem Namen. Tokens werden verschlüsselt gespeichert und nie wieder angezeigt; nur https-Server können verknüpft werden (http für localhost und private Adressen).',
+    'cli.server.add.help.interactive': 'Fragt nach allem',
+    'cli.server.add.help.url': 'Diesen Server verknüpfen',
+    'cli.server.add.help.token': 'Mit einem API-Token verknüpfen (Skripte)',
+    'cli.server.add.help.example_browser': 'Im Browser bestätigen',
+    'cli.server.add.help.example_lan': 'Ein Server im lokalen Netzwerk',
+    'cli.server.link.cannot_remove_host':
+        '\'{name}\' wird von der App konfiguriert und kann nicht entfernt werden.',
+    'cli.server.link.unknown_linked': 'Kein verknüpfter Server \'{name}\'. Siehe server list.',
+    'cli.server.link.removed':
+        'Verknüpfung mit {name} aufgehoben; sein Token wurde von diesem Gerät gelöscht.',
+    'cli.server.link.revoke_hint':
+        '  Das Token bleibt auf dem Server gültig, bis es abläuft: widerrufen Sie es dort mit token revoke.',
+    'cli.server.link.cannot_edit_host':
+        '\'{name}\' wird von der App konfiguriert und kann nicht bearbeitet werden.',
+    'cli.server.link.edit_nothing': 'Geben Sie --url <url> und/oder --token an.',
+    'cli.server.link.updated': '{name} aktualisiert: {count} Befehle.',
+    'cli.server.link.updated_unreachable':
+        '{name} aktualisiert, aber er ist derzeit nicht erreichbar.',
+    'cli.server.link.cancelled': 'Abgebrochen. Die Anfrage läuft auf dem Server in {minutes} Min. ab.',
+    'cli.server.link.none_linked': 'Keine verknüpften Server. Verknüpfe einen mit server add.',
+    'cli.server.link.forget_all_confirm':
+        'Verknüpfung mit {count} Servern aufheben und alle gespeicherten Tokens löschen?',
+    'cli.server.link.forgot_all': 'Alle verknüpften Server und gespeicherten Tokens sind entfernt.',
+    'cli.server.help.add':
+        'Einen Server mit diesem Terminal verknüpfen (bleibt nach dem Neuladen erhalten)',
+    'cli.server.help.edit': 'Einen verknüpften Server ändern',
+    'cli.server.help.remove': 'Verknüpfung mit einem Server aufheben und sein Token löschen',
+    'cli.server.help.forget_all': 'Verknüpfung mit allen Servern aufheben',
+    'cli.server.link.disabled':
+        'Diese App erlaubt das Verknüpfen von Servern über das Terminal nicht.',
+    'cli.server.link.found': 'Qodalis CLI-Server',
     'cli.ssh.description': 'Eine entfernte Shell-Sitzung auf einem Server öffnen',
     'cli.ssh.help.open_interactive_shell_server':
         'Eine interaktive Shell auf einem Server in diesem Terminal öffnen oder dort einen Befehl ausführen und dessen Ausgabe anzeigen. Nur Server mit aktivierter Shell können verwendet werden; mit dem Users-Plugin benötigen Sie die Berechtigung shell:execute. Ohne Namen verwendet ssh den einzigen Shell-Server, sonst den Standardserver, sonst wird gefragt, welcher.',
