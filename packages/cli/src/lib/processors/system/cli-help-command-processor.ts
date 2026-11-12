@@ -355,7 +355,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
     }
 
     private writeParameter(
-        param: { name: string; aliases?: string[]; type: string; description: string; required: boolean; defaultValue?: any; allowedValues?: string[] },
+        param: { name: string; aliases?: string[]; type: string; description: string; required: boolean; defaultValue?: any; allowedValues?: string[]; examples?: string[] },
         context: ICliExecutionContext,
         narrow = false,
     ) {
@@ -378,10 +378,14 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         const allowed = param.allowedValues?.length
             ? `${DIM}${translator.t('cli.help.one_of', 'one of:')}${RESET} ${param.allowedValues.map((v) => writer.wrapInColor(v, CliForegroundColor.Magenta)).join(', ')}`
             : '';
+        const examples = param.examples?.length
+            ? `${DIM}${translator.t('cli.help.for_example', 'e.g.')}${RESET} ${param.examples.map((v) => writer.wrapInColor(v, CliForegroundColor.Magenta)).join(', ')}`
+            : '';
         if (narrow) {
             writer.writeln(`    ${nameStr} ${typeStr}${required}${defaultVal}`);
             writeWrapped(context, param.description, 6);
             if (allowed) writer.writeln(`      ${allowed}`);
+            if (examples) writer.writeln(`      ${examples}`);
             return;
         }
         writer.writeln(
@@ -389,6 +393,9 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
         );
         if (allowed) {
             writer.writeln(`      ${allowed}`);
+        }
+        if (examples) {
+            writer.writeln(`      ${examples}`);
         }
     }
 }

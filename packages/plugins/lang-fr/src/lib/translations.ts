@@ -29,6 +29,7 @@ export const frTranslations: Record<string, string> = {
     'cli.help.requires_server': 'Nécessite un serveur connecté',
     'cli.help.runs_on_server': 'S’exécute sur le serveur {server}',
     'cli.help.one_of': 'parmi :',
+    'cli.help.for_example': 'p. ex.',
     'cli.help.aliases': 'Alias :',
     'cli.help.required': '(obligatoire)',
     'cli.help.show_all': 'Afficher toutes les commandes disponibles',

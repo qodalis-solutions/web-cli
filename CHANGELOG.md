@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - Server commands show their own documentation and examples in `help <command>`, keep their aliases, and are listed under their own module and icon. They need servers with command metadata (the next server release). Help names the server a command runs on. Commands from older servers look as before.
 - `ICliCommandParameterDescriptor.allowedValues` (core) works for every command: help lists the values and Tab completes them after `--name ` and `--name=`. Server commands also refuse other values before sending, ignoring case.
+- `ICliCommandParameterDescriptor.examples` (core): example values of a parameter, listed in help after its description (`e.g. Paris, New York`). Server commands get them from the servers' parameter `examples`.
 - A server alias is added as a bare name only when no local command owns it. `node:<alias>` always works.
 
 ## v2.4.2

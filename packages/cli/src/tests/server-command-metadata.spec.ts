@@ -19,7 +19,7 @@ const THINGS: CliServerCommandDescriptor = {
     documentation: 'First paragraph.\n\nSecond paragraph.',
     examples: [{ command: 'things show 1', description: 'Shows thing 1' }, { command: 'things' }],
     parameters: [
-        { name: 'format', aliases: ['f'], description: 'Output format', required: false, type: 'string', allowedValues: ['table', 'json'] },
+        { name: 'format', aliases: ['f'], description: 'Output format', required: false, type: 'string', allowedValues: ['table', 'json'], examples: ['json'] },
         { name: 'verbose', description: 'More output', required: false, type: 'boolean' },
     ],
     processors: [{ command: 'show', description: 'Shows a thing', aliases: ['sh'] }],
@@ -90,6 +90,8 @@ describe('server command metadata on proxy processors', () => {
         expect(format.validator!('JSON').valid).toBeTrue();
         expect(format.validator!('xml')).toEqual({ valid: false, message: '--format must be one of: table, json' });
         expect(proxy.parameters!.find((p) => p.name === 'verbose')!.validator).toBeUndefined();
+        expect(format.examples).toEqual(['json']);
+        expect(proxy.parameters!.find((p) => p.name === 'verbose')!.examples).toBeUndefined();
     });
 
     it('drops leading dashes from parameter aliases (servers declare "-a" or "a")', () => {
@@ -99,6 +101,40 @@ describe('server command metadata on proxy processors', () => {
         };
         const proxy = new CliServerProxyProcessor(connection([descriptor]), descriptor, 'node');
         expect(proxy.parameters![0].aliases).toEqual(['a', 'alg']);
+    });
+
+    it('drops terminal escapes from everything the server sends for help', () => {
+        const ESC = '\u001b';
+        const descriptor: CliServerCommandDescriptor = {
+            command: 'evil',
+            description: `Desc${ESC}[2J`,
+            aliases: [`ev${ESC}]0;x\u0007`, 'two words', ''],
+            module: `mod${ESC}[31m`,
+            icon: `${ESC}[5m!`,
+            documentation: `Para ${ESC}]8;;https://x.io\u0007one\nline two.\n\nSecond.`,
+            examples: [{ command: `evil ${ESC}[1A`, description: `Ex${ESC}c` }],
+            parameters: [
+                { name: 'mode', aliases: [`-m${ESC}[0m`], description: `Mode${ESC}[K`, required: false, type: 'string', allowedValues: [`a${ESC}[31m`, 'b'], examples: [`x${ESC}[2J`] },
+            ],
+        };
+        const proxy = new CliServerProxyProcessor(connection([descriptor]), descriptor, 'node');
+        const { context, lines } = textContext();
+        proxy.writeDescription!(context);
+        const printed = [
+            proxy.description,
+            ...(proxy.aliases ?? []),
+            proxy.metadata!['module'],
+            proxy.metadata!['icon'],
+            ...lines,
+            ...proxy.parameters!.flatMap((p) => [p.description, ...(p.aliases ?? []), ...(p.allowedValues ?? []), ...(p.examples ?? [])]),
+        ].join('|');
+        expect(printed).not.toMatch(/[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/);
+        expect(proxy.description).toBe('Desc[2J');
+        expect(proxy.aliases).toEqual(['node:ev]0;x']);
+        expect(proxy.parameters![0].allowedValues).toEqual(['a[31m', 'b']);
+        expect(proxy.parameters![0].examples).toEqual(['x[2J']);
+        expect(proxy.parameters![0].aliases).toEqual(['m[0m']);
+        expect(lines.map(plain)).toContain('Second.');
     });
 
     it('multi-server proxies take the metadata of the first server and keep sub-command aliases', () => {
@@ -167,17 +203,19 @@ describe('help of a server command', () => {
         return lines.map(plain);
     }
 
-    it('shows the documentation, examples, allowed values and the server it runs on', async () => {
+    it('shows the documentation, examples, allowed values, parameter examples and the server it runs on', async () => {
         const text = await help(new CliServerProxyProcessor(connection([THINGS]), THINGS, 'node'));
         expect(text).toContain('First paragraph.');
         expect(text.some((l) => l.includes('# Shows thing 1'))).toBeTrue();
         expect(text.some((l) => l.includes('one of: table, json'))).toBeTrue();
+        expect(text.some((l) => l.includes('e.g. json'))).toBeTrue();
         expect(text.some((l) => l.includes('Runs on server node'))).toBeTrue();
     });
 
-    it('lists allowed values on narrow terminals too', async () => {
+    it('lists allowed values and parameter examples on narrow terminals too', async () => {
         const text = await help(new CliServerProxyProcessor(connection([THINGS]), THINGS, 'node'), 40);
         expect(text.some((l) => l.includes('one of: table, json'))).toBeTrue();
+        expect(text.some((l) => l.includes('e.g. json'))).toBeTrue();
     });
 });
 

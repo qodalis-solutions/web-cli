@@ -23,6 +23,7 @@ export const roTranslations: Record<string, string> = {
     'cli.help.requires_server': 'Necesită un server conectat',
     'cli.help.runs_on_server': 'Rulează pe serverul {server}',
     'cli.help.one_of': 'una dintre:',
+    'cli.help.for_example': 'de ex.',
     'cli.help.aliases': 'Aliasuri:',
     'cli.help.required': '(obligatoriu)',
     'cli.help.show_all': 'Afișează toate comenzile disponibile',

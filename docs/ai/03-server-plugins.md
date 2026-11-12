@@ -46,10 +46,11 @@ A server command can carry the same help as a web command: examples, longer docu
 
 - Command members: Node `aliases`, `examples` (`{ command, description? }[]`), `documentation`, `module`, `icon`; .NET `Aliases`, `Examples` (`new CliCommandExample("cmd", "what it does")`), `Documentation`, `Module`, `Icon`; Python properties `aliases`, `examples` (`CliCommandExample("cmd", "what it does")`), `documentation`, `module`, `icon`.
 - Parameter member: Node `allowedValues` (7th constructor argument of `CliCommandParameterDescriptor`), .NET `AllowedValues`, Python `allowed_values`. The terminal lists them in help, completes them with Tab (`--format ` and `--format=`) and refuses other values before sending (ignoring case); MCP tools list them as an `enum`.
+- Parameter examples: Node `examples` (8th constructor argument), .NET `Examples`, Python `examples`: example values shown in help after the description (`e.g. Paris, New York`) and as `examples` in MCP tool schemas.
 - `documentation` is plain text; separate paragraphs with a blank line. Examples are command lines as the user types them.
 - Aliases work on root commands and sub-commands, on the server too (execution and permission checks). In the terminal `node:base64` also answers to `node:b64`, and the bare alias `b64` is registered unless a local command owns that name.
 - `module` and `icon` place the command in `help`'s list (default: the server's group, `Server (node)`, and 🖥); help still says which server the command runs on.
-- Wire format in `GET /api/v1/qcli/commands`: `aliases`, `examples`, `documentation`, `module`, `icon` on each command and `allowedValues` on each parameter, left out when unset.
+- Wire format in `GET /api/v1/qcli/commands`: `aliases`, `examples`, `documentation`, `module`, `icon` on each command and `allowedValues` and `examples` on each parameter, left out when unset.
 
 Node example:
 

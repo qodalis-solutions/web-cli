@@ -9,6 +9,8 @@ import {
 import { CliServerConnection } from './cli-server-connection';
 import { executeOnServer } from './cli-server-proxy-processor';
 import {
+    plainText,
+    serverCommandAliases,
     serverCommandMetadata,
     serverCommandParameters,
     serverCommandWriteDescription,
@@ -50,10 +52,11 @@ export class CliServerMultiProxyProcessor implements ICliCommandProcessor {
         const first = entries[0].descriptor;
         this.commandPath = [...parentPath, first.command];
         this.command = first.command;
-        this.description = first.description;
+        this.description = first.description === undefined ? undefined : plainText(first.description);
         // Sub-commands keep their aliases; the manager sets the root's (never a local command's name)
-        if (parentPath.length > 0 && first.aliases?.length) {
-            this.aliases = [...first.aliases];
+        const aliases = serverCommandAliases(first);
+        if (parentPath.length > 0 && aliases.length) {
+            this.aliases = aliases;
         }
         this.metadata = serverCommandMetadata(first, 'server:multi');
         this.parameters = serverCommandParameters(first);
