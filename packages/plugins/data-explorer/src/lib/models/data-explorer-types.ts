@@ -61,6 +61,8 @@ export interface DataExplorerResult {
     rowCount: number;
     truncated: boolean;
     error: string | null;
+    /** The query as the server ran it, when it changed it (a mixed-case name quoted: `"Users"` for `Users`). */
+    executedQuery?: string;
     /** Why the server refused the query (shown with a hint for some codes). */
     errorCode?: DataExplorerErrorCode | (string & {});
 }
