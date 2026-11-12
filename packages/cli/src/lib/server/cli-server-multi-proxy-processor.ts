@@ -8,6 +8,11 @@ import {
 } from '@qodalis/cli-core';
 import { CliServerConnection } from './cli-server-connection';
 import { executeOnServer } from './cli-server-proxy-processor';
+import {
+    serverCommandMetadata,
+    serverCommandParameters,
+    serverCommandWriteDescription,
+} from './cli-server-command-metadata';
 
 export interface MultiProxyEntry {
     serverName: string;
@@ -27,7 +32,9 @@ export interface DefaultServerProvider {
  */
 export class CliServerMultiProxyProcessor implements ICliCommandProcessor {
     command: string;
+    aliases?: string[];
     description?: string;
+    writeDescription?: (context: ICliExecutionContext) => void;
     metadata?: CliProcessorMetadata;
     parameters?: ICliCommandParameterDescriptor[];
     processors?: ICliCommandProcessor[];
@@ -44,19 +51,13 @@ export class CliServerMultiProxyProcessor implements ICliCommandProcessor {
         this.commandPath = [...parentPath, first.command];
         this.command = first.command;
         this.description = first.description;
-        this.metadata = {
-            module: 'server:multi',
-            icon: '\u{1F5A5}',
-            requireServer: true,
-        };
-        this.parameters = first.parameters?.map((p) => ({
-            name: p.name,
-            aliases: p.aliases,
-            description: p.description,
-            required: p.required,
-            type: p.type,
-            defaultValue: p.defaultValue,
-        }));
+        // Sub-commands keep their aliases; the manager sets the root's (never a local command's name)
+        if (parentPath.length > 0 && first.aliases?.length) {
+            this.aliases = [...first.aliases];
+        }
+        this.metadata = serverCommandMetadata(first, 'server:multi');
+        this.parameters = serverCommandParameters(first);
+        this.writeDescription = serverCommandWriteDescription(first);
         this.processors = first.processors?.map((sub) => {
             const subEntries = entries
                 .map((e) => {

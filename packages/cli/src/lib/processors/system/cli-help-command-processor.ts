@@ -324,9 +324,15 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
 
         // ── Server notice ────────────────────────────────────────
         if (processor.metadata?.requireServer) {
+            const server = processor.metadata.server as string | undefined;
             writer.writeln();
             writer.writeln(
-                `  ${writer.wrapInColor(t.t('cli.help.requires_server', 'Requires a connected server'), CliForegroundColor.Red)}`,
+                `  ${writer.wrapInColor(
+                    server
+                        ? t.t('cli.help.runs_on_server', 'Runs on server {server}', { server })
+                        : t.t('cli.help.requires_server', 'Requires a connected server'),
+                    CliForegroundColor.Red,
+                )}`,
             );
         }
 
@@ -349,7 +355,7 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
     }
 
     private writeParameter(
-        param: { name: string; aliases?: string[]; type: string; description: string; required: boolean; defaultValue?: any },
+        param: { name: string; aliases?: string[]; type: string; description: string; required: boolean; defaultValue?: any; allowedValues?: string[] },
         context: ICliExecutionContext,
         narrow = false,
     ) {
@@ -369,14 +375,21 @@ export class CliHelpCommandProcessor implements ICliCommandProcessor {
             param.defaultValue !== undefined && !param.required
                 ? `${DIM} [${param.defaultValue}]${RESET}`
                 : '';
+        const allowed = param.allowedValues?.length
+            ? `${DIM}${translator.t('cli.help.one_of', 'one of:')}${RESET} ${param.allowedValues.map((v) => writer.wrapInColor(v, CliForegroundColor.Magenta)).join(', ')}`
+            : '';
         if (narrow) {
             writer.writeln(`    ${nameStr} ${typeStr}${required}${defaultVal}`);
             writeWrapped(context, param.description, 6);
+            if (allowed) writer.writeln(`      ${allowed}`);
             return;
         }
         writer.writeln(
             `    ${nameStr} ${typeStr}  ${param.description}${required}${defaultVal}`,
         );
+        if (allowed) {
+            writer.writeln(`      ${allowed}`);
+        }
     }
 }
 

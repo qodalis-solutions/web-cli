@@ -15,6 +15,8 @@ export interface CliCompletionPath {
     subCommands?: ICliCommandProcessor[];
     /** The word at the cursor is the value of the flag before it (`--sides |`) */
     isFlagValue: boolean;
+    /** The parameter whose value is at the cursor, when `isFlagValue` and it is declared */
+    flag?: ICliCommandParameterDescriptor;
 }
 
 /**
@@ -34,6 +36,7 @@ export function resolveCompletionPath(
     let descriptors: ICliCommandParameterDescriptor[] = [];
     let candidates: ICliCommandProcessor[] | undefined = processors;
     let isFlagValue = false;
+    let flag: ICliCommandParameterDescriptor | undefined;
 
     for (let i = 0; i < parsed.length; i++) {
         const token = parsed[i];
@@ -44,6 +47,7 @@ export function resolveCompletionPath(
             } else if (!currentToken.startsWith('-')) {
                 // The flag is the last word: the cursor is on its value
                 isFlagValue = true;
+                flag = findParameter(token.name, descriptors);
             }
             continue;
         }
@@ -61,7 +65,19 @@ export function resolveCompletionPath(
         candidates = match?.processors?.length ? match.processors : undefined;
     }
 
-    return { processor, descriptors, subCommands: candidates, isFlagValue };
+    return { processor, descriptors, subCommands: candidates, isFlagValue, flag };
+}
+
+/** The parameter named `name` or with that alias (aliases written with or without dashes). */
+export function findParameter(
+    name: string,
+    descriptors: ICliCommandParameterDescriptor[],
+): ICliCommandParameterDescriptor | undefined {
+    const bare = (a: string) => a.replace(/^-+/, '');
+    return (
+        descriptors.find((d) => d.name === name) ??
+        descriptors.find((d) => d.aliases?.some((a) => bare(a) === name))
+    );
 }
 
 function toParsedToken(text: string): ParsedToken {

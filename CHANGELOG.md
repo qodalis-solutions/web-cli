@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 - `server jobs list --tag <tag>` (repeatable or comma-separated) lists only the jobs that have every tag, ignoring case. The tags go to the server as `?tag=`; the list is filtered in the CLI too, so a server without job tags lists nothing for a tag instead of every job.
 - `list` shows a Tags column when a job has tags, `info` a Tags row, and `edit` asks for the tags (comma-separated, `-` clears them). Needs servers with job tags (the next server release).
+### Server commands get the same help as web commands
+
+- Server commands show their own documentation and examples in `help <command>`, keep their aliases, and are listed under their own module and icon. They need servers with command metadata (the next server release). Help names the server a command runs on. Commands from older servers look as before.
+- `ICliCommandParameterDescriptor.allowedValues` (core) works for every command: help lists the values and Tab completes them after `--name ` and `--name=`. Server commands also refuse other values before sending, ignoring case.
+- A server alias is added as a bare name only when no local command owns it. `node:<alias>` always works.
 
 ## v2.4.2
 

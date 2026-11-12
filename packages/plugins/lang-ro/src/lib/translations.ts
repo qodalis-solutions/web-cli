@@ -21,6 +21,8 @@ export const roTranslations: Record<string, string> = {
     'cli.help.global_help': 'Afișează ajutorul comenzii',
     'cli.help.global_context': 'Setează comanda drept context activ',
     'cli.help.requires_server': 'Necesită un server conectat',
+    'cli.help.runs_on_server': 'Rulează pe serverul {server}',
+    'cli.help.one_of': 'una dintre:',
     'cli.help.aliases': 'Aliasuri:',
     'cli.help.required': '(obligatoriu)',
     'cli.help.show_all': 'Afișează toate comenzile disponibile',

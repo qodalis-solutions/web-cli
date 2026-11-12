@@ -140,6 +140,16 @@ export type CliServerCommandDescriptor = {
     command: string;
     description?: string;
     version?: string;
+    /** Other names of the command (servers with command metadata) */
+    aliases?: string[];
+    /** Example command lines for help */
+    examples?: { command: string; description?: string }[];
+    /** Longer help text: paragraphs separated by a blank line */
+    documentation?: string;
+    /** The group the command is listed under in help */
+    module?: string;
+    /** One emoji for help */
+    icon?: string;
     parameters?: {
         name: string;
         aliases?: string[];
@@ -147,6 +157,8 @@ export type CliServerCommandDescriptor = {
         required: boolean;
         type: string;
         defaultValue?: any;
+        /** The only values the parameter takes */
+        allowedValues?: string[];
     }[];
     processors?: CliServerCommandDescriptor[];
 };

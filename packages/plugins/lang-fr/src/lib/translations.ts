@@ -27,6 +27,8 @@ export const frTranslations: Record<string, string> = {
     'cli.help.global_help': 'Affiche l\'aide de la commande',
     'cli.help.global_context': 'Définit la commande comme contexte actif',
     'cli.help.requires_server': 'Nécessite un serveur connecté',
+    'cli.help.runs_on_server': 'S’exécute sur le serveur {server}',
+    'cli.help.one_of': 'parmi :',
     'cli.help.aliases': 'Alias :',
     'cli.help.required': '(obligatoire)',
     'cli.help.show_all': 'Afficher toutes les commandes disponibles',
