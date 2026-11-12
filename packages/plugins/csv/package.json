@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-csv",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "CSV data manipulation in the terminal",
   "author": "Qodalis Solutions",
   "license": "MIT",
