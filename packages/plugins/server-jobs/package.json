@@ -1,6 +1,6 @@
 {
   "name": "@qodalis/cli-server-jobs",
-  "version": "2.5.1",
+  "version": "2.5.2",
   "description": "Background job management",
   "author": "Qodalis Solutions",
   "license": "MIT",
