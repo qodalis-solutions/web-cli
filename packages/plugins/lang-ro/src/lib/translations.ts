@@ -404,6 +404,76 @@ export const roTranslations: Record<string, string> = {
     'cli.server.jobs.watch.help.events_all_connected_servers':
         'Evenimente de pe toate serverele conectate',
     'cli.server.jobs.watch.help.only_events_node': 'Doar evenimentele de pe node',
+    'cli.server.link.url_prompt': 'URL-ul serverului: ',
+    'cli.server.link.origin_not_allowed':
+        'Această aplicație nu permite asocierea serverului {url}.',
+    'cli.server.link.http_warning':
+        '{url} nu este criptat (http): tokenul său circulă în clar prin rețea.',
+    'cli.server.link.http_confirm': 'Îl asociezi totuși?',
+    'cli.server.link.mixed_content':
+        'Această pagină este servită prin https: browserul poate bloca cererile către un server http.',
+    'cli.server.link.checking': 'Se verifică {url}…',
+    'cli.server.link.no_secret_store':
+        'Tokenurile nu pot fi păstrate în siguranță pe această pagină (fără Web Crypto: servește-o prin https). Serverul nu a fost asociat.',
+    'cli.server.link.token_prompt': 'Token API: ',
+    'cli.server.link.username_prompt': 'Utilizator: ',
+    'cli.server.link.password_prompt': 'Parolă: ',
+    'cli.server.link.name_prompt': 'Nume pentru acest server: ',
+    'cli.server.link.invalid_name':
+        'Litere, cifre, - și _ (cel mult 32), începând cu o literă sau o cifră',
+    'cli.server.link.linked': '{name} asociat: {count} comenzi{user}.',
+    'cli.server.link.as_user': ' ca {user}',
+    'cli.server.link.needs_sign_in':
+        '{name} asociat, dar comenzile sale necesită autentificare: asociază-l cu un token sau prin browser.',
+    'cli.server.link.unreachable':
+        '{name} asociat, dar acum nu este accesibil: comenzile sale se încarcă atunci când revine.',
+    'cli.server.link.now_default': '  {name} este serverul implicit.',
+    'cli.server.link.host_server':
+        '\'{name}\' este configurat de aplicație și nu poate fi înlocuit.',
+    'cli.server.link.replace_confirm': 'Există deja un server asociat \'{name}\'. Îl înlocuiești?',
+    'cli.server.link.method_browser': 'Deschide serverul în browser și aprobă (recomandat)',
+    'cli.server.link.method_token': 'Lipește un token API',
+    'cli.server.link.method_password': 'Autentificare cu utilizator și parolă',
+    'cli.server.link.method_none': 'Fără autentificare (server deschis)',
+    'cli.server.link.method_prompt': 'Cum vrei să-l asociezi?',
+    'cli.server.link.no_browser_link':
+        'Acest server nu poate fi asociat prin browser (necesită pluginul users, 1.0.0-beta.25 sau mai nou). Folosește server add --no-browser.',
+    'cli.server.link.open_page': '  Deschide această pagină, autentifică-te și aprobă:',
+    'cli.server.link.compare_code': '  Verifică dacă afișează codul {code}',
+    'cli.server.link.waiting': 'Se așteaptă aprobarea… (Ctrl+C pentru anulare)',
+    'cli.server.link.denied': 'Cererea de asociere a fost refuzată.',
+    'cli.server.link.expired': 'Cererea de asociere a expirat. Rulează din nou server add.',
+    'cli.server.add.help.description':
+        'Asociază un server Node, .NET sau Python cu acest terminal: comenzile sale sunt disponibile imediat și după fiecare reîncărcare. Cere ce lipsește: URL-ul, modul de autentificare (aprobare în browser, un token API lipit sau un utilizator și o parolă) și un nume. Tokenurile sunt păstrate criptate și nu mai sunt afișate niciodată; pot fi asociate doar servere https (http pentru localhost și adrese private).',
+    'cli.server.add.help.interactive': 'Cere totul',
+    'cli.server.add.help.url': 'Asociază acest server',
+    'cli.server.add.help.token': 'Asociază cu un token API (scripturi)',
+    'cli.server.add.help.example_browser': 'Aprobare în browser',
+    'cli.server.add.help.example_lan': 'Un server din rețeaua locală',
+    'cli.server.link.cannot_remove_host':
+        '\'{name}\' este configurat de aplicație și nu poate fi eliminat.',
+    'cli.server.link.unknown_linked': 'Niciun server asociat \'{name}\'. Vezi server list.',
+    'cli.server.link.removed':
+        '{name} dezasociat; tokenul său a fost șters de pe acest dispozitiv.',
+    'cli.server.link.revoke_hint':
+        '  Tokenul rămâne valid pe server până expiră: revocă-l acolo cu token revoke.',
+    'cli.server.link.cannot_edit_host':
+        '\'{name}\' este configurat de aplicație și nu poate fi editat.',
+    'cli.server.link.edit_nothing': 'Specifică --url <url> și/sau --token.',
+    'cli.server.link.updated': '{name} actualizat: {count} comenzi.',
+    'cli.server.link.updated_unreachable': '{name} actualizat, dar acum nu este accesibil.',
+    'cli.server.link.cancelled': 'Anulat. Cererea expiră pe server în {minutes} min.',
+    'cli.server.link.none_linked': 'Niciun server asociat. Asociază unul cu server add.',
+    'cli.server.link.forget_all_confirm':
+        'Dezasociezi {count} servere și ștergi toate tokenurile salvate?',
+    'cli.server.link.forgot_all':
+        'Toate serverele asociate și tokenurile salvate au fost eliminate.',
+    'cli.server.help.add': 'Asociază un server cu acest terminal (păstrat după reîncărcare)',
+    'cli.server.help.edit': 'Modifică un server asociat',
+    'cli.server.help.remove': 'Dezasociază un server și șterge tokenul său',
+    'cli.server.help.forget_all': 'Dezasociază toate serverele asociate',
+    'cli.server.link.disabled': 'Această aplicație nu permite asocierea serverelor din terminal.',
+    'cli.server.link.found': 'Server Qodalis CLI',
     'cli.ssh.description': 'Deschide o sesiune shell la distanță pe un server',
     'cli.ssh.help.open_interactive_shell_server':
         'Deschide un shell interactiv pe un server, în acest terminal, sau rulează acolo o singură comandă și afișează rezultatul. Pot fi folosite doar serverele care activează shell-ul; cu pluginul users aveți nevoie de permisiunea shell:execute. Fără nume, ssh folosește singurul server cu shell, altfel serverul implicit, altfel întreabă pe care să-l folosească.',

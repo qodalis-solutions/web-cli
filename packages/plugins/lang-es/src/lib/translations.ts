@@ -508,6 +508,75 @@ export const esTranslations: Record<string, string> = {
     'cli.server.jobs.watch.help.events_all_connected_servers':
         'Eventos de todos los servidores conectados',
     'cli.server.jobs.watch.help.only_events_node': 'Solo eventos de node',
+    'cli.server.link.url_prompt': 'URL del servidor: ',
+    'cli.server.link.origin_not_allowed': 'Esta aplicación no permite vincular {url}.',
+    'cli.server.link.http_warning':
+        '{url} no está cifrado (http): su token viaja en texto plano por la red.',
+    'cli.server.link.http_confirm': '¿Vincularlo de todos modos?',
+    'cli.server.link.mixed_content':
+        'Esta página se sirve por https: el navegador puede bloquear las peticiones a un servidor http.',
+    'cli.server.link.checking': 'Comprobando {url}…',
+    'cli.server.link.no_secret_store':
+        'Los tokens no se pueden guardar de forma segura en esta página (sin Web Crypto: sírvala por https). El servidor no se vinculó.',
+    'cli.server.link.token_prompt': 'Token de API: ',
+    'cli.server.link.username_prompt': 'Usuario: ',
+    'cli.server.link.password_prompt': 'Contraseña: ',
+    'cli.server.link.name_prompt': 'Nombre para este servidor: ',
+    'cli.server.link.invalid_name':
+        'Letras, dígitos, - y _ (como máximo 32), empezando por una letra o un dígito',
+    'cli.server.link.linked': '{name} vinculado: {count} comandos{user}.',
+    'cli.server.link.as_user': ' como {user}',
+    'cli.server.link.needs_sign_in':
+        '{name} vinculado, pero sus comandos requieren iniciar sesión: vincúlelo con un token o a través del navegador.',
+    'cli.server.link.unreachable':
+        '{name} vinculado, pero ahora no está accesible: sus comandos se cargarán cuando vuelva.',
+    'cli.server.link.now_default': '  {name} es el servidor predeterminado.',
+    'cli.server.link.host_server':
+        '\'{name}\' está configurado por la aplicación y no se puede reemplazar.',
+    'cli.server.link.replace_confirm': 'Ya existe un servidor vinculado \'{name}\'. ¿Reemplazarlo?',
+    'cli.server.link.method_browser': 'Abrir el servidor en el navegador y aprobar (recomendado)',
+    'cli.server.link.method_token': 'Pegar un token de API',
+    'cli.server.link.method_password': 'Iniciar sesión con usuario y contraseña',
+    'cli.server.link.method_none': 'Sin inicio de sesión (servidor abierto)',
+    'cli.server.link.method_prompt': '¿Cómo quiere vincularlo?',
+    'cli.server.link.no_browser_link':
+        'Este servidor no se puede vincular a través del navegador (necesita el plugin users, 1.0.0-beta.25 o posterior). Use server add --no-browser.',
+    'cli.server.link.open_page': '  Abra esta página, inicie sesión y apruebe:',
+    'cli.server.link.compare_code': '  Compruebe que muestra el código {code}',
+    'cli.server.link.waiting': 'Esperando la aprobación… (Ctrl+C para cancelar)',
+    'cli.server.link.denied': 'La solicitud de vinculación fue denegada.',
+    'cli.server.link.expired': 'La solicitud de vinculación caducó. Ejecute server add de nuevo.',
+    'cli.server.add.help.description':
+        'Vincula un servidor Node, .NET o Python a este terminal: sus comandos están disponibles al instante y tras cada recarga. Pide lo que falte: la URL, cómo iniciar sesión (aprobar en el navegador, pegar un token de API, o un usuario y una contraseña) y un nombre. Los tokens se guardan cifrados y nunca se vuelven a mostrar; solo se pueden vincular servidores https (http para localhost y direcciones privadas).',
+    'cli.server.add.help.interactive': 'Lo pide todo',
+    'cli.server.add.help.url': 'Vincular este servidor',
+    'cli.server.add.help.token': 'Vincular con un token de API (scripts)',
+    'cli.server.add.help.example_browser': 'Aprobar en el navegador',
+    'cli.server.add.help.example_lan': 'Un servidor en la red local',
+    'cli.server.link.cannot_remove_host':
+        '\'{name}\' está configurado por la aplicación y no se puede eliminar.',
+    'cli.server.link.unknown_linked':
+        'No hay ningún servidor vinculado \'{name}\'. Consulte server list.',
+    'cli.server.link.removed': '{name} desvinculado; su token se ha eliminado de este dispositivo.',
+    'cli.server.link.revoke_hint':
+        '  El token sigue siendo válido en el servidor hasta que caduque: revóquelo allí con token revoke.',
+    'cli.server.link.cannot_edit_host':
+        '\'{name}\' está configurado por la aplicación y no se puede editar.',
+    'cli.server.link.edit_nothing': 'Indique --url <url> y/o --token.',
+    'cli.server.link.updated': '{name} actualizado: {count} comandos.',
+    'cli.server.link.updated_unreachable': '{name} actualizado, pero ahora no está accesible.',
+    'cli.server.link.cancelled': 'Cancelado. La solicitud caduca en el servidor en {minutes} min.',
+    'cli.server.link.none_linked': 'No hay servidores vinculados. Vincula uno con server add.',
+    'cli.server.link.forget_all_confirm':
+        '¿Desvincular {count} servidores y eliminar todos los tokens guardados?',
+    'cli.server.link.forgot_all':
+        'Se han eliminado todos los servidores vinculados y los tokens guardados.',
+    'cli.server.help.add': 'Vincular un servidor a este terminal (se conserva entre recargas)',
+    'cli.server.help.edit': 'Cambiar un servidor vinculado',
+    'cli.server.help.remove': 'Desvincular un servidor y eliminar su token',
+    'cli.server.help.forget_all': 'Desvincular todos los servidores vinculados',
+    'cli.server.link.disabled': 'Esta aplicación no permite vincular servidores desde el terminal.',
+    'cli.server.link.found': 'Servidor de Qodalis CLI',
     'cli.ssh.description': 'Abrir una sesión de shell remota en un servidor',
     'cli.ssh.help.open_interactive_shell_server':
         'Abre un shell interactivo en un servidor, en este terminal, o ejecuta allí un comando y muestra su salida. Solo se pueden usar servidores que habilitan su shell; con el plugin users se necesita el permiso shell:execute. Sin nombre, ssh usa el único servidor con shell, si no el servidor predeterminado, si no pregunta cuál.',
