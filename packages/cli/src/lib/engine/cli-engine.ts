@@ -66,6 +66,7 @@ import {
     createBootLog,
     createCompletionProviders,
 } from './cli-engine-boot';
+import { enableTouchScroll } from './cli-touch-scroll';
 
 export interface CliEngineOptions extends CliOptions {
     terminalOptions?: Partial<ITerminalOptions & ITerminalInitOnlyOptions>;
@@ -92,6 +93,14 @@ export interface CliEngineOptions extends CliOptions {
      * @default true
      */
     autoFocus?: boolean;
+    /**
+     * Scroll the scrollback with a finger on touch screens (xterm.js has no
+     * touch scrolling, so a drag would scroll the page instead). Paused while
+     * a full-screen command runs. Turn it off when the host scrolls the
+     * terminal itself.
+     * @default true
+     */
+    touchScroll?: boolean;
 }
 
 /** What the start phases share once services exist. */
@@ -113,6 +122,7 @@ export class CliEngine {
     private resizeObserver?: ResizeObserver;
     private resizeListener?: () => void;
     private wheelListener?: (e: WheelEvent) => void;
+    private disposeTouchScroll?: () => void;
     private resizeVersion = 0;
     private resizeScheduled = false;
     private bootService?: CliBoot;
@@ -248,6 +258,12 @@ export class CliEngine {
         this.serializeAddon = setup.serializeAddon;
         this.dragDropService = setup.dragDropService;
         this.wheelListener = setup.wheelListener;
+        if (this.options?.touchScroll !== false) {
+            this.disposeTouchScroll = enableTouchScroll(
+                this.terminal,
+                () => !!this.executionContext?.contextProcessor,
+            );
+        }
         this.handleResize();
     }
 
@@ -524,6 +540,7 @@ export class CliEngine {
         if (this.wheelListener) {
             this.container.removeEventListener('wheel', this.wheelListener);
         }
+        this.disposeTouchScroll?.();
         this.resizeVersion = -1;
         this.resizeScheduled = false;
         this.resizeObserver?.disconnect();

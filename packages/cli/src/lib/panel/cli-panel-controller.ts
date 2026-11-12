@@ -74,6 +74,26 @@ function asEventTarget(node: ParentNode | null): EventTarget | null {
     return node && typeof (node as Partial<EventTarget>).addEventListener === 'function' ? (node as unknown as EventTarget) : null;
 }
 
+/**
+ * Whether an element between `target` and `root` can still scroll in the
+ * wheel's direction (the tab strip, menus); the page must not take that wheel.
+ */
+function canScrollWithin(target: EventTarget | null, root: Node, dx: number, dy: number): boolean {
+    for (let el = target as HTMLElement | null; el && el !== root; el = el.parentElement) {
+        if (!(el instanceof HTMLElement)) continue;
+        const style = getComputedStyle(el);
+        const scrollsY = /auto|scroll/.test(style.overflowY) && el.scrollHeight > el.clientHeight;
+        const scrollsX = /auto|scroll/.test(style.overflowX) && el.scrollWidth > el.clientWidth;
+        if (dy !== 0 && scrollsY) {
+            if (dy < 0 ? el.scrollTop > 0 : el.scrollTop + el.clientHeight < el.scrollHeight) return true;
+        }
+        if (dx !== 0 && scrollsX) {
+            if (dx < 0 ? el.scrollLeft > 0 : el.scrollLeft + el.clientWidth < el.scrollWidth) return true;
+        }
+    }
+    return false;
+}
+
 /** Whether a theme input follows the system's color scheme. */
 function followsSystem(input: CliPanelThemeInput | undefined): boolean {
     return input === 'auto' || (typeof input === 'object' && input !== null && input.base === 'auto');
@@ -275,9 +295,13 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     /** Element containing the terminals, used for theme sync. */
     setRootElement(element: ParentNode | null): void {
         if (element === this.rootElement) return;
-        asEventTarget(this.rootElement)?.removeEventListener(CLI_TERMINAL_THEME_EVENT, this.onTerminalTheme);
+        const previous = asEventTarget(this.rootElement);
+        previous?.removeEventListener(CLI_TERMINAL_THEME_EVENT, this.onTerminalTheme);
+        previous?.removeEventListener('wheel', this.onPanelWheel);
         this.rootElement = element;
-        asEventTarget(element)?.addEventListener(CLI_TERMINAL_THEME_EVENT, this.onTerminalTheme);
+        const next = asEventTarget(element);
+        next?.addEventListener(CLI_TERMINAL_THEME_EVENT, this.onTerminalTheme);
+        next?.addEventListener('wheel', this.onPanelWheel, { passive: false });
         if (element && this.followsTerminalTheme) this.startThemeSync();
     }
 
@@ -837,6 +861,17 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         const first = this.rootElement?.querySelector('.terminal-container');
         if (event.target !== first) return;
         this.syncThemeFromEngine((event as CustomEvent<ITheme>).detail);
+    };
+
+    /**
+     * A wheel over the panel chrome (header, icon strip, empty pane) would
+     * scroll the page behind it; the terminals already keep their own wheel.
+     */
+    private readonly onPanelWheel = (event: Event): void => {
+        const wheel = event as WheelEvent;
+        const root = this.rootElement as unknown as Node | null;
+        if (!root || canScrollWithin(wheel.target, root, wheel.deltaX, wheel.deltaY)) return;
+        wheel.preventDefault();
     };
 
     /* ─── On-screen keyboard ────────────────────────────────── */
