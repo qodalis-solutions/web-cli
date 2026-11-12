@@ -3,24 +3,27 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## v2.5.0
 
 ### Job tags in `server jobs`
 
 - `server jobs list --tag <tag>` (repeatable or comma-separated) lists only the jobs that have every tag, ignoring case. The tags go to the server as `?tag=`; the list is filtered in the CLI too, so a server without job tags lists nothing for a tag instead of every job.
 - `list` shows a Tags column when a job has tags, `info` a Tags row, and `edit` asks for the tags (comma-separated, `-` clears them). Needs servers with job tags (the next server release).
+
 ### Server commands get the same help as web commands
 
 - Server commands show their own documentation and examples in `help <command>`, keep their aliases, and are listed under their own module and icon. They need servers with command metadata (the next server release). Help names the server a command runs on. Commands from older servers look as before.
 - `ICliCommandParameterDescriptor.allowedValues` (core) works for every command: help lists the values and Tab completes them after `--name ` and `--name=`. Server commands also refuse other values before sending, ignoring case.
 - `ICliCommandParameterDescriptor.examples` (core): example values of a parameter, listed in help after its description (`e.g. Paris, New York`). Server commands get them from the servers' parameter `examples`.
 - A server alias is added as a bare name only when no local command owns it. `node:<alias>` always works.
+
 ### Data explorer: read-only sources and export permission
 
 - The `data-explorer` source list and header show `read-only` for sources the server marks read-only (servers from 1.0.0-beta.25 make every source read-only unless it sets `readOnly: false`).
 - `\format json` and `\format csv` print `Export is not allowed on this source` when the server reports `canExport: false` for the user, and such a source starts in table output.
 - Refused queries show the server's message (missing source permission, too many queries) instead of the HTTP status.
 - A query that uses a masked column other than by its own name (`masked_column`) shows the server's message and the hint `Select masked columns by their own name, or use SELECT *`.
+
 ### Connect your own server: `server add`
 
 - `server add [name] [url]` links a Node, .NET or Python server to the terminal in any app, kept across reloads. It checks the server (version, OS, shell), then links it by **browser approval** (the terminal prints and opens the server's `/qcli/admin/link?code=…` page; the user signs in, compares the code and approves; servers from 1.0.0-beta.25), a pasted **API token** (`--token` for scripts) or a **user and password** (an API token is created for the device and the session ends). `server edit <name> --url|--token`, `server remove <name>` and `server forget-all` change and unlink linked servers; `server list` has a Source column (`app` or `linked ••••abcd`).
