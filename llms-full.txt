@@ -879,6 +879,7 @@ A server plugin registers command processors in a Qodalis CLI server (Node, .NET
 - In the browser, a server command that has sub-commands accepts only its sub-command words; a leaf command accepts positional text (`weather current Paris`).
 - Exceptions thrown by a processor become exit code 1 with `Error executing command: <message>` (style `error`). Unknown commands return `Unknown command: <name>`.
 - Servers: Node `@qodalis/cli-server-node` (default port 8047 in the demos), .NET `Qodalis.Cli` (8046), Python `qodalis-cli-server` (8048).
+- Users can link servers themselves with `server add [name] [url]`: browser approval (`POST /api/v1/qcli/link`, the user approves at `/qcli/admin/link?code=…`, the terminal polls `GET /api/v1/qcli/link/{linkId}` and receives an API token), a pasted API token (`--token`), or a user and password (the terminal creates a token and signs out). Linked servers persist (IndexedDB), their tokens are encrypted (`ICliSecretStore`, Web Crypto by default) and redacted from the history. `server edit`, `server remove`, `server forget-all`. Hosts restrict it with `CliOptions.userServers` (`false` or `{ allowedOrigins }`). Server side: the users plugin's link routes, `setLinkApprovalUrl` (Node) / `LinkApprovalUrl` (.NET) / `link_approval_url` (Python) for a host's own approval page.
 
 ### Paging list output (all servers)
 
@@ -907,6 +908,42 @@ public async Task<ICliStructuredResponse?> HandleStructuredAsync(CliProcessComma
     return builder.Build();
 }
 ```
+
+### Help for server commands (all servers)
+
+A server command can carry the same help as a web command: examples, longer documentation, aliases, its own module and icon, and the allowed values of a parameter. All are optional; the web terminal shows them with `help <command>` and older servers simply send none.
+
+- Command members: Node `aliases`, `examples` (`{ command, description? }[]`), `documentation`, `module`, `icon`; .NET `Aliases`, `Examples` (`new CliCommandExample("cmd", "what it does")`), `Documentation`, `Module`, `Icon`; Python properties `aliases`, `examples` (`CliCommandExample("cmd", "what it does")`), `documentation`, `module`, `icon`.
+- Parameter member: Node `allowedValues` (7th constructor argument of `CliCommandParameterDescriptor`), .NET `AllowedValues`, Python `allowed_values`. The terminal lists them in help, completes them with Tab (`--format ` and `--format=`) and refuses other values before sending (ignoring case); MCP tools list them as an `enum`.
+- Parameter examples: Node `examples` (8th constructor argument), .NET `Examples`, Python `examples`: example values shown in help after the description (`e.g. Paris, New York`) and as `examples` in MCP tool schemas.
+- `documentation` is plain text; separate paragraphs with a blank line. Examples are command lines as the user types them.
+- Aliases work on root commands and sub-commands, on the server too (execution and permission checks). In the terminal `node:base64` also answers to `node:b64`, and the bare alias `b64` is registered unless a local command owns that name.
+- `module` and `icon` place the command in `help`'s list (default: the server's group, `Server (node)`, and 🖥); help still says which server the command runs on.
+- Wire format in `GET /api/v1/qcli/commands`: `aliases`, `examples`, `documentation`, `module`, `icon` on each command and `allowedValues` and `examples` on each parameter, left out when unset.
+
+Node example:
+
+```typescript
+class ExportProcessor extends CliCommandProcessor {
+    command = 'export';
+    description = 'Exports the orders';
+    aliases = ['exp'];
+    module = 'orders';
+    icon = '📦';
+    documentation = 'Writes the orders of a day in the chosen format.\n\nLarge days are paged: see --skip and --take.';
+    examples = [
+        { command: 'export --format csv', description: "Today's orders as CSV" },
+        { command: 'export --day 2026-11-01 --format json', description: 'One day as JSON' },
+    ];
+    parameters = [
+        new CliCommandParameterDescriptor('format', 'Output format', false, 'string', ['f'], 'csv', ['csv', 'json']),
+        new CliCommandParameterDescriptor('day', 'Day (YYYY-MM-DD), default today', false, 'string'),
+    ];
+    async handleAsync(command: CliProcessCommand): Promise<string> { /* ... */ }
+}
+```
+
+.NET: `public override IEnumerable<CliCommandExample>? Examples { get; set; } = [new("export --format csv", "Today's orders as CSV")];` and `AllowedValues = ["csv", "json"]` in the parameter's object initializer. Python: `@property def examples(self): return [CliCommandExample("export --format csv", "Today's orders as CSV")]` and `allowed_values=["csv", "json"]`.
 
 ### Node: minimal server processor
 
@@ -940,7 +977,7 @@ const { app } = createCliServer({
 app.listen(8047);
 ```
 
-- `ICliCommandProcessor` members: `command`, `description`, `author` (default `DefaultLibraryAuthor`), `version` (default `'1.0.0'`), `allowUnlistedCommands?`, `valueRequired?`, `acceptsValue?`, `processors?`, `parameters?`, `requiredPermissions?`, `handleAsync(command, signal?) => Promise<string>`, `handleStructuredAsync?(command, signal?) => Promise<CliStructuredResponse>` (takes precedence when present).
+- `ICliCommandProcessor` members: `command`, `description`, `author` (default `DefaultLibraryAuthor`), `version` (default `'1.0.0'`), `allowUnlistedCommands?`, `valueRequired?`, `acceptsValue?`, `processors?`, `parameters?`, `requiredPermissions?`, `aliases?`, `examples?`, `documentation?`, `module?`, `icon?` (see "Help for server commands"), `handleAsync(command, signal?) => Promise<string>`, `handleStructuredAsync?(command, signal?) => Promise<CliStructuredResponse>` (takes precedence when present).
 - `CliProcessCommand`: `command`, `chainCommands: string[]`, `rawCommand`, `value?` (as typed), `positionals?: string[]` (shell-split; sent by current browsers), `args: Record<string, any>`, `data?`. Helpers: `getPositionals(command)` (falls back to splitting `value`), `getPositionalText(command)`, `splitShellWords`, `joinShellWords`, `quoteShellWord`.
 - `signal` is aborted when the HTTP client disconnects.
 - Packages: `npm install @qodalis/cli-server-abstractions` for plugins; `@qodalis/cli-server-node` for the host.
@@ -1485,7 +1522,7 @@ class WeatherModule(CliModule):
 # host: create_cli_server(CliServerOptions(configure=lambda b: b.add_module(WeatherModule())))
 ```
 
-- `CliCommandParameterDescriptor(name, description, required=False, type="string", aliases=None, default_value=None)`.
+- `CliCommandParameterDescriptor(name, description, required=False, type="string", aliases=None, default_value=None, allowed_values=None)`.
 - Dispatch: root by `command.lower()`, then each `chain_commands` word against `processors`; if a word matches no child, the current processor handles it only when `allow_unlisted_commands` is truthy, else `Unknown command`. Only the resolved processor runs.
 - `CliBuilder` (chainable): `add_processor`, `add_module`, `set_file_storage_provider`, `add_data_explorer_provider`, `add_filesystem` (legacy). Registering the same command twice replaces the first.
 - `CliServerOptions`: `base_path` (`"/api/qcli"`), `cors`, `cors_origins`, `allowed_origins`, `enable_shell`, `shell`, `mcp` (`True`, dict or `CliMcpOptions`), `configure`. `create_cli_server` returns `CliServerResult` with `app`, `registry`, `builder`, `executor`, `mcp`, `mount_plugin(plugin)`, ...
@@ -1651,6 +1688,20 @@ The audit log is a plugin of its own (.NET `Qodalis.Cli.Plugin.Audit`, Node `@qo
 - A host writes its own entries to the same log through the audit store: `IAuditStore.LogAsync` (.NET, `Qodalis.Cli.Abstractions.Audit`), `auditStore.log(...)` (Node), `await audit_store.log(...)` (Python).
 - Another store: `cli.SetAuditStore<T>()` (.NET), `CliAuditBuilder.setStore(store)` (Node), `CliAuditBuilder().set_store(store)` (Python); the users plugin's audit-store option still works and does the same. The contract (`AuditEntry`, `AuditQueryOptions`, the store interface) is in each server's abstractions package. Old entries: `PruneAsync(before)` (.NET), `prune(before)` (Node; Python takes Unix milliseconds).
 - .NET only: `cli.AddEfCoreAuditStore(o => o.UseNpgsql(connectionString))` (`Qodalis.Cli.Plugin.Audit.EfCore`) keeps the log in a database (table `audit_entries`; `modelBuilder.ApplyAuditStorageModel()` for your own migrations). It keeps every entry, failed sign-ins included: prune it from a daily job.
+
+### Data explorer sources: permissions, read-only, masking (all servers)
+
+Each data explorer source takes these options besides `timeout` and `maxRows` (Node and JSON names; .NET PascalCase, Python snake_case):
+
+- `readOnly` (default **true**): only queries that read are accepted (`SELECT`/`WITH`/`EXPLAIN`/`SHOW`..., MongoDB `find`/`aggregate`..., Redis read commands, Elasticsearch `GET` and `_search`), and SQL providers run them in a read-only transaction. Set it to false for a source that must write.
+- `requiredPermissions`: permissions the caller needs besides `data:query`; other users do not see the source (403 on `schema`/`execute`).
+- `allowedObjects`: glob patterns of the tables (`schema.table` or `table`), collections, Redis keys or indices the source shows and accepts.
+- `maskColumns` (values shown as `***`) and `dropColumns` (removed from results and schema): glob patterns of column or field names.
+- `rateLimit` `{ maxQueries, windowSeconds }`: per user and source; more answer 429.
+- `audit` (default true): every execute is written to the audit log as `data_query` with the source, the query (first 2000 characters), success, row count and duration.
+- `exportPermissions`: `GET /sources` reports `canExport`, and the web CLI's `data-explorer` refuses `\format json|csv` when it is false.
+
+The object filter and the read-only check are a convenience: give the source a database account that can only read what its users may see.
 
 ### Server logs and Seq (.NET)
 
