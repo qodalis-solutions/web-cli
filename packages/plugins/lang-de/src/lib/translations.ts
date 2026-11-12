@@ -458,6 +458,8 @@ export const deTranslations: Record<string, string> = {
     'cli.server.jobs.list.help.only_one_group': 'Nur eine Gruppe',
     'cli.server.jobs.list.help.jobs_node_server': 'Jobs auf dem Server node',
     'cli.server.jobs.list.help.jobs_reports_group': 'Jobs in der Gruppe reports',
+    'cli.server.jobs.list.help.only_tagged': 'Nur die Jobs mit allen angegebenen Tags',
+    'cli.server.jobs.list.help.jobs_tagged': 'Jobs mit den Tags country:ro und bank',
     'cli.server.jobs.info.help.show_everything_about_one':
         'Alles zu einem Job anzeigen: Zeitplan, Wiederholungen, Timeout, Überlappungsrichtlinie, die aktuell laufende Ausführung und das Ergebnis der letzten Ausführung. Der Job wird über Name (beliebige Schreibung) oder ID gefunden.',
     'cli.server.jobs.info.help.details_cleanup_job': 'Details des Jobs cleanup',

@@ -355,6 +355,8 @@ export const ruTranslations: Record<string, string> = {
     'cli.server.jobs.list.help.only_one_group': 'Только одна группа',
     'cli.server.jobs.list.help.jobs_node_server': 'Задания на сервере node',
     'cli.server.jobs.list.help.jobs_reports_group': 'Задания в группе reports',
+    'cli.server.jobs.list.help.only_tagged': 'Только задания со всеми указанными тегами',
+    'cli.server.jobs.list.help.jobs_tagged': 'Задания с тегами country:ro и bank',
     'cli.server.jobs.info.help.show_everything_about_one':
         'Показать всё об одном задании: расписание, повторы, тайм-аут, политику перекрытия, выполняющийся сейчас запуск и результат последнего запуска. Задание ищется по имени (в любом регистре) или ID.',
     'cli.server.jobs.info.help.details_cleanup_job': 'Подробности о задании cleanup',

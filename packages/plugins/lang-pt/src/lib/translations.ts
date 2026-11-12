@@ -459,6 +459,8 @@ export const ptTranslations: Record<string, string> = {
     'cli.server.jobs.list.help.only_one_group': 'Somente um grupo',
     'cli.server.jobs.list.help.jobs_node_server': 'Jobs do servidor node',
     'cli.server.jobs.list.help.jobs_reports_group': 'Jobs do grupo reports',
+    'cli.server.jobs.list.help.only_tagged': 'Apenas os trabalhos que têm todas as etiquetas indicadas',
+    'cli.server.jobs.list.help.jobs_tagged': 'Trabalhos com as etiquetas country:ro e bank',
     'cli.server.jobs.info.help.show_everything_about_one':
         'Mostra tudo sobre um job: agenda, novas tentativas, tempo limite, política de sobreposição, a execução em andamento e o resultado da última execução. O job é encontrado pelo nome (qualquer caixa) ou ID.',
     'cli.server.jobs.info.help.details_cleanup_job': 'Detalhes do job cleanup',

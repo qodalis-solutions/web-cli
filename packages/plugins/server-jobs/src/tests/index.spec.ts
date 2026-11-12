@@ -522,7 +522,7 @@ describe('server jobs sub-commands', () => {
         // retries, timeout, overlap policy
         const { context, out } = createContext(
             [{ name: 'one', url: 'http://srv1.test' }],
-            { readLines: ['New desc', '', '', '30s', '5', '', 'QUEUE'], confirm: true },
+            { readLines: ['New desc', '', '', '', '30s', '5', '', 'QUEUE'], confirm: true },
         );
 
         await run('edit', context, 'Cleanup');
@@ -543,7 +543,7 @@ describe('server jobs sub-commands', () => {
         const calls = installFetch({ [`GET ${BASE}`]: { body: [JOB] }, [`PUT ${BASE}/job-1`]: {} });
         const { context } = createContext(
             [{ name: 'one', url: 'http://srv1.test' }],
-            { readLines: ['', '', '', '', '', '', '', '3'], confirm: true },
+            { readLines: ['', '', '', '', '', '', '', '', '3'], confirm: true },
         );
         await run('edit', context, 'Cleanup');
         expect(calls.find((c) => c.method === 'PUT')!.body).toEqual({ maxConcurrentRuns: 3 });
@@ -553,7 +553,7 @@ describe('server jobs sub-commands', () => {
         const calls2 = installFetch({ [`GET ${BASE}`]: { body: [JOB] } });
         const { context: ctx2, out: out2 } = createContext(
             [{ name: 'one', url: 'http://srv1.test' }],
-            { readLines: ['', '', '', '', '', '', '', '0'], confirm: true },
+            { readLines: ['', '', '', '', '', '', '', '', '0'], confirm: true },
         );
         await run('edit', ctx2, 'Cleanup');
         expect(out2.info.join('\n')).toContain('Max concurrent runs must be a whole number of at least 1');
@@ -725,10 +725,62 @@ describe('server jobs with several servers', () => {
 
 // ── Edit cancellation ───────────────────────────────────────
 
+describe('server jobs tags', () => {
+    const TAGGED: JobDto = { ...JOB, tags: ['country:ro', 'bank'] };
+
+    it('list --tag sends every tag to the server and shows a Tags column', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}?tag=country%3Aro&tag=bank`]: { body: [TAGGED] },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+
+        await run('list', context, undefined, { tag: ['country:ro', 'bank'] });
+
+        expect(calls.map((c) => c.url)).toEqual([`${BASE}?tag=country%3Aro&tag=bank`]);
+        expect(out.tables[0].headers).toContain('Tags');
+        expect(out.tables[0].rows[0][2]).toBe('country:ro, bank');
+    });
+
+    it('list --tag accepts comma-separated tags and filters an older server that ignores ?tag=', async () => {
+        installFetch({
+            [`GET ${BASE}?tag=Bank&tag=country%3Aro`]: { body: [TAGGED, OTHER] },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+
+        await run('list', context, undefined, { tag: ['Bank,country:ro'] });
+
+        expect(out.tables[0].rows.map((r) => r[0])).toEqual(['Cleanup']);
+    });
+
+    it('list has no Tags column when no job has tags', async () => {
+        installFetch({ [`GET ${BASE}`]: { body: [JOB, OTHER] } });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+
+        await run('list', context);
+
+        expect(out.tables[0].headers).not.toContain('Tags');
+    });
+
+    it('edit "-" clears the tags', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [TAGGED] },
+            [`PUT ${BASE}/job-1`]: {},
+        });
+        const { context } = createContext([{ name: 'one', url: 'http://srv1.test' }], {
+            readLines: ['', '', '-'],
+            confirm: true,
+        });
+
+        await run('edit', context, 'Cleanup');
+
+        expect(calls.find((c) => c.method === 'PUT')!.body).toEqual({ tags: null });
+    });
+});
+
 describe('server jobs edit cancellation', () => {
-    // description, group, schedule (empty -> interval), interval, retries,
+    // description, group, tags, schedule (empty -> interval), interval, retries,
     // timeout, overlap policy
-    const answers = ['New desc', 'grp', '', '30s', '5', '1m', 'queue'];
+    const answers = ['New desc', 'grp', 'a, b,a', '', '30s', '5', '1m', 'queue'];
 
     for (let i = 0; i < answers.length; i++) {
         it(`Ctrl+C at prompt ${i + 1} cancels without sending changes`, async () => {
@@ -802,6 +854,7 @@ describe('server jobs edit cancellation', () => {
         expect(put.body).toEqual({
             description: 'New desc',
             group: 'grp',
+            tags: ['a', 'b', 'a'],
             interval: '30s',
             maxRetries: 5,
             timeout: '1m',
