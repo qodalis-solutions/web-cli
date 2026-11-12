@@ -4330,7 +4330,7 @@ interface CliThemeInfo {
 
 declare const DefaultThemeInfos: Record<string, CliThemeInfo>;
 
-declare const LIBRARY_VERSION = "2.5.1";
+declare const LIBRARY_VERSION = "2.5.2";
 declare const API_VERSION = 2;
 
 /**
