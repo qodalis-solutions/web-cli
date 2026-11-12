@@ -723,7 +723,7 @@ describe('server jobs with several servers', () => {
     });
 });
 
-// ── Edit cancellation ───────────────────────────────────────
+// ── Tags ────────────────────────────────────────────────────
 
 describe('server jobs tags', () => {
     const TAGGED: JobDto = { ...JOB, tags: ['country:ro', 'bank'] };
@@ -776,6 +776,8 @@ describe('server jobs tags', () => {
         expect(calls.find((c) => c.method === 'PUT')!.body).toEqual({ tags: null });
     });
 });
+
+// ── Edit cancellation ───────────────────────────────────────
 
 describe('server jobs edit cancellation', () => {
     // description, group, tags, schedule (empty -> interval), interval, retries,

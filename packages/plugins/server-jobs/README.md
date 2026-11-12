@@ -66,7 +66,7 @@ A job is picked by name (any case) or ID and looked up on every connected server
 |---|---|---|---|
 | `--server` | all | all connected servers | Target one server by name |
 | `--group` | `list` | | Only jobs in this group |
-| `--tag` | `list` | | Only jobs that have this tag; repeat it (`--tag a --tag b`) or separate tags with commas, and a job must have every one (ignoring case). `list` shows a Tags column and `info` a Tags row when jobs have tags (servers with job tags) |
+| `--tag` | `list` | | Only jobs that have this tag; repeat it (`--tag a --tag b`) or separate tags with commas, and a job must have every one (ignoring case). `list` shows a Tags column when a job has tags (servers with job tags), `info` always has a Tags row |
 | `--limit` | `history` | `20` | Number of runs to show |
 | `--offset` | `history` | `0` | Offset for paging through older runs |
 | `--status` | `history` | | Only runs with this status (`running`, `completed`, `failed`, `cancelled`, `timed_out`) |
