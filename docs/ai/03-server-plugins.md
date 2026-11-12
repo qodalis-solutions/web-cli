@@ -820,6 +820,20 @@ The audit log is a plugin of its own (.NET `Qodalis.Cli.Plugin.Audit`, Node `@qo
 - Another store: `cli.SetAuditStore<T>()` (.NET), `CliAuditBuilder.setStore(store)` (Node), `CliAuditBuilder().set_store(store)` (Python); the users plugin's audit-store option still works and does the same. The contract (`AuditEntry`, `AuditQueryOptions`, the store interface) is in each server's abstractions package. Old entries: `PruneAsync(before)` (.NET), `prune(before)` (Node; Python takes Unix milliseconds).
 - .NET only: `cli.AddEfCoreAuditStore(o => o.UseNpgsql(connectionString))` (`Qodalis.Cli.Plugin.Audit.EfCore`) keeps the log in a database (table `audit_entries`; `modelBuilder.ApplyAuditStorageModel()` for your own migrations). It keeps every entry, failed sign-ins included: prune it from a daily job.
 
+### Data explorer sources: permissions, read-only, masking (all servers)
+
+Each data explorer source takes these options besides `timeout` and `maxRows` (Node and JSON names; .NET PascalCase, Python snake_case):
+
+- `readOnly` (default **true**): only queries that read are accepted (`SELECT`/`WITH`/`EXPLAIN`/`SHOW`..., MongoDB `find`/`aggregate`..., Redis read commands, Elasticsearch `GET` and `_search`), and SQL providers run them in a read-only transaction. Set it to false for a source that must write.
+- `requiredPermissions`: permissions the caller needs besides `data:query`; other users do not see the source (403 on `schema`/`execute`).
+- `allowedObjects`: glob patterns of the tables (`schema.table` or `table`), collections, Redis keys or indices the source shows and accepts.
+- `maskColumns` (values shown as `***`) and `dropColumns` (removed from results and schema): glob patterns of column or field names.
+- `rateLimit` `{ maxQueries, windowSeconds }`: per user and source; more answer 429.
+- `audit` (default true): every execute is written to the audit log as `data_query` with the source, the query (first 2000 characters), success, row count and duration.
+- `exportPermissions`: `GET /sources` reports `canExport`, and the web CLI's `data-explorer` refuses `\format json|csv` when it is false.
+
+The object filter and the read-only check are a convenience: give the source a database account that can only read what its users may see.
+
 ### Server logs and Seq (.NET)
 
 The dashboard's Logs page reads `GET /api/v1/qcli/logs?level=&search=&service=&from=&to=&limit=&offset=` (`logs:read`; `level` is one level or a comma list of `DEBUG`, `INFO`, `WARN`, `ERROR`; `from`/`to` ISO 8601; at most 500 per page) and tails `/ws/v1/qcli/logs` live. By default the history is the admin plugin's in-memory buffer: the latest 1000 entries of that process, gone on restart.

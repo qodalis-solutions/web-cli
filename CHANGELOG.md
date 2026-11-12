@@ -15,6 +15,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `ICliCommandParameterDescriptor.allowedValues` (core) works for every command: help lists the values and Tab completes them after `--name ` and `--name=`. Server commands also refuse other values before sending, ignoring case.
 - `ICliCommandParameterDescriptor.examples` (core): example values of a parameter, listed in help after its description (`e.g. Paris, New York`). Server commands get them from the servers' parameter `examples`.
 - A server alias is added as a bare name only when no local command owns it. `node:<alias>` always works.
+### Data explorer: read-only sources and export permission
+
+- The `data-explorer` source list and header show `read-only` for sources the server marks read-only (servers from 1.0.0-beta.25 make every source read-only unless it sets `readOnly: false`).
+- `\format json` and `\format csv` print `Export is not allowed on this source` when the server reports `canExport: false` for the user, and such a source starts in table output.
+- Refused queries show the server's message (missing source permission, too many queries) instead of the HTTP status.
 
 ## v2.4.2
 
