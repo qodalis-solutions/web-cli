@@ -1,3 +1,4 @@
+import { restoreLinkedServers } from '../server/linked/cli-linked-servers-runtime';
 import {
     ITerminalOptions,
     ITerminalInitOnlyOptions,
@@ -371,35 +372,37 @@ export class CliEngine {
         return services.getRequired<CliServerManager>(CliServerManager_TOKEN);
     }
 
-    /** 4. Connect to the configured servers, one boot step each. */
+    /**
+     * 4. Connect to the configured servers, one boot step each, then to the
+     * servers the user linked (`server add`).
+     */
     private async connectServers(
         serverManager: CliServerManager,
         bootLog: CliBootLog,
     ): Promise<void> {
-        const servers = this.options?.servers;
-        if (!servers || servers.length === 0) return;
-
         const ctx = this.executionContext;
-        bootLog.setCurrent('Connecting to servers');
-        // The same logger reports reconnects later; the boot log ignores
-        // entries once boot is finished.
-        await serverManager.connectAll(
-            servers,
-            {
-                warn: (msg) => {
-                    ctx.logger.warn(msg);
-                    bootLog.warn(msg);
-                    bootLog.completeStep();
-                },
-                info: (msg) => {
-                    ctx.logger.info(msg);
-                    bootLog.ok(msg);
-                    bootLog.completeStep();
-                },
+        // The same logger reports reconnects (and servers linked later); the
+        // boot log ignores entries once boot is finished.
+        const logger = {
+            warn: (msg: string) => {
+                ctx.logger.warn(msg);
+                bootLog.warn(msg);
+                bootLog.completeStep();
             },
-            ctx.backgroundServices,
-            ctx.logger,
-        );
+            info: (msg: string) => {
+                ctx.logger.info(msg);
+                bootLog.ok(msg);
+                bootLog.completeStep();
+            },
+        };
+        serverManager.configure(logger, ctx.backgroundServices, ctx.logger);
+
+        const servers = this.options?.servers;
+        if (servers && servers.length > 0) {
+            bootLog.setCurrent('Connecting to servers');
+            await serverManager.connectAll(servers, logger, ctx.backgroundServices, ctx.logger);
+        }
+        await restoreLinkedServers(ctx, serverManager, logger.warn);
     }
 
     /**

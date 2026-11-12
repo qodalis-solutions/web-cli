@@ -62,7 +62,7 @@ export function writeUnknownServer(
 export function writeConfigureHint(context: ICliExecutionContext): void {
     const { writer } = context;
     writer.writeln(
-        `  Servers are configured by the app: ${writer.wrapInColor("servers: [{ name: 'node', url: 'http://localhost:8047' }]", CliForegroundColor.Yellow)}`,
+        `  Link one: ${writer.wrapInColor('server add', CliForegroundColor.Cyan)}, or configure it in the app: ${writer.wrapInColor("servers: [{ name: 'node', url: 'http://localhost:8047' }]", CliForegroundColor.Yellow)}`,
     );
     writer.writeln(
         `  See ${writer.wrapInColor('https://cli.qodalis.com/docs/server-integration', CliForegroundColor.Blue)}`,
@@ -74,8 +74,12 @@ export function statusLabel(
     context: ICliExecutionContext,
     connection: CliServerConnection,
 ): string {
-    return connection.connected
-        ? context.writer.wrapInColor('● connected', CliForegroundColor.Green)
+    if (connection.connected) {
+        return context.writer.wrapInColor('● connected', CliForegroundColor.Green);
+    }
+    // Up, but its commands need a sign-in (or a linked server's token was revoked)
+    return connection.needsSignIn
+        ? context.writer.wrapInColor('◐ sign-in needed', CliForegroundColor.Yellow)
         : context.writer.wrapInColor('○ unreachable', CliForegroundColor.Red);
 }
 

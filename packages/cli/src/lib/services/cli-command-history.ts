@@ -1,3 +1,4 @@
+import { redactSecrets } from '../server/linked/cli-linked-servers';
 import { ICliKeyValueStore } from '@qodalis/cli-core';
 
 /** History when nobody is signed in (and always without the users module) */
@@ -45,7 +46,8 @@ export class CliCommandHistory {
     }
 
     public async addCommand(command: string): Promise<void> {
-        const normalizedCommand = command.trim();
+        // Secrets typed as flags (server add --token …) never reach the history
+        const normalizedCommand = redactSecrets(command.trim());
         if (!normalizedCommand) return;
         await this.loading;
 

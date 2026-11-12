@@ -21,6 +21,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `\format json` and `\format csv` print `Export is not allowed on this source` when the server reports `canExport: false` for the user, and such a source starts in table output.
 - Refused queries show the server's message (missing source permission, too many queries) instead of the HTTP status.
 - A query that uses a masked column other than by its own name (`masked_column`) shows the server's message and the hint `Select masked columns by their own name, or use SELECT *`.
+### Connect your own server: `server add`
+
+- `server add [name] [url]` links a Node, .NET or Python server to the terminal in any app, kept across reloads. It checks the server (version, OS, shell), then links it by **browser approval** (the terminal prints and opens the server's `/qcli/admin/link?code=…` page; the user signs in, compares the code and approves; servers from 1.0.0-beta.25), a pasted **API token** (`--token` for scripts) or a **user and password** (an API token is created for the device and the session ends). `server edit <name> --url|--token`, `server remove <name>` and `server forget-all` change and unlink linked servers; `server list` has a Source column (`app` or `linked ••••abcd`).
+- Tokens are kept apart from the server list, encrypted with AES-GCM by a non-extractable Web Crypto key in IndexedDB, never shown again, redacted from the command history (`--token ***`) and never put in WebSocket URLs. Hosts provide their own store (`ICliSecretStore_TOKEN`) for platform storage.
+- Only https servers can be linked; http for localhost and private addresses after a confirmation, with a mixed-content warning. `CliOptions.userServers` turns linking off (`false`) or limits it to origins (`{ allowedOrigins }`); app servers cannot be removed, edited or replaced from the terminal.
+- `CliServerManager.addServer` / `removeServer` connect and drop a server while the terminal runs.
 
 ## v2.4.2
 

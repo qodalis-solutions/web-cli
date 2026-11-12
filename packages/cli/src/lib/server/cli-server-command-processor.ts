@@ -27,6 +27,13 @@ import {
     statusLabel,
     writeConfigureHint,
 } from './cli-server-command-helpers';
+import {
+    ServerAddProcessor,
+    ServerEditProcessor,
+    ServerForgetAllProcessor,
+    ServerRemoveProcessor,
+    linkedTokenLabels,
+} from './linked/cli-server-link-processors';
 
 /** Saved across reloads (the default server). */
 interface ServerState {
@@ -58,6 +65,10 @@ export class CliServerCommandProcessor implements ICliCommandProcessor {
         new ServerCommandsProcessor(),
         new ServerReconnectProcessor(),
         new ServerDefaultProcessor(),
+        new ServerAddProcessor(),
+        new ServerRemoveProcessor(),
+        new ServerEditProcessor(),
+        new ServerForgetAllProcessor(),
     ];
 
     /** Restore the default server saved by `server default <name>`. */
@@ -77,7 +88,7 @@ export class CliServerCommandProcessor implements ICliCommandProcessor {
         const t = context.translator;
         const manager = serverManagerOf(context);
         if (!manager) return;
-        writeServerTable(context, manager);
+        writeServerTable(context, manager, await linkedTokenLabels(context, manager));
         context.writer.writeln();
         writeHint(context, 'help server', t.t('cli.server.help.see_everything_you_can', 'to see everything you can do'));
     }
@@ -109,6 +120,10 @@ export class CliServerCommandProcessor implements ICliCommandProcessor {
             ['server commands|cmds [name]', t.t('cli.server.help.commands_each_server_provides', 'Commands each server provides')],
             ['server reconnect|rc [name]', t.t('cli.server.help.connect_again_unreachable_servers', 'Connect again (unreachable servers, or one)')],
             ['server default|use [name]', t.t('cli.server.help.show_set_server_shared', 'Show or set the server for shared commands')],
+            ['server add [name] [url]', t.t('cli.server.help.add', 'Link a server to this terminal (kept across reloads)')],
+            ['server edit <name> --url|--token', t.t('cli.server.help.edit', 'Change a linked server')],
+            ['server remove <name>', t.t('cli.server.help.remove', 'Unlink a server and delete its token')],
+            ['server forget-all', t.t('cli.server.help.forget_all', 'Unlink every linked server')],
             ['ssh [name] [command]', t.t('cli.server.help.open_shell_server_run', 'Open a shell on a server, or run one command')],
         ]);
         writer.writeln();
@@ -137,7 +152,7 @@ class ServerListProcessor implements ICliCommandChildProcessor {
         context: ICliExecutionContext,
     ): Promise<void> {
         const manager = serverManagerOf(context);
-        if (manager) writeServerTable(context, manager);
+        if (manager) writeServerTable(context, manager, await linkedTokenLabels(context, manager));
     }
 
     writeDescription(context: ICliExecutionContext): void {
@@ -154,6 +169,7 @@ class ServerListProcessor implements ICliCommandChildProcessor {
 function writeServerTable(
     context: ICliExecutionContext,
     manager: CliServerManager,
+    tokenLabels: Map<string, string> = new Map(),
 ): void {
     const t = context.translator;
     const { writer } = context;
@@ -176,12 +192,13 @@ function writeServerTable(
             connected ? `v${connection.apiVersion}` : '-',
             connected ? String(connection.commands.length) : '-',
             connected ? (connection.capabilities?.shell ? 'yes' : 'no') : '-',
+            manager.isLinked(name) ? `linked ${tokenLabels.get(name) ?? ''}`.trim() : 'app',
         ]);
     }
 
     writer.writeln(`🖥  Servers (${manager.connections.size}):`);
     writer.writeTable(
-        ['Name', 'Status', 'URL', 'Version', 'API', 'Commands', 'Shell'],
+        ['Name', 'Status', 'URL', 'Version', 'API', 'Commands', 'Shell', 'Source'],
         rows,
     );
     if (manager.defaultServer) {

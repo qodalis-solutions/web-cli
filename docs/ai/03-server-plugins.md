@@ -11,6 +11,7 @@ A server plugin registers command processors in a Qodalis CLI server (Node, .NET
 - In the browser, a server command that has sub-commands accepts only its sub-command words; a leaf command accepts positional text (`weather current Paris`).
 - Exceptions thrown by a processor become exit code 1 with `Error executing command: <message>` (style `error`). Unknown commands return `Unknown command: <name>`.
 - Servers: Node `@qodalis/cli-server-node` (default port 8047 in the demos), .NET `Qodalis.Cli` (8046), Python `qodalis-cli-server` (8048).
+- Users can link servers themselves with `server add [name] [url]`: browser approval (`POST /api/v1/qcli/link`, the user approves at `/qcli/admin/link?code=…`, the terminal polls `GET /api/v1/qcli/link/{linkId}` and receives an API token), a pasted API token (`--token`), or a user and password (the terminal creates a token and signs out). Linked servers persist (IndexedDB), their tokens are encrypted (`ICliSecretStore`, Web Crypto by default) and redacted from the history. `server edit`, `server remove`, `server forget-all`. Hosts restrict it with `CliOptions.userServers` (`false` or `{ allowedOrigins }`). Server side: the users plugin's link routes, `setLinkApprovalUrl` (Node) / `LinkApprovalUrl` (.NET) / `link_approval_url` (Python) for a host's own approval page.
 
 ### Paging list output (all servers)
 
