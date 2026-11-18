@@ -193,6 +193,12 @@ export class CliEngine {
             const serverManager = this.registerRuntimeServices(core);
             await this.connectServers(serverManager, bootLog);
             modules = this.modulesToBoot();
+            // The host's modules count as bundled: `pkg` neither installs a
+            // second copy of them nor removes them. Marked before booting,
+            // since `pkg` loads its installed packages while it initializes.
+            this.bootService!.getModuleRegistry().markBundled(
+                this.userModules.map((m) => m.name),
+            );
             await this.bootService!.boot(
                 this.executionContext,
                 modules,
@@ -245,8 +251,14 @@ export class CliEngine {
             this.options?.terminalOptions,
         );
         // The host's theme, unless terminalOptions names the colors itself
-        if (this.options?.theme !== undefined && !this.options?.terminalOptions?.theme) {
-            this.terminalOptions.theme = resolvePanelTheme(this.options.theme, prefersDarkScheme()).terminal;
+        if (
+            this.options?.theme !== undefined &&
+            !this.options?.terminalOptions?.theme
+        ) {
+            this.terminalOptions.theme = resolvePanelTheme(
+                this.options.theme,
+                prefersDarkScheme(),
+            ).terminal;
         }
         const setup = initializeTerminal(
             this.container,
@@ -329,7 +341,9 @@ export class CliEngine {
             (s) => s.enabled !== false,
         ).length;
         bootLog.addSteps(1 + serverCount);
-        bootLog.info(`Starting ${resolveCliBranding(this.options?.branding).name} ${LIBRARY_VERSION}`);
+        bootLog.info(
+            `Starting ${resolveCliBranding(this.options?.branding).name} ${LIBRARY_VERSION}`,
+        );
         bootLog.ok(
             `Terminal and services ready · ${this.terminal.cols}×${this.terminal.rows}`,
             bootLog.elapsedMs,
@@ -416,7 +430,12 @@ export class CliEngine {
         const servers = this.options?.servers;
         if (servers && servers.length > 0) {
             bootLog.setCurrent('Connecting to servers');
-            await serverManager.connectAll(servers, logger, ctx.backgroundServices, ctx.logger);
+            await serverManager.connectAll(
+                servers,
+                logger,
+                ctx.backgroundServices,
+                ctx.logger,
+            );
         }
         await restoreLinkedServers(ctx, serverManager, logger.warn);
     }
@@ -524,7 +543,9 @@ export class CliEngine {
                     );
                 try {
                     destroyed.push(
-                        Promise.resolve(module.onDestroy(context)).catch(report),
+                        Promise.resolve(module.onDestroy(context)).catch(
+                            report,
+                        ),
                     );
                 } catch (e) {
                     report(e);
