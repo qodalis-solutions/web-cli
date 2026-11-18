@@ -53,6 +53,28 @@ export class CliPackageInstaller {
         this.moduleRegistry = moduleRegistry;
     }
 
+    /**
+     * Full name of a module the host provides (bundled with the app) for a
+     * short or full package name, or `undefined` when it is not bundled.
+     */
+    bundledName(name: string): string | undefined {
+        const fullName = toFullPackageName(name, this.prefix);
+        if (this.moduleRegistry?.isBundled(fullName)) return fullName;
+        if (this.moduleRegistry?.isBundled(name)) return name;
+        return undefined;
+    }
+
+    /** Modules the host provides (bundled with the app), with their versions. */
+    bundledModules(): ICliModule[] {
+        const registry = this.moduleRegistry;
+        if (!registry) return [];
+        return registry
+            .getBundledNames()
+            .map(
+                (name) => registry.getModule(name) ?? ({ name } as ICliModule),
+            );
+    }
+
     /** Read `<packagePath>/package.json` from the first source that has it. */
     async fetchInfo(
         packagePath: string,
@@ -74,6 +96,14 @@ export class CliPackageInstaller {
         bootLog?.addSteps(packages.length);
 
         for (const pkg of packages) {
+            if (this.bundledName(pkg.name)) {
+                // Installed before the app bundled it: the app's copy wins
+                context.logger.info(
+                    `Package ${pkg.name} is built in, not loading the installed copy`,
+                );
+                bootLog?.completeStep();
+                continue;
+            }
             bootLog?.setCurrent(`Loading ${pkg.name}@${pkg.version}`);
             const startedAt = Date.now();
             try {
@@ -106,6 +136,14 @@ export class CliPackageInstaller {
     ): Promise<void> {
         const { progressBar, writer } = context;
         const versionSuffix = version ? `@${version}` : '';
+
+        const bundled = this.bundledName(name);
+        if (bundled) {
+            writer.writeError(
+                `Package ${bundled} is built in and cannot be installed with pkg`,
+            );
+            return;
+        }
 
         progressBar.show();
         progressBar.setText(`Fetching package ${name}`);
@@ -169,6 +207,14 @@ export class CliPackageInstaller {
         targetVersion?: string,
     ): Promise<UpdateResult> {
         const { progressBar, writer } = context;
+
+        const bundled = this.bundledName(name);
+        if (bundled) {
+            writer.writeInfo(
+                `Package ${bundled} is built in and updates with the app`,
+            );
+            return 'current';
+        }
 
         progressBar.show();
 
@@ -248,8 +294,13 @@ export class CliPackageInstaller {
     async remove(name: string, context: ICliExecutionContext): Promise<void> {
         const { progressBar, writer } = context;
 
+        const bundled = this.bundledName(name);
         if (!(await this.manager.hasPackage(name))) {
-            writer.writeError(`Package ${name} is not installed`);
+            writer.writeError(
+                bundled
+                    ? `Package ${bundled} is built in and cannot be removed`
+                    : `Package ${name} is not installed`,
+            );
             return;
         }
 
@@ -257,7 +308,9 @@ export class CliPackageInstaller {
 
         try {
             const pkg = await this.manager.removePackage(name);
-            const stillLoaded = this.unload(pkg.name);
+            // An installed copy of a bundled module was never loaded (see
+            // `loadInstalled`): unloading would remove the app's commands
+            const stillLoaded = bundled ? [] : this.unload(pkg.name);
             progressBar.complete();
             writer.writeSuccess(
                 `Package ${pkg.name}@${pkg.version} removed successfully`,
@@ -289,8 +342,7 @@ export class CliPackageInstaller {
      */
     unload(packageName: string): string[] {
         const module = this.moduleRegistry?.getModule(packageName);
-        const legacy = (window as any)[packageName] as
-            ICliModule | undefined;
+        const legacy = (window as any)[packageName] as ICliModule | undefined;
         const processors = module?.processors ?? legacy?.processors ?? [];
 
         if (module) {

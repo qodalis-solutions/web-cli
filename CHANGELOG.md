@@ -11,6 +11,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - A command that fails with a network error, the browser going `online` and the tab becoming visible trigger a check right away; nothing is polled while the tab is hidden or offline. A server that needs a sign-in is left to the auth layer.
 - Configurable per server with `CliServerConfig.healthCheck` (`interval`, `retryDelay`, `maxRetryDelay`; `false` turns polling off). `server status` re-checks a server whose answer contradicts its state.
 
+### pkg knows the app's own modules
+
+- A module the host registers in code (`modules`, `resolveCliModuleProvider`, `engine.registerModule()`) counts as installed: `pkg add` fails with an error instead of loading a second copy, `pkg ls` lists it and `pkg browse` marks it `✅ built in`. It is never offered as an update (`pkg check` and `pkg update` skip it; it updates with the app), and `pkg remove` refuses to remove it. A copy installed with `pkg` before the module was built in is no longer loaded at startup, and removing it keeps the app's commands ([#229](https://github.com/qodalis-solutions/web-cli/issues/229)).
+- `pkg ls`, `pkg browse` and `pkg check` are easier to read, above all on phones: short names (`guid`, not `@qodalis/cli-guid`), aligned version and source columns, descriptions wrapped at word boundaries, and, below 60 columns, one block per package (name and status, then version and source).
+
 ### Docs: the Android app
 
 - New pages: [Android app](https://cli.qodalis.com/docs/android-app) and a step-by-step guide to [connecting your own server from it](https://cli.qodalis.com/docs/android-app/connect-your-server) (https address, allowed origins, `server add` sign-in options, troubleshooting). Linked from the home page, Getting started, Server integration and the AI guide.

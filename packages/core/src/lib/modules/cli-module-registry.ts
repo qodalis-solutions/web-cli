@@ -14,6 +14,8 @@ export class CliModuleRegistry {
     private readonly bootHandlers: ((module: ICliModule) => Promise<void>)[] =
         [];
     private readonly unregisterHandlers: ((module: ICliModule) => void)[] = [];
+    /** Names of the modules the host provides (bundled with the app). */
+    private readonly bundled = new Set<string>();
     /** Registrations whose boot handlers are still running. */
     private readonly inFlight = new Set<Promise<void>>();
 
@@ -131,6 +133,31 @@ export class CliModuleRegistry {
      */
     track(module: ICliModule): void {
         this.modules.set(module.name, module);
+    }
+
+    /**
+     * Mark modules as provided by the host (bundled with the app), as opposed
+     * to plugins loaded at runtime (`pkg add`). The engine marks the modules
+     * the host passes to it before booting any.
+     */
+    markBundled(names: Iterable<string>): void {
+        for (const name of names) {
+            this.bundled.add(name);
+        }
+    }
+
+    /**
+     * Whether the host provides the module `name` (bundled with the app).
+     */
+    isBundled(name: string): boolean {
+        return this.bundled.has(name);
+    }
+
+    /**
+     * Names of the modules the host provides.
+     */
+    getBundledNames(): string[] {
+        return Array.from(this.bundled);
     }
 
     /**
