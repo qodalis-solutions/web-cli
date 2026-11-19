@@ -63,6 +63,8 @@ export interface ICliUsersBackend {
     createApiToken?(token: string, request: CliCreateApiToken): Promise<CliCreatedApiToken>;
     /** DELETE /tokens/{id} (own token, or any with tokens:revoke) */
     revokeApiToken?(token: string, tokenId: string): Promise<void>;
+    /** GET /permissions: the server's permission catalog entries the caller holds (`all`: every entry, requires users:read) */
+    listPermissions?(token: string, options?: { all?: boolean }): Promise<CliServerPermission[]>;
 
     // ── audit ────────────────────────────────────────────────────────
     listAudit(token: string, options?: { limit?: number; event?: string; username?: string }): Promise<ICliAuditEntry[]>;
@@ -103,8 +105,25 @@ export interface CliApiToken {
     expiresAt: number | null;
     /** null: never used */
     lastUsedAt: number | null;
+    /** `host`: accepted only by the host application's own routes; omitted by older servers (= `cli`) */
+    audience?: 'cli' | 'host';
     /** Scope; omitted/null when the token carries the user's full permissions */
     permissions?: string[] | null;
+}
+
+/**
+ * An entry of the server's permission catalog (`GET /permissions`): what a
+ * token can be limited to. Not the client-side permission registry
+ * (`CliPermissionDefinition`), which lists the CLI's own permissions.
+ */
+export interface CliServerPermission {
+    /** Concrete permission, e.g. `files:read` */
+    name: string;
+    description: string;
+    /** Display group, e.g. `Files` */
+    group: string;
+    /** `cli`: server and CLI routes; `host`: the host application's own routes */
+    surface: 'cli' | 'host';
 }
 
 export interface CliCreateApiToken {

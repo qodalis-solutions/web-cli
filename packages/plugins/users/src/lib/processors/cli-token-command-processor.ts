@@ -7,7 +7,7 @@ import {
     joinShellWords,
 } from '@qodalis/cli-core';
 import { CliUsersCommand, formatTime, listArg, USERS_METADATA, words } from './base';
-import { CliApiToken, CliCreateApiToken, CliUsersError } from '../backend/users-backend';
+import { CliApiToken, CliCreateApiToken, CliServerPermission, CliUsersError } from '../backend/users-backend';
 import {
     API_TOKENS_LOCAL_MESSAGE,
     CliApiTokensService,
@@ -59,12 +59,19 @@ class CliTokenCreateCommandProcessor extends CliUsersCommand {
             type: 'string' as const,
             required: false,
         },
+        {
+            name: 'select',
+            description: "Pick the permissions from the server's list",
+            type: 'boolean' as const,
+            required: false,
+        },
     ];
     protected override usage: Array<[string, string]> = [
         ['token create <name>', 'Create a token that expires in 90 days'],
         ['token create <name> --expires=30', 'Expire after 30 days (1-365)'],
         ['token create <name> --expires=never', 'Never expire (if the server allows it)'],
         ['token create <name> --permissions=a,b', 'Limit the token to some of your permissions'],
+        ['token create <name> --select', "Pick the token's permissions from the server's list"],
     ];
 
     override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
@@ -74,8 +81,17 @@ class CliTokenCreateCommandProcessor extends CliUsersCommand {
         const request: CliCreateApiToken = { name };
         const expiresInDays = parseExpires(command.args['expires']);
         if (expiresInDays !== undefined) request.expiresInDays = expiresInDays;
-        const permissions = listArg(command.args['permissions']);
-        if (permissions?.length) request.permissions = permissions;
+        if (isTrue(command.args['select'])) {
+            if (command.args['permissions'] !== undefined) {
+                throw new CliUsersError(400, 'use --select or --permissions, not both');
+            }
+            const chosen = await selectPermissions(name, service, context);
+            if (!chosen) return;
+            request.permissions = chosen;
+        } else {
+            const permissions = listArg(command.args['permissions']);
+            if (permissions?.length) request.permissions = permissions;
+        }
 
         const { token, apiToken } = await service.create(request);
         const { writer } = context;
@@ -89,6 +105,68 @@ class CliTokenCreateCommandProcessor extends CliUsersCommand {
         writer.writeln();
         writer.writeln('Use it with an MCP client, e.g. Claude Code:');
         writer.writeln(`  ${writer.wrapInColor(claudeMcpAddExample(service.serverUrl, token), CliForegroundColor.Cyan)}`);
+    }
+}
+
+/**
+ * Opens the permission picker for `token create --select`. Returns the chosen
+ * names in the order the server lists them, or null when nothing should be created.
+ */
+async function selectPermissions(
+    name: string,
+    service: CliApiTokensService,
+    context: ICliExecutionContext,
+): Promise<string[] | null> {
+    const catalog = await service.permissions();
+    if (!catalog.length) {
+        throw new CliUsersError(400, 'the server lists no permissions you hold; use --permissions');
+    }
+    const picked = await context.reader.readMultiSelect(
+        `Permissions for ${name}:`,
+        catalog.map((p) => ({ label: p.name, value: p.name, description: p.description, group: p.group })),
+        { searchable: true },
+    );
+    if (picked === null) {
+        context.writer.writeInfo('Cancelled');
+        return null;
+    }
+    if (!picked.length) {
+        context.writer.writeInfo('No permissions selected; token not created');
+        return null;
+    }
+    const set = new Set(picked);
+    return catalog.filter((p) => set.has(p.name)).map((p) => p.name);
+}
+
+class CliTokenPermissionsCommandProcessor extends CliUsersCommand {
+    override command = 'permissions';
+    override description = 'List the permissions you can put on a token';
+    override metadata: CliProcessorMetadata = { ...TOKEN_METADATA };
+    override parameters = [
+        {
+            name: 'all',
+            aliases: ['a'],
+            description: 'Every permission the server knows (requires users:read)',
+            type: 'boolean' as const,
+            required: false,
+        },
+    ];
+    protected override usage: Array<[string, string]> = [
+        ['token permissions', 'Permissions you hold, which a token can be limited to'],
+        ['token permissions --all', 'Every permission the server knows (requires users:read)'],
+    ];
+
+    override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
+        const all = isTrue(command.args['all'] ?? command.args['a']);
+        const permissions = await apiTokens(context).permissions(all ? { all } : undefined);
+        if (!permissions.length) {
+            context.writer.writeInfo('No permissions');
+            return;
+        }
+        context.writer.writeTable(
+            ['GROUP', 'PERMISSION', 'DESCRIPTION'],
+            permissions.map((p) => [p.group, permissionLabel(p), p.description]),
+        );
     }
 }
 
@@ -149,7 +227,7 @@ class CliTokenRevokeCommandProcessor extends CliUsersCommand {
     }
 }
 
-/** `token create|list|revoke`: API tokens for MCP clients, CI and scripts (server mode). */
+/** `token create|list|revoke|permissions`: API tokens for MCP clients, CI and scripts (server mode). */
 export class CliTokenCommandProcessor extends CliUsersCommand {
     override command = 'token';
     override aliases = ['tokens'];
@@ -159,11 +237,17 @@ export class CliTokenCommandProcessor extends CliUsersCommand {
         new CliTokenCreateCommandProcessor(),
         new CliTokenListCommandProcessor(),
         new CliTokenRevokeCommandProcessor(),
+        new CliTokenPermissionsCommandProcessor(),
     ];
     protected override usage: Array<[string, string]> = [
         ['token create <name> [--expires=<days>|never] [--permissions=a,b]', 'Create a token (shown once)'],
+        ['token create <name> --select', 'Pick the permissions from a list'],
         ['token list [--all]', 'List your tokens (--all: every user, requires tokens:read)'],
         ['token revoke <id>', 'Revoke a token (your own, or any with tokens:revoke)'],
+        [
+            'token permissions [--all]',
+            'Permissions you can put on a token (--all: every one, requires users:read)',
+        ],
     ];
 
     override async processCommand(_command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
@@ -178,8 +262,17 @@ function tokenRow(t: CliApiToken): string[] {
         t.id,
         t.expiresAt ? formatTime(t.expiresAt) : 'never',
         t.lastUsedAt ? formatTime(t.lastUsedAt) : 'never',
-        t.permissions?.length ? t.permissions.join(', ') : '(all)',
+        tokenScope(t),
     ];
+}
+
+function tokenScope(t: CliApiToken): string {
+    const scope = t.permissions?.length ? t.permissions.join(', ') : '(all)';
+    return t.audience === 'host' ? `${scope} (host)` : scope;
+}
+
+function permissionLabel(p: CliServerPermission): string {
+    return p.surface === 'host' ? `${p.name} (host)` : p.name;
 }
 
 function isTrue(value: unknown): boolean {

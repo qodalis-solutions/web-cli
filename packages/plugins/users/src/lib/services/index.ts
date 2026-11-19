@@ -9,6 +9,7 @@ export {
     CliApiTokensService,
     CliApiTokensService_TOKEN,
     API_TOKENS_LOCAL_MESSAGE,
+    PERMISSIONS_UNSUPPORTED_MESSAGE,
 } from './cli-users-services';
 export { CliDefaultUserEventService } from './cli-default-user-event.service';
 export { CliDefaultPermissionService } from './cli-default-permission.service';
