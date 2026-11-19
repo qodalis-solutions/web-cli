@@ -14,6 +14,7 @@ import {
     CliBackendSession,
     CliBackendUpdateUser,
     CliBackendUserPermissions,
+    CliServerPermission,
     CliUsersError,
     ICliUsersBackend,
 } from './users-backend';
@@ -188,6 +189,10 @@ export class CliHttpUsersBackend implements ICliUsersBackend {
 
     async revokeApiToken(token: string, tokenId: string): Promise<void> {
         await this.call('DELETE', `/tokens/${enc(tokenId)}`, token);
+    }
+
+    listPermissions(token: string, options?: { all?: boolean }): Promise<CliServerPermission[]> {
+        return this.call('GET', `/permissions${options?.all ? '?all=true' : ''}`, token);
     }
 
     // ── transport ────────────────────────────────────────────────────

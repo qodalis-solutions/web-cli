@@ -27,6 +27,7 @@ import {
     CliBackendLogin,
     CliCreateApiToken,
     CliCreatedApiToken,
+    CliServerPermission,
     CliUsersError,
     ICliUsersBackend,
 } from '../backend/users-backend';
@@ -377,6 +378,10 @@ export const CliApiTokensService_TOKEN =
 export const API_TOKENS_LOCAL_MESSAGE =
     'API tokens are available when the CLI is connected to a server (usersModule.configure({ server }))';
 
+/** Message shown when the server predates `GET /permissions` (it answers 404). */
+export const PERMISSIONS_UNSUPPORTED_MESSAGE =
+    'this server does not list its permissions (needs server 1.0.0-beta.29 or later)';
+
 /**
  * Long-lived API tokens (MCP clients, CI, scripts). Server backends only:
  * on a backend without the optional token methods every call fails with 501.
@@ -409,7 +414,24 @@ export class CliApiTokensService extends CliUsersServiceBase {
         return this.require('revokeApiToken')(this.token, tokenId);
     }
 
-    private require<K extends 'listApiTokens' | 'createApiToken' | 'revokeApiToken'>(
+    /**
+     * Permissions a token can be limited to, from the server's catalog: the
+     * entries the caller holds (`all`: every entry, requires users:read).
+     * A server without `GET /permissions` fails with a 404 naming the version needed.
+     */
+    async permissions(options?: { all?: boolean }): Promise<CliServerPermission[]> {
+        const list = this.require('listPermissions');
+        try {
+            return await list(this.token, options);
+        } catch (e) {
+            if (e instanceof CliUsersError && e.status === 404) {
+                throw new CliUsersError(404, PERMISSIONS_UNSUPPORTED_MESSAGE);
+            }
+            throw e;
+        }
+    }
+
+    private require<K extends 'listApiTokens' | 'createApiToken' | 'revokeApiToken' | 'listPermissions'>(
         method: K,
     ): NonNullable<ICliUsersBackend[K]> {
         const fn = this.backend[method];

@@ -4,7 +4,12 @@ import { usersModule, usersPermissionDefinitions } from '../public-api';
 import { createUsersRuntime, CliUsersRuntime } from '../lib/module/users-runtime';
 import { bindSessionToContext, bindTermination, wrapProcessors } from '../lib/module/session-lifecycle';
 import { CliHttpUsersBackend } from '../lib/backend/http-users-backend';
-import { claudeMcpAddExample, parseExpires } from '../lib/processors/cli-token-command-processor';
+import {
+    claudeMcpAddExample,
+    CliTokenCommandProcessor,
+    parseExpires,
+} from '../lib/processors/cli-token-command-processor';
+import { CliApiTokensService_TOKEN } from '../lib/services/cli-users-services';
 
 const WARNING = '[warn] Copy the token now: it will not be shown again.';
 const LOCAL_MESSAGE =
@@ -18,11 +23,21 @@ interface FakeToken {
     createdAt: number;
     expiresAt: number | null;
     lastUsedAt: number | null;
+    audience?: 'cli' | 'host';
     permissions?: string[] | null;
 }
 
+/** The `/permissions` catalog the fake server answers (contract C1/C4). */
+const PERMISSIONS = [
+    { name: 'files:read', description: 'List, read and download files', group: 'Files', surface: 'cli' },
+    { name: 'files:write', description: 'Upload, create and delete files', group: 'Files', surface: 'cli' },
+    { name: 'jobs:read', description: 'See jobs and their runs', group: 'Jobs', surface: 'cli' },
+    { name: 'rates:read', description: 'Official exchange rates', group: 'Rates', surface: 'host' },
+];
+const USERS_READ = { name: 'users:read', description: 'See users and their permissions', group: 'Users', surface: 'cli' };
+
 /** Minimal users-plugin server: sessions + the `/tokens` endpoints of the spec. */
-function fakeServer() {
+function fakeServer(config: { permissions?: 'missing' | 'empty' } = {}) {
     const root = { id: 'u1', name: 'root', email: 'root@localhost', groups: ['admin'], disabled: false, createdAt: 1, updatedAt: 1 };
     const session = { id: 'S1', user: root, permissions: ['*'], loginTime: 1, lastActivity: 1 };
     const tokens: FakeToken[] = [
@@ -37,6 +52,11 @@ function fakeServer() {
         const path = url.replace('http://srv/api/v1/qcli', '');
         calls.push({ method, path, body, auth: options?.headers?.Authorization });
         if (path === '/sessions/current' && method === 'GET') return session;
+        if (path.startsWith('/permissions') && method === 'GET') {
+            if (config.permissions === 'missing') fail(404, 'Not Found');
+            if (config.permissions === 'empty') return [];
+            return path.endsWith('?all=true') ? [...PERMISSIONS, USERS_READ] : PERMISSIONS;
+        }
         if (path.startsWith('/tokens')) {
             if (method === 'GET') return path.endsWith('?all=true') ? tokens : tokens.filter((t) => t.userId === 'u1');
             if (method === 'POST') {
@@ -104,8 +124,8 @@ async function harness(config: any, http?: ICliHttpClient): Promise<{ h: CliTest
     return { h, rt, run };
 }
 
-async function serverSetup() {
-    const srv = fakeServer();
+async function serverSetup(options: { permissions?: 'missing' | 'empty' } = {}) {
+    const srv = fakeServer(options);
     const t = await harness({ server: 'node' }, srv.http);
     await t.rt.session.start({ token: 'TOKEN', session: srv.session as any });
     return { ...t, srv };
@@ -195,6 +215,110 @@ describe('token commands (server mode)', () => {
         expect(srv.tokens.length).toBe(0);
     });
 
+    it('token permissions prints the groups, names and descriptions', async () => {
+        const { run, srv } = await serverSetup();
+        const r = await run('token permissions');
+        expect(r.err).toBe('');
+        for (const text of ['GROUP', 'PERMISSION', 'DESCRIPTION', 'Files', 'files:read', 'List, read and download files', 'rates:read (host)']) {
+            expect(r.out).toContain(text);
+        }
+        expect(r.out).not.toContain('users:read');
+        expect(srv.calls.some((c) => c.method === 'GET' && c.path === '/permissions')).toBeTrue();
+        expect(srv.calls.find((c) => c.path === '/permissions')!.auth).toBe('Bearer TOKEN');
+    });
+
+    it('token permissions keeps the server order', async () => {
+        const { h, srv } = await serverSetup();
+        const r = await h.execute('token permissions');
+        expect(r.tables[0].headers).toEqual(['GROUP', 'PERMISSION', 'DESCRIPTION']);
+        expect(r.tables[0].rows.map((row) => row[1])).toEqual(['files:read', 'files:write', 'jobs:read', 'rates:read (host)']);
+        expect(srv.calls.length).toBeGreaterThan(0);
+    });
+
+    it('token permissions --all asks for every permission', async () => {
+        const { run, srv } = await serverSetup();
+        const r = await run('token permissions --all');
+        expect(r.out).toContain('users:read');
+        expect(srv.calls.some((c) => c.method === 'GET' && c.path === '/permissions?all=true')).toBeTrue();
+        await run('token permissions -a');
+        expect(srv.calls.filter((c) => c.path === '/permissions?all=true').length).toBe(2);
+    });
+
+    it('token permissions with an empty list', async () => {
+        const { run } = await serverSetup({ permissions: 'empty' });
+        expect((await run('token permissions')).out).toContain('[info] No permissions');
+    });
+
+    it('token permissions on an older server', async () => {
+        const { run } = await serverSetup({ permissions: 'missing' });
+        const r = await run('token permissions');
+        expect(r.err).toContain('needs server 1.0.0-beta.29');
+        expect(r.err).toBe(
+            'token permissions: this server does not list its permissions (needs server 1.0.0-beta.29 or later)',
+        );
+    });
+
+    it('token create --select sends the chosen permissions', async () => {
+        const { h, run, srv } = await serverSetup();
+        h.setReaderResponses(['rates:read', 'files:read']);
+        const r = await run('token create picker --select');
+        expect(r.err).toBe(WARNING);
+        const post = srv.calls.find((c) => c.method === 'POST' && c.path === '/tokens')!;
+        expect(post.body.permissions).toEqual(['files:read', 'rates:read']);
+        expect(r.out).toContain('Scope: files:read, rates:read');
+        expect(srv.calls.some((c) => c.method === 'GET' && c.path === '/permissions')).toBeTrue();
+    });
+
+    it('picking equals typing', async () => {
+        const picked = await serverSetup();
+        picked.h.setReaderResponses(['files:read', 'jobs:read']);
+        await picked.run('token create same --select');
+        const typed = await serverSetup();
+        await typed.run('token create same --permissions=files:read,jobs:read');
+        const body = (srv: ReturnType<typeof fakeServer>) =>
+            srv.calls.find((c) => c.method === 'POST' && c.path === '/tokens')!.body;
+        expect(body(picked.srv)).toEqual(body(typed.srv));
+    });
+
+    it('token create --select with nothing chosen creates nothing', async () => {
+        const { h, run, srv } = await serverSetup();
+        h.setReaderResponses([]);
+        const r = await run('token create none --select');
+        expect(r.out).toContain('[info] No permissions selected; token not created');
+        expect(srv.calls.some((c) => c.method === 'POST')).toBeFalse();
+    });
+
+    it('token create --select --permissions=a is refused', async () => {
+        const { run, srv } = await serverSetup();
+        const r = await run('token create both --select --permissions=a');
+        expect(r.err).toBe('token create: use --select or --permissions, not both');
+        expect(srv.calls.some((c) => c.path.startsWith('/permissions') || c.method === 'POST')).toBeFalse();
+    });
+
+    it('token create --select with an empty list is refused', async () => {
+        const { run, srv } = await serverSetup({ permissions: 'empty' });
+        const r = await run('token create none --select');
+        expect(r.err).toBe('token create: the server lists no permissions you hold; use --permissions');
+        expect(srv.calls.some((c) => c.method === 'POST')).toBeFalse();
+    });
+
+    it('token create --select on an older server', async () => {
+        const { run, srv } = await serverSetup({ permissions: 'missing' });
+        const r = await run('token create old --select');
+        expect(r.err).toContain('needs server 1.0.0-beta.29');
+        expect(srv.calls.some((c) => c.method === 'POST')).toBeFalse();
+    });
+
+    it('token list marks host tokens', async () => {
+        const { run, srv } = await serverSetup();
+        srv.tokens.push({
+            id: 'tok-host', name: 'rates-app', userId: 'u1', userName: 'root', createdAt: 1,
+            expiresAt: null, lastUsedAt: null, audience: 'host', permissions: ['rates:read'],
+        });
+        const r = await run('token list');
+        expect(r.out).toContain('rates:read (host)');
+    });
+
     it('requires login', async () => {
         const srv = fakeServer();
         const { run } = await harness({ server: 'node' }, srv.http);
@@ -210,7 +334,39 @@ describe('token commands (local mode)', () => {
         expect((await run('token list')).err).toBe(`token list: ${LOCAL_MESSAGE}`);
         expect((await run('token create x')).err).toBe(`token create: ${LOCAL_MESSAGE}`);
         expect((await run('token revoke x')).err).toBe(`token revoke: ${LOCAL_MESSAGE}`);
+        expect((await run('token permissions')).err).toBe(`token permissions: ${LOCAL_MESSAGE}`);
         expect((await run('token')).err).toBe(`token: ${LOCAL_MESSAGE}`);
+    });
+});
+
+describe('token create --select (processor)', () => {
+    it('cancelling the picker creates nothing', async () => {
+        const create = new CliTokenCommandProcessor().processors.find((p) => p.command === 'create')!;
+        const service = jasmine.createSpyObj('tokens', ['permissions', 'create']);
+        Object.assign(service, { supported: true });
+        service.permissions.and.resolveTo([
+            { name: 'files:read', description: 'List, read and download files', group: 'Files', surface: 'cli' },
+        ]);
+        const info: string[] = [];
+        let pickerArgs: any[] = [];
+        const context: any = {
+            services: { get: (token: unknown) => (token === CliApiTokensService_TOKEN ? service : undefined) },
+            reader: {
+                readMultiSelect: async (...args: any[]) => {
+                    pickerArgs = args;
+                    return null;
+                },
+            },
+            writer: { writeInfo: (m: string) => info.push(m) },
+        };
+        await create.processCommand({ command: 'token create', value: 'x', args: { select: true } } as any, context);
+        expect(info).toEqual(['Cancelled']);
+        expect(service.create).not.toHaveBeenCalled();
+        expect(pickerArgs[0]).toBe('Permissions for x:');
+        expect(pickerArgs[1]).toEqual([
+            { label: 'files:read', value: 'files:read', description: 'List, read and download files', group: 'Files' },
+        ]);
+        expect(pickerArgs[2]).toEqual({ searchable: true });
     });
 });
 
