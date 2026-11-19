@@ -77,7 +77,12 @@ class CliTokenCreateCommandProcessor extends CliUsersCommand {
     override async processCommand(command: CliProcessCommand, context: ICliExecutionContext): Promise<void> {
         const service = apiTokens(context);
         const name = joinShellWords(String(command.value ?? ''));
-        if (!name) throw new CliUsersError(400, 'usage: token create <name> [--expires=<days>|never] [--permissions=a,b]');
+        if (!name) {
+            throw new CliUsersError(
+                400,
+                'usage: token create <name> [--expires=<days>|never] [--permissions=a,b|--select]',
+            );
+        }
         const request: CliCreateApiToken = { name };
         const expiresInDays = parseExpires(command.args['expires']);
         if (expiresInDays !== undefined) request.expiresInDays = expiresInDays;

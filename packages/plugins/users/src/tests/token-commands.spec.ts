@@ -34,7 +34,12 @@ const PERMISSIONS = [
     { name: 'jobs:read', description: 'See jobs and their runs', group: 'Jobs', surface: 'cli' },
     { name: 'rates:read', description: 'Official exchange rates', group: 'Rates', surface: 'host' },
 ];
-const USERS_READ = { name: 'users:read', description: 'See users and their permissions', group: 'Users', surface: 'cli' };
+const USERS_READ = {
+    name: 'users:read',
+    description: 'See users and their permissions',
+    group: 'Users',
+    surface: 'cli',
+};
 
 /** Minimal users-plugin server: sessions + the `/tokens` endpoints of the spec. */
 function fakeServer(config: { permissions?: 'missing' | 'empty' } = {}) {
@@ -219,9 +224,16 @@ describe('token commands (server mode)', () => {
         const { run, srv } = await serverSetup();
         const r = await run('token permissions');
         expect(r.err).toBe('');
-        for (const text of ['GROUP', 'PERMISSION', 'DESCRIPTION', 'Files', 'files:read', 'List, read and download files', 'rates:read (host)']) {
-            expect(r.out).toContain(text);
-        }
+        const expected = [
+            'GROUP',
+            'PERMISSION',
+            'DESCRIPTION',
+            'Files',
+            'files:read',
+            'List, read and download files',
+            'rates:read (host)',
+        ];
+        for (const text of expected) expect(r.out).toContain(text);
         expect(r.out).not.toContain('users:read');
         expect(srv.calls.some((c) => c.method === 'GET' && c.path === '/permissions')).toBeTrue();
         expect(srv.calls.find((c) => c.path === '/permissions')!.auth).toBe('Bearer TOKEN');
@@ -231,8 +243,13 @@ describe('token commands (server mode)', () => {
         const { h, srv } = await serverSetup();
         const r = await h.execute('token permissions');
         expect(r.tables[0].headers).toEqual(['GROUP', 'PERMISSION', 'DESCRIPTION']);
-        expect(r.tables[0].rows.map((row) => row[1])).toEqual(['files:read', 'files:write', 'jobs:read', 'rates:read (host)']);
-        expect(srv.calls.length).toBeGreaterThan(0);
+        expect(r.tables[0].rows.map((row) => row[1])).toEqual([
+            'files:read',
+            'files:write',
+            'jobs:read',
+            'rates:read (host)',
+        ]);
+        expect(srv.calls.filter((c) => c.method === 'GET' && c.path === '/permissions').length).toBe(1);
     });
 
     it('token permissions --all asks for every permission', async () => {
@@ -312,8 +329,15 @@ describe('token commands (server mode)', () => {
     it('token list marks host tokens', async () => {
         const { run, srv } = await serverSetup();
         srv.tokens.push({
-            id: 'tok-host', name: 'rates-app', userId: 'u1', userName: 'root', createdAt: 1,
-            expiresAt: null, lastUsedAt: null, audience: 'host', permissions: ['rates:read'],
+            id: 'tok-host',
+            name: 'rates-app',
+            userId: 'u1',
+            userName: 'root',
+            createdAt: 1,
+            expiresAt: null,
+            lastUsedAt: null,
+            audience: 'host',
+            permissions: ['rates:read'],
         });
         const r = await run('token list');
         expect(r.out).toContain('rates:read (host)');

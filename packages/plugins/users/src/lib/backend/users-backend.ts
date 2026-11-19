@@ -63,7 +63,7 @@ export interface ICliUsersBackend {
     createApiToken?(token: string, request: CliCreateApiToken): Promise<CliCreatedApiToken>;
     /** DELETE /tokens/{id} (own token, or any with tokens:revoke) */
     revokeApiToken?(token: string, tokenId: string): Promise<void>;
-    /** GET /permissions: the server's permission catalog entries the caller holds (`all`: every entry, requires users:read) */
+    /** GET /permissions: the catalog entries the caller holds (`all`: every entry, requires users:read) */
     listPermissions?(token: string, options?: { all?: boolean }): Promise<CliServerPermission[]>;
 
     // ── audit ────────────────────────────────────────────────────────
