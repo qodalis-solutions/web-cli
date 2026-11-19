@@ -12,6 +12,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `token list` marks host tokens with `(host)` after their scope.
 - Needs servers 1.0.0-beta.29; against an older server both commands say so, and `token create --permissions=a,b` works as before. Custom backends opt in with `listPermissions`.
 
+### Public API, docs and portal (server plugins)
+
+- The servers gain three plugins (public-api, docs, portal) that publish a host's own REST API with `host` tokens, per-account quotas, usage per token, a public OpenAPI document, Swagger UI, markdown guides and a documentation site; see their READMEs and the AI guide's "Public API, docs and portal plugins" section. No web-cli package changes.
+
 ## v2.5.2
 
 ### `server add` knows servers it already has
