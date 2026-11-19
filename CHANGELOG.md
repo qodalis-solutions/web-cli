@@ -3,6 +3,15 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Pick a token's permissions from the server's list
+
+- `token create <name> --select` opens a searchable multi-select of the permissions you hold, grouped and described as the server lists them (`GET /api/v1/qcli/permissions`), and limits the token to the ones you pick, in the server's order. Nothing chosen or Esc creates nothing; `--select` and `--permissions` cannot be combined.
+- `token permissions` prints those permissions (group, name, description; host-application permissions marked `(host)`); `--all` (`-a`) lists every permission the server knows (needs `users:read`).
+- `token list` marks host tokens with `(host)` after their scope.
+- Needs servers 1.0.0-beta.29; against an older server both commands say so, and `token create --permissions=a,b` works as before. Custom backends opt in with `listPermissions`.
+
 ## v2.5.2
 
 ### `server add` knows servers it already has

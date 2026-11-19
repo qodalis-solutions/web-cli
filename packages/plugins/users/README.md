@@ -104,6 +104,7 @@ usersModule.configure({
 | `token create <name>` | | login, server mode | Create an API token, shown once |
 | `token list` | `ls` | login, server mode | List your API tokens |
 | `token revoke <id>` | `rm` | login, server mode | Revoke a token (own, or any with `tokens:revoke`) |
+| `token permissions` | | login, server mode | Permissions you can put on a token, from the server's list |
 | `last [user]` | | `audit:read` | Sign-in history (logins, logouts, failures) |
 | `audit` | | `audit:read` | Security audit log, newest first |
 | `audit clear` | | `audit:clear` | Clear the audit log (asks first) |
@@ -137,7 +138,9 @@ usersModule.configure({
 | `--add-member`, `--remove-member` | | `groupmod` | | Add or remove users, comma separated |
 | `--expires` | | `token create` | `90` | Days until expiry (1-365) or `never` (if the server allows it) |
 | `--permissions` | | `token create` | all of yours | Limit the token to these permissions, comma separated |
+| `--select` | | `token create` | `false` | Pick the permissions from the server's list (not with `--permissions`) |
 | `--all` | `-a` | `token list` | `false` | Every user's tokens (`tokens:read`) |
+| `--all` | `-a` | `token permissions` | `false` | Every permission the server knows (`users:read`) |
 | `--limit` | `-n` | `last`, `audit` | `20` / `50` | Number of entries |
 | `--user`, `--event` | `-u`, `-e` | `audit` | | Only entries for this user or event |
 
@@ -151,6 +154,8 @@ perms alice
 perms --list
 listusers --query=jo --take=10
 token create ci --expires=30 --permissions=commands:execute
+token create reports --select
+token permissions
 token list --all
 audit --user=alice --limit=20
 ```
@@ -196,6 +201,8 @@ In code, use `cliAuthorize(context, 'deploy:rollback')` and `cliCanAccess` from 
 ## API tokens
 
 In server mode, `token create` makes long-lived, revocable bearer tokens (`qcli_pat_...`) for MCP clients such as Claude Code, CI jobs and scripts. A token acts as the user who created it, with that user's live permissions; `--permissions` narrows it to permissions you hold. The token is printed once, together with a ready-to-paste `claude mcp add --transport http qcli <server>/api/qcli/mcp ...` command. Local mode has no tokens; custom backends opt in by implementing `listApiTokens`, `createApiToken` and `revokeApiToken`.
+
+With servers 1.0.0-beta.29, `token create <name> --select` picks the token's permissions from the server's permission catalog (`GET /api/v1/qcli/permissions`): a searchable list of the permissions you hold, grouped and described, sent in the server's order. `token permissions` prints that list, `--all` every permission the server knows (`users:read`). Entries the host application registered for its own routes are marked `(host)`, and so are `host` tokens in `token list`: the host issues those itself, and the server's CLI routes refuse them. Against an older server both commands say which server version they need; custom backends opt in with `listPermissions`.
 
 ## Rules
 
