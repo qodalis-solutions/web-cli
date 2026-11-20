@@ -169,10 +169,20 @@ an error; a country whose official source is hidden answers with its banks only,
 when nothing is left. Which banks are marked allowed at launch is the user's decision (open); the bank
 endpoints, `banks:read` and `ApiBankRates` ship either way and simply return the banks that are marked.
 
-**Plans.** Two new limits on `PlanDefinition`, managed on the admin Plans page like the others:
-`ApiRequestsPerDay` (0 = no API access) and `ApiBankRates` (holds `banks:read`). The plan gives an account
-its `host` permissions; the public-api plugin's quota callback reads the plan. Seeds: Free 100 a day without
-banks, Plus 5,000 with banks, Premium 50,000 with banks (the user sets the real numbers).
+**API plans, separate from the app's plans** (user decision, 2026-11-20). Developers get their own plans;
+the app's subscription plans (Free, Plus, Premium) never change API access, and an API plan never changes
+the app's limits. A new `ApiPlans` table: name, `RequestsPerDay` (0 = no API access), `RequestsPerMinute`,
+`BankRates` (grants `banks:read`), `IsDefault` (exactly one), sort order, archived. Accounts get `ApiPlanId`
+(null = the default API plan) and `ApiPlanUntil` (null = no end; past it the account falls back to the
+default). Admins manage API plans on a new "API plans" tab of the admin page and set an account's API plan
+(and its end) on the admin Users page and with a console command, both audited, behind a new
+`api-plans.manage` permission. Every account holds `rates:read` while its API plan allows requests, and
+`banks:read` when it has `BankRates`; a token keeps only what the plan still allows (Part 1 narrows tokens to
+the user's live permissions). The quota resolver in `RateBell.PublicApi` reads the account's API plan
+(cached briefly). No self-service purchase yet (the website's checkout is off): the Developers page lists the
+API plans with their limits and a contact link to upgrade; paying for API plans comes later. Seeds (the user
+sets the real numbers): Developer (default) 100 a day, 10 a minute, no banks; Pro 10,000 a day, 60 a minute,
+with banks; Business 100,000 a day, 300 a minute, with banks.
 
 **Accounts as token holders.** `CliUserStore` returns any enabled account for a token lookup, with the plan's
 `rates:read` / `banks:read`; only staff stay CLI users for sessions. The Developers page creates `host`
@@ -195,7 +205,9 @@ repo (getting started, authentication, limits, sources and credits, errors).
 
 1. Part 1: servers 1.0.0-beta.29 (all packages together), dashboard, `@qodalis/cli-users`.
 2. Parts 2 and 3: the two plugins and the portal, next server version.
-3. Part 4: RateBell, once the packages are on NuGet and npm.
+3. Part 4: RateBell. Developed and tested against a local NuGet feed of the unreleased packages
+   (`~/Documents/Personal/.local-nuget`, version `1.0.0-beta.30-local.1`), added only on this machine and
+   never committed into RateBell's `nuget.config`; the published versions replace it before RateBell's PR.
 
 Each part gets its own implementation plan and feature branch per repo; all three servers stay in step.
 
