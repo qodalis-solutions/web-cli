@@ -13,6 +13,25 @@ A server plugin registers command processors in a Qodalis CLI server (Node, .NET
 - Servers: Node `@qodalis/cli-server-node` (default port 8047 in the demos), .NET `Qodalis.Cli` (8046), Python `qodalis-cli-server` (8048).
 - Users can link servers themselves with `server add [name] [url]`: browser approval (`POST /api/v1/qcli/link`, the user approves at `/qcli/admin/link?code=…`, the terminal polls `GET /api/v1/qcli/link/{linkId}` and receives an API token), a pasted API token (`--token`), or a user and password (the terminal creates a token and signs out). Linked servers persist (IndexedDB), their tokens are encrypted (`ICliSecretStore`, Web Crypto by default) and redacted from the history. `server edit`, `server remove`, `server forget-all`. Hosts restrict it with `CliOptions.userServers` (`false` or `{ allowedOrigins }`). Server side: the users plugin's link routes, `setLinkApprovalUrl` (Node) / `LinkApprovalUrl` (.NET) / `link_approval_url` (Python) for a host's own approval page.
 
+### Connecting a server from the Android app, the PWA or the docs site
+
+A user links their own server to the Android app (`com.qodalis.cli`), the PWA or the docs terminal with `server add`; the server needs an https address and must allow the terminal's origin.
+
+- The pages are served over https: the Android app from `https://localhost` (Capacitor WebView, `allowMixedContent: false`, no clear-text traffic), the PWA from `https://qodalis-solutions.github.io`, the docs from `https://cli.qodalis.com`. `server add` accepts `http://` for private addresses after a confirmation, but these pages block http requests and `ws://` sockets as mixed content, so a plain `http://192.168.x.x:8047` server fails with `Cannot reach … Failed to fetch`. `localhost` on a phone is the phone.
+- Give the server an https address with a publicly trusted certificate (self-signed ones are rejected): `tailscale serve --bg 8047` (`https://<machine>.<tailnet>.ts.net`, private to the tailnet), `cloudflared tunnel --url http://localhost:8047` (public `https://….trycloudflare.com`), or a reverse proxy such as Caddy. All three pass WebSockets through.
+- Allow the origins (CORS and WebSocket upgrades): `https://localhost`, `https://qodalis-solutions.github.io`, `https://cli.qodalis.com`. Node `createCliServer({ allowedOrigins })` (demo and Docker image: `QCLI_ALLOWED_ORIGINS`, comma-separated, replaces the demo list); .NET `cli.SetAllowedOrigins(...)` (demo and image: `QCLI_ALLOWED_ORIGINS`, added to the demo list); Python `CliServerOptions(allowed_origins=[...])` (no environment variable).
+- Run a server with the users and admin plugins (the demos and `ghcr.io/qodalis-solutions/cli-server-{node,dotnet,python}` images have both; demo user `root`, password `admin` for Node/Python, `root` for .NET) so browser approval works; then `server add https://…` and pick approve in the browser, paste a `token create` token, or user and password.
+- On the phone the token is encrypted with a non-extractable Web Crypto key in IndexedDB unless the host provides `ICliSecretStore_TOKEN` (for example the Android Keystore). Troubleshooting: `server status <name>`, `server edit <name> --token` after an expired or revoked token, `server edit <name> --url`, `server remove <name>`, `server forget-all`.
+
+```bash
+docker run -p 8047:8047 \
+  -e QCLI_ALLOWED_ORIGINS=https://localhost,https://qodalis-solutions.github.io,https://cli.qodalis.com \
+  ghcr.io/qodalis-solutions/cli-server-node
+tailscale serve --bg 8047
+# then, in the app:
+server add https://my-pc.tailnet-1234.ts.net
+```
+
 ### Paging list output (all servers)
 
 A command that can return many rows must page them: a terminal should never receive thousands of rows.

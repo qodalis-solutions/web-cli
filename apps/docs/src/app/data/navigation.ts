@@ -9,6 +9,13 @@ export interface NavItem {
 
 export const DOCS_NAV: NavItem[] = [
     { label: 'sidebar.getting-started', path: '/docs/getting-started' },
+    {
+        label: 'sidebar.android-app',
+        path: '/docs/android-app',
+        children: [
+            { label: 'sidebar.connect-your-server', path: '/docs/android-app/connect-your-server' },
+        ],
+    },
     { label: 'sidebar.migration', path: '/docs/migration' },
     { label: 'sidebar.built-in-commands', path: '/docs/built-in-commands' },
     { label: 'sidebar.configuration', path: '/docs/configuration' },

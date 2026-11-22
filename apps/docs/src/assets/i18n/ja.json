@@ -529,5 +529,16 @@
   "docs.playground.built-with-type-errors": "実行中、型エラー {{count}} 件: 下線のコードにカーソルを合わせてください",
   "docs.playground.press-run": "実行を押して開始",
   "docs.playground.hint": "コマンドプロセッサー (クラス、または processCommand を持つオブジェクト) かモジュールを export し、@qodalis/cli-core から import してください。コードはこのブラウザーに保存され、リンクをコピーで共有できます。",
-  "docs.playground.open": "Playground"
+  "docs.playground.open": "Playground",
+  "sidebar.android-app": "Android アプリ",
+  "sidebar.connect-your-server": "自分のサーバーに接続",
+  "docs.android-app.title": "Android 版 Qodalis CLI",
+  "docs.android-app.intro": "Qodalis CLI のターミナルをスマートフォンアプリで。コマンド、ファイル、エディター、ゲームが端末上でオフラインで動作し、リンクすれば自分のサーバーも使えます。",
+  "docs.android-app.open-pwa": "ブラウザーで開く (PWA)",
+  "docs.android-app.see-also": "関連項目:",
+  "docs.connect-your-server.title": "アプリから自分のサーバーに接続する",
+  "docs.connect-your-server.intro": "自分で運用している Node、.NET、Python のサーバーを Android アプリにリンクし、そのコマンドとシェルをスマートフォンから使います。",
+  "home.hero.android-app": "Android 版もあります: Google Play の Qodalis CLI",
+  "docs.getting-started.android-app-hint": "スマートフォンでターミナルを使いたいだけなら、アプリがあります:",
+  "docs.getting-started.next-android": "Android アプリ — スマートフォンのターミナルと自分のサーバー"
 }

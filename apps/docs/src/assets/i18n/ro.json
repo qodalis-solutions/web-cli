@@ -529,5 +529,16 @@
   "docs.playground.built-with-type-errors": "Rulează, cu {{count}} eroare/erori de tip: treci cu mouse-ul peste codul subliniat",
   "docs.playground.press-run": "Apasă Rulează pentru a porni",
   "docs.playground.hint": "Exportă un procesor de comenzi (o clasă sau un obiect cu processCommand) sau un modul și importă din @qodalis/cli-core. Codul tău rămâne în acest browser; Copiază linkul îl partajează.",
-  "docs.playground.open": "Playground"
+  "docs.playground.open": "Playground",
+  "sidebar.android-app": "Aplicația Android",
+  "sidebar.connect-your-server": "Conectează-ți serverul",
+  "docs.android-app.title": "Qodalis CLI pentru Android",
+  "docs.android-app.intro": "Terminalul Qodalis CLI ca aplicație de telefon: comenzi, fișiere, un editor și jocuri care rulează offline pe dispozitiv, plus propriile servere, după ce le conectezi.",
+  "docs.android-app.open-pwa": "Deschide în browser (PWA)",
+  "docs.android-app.see-also": "Vezi și:",
+  "docs.connect-your-server.title": "Conectează-ți propriul server din aplicație",
+  "docs.connect-your-server.intro": "Conectează la aplicația Android un server Node, .NET sau Python propriu, ca să ai comenzile și shell-ul lui pe telefon.",
+  "home.hero.android-app": "Și pe Android: Qodalis CLI pe Google Play",
+  "docs.getting-started.android-app-hint": "Vrei doar să folosești terminalul pe telefon? Pentru asta există aplicația:",
+  "docs.getting-started.next-android": "Aplicația Android — terminalul pe telefon, cu propriul server"
 }

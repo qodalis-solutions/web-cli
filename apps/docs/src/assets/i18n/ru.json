@@ -529,5 +529,16 @@
   "docs.playground.built-with-type-errors": "Работает, ошибок типов: {{count}} — наведите на подчёркнутый код",
   "docs.playground.press-run": "Нажмите «Запустить», чтобы начать",
   "docs.playground.hint": "Экспортируйте обработчик команды (класс или объект с processCommand) или модуль и импортируйте из @qodalis/cli-core. Код сохраняется в этом браузере; «Копировать ссылку» делится им.",
-  "docs.playground.open": "Playground"
+  "docs.playground.open": "Playground",
+  "sidebar.android-app": "Приложение для Android",
+  "sidebar.connect-your-server": "Подключение своего сервера",
+  "docs.android-app.title": "Qodalis CLI для Android",
+  "docs.android-app.intro": "Терминал Qodalis CLI в виде приложения для телефона: команды, файлы, редактор и игры работают офлайн на устройстве, а после привязки — и ваши собственные серверы.",
+  "docs.android-app.open-pwa": "Открыть в браузере (PWA)",
+  "docs.android-app.see-also": "См. также:",
+  "docs.connect-your-server.title": "Подключение своего сервера из приложения",
+  "docs.connect-your-server.intro": "Привяжите свой сервер на Node, .NET или Python к приложению для Android, чтобы его команды и оболочка были под рукой на телефоне.",
+  "home.hero.android-app": "Также для Android: Qodalis CLI в Google Play",
+  "docs.getting-started.android-app-hint": "Нужен терминал только на телефоне? Для этого есть приложение:",
+  "docs.getting-started.next-android": "Приложение для Android — терминал на телефоне и ваш сервер"
 }

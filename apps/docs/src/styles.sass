@@ -307,6 +307,17 @@ $radius-sm: 8px
     background: rgba(255, 255, 255, 0.08)
     color: $accent
 
+.hero-app-link
+  display: block
+  width: fit-content
+  margin: 20px auto 0
+  font-size: 0.85rem
+  color: $text-secondary
+  text-decoration: none
+
+  &:hover
+    color: $accent
+
 // ─── Framework Code Examples ───
 .frameworks-section
   padding: 80px 0
@@ -1140,6 +1151,32 @@ $radius-sm: 8px
   .next-step-title
     font-size: 0.9rem
     line-height: 1.4
+
+// ─── Android app page ───
+.app-store-links
+  display: flex
+  align-items: center
+  flex-wrap: wrap
+  gap: 12px
+  margin: 16px 0 24px
+
+  .play-badge
+    display: block
+    height: 60px
+    margin: -8px 0
+
+.app-screenshots
+  display: flex
+  flex-wrap: wrap
+  gap: 16px
+  margin: 0 0 24px
+
+  img
+    width: 220px
+    max-width: calc(50% - 8px)
+    height: auto
+    border: 1px solid $border
+    border-radius: $radius-sm
 
 // ─── Category Badge ───
 .category-badge

@@ -1,5 +1,9 @@
 <h1>{{ "docs.getting-started.title" | translate }}</h1>
 <p>{{ "docs.getting-started.intro" | translate }}</p>
+<p>
+  {{ "docs.getting-started.android-app-hint" | translate }}
+  <a routerLink="/docs/android-app">{{ "sidebar.android-app" | translate }}</a>
+</p>
 
 <!-- Installation -->
 <h2>{{ "docs.getting-started.installation" | translate }}</h2>
@@ -230,6 +234,12 @@ engine.start().then(() =&gt; engine.focus());</code></pre>
     <span class="next-step-icon">◐</span>
     <span class="next-step-title">{{
       "docs.getting-started.next-plugins" | translate
+    }}</span>
+  </a>
+  <a routerLink="/docs/android-app" class="next-step-card">
+    <span class="next-step-icon">▯</span>
+    <span class="next-step-title">{{
+      "docs.getting-started.next-android" | translate
     }}</span>
   </a>
 </div>

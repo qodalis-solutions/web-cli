@@ -101,6 +101,20 @@ const routes: Routes = [
                     ),
             },
             {
+                path: 'android-app',
+                loadChildren: () =>
+                    import('./pages/android-app/android-app.module').then(
+                        (m) => m.AndroidAppModule,
+                    ),
+            },
+            {
+                path: 'android-app/connect-your-server',
+                loadChildren: () =>
+                    import(
+                        './pages/connect-your-server/connect-your-server.module'
+                    ).then((m) => m.ConnectYourServerModule),
+            },
+            {
                 path: 'panel-api',
                 loadChildren: () =>
                     import('./pages/panel-api/panel-api.module').then(
