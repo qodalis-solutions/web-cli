@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
+### Server connections are monitored
+
+- Every enabled server gets a `server-health:<name>` background service (listed in `services`, with its log). While connected it pings `/api/qcli/versions` (every 30 s) and marks the server disconnected when it stops answering, even without the event WebSocket. While down it retries with backoff (5 s up to 60 s) and no attempt limit, so a server that was down at startup, or for any length of time, brings its commands back without a reload or `server reconnect`.
+- A command that fails with a network error, the browser going `online` and the tab becoming visible trigger a check right away; nothing is polled while the tab is hidden or offline. A server that needs a sign-in is left to the auth layer.
+- Configurable per server with `CliServerConfig.healthCheck` (`interval`, `retryDelay`, `maxRetryDelay`; `false` turns polling off). `server status` re-checks a server whose answer contradicts its state.
+
+### Docs: the Android app
+
+- New pages: [Android app](https://cli.qodalis.com/docs/android-app) and a step-by-step guide to [connecting your own server from it](https://cli.qodalis.com/docs/android-app/connect-your-server) (https address, allowed origins, `server add` sign-in options, troubleshooting). Linked from the home page, Getting started, Server integration and the AI guide.
+
 ### Panel header fits on phones
 
 - A panel narrower than 480px (measured on the panel, so a narrow docked side panel counts too) shows only collapse/expand and a **⋮** button in its header. The ⋮ menu holds Maximize/Restore, the four positions, Hide (when hideable) and Close (when closable), with 44px touch targets. It renders outside the panel with the theme's colors, closes on an outside tap, Escape or a selection, and is keyboard reachable (`aria-haspopup="menu"`, `role="menu"`/`menuitem`, arrow keys). Same behaviour in the Angular, React and Vue panels (`CliPanelController.observePanelWidth`, `headerMenuItems`).
