@@ -91,6 +91,32 @@ export type CliServerConfig = {
      * @deprecated use the users plugin's WebSocket tickets
      */
     unsafeHeadersInWebSocketUrl?: boolean;
+
+    /**
+     * How the server is watched (the `server-health:<name>` background
+     * service): pinged every `interval` while connected, retried with a
+     * capped backoff while down. `false` turns polling off: the server is then
+     * checked only when a command fails with a network error, the browser
+     * comes back online or the tab becomes visible.
+     * @default { interval: 30000, retryDelay: 5000, maxRetryDelay: 60000 }
+     */
+    healthCheck?: false | CliServerHealthCheckOptions;
+};
+
+/**
+ * Polling of a server's health (`CliServerConfig.healthCheck`). Nothing is
+ * polled while the tab is hidden or the browser is offline.
+ */
+export type CliServerHealthCheckOptions = {
+    /**
+     * Milliseconds between checks while the server is connected; 0 polls
+     * only while it is down. @default 30000
+     */
+    interval?: number;
+    /** First retry delay while the server is down, doubled after each failed check. @default 5000 */
+    retryDelay?: number;
+    /** Longest delay between retries while the server is down. @default 60000 */
+    maxRetryDelay?: number;
 };
 
 /**

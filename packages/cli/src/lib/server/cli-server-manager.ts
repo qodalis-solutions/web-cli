@@ -161,6 +161,9 @@ export class CliServerManager implements DefaultServerProvider {
                 url: config.url,
             });
         }
+        // Watched from now on, connected or not: a server that is down
+        // connects on its own once it answers (`server-health:<name>`)
+        connection.startHealthCheck();
         return connection;
     }
 
@@ -208,7 +211,6 @@ export class CliServerManager implements DefaultServerProvider {
             return { success: false, commandCount: 0 };
         }
 
-        connection.stopHealthCheck();
         this.unregisterServerProcessors(name);
 
         connection.onDisconnect = () => {
@@ -226,6 +228,8 @@ export class CliServerManager implements DefaultServerProvider {
         };
 
         await connection.connect();
+        // Keeps watching it (and retrying it, when the connect failed)
+        connection.startHealthCheck();
 
         if (connection.connected) {
             this.registerProxyProcessors(connection, name);
@@ -265,7 +269,7 @@ export class CliServerManager implements DefaultServerProvider {
     private handleDisconnect(name: string): void {
         this.events?.emit('server:disconnected', { name });
         this._logger?.warn(
-            `Server '${name}' disconnected. Its commands are no longer available. Starting health check...`,
+            `Server '${name}' disconnected. Its commands are no longer available until it answers again (retrying in the background: server-health:${name}).`,
         );
         this.unregisterServerProcessors(name);
 
