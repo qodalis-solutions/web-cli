@@ -5,6 +5,8 @@ export interface NavItem {
     path: string;
     children?: NavItem[];
     external?: boolean;
+    /** Only holds children: there is no page at `path`. */
+    group?: boolean;
 }
 
 export const DOCS_NAV: NavItem[] = [
@@ -22,6 +24,7 @@ export const DOCS_NAV: NavItem[] = [
     {
         label: 'sidebar.core-concepts',
         path: '/docs/core-concepts',
+        group: true,
         children: [
             { label: 'sidebar.command-line', path: '/docs/core-concepts/command-line' },
             { label: 'sidebar.command-processors', path: '/docs/core-concepts/command-processors' },

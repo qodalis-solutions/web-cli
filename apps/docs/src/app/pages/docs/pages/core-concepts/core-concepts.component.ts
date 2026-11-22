@@ -56,11 +56,6 @@ export class CoreConceptsComponent implements OnInit, OnDestroy {
         this.sub.unsubscribe();
     }
 
-    scrollTo(id: string): void {
-        const el = this.elRef.nativeElement.querySelector(`#${id}`);
-        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
     private buildToc(): void {
         const headings =
             this.elRef.nativeElement.querySelectorAll('h2');
@@ -77,5 +72,9 @@ export class CoreConceptsComponent implements OnInit, OnDestroy {
             this.toc.push({ id, label: h.textContent!.trim() });
         });
         this.cdr.detectChanges();
+        // The heading ids exist only now: a link that opened this page at a
+        // section (…#writer-methods) could not be followed by the router
+        const fragment = this.route.snapshot.fragment;
+        if (fragment) this.elRef.nativeElement.querySelector(`#${CSS.escape(fragment)}`)?.scrollIntoView();
     }
 }

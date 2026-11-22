@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 import { DocsComponent } from './docs.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { NotFoundComponent } from './components/not-found/not-found.component';
 import { SharedModule } from '../../shared/shared.module';
 
 const routes: Routes = [
@@ -135,12 +136,22 @@ const routes: Routes = [
                         (m) => m.LanguagePacksModule,
                     ),
             },
+            {
+                // A group of topics without a page of its own: open the first
+                path: 'core-concepts',
+                redirectTo: 'core-concepts/command-line',
+                pathMatch: 'full',
+            },
+            {
+                path: '**',
+                component: NotFoundComponent,
+            },
         ],
     },
 ];
 
 @NgModule({
-    declarations: [DocsComponent, SidebarComponent],
+    declarations: [DocsComponent, SidebarComponent, NotFoundComponent],
     imports: [CommonModule, SharedModule, RouterModule.forChild(routes)],
 })
 export class DocsModule {}

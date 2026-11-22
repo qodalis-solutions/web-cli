@@ -4,12 +4,9 @@
       "docs.core-concepts.toc-label" | translate
     }}</span>
     @for (entry of toc; track entry) {
-      <a
-        class="toc-link"
-        (click)="scrollTo(entry.id); $event.preventDefault()"
-        href="#"
-        >{{ entry.label }}</a
-      >
+      <a class="toc-link" [routerLink]="[]" [fragment]="entry.id">{{
+        entry.label
+      }}</a>
     }
   </nav>
 }

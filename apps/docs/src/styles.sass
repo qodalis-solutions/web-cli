@@ -1,3 +1,141 @@
+// ─── Tokens ───
+// Colours are CSS custom properties so the light/dark switch (data-theme on
+// <html>, set by ThemeService and the inline script in index.html) needs no
+// rebuild. Text colours keep at least 4.5:1 contrast (WCAG AA) on every
+// background they sit on, in both schemes.
+$bg-page: var(--bg-page)
+$bg-surface: var(--bg-surface)
+$bg-card: var(--bg-card)
+$bg-card-hover: var(--bg-card-hover)
+$bg-elevated: var(--bg-elevated)
+$border: var(--border)
+$border-light: var(--border-light)
+$text: var(--text)
+$text-strong: var(--text-strong)
+$text-secondary: var(--text-secondary)
+$text-muted: var(--text-muted)
+$accent: var(--accent)
+$accent-hover: var(--accent-hover)
+$accent-glow: var(--accent-glow)
+$accent-soft: var(--accent-soft)
+$accent-border: var(--accent-border)
+$on-accent: var(--on-accent)
+$btn-bg: var(--btn-bg)
+$btn-bg-hover: var(--btn-bg-hover)
+$link: var(--link)
+$link-hover: var(--link-hover)
+$hover: var(--hover)
+$hover-strong: var(--hover-strong)
+$shadow: var(--shadow)
+$success: var(--success)
+$danger: var(--danger)
+$danger-soft: var(--danger-soft)
+$code-bg: var(--code-bg)
+$code-text: var(--code-text)
+$mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace
+$max-w: 1120px
+$radius: 12px
+$radius-sm: 8px
+$nav-h: 56px
+
+=dark-tokens
+  --bg-page: #070b14
+  --bg-surface: #0d1117
+  --bg-card: #111827
+  --bg-card-hover: #1a2236
+  --bg-elevated: #1f2937
+  --border: #1e293b
+  --border-light: #334155
+  --text: #e5e7eb
+  --text-strong: #ffffff
+  --text-secondary: #a3acbd
+  --text-muted: #8b93a5
+  --accent: #818cf8
+  --accent-hover: #a5b4fc
+  --accent-glow: $accent-border
+  --accent-soft: rgba(129, 140, 248, 0.12)
+  --accent-border: rgba(129, 140, 248, 0.28)
+  --on-accent: #ffffff
+  --btn-bg: #4f46e5
+  --btn-bg-hover: #6366f1
+  --link: #a5b4fc
+  --link-hover: #c7d2fe
+  --hover: $hover
+  --hover-strong: $hover-strong
+  --nav-bg: rgba(7, 11, 20, 0.8)
+  --shadow: rgba(0, 0, 0, 0.45)
+  --success: #86efac
+  --danger: #fca5a5
+  --danger-soft: rgba(248, 113, 113, 0.1)
+  --code-bg: #111827
+  --code-text: #d4d4d8
+  --code-comment: #9ca3af
+  --code-tag: #f19ca0
+  --code-function-name: #7fb0e8
+  --code-number: #f5a46b
+  --code-property: var(--code-property)
+  --code-keyword: #d7a8f0
+  --code-string: #8fd6a8
+  --code-operator: var(--code-operator)
+  --scrollbar: rgba(255, 255, 255, 0.15)
+  --scrollbar-hover: rgba(255, 255, 255, 0.28)
+  color-scheme: dark
+
+=light-tokens
+  --bg-page: #ffffff
+  --bg-surface: #f6f8fb
+  --bg-card: #ffffff
+  --bg-card-hover: #f8fafc
+  --bg-elevated: #eef2f7
+  --border: #e2e8f0
+  --border-light: #cbd5e1
+  --text: #1e293b
+  --text-strong: #0f172a
+  --text-secondary: #475569
+  --text-muted: #5b6678
+  --accent: #4f46e5
+  --accent-hover: #4338ca
+  --accent-glow: rgba(79, 70, 229, 0.12)
+  --accent-soft: rgba(79, 70, 229, 0.08)
+  --accent-border: rgba(79, 70, 229, 0.25)
+  --on-accent: #ffffff
+  --btn-bg: #4f46e5
+  --btn-bg-hover: #4338ca
+  --link: #4338ca
+  --link-hover: #312e81
+  --hover: rgba(15, 23, 42, 0.04)
+  --hover-strong: rgba(15, 23, 42, 0.08)
+  --nav-bg: rgba(255, 255, 255, 0.85)
+  --shadow: rgba(15, 23, 42, 0.12)
+  --success: #15803d
+  --danger: #b91c1c
+  --danger-soft: rgba(185, 28, 28, 0.08)
+  --code-bg: #f6f8fa
+  --code-text: #24292f
+  --code-comment: #6e7781
+  --code-tag: #116329
+  --code-function-name: #8250df
+  --code-number: #0550ae
+  --code-property: #953800
+  --code-keyword: #cf222e
+  --code-string: #0a3069
+  --code-operator: #0550ae
+  --scrollbar: rgba(15, 23, 42, 0.2)
+  --scrollbar-hover: rgba(15, 23, 42, 0.35)
+  color-scheme: light
+
+// Dark is the default; data-theme (set before first paint) picks the scheme,
+// and without script the system setting decides
+:root
+  +dark-tokens
+
+@media (prefers-color-scheme: light)
+  :root:not([data-theme])
+    +light-tokens
+
+:root[data-theme="light"]
+  +light-tokens
+
 // ─── Reset & Base ───
 *,
 *::before,
@@ -11,15 +149,15 @@ body
   min-height: 100%
   height: 100%
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
-  background-color: #070b14
-  color: rgba(255, 255, 255, 0.87)
+  background-color: $bg-page
+  color: $text
   -webkit-font-smoothing: antialiased
   -moz-osx-font-smoothing: grayscale
   scroll-behavior: smooth
 
 ::selection
-  background-color: rgba(129, 140, 248, 0.3)
-  color: #fff
+  background-color: $accent-border
+  color: $text-strong
 
 ::-webkit-scrollbar
   width: 8px
@@ -29,29 +167,11 @@ body
   background: transparent
 
 ::-webkit-scrollbar-thumb
-  background: rgba(255, 255, 255, 0.15)
+  background: var(--scrollbar)
   border-radius: 4px
 
   &:hover
-    background: rgba(255, 255, 255, 0.25)
-
-// ─── Tokens ───
-$bg-page: #070b14
-$bg-surface: #0d1117
-$bg-card: #111827
-$bg-card-hover: #1a2236
-$bg-elevated: #1f2937
-$border: #1e293b
-$border-light: #334155
-$text: rgba(255, 255, 255, 0.87)
-$text-secondary: rgba(255, 255, 255, 0.55)
-$accent: #818cf8
-$accent-hover: #6366f1
-$accent-glow: rgba(129, 140, 248, 0.15)
-$mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace
-$max-w: 1120px
-$radius: 12px
-$radius-sm: 8px
+    background: var(--scrollbar-hover)
 
 // ─── Shared ───
 .section-inner
@@ -76,7 +196,7 @@ $radius-sm: 8px
   code
     font-family: $mono
     font-size: 0.85rem
-    background: rgba(129, 140, 248, 0.1)
+    background: $accent-soft
     padding: 2px 7px
     border-radius: 4px
     color: $accent
@@ -84,7 +204,7 @@ $radius-sm: 8px
 .subsection-heading
   font-size: 1.1rem
   font-weight: 600
-  color: #fff
+  color: $text-strong
   margin: 32px 0 16px
   text-align: center
 
@@ -108,11 +228,11 @@ $radius-sm: 8px
     transform: scale(0.97)
 
 .btn-primary
-  background: $accent
-  color: #fff
+  background: $btn-bg
+  color: $on-accent
 
   &:hover
-    background: $accent-hover
+    background: $btn-bg-hover
     box-shadow: 0 0 24px $accent-glow
 
 .btn-ghost
@@ -121,8 +241,33 @@ $radius-sm: 8px
   border: 1px solid $border-light
 
   &:hover
-    background: rgba(255, 255, 255, 0.05)
-    border-color: rgba(255, 255, 255, 0.3)
+    background: $hover
+    border-color: $text-muted
+
+// ─── Focus & links ───
+// Keyboard focus is always visible; mouse clicks don't draw the ring
+:focus-visible
+  outline: 2px solid $accent
+  outline-offset: 2px
+  border-radius: 4px
+
+// Text links: underlined so they never rely on colour alone. :where() keeps
+// the specificity at zero, so card-style links (.next-step-card, .btn, ...)
+// keep their own look.
+:where(.docs-content, .hero-subtitle, .section-subheading, .feature-desc, .advanced-desc, .footer-copy) a
+  color: $link
+  text-decoration: underline
+  text-decoration-color: $accent-border
+  text-decoration-thickness: 1px
+  text-underline-offset: 3px
+  transition: color 0.15s, text-decoration-color 0.15s
+
+  &:hover
+    color: $link-hover
+    text-decoration-color: currentColor
+
+  code
+    color: inherit
 
 // ─── Nav ───
 .nav
@@ -133,7 +278,7 @@ $radius-sm: 8px
   z-index: 100
   backdrop-filter: blur(16px) saturate(180%)
   -webkit-backdrop-filter: blur(16px) saturate(180%)
-  background: rgba(7, 11, 20, 0.75)
+  background: var(--nav-bg)
   border-bottom: 1px solid $border
 
 .nav-inner
@@ -155,6 +300,8 @@ $radius-sm: 8px
   font-size: 1rem
   color: $text
   letter-spacing: -0.01em
+
+  text-decoration: none
 
   .brand-icon
     width: 24px
@@ -189,16 +336,19 @@ $radius-sm: 8px
 
   &:hover
     color: $text
-    background: rgba(255, 255, 255, 0.06)
+    background: $hover
+
+  &.active
+    color: $text-strong
 
   &.gh-link
     color: $text
-    background: rgba(255, 255, 255, 0.06)
+    background: $hover
     border: 1px solid $border-light
 
     &:hover
-      border-color: rgba(255, 255, 255, 0.25)
-      background: rgba(255, 255, 255, 0.1)
+      border-color: $border-light
+      background: $hover-strong
 
   .arrow
     font-size: 0.75rem
@@ -206,6 +356,45 @@ $radius-sm: 8px
 
     @media (max-width: 520px)
       display: none
+
+  // Narrow phones: the logo leads home and npm is linked from the docs
+  &.nav-link-npm
+    @media (max-width: 600px)
+      display: none
+
+  &.nav-link-home
+    @media (max-width: 420px)
+      display: none
+
+.theme-btn
+  appearance: none
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  width: 32px
+  height: 32px
+  padding: 0
+  margin-left: 2px
+  background: transparent
+  color: $text-secondary
+  border: 1px solid $border-light
+  border-radius: 6px
+  cursor: pointer
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s
+
+  &:hover
+    color: $text-strong
+    background: $hover
+    border-color: $text-muted
+
+  svg
+    width: 16px
+    height: 16px
+    fill: none
+    stroke: currentColor
+    stroke-width: 2
+    stroke-linecap: round
+    stroke-linejoin: round
 
 // ─── Hero ───
 .hero
@@ -221,7 +410,7 @@ $radius-sm: 8px
   transform: translateX(-50%)
   width: 700px
   height: 500px
-  background: radial-gradient(ellipse at center, rgba(129, 140, 248, 0.12) 0%, transparent 70%)
+  background: radial-gradient(ellipse at center, $accent-glow 0%, transparent 70%)
   pointer-events: none
 
 .hero-content
@@ -236,8 +425,8 @@ $radius-sm: 8px
   text-transform: uppercase
   letter-spacing: 0.06em
   color: $accent
-  background: rgba(129, 140, 248, 0.1)
-  border: 1px solid rgba(129, 140, 248, 0.2)
+  background: $accent-soft
+  border: 1px solid $accent-border
   border-radius: 20px
   padding: 5px 16px
   margin-bottom: 24px
@@ -248,7 +437,7 @@ $radius-sm: 8px
   line-height: 1.15
   letter-spacing: -0.03em
   margin: 0 0 20px
-  color: #fff
+  color: $text-strong
 
 .accent
   color: $accent
@@ -304,7 +493,7 @@ $radius-sm: 8px
   white-space: nowrap
 
   &:hover
-    background: rgba(255, 255, 255, 0.08)
+    background: $hover-strong
     color: $accent
 
 .hero-app-link
@@ -313,10 +502,13 @@ $radius-sm: 8px
   margin: 20px auto 0
   font-size: 0.85rem
   color: $text-secondary
-  text-decoration: none
+  text-decoration: underline
+  text-decoration-color: $border-light
+  text-underline-offset: 3px
 
   &:hover
-    color: $accent
+    color: $link
+    text-decoration-color: currentColor
 
 // ─── Framework Code Examples ───
 .frameworks-section
@@ -348,9 +540,9 @@ $radius-sm: 8px
     border-color: $border-light
 
   &.active
-    background: $accent
-    border-color: $accent
-    color: #fff
+    background: $btn-bg
+    border-color: $btn-bg
+    color: $on-accent
 
 .framework-panels
   max-width: 720px
@@ -363,7 +555,7 @@ $radius-sm: 8px
 
 .code-block
   position: relative
-  background: $bg-card
+  background: $code-bg
   border: 1px solid $border
   border-radius: $radius-sm
   overflow: hidden
@@ -373,7 +565,7 @@ $radius-sm: 8px
     padding: 20px 24px
     padding-top: 36px
     overflow-x: auto
-    background: $bg-card !important
+    background: $code-bg !important
 
   code
     font-family: $mono
@@ -382,56 +574,68 @@ $radius-sm: 8px
     white-space: pre
     background: transparent !important
     text-shadow: none !important
-    color: #ccc
+    color: $code-text
 
-    .token.comment,
-    .token.block-comment,
-    .token.prolog,
-    .token.doctype,
-    .token.cdata
-      color: #999
+// Prism: prism-tomorrow.css (a dark theme) loads after this file, so these
+// rules sit under html to outrank it and follow the site's scheme everywhere,
+// in .code-block and in bare <pre> blocks
+html
+  :is(pre, code)[class*="language-"]
+    color: $code-text
+    text-shadow: none
 
-    .token.punctuation
-      color: #ccc
+  pre[class*="language-"],
+  :not(pre) > code[class*="language-"]
+    background: $code-bg
 
-    .token.tag,
-    .token.attr-name,
-    .token.namespace,
-    .token.deleted
-      color: #e2777a
+  .token.comment,
+  .token.block-comment,
+  .token.prolog,
+  .token.doctype,
+  .token.cdata
+    color: var(--code-comment)
 
-    .token.function-name
-      color: #6196cc
+  .token.punctuation
+    color: $code-text
 
-    .token.boolean,
-    .token.number,
-    .token.function
-      color: #f08d49
+  .token.tag,
+  .token.attr-name,
+  .token.namespace,
+  .token.deleted
+    color: var(--code-tag)
 
-    .token.property,
-    .token.class-name,
-    .token.constant,
-    .token.symbol
-      color: #f8c555
+  .token.function-name
+    color: var(--code-function-name)
 
-    .token.selector,
-    .token.important,
-    .token.atrule,
-    .token.keyword,
-    .token.builtin
-      color: #cc99cd
+  .token.boolean,
+  .token.number,
+  .token.function
+    color: var(--code-number)
 
-    .token.string,
-    .token.char,
-    .token.attr-value,
-    .token.regex,
-    .token.variable
-      color: #7ec699
+  .token.property,
+  .token.class-name,
+  .token.constant,
+  .token.symbol
+    color: var(--code-property)
 
-    .token.operator,
-    .token.entity,
-    .token.url
-      color: #67cdcc
+  .token.selector,
+  .token.important,
+  .token.atrule,
+  .token.keyword,
+  .token.builtin
+    color: var(--code-keyword)
+
+  .token.string,
+  .token.char,
+  .token.attr-value,
+  .token.regex,
+  .token.variable
+    color: var(--code-string)
+
+  .token.operator,
+  .token.entity,
+  .token.url
+    color: var(--code-operator)
 
 .code-label
   position: absolute
@@ -442,7 +646,7 @@ $radius-sm: 8px
   text-transform: uppercase
   letter-spacing: 0.08em
   color: $accent
-  background: rgba(129, 140, 248, 0.1)
+  background: $accent-soft
   padding: 2px 8px
   border-radius: 3px
 
@@ -451,7 +655,7 @@ $radius-sm: 8px
   top: 8px
   right: 8px
   appearance: none
-  background: rgba(255, 255, 255, 0.06)
+  background: $hover
   border: 1px solid $border
   color: $text-secondary
   font-family: inherit
@@ -464,19 +668,25 @@ $radius-sm: 8px
   transition: opacity 0.15s, background-color 0.15s, color 0.15s
 
   &:hover
-    background: rgba(255, 255, 255, 0.1)
+    background: $hover-strong
     color: $text
 
   &.copied
-    color: #a6e3a1
-    border-color: rgba(166, 227, 161, 0.3)
+    color: $success
+    border-color: currentColor
 
 // Consecutive code blocks (e.g. npm + runtime install) need a gap between them
 .code-block + .code-block
   margin-top: 12px
 
-.code-block:hover .code-copy-btn
+.code-block:hover .code-copy-btn,
+.code-copy-btn:focus-visible
   opacity: 1
+
+// No hover on touch screens: keep the copy buttons visible
+@media (hover: none)
+  .code-copy-btn
+    opacity: 1
 
 // "Playground" sits left of "Copy"
 .code-playground-btn
@@ -525,7 +735,7 @@ $radius-sm: 8px
   font-size: 0.95rem
   font-weight: 600
   margin: 0 0 8px
-  color: #fff
+  color: $text-strong
 
 .feature-desc
   font-size: 0.82rem
@@ -575,8 +785,8 @@ $radius-sm: 8px
   font-family: $mono
   font-size: 0.72rem
   color: $accent
-  background: rgba(129, 140, 248, 0.1)
-  border: 1px solid rgba(129, 140, 248, 0.15)
+  background: $accent-soft
+  border: 1px solid $accent-border
   padding: 4px 10px
   border-radius: 4px
   white-space: nowrap
@@ -591,7 +801,7 @@ $radius-sm: 8px
 .command-aliases
   font-family: $mono
   font-size: 0.72rem
-  color: rgba(255, 255, 255, 0.45)
+  color: $text-muted
 
 // ─── Examples ───
 .examples-list
@@ -635,7 +845,7 @@ $radius-sm: 8px
   border-radius: $radius
   overflow: hidden
   border: 1px solid $border-light
-  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.5), 0 0 80px rgba(129, 140, 248, 0.06)
+  box-shadow: 0 8px 48px $shadow, 0 0 80px $accent-soft
 
 .terminal-chrome
   display: flex
@@ -709,7 +919,7 @@ $radius-sm: 8px
   font-size: 0.95rem
   font-weight: 600
   margin: 0 0 8px
-  color: #fff
+  color: $text-strong
 
 .advanced-desc
   font-size: 0.82rem
@@ -721,8 +931,8 @@ $radius-sm: 8px
   font-family: $mono
   font-size: 0.72rem
   color: $accent
-  background: rgba(129, 140, 248, 0.1)
-  border: 1px solid rgba(129, 140, 248, 0.15)
+  background: $accent-soft
+  border: 1px solid $accent-border
   padding: 4px 10px
   border-radius: 4px
   display: inline-block
@@ -756,13 +966,13 @@ $radius-sm: 8px
 .plugin-name
   font-size: 0.88rem
   font-weight: 600
-  color: #fff
+  color: $text-strong
 
 .plugin-cmd
   font-family: $mono
   font-size: 0.72rem
   color: $accent
-  background: rgba(129, 140, 248, 0.1)
+  background: $accent-soft
   padding: 3px 8px
   border-radius: 4px
 
@@ -797,7 +1007,7 @@ $radius-sm: 8px
   code
     font-family: $mono
     font-size: 0.78rem
-    background: rgba(129, 140, 248, 0.1)
+    background: $accent-soft
     padding: 1px 6px
     border-radius: 3px
     color: $accent
@@ -809,8 +1019,8 @@ $radius-sm: 8px
   align-items: center
   justify-content: center
   flex-shrink: 0
-  background: $accent
-  color: #fff
+  background: $btn-bg
+  color: $on-accent
   font-size: 0.82rem
   font-weight: 700
   border-radius: 50%
@@ -823,7 +1033,7 @@ $radius-sm: 8px
 
   strong
     font-size: 0.9rem
-    color: #fff
+    color: $text-strong
 
   span
     font-size: 0.82rem
@@ -873,7 +1083,8 @@ $radius-sm: 8px
 
 .footer-links
   display: flex
-  gap: 16px
+  flex-wrap: wrap
+  gap: 8px 16px
 
   a
     font-size: 0.78rem
@@ -910,7 +1121,7 @@ $radius-sm: 8px
 
     &.open
       left: 0
-      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4)
+      box-shadow: 4px 0 24px $shadow
 
 .docs-content
   flex: 1
@@ -929,29 +1140,87 @@ $radius-sm: 8px
     padding: 56px 16px 24px
 
   h1
-    font-size: 1.75rem
+    font-size: 1.85rem
     font-weight: 700
+    line-height: 1.25
     letter-spacing: -0.02em
-    margin: 0 0 8px
-    color: #fff
+    margin: 0 0 12px
+    color: $text-strong
 
   h2
-    font-size: 1.25rem
+    font-size: 1.3rem
     font-weight: 600
-    margin: 40px 0 16px
-    color: #fff
+    line-height: 1.35
+    margin: 44px 0 16px
+    padding-top: 8px
+    color: $text-strong
 
   h3
-    font-size: 1rem
+    font-size: 1.05rem
     font-weight: 600
+    line-height: 1.4
     margin: 28px 0 12px
-    color: #fff
+    color: $text-strong
+
+  // Anchor jumps land below the fixed nav
+  h1, h2, h3, h4, [id]
+    scroll-margin-top: calc(#{$nav-h} + 16px)
+
+  p,
+  li
+    font-size: 0.95rem
+    line-height: 1.75
+    color: $text-secondary
 
   p
-    font-size: 0.9rem
-    line-height: 1.7
-    color: $text-secondary
     margin: 0 0 16px
+
+  ul,
+  ol
+    margin: 0 0 16px
+    padding-left: 1.4em
+
+  li
+    margin: 4px 0
+
+    &::marker
+      color: $text-muted
+
+  strong
+    color: $text
+
+  hr
+    border: none
+    border-top: 1px solid $border
+    margin: 32px 0
+
+  blockquote
+    margin: 0 0 16px
+    padding: 12px 16px
+    border-left: 3px solid $accent
+    background: $accent-soft
+    border-radius: 0 $radius-sm $radius-sm 0
+
+    p:last-child
+      margin-bottom: 0
+
+  // Inline code in running text (tables have their own rule below)
+  :is(p, li, h2, h3, figcaption, blockquote) > code
+    font-family: $mono
+    font-size: 0.85em
+    color: $text
+    background: $bg-elevated
+    border: 1px solid $border
+    padding: 1px 6px
+    border-radius: 4px
+    overflow-wrap: anywhere
+
+  :is(p, li, td) a > code
+    font-family: $mono
+    font-size: 0.85em
+    background: $accent-soft
+    padding: 1px 6px
+    border-radius: 4px
 
   // Code outside a .code-block (plain <pre>) scrolls inside itself too
   pre
@@ -986,7 +1255,7 @@ $radius-sm: 8px
       font-family: $mono
       font-size: 0.78rem
       color: $accent
-      background: rgba(129, 140, 248, 0.1)
+      background: $accent-soft
       padding: 2px 6px
       border-radius: 3px
 
@@ -1010,83 +1279,168 @@ $radius-sm: 8px
     align-items: center
     justify-content: center
 
+    // Open: sits on the backdrop beside the sidebar, clear of its links
+    &[aria-expanded="true"]
+      left: 268px
+
+// Dims the page behind the open sidebar on phones; a tap closes it
+.sidebar-backdrop
+  display: none
+
+  @media (max-width: 768px)
+    display: block
+    position: fixed
+    inset: $nav-h 0 0 0
+    z-index: 98
+    background: rgba(0, 0, 0, 0.45)
+
+// ─── Previous / next page ───
+.docs-pager
+  display: grid
+  grid-template-columns: 1fr 1fr
+  gap: 12px
+  margin-top: 56px
+  padding-top: 24px
+  border-top: 1px solid $border
+
+  @media (max-width: 520px)
+    grid-template-columns: 1fr
+
+.pager-link
+  display: flex
+  flex-direction: column
+  gap: 4px
+  padding: 14px 18px
+  border: 1px solid $border
+  border-radius: $radius-sm
+  text-decoration: none
+  transition: border-color 0.15s, background-color 0.15s
+
+  &:hover
+    border-color: $accent
+    background: $accent-soft
+
+  &.next
+    grid-column: 2
+    text-align: right
+
+    @media (max-width: 520px)
+      grid-column: 1
+
+.pager-dir
+  font-size: 0.75rem
+  color: $text-muted
+
+.pager-title
+  font-size: 0.95rem
+  font-weight: 600
+  color: $link
+
 // ─── Sidebar Nav ───
 .sidebar-nav
-  padding: 16px 0
+  padding: 8px 0 16px
 
 .sidebar-section
-  margin-bottom: 4px
+  margin-bottom: 2px
 
 .sidebar-section-header
   appearance: none
   background: transparent
   border: none
+  border-right: 2px solid transparent
   width: 100%
   display: flex
   align-items: center
   justify-content: space-between
   padding: 8px 20px
   font-family: inherit
-  font-size: 0.82rem
+  font-size: 0.86rem
   font-weight: 600
+  text-align: left
   color: $text
   cursor: pointer
   text-decoration: none
-  transition: background-color 0.15s
+  transition: color 0.15s, background-color 0.15s
 
   &:hover
-    background: rgba(255, 255, 255, 0.04)
+    color: $text-strong
+    background: $hover
 
   &.external
     color: $text-secondary
 
-  &.leaf
-    text-decoration: none
-    color: $text
-    transition: color 0.15s, background-color 0.15s
+  &.active
+    color: $accent
+    background: $accent-soft
+    border-right-color: $accent
 
-    &:hover
-      background: rgba(255, 255, 255, 0.04)
+// A section with children: its title opens the section page, the chevron
+// shows or hides the children
+.sidebar-section-row
+  display: flex
+  align-items: stretch
 
-    &.active
-      color: $accent
-      background: rgba(129, 140, 248, 0.08)
-      border-right: 2px solid $accent
+  .sidebar-section-header
+    flex: 1
+    min-width: 0
+    padding-right: 4px
+
+.sidebar-toggle-btn
+  appearance: none
+  flex: 0 0 40px
+  display: flex
+  align-items: center
+  justify-content: center
+  background: transparent
+  border: none
+  color: $text-muted
+  cursor: pointer
+  transition: color 0.15s, background-color 0.15s
+
+  &:hover
+    color: $text-strong
+    background: $hover
 
   .chevron
-    font-size: 0.65rem
+    font-size: 0.7rem
     transition: transform 0.2s
-    color: $text-secondary
 
-  &.expanded .chevron
-    transform: rotate(90deg)
+.sidebar-section-row.expanded .chevron
+  transform: rotate(90deg)
 
 .sidebar-children
   display: flex
   flex-direction: column
+  margin: 2px 0 6px 20px
+  border-left: 1px solid $border
 
 .sidebar-link
-  font-size: 0.8rem
+  font-size: 0.84rem
+  line-height: 1.4
   color: $text-secondary
   text-decoration: none
-  padding: 6px 20px 6px 32px
-  transition: color 0.15s, background-color 0.15s
+  padding: 6px 20px 6px 14px
+  margin-left: -1px
+  border-left: 2px solid transparent
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s
 
   &:hover
-    color: $text
-    background: rgba(255, 255, 255, 0.04)
+    color: $text-strong
+    background: $hover
+    border-left-color: $border-light
 
   &.active
     color: $accent
-    background: rgba(129, 140, 248, 0.08)
-    border-right: 2px solid $accent
+    font-weight: 600
+    background: $accent-soft
+    border-left-color: $accent
 
 // ─── Try-it Terminal ───
 .try-it-terminal
   border-radius: $radius
   overflow: hidden
   border: 1px solid $border-light
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 40px rgba(129, 140, 248, 0.04)
+  box-shadow: 0 4px 24px $shadow
   margin: 16px 0 32px
 
 .try-it-chrome
@@ -1137,13 +1491,13 @@ $radius-sm: 8px
   background: $bg-elevated
   border: 1px solid $border
   border-radius: $radius-sm
-  color: rgba(255, 255, 255, 0.87)
+  color: $text
   text-decoration: none
   transition: border-color 0.2s, background 0.2s
 
   &:hover
     border-color: $accent
-    background: rgba(129, 140, 248, 0.06)
+    background: $accent-soft
 
   .next-step-icon
     font-size: 1.4rem
@@ -1186,8 +1540,8 @@ $radius-sm: 8px
   text-transform: uppercase
   letter-spacing: 0.04em
   color: $accent
-  background: rgba(129, 140, 248, 0.1)
-  border: 1px solid rgba(129, 140, 248, 0.2)
+  background: $accent-soft
+  border: 1px solid $accent-border
   border-radius: 4px
   padding: 2px 8px
   margin-left: 8px
@@ -1214,7 +1568,7 @@ $radius-sm: 8px
   h3
     font-size: 1rem
     font-weight: 600
-    color: #fff
+    color: $text-strong
     margin: 0 0 8px
 
   p
@@ -1264,7 +1618,7 @@ $radius-sm: 8px
 .docs-content .subsection-heading
   font-size: 1rem
   font-weight: 600
-  color: #fff
+  color: $text-strong
   margin: 32px 0 16px
   padding-bottom: 8px
   border-bottom: 1px solid $border
@@ -1298,7 +1652,7 @@ $radius-sm: 8px
     font-size: 0.85rem
     font-family: $mono
     background: $bg-card
-    color: #fff
+    color: $text-strong
     border: 1px solid $border
     border-radius: 6px
     outline: none
@@ -1312,22 +1666,22 @@ $radius-sm: 8px
     font-size: 0.85rem
     font-family: $mono
     background: $bg-card
-    color: #fff
+    color: $text-strong
     border: 1px solid $border
     border-radius: 6px
     cursor: pointer
     transition: background 0.15s, border-color 0.15s
 
     &:hover
-      background: lighten($bg-card, 5%)
-      border-color: lighten($border, 10%)
+      background: $bg-card-hover
+      border-color: $border-light
 
     &.destructive
-      color: #f87171
-      border-color: rgba(248, 113, 113, 0.3)
+      color: $danger
+      border-color: currentColor
 
       &:hover
-        background: rgba(248, 113, 113, 0.1)
+        background: $danger-soft
 
   .demo-log
     max-height: 200px
@@ -1346,7 +1700,7 @@ $radius-sm: 8px
       white-space: pre-wrap
 
       &:first-child
-        color: #fff
+        color: $text-strong
 
   .demo-terminal
     border: 1px solid $border
