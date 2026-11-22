@@ -7,6 +7,24 @@ export const DEFAULT_PANEL_HEIGHT = 600;
 export const DEFAULT_PANEL_WIDTH = 400;
 export const PANEL_POSITIONS: readonly CliPanelPosition[] = ['bottom', 'top', 'left', 'right'];
 
+/**
+ * Below this panel width (px) the header's action buttons give way to a ⋮
+ * menu, with only collapse/expand left beside it. Measured on the panel, not
+ * the viewport, so a narrow docked panel behaves like a phone.
+ */
+export const COMPACT_HEADER_BREAKPOINT = 480;
+
+/** Width the header menu is assumed to need when choosing the side it opens on. */
+export const HEADER_MENU_WIDTH = 220;
+
+/** Height the header menu is assumed to need when choosing whether it opens up or down. */
+export const HEADER_MENU_HEIGHT = 380;
+
+/** Whether a panel this wide (px) shows the ⋮ menu instead of the action buttons. */
+export function isCompactHeaderWidth(width: number): boolean {
+    return width > 0 && width < COMPACT_HEADER_BREAKPOINT;
+}
+
 /** Scale pane widths so they add up to 100. Returns new pane objects. */
 export function normalizePaneWidths(panes: readonly CliPanelPane[]): CliPanelPane[] {
     const total = panes.reduce((s, p) => s + p.widthPercent, 0);
@@ -106,6 +124,48 @@ export function dropdownAnchorStyle(
         default:
             return { ...base, bottom: `${viewport.height - anchor.top + 4}px`, left: `${anchor.left}px` };
     }
+}
+
+/**
+ * Fixed-position style of the header's ⋮ menu opened from `anchor`. It opens
+ * toward the page (above a bottom panel, below a top one), or the other way
+ * when that side is too short for it and the other side is taller; its
+ * `max-height` keeps it on screen. Horizontally it lines up with the button's
+ * outer edge; from a side panel it opens onto the page, or over the panel when
+ * the page side has no room (a side panel as wide as a phone).
+ */
+export function headerMenuAnchorStyle(
+    anchor: AnchorRect,
+    position: CliPanelPosition,
+    viewport: CliPanelViewport,
+): Record<string, string> {
+    const base = { position: 'fixed', zIndex: '1100' };
+    const gap = 4;
+    const margin = 8;
+
+    if (position === 'left' || position === 'right') {
+        // The button sits low in the vertical header: the menu grows upward from its bottom edge
+        const roomRight = viewport.width - anchor.right >= HEADER_MENU_WIDTH + margin;
+        const roomLeft = anchor.left >= HEADER_MENU_WIDTH + margin;
+        const openRight = position === 'left' ? roomRight || !roomLeft : !roomLeft;
+        const vertical = {
+            bottom: `${Math.max(viewport.height - anchor.bottom, margin)}px`,
+            maxHeight: `${Math.max(anchor.bottom - margin, 0)}px`,
+        };
+        return openRight
+            ? { ...base, ...vertical, left: `${anchor.right + gap}px` }
+            : { ...base, ...vertical, right: `${viewport.width - anchor.left + gap}px` };
+    }
+
+    const right = `${Math.max(viewport.width - anchor.right, gap)}px`;
+    const above = anchor.top - gap - margin;
+    const below = viewport.height - anchor.bottom - gap - margin;
+    const towardPage = position === 'top' ? below : above;
+    const otherSide = position === 'top' ? above : below;
+    const openUp = (position === 'top') === (towardPage < HEADER_MENU_HEIGHT && otherSide > towardPage);
+    return openUp
+        ? { ...base, bottom: `${viewport.height - anchor.top + gap}px`, right, maxHeight: `${Math.max(above, 0)}px` }
+        : { ...base, top: `${anchor.bottom + gap}px`, right, maxHeight: `${Math.max(below, 0)}px` };
 }
 
 /** "12m", "1h05m"-style uptime label. */

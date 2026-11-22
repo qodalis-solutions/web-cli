@@ -19,6 +19,8 @@ import {
     distributePaneWidths,
     dropdownAnchorStyle,
     formatUptime,
+    headerMenuAnchorStyle,
+    isCompactHeaderWidth,
     isHorizontalPosition,
     normalizePaneWidths,
     resizePaneWidths,
@@ -68,6 +70,9 @@ interface PaneResizeDrag {
 const PANE_RESIZING_BODY_CLASS = 'cli-pane-resizing';
 
 const DARK_SCHEME_QUERY = '(prefers-color-scheme: dark)';
+
+const HEADER_MENU_SELECTOR = '.cli-panel-header-menu';
+const HEADER_MENU_ITEM_SELECTOR = '[role^="menuitem"]:not(:disabled)';
 
 /** The root element as an event target (view roots are elements; test doubles may not be). */
 function asEventTarget(node: ParentNode | null): EventTarget | null {
@@ -161,6 +166,10 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     private resolvedTheme: CliResolvedPanelTheme;
     private schemeQuery?: MediaQueryList;
     private visualViewport?: VisualViewport;
+    private widthObserver?: ResizeObserver;
+    private observedPanel: Element | null = null;
+    /** The ⋮ button that opened the header menu; focus returns to it on Escape. */
+    private headerMenuAnchor: HTMLElement | null = null;
 
     constructor(options: CliPanelControllerOptions = {}) {
         const config = options.config ?? {};
@@ -206,6 +215,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             scheme: this.resolvedTheme.scheme,
             terminalTheme: config.theme === undefined ? undefined : this.resolvedTheme.terminal,
             ...visualViewportFields(),
+            compactHeader: false,
             ...this.configFields(config),
             tabs: [],
             activeTabId: 0,
@@ -217,6 +227,8 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             servicesDropdownStyle: {},
             serversDropdownOpen: false,
             serversDropdownStyle: {},
+            headerMenuOpen: false,
+            headerMenuStyle: {},
             status: DEFAULT_TAB_STATUS,
             tabStatuses: {},
             global: DEFAULT_GLOBAL_STATUS,
@@ -316,6 +328,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         this.schemeQuery?.removeEventListener('change', this.onSystemSchemeChange);
         this.schemeQuery = undefined;
         this.unwatchVisualViewport();
+        this.observePanelWidth(null);
         this.endPanelResize();
         this.endPaneResize();
         this.detachDocumentListeners();
@@ -415,7 +428,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     }
 
     setPosition(position: CliPanelPosition): void {
-        this.commit({ positionDropdownOpen: false });
+        this.commit({ positionDropdownOpen: false, headerMenuOpen: false });
         this.internal.position = position;
         if (this.persistPosition) savePanelPosition(position);
         this.commit({});
@@ -607,6 +620,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         this.commit({
             contextMenu: { visible: true, x, y, tabId },
             positionDropdownOpen: false,
+            headerMenuOpen: false,
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
         });
@@ -620,6 +634,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     togglePositionDropdown(): void {
         this.commit({
             positionDropdownOpen: !this.snapshot.positionDropdownOpen,
+            headerMenuOpen: false,
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
         });
@@ -653,6 +668,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             servicesDropdownOpen: open,
             serversDropdownOpen: false,
             positionDropdownOpen: false,
+            headerMenuOpen: false,
             servicesDropdownStyle: open ? this.anchorStyle(anchor) : {},
         });
     }
@@ -663,22 +679,96 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             serversDropdownOpen: open,
             servicesDropdownOpen: false,
             positionDropdownOpen: false,
+            headerMenuOpen: false,
             serversDropdownStyle: open ? this.anchorStyle(anchor) : {},
         });
+    }
+
+    /**
+     * The ⋮ button of the compact header: open or close the menu holding the
+     * actions that do not fit (maximize, position, hide, close). `anchor` is
+     * the button; the menu is placed next to it and focus moves into it.
+     */
+    toggleHeaderMenu(anchor?: HTMLElement | null): void {
+        if (this.snapshot.headerMenuOpen) {
+            this.closeHeaderMenu();
+            return;
+        }
+        this.headerMenuAnchor = anchor ?? null;
+        this.commit({
+            headerMenuOpen: true,
+            headerMenuStyle: anchor ? headerMenuAnchorStyle(anchor.getBoundingClientRect(), this.snapshot.position, this.viewport()) : {},
+            contextMenu: { ...this.snapshot.contextMenu, visible: false },
+            positionDropdownOpen: false,
+            servicesDropdownOpen: false,
+            serversDropdownOpen: false,
+        });
+        // The views render the menu on this change; focus its first item after that
+        setTimeout(() => {
+            if (this.snapshot.headerMenuOpen) this.headerMenuElements()[0]?.focus();
+        }, 0);
+    }
+
+    /** Close the ⋮ menu; with `restoreFocus`, focus goes back to its button (as on Escape). */
+    closeHeaderMenu(restoreFocus = false): void {
+        if (!this.snapshot.headerMenuOpen) return;
+        const anchor = this.headerMenuAnchor;
+        this.headerMenuAnchor = null;
+        this.commit({ headerMenuOpen: false });
+        if (restoreFocus) anchor?.focus();
     }
 
     /** Close the context menu and every dropdown. */
     closeMenus(): void {
         const s = this.snapshot;
-        if (!s.contextMenu.visible && !s.positionDropdownOpen && !s.servicesDropdownOpen && !s.serversDropdownOpen) {
+        if (!s.contextMenu.visible && !s.positionDropdownOpen && !s.servicesDropdownOpen && !s.serversDropdownOpen && !s.headerMenuOpen) {
             return;
         }
+        this.headerMenuAnchor = null;
         this.commit({
             contextMenu: { ...s.contextMenu, visible: false },
             positionDropdownOpen: false,
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
+            headerMenuOpen: false,
         });
+    }
+
+    /* ─── Panel width (compact header) ──────────────────────── */
+
+    /**
+     * Follow the panel element's width (views pass their wrapper element, and
+     * null on unmount): below `COMPACT_HEADER_BREAKPOINT` the header switches
+     * to the ⋮ menu.
+     */
+    observePanelWidth(element: Element | null): void {
+        if (element === this.observedPanel) return;
+        this.widthObserver?.disconnect();
+        this.widthObserver = undefined;
+        this.observedPanel = element;
+        if (!element) return;
+        if (typeof ResizeObserver === 'undefined') {
+            this.updatePanelWidth(element.getBoundingClientRect().width);
+            return;
+        }
+        this.widthObserver = new ResizeObserver((entries) => {
+            const entry = entries[entries.length - 1];
+            if (!entry) return;
+            this.updatePanelWidth(entry.borderBoxSize?.[0]?.inlineSize ?? entry.contentRect.width);
+        });
+        this.widthObserver.observe(element);
+    }
+
+    /**
+     * The panel is `width` px wide. A width of 0 (hidden with `display: none`,
+     * not laid out yet) keeps the current header.
+     */
+    updatePanelWidth(width: number): void {
+        if (!(width > 0)) return;
+        const compact = isCompactHeaderWidth(width);
+        if (compact === this.snapshot.compactHeader) return;
+        if (!compact) this.headerMenuAnchor = null;
+        this.commit(compact ? { compactHeader: true } : { compactHeader: false, headerMenuOpen: false });
     }
 
     /* ─── Drag resizing ─────────────────────────────────────── */
@@ -769,10 +859,50 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     private readonly onDocumentClick = (): void => this.closeMenus();
 
     private readonly onDocumentKeydown = (event: KeyboardEvent): void => {
+        if (this.snapshot.headerMenuOpen && this.moveHeaderMenuFocus(event)) return;
         if (event.key !== 'Escape') return;
+        const restoreFocus = this.snapshot.headerMenuOpen ? this.headerMenuAnchor : null;
         this.closeMenus();
         this.cancelRename();
+        restoreFocus?.focus();
     };
+
+    private headerMenuElements(): HTMLElement[] {
+        if (typeof document === 'undefined') return [];
+        const menu = document.querySelector(HEADER_MENU_SELECTOR);
+        return menu ? Array.from(menu.querySelectorAll<HTMLElement>(HEADER_MENU_ITEM_SELECTOR)) : [];
+    }
+
+    /** Arrow keys, Home and End move between the ⋮ menu's items; Tab leaves and closes it. */
+    private moveHeaderMenuFocus(event: KeyboardEvent): boolean {
+        if (event.key === 'Tab') {
+            this.closeHeaderMenu();
+            return true;
+        }
+        const items = this.headerMenuElements();
+        if (items.length === 0) return false;
+        const current = items.indexOf(document.activeElement as HTMLElement);
+        let next: number;
+        switch (event.key) {
+            case 'ArrowDown':
+                next = current < 0 ? 0 : (current + 1) % items.length;
+                break;
+            case 'ArrowUp':
+                next = current < 0 ? items.length - 1 : (current - 1 + items.length) % items.length;
+                break;
+            case 'Home':
+                next = 0;
+                break;
+            case 'End':
+                next = items.length - 1;
+                break;
+            default:
+                return false;
+        }
+        event.preventDefault();
+        items[next].focus();
+        return true;
+    }
 
     private syncDocumentListeners(): void {
         if (typeof document === 'undefined') return;
@@ -782,6 +912,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             s.positionDropdownOpen ||
             s.servicesDropdownOpen ||
             s.serversDropdownOpen ||
+            s.headerMenuOpen ||
             s.tabs.some((t) => t.isEditing);
         if (needed && !this.documentListenersAttached) {
             document.addEventListener('click', this.onDocumentClick);

@@ -30,6 +30,7 @@
   }
   <!-- Panel (kept in the DOM while hidden to preserve terminal state) -->
   <div
+    #panelWrapper
     [class]="view.wrapperClass"
     [ngStyle]="view.wrapperStyle"
     [attr.data-position]="s.position"
@@ -53,7 +54,7 @@
               <cli-panel-icon [icon]="terminalIcon" />
             }
           </span>
-          {{ brand.title }}
+          <span class="cli-panel-title-text">{{ brand.title }}</span>
         </p>
         @if (s.showStatusIndicators) {
           <div class="cli-panel-status-indicators">
@@ -111,69 +112,95 @@
             </span>
           }
         </div>
-        <div class="cli-panel-action-buttons">
-          <div
-            class="cli-panel-btn-position-wrapper"
-            (click)="$event.stopPropagation()"
-          >
+        @if (s.compactHeader) {
+          <!-- Narrow panel: collapse/expand and a menu with the other actions -->
+          <div class="cli-panel-action-buttons">
             <button
-              class="cli-panel-btn cli-panel-btn-position"
-              [title]="labels.movePanel"
-              (click)="controller.togglePositionDropdown()"
+              type="button"
+              class="cli-panel-btn cli-panel-btn-more"
+              [title]="labels.moreActions"
+              [attr.aria-label]="labels.moreActions"
+              aria-haspopup="menu"
+              [attr.aria-expanded]="s.headerMenuOpen"
+              (click)="onHeaderMenuToggle($event)"
             >
-              <cli-panel-icon [icon]="view.positionIcon" />
+              <cli-panel-icon [icon]="moreIcon" />
             </button>
-            @if (s.positionDropdownOpen) {
-              <div class="cli-panel-position-dropdown">
-                @for (
-                  opt of view.positionOptions;
-                  track trackByKey($index, opt)
-                ) {
-                  <button
-                    [class]="opt.className"
-                    (click)="controller.setPosition(opt.position)"
-                  >
-                    <cli-panel-icon [icon]="opt.icon" />
-                    {{ opt.label }}
-                  </button>
-                }
-              </div>
+            <button
+              type="button"
+              class="cli-panel-btn"
+              [title]="s.collapsed ? labels.expand : labels.collapse"
+              [attr.aria-label]="s.collapsed ? labels.expand : labels.collapse"
+              (click)="controller.toggle()"
+            >
+              <cli-panel-icon [icon]="view.collapseIcon" />
+            </button>
+          </div>
+        } @else {
+          <div class="cli-panel-action-buttons">
+            <div
+              class="cli-panel-btn-position-wrapper"
+              (click)="$event.stopPropagation()"
+            >
+              <button
+                class="cli-panel-btn cli-panel-btn-position"
+                [title]="labels.movePanel"
+                (click)="controller.togglePositionDropdown()"
+              >
+                <cli-panel-icon [icon]="view.positionIcon" />
+              </button>
+              @if (s.positionDropdownOpen) {
+                <div class="cli-panel-position-dropdown">
+                  @for (
+                    opt of view.positionOptions;
+                    track trackByKey($index, opt)
+                  ) {
+                    <button
+                      [class]="opt.className"
+                      (click)="controller.setPosition(opt.position)"
+                    >
+                      <cli-panel-icon [icon]="opt.icon" />
+                      {{ opt.label }}
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+            @if (s.hideable) {
+              <button
+                class="cli-panel-btn cli-panel-btn-hide"
+                [title]="labels.hide"
+                (click)="controller.hide()"
+              >
+                <cli-panel-icon [icon]="hideIcon" />
+              </button>
+            }
+            <button
+              class="cli-panel-btn"
+              [title]="s.maximized ? labels.restore : labels.maximize"
+              [disabled]="s.collapsed"
+              (click)="controller.toggleMaximize()"
+            >
+              <cli-panel-icon [icon]="view.maximizeIcon" />
+            </button>
+            <button
+              class="cli-panel-btn"
+              [title]="s.collapsed ? labels.expand : labels.collapse"
+              (click)="controller.toggle()"
+            >
+              <cli-panel-icon [icon]="view.collapseIcon" />
+            </button>
+            @if (s.closable) {
+              <button
+                class="cli-panel-btn cli-panel-btn-close"
+                [title]="labels.close"
+                (click)="controller.close()"
+              >
+                <cli-panel-icon [icon]="closeIcon" />
+              </button>
             }
           </div>
-          @if (s.hideable) {
-            <button
-              class="cli-panel-btn cli-panel-btn-hide"
-              [title]="labels.hide"
-              (click)="controller.hide()"
-            >
-              <cli-panel-icon [icon]="hideIcon" />
-            </button>
-          }
-          <button
-            class="cli-panel-btn"
-            [title]="s.maximized ? labels.restore : labels.maximize"
-            [disabled]="s.collapsed"
-            (click)="controller.toggleMaximize()"
-          >
-            <cli-panel-icon [icon]="view.maximizeIcon" />
-          </button>
-          <button
-            class="cli-panel-btn"
-            [title]="s.collapsed ? labels.expand : labels.collapse"
-            (click)="controller.toggle()"
-          >
-            <cli-panel-icon [icon]="view.collapseIcon" />
-          </button>
-          @if (s.closable) {
-            <button
-              class="cli-panel-btn cli-panel-btn-close"
-              [title]="labels.close"
-              (click)="controller.close()"
-            >
-              <cli-panel-icon [icon]="closeIcon" />
-            </button>
-          }
-        </div>
+        }
       </div>
       <div [class]="view.glowLineClass"></div>
     </div>
@@ -297,6 +324,39 @@
           [disabled]="item.disabled"
           (click)="onContextMenuAction(item.action)"
         >
+          {{ item.label }}
+        </button>
+      }
+    </div>
+  }
+  @if (s.headerMenuOpen) {
+    <div
+      class="cli-panel-header-menu"
+      role="menu"
+      [attr.aria-label]="labels.moreActions"
+      [ngStyle]="view.headerMenuStyle"
+      (click)="$event.stopPropagation()"
+    >
+      @for (item of view.headerMenuItems; track item.key) {
+        @if (item.separatorBefore) {
+          <div class="cli-panel-header-menu-separator" role="separator"></div>
+        }
+        @if (item.heading) {
+          <div class="cli-panel-header-menu-heading" role="presentation">
+            {{ item.heading }}
+          </div>
+        }
+        <button
+          type="button"
+          [class]="headerMenuItemClass(item)"
+          [attr.role]="item.role"
+          [attr.aria-checked]="
+            item.role === 'menuitemradio' ? !!item.checked : null
+          "
+          [disabled]="item.disabled"
+          (click)="onHeaderMenuAction(item)"
+        >
+          <cli-panel-icon [icon]="item.icon" />
           {{ item.label }}
         </button>
       }

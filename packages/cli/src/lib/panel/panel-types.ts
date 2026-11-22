@@ -161,6 +161,12 @@ export interface CliPanelSnapshot {
     keyboardInset: number;
     /** Height of the visible area (visual viewport), 0 when unknown; caps the panel's height. */
     visibleHeight: number;
+    /**
+     * The panel is narrower than `COMPACT_HEADER_BREAKPOINT` (measured on the
+     * panel element, see `observePanelWidth`): the header shows collapse/expand
+     * and a ⋮ menu with the other actions instead of the button row.
+     */
+    compactHeader: boolean;
 
     // ── Config ──
     closable: boolean;
@@ -182,6 +188,10 @@ export interface CliPanelSnapshot {
     servicesDropdownStyle: Record<string, string>;
     serversDropdownOpen: boolean;
     serversDropdownStyle: Record<string, string>;
+    /** The header's ⋮ menu (compact header) is open. */
+    headerMenuOpen: boolean;
+    /** Fixed position of the ⋮ menu, next to its button. */
+    headerMenuStyle: Record<string, string>;
 
     // ── Status ──
     /** Status of the active tab. */

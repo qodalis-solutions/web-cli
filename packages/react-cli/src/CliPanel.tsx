@@ -10,6 +10,7 @@ import {
     HIDE_ICON,
     HIDE_TAB_TERMINAL_ICON,
     MAXIMIZE_ICON,
+    MORE_ICON,
     PANEL_LABELS,
     panelBranding,
     RESTORE_ICON,
@@ -20,6 +21,9 @@ import {
     contextMenuStyle,
     glowLineClass,
     handleRenameKey,
+    headerMenuItemClass,
+    headerMenuItems,
+    headerMenuStyle,
     hideTabChevronIcon,
     joinClasses,
     mergeCliOptions,
@@ -36,6 +40,7 @@ import {
     positionOptions,
     resolveCliHostConfig,
     runContextMenuAction,
+    runHeaderMenuAction,
     statusIndicators,
     svgAttrs,
     PanelStatusIndicator,
@@ -168,6 +173,8 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
     });
 
     useEffect(() => controller.setRootElement(rootElement), [controller, rootElement]);
+    // The panel's width switches the header to the ⋮ menu
+    useEffect(() => controller.observePanelWidth(rootElement), [controller, rootElement]);
     useEffect(() => () => controller.destroy(), [controller]);
     React.useImperativeHandle(ref, () => controller, [controller]);
 
@@ -325,14 +332,52 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
                 </div>
             )}
 
-            <StatusDropdown s={s} />
+            {s.headerMenuOpen && <HeaderMenu controller={controller} s={s} />}
+
+            <StatusDropdown controller={controller} s={s} />
         </>
     );
 });
 
+/* ─── Header ⋮ menu (compact header) ─────────────────────── */
+
+function HeaderMenu({ controller, s }: { controller: CliPanelController; s: CliPanelSnapshot }) {
+    return (
+        <div
+            className="cli-panel-header-menu"
+            role="menu"
+            aria-label={PANEL_LABELS.moreActions}
+            style={asStyle(headerMenuStyle(s))}
+            onClick={(e) => e.stopPropagation()}
+        >
+            {headerMenuItems(s).map((item) => (
+                <React.Fragment key={item.key}>
+                    {item.separatorBefore && <div className="cli-panel-header-menu-separator" role="separator" />}
+                    {item.heading && (
+                        <div className="cli-panel-header-menu-heading" role="presentation">
+                            {item.heading}
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        className={headerMenuItemClass(item)}
+                        role={item.role}
+                        aria-checked={item.role === 'menuitemradio' ? !!item.checked : undefined}
+                        disabled={item.disabled}
+                        onClick={() => runHeaderMenuAction(controller, item)}
+                    >
+                        <Icon icon={item.icon} />
+                        {item.label}
+                    </button>
+                </React.Fragment>
+            ))}
+        </div>
+    );
+}
+
 /* ─── Services / servers dropdown ────────────────────────── */
 
-function StatusDropdown({ s }: { s: CliPanelSnapshot }) {
+function StatusDropdown({ controller, s }: { controller: CliPanelController; s: CliPanelSnapshot }) {
     const dropdown = openStatusDropdown(s);
     if (!dropdown) return null;
     return (
@@ -423,7 +468,7 @@ function PanelHeader({
                     <span className="cli-panel-title-icon">
                         {brand.iconUrl ? <img src={brand.iconUrl} alt="" className="cli-panel-brand-icon" /> : <Icon icon={TERMINAL_ICON} />}
                     </span>
-                    {brand.title}
+                    <span className="cli-panel-title-text">{brand.title}</span>
                 </p>
 
                 {s.showStatusIndicators && (
@@ -471,46 +516,74 @@ function PanelHeader({
                     ))}
                 </div>
 
-                <div className="cli-panel-action-buttons">
-                    <div className="cli-panel-btn-position-wrapper" onClick={(e) => e.stopPropagation()}>
-                        <button className="cli-panel-btn cli-panel-btn-position" title={PANEL_LABELS.movePanel} onClick={() => controller.togglePositionDropdown()}>
-                            <Icon icon={positionIcon(s.position)} />
+                {s.compactHeader ? (
+                    // Narrow panel: collapse/expand and a menu with the other actions
+                    <div className="cli-panel-action-buttons">
+                        <button
+                            type="button"
+                            className="cli-panel-btn cli-panel-btn-more"
+                            title={PANEL_LABELS.moreActions}
+                            aria-label={PANEL_LABELS.moreActions}
+                            aria-haspopup="menu"
+                            aria-expanded={s.headerMenuOpen}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                controller.toggleHeaderMenu(e.currentTarget);
+                            }}
+                        >
+                            <Icon icon={MORE_ICON} />
                         </button>
-                        {s.positionDropdownOpen && (
-                            <div className="cli-panel-position-dropdown">
-                                {positionOptions(s).map((opt) => (
-                                    <button key={opt.position} className={opt.className} onClick={() => controller.setPosition(opt.position)}>
-                                        <Icon icon={positionIcon(opt.position, 16)} />
-                                        {opt.label}
-                                    </button>
-                                ))}
-                            </div>
+                        <CollapseButton controller={controller} s={s} />
+                    </div>
+                ) : (
+                    <div className="cli-panel-action-buttons">
+                        <div className="cli-panel-btn-position-wrapper" onClick={(e) => e.stopPropagation()}>
+                            <button className="cli-panel-btn cli-panel-btn-position" title={PANEL_LABELS.movePanel} onClick={() => controller.togglePositionDropdown()}>
+                                <Icon icon={positionIcon(s.position)} />
+                            </button>
+                            {s.positionDropdownOpen && (
+                                <div className="cli-panel-position-dropdown">
+                                    {positionOptions(s).map((opt) => (
+                                        <button key={opt.position} className={opt.className} onClick={() => controller.setPosition(opt.position)}>
+                                            <Icon icon={positionIcon(opt.position, 16)} />
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        {s.hideable && (
+                            <button className="cli-panel-btn cli-panel-btn-hide" title={PANEL_LABELS.hide} onClick={() => controller.hide()}>
+                                <Icon icon={HIDE_ICON} />
+                            </button>
+                        )}
+                        <button
+                            className="cli-panel-btn"
+                            title={s.maximized ? PANEL_LABELS.restore : PANEL_LABELS.maximize}
+                            disabled={s.collapsed}
+                            onClick={() => controller.toggleMaximize()}
+                        >
+                            <Icon icon={s.maximized ? RESTORE_ICON : MAXIMIZE_ICON} />
+                        </button>
+                        <CollapseButton controller={controller} s={s} />
+                        {s.closable && (
+                            <button className="cli-panel-btn cli-panel-btn-close" title={PANEL_LABELS.close} onClick={() => controller.close()}>
+                                <Icon icon={CLOSE_ICON} />
+                            </button>
                         )}
                     </div>
-                    {s.hideable && (
-                        <button className="cli-panel-btn cli-panel-btn-hide" title={PANEL_LABELS.hide} onClick={() => controller.hide()}>
-                            <Icon icon={HIDE_ICON} />
-                        </button>
-                    )}
-                    <button
-                        className="cli-panel-btn"
-                        title={s.maximized ? PANEL_LABELS.restore : PANEL_LABELS.maximize}
-                        disabled={s.collapsed}
-                        onClick={() => controller.toggleMaximize()}
-                    >
-                        <Icon icon={s.maximized ? RESTORE_ICON : MAXIMIZE_ICON} />
-                    </button>
-                    <button className="cli-panel-btn" title={s.collapsed ? PANEL_LABELS.expand : PANEL_LABELS.collapse} onClick={() => controller.toggle()}>
-                        <Icon icon={collapseChevronIcon(s.position, s.collapsed)} />
-                    </button>
-                    {s.closable && (
-                        <button className="cli-panel-btn cli-panel-btn-close" title={PANEL_LABELS.close} onClick={() => controller.close()}>
-                            <Icon icon={CLOSE_ICON} />
-                        </button>
-                    )}
-                </div>
+                )}
             </div>
             <div className={glowLineClass(s)} />
         </div>
+    );
+}
+
+function CollapseButton({ controller, s }: { controller: CliPanelController; s: CliPanelSnapshot }) {
+    const label = s.collapsed ? PANEL_LABELS.expand : PANEL_LABELS.collapse;
+    return (
+        <button type="button" className="cli-panel-btn" title={label} aria-label={label} onClick={() => controller.toggle()}>
+            <Icon icon={collapseChevronIcon(s.position, s.collapsed)} />
+        </button>
     );
 }
