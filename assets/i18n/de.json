@@ -529,5 +529,16 @@
   "docs.playground.built-with-type-errors": "Läuft, mit {{count}} Typfehler(n): unterstrichenen Code mit der Maus berühren",
   "docs.playground.press-run": "Zum Starten auf Ausführen klicken",
   "docs.playground.hint": "Exportieren Sie einen Befehlsprozessor (eine Klasse oder ein Objekt mit processCommand) oder ein Modul und importieren Sie aus @qodalis/cli-core. Ihr Code bleibt in diesem Browser gespeichert; Link kopieren teilt ihn.",
-  "docs.playground.open": "Playground"
+  "docs.playground.open": "Playground",
+  "sidebar.android-app": "Android-App",
+  "sidebar.connect-your-server": "Eigenen Server verbinden",
+  "docs.android-app.title": "Qodalis CLI für Android",
+  "docs.android-app.intro": "Das Qodalis-CLI-Terminal als Smartphone-App: Befehle, Dateien, ein Editor und Spiele, die offline auf dem Gerät laufen, und deine eigenen Server, sobald du sie verknüpfst.",
+  "docs.android-app.open-pwa": "Im Browser öffnen (PWA)",
+  "docs.android-app.see-also": "Siehe auch:",
+  "docs.connect-your-server.title": "Eigenen Server aus der App verbinden",
+  "docs.connect-your-server.intro": "Verknüpfe einen eigenen Node-, .NET- oder Python-Server mit der Android-App, damit seine Befehle und seine Shell auf dem Smartphone verfügbar sind.",
+  "home.hero.android-app": "Auch für Android: Qodalis CLI bei Google Play",
+  "docs.getting-started.android-app-hint": "Du möchtest das Terminal nur auf dem Smartphone nutzen? Dafür gibt es die App:",
+  "docs.getting-started.next-android": "Android-App — das Terminal auf dem Smartphone, mit deinem eigenen Server"
 }

@@ -20,6 +20,8 @@ Commands are registered through modules: a web plugin exports an `ICliModule` wh
 - [Configuration](https://cli.qodalis.com/docs/configuration): `CliOptions`
 - [Engine API](https://cli.qodalis.com/docs/engine-api): `CliEngine` for plain TypeScript
 - [Server integration](https://cli.qodalis.com/docs/server-integration): Node.js, .NET and Python servers
+- [Android app](https://cli.qodalis.com/docs/android-app): The terminal on Google Play (`com.qodalis.cli`) and as a PWA
+- [Connect your own server from the app](https://cli.qodalis.com/docs/android-app/connect-your-server): https address, allowed origins, `server add`, troubleshooting
 - [Migration to 2.0](https://cli.qodalis.com/docs/migration): Removed and renamed APIs
 
 ## Optional

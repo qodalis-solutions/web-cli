@@ -3505,6 +3505,30 @@ type CliServerConfig = {
      * @deprecated use the users plugin's WebSocket tickets
      */
     unsafeHeadersInWebSocketUrl?: boolean;
+    /**
+     * How the server is watched (the `server-health:<name>` background
+     * service): pinged every `interval` while connected, retried with a
+     * capped backoff while down. `false` turns polling off: the server is then
+     * checked only when a command fails with a network error, the browser
+     * comes back online or the tab becomes visible.
+     * @default { interval: 30000, retryDelay: 5000, maxRetryDelay: 60000 }
+     */
+    healthCheck?: false | CliServerHealthCheckOptions;
+};
+/**
+ * Polling of a server's health (`CliServerConfig.healthCheck`). Nothing is
+ * polled while the tab is hidden or the browser is offline.
+ */
+type CliServerHealthCheckOptions = {
+    /**
+     * Milliseconds between checks while the server is connected; 0 polls
+     * only while it is down. @default 30000
+     */
+    interval?: number;
+    /** First retry delay while the server is down, doubled after each failed check. @default 5000 */
+    retryDelay?: number;
+    /** Longest delay between retries while the server is down. @default 60000 */
+    maxRetryDelay?: number;
 };
 /**
  * Which rows of a longer result a server table holds. Commands that page (`--skip`,
@@ -3762,6 +3786,8 @@ declare class CliModuleRegistry {
     private readonly modules;
     private readonly bootHandlers;
     private readonly unregisterHandlers;
+    /** Names of the modules the host provides (bundled with the app). */
+    private readonly bundled;
     /** Registrations whose boot handlers are still running. */
     private readonly inFlight;
     /** Optional warning callback — set by the engine to route through ICliLogger */
@@ -3807,6 +3833,20 @@ declare class CliModuleRegistry {
      * already being booted through the normal pipeline.
      */
     track(module: ICliModule): void;
+    /**
+     * Mark modules as provided by the host (bundled with the app), as opposed
+     * to plugins loaded at runtime (`pkg add`). The engine marks the modules
+     * the host passes to it before booting any.
+     */
+    markBundled(names: Iterable<string>): void;
+    /**
+     * Whether the host provides the module `name` (bundled with the app).
+     */
+    isBundled(name: string): boolean;
+    /**
+     * Names of the modules the host provides.
+     */
+    getBundledNames(): string[];
     /**
      * Check if a module is registered.
      */
@@ -4330,7 +4370,7 @@ interface CliThemeInfo {
 
 declare const DefaultThemeInfos: Record<string, CliThemeInfo>;
 
-declare const LIBRARY_VERSION = "2.6.0";
+declare const LIBRARY_VERSION = "2.7.0";
 declare const API_VERSION = 2;
 
 /**
@@ -4392,4 +4432,4 @@ declare class BrowserFileTransferService implements ICliFileTransferService {
 }
 
 export { API_VERSION, BrowserFileTransferService, CANCELLATION_ERROR_MESSAGE, CLI_CONFIGURE_STORE_NAME, CLI_WS_TICKET_PATH, CancellablePromise, CliAccessDeniedError, CliBackgroundColor, CliForegroundColor, CliHttpError, CliIcon, CliKeyData, CliLogLevel, CliModuleRegistry, CliPanelPalettes, CliServerPermissions, CliUsersPermissions, DEFAULT_DIR_PERMISSIONS, DEFAULT_FILE_PERMISSIONS, DefaultLibraryAuthor, DefaultThemeInfos, DefaultThemes, ICliAuditService_TOKEN, ICliAuthService_TOKEN, ICliAuthorizationService_TOKEN, ICliCommandGuard_TOKEN, ICliCompletionProvider_TOKEN, ICliDragDropService_TOKEN, ICliEventBus_TOKEN, ICliFilePickerProvider_TOKEN, ICliFileTransferService_TOKEN, ICliGroupsStoreService_TOKEN, ICliHttpClient_TOKEN, ICliKeyValueStore_TOKEN, ICliPermissionRegistry_TOKEN, ICliPermissionService_TOKEN, ICliSecretStore_TOKEN, ICliServerAuthService_TOKEN, ICliServerAuthTokenProvider_TOKEN, ICliServerManager_TOKEN, ICliSessionsService_TOKEN, ICliTranslationService_TOKEN, ICliUserEventService_TOKEN, ICliUserSessionService_TOKEN, ICliUsersStoreService_TOKEN, LIBRARY_VERSION, ObjectDescriber, ServerVersionNegotiator, appendQueryParams, bootCliModule, buildAuthenticatedWebSocketUrl, buildServerWebSocketUrl, clearTerminalLine, cliAccessMetadataGuards, cliAuthorize, cliCanAccess, cliDefaultServer, cliEvaluateAccess, cliHasPermission, cliMergePermissions, cliMissingPermissions, cliPermissionMatches, cliRequireAuthGuard, cliRequiredGroupsGuard, cliRequiredPermissionsGuard, colorFirstWord, colorSchemeOf, colorizeJson, compareVersions, constants, createCliToken, createWorkerService, delay, derivePanelColors, derivePanelThemeStyles, enums, formatJson, getConfigValue, getParameterValue, getPluginConfigValue, getRightOfWord, highlightTextWithBg, initializeBrowserEnvironment, isCliAccessDeniedError, joinShellWords, loadPanelPosition, nextPanelPosition, panelColorStyles, prefersDarkScheme, quoteShellWord, resolveConfigurationCategories, resolveHeaders, resolvePanelTheme, resolveServerHeaders, resolveServerWebSocketUrl, satisfiesMinVersion, satisfiesVersionRange, savePanelPosition, splitShellWords, stripAnsi, toQueryString, truncateToWidth, unquoteRawArgument, utils, visibleLength, writeExamples, writeHint, writeUsage, writeWrapped };
-export type { CliAccessAction, CliAddUser, CliBackgroundServiceStatus, CliBackgroundServiceType, CliBootOptions, CliBranding, CliCommandGuardResult, CliDateOptions, CliEmitOptions, CliEngineSnapshot, CliEvent, CliEventData, CliEventHandler, CliEventMap, CliEventType, CliFactoryProvider, CliFilePickerOptions, CliFileResult, CliFullScreenOptions, CliHeadersProvider, CliHelpRow, CliHttpRequestOptions, CliLineOptions, CliMultiSelectOption, CliMultiSelectOptions, CliNotification, CliNotificationLevel, CliNumberOptions, CliOptions, CliPackageSource, CliPanelColorScheme, CliPanelColors, CliPanelConfig, CliPanelHideAlignment, CliPanelPaneState, CliPanelPosition, CliPanelState, CliPanelTabState, CliPanelTheme, CliPanelThemeInput, CliPercentageProgressBarUpdateValueOptions, CliPermissionDefinition, CliProcessCommand, CliProcessorMetadata, CliProvider, CliResolvedPanelTheme, CliSelectOption, CliSelectOptions, CliServerCapabilities, CliServerCommandDescriptor, CliServerConfig, CliServerOutput, CliServerResponse, CliServerTablePage, CliServiceEventHandler, CliServiceExecutionMode, CliServiceLogLevel, CliState, CliStateConfiguration, CliStateScope, CliStateStoreOptions, CliTableOptions, CliTextAnimatorOptions, CliTheme, CliThemeCategory, CliThemeInfo, CliToken, CliTypeProvider, CliUpdateUser, CliValueProvider, CliWebSocketAuthOptions, CliWorkerInboundMessage, CliWorkerOutboundMessage, CustomEventType, DefaultThemesType, ICliAuditEntry, ICliAuditService, ICliAuthService, ICliAuthorizationService, ICliBackgroundService, ICliBackgroundServiceInfo, ICliBackgroundServiceRegistry, ICliClipboard, ICliCommandAuthor, ICliCommandChildProcessor, ICliCommandControls, ICliCommandExecutorService, ICliCommandGuard, ICliCommandKey, ICliCommandParameterDescriptor, ICliCommandProcessor, ICliCommandProcessorRegistry, ICliCompletionContext, ICliCompletionProvider, ICliConfigurableModule, ICliConfigurationOption, ICliDragDropService, ICliEventBus, ICliExecutionContext, ICliExecutionProcess, ICliFileEntry, ICliFilePickerProvider, ICliFileTransferService, ICliGlobalParameterHandler, ICliGroup, ICliGroupsStoreService, ICliHttpClient, ICliInputReader, ICliKeyValueStore, ICliLogger, ICliManagedInterval, ICliManagedTimer, ICliModule, ICliNotifier, ICliOwnership, ICliPanelRef, ICliPercentageProgressBar, ICliPermissionRegistry, ICliPermissionService, ICliPingServerService, ICliPrincipal, ICliProcessEntry, ICliProcessRegisterOptions, ICliProcessRegistry, ICliProcessorHook, ICliProgressBar, ICliProtectedResource, ICliSecretStore, ICliServerAuthService, ICliServerAuthTokenProvider, ICliServerManager, ICliServiceContext, ICliServiceEvent, ICliServiceLogEntry, ICliServiceProvider, ICliSessionInfo, ICliSessionsService, ICliSpinner, ICliStateStore, ICliTerminalWriter, ICliTextAnimator, ICliTranslationService, ICliUser, ICliUserCredentials, ICliUserEvent, ICliUserEventService, ICliUserSession, ICliUserSessionService, ICliUsersStoreService, ISyntaxHighlightRule, ISyntaxHighlighter, ISyntaxTheme, LineState, Package, ServerVersionInfo, WorkerServiceContext };
+export type { CliAccessAction, CliAddUser, CliBackgroundServiceStatus, CliBackgroundServiceType, CliBootOptions, CliBranding, CliCommandGuardResult, CliDateOptions, CliEmitOptions, CliEngineSnapshot, CliEvent, CliEventData, CliEventHandler, CliEventMap, CliEventType, CliFactoryProvider, CliFilePickerOptions, CliFileResult, CliFullScreenOptions, CliHeadersProvider, CliHelpRow, CliHttpRequestOptions, CliLineOptions, CliMultiSelectOption, CliMultiSelectOptions, CliNotification, CliNotificationLevel, CliNumberOptions, CliOptions, CliPackageSource, CliPanelColorScheme, CliPanelColors, CliPanelConfig, CliPanelHideAlignment, CliPanelPaneState, CliPanelPosition, CliPanelState, CliPanelTabState, CliPanelTheme, CliPanelThemeInput, CliPercentageProgressBarUpdateValueOptions, CliPermissionDefinition, CliProcessCommand, CliProcessorMetadata, CliProvider, CliResolvedPanelTheme, CliSelectOption, CliSelectOptions, CliServerCapabilities, CliServerCommandDescriptor, CliServerConfig, CliServerHealthCheckOptions, CliServerOutput, CliServerResponse, CliServerTablePage, CliServiceEventHandler, CliServiceExecutionMode, CliServiceLogLevel, CliState, CliStateConfiguration, CliStateScope, CliStateStoreOptions, CliTableOptions, CliTextAnimatorOptions, CliTheme, CliThemeCategory, CliThemeInfo, CliToken, CliTypeProvider, CliUpdateUser, CliValueProvider, CliWebSocketAuthOptions, CliWorkerInboundMessage, CliWorkerOutboundMessage, CustomEventType, DefaultThemesType, ICliAuditEntry, ICliAuditService, ICliAuthService, ICliAuthorizationService, ICliBackgroundService, ICliBackgroundServiceInfo, ICliBackgroundServiceRegistry, ICliClipboard, ICliCommandAuthor, ICliCommandChildProcessor, ICliCommandControls, ICliCommandExecutorService, ICliCommandGuard, ICliCommandKey, ICliCommandParameterDescriptor, ICliCommandProcessor, ICliCommandProcessorRegistry, ICliCompletionContext, ICliCompletionProvider, ICliConfigurableModule, ICliConfigurationOption, ICliDragDropService, ICliEventBus, ICliExecutionContext, ICliExecutionProcess, ICliFileEntry, ICliFilePickerProvider, ICliFileTransferService, ICliGlobalParameterHandler, ICliGroup, ICliGroupsStoreService, ICliHttpClient, ICliInputReader, ICliKeyValueStore, ICliLogger, ICliManagedInterval, ICliManagedTimer, ICliModule, ICliNotifier, ICliOwnership, ICliPanelRef, ICliPercentageProgressBar, ICliPermissionRegistry, ICliPermissionService, ICliPingServerService, ICliPrincipal, ICliProcessEntry, ICliProcessRegisterOptions, ICliProcessRegistry, ICliProcessorHook, ICliProgressBar, ICliProtectedResource, ICliSecretStore, ICliServerAuthService, ICliServerAuthTokenProvider, ICliServerManager, ICliServiceContext, ICliServiceEvent, ICliServiceLogEntry, ICliServiceProvider, ICliSessionInfo, ICliSessionsService, ICliSpinner, ICliStateStore, ICliTerminalWriter, ICliTextAnimator, ICliTranslationService, ICliUser, ICliUserCredentials, ICliUserEvent, ICliUserEventService, ICliUserSession, ICliUserSessionService, ICliUsersStoreService, ISyntaxHighlightRule, ISyntaxHighlighter, ISyntaxTheme, LineState, Package, ServerVersionInfo, WorkerServiceContext };

@@ -1,5 +1,5 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>CliServerConnection | Qodalis CLI - v2.6.0</title><meta name="description" content="Documentation for Qodalis CLI"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
-<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">Qodalis CLI - v2.6.0</a>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>CliServerConnection | Qodalis CLI - v2.7.0</title><meta name="description" content="Documentation for Qodalis CLI"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">Qodalis CLI - v2.7.0</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
 <div id="tsd-search-status" aria-live="polite" aria-atomic="true">
@@ -10,9 +10,16 @@
 <ul class="tsd-breadcrumb" aria-label="Breadcrumb">
 <li><a href="../modules/cli_src_public-api.html">cli/src/public-api</a></li>
 <li><a href="" aria-current="page">CliServerConnection</a></li></ul>
-<h1>Class CliServerConnection</h1></div><aside class="tsd-sources">
+<h1>Class CliServerConnection</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>What the monitor needs from the connection it watches.</p>
+</div></section>
+<section class="tsd-panel">
+<h4>Implements</h4>
+<ul class="tsd-hierarchy">
+<li><a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html" class="tsd-signature-type tsd-kind-interface">CliServerHealthTarget</a></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L17">packages/cli/src/lib/server/cli-server-connection.ts:17</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L21">packages/cli/src/lib/server/cli-server-connection.ts:21</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -34,18 +41,23 @@
 <a href="#commands" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>commands</span></a>
 <a href="#config" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>config</span></a>
 <a href="#connected" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>connected</span></a>
+<a href="#healthcheckrunning" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>health<wbr/>Check<wbr/>Running</span></a>
 <a href="#needssignin" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>needs<wbr/>Sign<wbr/>In</span></a>
 </div></section>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading tsd-anchor-link" id="methods">Methods<a href="#methods" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-index-list"><a href="#buildwebsocketurl" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>build<wbr/>Web<wbr/>Socket<wbr/>Url</span></a>
+<a href="#checkhealth" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>check<wbr/>Health</span></a>
 <a href="#connect" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>connect</span></a>
 <a href="#disconnect" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>disconnect</span></a>
 <a href="#execute" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>execute</span></a>
 <a href="#executestream" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>execute<wbr/>Stream</span></a>
 <a href="#fetchcapabilities" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>fetch<wbr/>Capabilities</span></a>
 <a href="#fetchcommands" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>fetch<wbr/>Commands</span></a>
+<a href="#markdisconnected" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>mark<wbr/>Disconnected</span></a>
 <a href="#ping" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>ping</span></a>
+<a href="#probe" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>probe</span></a>
+<a href="#reconnectfrommonitor" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>reconnect<wbr/>From<wbr/>Monitor</span></a>
 <a href="#resolveauthheaders" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>resolve<wbr/>Auth<wbr/>Headers</span></a>
 <a href="#starthealthcheck" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>start<wbr/>Health<wbr/>Check</span></a>
 <a href="#stophealthcheck" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>stop<wbr/>Health<wbr/>Check</span></a>
@@ -68,7 +80,7 @@
 <li><span><code class="tsd-tag">Optional</code><span class="tsd-kind-parameter">_authService</span>: <span class="tsd-signature-type">ICliServerAuthService</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="" class="tsd-signature-type tsd-kind-class">CliServerConnection</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L39">packages/cli/src/lib/server/cli-server-connection.ts:39</a></li></ul></aside></div></li></ul></section></section></details>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L41">packages/cli/src/lib/server/cli-server-connection.ts:41</a></li></ul></aside></div></li></ul></section></section></details>
 <details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
 <h2 class="tsd-anchor-link" id="properties-1">Properties<a href="#properties-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
 <section>
@@ -76,12 +88,12 @@
 <h3 class="tsd-anchor-link" id="ondisconnect"><code class="tsd-tag">Optional</code><span>on<wbr/>Disconnect</span><a href="#ondisconnect" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">onDisconnect</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L36">packages/cli/src/lib/server/cli-server-connection.ts:36</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L38">packages/cli/src/lib/server/cli-server-connection.ts:38</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="onreconnected"><code class="tsd-tag">Optional</code><span>on<wbr/>Reconnected</span><a href="#onreconnected" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">onReconnected</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L37">packages/cli/src/lib/server/cli-server-connection.ts:37</a></li></ul></aside></section></section></details>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L39">packages/cli/src/lib/server/cli-server-connection.ts:39</a></li></ul></aside></section></section></details>
 <details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Accessors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
 <h2 class="tsd-anchor-link" id="accessors-1">Accessors<a href="#accessors-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
 <section>
@@ -93,7 +105,7 @@
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L72">packages/cli/src/lib/server/cli-server-connection.ts:72</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L76">packages/cli/src/lib/server/cli-server-connection.ts:76</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="capabilities"><span>capabilities</span><a href="#capabilities" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -102,7 +114,7 @@
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">CliServerCapabilities</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L68">packages/cli/src/lib/server/cli-server-connection.ts:68</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L72">packages/cli/src/lib/server/cli-server-connection.ts:72</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="commands"><span>commands</span><a href="#commands" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -111,7 +123,7 @@
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">CliServerCommandDescriptor</span><span class="tsd-signature-symbol">[]</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L64">packages/cli/src/lib/server/cli-server-connection.ts:64</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L68">packages/cli/src/lib/server/cli-server-connection.ts:68</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="config"><span>config</span><a href="#config" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -119,8 +131,9 @@
 <div class="tsd-signature" id="configconfig"><span class="tsd-signature-keyword">get</span> <span class="tsd-kind-get-signature">config</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">CliServerConfig</span></div>
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">CliServerConfig</span></h4><aside class="tsd-sources">
+<p>Implementation of <a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html">CliServerHealthTarget</a>.<a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html#config">config</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L46">packages/cli/src/lib/server/cli-server-connection.ts:46</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L50">packages/cli/src/lib/server/cli-server-connection.ts:50</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="connected"><span>connected</span><a href="#connected" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -128,8 +141,20 @@
 <div class="tsd-signature" id="connectedconnected"><span class="tsd-signature-keyword">get</span> <span class="tsd-kind-get-signature">connected</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
+<p>Implementation of <a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html">CliServerHealthTarget</a>.<a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html#connected">connected</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L60">packages/cli/src/lib/server/cli-server-connection.ts:60</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L64">packages/cli/src/lib/server/cli-server-connection.ts:64</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="healthcheckrunning"><span>health<wbr/>Check<wbr/>Running</span><a href="#healthcheckrunning" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li>
+<div class="tsd-signature" id="healthcheckrunninghealthcheckrunning"><span class="tsd-signature-keyword">get</span> <span class="tsd-kind-get-signature">healthCheckRunning</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Whether the health monitor runs.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L173">packages/cli/src/lib/server/cli-server-connection.ts:173</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="needssignin"><span>needs<wbr/>Sign<wbr/>In</span><a href="#needssignin" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -140,8 +165,9 @@
 command list): the server is up, and a sign-in reconnects it.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
+<p>Implementation of <a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html">CliServerHealthTarget</a>.<a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html#needssignin">needsSignIn</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L54">packages/cli/src/lib/server/cli-server-connection.ts:54</a></li></ul></aside></div></li></ul></section></section></details>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L58">packages/cli/src/lib/server/cli-server-connection.ts:58</a></li></ul></aside></div></li></ul></section></section></details>
 <details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
 <h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
 <section>
@@ -161,7 +187,23 @@ headers (never the headers themselves, unless the config opts in).</p>
 <li><span><span class="tsd-kind-parameter">path</span>: <span class="tsd-signature-type">string</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L93">packages/cli/src/lib/server/cli-server-connection.ts:93</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L97">packages/cli/src/lib/server/cli-server-connection.ts:97</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="checkhealth"><span>check<wbr/>Health</span><a href="#checkhealth" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="checkhealth-1"><span class="tsd-kind-call-signature">checkHealth</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">reason</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#checkhealth-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Check the server now instead of at the next tick (e.g. after a command
+failed with a network error). Resolves once the check is done.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">reason</span>: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &#39;requested&#39;</span></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L181">packages/cli/src/lib/server/cli-server-connection.ts:181</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="connect"><span>connect</span><a href="#connect" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -170,7 +212,7 @@ headers (never the headers themselves, unless the config opts in).</p>
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L104">packages/cli/src/lib/server/cli-server-connection.ts:104</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L108">packages/cli/src/lib/server/cli-server-connection.ts:108</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="disconnect"><span>disconnect</span><a href="#disconnect" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -179,7 +221,7 @@ headers (never the headers themselves, unless the config opts in).</p>
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L139">packages/cli/src/lib/server/cli-server-connection.ts:139</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L143">packages/cli/src/lib/server/cli-server-connection.ts:143</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="execute"><span>execute</span><a href="#execute" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -192,7 +234,7 @@ headers (never the headers themselves, unless the config opts in).</p>
 <li><span><span class="tsd-kind-parameter">command</span>: <span class="tsd-signature-type">CliProcessCommand</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">CliServerResponse</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L225">packages/cli/src/lib/server/cli-server-connection.ts:225</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L225">packages/cli/src/lib/server/cli-server-connection.ts:225</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="executestream"><span>execute<wbr/>Stream</span><a href="#executestream" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -206,7 +248,7 @@ headers (never the headers themselves, unless the config opts in).</p>
 <li><span><span class="tsd-kind-parameter">onOutput</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">output</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">CliServerOutput</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">exitCode</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L249">packages/cli/src/lib/server/cli-server-connection.ts:249</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L251">packages/cli/src/lib/server/cli-server-connection.ts:251</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="fetchcapabilities"><span>fetch<wbr/>Capabilities</span><a href="#fetchcapabilities" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -215,7 +257,7 @@ headers (never the headers themselves, unless the config opts in).</p>
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">CliServerCapabilities</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L213">packages/cli/src/lib/server/cli-server-connection.ts:213</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L213">packages/cli/src/lib/server/cli-server-connection.ts:213</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="fetchcommands"><span>fetch<wbr/>Commands</span><a href="#fetchcommands" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -224,7 +266,19 @@ headers (never the headers themselves, unless the config opts in).</p>
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">CliServerCommandDescriptor</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L199">packages/cli/src/lib/server/cli-server-connection.ts:199</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L199">packages/cli/src/lib/server/cli-server-connection.ts:199</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="markdisconnected"><span>mark<wbr/>Disconnected</span><a href="#markdisconnected" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="markdisconnected-1"><span class="tsd-kind-call-signature">markDisconnected</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#markdisconnected-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description"><code class="tsd-tag">Internal</code>
+<div class="tsd-comment tsd-typography"><p>Health monitor: the server stopped answering.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<p>Implementation of <a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html">CliServerHealthTarget</a>.<a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html#markdisconnected">markDisconnected</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L195">packages/cli/src/lib/server/cli-server-connection.ts:195</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="ping"><span>ping</span><a href="#ping" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -233,7 +287,33 @@ headers (never the headers themselves, unless the config opts in).</p>
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L325">packages/cli/src/lib/server/cli-server-connection.ts:325</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L329">packages/cli/src/lib/server/cli-server-connection.ts:329</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="probe"><span>probe</span><a href="#probe" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="probe-1"><span class="tsd-kind-call-signature">probe</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span><a href="#probe-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Whether the server is up, for the health monitor: it answers
+<code>/api/qcli/versions</code> without a network error, a timeout or a 5xx
+(a 401/403 means up, signed out).</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<p>Implementation of <a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html">CliServerHealthTarget</a>.<a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html#probe">probe</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L346">packages/cli/src/lib/server/cli-server-connection.ts:346</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="reconnectfrommonitor"><span>reconnect<wbr/>From<wbr/>Monitor</span><a href="#reconnectfrommonitor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="reconnectfrommonitor-1"><span class="tsd-kind-call-signature">reconnectFromMonitor</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span><a href="#reconnectfrommonitor-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description"><code class="tsd-tag">Internal</code>
+<div class="tsd-comment tsd-typography"><p>Health monitor: the server answered again, connect it. True once connected.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<p>Implementation of <a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html">CliServerHealthTarget</a>.<a href="../interfaces/cli_src_public-api.CliServerHealthTarget.html#reconnectfrommonitor">reconnectFromMonitor</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L186">packages/cli/src/lib/server/cli-server-connection.ts:186</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="resolveauthheaders"><span>resolve<wbr/>Auth<wbr/>Headers</span><a href="#resolveauthheaders" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -246,25 +326,31 @@ ICliServerAuthTokenProviders), or falls back to config headers directly.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L81">packages/cli/src/lib/server/cli-server-connection.ts:81</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L85">packages/cli/src/lib/server/cli-server-connection.ts:85</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="starthealthcheck"><span>start<wbr/>Health<wbr/>Check</span><a href="#starthealthcheck" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
 <li class="">
 <div class="tsd-signature tsd-anchor-link" id="starthealthcheck-1"><span class="tsd-kind-call-signature">startHealthCheck</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#starthealthcheck-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
 <div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Start the health monitor (<code>server-health:&lt;name&gt;</code> background service):
+it polls the server while connected and reconnects it, with a capped
+backoff and no attempt limit, while it is down. No-op while it runs.</p>
+</div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L154">packages/cli/src/lib/server/cli-server-connection.ts:154</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L163">packages/cli/src/lib/server/cli-server-connection.ts:163</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="stophealthcheck"><span>stop<wbr/>Health<wbr/>Check</span><a href="#stophealthcheck" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
 <li class="">
 <div class="tsd-signature tsd-anchor-link" id="stophealthcheck-1"><span class="tsd-kind-call-signature">stopHealthCheck</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#stophealthcheck-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
 <div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Stop the health monitor.</p>
+</div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/7b0dcc4ccceb37d4308448679aa19d7892dd93b1/packages/cli/src/lib/server/cli-server-connection.ts#L191">packages/cli/src/lib/server/cli-server-connection.ts:191</a></li></ul></aside></div></li></ul></section></section></details></div>
+<li>Defined in <a href="https://github.com/qodalis-solutions/web-cli/blob/6d6030d99779bb5808e628903683848abc63d2a3/packages/cli/src/lib/server/cli-server-connection.ts#L168">packages/cli/src/lib/server/cli-server-connection.ts:168</a></li></ul></aside></div></li></ul></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -283,11 +369,11 @@ ICliServerAuthTokenProviders), or falls back to config headers directly.</p>
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
 <div><a href="#ondisconnect"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>on<wbr/>Disconnect</span></a><a href="#onreconnected"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>on<wbr/>Reconnected</span></a></div></details>
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Accessors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Accessors</summary>
-<div><a href="#apiversion"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>api<wbr/>Version</span></a><a href="#capabilities"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>capabilities</span></a><a href="#commands"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>commands</span></a><a href="#config"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>config</span></a><a href="#connected"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>connected</span></a><a href="#needssignin"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>needs<wbr/>Sign<wbr/>In</span></a></div></details>
+<div><a href="#apiversion"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>api<wbr/>Version</span></a><a href="#capabilities"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>capabilities</span></a><a href="#commands"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>commands</span></a><a href="#config"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>config</span></a><a href="#connected"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>connected</span></a><a href="#healthcheckrunning"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>health<wbr/>Check<wbr/>Running</span></a><a href="#needssignin"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Accessor"><use href="../assets/icons.svg#icon-262144"></use></svg><span>needs<wbr/>Sign<wbr/>In</span></a></div></details>
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
-<div><a href="#buildwebsocketurl"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>build<wbr/>Web<wbr/>Socket<wbr/>Url</span></a><a href="#connect"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>connect</span></a><a href="#disconnect"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>disconnect</span></a><a href="#execute"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>execute</span></a><a href="#executestream"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>execute<wbr/>Stream</span></a><a href="#fetchcapabilities"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>fetch<wbr/>Capabilities</span></a><a href="#fetchcommands"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>fetch<wbr/>Commands</span></a><a href="#ping"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>ping</span></a><a href="#resolveauthheaders"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>resolve<wbr/>Auth<wbr/>Headers</span></a><a href="#starthealthcheck"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>start<wbr/>Health<wbr/>Check</span></a><a href="#stophealthcheck"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>stop<wbr/>Health<wbr/>Check</span></a></div></details></div></details></div>
+<div><a href="#buildwebsocketurl"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>build<wbr/>Web<wbr/>Socket<wbr/>Url</span></a><a href="#checkhealth"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>check<wbr/>Health</span></a><a href="#connect"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>connect</span></a><a href="#disconnect"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>disconnect</span></a><a href="#execute"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>execute</span></a><a href="#executestream"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>execute<wbr/>Stream</span></a><a href="#fetchcapabilities"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>fetch<wbr/>Capabilities</span></a><a href="#fetchcommands"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>fetch<wbr/>Commands</span></a><a href="#markdisconnected"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>mark<wbr/>Disconnected</span></a><a href="#ping"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>ping</span></a><a href="#probe"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>probe</span></a><a href="#reconnectfrommonitor"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>reconnect<wbr/>From<wbr/>Monitor</span></a><a href="#resolveauthheaders"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>resolve<wbr/>Auth<wbr/>Headers</span></a><a href="#starthealthcheck"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>start<wbr/>Health<wbr/>Check</span></a><a href="#stophealthcheck"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>stop<wbr/>Health<wbr/>Check</span></a></div></details></div></details></div>
 <div class="site-menu">
-<nav class="tsd-navigation"><a href="../modules.html">Qodalis CLI - v2.6.0</a>
+<nav class="tsd-navigation"><a href="../modules.html">Qodalis CLI - v2.7.0</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">
 <li>Loading...</li></ul></nav></div></div></div><footer></footer>
 <div class="overlay"></div></body></html>

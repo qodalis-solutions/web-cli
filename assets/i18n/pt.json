@@ -529,5 +529,16 @@
   "docs.playground.built-with-type-errors": "Em execução, com {{count}} erro(s) de tipo: passe o rato sobre o código sublinhado",
   "docs.playground.press-run": "Clique em Executar para começar",
   "docs.playground.hint": "Exporte um processador de comandos (uma classe ou um objeto com processCommand) ou um módulo, e importe de @qodalis/cli-core. O seu código fica guardado neste navegador; Copiar link partilha-o.",
-  "docs.playground.open": "Playground"
+  "docs.playground.open": "Playground",
+  "sidebar.android-app": "App Android",
+  "sidebar.connect-your-server": "Conecte seu servidor",
+  "docs.android-app.title": "Qodalis CLI para Android",
+  "docs.android-app.intro": "O terminal Qodalis CLI como app de celular: comandos, arquivos, um editor e jogos que funcionam offline no aparelho, e seus próprios servidores quando você os vincula.",
+  "docs.android-app.open-pwa": "Abrir no navegador (PWA)",
+  "docs.android-app.see-also": "Veja também:",
+  "docs.connect-your-server.title": "Conecte seu próprio servidor pelo app",
+  "docs.connect-your-server.intro": "Vincule ao app Android um servidor Node, .NET ou Python seu, para ter os comandos e o shell dele no celular.",
+  "home.hero.android-app": "Também no Android: Qodalis CLI no Google Play",
+  "docs.getting-started.android-app-hint": "Só quer usar o terminal no celular? Para isso existe o app:",
+  "docs.getting-started.next-android": "App Android — o terminal no celular, com o seu servidor"
 }
