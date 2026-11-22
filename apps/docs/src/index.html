@@ -19,14 +19,29 @@
       content="A lightweight, extensible web terminal for Angular, React, and Vue. Tabs, split panes, plugin ecosystem, and full theming."
     />
     <link rel="icon" type="image/svg+xml" href="assets/qodalis-icon.svg" />
-    <!-- Critical inline styles to prevent FOUC (white flash before stylesheet loads) -->
+    <!-- Light/dark before first paint: the reader's choice (ThemeService, same
+         storage key), else the system setting -->
+    <script>
+      (function () {
+        var mode = 'system';
+        try { mode = localStorage.getItem('qcli-docs-theme') || 'system'; } catch (e) {}
+        if (mode !== 'light' && mode !== 'dark') {
+          mode = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        document.documentElement.setAttribute('data-theme', mode);
+        document.documentElement.style.colorScheme = mode;
+      })();
+    </script>
+    <!-- Critical inline styles to prevent FOUC (a flash of the wrong colours before the stylesheet loads) -->
     <style>
+      :root { --loader-bg: #070b14; --loader-fg: rgba(255, 255, 255, 0.87); --loader-muted: rgba(255, 255, 255, 0.6); --loader-card: #0d1117; --loader-bar: #111827; --loader-border: #1e293b; --loader-accent: #818cf8; }
+      :root[data-theme="light"] { --loader-bg: #ffffff; --loader-fg: #1e293b; --loader-muted: #475569; --loader-card: #f6f8fb; --loader-bar: #eef2f7; --loader-border: #e2e8f0; --loader-accent: #4f46e5; }
       html, body {
         margin: 0;
         padding: 0;
         min-height: 100%;
-        background-color: #070b14;
-        color: rgba(255, 255, 255, 0.87);
+        background-color: var(--loader-bg);
+        color: var(--loader-fg);
       }
     </style>
     <!-- Preconnect + load Google Fonts with optional display to prevent font swap glitch -->
@@ -48,25 +63,25 @@
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          background: #070b14;
+          background: var(--loader-bg);
           z-index: 9999;
           gap: 28px;
         }
         .app-loader-terminal {
           width: 280px;
-          background: #0d1117;
-          border: 1px solid #1e293b;
+          background: var(--loader-card);
+          border: 1px solid var(--loader-border);
           border-radius: 10px;
           overflow: hidden;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
         }
         .app-loader-titlebar {
           display: flex;
           align-items: center;
           gap: 6px;
           padding: 10px 14px;
-          background: #111827;
-          border-bottom: 1px solid #1e293b;
+          background: var(--loader-bar);
+          border-bottom: 1px solid var(--loader-border);
         }
         .app-loader-dot {
           width: 10px;
@@ -81,16 +96,16 @@
           font-family: 'JetBrains Mono', monospace;
           font-size: 13px;
           line-height: 1.7;
-          color: rgba(255, 255, 255, 0.7);
+          color: var(--loader-fg);
         }
         .app-loader-prompt {
-          color: #818cf8;
+          color: var(--loader-accent);
         }
         .app-loader-cursor {
           display: inline-block;
           width: 8px;
           height: 15px;
-          background: #818cf8;
+          background: var(--loader-accent);
           vertical-align: text-bottom;
           margin-left: 2px;
           animation: blink 1s step-end infinite;
@@ -102,7 +117,7 @@
           margin-top: 0;
           font-family: 'Inter', sans-serif;
           font-size: 13px;
-          color: rgba(255, 255, 255, 0.35);
+          color: var(--loader-muted);
           letter-spacing: 0.5px;
         }
       </style>

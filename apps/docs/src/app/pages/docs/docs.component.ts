@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, HostListener, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { NavigationEnd, Router } from '@angular/router';
@@ -19,6 +19,16 @@ function navLabel(path: string, items: NavItem[] = DOCS_NAV): string | undefined
     return undefined;
 }
 
+/** Every page of the docs in sidebar order (group headers have none). */
+function flattenNav(items: NavItem[] = DOCS_NAV): NavItem[] {
+    return items.flatMap((item) => [
+        ...(item.group || item.external ? [] : [item]),
+        ...flattenNav(item.children ?? []),
+    ]);
+}
+
+const PAGES = flattenNav();
+
 @Component({
     standalone: false,
     selector: 'docs-shell',
@@ -27,6 +37,8 @@ function navLabel(path: string, items: NavItem[] = DOCS_NAV): string | undefined
 })
 export class DocsComponent {
     sidebarOpen = false;
+    /** The pages before and after the current one, for the links below it. */
+    pager: { prev?: NavItem; next?: NavItem } = {};
 
     private readonly router = inject(Router);
     private readonly title = inject(Title);
@@ -40,8 +52,20 @@ export class DocsComponent {
             this.translate.onLangChange,
         )
             .pipe(takeUntilDestroyed(inject(DestroyRef)))
-            .subscribe(() => this.updateTitle());
+            .subscribe(() => this.update());
+        this.update();
+    }
+
+    @HostListener('document:keydown.escape')
+    closeSidebar(): void {
+        this.sidebarOpen = false;
+    }
+
+    private update(): void {
         this.updateTitle();
+        const path = this.router.url.split(/[?#]/)[0];
+        const index = PAGES.findIndex((p) => p.path === path);
+        this.pager = index < 0 ? {} : { prev: PAGES[index - 1], next: PAGES[index + 1] };
     }
 
     private updateTitle(): void {

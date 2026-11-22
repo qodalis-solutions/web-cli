@@ -1,7 +1,7 @@
-$border: #1e293b
-$card: #111827
-$muted: rgba(255, 255, 255, 0.55)
-$accent: #818cf8
+$border: var(--border)
+$card: var(--bg-card)
+$muted: var(--text-secondary)
+$accent: var(--btn-bg)
 $mono: 'JetBrains Mono', 'Fira Code', monospace
 
 :host
@@ -17,16 +17,20 @@ $mono: 'JetBrains Mono', 'Fira Code', monospace
   button, select
     padding: 6px 14px
     font: 0.85rem $mono
-    color: #fff
+    color: var(--text)
     background: $card
-    border: 1px solid $border
+    border: 1px solid var(--border-light)
     border-radius: 6px
     cursor: pointer
+
+    &:hover:not(:disabled)
+      border-color: var(--text-muted)
 
   .primary
     background: $accent
     border-color: $accent
-    color: #0b1020
+    color: var(--on-accent)
+
 
 .example-picker
   display: flex
@@ -40,6 +44,7 @@ $mono: 'JetBrains Mono', 'Fira Code', monospace
   border: 1px solid #a16207
   border-radius: 8px
   background: rgba(161, 98, 7, 0.12)
+  color: var(--text)
 
 .workspace
   display: grid
@@ -70,7 +75,7 @@ $mono: 'JetBrains Mono', 'Fira Code', monospace
   letter-spacing: 0
   font-weight: 400
   &.error
-    color: #f87171
+    color: var(--danger)
 
 .editor, .terminal-host
   // Fill the window below the title and toolbar
@@ -78,7 +83,7 @@ $mono: 'JetBrains Mono', 'Fira Code', monospace
   border: 1px solid $border
   border-radius: 8px
   overflow: hidden
-  background: #1e1e1e
+  background: var(--code-bg)
 
   // Stacked below 1100px: a fixed height each
   @media (max-width: 1100px)
@@ -97,7 +102,7 @@ $mono: 'JetBrains Mono', 'Fira Code', monospace
 .commands
   font: 0.85rem $mono
   padding: 8px 10px
-  color: #fff
+  color: var(--text)
   background: $card
   border: 1px solid $border
   border-radius: 8px
@@ -108,8 +113,8 @@ $mono: 'JetBrains Mono', 'Fira Code', monospace
   padding: 10px 12px
   white-space: pre-wrap
   font: 0.8rem $mono
-  color: #fca5a5
-  background: rgba(248, 113, 113, 0.08)
+  color: var(--danger)
+  background: var(--danger-soft)
   border-radius: 8px
 
 .hint

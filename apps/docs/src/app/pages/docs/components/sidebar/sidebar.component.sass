@@ -5,11 +5,30 @@
 
 .sidebar-nav
   flex: 1
+  padding-top: 8px
+
+.sidebar-home
+  display: flex
+  align-items: center
+  gap: 8px
+  margin: 16px 12px 0
+  padding: 8px 10px
+  font-size: 0.84rem
+  font-weight: 500
+  color: var(--text-secondary)
+  text-decoration: none
+  border: 1px solid var(--border)
+  border-radius: 8px
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s
+  &:hover
+    color: var(--text-strong)
+    border-color: var(--border-light)
+    background: var(--hover)
 
 .sidebar-version
   padding: 16px 20px
-  border-top: 1px solid rgba(255, 255, 255, 0.08)
+  border-top: 1px solid var(--border)
   code
     font-size: 0.8em
-    color: #666
+    color: var(--text-muted)
     letter-spacing: 0.02em

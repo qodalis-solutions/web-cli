@@ -1,5 +1,8 @@
-<nav class="sidebar-nav">
-  @for (section of nav; track section) {
+<a class="sidebar-home" routerLink="/" (click)="linkClicked.emit()">
+  <span aria-hidden="true">&larr;</span> {{ "docs.back-home" | translate }}
+</a>
+<nav class="sidebar-nav" [attr.aria-label]="'nav.docs' | translate">
+  @for (section of nav; track section.path) {
     <div class="sidebar-section">
       @if (section.external) {
         <a
@@ -13,17 +16,41 @@
         </a>
       }
       @if (!section.external && section.children) {
-        <button
-          class="sidebar-section-header"
-          (click)="toggleSection(section.label)"
-          [class.expanded]="isExpanded(section.label)"
-        >
-          <span>{{ section.label | translate }}</span>
-          <span class="chevron">&#9656;</span>
-        </button>
+        <div class="sidebar-section-row" [class.expanded]="isExpanded(section.label)">
+          @if (section.group) {
+            <!-- A group without a page of its own: the whole row toggles -->
+            <button
+              class="sidebar-section-header"
+              type="button"
+              [attr.aria-expanded]="isExpanded(section.label)"
+              (click)="toggleSection(section.label)"
+            >
+              <span>{{ section.label | translate }}</span>
+            </button>
+          } @else {
+            <a
+              class="sidebar-section-header"
+              [routerLink]="section.path"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: true }"
+              (click)="expand(section.label); linkClicked.emit()"
+            >
+              <span>{{ section.label | translate }}</span>
+            </a>
+          }
+          <button
+            class="sidebar-toggle-btn"
+            type="button"
+            [attr.aria-expanded]="isExpanded(section.label)"
+            [attr.aria-label]="section.label | translate"
+            (click)="toggleSection(section.label)"
+          >
+            <span class="chevron" aria-hidden="true">&#9656;</span>
+          </button>
+        </div>
         @if (isExpanded(section.label)) {
           <div class="sidebar-children">
-            @for (child of section.children; track child) {
+            @for (child of section.children; track child.path) {
               <a
                 class="sidebar-link"
                 [routerLink]="child.path"

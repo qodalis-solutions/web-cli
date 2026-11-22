@@ -12,6 +12,8 @@ const routes: Routes = [
         loadChildren: () =>
             import('./pages/docs/docs.module').then((m) => m.DocsModule),
     },
+    // Unknown URLs get the docs' "page not found"
+    { path: '**', redirectTo: 'docs/not-found' },
 ];
 
 @NgModule({
@@ -20,6 +22,8 @@ const routes: Routes = [
             // New pages open at the top; Back/Forward restore the previous position.
             scrollPositionRestoration: 'enabled',
             anchorScrolling: 'enabled',
+            // Anchor jumps land below the fixed 56px nav
+            scrollOffset: [0, 72],
         }),
     ],
     exports: [RouterModule],

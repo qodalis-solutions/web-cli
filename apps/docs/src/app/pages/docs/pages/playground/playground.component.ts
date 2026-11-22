@@ -6,6 +6,8 @@ import {
     ElementRef,
     OnDestroy,
     ViewChild,
+    effect,
+    inject,
 } from '@angular/core';
 import { CliEngine } from '@qodalis/cli';
 import { loadMonaco, Monaco } from './monaco-loader';
@@ -21,6 +23,7 @@ import {
     playgroundUrl,
     readPlaygroundFragment,
 } from '../../../../shared/playground-link';
+import { ThemeService } from '../../../../services/theme.service';
 
 const MODEL_URI = 'file:///playground.ts';
 const CORE_TYPES_URL = '/assets/playground/types/cli-core/public-api.d.ts';
@@ -63,7 +66,19 @@ export class PlaygroundComponent implements AfterViewInit, OnDestroy {
     private buildId = 0;
     private destroyed = false;
 
-    constructor(private readonly cdr: ChangeDetectorRef) {}
+    private readonly theme = inject(ThemeService);
+
+    constructor(private readonly cdr: ChangeDetectorRef) {
+        // The editor follows the site's light/dark scheme
+        effect(() => {
+            const theme = this.editorTheme();
+            this.monaco?.editor.setTheme(theme);
+        });
+    }
+
+    private editorTheme(): string {
+        return this.theme.scheme() === 'light' ? 'vs' : 'vs-dark';
+    }
 
     async ngAfterViewInit(): Promise<void> {
         try {
@@ -94,7 +109,7 @@ export class PlaygroundComponent implements AfterViewInit, OnDestroy {
             this.model = monaco.editor.createModel(code, 'typescript', monaco.Uri.parse(MODEL_URI));
             this.editor = monaco.editor.create(this.editorHost.nativeElement, {
                 model: this.model,
-                theme: 'vs-dark',
+                theme: this.editorTheme(),
                 automaticLayout: true,
                 minimap: { enabled: false },
                 fontSize: 13,

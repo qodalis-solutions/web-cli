@@ -1,7 +1,8 @@
-import { Component, HostListener, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, HostListener, ViewChild, effect, inject } from '@angular/core';
 import { CliLogLevel, ICliModule } from '@qodalis/cli-core';
 import { CliPanelComponent, CliPanelOptions } from '@qodalis/angular-cli';
 import { PanelRefService } from './services/panel-ref.service';
+import { ThemeService, ThemeMode } from './services/theme.service';
 import { TranslateService } from '@ngx-translate/core';
 import { LANGUAGES, Language, DEFAULT_LANG, LANG_STORAGE_KEY } from './data/languages';
 import { usersModule } from '@qodalis/cli-users';
@@ -40,10 +41,19 @@ import { loadLanguagePacks } from './lang-packs';
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.sass'],
 })
-export class AppComponent implements AfterViewInit {
+export class AppComponent {
     title = 'Qodalis CLI';
 
-    @ViewChild(CliPanelComponent) panel!: CliPanelComponent;
+    readonly theme = inject(ThemeService);
+    private panel?: CliPanelComponent;
+
+    /** The panel renders once the language packs are in, after the first view check. */
+    @ViewChild(CliPanelComponent)
+    set panelComponent(panel: CliPanelComponent | undefined) {
+        this.panel = panel;
+        this.panelRef.panel = panel ?? null;
+        panel?.setTheme(this.theme.scheme());
+    }
 
     languages = LANGUAGES;
     currentLang: Language;
@@ -53,6 +63,9 @@ export class AppComponent implements AfterViewInit {
         private translate: TranslateService,
         private panelRef: PanelRefService,
     ) {
+        // The panel follows the site's light/dark scheme
+        effect(() => this.panel?.setTheme(this.theme.scheme()));
+
         const browserLangPrefix = navigator.language?.split('-')[0];
         const supportedCodes = LANGUAGES.map((l) => l.code);
         const storedLang = localStorage.getItem(LANG_STORAGE_KEY);
@@ -81,11 +94,13 @@ export class AppComponent implements AfterViewInit {
         this.langDropdownOpen = !this.langDropdownOpen;
     }
 
-    ngAfterViewInit(): void {
-        this.panelRef.panel = this.panel;
+    /** Label key of the theme button: names the current mode. */
+    themeLabel(mode: ThemeMode): string {
+        return `nav.theme.${mode}`;
     }
 
     @HostListener('document:click')
+    @HostListener('document:keydown.escape')
     closeLangDropdown(): void {
         this.langDropdownOpen = false;
     }
@@ -133,5 +148,6 @@ export class AppComponent implements AfterViewInit {
         logLevel: CliLogLevel.DEBUG,
         position: 'right',
         isHidden: true,
+        theme: this.theme.scheme(),
     };
 }

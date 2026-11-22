@@ -1,11 +1,38 @@
 <div class="docs-layout">
-    <button class="sidebar-toggle" (click)="sidebarOpen = !sidebarOpen">
-        &#9776;
+    <button
+        class="sidebar-toggle"
+        type="button"
+        [attr.aria-expanded]="sidebarOpen"
+        aria-controls="docs-sidebar"
+        [attr.aria-label]="'docs.menu' | translate"
+        (click)="sidebarOpen = !sidebarOpen"
+    >
+        <span aria-hidden="true">{{ sidebarOpen ? '&#10005;' : '&#9776;' }}</span>
     </button>
-    <aside class="docs-sidebar" [class.open]="sidebarOpen">
+    @if (sidebarOpen) {
+        <div class="sidebar-backdrop" (click)="sidebarOpen = false"></div>
+    }
+    <aside id="docs-sidebar" class="docs-sidebar" [class.open]="sidebarOpen">
         <docs-sidebar (linkClicked)="sidebarOpen = false"></docs-sidebar>
     </aside>
     <main class="docs-content">
         <router-outlet></router-outlet>
+
+        @if (pager.prev || pager.next) {
+            <nav class="docs-pager" [attr.aria-label]="'docs.pager.label' | translate">
+                @if (pager.prev) {
+                    <a class="pager-link prev" [routerLink]="pager.prev.path">
+                        <span class="pager-dir">&larr; {{ 'docs.pager.previous' | translate }}</span>
+                        <span class="pager-title">{{ pager.prev.label | translate }}</span>
+                    </a>
+                }
+                @if (pager.next) {
+                    <a class="pager-link next" [routerLink]="pager.next.path">
+                        <span class="pager-dir">{{ 'docs.pager.next' | translate }} &rarr;</span>
+                        <span class="pager-title">{{ pager.next.label | translate }}</span>
+                    </a>
+                }
+            </nav>
+        }
     </main>
 </div>

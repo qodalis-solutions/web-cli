@@ -47,7 +47,7 @@
         <tr><td><code>server commands [name]</code></td><td><code>server cmds</code></td><td>The commands each server provides, with the name to type: <code>node:echo</code> when a local command has the same name, ◆ when several servers share it</td></tr>
         <tr><td><code>server reconnect [name]</code></td><td><code>server rc</code>, <code>server connect</code></td><td>Connect again and reload the commands. Without a name, the unreachable servers are retried; <code>--all</code> reconnects every server</td></tr>
         <tr><td><code>server default [name]</code></td><td><code>server use</code></td><td>Show or set the default server, which runs commands several servers have and commands that need one server (<code>server logs</code>, <code>scp</code>). Remembered across reloads; <code>--clear</code> removes it</td></tr>
-        <tr><td><code>server add [name] [url]</code></td><td><code>server link</code></td><td>Link a server to this terminal (see <a href="#connect-your-own-server">Connect your own server</a>); <code>server edit</code>, <code>server remove</code> and <code>server forget-all</code> change and unlink linked servers</td></tr>
+        <tr><td><code>server add [name] [url]</code></td><td><code>server link</code></td><td>Link a server to this terminal (see <a routerLink="/docs/server-integration" fragment="connect-your-own-server">Connect your own server</a>); <code>server edit</code>, <code>server remove</code> and <code>server forget-all</code> change and unlink linked servers</td></tr>
         <tr><td><code>ssh [name] [command]</code></td><td><code>shell</code></td><td>Interactive shell on a server, or one command with its output (servers that enable the shell; see below)</td></tr>
     </tbody>
 </table>
@@ -811,7 +811,7 @@ CliAdminBuilder().set_branding(&#123;"name": "RateBell", "icon_url": "/favicon.s
     validate the values at startup and publish them as <code>branding</code> in <code>/qcli/admin/theme.json</code>.
     The terminal's copyright line, documentation link and <code>version</code> stay Qodalis CLI's
     (<code>version</code> adds the name). In a web app, the same name and icon go in the CLI's
-    <a href="/docs/configuration"><code>branding</code></a> option.
+    <a routerLink="/docs/configuration"><code>branding</code></a> option.
 </p>
 
 <h3 id="admin-terminal-user">The terminal's user</h3>

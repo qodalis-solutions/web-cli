@@ -85,7 +85,7 @@ function collectRoutes({ DOCS_NAV, PLUGINS }, en, defaultDescription) {
     const seen = new Set(['/']);
     const add = (item) => {
         // Group headers without a page of their own (e.g. /docs/core-concepts) only hold children
-        const isPage = !(item.children?.length && item.path === '/docs/core-concepts');
+        const isPage = !item.group;
         if (isPage && !seen.has(item.path)) {
             seen.add(item.path);
             const plugin = plugins.get(item.path);
