@@ -83,13 +83,19 @@ export function statusLabel(
         : context.writer.wrapInColor('○ unreachable', CliForegroundColor.Red);
 }
 
-/** Ping a server and measure the round trip. */
+/** Ping a server and measure the round trip (a state the answer contradicts is checked again). */
 export async function pingServer(
     connection: CliServerConnection,
 ): Promise<{ reachable: boolean; ms: number }> {
     const started = performance.now();
     const reachable = await connection.ping();
-    return { reachable, ms: Math.round(performance.now() - started) };
+    const ms = Math.round(performance.now() - started);
+    // The state disagrees with the answer: let the health monitor connect or
+    // drop the server now, so the status shown is the current one
+    if (reachable !== connection.connected && !connection.needsSignIn) {
+        await connection.checkHealth?.('server status');
+    }
+    return { reachable, ms };
 }
 
 /** Whether `name` is the default server, as a short marker. */

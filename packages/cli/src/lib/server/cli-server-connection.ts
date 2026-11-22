@@ -13,8 +13,12 @@ import {
     appendQueryParams,
     resolveHeaders,
 } from '@qodalis/cli-core';
+import {
+    CliServerHealthMonitor,
+    CliServerHealthTarget,
+} from './cli-server-health-monitor';
 
-export class CliServerConnection {
+export class CliServerConnection implements CliServerHealthTarget {
     private _connected = false;
     private _commands: CliServerCommandDescriptor[] = [];
     private _capabilities: CliServerCapabilities | null = null;
@@ -28,10 +32,8 @@ export class CliServerConnection {
     private static readonly WS_MAX_RECONNECT_ATTEMPTS = 5;
     private static readonly WS_MAX_RECONNECT_DELAY_MS = 30000;
 
-    private _healthCheckTimer: ReturnType<typeof setTimeout> | null = null;
-    private _healthCheckAttempts = 0;
-    private static readonly HEALTH_CHECK_INTERVAL_MS = 30000;
-    private static readonly HEALTH_CHECK_MAX_ATTEMPTS = 5;
+    /** Watches the server (`server-health:<name>`): see {@link CliServerHealthMonitor} */
+    private readonly _health: CliServerHealthMonitor;
 
     onDisconnect?: () => void;
     onReconnected?: () => void;
@@ -41,7 +43,9 @@ export class CliServerConnection {
         private readonly _backgroundServices?: ICliBackgroundServiceRegistry,
         private readonly _logger?: ICliLogger,
         private readonly _authService?: ICliServerAuthService,
-    ) {}
+    ) {
+        this._health = new CliServerHealthMonitor(this, _backgroundServices, _logger);
+    }
 
     get config(): CliServerConfig {
         return this._config;
@@ -126,7 +130,7 @@ export class CliServerConnection {
             this._connected = true;
             this._capabilities = await this.fetchCapabilities();
             this.connectEventSocket();
-            this.stopHealthCheck();
+            this._health.notifyConnected();
         } catch (e) {
             // The manager warns once with the URL; this is the detail
             this._logger?.debug(`Failed to connect to server "${this._config.name}": ${e}`);
@@ -151,49 +155,45 @@ export class CliServerConnection {
         this.closeEventSocket();
     }
 
+    /**
+     * Start the health monitor (`server-health:<name>` background service):
+     * it polls the server while connected and reconnects it, with a capped
+     * backoff and no attempt limit, while it is down. No-op while it runs.
+     */
     startHealthCheck(): void {
-        this.stopHealthCheck();
-        this._healthCheckAttempts = 0;
-        this.scheduleNextHealthCheck();
+        this._health.start();
     }
 
-    private scheduleNextHealthCheck(): void {
-        this._healthCheckTimer = setTimeout(async () => {
-            this._healthCheckAttempts++;
-
-            if (this._healthCheckAttempts > CliServerConnection.HEALTH_CHECK_MAX_ATTEMPTS) {
-                this._logger?.debug(
-                    `Health check gave up for "${this._config.name}" after ${CliServerConnection.HEALTH_CHECK_MAX_ATTEMPTS} attempts.`,
-                );
-                this.stopHealthCheck();
-                return;
-            }
-
-            this._logger?.debug(
-                `Health check ${this._healthCheckAttempts}/${CliServerConnection.HEALTH_CHECK_MAX_ATTEMPTS} for "${this._config.name}"...`,
-            );
-
-            const alive = await this.ping();
-            if (alive) {
-                this._logger?.debug(`Server "${this._config.name}" is back online, reconnecting...`);
-                this.stopHealthCheck();
-                await this.connect();
-                if (this._connected) {
-                    this.onReconnected?.();
-                }
-            } else {
-                // Schedule next check only after current one completes
-                this.scheduleNextHealthCheck();
-            }
-        }, CliServerConnection.HEALTH_CHECK_INTERVAL_MS);
-    }
-
+    /** Stop the health monitor. */
     stopHealthCheck(): void {
-        if (this._healthCheckTimer) {
-            clearTimeout(this._healthCheckTimer);
-            this._healthCheckTimer = null;
+        this._health.stop();
+    }
+
+    /** Whether the health monitor runs. */
+    get healthCheckRunning(): boolean {
+        return this._health.running;
+    }
+
+    /**
+     * Check the server now instead of at the next tick (e.g. after a command
+     * failed with a network error). Resolves once the check is done.
+     */
+    checkHealth(reason = 'requested'): Promise<void> {
+        return this._health.checkNow(reason);
+    }
+
+    /** @internal Health monitor: the server answered again, connect it. True once connected. */
+    async reconnectFromMonitor(): Promise<boolean> {
+        await this.connect();
+        if (this._connected) {
+            this.onReconnected?.();
         }
-        this._healthCheckAttempts = 0;
+        return this._connected;
+    }
+
+    /** @internal Health monitor: the server stopped answering. */
+    markDisconnected(): void {
+        if (this._connected) this.handleServerDisconnect();
     }
 
     async fetchCommands(): Promise<CliServerCommandDescriptor[]> {
@@ -224,11 +224,13 @@ export class CliServerConnection {
 
     async execute(command: CliProcessCommand): Promise<CliServerResponse> {
         const url = `${this._basePath}/execute`;
-        const response = await this.httpFetchWithRetry(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(command),
-        });
+        const response = await this.withHealthCheckOnNetworkError(() =>
+            this.httpFetchWithRetry(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(command),
+            }),
+        );
 
         if (!response.ok) {
             return {
@@ -251,11 +253,13 @@ export class CliServerConnection {
         onOutput: (output: CliServerOutput) => void,
     ): Promise<{ exitCode: number }> {
         const url = `${this._basePath}/execute/stream`;
-        const response = await this.httpFetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(command),
-        });
+        const response = await this.withHealthCheckOnNetworkError(() =>
+            this.httpFetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(command),
+            }),
+        );
 
         if (!response.ok) {
             throw new Error(`Server error: ${response.status} ${response.statusText}`);
@@ -330,6 +334,23 @@ export class CliServerConnection {
             return response.ok;
         } catch (e) {
             this._logger?.debug(`Ping failed for "${this._config.name}": ${e}`);
+            return false;
+        }
+    }
+
+    /**
+     * Whether the server is up, for the health monitor: it answers
+     * `/api/qcli/versions` without a network error, a timeout or a 5xx
+     * (a 401/403 means up, signed out).
+     */
+    async probe(): Promise<boolean> {
+        try {
+            const response = await this.httpFetch(
+                `${this.normalizeUrl(this._config.url)}/api/qcli/versions`,
+            );
+            return response.status < 500;
+        } catch (e) {
+            this._logger?.debug(`Health check failed for "${this._config.name}": ${e}`);
             return false;
         }
     }
@@ -533,10 +554,14 @@ export class CliServerConnection {
 
     private scheduleWsReconnect(): void {
         if (this._wsReconnectAttempts >= CliServerConnection.WS_MAX_RECONNECT_ATTEMPTS) {
+            // Commands go over HTTP: the health monitor decides whether the
+            // server is down (a proxy may block only the socket)
             this._logger?.warn(
-                `WebSocket reconnect failed after ${this._wsReconnectAttempts} attempts for "${this._config.name}". Marking disconnected.`,
+                `WebSocket reconnect failed after ${this._wsReconnectAttempts} attempts for "${this._config.name}". Server events are unavailable until it reconnects.`,
             );
-            this.handleServerDisconnect();
+            this._wsReconnectAttempts = 0;
+            this.closeEventSocket();
+            void this._health.checkNow('the event socket could not reconnect');
             return;
         }
 
@@ -568,6 +593,24 @@ export class CliServerConnection {
             );
             this.connectEventSocket();
         }, delay);
+    }
+
+    /**
+     * A request that fails without a response (server down, network gone,
+     * timeout) checks the server's health at once, so a dead server is marked
+     * disconnected without waiting for the next poll.
+     */
+    private async withHealthCheckOnNetworkError(
+        request: () => Promise<Response>,
+    ): Promise<Response> {
+        try {
+            return await request();
+        } catch (e) {
+            if (this._connected) {
+                void this._health.checkNow('a command failed with a network error');
+            }
+            throw e;
+        }
     }
 
     private async httpFetchWithRetry(

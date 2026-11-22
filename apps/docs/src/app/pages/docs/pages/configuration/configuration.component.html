@@ -215,6 +215,35 @@
         token without the users plugin.
       </td>
     </tr>
+    <tr>
+      <td><code>healthCheck</code></td>
+      <td>
+        <code
+          >false | &#123; interval?, retryDelay?, maxRetryDelay? &#125;</code
+        >
+      </td>
+      <td>
+        <code
+          >&#123; interval: 30000, retryDelay: 5000, maxRetryDelay: 60000
+          &#125;</code
+        >
+      </td>
+      <td>
+        How the <code>server-health:&lt;name&gt;</code> background service
+        (see <code>services</code>) watches the server: it pings
+        <code>/api/qcli/versions</code> every <code>interval</code> ms while
+        connected and marks the server disconnected when it stops answering;
+        while it is down (also when it was down at startup) it retries without
+        a limit, from <code>retryDelay</code> doubling up to
+        <code>maxRetryDelay</code>, and brings its commands back once it
+        answers. It also checks at once when a command fails with a network
+        error, when the browser comes back online and when the tab becomes
+        visible, and polls nothing while the tab is hidden or offline.
+        <code>interval: 0</code> polls only while the server is down;
+        <code>false</code> turns polling off (checks then run only on those
+        events). A server that needs a sign-in is left to the sign-in.
+      </td>
+    </tr>
   </tbody>
 </table>
 <div class="code-block">

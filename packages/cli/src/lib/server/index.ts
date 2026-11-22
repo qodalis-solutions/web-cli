@@ -1,4 +1,5 @@
 export * from './cli-server-connection';
+export * from './cli-server-health-monitor';
 export * from './cli-server-proxy-processor';
 export * from './cli-server-multi-proxy-processor';
 export * from './cli-server-manager';
