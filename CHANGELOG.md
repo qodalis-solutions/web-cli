@@ -11,6 +11,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - A command that fails with a network error, the browser going `online` and the tab becoming visible trigger a check right away; nothing is polled while the tab is hidden or offline. A server that needs a sign-in is left to the auth layer.
 - Configurable per server with `CliServerConfig.healthCheck` (`interval`, `retryDelay`, `maxRetryDelay`; `false` turns polling off). `server status` re-checks a server whose answer contradicts its state.
 
+### Long commands on phones
+
+- A command longer than the terminal row no longer repeats itself over several lines while typing, editing in the middle, moving the cursor, recalling history or completing with Tab. The prompt keeps track of the row the cursor is on, moves across rows with row-aware cursor movement, and Enter and Ctrl+C put what follows below the whole command.
+- Below 60 columns a long user name is shortened in the prompt (`nicolae***@gmail.com`) and the home directory is written `~`, so the prompt leaves room for the command; wider terminals show both in full.
+
 ### pkg knows the app's own modules
 
 - A module the host registers in code (`modules`, `resolveCliModuleProvider`, `engine.registerModule()`) counts as installed: `pkg add` fails with an error instead of loading a second copy, `pkg ls` lists it and `pkg browse` marks it `✅ built in`. It is never offered as an update (`pkg check` and `pkg update` skip it; it updates with the app), and `pkg remove` refuses to remove it. A copy installed with `pkg` before the module was built in is no longer loaded at startup, and removing it keeps the app's commands ([#229](https://github.com/qodalis-solutions/web-cli/issues/229)).

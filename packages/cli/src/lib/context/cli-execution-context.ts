@@ -466,6 +466,8 @@ export class CliExecutionContext
      * command, and shows a new prompt afterwards.
      */
     async submitCommand(command: string): Promise<void> {
+        // The cursor leaves the prompt; the next prompt sets its row again
+        this.lineRenderer.endLine();
         if (command.trim()) {
             await this.commandHistory.addCommand(command);
             const startedAt = Date.now();
@@ -542,8 +544,14 @@ export class CliExecutionContext
             startRow--;
         }
 
-        const linesToClear = buf.cursorY - startRow + 1;
-        this.refreshCurrentLine(linesToClear * this.terminal.cols);
+        // xterm reflowed the rows: the cursor's row comes from the buffer.
+        // The prompt may change too (a long user name is shortened on a
+        // narrow terminal).
+        this.lineRenderer.setCursorRow(buf.cursorY - startRow);
+        this.promptLength = this.lineRenderer.getPromptLength(
+            this.getPromptOptions(),
+        );
+        this.refreshCurrentLine();
     }
 
     public isRawModeActive(): boolean {
@@ -643,6 +651,7 @@ export class CliExecutionContext
             anonymousName,
             contextProcessor: this.contextProcessor?.command,
             pathProvider: this.promptPathProvider,
+            homeDir: this.userSession?.user?.homeDir,
         };
     }
 
