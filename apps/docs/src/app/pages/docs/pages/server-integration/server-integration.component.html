@@ -60,7 +60,8 @@
 <p>
     Users can link their own Node, .NET or Python server from the terminal, in any app (the Android app, the docs site,
     a page that configures no servers). <code>server add</code> asks for the URL, checks that it is a Qodalis CLI server,
-    then offers three ways to sign in:
+    then offers three ways to sign in. For a step-by-step guide from the phone, from starting a server to troubleshooting,
+    see <a routerLink="/docs/android-app/connect-your-server">Connect your own server from the app</a>.
 </p>
 <ul>
     <li><strong>Approve in the browser</strong> (recommended): the terminal prints a link to the server's page
@@ -95,7 +96,11 @@ server forget-all                         # unlink every linked server</code></p
 <ul>
     <li>The server is not running, or the URL (port, <code>http</code> / <code>https</code>) is wrong.</li>
     <li>The server does not allow the page's origin. Browsers block the requests (CORS): add the origin to the server's
-        allowed origins (<code>allowedOrigins</code> / <code>QCLI_ALLOWED_ORIGINS</code>).</li>
+        allowed origins (<code>allowedOrigins</code> / <code>QCLI_ALLOWED_ORIGINS</code>); the origins of the Android app, the PWA
+        and this site are in <a routerLink="/docs/android-app/connect-your-server" fragment="allow-origins">the app guide</a>.</li>
+    <li>An <code>http</code> server from an <code>https</code> page (the Android app, the PWA, this site): the requests are
+        blocked as mixed content. Serve the server over https
+        (<a routerLink="/docs/android-app/connect-your-server" fragment="reachable">options</a>).</li>
     <li>A VPN, proxy or firewall blocks the connection.</li>
 </ul>
 <p>Fix it, then run <code>server reconnect</code>, or wait for the automatic retry.</p>

@@ -529,5 +529,16 @@
   "docs.playground.built-with-type-errors": "正在运行，有 {{count}} 个类型错误：将鼠标悬停在带下划线的代码上",
   "docs.playground.press-run": "点击运行开始",
   "docs.playground.hint": "导出一个命令处理器（类或带 processCommand 的对象）或模块，并从 @qodalis/cli-core 导入。代码保存在此浏览器中；复制链接即可分享。",
-  "docs.playground.open": "Playground"
+  "docs.playground.open": "Playground",
+  "sidebar.android-app": "Android 应用",
+  "sidebar.connect-your-server": "连接自己的服务器",
+  "docs.android-app.title": "Qodalis CLI Android 版",
+  "docs.android-app.intro": "手机上的 Qodalis CLI 终端：命令、文件、编辑器和游戏都在设备上离线运行，关联后还能使用你自己的服务器。",
+  "docs.android-app.open-pwa": "在浏览器中打开 (PWA)",
+  "docs.android-app.see-also": "另请参阅：",
+  "docs.connect-your-server.title": "从应用连接自己的服务器",
+  "docs.connect-your-server.intro": "将你运行的 Node、.NET 或 Python 服务器关联到 Android 应用，在手机上使用它的命令和 Shell。",
+  "home.hero.android-app": "也有 Android 版：Google Play 上的 Qodalis CLI",
+  "docs.getting-started.android-app-hint": "只想在手机上使用终端？可以使用应用：",
+  "docs.getting-started.next-android": "Android 应用 — 手机上的终端和你自己的服务器"
 }

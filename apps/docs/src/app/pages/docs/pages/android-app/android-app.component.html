@@ -1,0 +1,96 @@
+<h1>{{ 'docs.android-app.title' | translate }}</h1>
+<p>{{ 'docs.android-app.intro' | translate }}</p>
+
+<div class="app-store-links">
+    <a href="https://play.google.com/store/apps/details?id=com.qodalis.cli" target="_blank" rel="noopener">
+        <img
+            class="play-badge"
+            src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+            alt="Get it on Google Play"
+        />
+    </a>
+    <a class="btn btn-ghost" href="https://qodalis-solutions.github.io/pwa-cli/" target="_blank" rel="noopener">
+        {{ 'docs.android-app.open-pwa' | translate }}
+    </a>
+</div>
+
+<div class="app-screenshots">
+    <img src="assets/android-app/tools.png" alt="Developer tools in the app: string, base64, hash, guid, password and QR commands" loading="lazy" />
+    <img src="assets/android-app/files.png" alt="The nano editor in the app, with its touch keys" loading="lazy" />
+</div>
+
+<h2 id="what-it-is">What it is</h2>
+<p>
+    The app is the Qodalis CLI terminal packaged for phones: the same engine and plugins as this site, in a full-screen
+    terminal with keys made for touch screens. It needs Android 7.0 or later, has no online account and needs no server.
+    The same app runs in the browser as a PWA at
+    <a href="https://qodalis-solutions.github.io/pwa-cli/" target="_blank" rel="noopener">qodalis-solutions.github.io/pwa-cli</a>.
+    Its source is <a href="https://github.com/qodalis-solutions/pwa-cli" target="_blank" rel="noopener">qodalis-solutions/pwa-cli</a>.
+</p>
+
+<h2 id="on-the-device">What runs on the device</h2>
+<p>Everything below works offline, without a server. Files, settings and installed packages are kept on the phone.</p>
+<table>
+    <thead>
+        <tr><th>Area</th><th>Commands</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Developer tools</td><td><code>guid</code>, <code>hash</code>, <code>base64</code>, <code>jwt</code>, <code>regex</code>, <code>json</code>, string tools, password generator</td></tr>
+        <tr><td>Files</td><td><code>ls</code>, <code>cd</code>, <code>cat</code>, <code>grep</code>, <code>sed</code>, <code>awk</code>, <code>find</code>, <code>tree</code>, pipes, aliases and the <code>nano</code> editor</td></tr>
+        <tr><td>Network</td><td><code>curl</code>, <code>wget</code>, <code>speed-test</code>: the only commands that go online, and only to the URLs you give</td></tr>
+        <tr><td>Productivity</td><td>To-do list, stopwatch, QR codes, Markdown, charts</td></tr>
+        <tr><td>Users</td><td>The first launch creates your account on the phone; <code>whoami</code>, <code>adduser</code>, <code>su</code>, <code>passwd</code>, <code>login</code> / <code>logout</code></td></tr>
+        <tr><td>Phone</td><td><code>device</code>, <code>battery</code>, <code>network</code>, <code>share</code>, <code>vibrate</code>, <code>toast</code></td></tr>
+        <tr><td>Games</td><td>2048, Tetris, Snake, Minesweeper, Sudoku, Wordle, played by touch or keyboard</td></tr>
+    </tbody>
+</table>
+<ul>
+    <li><strong>More plugins</strong>: <code>pkg browse</code> lists the published plugins, <code>pkg add &lt;name&gt;</code> installs one
+        (for example <code>pkg add csv</code>) and keeps it across launches, <code>pkg remove &lt;name&gt;</code> drops it.</li>
+    <li><strong>Themes</strong>: <code>theme list</code> lists them, <code>theme apply dracula</code> switches.</li>
+    <li><strong>Languages</strong>: English and 10 translations. The app starts in the phone's language when one matches;
+        <code>configure set system.language de</code> changes it.</li>
+    <li><strong>Your own server</strong>: <code>server add</code> links a Node, .NET or Python server, so its commands run from the
+        phone. See <a routerLink="/docs/android-app/connect-your-server">{{ 'sidebar.connect-your-server' | translate }}</a>.</li>
+</ul>
+
+<h2 id="phone-features">Made for phones</h2>
+<table>
+    <thead>
+        <tr><th>Feature</th><th>Details</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Extra keys</td><td>Two rows above the keyboard: Esc, Tab, Ctrl, Ctrl+C, Home, End, Del, the arrows and <code>/ | -</code>, sent as real key presses. Ctrl is sticky: tap it, then a key (Ctrl+A, E, U, K, W, L); double-tap locks it. Held arrows and Del repeat</td></tr>
+        <tr><td>Command keys</td><td>Full-screen commands show their own keys instead: <code>nano</code> gets Save, Exit, Find, Cut, Paste and PgUp/PgDn; games get big buttons and swipes, and the on-screen keyboard closes</td></tr>
+        <tr><td>Keyboard</td><td>On Android the keyboard sends plain key presses (Capacitor's <code>captureInput</code>), so there are no suggestions or autocorrect: commands arrive exactly as typed, and the keyboard does not learn what you type, passwords included. The terminal stays above the keyboard</td></tr>
+        <tr><td>Back button</td><td>Closes the keyboard; in a game or a prompt it presses Escape; otherwise (or pressed twice) it sends the app to the background and keeps the session</td></tr>
+        <tr><td>Edge to edge</td><td>The terminal fills the screen around notches and the navigation bar; the system bars follow the terminal's colors</td></tr>
+        <tr><td>Introduction</td><td>The first launch shows a few slides of what the app does; <code>intro</code> shows them again</td></tr>
+    </tbody>
+</table>
+
+<h2 id="privacy">Privacy</h2>
+<p>
+    Accounts, files and history stay on the phone. The Android app sends anonymous usage statistics (<code>analytics off</code>
+    stops them) and shows ads. The policy is at <a href="https://cli.qodalis.com/privacy/">cli.qodalis.com/privacy</a>, and the
+    <code>privacy</code> command shows it in the app.
+</p>
+
+<h2 id="pwa">iPhone, iPad and desktop</h2>
+<p>
+    Apps for iOS and desktop are planned. Until then, install the PWA: it is the same terminal, works offline once loaded
+    and keeps its files in the browser.
+</p>
+<ul>
+    <li><strong>iPhone and iPad</strong>: open <a href="https://qodalis-solutions.github.io/pwa-cli/" target="_blank" rel="noopener">the PWA</a>
+        in Safari, tap Share, then <em>Add to Home Screen</em>.</li>
+    <li><strong>Desktop</strong> (Chrome, Edge): open the PWA and click the install icon in the address bar, or <em>Install</em> in the browser menu.</li>
+    <li><strong>Android without Google Play</strong>: open the PWA in Chrome and choose <em>Add to Home screen</em> / <em>Install app</em>.</li>
+</ul>
+
+<p>
+    {{ 'docs.android-app.see-also' | translate }}
+    <a routerLink="/docs/android-app/connect-your-server">{{ 'sidebar.connect-your-server' | translate }}</a>,
+    <a routerLink="/docs/server-integration">{{ 'sidebar.server-integration' | translate }}</a>,
+    <a routerLink="/docs/built-in-commands">{{ 'sidebar.built-in-commands' | translate }}</a>
+</p>
