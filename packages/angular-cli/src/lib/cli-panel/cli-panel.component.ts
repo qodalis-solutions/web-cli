@@ -11,6 +11,7 @@ import {
     OnInit,
     Output,
     QueryList,
+    ViewChild,
     ViewChildren,
 } from '@angular/core';
 import {
@@ -34,10 +35,12 @@ import {
     HIDE_ICON,
     HIDE_TAB_TERMINAL_ICON,
     MAXIMIZE_ICON,
+    MORE_ICON,
     PANEL_LABELS,
     panelBranding,
     PanelContextMenuAction,
     PanelContextMenuItem,
+    PanelHeaderMenuItem,
     PanelPositionOption,
     PanelStatusDropdown,
     PanelStatusIndicator,
@@ -49,6 +52,9 @@ import {
     contextMenuStyle,
     glowLineClass,
     handleRenameKey,
+    headerMenuItemClass,
+    headerMenuItems,
+    headerMenuStyle,
     hideTabChevronIcon,
     paneClass,
     panelTabClass,
@@ -61,6 +67,7 @@ import {
     positionIcon,
     positionOptions,
     runContextMenuAction,
+    runHeaderMenuAction,
     statusIndicators,
 } from '@qodalis/cli';
 import { Subscription } from 'rxjs';
@@ -79,6 +86,8 @@ interface PanelView {
     maximizeIcon: SvgIcon;
     contextMenuItems: PanelContextMenuItem[];
     contextMenuStyle: Record<string, string>;
+    headerMenuItems: PanelHeaderMenuItem[];
+    headerMenuStyle: Record<string, string>;
     glowLineClass: string;
     panesContainerClass: string;
     statusDropdown: PanelStatusDropdown | null;
@@ -137,6 +146,12 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
     @ViewChildren('renameInput') renameInputs!: QueryList<ElementRef<HTMLInputElement>>;
 
+    /** The panel element, whose width switches the header to the ⋮ menu. */
+    @ViewChild('panelWrapper')
+    set panelWrapper(ref: ElementRef<HTMLElement> | undefined) {
+        this.zone.runOutsideAngular(() => this.controller?.observePanelWidth(ref?.nativeElement ?? null));
+    }
+
     readonly labels = PANEL_LABELS;
 
     /** The panel's title and icon: the host's branding, or "CLI" with the terminal glyph. */
@@ -148,6 +163,7 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     readonly hideTabIcon = HIDE_TAB_TERMINAL_ICON;
     readonly hideIcon = HIDE_ICON;
     readonly closeIcon = CLOSE_ICON;
+    readonly moreIcon = MORE_ICON;
 
     controller!: CliPanelController;
     s!: CliPanelSnapshot;
@@ -270,6 +286,20 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         else this.controller.toggleServersDropdown(anchor);
     }
 
+    /** The ⋮ button of the compact header. */
+    onHeaderMenuToggle(event: MouseEvent): void {
+        event.stopPropagation();
+        this.controller.toggleHeaderMenu(event.currentTarget as HTMLElement);
+    }
+
+    onHeaderMenuAction(item: PanelHeaderMenuItem): void {
+        runHeaderMenuAction(this.controller, item);
+    }
+
+    headerMenuItemClass(item: PanelHeaderMenuItem): string {
+        return headerMenuItemClass(item);
+    }
+
     onContextMenuAction(action: PanelContextMenuAction): void {
         runContextMenuAction(this.controller, action);
     }
@@ -388,6 +418,8 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             maximizeIcon: s.maximized ? RESTORE_ICON : MAXIMIZE_ICON,
             contextMenuItems: contextMenuItems(s),
             contextMenuStyle: contextMenuStyle(s),
+            headerMenuItems: s.headerMenuOpen ? headerMenuItems(s) : [],
+            headerMenuStyle: headerMenuStyle(s),
             glowLineClass: glowLineClass(s),
             panesContainerClass: panesContainerClass(s),
             statusDropdown: openStatusDropdown(s),

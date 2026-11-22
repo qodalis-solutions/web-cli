@@ -1,4 +1,4 @@
-import { defineComponent, computed, inject, watch, PropType, h, onBeforeUnmount, onMounted, shallowRef, VNode, Fragment } from 'vue';
+import { defineComponent, computed, inject, watch, PropType, h, onBeforeUnmount, shallowRef, VNode, Fragment } from 'vue';
 import { ICliModule, CliPanelConfig, CliPanelPosition, ICliPanelRef } from '@qodalis/cli-core';
 import {
     CliEngine,
@@ -10,6 +10,7 @@ import {
     HIDE_ICON,
     HIDE_TAB_TERMINAL_ICON,
     MAXIMIZE_ICON,
+    MORE_ICON,
     PANEL_LABELS,
     panelBranding,
     RESTORE_ICON,
@@ -20,6 +21,9 @@ import {
     contextMenuStyle,
     glowLineClass,
     handleRenameKey,
+    headerMenuItemClass,
+    headerMenuItems,
+    headerMenuStyle,
     hideTabChevronIcon,
     joinClasses,
     mergeCliOptions,
@@ -36,6 +40,7 @@ import {
     positionOptions,
     resolveCliHostConfig,
     runContextMenuAction,
+    runHeaderMenuAction,
     statusIndicators,
     svgAttrs,
     PanelStatusIndicator,
@@ -129,8 +134,17 @@ export const CliPanel = defineComponent({
         watch(controlled, (values) => controller.setControlled(values));
         watch(mergedOptions, (options) => controller.setOptions(options));
 
+        // The wrapper element: theme sync, and its width switches the header to the ⋮ menu.
+        // It is replaced when the panel is closed and opened again.
         const root = shallowRef<HTMLElement | null>(null);
-        onMounted(() => controller.setRootElement(root.value));
+        watch(
+            root,
+            (element) => {
+                controller.setRootElement(element);
+                controller.observePanelWidth(element);
+            },
+            { flush: 'post' },
+        );
         onBeforeUnmount(() => {
             unsubscribe();
             controller.destroy();
@@ -181,7 +195,7 @@ export const CliPanel = defineComponent({
                         h('span', { class: 'cli-panel-title-icon' }, [
                             branding.value.iconUrl ? h('img', { src: branding.value.iconUrl, alt: '', class: 'cli-panel-brand-icon' }) : icon(TERMINAL_ICON),
                         ]),
-                        branding.value.title,
+                        h('span', { class: 'cli-panel-title-text' }, branding.value.title),
                     ]),
                     s.showStatusIndicators
                         ? h(
@@ -240,7 +254,7 @@ export const CliPanel = defineComponent({
                             ),
                         ),
                     ),
-                    h('div', { class: 'cli-panel-action-buttons' }, [
+                    s.compactHeader ? renderCompactActions(s) : h('div', { class: 'cli-panel-action-buttons' }, [
                         h('div', { class: 'cli-panel-btn-position-wrapper', onClick: stop }, [
                             h(
                                 'button',
@@ -278,15 +292,7 @@ export const CliPanel = defineComponent({
                             },
                             [icon(s.maximized ? RESTORE_ICON : MAXIMIZE_ICON)],
                         ),
-                        h(
-                            'button',
-                            {
-                                class: 'cli-panel-btn',
-                                title: s.collapsed ? PANEL_LABELS.expand : PANEL_LABELS.collapse,
-                                onClick: () => controller.toggle(),
-                            },
-                            [icon(collapseChevronIcon(s.position, s.collapsed))],
-                        ),
+                        renderCollapseButton(s),
                         s.closable
                             ? h('button', { class: 'cli-panel-btn cli-panel-btn-close', title: PANEL_LABELS.close, onClick: () => controller.close() }, [icon(CLOSE_ICON)])
                             : null,
@@ -295,6 +301,60 @@ export const CliPanel = defineComponent({
                 h('div', { class: glowLineClass(s) }),
             ]);
         };
+
+        const renderCollapseButton = (s: CliPanelSnapshot) => {
+            const label = s.collapsed ? PANEL_LABELS.expand : PANEL_LABELS.collapse;
+            return h(
+                'button',
+                { type: 'button', class: 'cli-panel-btn', title: label, 'aria-label': label, onClick: () => controller.toggle() },
+                [icon(collapseChevronIcon(s.position, s.collapsed))],
+            );
+        };
+
+        /** Narrow panel: collapse/expand and a menu with the other actions. */
+        const renderCompactActions = (s: CliPanelSnapshot) =>
+            h('div', { class: 'cli-panel-action-buttons' }, [
+                h(
+                    'button',
+                    {
+                        type: 'button',
+                        class: 'cli-panel-btn cli-panel-btn-more',
+                        title: PANEL_LABELS.moreActions,
+                        'aria-label': PANEL_LABELS.moreActions,
+                        'aria-haspopup': 'menu',
+                        'aria-expanded': String(s.headerMenuOpen),
+                        onClick: (e: MouseEvent) => {
+                            e.stopPropagation();
+                            controller.toggleHeaderMenu(e.currentTarget as HTMLElement);
+                        },
+                    },
+                    [icon(MORE_ICON)],
+                ),
+                renderCollapseButton(s),
+            ]);
+
+        const renderHeaderMenu = (s: CliPanelSnapshot) =>
+            h(
+                'div',
+                { class: 'cli-panel-header-menu', role: 'menu', 'aria-label': PANEL_LABELS.moreActions, style: headerMenuStyle(s), onClick: stop },
+                headerMenuItems(s).flatMap((item) => [
+                    item.separatorBefore ? h('div', { class: 'cli-panel-header-menu-separator', role: 'separator' }) : null,
+                    item.heading ? h('div', { class: 'cli-panel-header-menu-heading', role: 'presentation' }, item.heading) : null,
+                    h(
+                        'button',
+                        {
+                            key: item.key,
+                            type: 'button',
+                            class: headerMenuItemClass(item),
+                            role: item.role,
+                            'aria-checked': item.role === 'menuitemradio' ? String(!!item.checked) : undefined,
+                            disabled: item.disabled,
+                            onClick: () => runHeaderMenuAction(controller, item),
+                        },
+                        [icon(item.icon), item.label],
+                    ),
+                ]),
+            );
 
         const renderTabs = (s: CliPanelSnapshot) =>
             h('div', { class: 'cli-panel-tabs' }, [
@@ -527,6 +587,7 @@ export const CliPanel = defineComponent({
                     ],
                 ),
                 s.contextMenu.visible ? renderContextMenu(s) : null,
+                s.headerMenuOpen ? renderHeaderMenu(s) : null,
                 renderStatusDropdown(s),
             ]);
         };

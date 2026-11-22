@@ -1,6 +1,7 @@
 import { CliOptions, CliPanelPosition } from '@qodalis/cli-core';
 import { CliPanelController } from './cli-panel-controller';
 import { PANEL_POSITIONS } from './panel-geometry';
+import { CLOSE_ICON, HIDE_ICON, MAXIMIZE_ICON, RESTORE_ICON, SvgIcon, positionIcon } from './panel-icons';
 import { CliPanelSnapshot, CliPanelTab, CliPanelTabStatus } from './panel-types';
 
 /**
@@ -12,6 +13,8 @@ export const PANEL_LABELS = {
     title: 'CLI',
     showCli: 'Show CLI',
     movePanel: 'Move panel',
+    moreActions: 'More actions',
+    position: 'Position',
     hide: 'Hide',
     maximize: 'Maximize',
     restore: 'Restore',
@@ -57,7 +60,14 @@ export function joinClasses(...classes: Array<string | false | null | undefined>
 }
 
 export function panelWrapperClass(s: CliPanelSnapshot, extra?: string): string {
-    return joinClasses('cli-panel-wrapper', s.collapsed && 'collapsed', s.maximized && 'maximized', s.panelResizing && 'resizing', extra);
+    return joinClasses(
+        'cli-panel-wrapper',
+        s.collapsed && 'collapsed',
+        s.maximized && 'maximized',
+        s.panelResizing && 'resizing',
+        s.compactHeader && 'compact-header',
+        extra,
+    );
 }
 
 export function panelTabClass(s: CliPanelSnapshot, tab: CliPanelTab): string {
@@ -214,6 +224,101 @@ export function positionOptions(s: CliPanelSnapshot): PanelPositionOption[] {
         label: capitalize(position),
         className: positionDropdownItemClass(s, position),
     }));
+}
+
+/* ─── Header ⋮ menu (compact header) ────────────────────────── */
+
+export type PanelHeaderMenuAction = 'maximize' | 'position' | 'hide' | 'close';
+
+export interface PanelHeaderMenuItem {
+    /** Unique key (the action, or `position-<position>`). */
+    key: string;
+    action: PanelHeaderMenuAction;
+    label: string;
+    icon: SvgIcon;
+    /** `menuitemradio` for the position options, `menuitem` otherwise. */
+    role: 'menuitem' | 'menuitemradio';
+    /** The position an option moves the panel to. */
+    position?: CliPanelPosition;
+    /** The panel's current position (`aria-checked`). */
+    checked?: boolean;
+    disabled: boolean;
+    destructive: boolean;
+    /** Draw a separator above this item. */
+    separatorBefore: boolean;
+    /** Group label shown above this item (the position options). */
+    heading?: string;
+}
+
+/** Fixed position and theme variables of the ⋮ menu, rendered outside the panel. */
+export function headerMenuStyle(s: CliPanelSnapshot): Record<string, string> {
+    return { ...s.themeStyles, ...s.headerMenuStyle };
+}
+
+/**
+ * Items of the ⋮ menu that replaces the action buttons on a narrow panel:
+ * maximize/restore, the four positions, hide (when hideable) and close (when
+ * closable). Collapse/expand stays a button next to the ⋮.
+ */
+export function headerMenuItems(s: CliPanelSnapshot): PanelHeaderMenuItem[] {
+    const items: PanelHeaderMenuItem[] = [
+        {
+            key: 'maximize',
+            action: 'maximize',
+            label: s.maximized ? PANEL_LABELS.restore : PANEL_LABELS.maximize,
+            icon: s.maximized ? RESTORE_ICON : MAXIMIZE_ICON,
+            role: 'menuitem',
+            disabled: s.collapsed,
+            destructive: false,
+            separatorBefore: false,
+        },
+    ];
+    PANEL_POSITIONS.forEach((position, i) => {
+        items.push({
+            key: `position-${position}`,
+            action: 'position',
+            label: capitalize(position),
+            icon: positionIcon(position, 18),
+            role: 'menuitemradio',
+            position,
+            checked: s.position === position,
+            disabled: false,
+            destructive: false,
+            separatorBefore: i === 0,
+            heading: i === 0 ? PANEL_LABELS.position : undefined,
+        });
+    });
+    if (s.hideable) {
+        items.push({ key: 'hide', action: 'hide', label: PANEL_LABELS.hide, icon: HIDE_ICON, role: 'menuitem', disabled: false, destructive: false, separatorBefore: true });
+    }
+    if (s.closable) {
+        items.push({ key: 'close', action: 'close', label: PANEL_LABELS.close, icon: CLOSE_ICON, role: 'menuitem', disabled: false, destructive: true, separatorBefore: !s.hideable });
+    }
+    return items;
+}
+
+export function headerMenuItemClass(item: PanelHeaderMenuItem): string {
+    return joinClasses('cli-panel-header-menu-item', item.checked && 'active', item.destructive && 'destructive');
+}
+
+/** Run a ⋮ menu item; the menu closes. */
+export function runHeaderMenuAction(controller: CliPanelController, item: PanelHeaderMenuItem): void {
+    // The ⋮ button stays after maximize and position changes: keyboard users continue from it
+    controller.closeHeaderMenu(item.action === 'maximize' || item.action === 'position');
+    switch (item.action) {
+        case 'maximize':
+            controller.toggleMaximize();
+            break;
+        case 'position':
+            if (item.position) controller.setPosition(item.position);
+            break;
+        case 'hide':
+            controller.hide();
+            break;
+        case 'close':
+            controller.close();
+            break;
+    }
 }
 
 /* ─── Context menu ──────────────────────────────────────────── */

@@ -3,6 +3,13 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Panel header fits on phones
+
+- A panel narrower than 480px (measured on the panel, so a narrow docked side panel counts too) shows only collapse/expand and a **⋮** button in its header. The ⋮ menu holds Maximize/Restore, the four positions, Hide (when hideable) and Close (when closable), with 44px touch targets. It renders outside the panel with the theme's colors, closes on an outside tap, Escape or a selection, and is keyboard reachable (`aria-haspopup="menu"`, `role="menu"`/`menuitem`, arrow keys). Same behaviour in the Angular, React and Vue panels (`CliPanelController.observePanelWidth`, `headerMenuItems`).
+- A long panel title (`options.branding.name`) truncates with an ellipsis instead of pushing the buttons out; the tab bar scrolls sideways and never wraps.
+
 ## v2.6.0
 
 ### Pick a token's permissions from the server's list

@@ -60,6 +60,13 @@ export const HIDE_ICON: SvgIcon = {
     shapes: [line('5', '18', '19', '18'), polyline('9 14 12 17 15 14')],
 };
 
+/** Three vertical dots (⋮): zero-length lines drawn as round caps. */
+export const MORE_ICON: SvgIcon = {
+    size: 20,
+    strokeWidth: 3,
+    shapes: [line('12', '5', '12', '5'), line('12', '12', '12', '12'), line('12', '19', '12', '19')],
+};
+
 const CHEVRON_UP = '18 15 12 9 6 15';
 const CHEVRON_DOWN = '6 9 12 15 18 9';
 const CHEVRON_LEFT = '15 6 9 12 15 18';
