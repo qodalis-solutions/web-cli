@@ -3,6 +3,16 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Docs: connecting your own server from the app
+
+- The guide is written for any server, wherever it runs: an https address from the hosting platform, a reverse proxy or a VPN service, instead of commands for specific tools. It has phone screenshots of every step (`server add`, the approval page, the linked server in use) and explains the `myserver:` prefix for commands the app also has.
+
+### Fixes
+
+- Select, multi-select, inline-select and file prompts no longer print a colon after a question mark (`How do you want to link it?`, not `…it?:`).
+
 ## v2.7.0
 
 ### Server connections are monitored

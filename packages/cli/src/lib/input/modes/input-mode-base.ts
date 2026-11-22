@@ -91,15 +91,24 @@ export abstract class InputModeBase<T> implements IInputMode {
         this.host.terminal.write(buf);
     }
 
-    /**
-     * Cut a line to the terminal width. Lines redrawn in place must stay on one row:
-     * a wrapped line takes two rows and breaks the cursor-up arithmetic of the redraw.
-     */
     /** A prompt label without a trailing colon, for modes that append their own ": ". */
     protected label(promptText: string): string {
         return promptText.replace(/:\s*$/, '');
     }
 
+    /**
+     * The prompt followed by a colon, unless it ends with a question mark:
+     * `Groups:`, but `How do you want to link it?`.
+     */
+    protected heading(promptText: string): string {
+        const label = this.label(promptText);
+        return /\?\s*$/.test(label) ? label : `${label}:`;
+    }
+
+    /**
+     * Cut a line to the terminal width. Lines redrawn in place must stay on one row:
+     * a wrapped line takes two rows and breaks the cursor-up arithmetic of the redraw.
+     */
     protected fitLine(text: string): string {
         return truncateToWidth(text, Math.max(1, this.host.getTerminalCols() - 1));
     }
