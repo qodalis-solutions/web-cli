@@ -1,17 +1,19 @@
 <h1>{{ 'docs.connect-your-server.title' | translate }}</h1>
 <p>{{ 'docs.connect-your-server.intro' | translate }}</p>
 <p>
-    It takes six steps: run a server, give it an <code>https</code> address the phone can reach, allow the app's origin,
-    link it with <code>server add</code>, then use it. The same steps work for the PWA and for this site's terminal. For the
-    options apps and servers offer developers, see <a routerLink="/docs/server-integration" fragment="connect-your-own-server">{{ 'sidebar.server-integration' | translate }}</a>.
+    You need three things: a Qodalis CLI server, an <code>https</code> address for it, and the app's origin allowed on the
+    server. Then <code>server add</code> links it in a minute. The same steps work for the PWA and for this site's terminal.
+    For the options apps and servers offer developers, see
+    <a routerLink="/docs/server-integration" fragment="connect-your-own-server">{{ 'sidebar.server-integration' | translate }}</a>.
 </p>
 
 <!-- 1 -->
 <h2 id="run-a-server">1. Run a server</h2>
 <p>
-    Pick the Node, .NET or Python server. Use one with the <strong>users</strong> and <strong>admin</strong> plugins: they add
-    sign-in, API tokens and the approval page that <em>Approve in the browser</em> needs (servers 1.0.0-beta.25 or later).
-    The demo servers and their Docker images include both.
+    Use the Node, .NET or Python server, wherever it can run: a hosting provider or cloud, a virtual server, your company's
+    servers, or a machine at home. Include the <strong>users</strong> and <strong>admin</strong> plugins: they add sign-in,
+    API tokens and the approval page that <em>Approve in the browser</em> needs (servers 1.0.0-beta.25 or later). The Docker
+    images include both:
 </p>
 <div class="code-block">
     <span class="code-label">Docker (pick one)</span>
@@ -20,66 +22,56 @@ docker run -p 8046:8046 ghcr.io/qodalis-solutions/cli-server-dotnet
 docker run -p 8048:8048 ghcr.io/qodalis-solutions/cli-server-python</code></pre>
 </div>
 <p>
-    From the workspace with all three servers, <code>./docker-run-all.sh</code> starts them together on ports 8046, 8047 and
-    8048. The demos sign in as <code>root</code>, with the password <code>admin</code> (Node, Python) or <code>root</code> (.NET):
-    change it (<code>passwd</code> in the dashboard's <em>Terminal</em>) before the server is reachable from the internet.
-    Check it from the computer: <code>http://localhost:8047/qcli/admin</code> opens the dashboard.
+    The images start with a <code>root</code> user whose password is <code>admin</code> (Node, Python) or <code>root</code>
+    (.NET). Change it before the server is reachable from other devices: sign in to the dashboard at
+    <code>/qcli/admin</code> and run <code>passwd</code> in its <em>Terminal</em>.
 </p>
 <p>
-    To build your own server instead, follow the <a routerLink="/docs/server-integration/node">Node</a>,
+    To add the CLI to your own application instead, follow the <a routerLink="/docs/server-integration/node">Node</a>,
     <a routerLink="/docs/server-integration/dotnet">.NET</a> or <a routerLink="/docs/server-integration/python">Python</a> guide
     and add the users and admin plugins.
 </p>
 
 <!-- 2 -->
-<h2 id="reachable">2. Make it reachable from the phone</h2>
+<h2 id="reachable">2. Give it an https address</h2>
 <p>
-    <code>localhost</code> on the phone is the phone itself. The phone needs an address that leads to your computer, and in
-    practice that address must be <strong>https</strong> with a certificate the phone trusts.
+    The phone reaches the server through an address such as <code>https://cli.example.com</code>. It must use
+    <strong>https</strong> with a certificate the phone trusts, and the phone must be able to reach it from its network.
 </p>
-<h3 id="why-https">Why plain http on the LAN does not work</h3>
+<h3 id="why-https">Why plain http does not work</h3>
 <p>
     <code>server add</code> accepts <code>http://192.168.1.20:8047</code> for private addresses after a confirmation, but the page
     the terminal runs in decides whether the requests leave:
 </p>
 <table>
     <thead>
-        <tr><th>Terminal</th><th>Page origin</th><th><code>http://192.168.x.x</code> server</th></tr>
+        <tr><th>Terminal</th><th>Page origin</th><th><code>http://</code> server</th></tr>
     </thead>
     <tbody>
-        <tr><td>Android app</td><td><code>https://localhost</code></td><td>Blocked: the WebView forbids mixed content (<code>allowMixedContent: false</code>) and Android blocks clear-text traffic by default</td></tr>
+        <tr><td>Android app</td><td><code>https://localhost</code></td><td>Blocked: the WebView forbids mixed content and Android blocks clear-text traffic</td></tr>
         <tr><td>PWA</td><td><code>https://qodalis-solutions.github.io</code></td><td>Blocked: browsers block http requests and <code>ws://</code> sockets from https pages (mixed content)</td></tr>
         <tr><td>This docs site</td><td><code>https://cli.qodalis.com</code></td><td>Blocked, for the same reason</td></tr>
-        <tr><td>A page served over http (a local dev server)</td><td><code>http://…</code></td><td>Works</td></tr>
     </tbody>
 </table>
 <p>
     When it is blocked, <code>server add</code> warns <em>This page is served over https: the browser may block requests to an
     http server</em> and then fails with <em>Cannot reach … Failed to fetch</em>. Self-signed certificates do not help either:
-    the WebView and the browsers reject them. Use one of these instead; each gives an https address with a valid certificate
-    and passes WebSockets through, so the shell works too:
+    the WebView and the browsers reject them. (<code>localhost</code> does not help: on the phone it is the phone itself.)
 </p>
+<h3 id="https-options">Ways to get one</h3>
+<p>Serve the CLI server like any web application:</p>
 <ul>
-    <li>
-        <strong>Tailscale</strong> (private, nothing exposed to the internet): install Tailscale on the computer and on the phone,
-        enable HTTPS certificates for your tailnet, then run
-        <div class="code-block"><pre><code>tailscale serve --bg 8047</code></pre></div>
-        The server is at <code>https://&lt;computer&gt;.&lt;tailnet&gt;.ts.net</code> for your devices only.
-    </li>
-    <li>
-        <strong>Cloudflare Tunnel</strong> (public): a quick tunnel needs no account and prints an
-        <code>https://….trycloudflare.com</code> address:
-        <div class="code-block"><pre><code>cloudflared tunnel --url http://localhost:8047</code></pre></div>
-        Anyone with the address reaches the server's sign-in, so change the default password first. A named tunnel gives a
-        fixed address on your own domain.
-    </li>
-    <li>
-        <strong>A reverse proxy</strong> on a machine with a domain name, for example Caddy, which gets the certificate itself:
-        <div class="code-block"><span class="code-label">Caddyfile</span><pre><code>cli.example.com &#123;
-    reverse_proxy localhost:8047
-&#125;</code></pre></div>
-    </li>
+    <li><strong>Your hosting platform's https</strong>: most hosting and container platforms give an app an https address and a
+        certificate.</li>
+    <li><strong>A reverse proxy or load balancer</strong> in front of the server, on a domain name, with a certificate from a
+        public authority (Let's Encrypt or your provider's).</li>
+    <li><strong>A VPN or tunnel service</strong> that gives devices an https address, for a server that should not be on the
+        public internet. The phone then needs the same VPN.</li>
 </ul>
+<p>
+    Whichever you use, it must pass <strong>WebSocket</strong> upgrades through to the server: the shell and live events use
+    them. To check, open <code>https://cli.example.com/api/qcli/versions</code> in the phone's browser: it answers with JSON.
+</p>
 
 <!-- 3 -->
 <h2 id="allow-origins">3. Allow the app's origin</h2>
@@ -100,12 +92,12 @@ docker run -p 8048:8048 ghcr.io/qodalis-solutions/cli-server-python</code></pre>
 <p>The server's own dashboard (<code>/qcli/admin</code>) is same-origin and needs no entry.</p>
 <table>
     <thead>
-        <tr><th>Server</th><th>In code</th><th>Demo and Docker image</th></tr>
+        <tr><th>Server</th><th>In code</th><th>Docker image</th></tr>
     </thead>
     <tbody>
-        <tr><td>Node</td><td><code>createCliServer(&#123; allowedOrigins: [...] &#125;)</code></td><td><code>QCLI_ALLOWED_ORIGINS</code>, comma-separated; replaces the demo's list</td></tr>
-        <tr><td>.NET</td><td><code>cli.SetAllowedOrigins(...)</code> in <code>AddCli</code></td><td><code>QCLI_ALLOWED_ORIGINS</code>, comma-separated; added to the demo's list</td></tr>
-        <tr><td>Python</td><td><code>CliServerOptions(allowed_origins=[...])</code></td><td>No variable: edit <code>allowed_origins</code> in <code>demo/main.py</code></td></tr>
+        <tr><td>Node</td><td><code>createCliServer(&#123; allowedOrigins: [...] &#125;)</code></td><td><code>QCLI_ALLOWED_ORIGINS</code>, comma-separated; replaces the image's list</td></tr>
+        <tr><td>.NET</td><td><code>cli.SetAllowedOrigins(...)</code> in <code>AddCli</code></td><td><code>QCLI_ALLOWED_ORIGINS</code>, comma-separated; added to the image's list</td></tr>
+        <tr><td>Python</td><td><code>CliServerOptions(allowed_origins=[...])</code></td><td>No variable: set <code>allowed_origins</code> in code</td></tr>
     </tbody>
 </table>
 <div class="code-block">
@@ -124,76 +116,102 @@ docker run -p 8048:8048 ghcr.io/qodalis-solutions/cli-server-python</code></pre>
 
 <!-- 4 -->
 <h2 id="link">4. Link it from the app</h2>
-<p>In the app, run <code>server add</code> with the server's https address:</p>
-<div class="code-block">
-    <span class="code-label">Terminal</span>
-    <pre><code>$ server add https://my-pc.tailnet-1234.ts.net
-Qodalis CLI server 1.0.0-beta.29 https://my-pc.tailnet-1234.ts.net (linux · shell · streaming · sign-in required)
-How do you want to link it?
-  Open the server in the browser and approve (recommended)
-  Paste an API token
-  Sign in with user and password</code></pre>
+<p>In the app, run <code>server add</code> with the server's address. The terminal checks the server and asks how to sign in:</p>
+<div class="guide-shots">
+    <figure class="guide-shot">
+        <img src="assets/android-app/connect-add.png" alt="server add https://cli.example.com: the server is found and the terminal asks how to link it" loading="lazy" />
+        <figcaption><code>server add https://cli.example.com</code></figcaption>
+    </figure>
 </div>
-<p>Pick one of the three ways to sign in:</p>
+<p>Pick one of the three ways to sign in.</p>
+
+<h3 id="approve-in-browser">Approve in the browser (recommended)</h3>
+<p>
+    The terminal shows a code and opens the server's approval page in the browser. Sign in there with your account on the
+    server, check that the page shows the same code, and approve. You can also open the link on another device, such as your
+    computer. The terminal receives an API token for your account and connects; your password never goes through the app.
+</p>
+<div class="guide-shots">
+    <figure class="guide-shot">
+        <img src="assets/android-app/connect-approve-code.png" alt="The terminal prints the approval link and the code NUAE-HPYG, then waits" loading="lazy" />
+        <figcaption>The terminal waits for the approval</figcaption>
+    </figure>
+    <figure class="guide-shot">
+        <img src="assets/android-app/connect-approve-page.png" alt="The server's approval page shows the same code, the device, the page and the address, with Approve and Deny" loading="lazy" />
+        <figcaption>The approval page shows the same code</figcaption>
+    </figure>
+</div>
+<p>After the approval, name the server (one is suggested from the address) and it is linked:</p>
+<div class="guide-shots">
+    <figure class="guide-shot">
+        <img src="assets/android-app/connect-linked.png" alt="Name for this server: myserver. Linked myserver: 11 commands as root" loading="lazy" />
+        <figcaption>Linked as <code>myserver</code></figcaption>
+    </figure>
+</div>
+
+<h3 id="other-sign-in">Paste an API token, or user and password</h3>
 <ul>
-    <li>
-        <strong>Approve in the browser</strong> (recommended): the terminal prints a link to the server's approval page with a
-        code such as <code>ABCD-2345</code> and opens it. Sign in there (the phone's browser, or open the same link on your
-        computer), check that the page shows the same code and approve. The terminal receives an API token for your account
-        and connects. Your password never goes through the app.
-    </li>
     <li>
         <strong>Paste an API token</strong>: create one on the server, on the dashboard's <em>Tokens</em> page or with
         <code>token create phone</code> in a terminal signed in to the server, copy the <code>qcli_pat_…</code> value and paste it
         at the hidden prompt. Use this when the phone cannot open the approval page.
     </li>
     <li>
-        <strong>User and password</strong>: the terminal signs in once, creates an API token named after the device and signs the
-        session out. Only the token is kept.
+        <strong>User and password</strong>: the terminal signs in once, creates an API token named after the device and signs
+        the session out. Only the token is kept.
     </li>
 </ul>
 <p>
-    Then choose a name for the server (one is suggested from the address). <code>server add home https://…</code> gives the
-    name up front, <code>--default</code> makes it the default server, and <code>--no-browser</code> skips the browser option.
+    <code>server add myserver https://…</code> gives the name up front, <code>--default</code> makes it the default server, and
+    <code>--no-browser</code> skips the browser option.
 </p>
 
 <!-- 5 -->
 <h2 id="use">5. Use it</h2>
+<div class="guide-shots">
+    <figure class="guide-shot">
+        <img src="assets/android-app/connect-use.png" alt="myserver:echo runs on the server; server status myserver shows it connected, with its version, commands, OS and shell" loading="lazy" />
+        <figcaption>A server command and <code>server status myserver</code></figcaption>
+    </figure>
+</div>
 <ul>
+    <li>The server's commands run like local ones. When the app has a command with the same name (<code>echo</code>,
+        <code>hash</code>, ...), the local one runs: put the server's name in front, <code>myserver:echo hello</code>.
+        <code>server commands myserver</code> lists them.</li>
     <li><code>server list</code> shows the server as <code>linked</code>, with its status and number of commands.</li>
-    <li>Its commands run like local ones: <code>echo hello</code>, or <code>home:echo hello</code> to pick the server when a local
-        command has the same name. <code>server commands home</code> lists them.</li>
-    <li><code>ssh home</code> opens a shell on the server, when the server enables the shell and your user has the
-        <code>shell:execute</code> permission (root does in the demos).</li>
+    <li><code>ssh myserver</code> opens a shell on the server, when the server enables the shell and your user has the
+        <code>shell:execute</code> permission.</li>
     <li>The server's files, data explorer, jobs and logs are on its dashboard (<code>/qcli/admin</code>), which also works in the
         phone's browser.</li>
 </ul>
 <p>
-    The link survives restarts. The token is kept on the phone encrypted with a Web Crypto key that cannot be read out
-    (IndexedDB), is never shown again and never written to the command history. Apps that provide
-    <code>ICliSecretStore_TOKEN</code> keep it in the platform's secure storage (Android Keystore) instead.
+    The link survives restarts, and the terminal keeps checking the server: when it goes down and comes back, its commands
+    return on their own. The token is kept on the phone encrypted with a key that cannot be read out, is never shown again and
+    never written to the command history.
 </p>
 
 <!-- 6 -->
 <h2 id="troubleshooting">6. Troubleshooting</h2>
-<p>Start with <code>server status home</code>: it pings the server and lists what to check when it is unreachable.</p>
+<p>Start with <code>server status myserver</code>: it checks the server and lists what to look at when it is unreachable.</p>
 <table>
     <thead>
         <tr><th>Symptom</th><th>Cause and fix</th></tr>
     </thead>
     <tbody>
-        <tr><td><em>Cannot reach … Failed to fetch</em></td><td>Wrong address or port, the server is not running, or the address is <code>http</code> (see step 2). Open the same address in the phone's browser: <code>/api/qcli/versions</code> should answer with JSON</td></tr>
-        <tr><td>Works in the phone's browser, not in the app</td><td>The app's origin is not allowed (step 3). The browser's address bar sends no Origin, so CORS only shows up in the app</td></tr>
-        <tr><td>Times out on the LAN or through Tailscale</td><td>Phone and computer are on different Wi‑Fi networks (a guest network isolates devices), Tailscale is off on one of them, or the computer's firewall blocks the port</td></tr>
-        <tr><td><em>is not a Qodalis CLI server</em></td><td>The address leads to something else, for example the proxy's default page or a different port</td></tr>
+        <tr><td><em>Cannot reach … Failed to fetch</em></td><td>Wrong address, the server is not running, or the address is <code>http</code> (see step 2). Open <code>/api/qcli/versions</code> at the same address in the phone's browser: it should answer with JSON</td></tr>
+        <tr><td>Works in the phone's browser, not in the app</td><td>The app's origin is not allowed (step 3). The browser's address bar sends no origin, so this only shows up in the app</td></tr>
+        <tr><td>Times out</td><td>The phone cannot reach the server from its network: a firewall blocks the port, or the server is on a private network or VPN the phone is not connected to</td></tr>
+        <tr><td>Commands work, the shell does not</td><td>The proxy in front of the server does not pass WebSocket upgrades through (step 2), or your user lacks <code>shell:execute</code></td></tr>
+        <tr><td><em>is not a Qodalis CLI server</em></td><td>The address leads to something else, for example the proxy's default page</td></tr>
         <tr><td><em>cannot link through the browser</em></td><td>The server has no users plugin or is older than 1.0.0-beta.25: use <code>server add --no-browser</code></td></tr>
-        <tr><td><em>Server 'home' rejected its token</em></td><td>The token expired or was revoked (<code>token revoke</code>): paste a new one with <code>server edit home --token</code>, or run <code>server add</code> again</td></tr>
-        <tr><td>The server moved</td><td><code>server edit home --url https://new-address</code></td></tr>
+        <tr><td><em>Server 'myserver' rejected its token</em></td><td>The token expired or was revoked (<code>token revoke</code>): paste a new one with <code>server edit myserver --token</code>, or run <code>server add</code> again</td></tr>
+        <tr><td>The server moved</td><td><code>server edit myserver --url https://new-address</code></td></tr>
     </tbody>
 </table>
 <p>
-    <code>server remove home</code> unlinks a server and deletes its token from the phone; the token stays valid on the server
-    until it expires, so revoke it there with <code>token revoke</code>. <code>server forget-all</code> unlinks every linked server.
+    <code>server remove myserver</code> unlinks a server and deletes its token from the phone; the token stays valid on the
+    server until it expires, so revoke it there with <code>token revoke</code>. <code>server forget-all</code> unlinks every
+    linked server.
 </p>
 
 <p>
