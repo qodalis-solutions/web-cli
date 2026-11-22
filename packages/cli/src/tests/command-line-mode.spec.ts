@@ -1,6 +1,9 @@
 import { ICliKeyValueStore } from '@qodalis/cli-core';
 import { CliCommandHistory } from '../lib/services/cli-command-history';
-import { CommandLineMode, CommandLineModeHost } from '../lib/input/command-line-mode';
+import {
+    CommandLineMode,
+    CommandLineModeHost,
+} from '../lib/input/command-line-mode';
 import { CliLineBuffer } from '../lib/input/cli-line-buffer';
 
 // ---------------------------------------------------------------------------
@@ -43,7 +46,10 @@ function createMockHost(
                     cursorY: 0,
                     baseY: 0,
                     getLine: () =>
-                        ({ isWrapped: false, translateToString: () => '' }) as any,
+                        ({
+                            isWrapped: false,
+                            translateToString: () => '',
+                        }) as any,
                 },
             },
         } as any,
@@ -51,6 +57,10 @@ function createMockHost(
         lineRenderer: {
             clearLine: () => {},
             refreshLine: () => {},
+            renderGhostText: () => {},
+            endLine: () => {},
+            setCursorRow: () => {},
+            getPromptLength: () => 2,
             getPromptString: () => '$ ',
         } as any,
         completionEngine: {
@@ -322,7 +332,9 @@ describe('CommandLineMode type-ahead', () => {
         const running = mode.handleInput('\r');
         await type('oops');
 
-        mode.handleKeyEvent(new KeyboardEvent('keydown', { code: 'KeyC', ctrlKey: true }));
+        mode.handleKeyEvent(
+            new KeyboardEvent('keydown', { code: 'KeyC', ctrlKey: true }),
+        );
         finishCommand();
         await running;
 

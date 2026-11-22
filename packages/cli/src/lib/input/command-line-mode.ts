@@ -1,5 +1,10 @@
 import { IInputMode } from './input-mode';
-import { applyEditingKey, CliKillRing, CliLineBuffer, isEscapeSequence } from './cli-line-buffer';
+import {
+    applyEditingKey,
+    CliKillRing,
+    CliLineBuffer,
+    isEscapeSequence,
+} from './cli-line-buffer';
 import {
     CliTerminalLineRenderer,
     PromptOptions,
@@ -82,7 +87,7 @@ export class CommandLineMode implements IInputMode {
         this.host.completionEngine.resetState();
 
         if (data === '\r') {
-            this.clearGhostText();
+            this.leaveLine();
             this.host.terminal.write('\r\n');
 
             const text = buffer.text;
@@ -109,17 +114,20 @@ export class CommandLineMode implements IInputMode {
         } else if (data === '\u001B[D') {
             if (buffer.cursorPosition > 0) {
                 buffer.moveCursorLeft();
-                this.host.terminal.write(data);
+                this.refreshLine();
             }
         } else if (data === '\u001B[C') {
-            if (this.ghostText && buffer.cursorPosition === buffer.text.length) {
+            if (
+                this.ghostText &&
+                buffer.cursorPosition === buffer.text.length
+            ) {
                 // Accept ghost text suggestion
                 buffer.insert(this.ghostText);
                 this.ghostText = '';
                 this.refreshLine();
             } else if (buffer.cursorPosition < buffer.text.length) {
                 buffer.moveCursorRight();
-                this.host.terminal.write(data);
+                this.refreshLine();
             }
         } else if (data === '\u007F') {
             this.handleBackspace();
@@ -153,6 +161,7 @@ export class CommandLineMode implements IInputMode {
             // Ctrl+C also discards anything typed ahead of the prompt
             this.typeAhead = [];
             this.host.abort();
+            if (!this.isExecutingCommand) this.leaveLine();
             this.host.terminal.writeln('Ctrl+C');
 
             // Clear context processor if one is active (e.g. --context mode)
@@ -209,6 +218,22 @@ export class CommandLineMode implements IInputMode {
         return true;
     }
 
+    /**
+     * Put the cursor after the whole command before leaving the prompt, so
+     * what follows starts below a wrapped command, not on its cursor's row.
+     * The redraw also removes ghost text.
+     */
+    private leaveLine(): void {
+        const buffer = this.host.lineBuffer;
+        const hadGhostText = !!this.ghostText;
+        this.clearGhostText();
+        if (hadGhostText || buffer.cursorPosition < buffer.text.length) {
+            buffer.cursorPosition = buffer.text.length;
+            this.refreshLine();
+        }
+        this.host.lineRenderer.endLine();
+    }
+
     private handleInputText(text: string): void {
         text = text.replace(/[\r\n\t]+/g, '');
         this.clearGhostText();
@@ -254,7 +279,8 @@ export class CommandLineMode implements IInputMode {
     private applyEditingKey(data: string): boolean {
         const buffer = this.host.lineBuffer;
         const before = buffer.text;
-        const previousContentLength = this.host.getPromptLength() + before.length;
+        const previousContentLength =
+            this.host.getPromptLength() + before.length;
         if (!applyEditingKey(buffer, data, this.killRing)) return false;
         this.clearGhostText();
         // Moving the cursor keeps the history position; editing starts over
@@ -324,20 +350,14 @@ export class CommandLineMode implements IInputMode {
                     this.host.terminal.write(line + '\r\n');
                 }
 
-                const promptStr = this.host.lineRenderer.getPromptString(
-                    this.host.getPromptOptions(),
-                );
-                this.host.terminal.write(promptStr);
+                // A new prompt below the candidates
                 this.host.setPromptLength(
-                    this.host.terminal.buffer.active.cursorX,
+                    this.host.lineRenderer.getPromptLength(
+                        this.host.getPromptOptions(),
+                    ),
                 );
-                this.host.terminal.write(buffer.text);
-
-                const charsAfterCursor =
-                    buffer.text.length - buffer.cursorPosition;
-                if (charsAfterCursor > 0) {
-                    this.host.terminal.write(`\x1b[${charsAfterCursor}D`);
-                }
+                this.host.lineRenderer.setCursorRow(0);
+                this.refreshLine();
                 break;
             }
         }
@@ -359,7 +379,11 @@ export class CommandLineMode implements IInputMode {
         const buffer = this.host.lineBuffer;
 
         // If the buffer has user-typed text and we haven't started a prefix search, begin one.
-        if (buffer.text && !this.bufferSetByHistory && this.historySearchPrefix === null) {
+        if (
+            buffer.text &&
+            !this.bufferSetByHistory &&
+            this.historySearchPrefix === null
+        ) {
             this.historySearchPrefix = buffer.text;
             this.historyIndex = this.host.commandHistory.getLastIndex();
         }
@@ -455,9 +479,9 @@ export class CommandLineMode implements IInputMode {
         const buffer = this.host.lineBuffer;
         // Only show ghost text when cursor is at end of input
         if (buffer.cursorPosition < buffer.text.length) return;
-        const ghost = this.ghostText;
-        this.host.terminal.write(
-            `\x1b[2m\x1b[38;5;240m${ghost}\x1b[0m\x1b[${ghost.length}D`,
+        this.host.lineRenderer.renderGhostText(
+            this.ghostText,
+            this.host.getPromptLength() + buffer.text.length,
         );
     }
 
