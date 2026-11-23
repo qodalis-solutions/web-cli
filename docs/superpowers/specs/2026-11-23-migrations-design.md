@@ -35,13 +35,43 @@ knex/Alembic adapters can follow).
 
 ## History tables (per database)
 
+Named by the plugin table rule below (cli-server-dotnet#99): prefix `Cli` + PascalCase, PascalCase columns.
+
 ```
-qcli_migrations       (source, id, name, checksum, applied_at, duration_ms, applied_by, run_id)   PK (source, id)
-qcli_migration_runs   (id, direction, target, trigger, actor, started_at, finished_at, status, error, applied_json)
+CliMigrations      (Source, Id, Name, Checksum, AppliedAt, DurationMs, AppliedBy, RunId)   PK (Source, Id)
+CliMigrationRuns   (Id, Direction, Target, Trigger, Actor, StartedAt, FinishedAt, Status, Error, Applied)
 ```
 
-EF Core sources write `qcli_migration_runs` only (history stays in `__EFMigrationsHistory`, so `dotnet ef` keeps
-working). Table prefix configurable (`qcli_` default) for hosts that already use these names.
+EF Core sources write `CliMigrationRuns` only (history stays in `__EFMigrationsHistory`, so `dotnet ef` keeps
+working).
+
+## Plugin table names (cli-server-dotnet#99, cli-server-node#77, cli-server-python#83)
+
+Every table a CLI plugin creates is `Cli` + PascalCase with PascalCase columns, the same in the three servers:
+
+| Today | New |
+|---|---|
+| `files` (filesystem-efcore, filesystem-sqlite) | `CliFiles` |
+| `job_executions`, `job_log_entries`, `job_states` | `CliJobExecutions`, `CliJobLogEntries`, `CliJobStates` |
+| `api_tokens` | `CliApiTokens` |
+| `audit_entries` | `CliAuditEntries` |
+| `qcli_api_usage` | `CliApiUsage` |
+| `qcli_users`, `qcli_groups`, `qcli_credentials`, `qcli_sessions`, `qcli_api_tokens`, `qcli_audit` (Node users-postgres) | `CliUsers`, `CliGroups`, `CliCredentials`, `CliSessions`, `CliApiTokens`, `CliAuditEntries` |
+
+Indexes and keys follow (`IX_CliJobExecutions_JobId`, `PK_CliFiles`). Columns: `created_at` → `CreatedAt`, etc.
+
+Options, one shared helper per server (abstractions: `CliTableNames`): a global prefix (`tablePrefix` /
+`table_prefix` / `TablePrefix`, default `Cli`, `''` = plain PascalCase), per-table overrides on each store's options
+(`tables: { files: 'MyFiles' }` / `Tables.Files`), a schema where the database has them (`schema` / `Schema`), and
+`legacyTableNames` to keep the old names. Names are validated (identifier characters) and always quoted.
+
+Upgrade keeps the data: each store's first migration renames the old table and its columns when the old table
+exists and the new one does not (`ALTER TABLE … RENAME TO` / `RENAME COLUMN`, SQLite ≥ 3.25, `sp_rename` on SQL
+Server), then creates what is missing. Without the migrations plugin the stores run the same steps themselves at
+startup (as `EnsureCreated`/`UpgradeSchema` do today). Tested from the previous beta's schema on every dialect.
+
+Hosts that map the stores' tables in their own EF model (RateBell) add an EF migration with the renames, or set
+`legacyTableNames`.
 
 ## Runner
 
@@ -106,7 +136,7 @@ Plugins register their schema as a `code` source on a database the host names (o
 
 | Store | Today | With the plugin |
 |---|---|---|
-| Node `users-postgres` | own `runPostgresMigrations` (`qcli_schema_migrations`) | `code` source `qcli-users`; existing history rows imported once |
+| Node `users-postgres` (not released yet) | own `runPostgresMigrations` (`qcli_schema_migrations`) | `code` source `qcli-users` with the new names from the start (no rename: never released) |
 | Node/Python/.NET `filesystem-sqlite` | `CREATE TABLE IF NOT EXISTS` | `code` source `qcli-filesystem` (migration 1 = today's schema, `IF NOT EXISTS`) |
 | .NET `users-efcore`, `jobs-efcore`, `audit-efcore`, `filesystem-efcore`, `public-api-efcore` | `EnsureCreated` + `UpgradeSchema` | each ships a `code` source with SQL per dialect (`IF NOT EXISTS`, so tables a host already made are adopted); `EnsureCreated` stays as the default when the migrations plugin is not used |
 
@@ -135,6 +165,7 @@ dashboard extension (group `data`, permission `migrations:read`). Its own texts 
 
 ## Order
 
+0. The table-name helper and the renames in the stores (#99), in the three servers.
 1. Node plugin (runner, dialects, sql-folder, code, API, commands, MCP) + tests on the four dialects (containers).
 2. .NET plugin + `Migrations.EfCore` adapter; Python plugin. Same tests.
 3. The stores move onto it (table above).
