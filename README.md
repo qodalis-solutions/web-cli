@@ -171,7 +171,7 @@ All options are listed in [Configuration](https://cli.qodalis.com/docs/configura
 
 - **Shell-like command line**: `&&`, `||`, `;`, pipes, `>`/`>>` redirects, aliases, history search, tab completion and readline shortcuts (`hotkeys` lists them).
 - **Built-in commands**: `help`, `theme`, `pkg`, `history`, `alias`, `json`, `diff`, `random`, `timestamp`, `convert`, `color`, `clipboard`, `ps`/`kill`, `htop` and more. See [Built-in commands](https://cli.qodalis.com/docs/built-in-commands).
-- **Runtime packages**: `pkg add guid` installs a plugin from npm (unpkg or jsdelivr) without rebuilding the app.
+- **Runtime packages**: `pkg add guid` installs a plugin from npm (unpkg or jsdelivr) without rebuilding the app. `pkg browse`, `pkg search` and `pkg info` read the [plugin marketplace](https://plugins.qodalis.com), which checks that a version fits the CLI and pins the hash of its bundle; [publish yours](https://cli.qodalis.com/docs/publishing-plugins) with `pkg publish`.
 - **Interactive input**: line, password, confirm, select, multi-select and number prompts, progress bars, spinners and a full-screen mode for editors and games.
 - **Themes**: 29 built-in themes, custom colors and fonts.
 - **Panel**: a dockable panel with tabs, split panes, resizing and maximize.

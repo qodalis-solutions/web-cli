@@ -62,12 +62,15 @@ Implement the command in `src/lib/processors/`, build, then `npm publish --acces
 pkg add @qodalis/cli-weather
 ```
 
+The generated `package.json` carries the keyword `qodalis-cli-plugin` and a `qodalis` block (`apiVersion`, `category`), which the [plugin marketplace](https://plugins.qodalis.com) reads. After `npm publish`, run `pkg publish <package name>` in any Qodalis CLI terminal to queue it for review: see [Publishing a plugin](https://cli.qodalis.com/docs/publishing-plugins).
+
 The standalone project includes an `AGENTS.md` for AI coding agents. With [`@qodalis/mcp-cli`](https://www.npmjs.com/package/@qodalis/mcp-cli), Claude Code can run this scaffolder itself and look up the plugin API.
 
 ## Documentation
 
 - [Creating a plugin](https://cli.qodalis.com/docs/create-plugin) and [Core concepts](https://cli.qodalis.com/docs/core-concepts)
 - [AI plugin development](https://cli.qodalis.com/docs/ai-plugin-development)
+- [Publishing a plugin](https://cli.qodalis.com/docs/publishing-plugins)
 
 ## License
 

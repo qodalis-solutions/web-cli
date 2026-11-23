@@ -23,6 +23,20 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Keys are sent as real key presses to the active terminal, which keeps the focus, so the on-screen keyboard stays open. `sendKeys: false` (`CliPanelConfig`) hides it.
 - The helpers are exported from `@qodalis/cli` for hosts with their own key bars: `sendTerminalKey`, `sendTerminalKeyPress`, `CLI_SEND_KEYS`, `CLI_KEY_PRESSES`, `ctrlLetterPress`, `CliStickyModifier`, `applyStickyCtrlToKeyboard`.
 
+### Plugin marketplace (#230)
+
+- `pkg` reads a plugin marketplace: a catalog that indexes plugins from npm, records which CLI API each version needs and the SHA-384 of its bundle, and lists a plugin after review. The built-in source `qodalis` (kind `marketplace`) is `https://plugins.qodalis.com/`; plugins stay on npm and bundles still come from unpkg/jsdelivr.
+- `pkg browse` and the new **`pkg search <text>`** list marketplace plugins with the newest version that fits this CLI, the category, a ✓ for verified publishers and, for a plugin that does not fit, why (`needs CLI API 3`). Narrow terminals get one block per plugin, as before.
+- New **`pkg info <name>`**: description, publisher, category, versions and which fit, links, and paired server packages with their install commands. Falls back to the npm registry document.
+- **`pkg add`** resolves short names through the marketplace, so third-party plugins install by short name (an ambiguous name lists the candidates; `pkg add guid` still means `@qodalis/cli-guid`). It installs the newest listed version that fits, refuses a version that needs another CLI, or was flagged or unlisted, naming the newest one that works, and checks the downloaded bundle against the recorded hash before running it: a mismatch installs nothing.
+- Installed packages keep the hash (`Package.integrity`); at startup the bundle loads with the `integrity` attribute, so a changed file is refused by the browser, reported and skipped while the CLI starts. Packages installed earlier load as before.
+- `pkg check` and `pkg update` take versions from the marketplace when it lists the package, never offer one that does not fit or is unlisted, and warn when the installed version was flagged.
+- New **`pkg publish <name>`** submits an npm package to the marketplace for indexing and review (it does not publish to npm).
+- Packages the marketplace does not list still install by full name, with a warning that they were not reviewed. Hosts set `packageSources.marketplaceOnly: true` to refuse them, `packageSources.marketplace` to a URL for a private marketplace, or `false` to turn it off (no request to plugins.qodalis.com). `pkg source` shows the marketplace in use.
+- Every marketplace request gives up after 4 s; `pkg` then prints `Marketplace unreachable, searching npm` once and works as before.
+- `@qodalis/create-cli-plugin` writes the keyword `qodalis-cli-plugin` and a `qodalis` block (`apiVersion`, `category`) and links the publishing guide; every official web plugin carries the keyword.
+- Docs: a [Publishing a plugin](https://cli.qodalis.com/docs/publishing-plugins) guide, the marketplace options on the Configuration page, the new commands on Built-in commands, and the Plugins page lists the marketplace catalog (the static list stays when it does not answer). The AI guide has a "Publishing to the plugin marketplace" topic.
+
 ### Fixes
 
 - A host theme change (and a pick) now reaches a terminal that is still starting, e.g. while the users plugin's first-run wizard is open: the engine announces its terminal as soon as it exists (`qcli-terminal-ready`), instead of the panel learning about it only when `start()` resolves.

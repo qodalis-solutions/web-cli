@@ -94,6 +94,7 @@ describe('dice', () => {
 ```bash
 npx tsup                      # dist/public-api.{js,mjs,d.ts} + dist/umd/index.global.js
 npm publish --access public   # then in any Qodalis terminal: pkg add @qodalis/cli-dice
+                              # (pkg publish @qodalis/cli-dice lists it in the plugin marketplace after review)
 ```
 
 ```tsx
