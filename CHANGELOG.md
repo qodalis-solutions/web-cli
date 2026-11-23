@@ -16,6 +16,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `themePicker: false` (`CliPanelConfig`) hides the picker for panels with a fixed brand theme.
 - The docs site's theme button and its panel follow each other.
 
+### Panel: Send key, for the keys phones lack
+
+- A keyboard button in the panel's header (Send key in the ⋮ menu of a narrow panel) lists Ctrl+C, Ctrl+L, the line editing shortcuts (Ctrl+A/E/U/K/W/Y/D), Esc, Tab, Shift+Tab and ↑/↓ for the history, each with what it does. While a full-screen command runs, its own keys come first (nano's Save, Exit, Find, ...).
+- **Ctrl + key** gives the next letter typed on the on-screen keyboard Ctrl (any Ctrl shortcut); the button shows it until then.
+- Keys are sent as real key presses to the active terminal, which keeps the focus, so the on-screen keyboard stays open. `sendKeys: false` (`CliPanelConfig`) hides it.
+- The helpers are exported from `@qodalis/cli` for hosts with their own key bars: `sendTerminalKey`, `sendTerminalKeyPress`, `CLI_SEND_KEYS`, `CLI_KEY_PRESSES`, `ctrlLetterPress`, `CliStickyModifier`, `applyStickyCtrlToKeyboard`.
+
 ### Fixes
 
 - A host theme change (and a pick) now reaches a terminal that is still starting, e.g. while the users plugin's first-run wizard is open: the engine announces its terminal as soon as it exists (`qcli-terminal-ready`), instead of the panel learning about it only when `start()` resolves.

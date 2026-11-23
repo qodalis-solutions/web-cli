@@ -331,6 +331,12 @@
       <td>Look of the panel and its terminals; see <a routerLink="/docs/configuration" fragment="panel-themes">Panel themes</a></td>
     </tr>
     <tr>
+      <td><code>sendKeys</code></td>
+      <td><code>boolean</code></td>
+      <td><code>true</code></td>
+      <td>Whether the panel offers its Send key menu, for the keys phone keyboards lack; see <a routerLink="/docs/configuration" fragment="panel-send-key">Send key</a></td>
+    </tr>
+    <tr>
       <td><code>themePicker</code></td>
       <td><code>boolean</code></td>
       <td><code>true</code></td>
@@ -488,6 +494,19 @@
 <p>
   A panel with a fixed brand theme turns the picker off with
   <code>themePicker: false</code>.
+</p>
+<h3 id="panel-send-key">Send key</h3>
+<p>
+  Phone keyboards have no Ctrl, Esc, Tab or arrow keys. The panel's keyboard
+  button (on a narrow panel, <em>Send key</em> in the ⋮ menu) lists them:
+  Ctrl+C, Ctrl+L, the line editing shortcuts (Ctrl+A, Ctrl+E, Ctrl+U, Ctrl+K,
+  Ctrl+W, Ctrl+Y, Ctrl+D), Esc, Tab, Shift+Tab and ↑/↓ for the command
+  history. <strong>Ctrl + key</strong> gives the next letter typed on the
+  keyboard Ctrl; the button shows it until then. While a full-screen command
+  runs, its own keys come first (nano's Save, Exit, Find, ...). A key is sent
+  as a real key press to the active terminal, which keeps the focus, so the
+  on-screen keyboard stays open. Turn the menu off with
+  <code>sendKeys: false</code>.
 </p>
 <h3>CSS variables</h3>
 <p>

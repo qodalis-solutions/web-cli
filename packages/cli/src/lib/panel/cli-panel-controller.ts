@@ -41,6 +41,7 @@ import {
 } from './panel-geometry';
 import { CliPanelStatusTracker, interruptCommand, killProcess } from './panel-status';
 import { CLI_TERMINAL_READY_EVENT, CLI_TERMINAL_THEME_EVENT, CLI_TERMINAL_THEME_RESET_EVENT } from '../processors/theme/terminal-theme';
+import { CliSendKey, CliStickyModifier, applyStickyCtrlToKeyboard, sendTerminalKey } from '../keys';
 import {
     CliPanelCallbacks,
     CliPanelControlledState,
@@ -86,6 +87,7 @@ const DARK_SCHEME_QUERY = '(prefers-color-scheme: dark)';
 
 const HEADER_MENU_SELECTOR = '.cli-panel-header-menu';
 const THEME_DROPDOWN_SELECTOR = '.cli-panel-theme-dropdown';
+const SEND_KEY_MENU_SELECTOR = '.cli-panel-send-key-menu';
 const HEADER_MENU_ITEM_SELECTOR = '[role^="menuitem"]:not(:disabled), input[type="color"]';
 
 /** The root element as an event target (view roots are elements; test doubles may not be). */
@@ -206,6 +208,11 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     private customTerminal?: ITheme;
     /** A pick is being applied to the terminals; their theme is read when it is done. */
     private pickingTheme = false;
+    /** "Ctrl + key" of the Send key menu. */
+    private readonly ctrl = new CliStickyModifier((state) => this.commit({ ctrlModifier: state }));
+    private stopStickyCtrl?: () => void;
+    /** The button that opened the Send key menu; focus returns to it on Escape. */
+    private sendKeyMenuAnchor: HTMLElement | null = null;
     private resolvedTheme: CliResolvedPanelTheme;
     private schemeQuery?: MediaQueryList;
     private visualViewport?: VisualViewport;
@@ -284,6 +291,11 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             contextMenu: { visible: false, x: 0, y: 0, tabId: 0 },
             positionDropdownOpen: false,
             themeDropdownOpen: false,
+            sendKeyMenuOpen: false,
+            sendKeyMenuStyle: {},
+            ctrlModifier: 'off',
+            commandKeys: [],
+            commandName: '',
             themeDropdownStyle: {},
             themeListOpen: false,
             servicesDropdownOpen: false,
@@ -307,6 +319,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         this.watchSystemScheme();
         this.watchVisualViewport();
         this.onVisualViewportChange();
+        if (this.rootElement) this.watchStickyCtrl();
         return () => {
             this.listeners.delete(listener);
         };
@@ -325,11 +338,16 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             fields.hideable === s.hideable &&
             fields.hideAlignment === s.hideAlignment &&
             fields.syncTheme === s.syncTheme &&
-            fields.themePicker === s.themePicker
+            fields.themePicker === s.themePicker &&
+            fields.sendKeys === s.sendKeys
         ) {
             return;
         }
-        this.commit(fields.themePicker ? fields : { ...fields, themeDropdownOpen: false });
+        this.commit({
+            ...fields,
+            ...(fields.themePicker ? {} : { themeDropdownOpen: false }),
+            ...(fields.sendKeys ? {} : { sendKeyMenuOpen: false }),
+        });
         if (this.followsTerminalTheme) this.startThemeSync();
         else this.stopThemeSync();
     }
@@ -458,6 +476,8 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         next?.addEventListener(CLI_TERMINAL_READY_EVENT, this.onTerminalReady);
         next?.addEventListener(CLI_TERMINAL_THEME_RESET_EVENT, this.onTerminalThemeReset);
         next?.addEventListener('wheel', this.onPanelWheel, { passive: false });
+        if (element) this.watchStickyCtrl();
+        else this.unwatchStickyCtrl();
         if (element && this.followsTerminalTheme) this.startThemeSync();
     }
 
@@ -476,6 +496,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         this.observePanelWidth(null);
         this.endPanelResize();
         this.endPaneResize();
+        this.unwatchStickyCtrl();
         this.detachDocumentListeners();
     }
 
@@ -573,7 +594,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     }
 
     setPosition(position: CliPanelPosition): void {
-        this.commit({ positionDropdownOpen: false, themeDropdownOpen: false, headerMenuOpen: false });
+        this.commit({ positionDropdownOpen: false, themeDropdownOpen: false, sendKeyMenuOpen: false, headerMenuOpen: false });
         this.internal.position = position;
         if (this.persistPosition) savePanelPosition(position);
         this.commit({});
@@ -767,6 +788,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             contextMenu: { visible: true, x, y, tabId },
             positionDropdownOpen: false,
             themeDropdownOpen: false,
+            sendKeyMenuOpen: false,
             headerMenuOpen: false,
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
@@ -782,6 +804,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         this.commit({
             positionDropdownOpen: !this.snapshot.positionDropdownOpen,
             themeDropdownOpen: false,
+            sendKeyMenuOpen: false,
             headerMenuOpen: false,
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
@@ -806,6 +829,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             themeListOpen: this.terminalThemeChosen,
             contextMenu: { ...this.snapshot.contextMenu, visible: false },
             positionDropdownOpen: false,
+            sendKeyMenuOpen: false,
             headerMenuOpen: false,
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
@@ -858,6 +882,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             serversDropdownOpen: false,
             positionDropdownOpen: false,
             themeDropdownOpen: false,
+            sendKeyMenuOpen: false,
             headerMenuOpen: false,
             servicesDropdownStyle: open ? this.anchorStyle(anchor) : {},
         });
@@ -870,6 +895,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             servicesDropdownOpen: false,
             positionDropdownOpen: false,
             themeDropdownOpen: false,
+            sendKeyMenuOpen: false,
             headerMenuOpen: false,
             serversDropdownStyle: open ? this.anchorStyle(anchor) : {},
         });
@@ -892,6 +918,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             contextMenu: { ...this.snapshot.contextMenu, visible: false },
             positionDropdownOpen: false,
             themeDropdownOpen: false,
+            sendKeyMenuOpen: false,
             themeListOpen: this.terminalThemeChosen,
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
@@ -918,6 +945,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             !s.contextMenu.visible &&
             !s.positionDropdownOpen &&
             !s.themeDropdownOpen &&
+            !s.sendKeyMenuOpen &&
             !s.servicesDropdownOpen &&
             !s.serversDropdownOpen &&
             !s.headerMenuOpen
@@ -926,10 +954,12 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         }
         this.headerMenuAnchor = null;
         this.themeDropdownAnchor = null;
+        this.sendKeyMenuAnchor = null;
         this.commit({
             contextMenu: { ...s.contextMenu, visible: false },
             positionDropdownOpen: false,
             themeDropdownOpen: false,
+            sendKeyMenuOpen: false,
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
             headerMenuOpen: false,
@@ -972,6 +1002,99 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         if (!compact) this.headerMenuAnchor = null;
         // Each header has its own theme picker (button or ⋮ menu): close the one that goes away
         this.commit(compact ? { compactHeader: true, themeDropdownOpen: false } : { compactHeader: false, headerMenuOpen: false });
+    }
+
+    /* ─── Send key (phones) ─────────────────────────────────── */
+
+    /**
+     * The Send key button (or "Send key" in the ⋮ menu): open or close the list
+     * of combinations, next to `anchor`. It lists the keys of the full-screen
+     * command running in the active pane first.
+     */
+    toggleSendKeyMenu(anchor?: HTMLElement | null): void {
+        if (this.snapshot.sendKeyMenuOpen) {
+            this.sendKeyMenuAnchor = null;
+            this.commit({ sendKeyMenuOpen: false });
+            return;
+        }
+        const processor = this.getEngine()?.getContext?.()?.contextProcessor;
+        this.sendKeyMenuAnchor = anchor ?? null;
+        this.headerMenuAnchor = null;
+        this.commit({
+            sendKeyMenuOpen: true,
+            sendKeyMenuStyle: anchor ? headerMenuAnchorStyle(anchor.getBoundingClientRect(), this.snapshot.position, this.viewport()) : {},
+            commandKeys: processor?.controls?.keys ?? [],
+            commandName: processor?.command ?? '',
+            contextMenu: { ...this.snapshot.contextMenu, visible: false },
+            positionDropdownOpen: false,
+            themeDropdownOpen: false,
+            headerMenuOpen: false,
+            servicesDropdownOpen: false,
+            serversDropdownOpen: false,
+        });
+        setTimeout(() => {
+            if (this.snapshot.sendKeyMenuOpen) this.openMenuElements()[0]?.focus();
+        }, 0);
+    }
+
+    /** "Send key" in the ⋮ menu: the ⋮ menu closes and the Send key menu opens from its button. */
+    openSendKeyMenuFromHeaderMenu(): void {
+        const anchor = this.headerMenuAnchor;
+        this.closeHeaderMenu();
+        if (this.snapshot.sendKeyMenuOpen) this.commit({ sendKeyMenuOpen: false });
+        this.toggleSendKeyMenu(anchor);
+    }
+
+    /**
+     * Send a combination from the Send key menu to the active terminal (a
+     * command's key sends the data it reads). One without a key press ("Ctrl +
+     * key") gives the next letter typed Ctrl. The menu closes and
+     * the terminal gets the focus back, so the on-screen keyboard stays.
+     */
+    sendKey(key: CliSendKey | { data: string }): void {
+        this.sendKeyMenuAnchor = null;
+        if (this.snapshot.sendKeyMenuOpen) this.commit({ sendKeyMenuOpen: false });
+        const engine = this.getEngine();
+        const terminal = this.activeTerminal();
+        if ('data' in key) {
+            if (terminal) sendTerminalKey(terminal, { text: key.data });
+        } else if (key.press) {
+            this.ctrl.reset();
+            if (terminal) sendTerminalKey(terminal, { press: key.press });
+        } else {
+            this.ctrl.arm();
+        }
+        engine?.focus();
+    }
+
+    private activeTerminal() {
+        try {
+            return this.getEngine()?.getTerminal();
+        } catch {
+            return undefined;
+        }
+    }
+
+    /** Letters typed on the on-screen keyboard while the sticky Ctrl is on become Ctrl+<letter>. */
+    private watchStickyCtrl(): void {
+        if (this.stopStickyCtrl) return;
+        this.stopStickyCtrl = applyStickyCtrlToKeyboard(this.ctrl, (target) => {
+            if (!target || !this.ctrl.active) return undefined;
+            for (const engine of this.allEngines()) {
+                try {
+                    const terminal = engine.getTerminal();
+                    if (terminal?.textarea === target) return terminal;
+                } catch {
+                    /* destroyed */
+                }
+            }
+            return undefined;
+        });
+    }
+
+    private unwatchStickyCtrl(): void {
+        this.stopStickyCtrl?.();
+        this.stopStickyCtrl = undefined;
     }
 
     /* ─── Drag resizing ─────────────────────────────────────── */
@@ -1063,18 +1186,26 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
 
     private readonly onDocumentKeydown = (event: KeyboardEvent): void => {
         const s = this.snapshot;
-        if ((s.headerMenuOpen || s.themeDropdownOpen) && this.moveMenuFocus(event)) return;
+        if ((s.headerMenuOpen || s.themeDropdownOpen || s.sendKeyMenuOpen) && this.moveMenuFocus(event)) return;
         if (event.key !== 'Escape') return;
-        const restoreFocus = s.headerMenuOpen ? this.headerMenuAnchor : s.themeDropdownOpen ? this.themeDropdownAnchor : null;
+        const restoreFocus = s.headerMenuOpen
+            ? this.headerMenuAnchor
+            : s.themeDropdownOpen
+              ? this.themeDropdownAnchor
+              : s.sendKeyMenuOpen
+                ? this.sendKeyMenuAnchor
+                : null;
         this.closeMenus();
         this.cancelRename();
         restoreFocus?.focus();
     };
 
-    /** Items of the open ⋮ menu or theme picker. */
+    /** Items of the open ⋮ menu, theme picker or Send key menu. */
     private openMenuElements(): HTMLElement[] {
         if (typeof document === 'undefined') return [];
-        const menu = document.querySelector(this.snapshot.headerMenuOpen ? HEADER_MENU_SELECTOR : THEME_DROPDOWN_SELECTOR);
+        const s = this.snapshot;
+        const selector = s.headerMenuOpen ? HEADER_MENU_SELECTOR : s.sendKeyMenuOpen ? SEND_KEY_MENU_SELECTOR : THEME_DROPDOWN_SELECTOR;
+        const menu = document.querySelector(selector);
         return menu ? Array.from(menu.querySelectorAll<HTMLElement>(HEADER_MENU_ITEM_SELECTOR)) : [];
     }
 
@@ -1116,6 +1247,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             s.contextMenu.visible ||
             s.positionDropdownOpen ||
             s.themeDropdownOpen ||
+            s.sendKeyMenuOpen ||
             s.servicesDropdownOpen ||
             s.serversDropdownOpen ||
             s.headerMenuOpen ||
@@ -1419,6 +1551,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             hideAlignment: config.hideAlignment ?? 'center',
             syncTheme: config.syncTheme ?? false,
             themePicker: config.themePicker ?? true,
+            sendKeys: config.sendKeys ?? true,
         };
     }
 

@@ -105,6 +105,7 @@ describe('Panel compact header (⋮ menu)', () => {
                 'theme-dark',
                 'theme-custom',
                 'theme-list',
+                'send-key',
                 'hide',
                 'close',
             ]);

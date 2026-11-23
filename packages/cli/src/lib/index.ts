@@ -17,3 +17,4 @@ export * from './server';
 export * from './testing';
 export * from './wasm';
 export * from './panel';
+export * from './keys';

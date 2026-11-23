@@ -55,7 +55,7 @@ import { guidModule } from '@qodalis/cli-guid';
 <CliPanel :options="{ theme: { base: 'light', colors: { accent: '#0f766e' }, radius: '10px' } }" />
 ```
 
-The panel's theme picker (Auto, Light, Dark, Custom colors and the terminal themes, in sync with the `theme` command) lets the reader choose; `@theme-change` reports the pick as `{ theme, scheme }` so your app can follow, and `themePicker: false` hides it.
+The panel's theme picker (Auto, Light, Dark, Custom colors and the terminal themes, in sync with the `theme` command) lets the reader choose; `@theme-change` reports the pick as `{ theme, scheme }` so your app can follow, and `themePicker: false` hides it. On phones, the Send key menu (`sendKeys`) sends Ctrl, Esc, Tab and the arrows the on-screen keyboard lacks.
 
 See [Panel themes](https://cli.qodalis.com/docs/configuration#panel-themes).
 

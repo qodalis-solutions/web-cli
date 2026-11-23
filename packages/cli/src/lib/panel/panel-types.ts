@@ -1,4 +1,5 @@
 import type { ITheme } from '@xterm/xterm';
+import type { CliModifierState } from '../keys';
 import {
     CliEngineSnapshot,
     CliNotification,
@@ -7,6 +8,7 @@ import {
     CliPanelHideAlignment,
     CliPanelPosition,
     CliPanelThemeChange,
+    ICliCommandKey,
 } from '@qodalis/cli-core';
 
 /** One terminal inside a tab. */
@@ -192,6 +194,19 @@ export interface CliPanelSnapshot {
     hideAlignment: CliPanelHideAlignment;
     syncTheme: boolean;
     themePicker: boolean;
+    sendKeys: boolean;
+
+    // ── Send key (phones) ──
+    /** "Ctrl + key" of the Send key menu: the next letter typed gets Ctrl. */
+    ctrlModifier: CliModifierState;
+    /** The Send key menu is open. */
+    sendKeyMenuOpen: boolean;
+    /** Fixed position of the Send key menu, next to the button that opened it. */
+    sendKeyMenuStyle: Record<string, string>;
+    /** Keys of the full-screen command running in the active pane when the menu opened (an editor's Save, Exit). */
+    commandKeys: readonly ICliCommandKey[];
+    /** Name of that command, the heading of its keys. */
+    commandName: string;
 
     // ── Tabs & panes ──
     tabs: readonly CliPanelTab[];

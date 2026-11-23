@@ -5,7 +5,7 @@
  * panel, its hide tab, dropdowns and context menu (see CliPanelConfig.theme).
  * Without that option a stylesheet can set them on `.cli-panel-wrapper,
  * .cli-panel-hide-tab, .cli-panel-context-menu, .cli-panel-header-menu,
- * .cli-panel-services-dropdown`:
+ * .cli-panel-send-key-menu, .cli-panel-services-dropdown`:
  *   --cli-panel-bg                 panel background behind the terminals
  *   --cli-panel-header-bg          header, tab bar and menus
  *   --cli-panel-border             borders and separators
@@ -1128,6 +1128,91 @@
   bottom: auto;
   right: calc(100% + 4px);
   left: auto;
+}
+
+/* ─── Send key menu ───────────────────────────────────────── */
+
+/* Rendered outside the panel (like the ⋮ menu), so it carries the theme's variables */
+.cli-panel-send-key-menu {
+  position: fixed;
+  z-index: 1100;
+  background-color: var(--cli-panel-header-bg, #0f1623);
+  border: 1px solid var(--cli-panel-border, #1e293b);
+  border-radius: calc(var(--cli-panel-radius, 8px) + 2px);
+  padding: 4px 0;
+  min-width: 240px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(var(--cli-panel-visible-height, 100vh) - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-shadow: 0 8px 24px var(--cli-panel-shadow, rgba(0, 0, 0, 0.4));
+  color: var(--cli-panel-text, #e2e8f0);
+  font-family: var(
+    --cli-panel-font,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+}
+
+.cli-panel-send-key-item {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--cli-panel-text-secondary, #94a3b8);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 16px;
+  text-align: left;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.cli-panel-send-key-item kbd {
+  flex-shrink: 0;
+  min-width: 88px;
+  color: var(--cli-panel-text, #e2e8f0);
+  font: 600 0.8rem ui-monospace, "SF Mono", Menlo, "Roboto Mono", monospace;
+}
+
+.cli-panel-send-key-item:hover,
+.cli-panel-send-key-item:focus-visible {
+  background-color: var(--cli-btn-hover-bg, rgba(129, 140, 248, 0.12));
+  outline: none;
+}
+
+.cli-panel-send-key-item:focus-visible {
+  box-shadow: inset 2px 0 0 var(--cli-panel-accent, #818cf8);
+}
+
+.cli-panel-send-key-heading {
+  padding: 8px 16px 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cli-panel-text-secondary, #94a3b8);
+}
+
+.cli-panel-send-key-separator {
+  height: 1px;
+  background-color: var(--cli-panel-border, #1e293b);
+  margin: 4px 0;
+}
+
+/* "Ctrl + key" is on: the Send key button, or the ⋮ of a narrow panel, shows it */
+.cli-panel-wrapper.ctrl-held .cli-panel-btn-send-key,
+.cli-panel-wrapper.ctrl-held.compact-header .cli-panel-btn-more {
+  color: var(--cli-panel-accent, #818cf8);
+  box-shadow: inset 0 0 0 1px var(--cli-panel-accent, #818cf8);
 }
 
 /* ─── Theme picker ────────────────────────────────────────── */

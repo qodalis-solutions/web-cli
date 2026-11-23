@@ -51,7 +51,7 @@ Tests can run commands without a browser terminal through `CliTestHarness`.
 - `pkg`: installs plugins from npm at runtime.
 - Server connections (`servers` option): remote commands, streamed output, `ssh` shell sessions.
 - The dockable panel with tabs and split panes used by the wrappers: light, dark, `auto` and custom themes (`theme` option), touch resizing, and it stays above the on-screen keyboard on phones.
-- `theme` option: `'dark'`, `'light'`, `'auto'`, a terminal theme name or a `CliPanelTheme`; it is the default, and a theme the user applies with the `theme` command wins over it until `theme reset`. The panel's theme picker (`themePicker`, on by default) offers Auto, Light, Dark, Custom colors and the terminal themes, shares the `theme` command's saved state, remembers the pick and reports it through `onThemeChange`.
+- `theme` option: `'dark'`, `'light'`, `'auto'`, a terminal theme name or a `CliPanelTheme`; it is the default, and a theme the user applies with the `theme` command wins over it until `theme reset`. The panel's theme picker (`themePicker`, on by default) offers Auto, Light, Dark, Custom colors and the terminal themes, shares the `theme` command's saved state, remembers the pick and reports it through `onThemeChange`. On phones, its Send key menu (`sendKeys`) sends Ctrl, Esc, Tab and the arrows the on-screen keyboard lacks.
 
 ## Documentation
 

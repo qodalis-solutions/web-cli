@@ -9,6 +9,7 @@ import {
     CLOSE_ICON,
     HIDE_ICON,
     HIDE_TAB_TERMINAL_ICON,
+    KEYBOARD_ICON,
     MAXIMIZE_ICON,
     MORE_ICON,
     PANEL_LABELS,
@@ -18,6 +19,9 @@ import {
     TERMINAL_ICON,
     collapseChevronIcon,
     contextMenuItems,
+    runSendKeyItem,
+    sendKeyMenuItems,
+    sendKeyMenuStyle,
     contextMenuStyle,
     glowLineClass,
     handleRenameKey,
@@ -341,6 +345,8 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
 
             {s.headerMenuOpen && <HeaderMenu controller={controller} s={s} />}
 
+            {s.sendKeyMenuOpen && <SendKeyMenu controller={controller} s={s} />}
+
             <StatusDropdown controller={controller} s={s} />
         </>
     );
@@ -404,6 +410,42 @@ function ColorRow({
             <span>{label}</span>
             <input type="color" value={color.value} onChange={(e) => controller.setCustomThemeColor(color.key, e.target.value)} />
         </label>
+    );
+}
+
+/* ─── Send key menu (phones) ─────────────────────────────── */
+
+function SendKeyMenu({ controller, s }: { controller: CliPanelController; s: CliPanelSnapshot }) {
+    return (
+        <div
+            className="cli-panel-send-key-menu"
+            role="menu"
+            aria-label={PANEL_LABELS.sendKey}
+            style={asStyle(sendKeyMenuStyle(s))}
+            onClick={(e) => e.stopPropagation()}
+        >
+            {sendKeyMenuItems(s).map((item) => (
+                <React.Fragment key={item.id}>
+                    {item.separatorBefore && <div className="cli-panel-send-key-separator" role="separator" />}
+                    {item.heading && (
+                        <div className="cli-panel-send-key-heading" role="presentation">
+                            {item.heading}
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        className="cli-panel-send-key-item"
+                        role="menuitem"
+                        // A tap must not take the focus from the terminal: the keyboard stays open
+                        onPointerDown={(e) => e.preventDefault()}
+                        onClick={() => runSendKeyItem(controller, item)}
+                    >
+                        <kbd>{item.label}</kbd>
+                        <span>{item.description}</span>
+                    </button>
+                </React.Fragment>
+            ))}
+        </div>
     );
 }
 
@@ -584,6 +626,23 @@ function PanelHeader({
                                 </div>
                             )}
                         </div>
+                        {s.sendKeys && (
+                            <button
+                                type="button"
+                                className="cli-panel-btn cli-panel-btn-send-key"
+                                title={s.ctrlModifier !== 'off' ? PANEL_LABELS.ctrlHeld : PANEL_LABELS.sendKey}
+                                aria-label={PANEL_LABELS.sendKey}
+                                aria-haspopup="menu"
+                                aria-expanded={s.sendKeyMenuOpen}
+                                onPointerDown={(e) => e.preventDefault()}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    controller.toggleSendKeyMenu(e.currentTarget);
+                                }}
+                            >
+                                <Icon icon={KEYBOARD_ICON} />
+                            </button>
+                        )}
                         {s.themePicker && (
                             <div className="cli-panel-btn-theme-wrapper" onClick={(e) => e.stopPropagation()}>
                                 <button
