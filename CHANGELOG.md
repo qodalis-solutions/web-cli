@@ -38,6 +38,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - `@qodalis/create-cli-plugin` writes the keyword `qodalis-cli-plugin` and a `qodalis` block (`apiVersion`, `category`) and links the publishing guide; every official web plugin carries the keyword.
 - Docs: a [Publishing a plugin](https://cli.qodalis.com/docs/publishing-plugins) guide (with the marketplace API and why the core peer range must be honest), the marketplace options on the Configuration page, the new commands on Built-in commands, and the Plugins page lists the marketplace catalog (the static list stays when it does not answer). The AI guide has a "Publishing to the plugin marketplace" topic.
 
+### Docs
+
+- New **Admin dashboard** page (Server Integration): setting the dashboard up step by step on Node, .NET and Python (admin and users plugins, sign-in, the Jobs, Databases, Filesystem and Data explorer pages, groups and permissions, the Account page), with screenshots, and how to add pages of your own with the dashboard kit. The AI guide has the same in its server plugins topic.
+
 ### Fixes
 
 - A host theme change (and a pick) now reaches a terminal that is still starting, e.g. while the users plugin's first-run wizard is open: the engine announces its terminal as soon as it exists (`qcli-terminal-ready`), instead of the panel learning about it only when `start()` resolves.
