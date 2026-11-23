@@ -38,3 +38,15 @@ export function satisfiesVersionRange(
     }
     return semver.satisfies(coerced, range);
 }
+
+/**
+ * The lowest version a semver range accepts (`^2.7.0` -> `2.7.0`,
+ * `>=2.8.0-beta.1 <3` -> `2.8.0-beta.1`), or `undefined` for an invalid range.
+ */
+export function minVersionOfRange(range: string): string | undefined {
+    try {
+        return semver.minVersion(range)?.version;
+    } catch {
+        return undefined;
+    }
+}

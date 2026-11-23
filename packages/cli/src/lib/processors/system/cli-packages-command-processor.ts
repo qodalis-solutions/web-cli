@@ -36,6 +36,7 @@ import {
 } from './packages/package-search';
 import {
     applyMarketplaceOptions,
+    CLI_RUNTIME,
     MarketplaceClient,
     MarketplacePluginSummary,
     MarketplaceRequestError,
@@ -47,7 +48,6 @@ import {
     marketplaceRows,
     writeMarketplaceInfo,
 } from './packages/package-marketplace-output';
-import { API_VERSION } from '../../version';
 import {
     writeExamples,
     writeHint,
@@ -1274,7 +1274,7 @@ export class CliPackagesCommandProcessor implements ICliCommandProcessor {
                     }
                     const plugin = await session.run(
                         (client) =>
-                            client.plugin(picked.name, API_VERSION, signal),
+                            client.plugin(picked.name, CLI_RUNTIME, signal),
                         'using npm',
                         signal,
                     );
@@ -1453,7 +1453,7 @@ async function readMarketplaceList(
 ): Promise<{ plugins: MarketplacePluginSummary[]; total: number }> {
     if (text) {
         const page = await client.search(
-            { query: text, apiVersion: API_VERSION, pageSize: 50 },
+            { query: text, ...CLI_RUNTIME, pageSize: 50 },
             signal,
         );
         return { plugins: page.items, total: page.total };
@@ -1462,7 +1462,7 @@ async function readMarketplaceList(
     let total = 0;
     for (let page = 1; page <= BROWSE_MAX_PAGES; page++) {
         const result = await client.search(
-            { apiVersion: API_VERSION, page, pageSize: 100, sort: 'name' },
+            { ...CLI_RUNTIME, page, pageSize: 100, sort: 'name' },
             signal,
         );
         plugins.push(...result.items);

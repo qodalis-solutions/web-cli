@@ -5,7 +5,13 @@
  * `docs/superpowers/plans/2026-11-23-plugin-marketplace.md`.
  */
 
-import { CliOptions, ICliExecutionContext } from '@qodalis/cli-core';
+import {
+    CliOptions,
+    ICliExecutionContext,
+    LIBRARY_VERSION as CORE_VERSION,
+    minVersionOfRange,
+    satisfiesVersionRange,
+} from '@qodalis/cli-core';
 import { ScriptLoaderService } from '../../../services/script-loader';
 import { API_VERSION } from '../../../version';
 import { compareSemver } from './package-utils';
@@ -83,6 +89,7 @@ export interface MarketplaceSearchQuery {
     query?: string;
     category?: string;
     apiVersion?: number;
+    coreVersion?: string;
     page?: number;
     pageSize?: number;
     sort?: 'relevance' | 'downloads' | 'updated' | 'name';
@@ -92,6 +99,20 @@ export interface MarketplaceSubmission {
     status: 'queued' | 'known';
     plugin?: { name: string; status: string };
 }
+
+/** What decides whether a plugin version fits: the module API and the core version. */
+export interface MarketplaceRuntime {
+    /** Module API of the running CLI (`API_VERSION`). */
+    apiVersion: number;
+    /** Version of the running `@qodalis/cli-core`. */
+    coreVersion: string;
+}
+
+/** The running CLI. */
+export const CLI_RUNTIME: MarketplaceRuntime = {
+    apiVersion: API_VERSION,
+    coreVersion: CORE_VERSION,
+};
 
 /** Every marketplace request gives up after this long. */
 export const MARKETPLACE_TIMEOUT_MS = 4000;
@@ -176,10 +197,12 @@ export class MarketplaceClient {
     /** One listed plugin, or `null` when the marketplace does not list it. */
     async plugin(
         name: string,
-        apiVersion?: number,
+        runtime?: MarketplaceRuntime,
         signal?: AbortSignal,
     ): Promise<MarketplacePlugin | null> {
-        const qs = apiVersion !== undefined ? `?apiVersion=${apiVersion}` : '';
+        const qs = runtime
+            ? `?apiVersion=${runtime.apiVersion}&coreVersion=${encodeURIComponent(runtime.coreVersion)}`
+            : '';
         try {
             return await this.request<MarketplacePlugin>(
                 `/plugins/${encodeURIComponent(name)}${qs}`,
@@ -318,31 +341,57 @@ export class MarketplaceSession {
     }
 }
 
-/** Whether a version can run in this CLI (its module API equals the runtime's). */
+/**
+ * Whether a version can run in this CLI: its module API equals the
+ * runtime's and its `@qodalis/cli-core` peer range accepts the running core.
+ */
 export function versionFits(
-    version: Pick<MarketplaceVersion, 'apiVersion'>,
-    apiVersion = API_VERSION,
+    version: Pick<MarketplaceVersion, 'apiVersion' | 'coreRange'>,
+    runtime: MarketplaceRuntime = CLI_RUNTIME,
 ): boolean {
-    return version.apiVersion === apiVersion;
+    return (
+        version.apiVersion === runtime.apiVersion &&
+        coreRangeFits(version.coreRange, runtime.coreVersion)
+    );
 }
 
-/** Why a version does not fit this CLI, e.g. `needs CLI API 3 (this CLI has 2)`. */
+/** Whether the running core satisfies a version's core peer range (none: yes). */
+export function coreRangeFits(
+    coreRange: string | null | undefined,
+    coreVersion: string,
+): boolean {
+    if (!coreRange || coreRange.trim() === '*') return true;
+    return satisfiesVersionRange(coreVersion, coreRange);
+}
+
+/**
+ * Why a version does not fit this CLI, e.g. `needs CLI API 3 (this CLI has 2)`
+ * or `needs CLI 2.9.0 or newer (this CLI has 2.8.0)`.
+ */
 export function incompatibilityReason(
-    version: Pick<MarketplaceVersion, 'apiVersion'>,
-    apiVersion = API_VERSION,
+    version: Pick<MarketplaceVersion, 'apiVersion' | 'coreRange'>,
+    runtime: MarketplaceRuntime = CLI_RUNTIME,
 ): string {
-    return version.apiVersion > apiVersion
-        ? `needs CLI API ${version.apiVersion} (this CLI has ${apiVersion})`
-        : `built for CLI API ${version.apiVersion} (this CLI has ${apiVersion})`;
+    if (version.apiVersion > runtime.apiVersion) {
+        return `needs CLI API ${version.apiVersion} (this CLI has ${runtime.apiVersion})`;
+    }
+    if (version.apiVersion < runtime.apiVersion) {
+        return `built for CLI API ${version.apiVersion} (this CLI has ${runtime.apiVersion})`;
+    }
+    const range = version.coreRange ?? '';
+    const min = minVersionOfRange(range);
+    return min && compareSemver(min, runtime.coreVersion) === 1
+        ? `needs CLI ${min} or newer (this CLI has ${runtime.coreVersion})`
+        : `needs CLI ${range} (this CLI has ${runtime.coreVersion})`;
 }
 
 /** The newest listed version that fits this CLI. */
 export function newestWorkingVersion(
     plugin: Pick<MarketplacePlugin, 'versions'>,
-    apiVersion = API_VERSION,
+    runtime: MarketplaceRuntime = CLI_RUNTIME,
 ): MarketplaceVersion | undefined {
     return [...plugin.versions]
-        .filter((v) => v.status === 'listed' && versionFits(v, apiVersion))
+        .filter((v) => v.status === 'listed' && versionFits(v, runtime))
         .sort((a, b) => compareSemver(b.version, a.version) ?? 0)[0];
 }
 
@@ -358,9 +407,9 @@ export type VersionChoice =
 export function chooseMarketplaceVersion(
     plugin: MarketplacePlugin,
     requested?: string,
-    apiVersion = API_VERSION,
+    runtime: MarketplaceRuntime = CLI_RUNTIME,
 ): VersionChoice {
-    const suggestion = newestWorkingVersion(plugin, apiVersion);
+    const suggestion = newestWorkingVersion(plugin, runtime);
     if (!requested || requested === 'latest') {
         if (suggestion) return { ok: true, version: suggestion };
         const newest = plugin.versions.find((v) => v.status === 'listed');
@@ -369,7 +418,7 @@ export function chooseMarketplaceVersion(
             reason:
                 plugin.reason ??
                 (newest
-                    ? incompatibilityReason(newest, apiVersion)
+                    ? incompatibilityReason(newest, runtime)
                     : 'no listed version'),
         };
     }
@@ -396,10 +445,10 @@ export function chooseMarketplaceVersion(
             suggestion,
         };
     }
-    if (!versionFits(version, apiVersion)) {
+    if (!versionFits(version, runtime)) {
         return {
             ok: false,
-            reason: `version ${requested} ${incompatibilityReason(version, apiVersion)}`,
+            reason: `version ${requested} ${incompatibilityReason(version, runtime)}`,
             suggestion,
         };
     }
