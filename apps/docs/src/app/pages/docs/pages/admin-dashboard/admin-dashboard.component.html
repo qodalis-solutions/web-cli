@@ -3,32 +3,244 @@
 <p>
     The admin plugin serves the dashboard at <code>/qcli/admin</code> on the Node, .NET and Python servers: the same
     single-page app, in eleven languages, light or dark. It has a few pages of its own; every other page comes from the
-    server plugin that owns its API, so a server shows a page only when it has the plugin. Its colors, name and icon
-    are set in the admin plugin's options (see
-    <a routerLink="/docs/server-integration" fragment="admin-color-scheme">Color scheme</a>).
+    server plugin that owns its API, so a server shows a page only when it has the plugin. Below: how to set it up step
+    by step, what each page does, and how to add pages of your own.
+</p>
+<figure class="guide-shot guide-shot--wide">
+    <img src="assets/admin-dashboard/overview.webp" alt="The dashboard's Overview: uptime, commands, connections, active jobs and databases cards, server information and resource charts" loading="lazy" />
+    <figcaption>The Overview of a Node server with the users, jobs and databases plugins</figcaption>
+</figure>
+
+<h2 id="set-up">Set it up, step by step</h2>
+
+<h3 id="step-1">1. Add the admin and users plugins</h3>
+<p>
+    The <strong>admin</strong> plugin serves the dashboard; the <strong>users</strong> plugin gives it accounts, groups and
+    permissions (without it, the admin plugin has one account of its own, set in its options). Mount the users plugin
+    before the admin plugin signs anyone in, and point the admin plugin at it:
+</p>
+<div class="code-block">
+    <span class="code-label">Node</span>
+    <pre><code>npm install &#64;qodalis/cli-server-node &#64;qodalis/cli-server-plugin-users &#64;qodalis/cli-server-plugin-admin
+
+import &#123; createCliServer &#125; from '&#64;qodalis/cli-server-node';
+import &#123; CliUsersBuilder &#125; from '&#64;qodalis/cli-server-plugin-users';
+import &#123; CliAdminBuilder &#125; from '&#64;qodalis/cli-server-plugin-admin';
+
+const cli = createCliServer(&#123; configure: (builder) =&gt; builder &#125;);
+const users = new CliUsersBuilder().build(cli.eventBus);
+const admin = new CliAdminBuilder()
+    .setAuthProvider(users.serverAuth)    // sign in with the users plugin's accounts
+    .build(&#123; registry: cli.registry, eventSocketManager: cli.eventSocketManager, builder: cli.builder, executor: cli.executor &#125;);
+cli.mountPlugin(admin);
+cli.mountPlugin(users);
+
+const server = cli.app.listen(8047);
+cli.eventSocketManager.attach(server);</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">.NET</span>
+    <pre><code>dotnet add package Qodalis.Cli.Plugin.Users
+dotnet add package Qodalis.Cli.Plugin.Admin
+
+builder.Services.AddControllers().AddCli(cli =&gt;
+&#123;
+    cli.AddUsers();
+    cli.AddAdmin();
+&#125;);
+
+var app = builder.Build();
+app.UseWebSockets();
+app.UseQodalisUsers();
+app.UseQodalisAdmin();
+app.MapControllers();
+app.UseCli();</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">Python</span>
+    <pre><code>pip install qodalis-cli-server qodalis-cli-server-plugin-users qodalis-cli-server-plugin-admin
+
+from qodalis_cli import CliServerOptions, create_cli_server
+from qodalis_cli_users import CliUsersBuilder
+from qodalis_cli_admin import CliAdminBuilder, AdminBuildDeps
+
+result = create_cli_server(CliServerOptions())
+users_plugin = CliUsersBuilder().build()
+result.mount_plugin(users_plugin)
+admin_plugin = CliAdminBuilder().set_users_plugin(users_plugin).build(AdminBuildDeps(
+    registry=result.registry, event_socket_manager=result.event_socket_manager, builder=result.builder,
+))
+result.mount_plugin(admin_plugin)
+# Start the users plugin with the app: await users_plugin.startup() in its lifespan</code></pre>
+</div>
+
+<h3 id="step-2">2. Sign in and set your own password</h3>
+<p>
+    Open <code>http://your-server/qcli/admin</code> and sign in as <code>root</code>. Its first password is the users
+    plugin's default (set it with <code>setDefaultAdminPassword</code> / <code>DefaultAdminPassword</code> /
+    <code>set_default_admin_password</code>); change it before the server is reachable from other devices, on the
+    <a href="#step-5">Account page</a>. A user whose password an administrator set is asked for a new one right after
+    signing in, before the dashboard opens:
+</p>
+<figure class="guide-shot">
+    <img src="assets/admin-dashboard/new-password.webp" alt="Set a new password: the password of carol was set by an administrator, choose your own to continue" loading="lazy" />
+    <figcaption>The first sign-in with a password an administrator set</figcaption>
+</figure>
+<p>
+    When your own application signs users in (the users plugin with an auth adapter), the dashboard has no password form:
+    it sends people to your sign-in page and takes the token you hand back (<code>#token=</code>). Set the address with the
+    admin plugin's <code>signInUrl</code>.
 </p>
 
-<h2 id="sign-in">Sign-in</h2>
-<ul>
-    <li>
-        <strong>With the users plugin</strong>, users sign in with their own account and need the
-        <code>admin:access</code> permission. Each page also checks its own permission, and the dashboard hides the pages
-        a user may not open.
-    </li>
-    <li>
-        <strong>Without it</strong>, the admin plugin has one account of its own, set in its options, which holds every
-        permission.
-    </li>
-    <li>
-        <strong>When the host application signs users in</strong> (the users plugin with an auth adapter), the dashboard
-        shows no password form: it links to the host's sign-in page and accepts the token the host hands over
-        (<code>#token=</code>).
-    </li>
-    <li>
-        <strong>A password an administrator set</strong> (or the default one) must be changed first: right after signing
-        in, the dashboard asks for a new password, then opens.
-    </li>
-</ul>
+<h3 id="step-3">3. Add the pages you need</h3>
+<p>
+    Each page comes with its plugin: add the plugin and its page appears in the sidebar, for the users allowed to open
+    it. Nothing else to install: the page's build is embedded in the plugin's package.
+</p>
+
+<h4 id="add-jobs">Jobs</h4>
+<div class="code-block">
+    <span class="code-label">Node: &#64;qodalis/cli-server-plugin-jobs</span>
+    <pre><code>const jobs = new CliJobsBuilder()
+    .addJob(new NightlyReportJob(), &#123; name: 'nightly-report', group: 'reports', interval: '1d' &#125;)
+    .build(cli.eventBus);
+cli.mountPlugin(jobs);
+await jobs.scheduler.start();</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">.NET: Qodalis.Cli.Plugin.Jobs</span>
+    <pre><code>cli.AddJob&lt;NightlyReportJob&gt;(o =&gt;
+&#123;
+    o.Name = "nightly-report";
+    o.Group = "reports";
+    o.Interval = TimeSpan.FromDays(1);
+&#125;);</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">Python: qodalis-cli-server-plugin-jobs</span>
+    <pre><code>jobs_plugin = (
+    CliJobsBuilder()
+    .add_job(NightlyReportJob(), CliJobOptions(name="nightly-report", group="reports", interval="1d"))
+    .build()
+)
+result.mount_plugin(jobs_plugin)
+# Start it with the app: await jobs_plugin.scheduler.start() in its lifespan</code></pre>
+</div>
+<figure class="guide-shot guide-shot--wide">
+    <img src="assets/admin-dashboard/jobs.webp" alt="The Jobs page: runs, success rate, failed runs and duration, and each job with its schedule, last runs and actions" loading="lazy" />
+    <figcaption>Jobs: runs, schedules, history, logs; trigger, pause, resume and stop</figcaption>
+</figure>
+
+<h4 id="add-databases">Databases</h4>
+<p>Each database with its size, load and largest tables, and its migrations, applied or rolled back from the page.</p>
+<div class="code-block">
+    <span class="code-label">Node: &#64;qodalis/cli-server-plugin-databases</span>
+    <pre><code>const databases = new CliDatabasesBuilder()
+    .addDatabase('main', &#123; connection: postgresConnection(pool), applyOnStartup: true &#125;)
+    .addSqlFolder('main', './migrations')
+    .build();
+await databases.applyOnStartup();
+cli.mountPlugin(databases);</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">.NET: Qodalis.Cli.Plugin.Databases</span>
+    <pre><code>cli.AddDatabases(d =&gt; d
+    .AddDatabase("main", db =&gt; db
+        .UseConnection(_ =&gt; new NpgsqlConnection(connectionString))
+        .ApplyMigrationsOnStartup())
+    .AddSqlFolder("main", "./migrations"));</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">Python: qodalis-cli-server-plugin-databases</span>
+    <pre><code>databases = (
+    CliDatabasesBuilder()
+    .add_database("main", CliMigrationDatabaseOptions(postgres_connection(pool), apply_on_startup=True))
+    .add_sql_folder("main", "./migrations")
+    .build()
+)
+await databases.apply_on_startup()   # in the app's lifespan
+result.mount_plugin(databases)</code></pre>
+</div>
+<div class="guide-shots">
+    <figure class="guide-shot guide-shot--half">
+        <img src="assets/admin-dashboard/database.webp" alt="A database's overview: its size and largest tables with their rows and size" loading="lazy" />
+        <figcaption>A database: size, connections, load and largest tables</figcaption>
+    </figure>
+    <figure class="guide-shot guide-shot--half">
+        <img src="assets/admin-dashboard/database-migrations.webp" alt="A database's migrations: two applied, one pending, with Roll back to here and Migrate to here" loading="lazy" />
+        <figcaption>Its migrations: apply, migrate to one, roll back</figcaption>
+    </figure>
+</div>
+
+<h4 id="add-files-data">Files and data explorer</h4>
+<p>These two come with the server itself: enable the filesystem, or add a data explorer source.</p>
+<div class="code-block">
+    <span class="code-label">Node</span>
+    <pre><code>createCliServer(&#123; configure: (builder) =&gt; builder
+    .addFileSystem(&#123; allowedPaths: ['/srv/files'] &#125;)
+    .addDataExplorerProvider(new SqlDataExplorerProvider(&#123; type: 'sqlite', filename: './app.db' &#125;), &#123; name: 'app' &#125;) &#125;);</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">.NET</span>
+    <pre><code>cli.AddFileSystem(o =&gt; o.UseOsFileSystem(os =&gt; os.AllowedPaths = ["/srv/files"]));
+cli.AddDataExplorerSql("Data Source=app.db", o =&gt; o.Name = "app");</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">Python</span>
+    <pre><code>def configure(builder):
+    builder.add_filesystem(FileSystemOptions(allowed_paths=["/srv/files"])) \
+        .add_data_explorer_provider(SqlDataExplorerProvider("./app.db"), DataExplorerProviderOptions(name="app"))</code></pre>
+</div>
+<p>
+    Plugins also add cards to the Overview and items to its <em>Needs attention</em> list: Jobs its runs of the last 24
+    hours and failing jobs, Databases pending or failed migrations.
+</p>
+<figure class="guide-shot guide-shot--wide">
+    <img src="assets/admin-dashboard/overview-modules.webp" alt="The Overview's Needs attention list with a pending migration, and the jobs' runs over the last 24 hours" loading="lazy" />
+    <figcaption>What the plugins add to the Overview</figcaption>
+</figure>
+
+<h3 id="step-4">4. Give people access</h3>
+<p>
+    On the <strong>Users</strong> page, create the accounts and put them in groups. A group holds permissions, and a user
+    holds those of all their groups. To open the dashboard a user needs <code>admin:access</code>; each page needs its
+    own (<a href="#pages">see the table below</a>). Wildcards work: <code>jobs:*</code> is every jobs permission,
+    <code>*</code> everything. A first password is temporary by default: the user picks their own at the first sign-in.
+</p>
+<figure class="guide-shot guide-shot--wide">
+    <img src="assets/admin-dashboard/users.webp" alt="The Users page: alice, bob (disabled), carol (must change password) and root, with their groups and last sign-in" loading="lazy" />
+    <figcaption>Users: create, edit, set a password, disable, delete</figcaption>
+</figure>
+<div class="guide-shots">
+    <figure class="guide-shot guide-shot--half">
+        <img src="assets/admin-dashboard/group-edit.webp" alt="Editing the operators group: its description and the server's permissions as checkboxes, with jobs:* typed" loading="lazy" />
+        <figcaption>A group: the server's permissions, and wildcards</figcaption>
+    </figure>
+    <figure class="guide-shot guide-shot--half">
+        <img src="assets/admin-dashboard/sessions.webp" alt="The Sessions tab: who is signed in, from which client, since when, with Sign out" loading="lazy" />
+        <figcaption>Sessions: who is signed in, and sign one out</figcaption>
+    </figure>
+</div>
+<p>
+    Where your application manages the users (read-only users and groups) or signs them in, the Users page only shows
+    them: no forms to change them.
+</p>
+
+<h3 id="step-5">5. Each user's own account</h3>
+<p>
+    Every signed-in user has an <strong>Account</strong> page in the account menu: their profile and email, their password,
+    and what they may do. When your application signs users in, the password is changed there instead.
+</p>
+<div class="guide-shots">
+    <figure class="guide-shot">
+        <img src="assets/admin-dashboard/account-menu.webp" alt="The account menu at the bottom of the sidebar: Account and Sign out" loading="lazy" />
+        <figcaption>The account menu</figcaption>
+    </figure>
+</div>
+<figure class="guide-shot guide-shot--wide">
+    <img src="assets/admin-dashboard/account.webp" alt="The Account page: profile with email, change password, and the permissions the user holds" loading="lazy" />
+    <figcaption>Account: profile, password, permissions</figcaption>
+</figure>
 
 <h2 id="pages">Pages</h2>
 <p>The dashboard's own pages, on every server:</p>
@@ -64,25 +276,21 @@
         <tr><td>Audit</td><td>audit (the users plugin adds it)</td><td><code>audit:read</code></td><td>The audit log, filtered.</td></tr>
         <tr><td>Filesystem</td><td>server core, with the filesystem enabled</td><td><code>files:read</code></td><td>Browse, upload, download and delete files.</td></tr>
         <tr><td>Data explorer</td><td>server core, with data explorer sources</td><td><code>data:query</code></td><td>Queries against SQL, MongoDB, Redis, Elasticsearch and other sources.</td></tr>
-        <tr><td>Databases</td><td>databases</td><td><code>databases:read</code></td><td>Size, load and largest tables of each database; its migrations, applied from the page. Adds a card and pending or failed migrations to the Overview.</td></tr>
-        <tr><td>Users</td><td>users</td><td><code>users:read</code></td><td>Users, groups and their permissions, signed-in sessions.</td></tr>
+        <tr><td>Databases</td><td>databases</td><td><code>databases:read</code></td><td>Size, load and largest tables of each database; its migrations, applied from the page (<code>databases:migrate</code>). Adds a card and pending or failed migrations to the Overview.</td></tr>
+        <tr><td>Users</td><td>users</td><td><code>users:read</code></td><td>Users, groups and their permissions, signed-in sessions (<code>sessions:read</code>).</td></tr>
         <tr><td>API tokens</td><td>users</td><td>none</td><td>Your API tokens, everyone's with <code>tokens:read</code>.</td></tr>
         <tr><td>Account</td><td>users</td><td>none</td><td>In the account menu: your profile, your password and what you may do.</td></tr>
     </tbody>
 </table>
 <p>
-    Where the host application signs users in or manages them (read-only users and groups), the Users and Account pages
-    only show them: no password forms and no edits.
-</p>
-<p>
-    A plugin's page is a module built in the dashboard's repository (<code>@qodalis/cli-dashboard-module-&lt;name&gt;</code>)
+    A plugin's page is a module built in the dashboard's repository (<code>&#64;qodalis/cli-dashboard-module-&lt;name&gt;</code>)
     and embedded in the plugin's package; the server serves its files at <code>/qcli/modules/&lt;id&gt;</code>. To serve
     another build of a page, or leave it out:
 </p>
 <div class="code-block">
     <span class="code-label">Node</span>
     <pre><code>new CliUsersBuilder().setUsersDashboardDir(false)   // no Users and Account pages
-cliServer.builder.setDashboardModuleDir('filesystem', './my-filesystem-build')</code></pre>
+cli.builder.setDashboardModuleDir('filesystem', './my-filesystem-build')</code></pre>
 </div>
 <div class="code-block">
     <span class="code-label">.NET</span>
@@ -94,6 +302,10 @@ cli.ConfigureDashboardModule("filesystem", new PhysicalFileProvider("/srv/my-fil
     <pre><code>CliUsersBuilder().set_users_dashboard_dir(False)      # no Users and Account pages
 CliServerOptions(dashboard_pages=&#123;"filesystem": "./my-filesystem-build"&#125;)</code></pre>
 </div>
+<p>
+    Colors, name and icon are set in the admin plugin's options (see
+    <a routerLink="/docs/server-integration" fragment="admin-color-scheme">Color scheme</a>).
+</p>
 
 <h2 id="your-own-pages">Your own pages</h2>
 <p>
@@ -103,9 +315,11 @@ CliServerOptions(dashboard_pages=&#123;"filesystem": "./my-filesystem-build"&#12
     theme, the language, routing below <code>/x/&lt;id&gt;</code>, notices, a confirm dialog, server events and
     <code>fetch</code> with the dashboard's session.
 </p>
+
+<h3 id="own-step-1">1. Register the page</h3>
 <div class="code-block">
     <span class="code-label">Node</span>
-    <pre><code>cliServer.builder.addDashboardExtension(&#123;
+    <pre><code>cli.builder.addDashboardExtension(&#123;
     id: 'billing', title: 'Billing', titles: &#123; de: 'Abrechnung' &#125;, icon: '💳',
     group: 'data', order: 30, permission: 'billing:read',
     entry: '/billing/admin/extension.js', styles: ['/billing/admin/extension.css'],
@@ -146,12 +360,17 @@ CliServerOptions(dashboard_pages=&#123;"filesystem": "./my-filesystem-build"&#12
     </tbody>
 </table>
 
-<h3 id="dashboard-kit">Build a page with the kit</h3>
+<h3 id="dashboard-kit">2. Build the page with the kit</h3>
 <p>
     <code>&#64;qodalis/cli-server-dashboard-kit</code> holds the dashboard's components, theme (a Tailwind preset), the
     texts of its components in eleven languages and the extension API, so a page looks and behaves like the dashboard's
-    own. Build it with Vite into <code>extension.js</code> and <code>extension.css</code>, and serve both from your plugin.
+    own.
 </p>
+<div class="code-block">
+    <span class="code-label">Install</span>
+    <pre><code>npm install &#64;qodalis/cli-server-dashboard-kit react react-dom
+npm install -D vite &#64;vitejs/plugin-react tailwindcss&#64;3 postcss autoprefixer</code></pre>
+</div>
 <div class="code-block">
     <span class="code-label">src/index.tsx</span>
     <pre><code>import &#123; PageHeader, StatCard, defineExtension, defineMessages, useApi, useAsync, useTranslations &#125; from '&#64;qodalis/cli-server-dashboard-kit';
@@ -184,6 +403,23 @@ export default defineExtension(Billing, &#123;
     palette: async () =&gt; [&#123; id: 'inv-42', label: 'Invoice 42', path: '/42' &#125;],
 &#125;);</code></pre>
 </div>
+
+<h3 id="own-step-3">3. Build it and serve the files</h3>
+<div class="code-block">
+    <span class="code-label">vite.config.ts</span>
+    <pre><code>export default defineConfig(&#123;
+    plugins: [react()],
+    define: &#123; 'process.env.NODE_ENV': JSON.stringify('production') &#125;,
+    build: &#123; lib: &#123; entry: 'src/index.tsx', formats: ['es'], fileName: () =&gt; 'extension.js', cssFileName: 'extension' &#125; &#125;,
+&#125;);</code></pre>
+</div>
+<p>
+    <code>vite build</code> writes <code>dist/extension.js</code> and <code>dist/extension.css</code>; serve both at the
+    <code>entry</code> and <code>styles</code> you registered (React and the kit are bundled in). Pages of a server plugin
+    can use the servers' helpers, which serve a build with versioned URLs and register it: Node
+    <code>dashboardModulePage(dir, info)</code> in the plugin's <code>dashboardPages</code>, .NET
+    <code>cli.AddDashboardModule(module, fileProvider)</code>, Python <code>dashboard_module_page(dir, prefix, extension)</code>.
+</p>
 <p>
     The kit also has the dashboard's hooks (<code>useQueryParams</code>, <code>usePaging</code>,
     <code>useStoredState</code>, <code>useLiveReload</code> on server events), charts, and test helpers at
