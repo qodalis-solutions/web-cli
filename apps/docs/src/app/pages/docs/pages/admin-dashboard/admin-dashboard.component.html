@@ -1,0 +1,195 @@
+<h1>{{ 'docs.admin-dashboard.title' | translate }}</h1>
+<p>{{ 'docs.admin-dashboard.intro' | translate }}</p>
+<p>
+    The admin plugin serves the dashboard at <code>/qcli/admin</code> on the Node, .NET and Python servers: the same
+    single-page app, in eleven languages, light or dark. It has a few pages of its own; every other page comes from the
+    server plugin that owns its API, so a server shows a page only when it has the plugin. Its colors, name and icon
+    are set in the admin plugin's options (see
+    <a routerLink="/docs/server-integration" fragment="admin-color-scheme">Color scheme</a>).
+</p>
+
+<h2 id="sign-in">Sign-in</h2>
+<ul>
+    <li>
+        <strong>With the users plugin</strong>, users sign in with their own account and need the
+        <code>admin:access</code> permission. Each page also checks its own permission, and the dashboard hides the pages
+        a user may not open.
+    </li>
+    <li>
+        <strong>Without it</strong>, the admin plugin has one account of its own, set in its options, which holds every
+        permission.
+    </li>
+    <li>
+        <strong>When the host application signs users in</strong> (the users plugin with an auth adapter), the dashboard
+        shows no password form: it links to the host's sign-in page and accepts the token the host hands over
+        (<code>#token=</code>).
+    </li>
+    <li>
+        <strong>A password an administrator set</strong> (or the default one) must be changed first: right after signing
+        in, the dashboard asks for a new password, then opens.
+    </li>
+</ul>
+
+<h2 id="pages">Pages</h2>
+<p>The dashboard's own pages, on every server:</p>
+<table>
+    <thead>
+        <tr>
+            <th>Page</th>
+            <th>What it shows</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>Overview</td><td>Server health: uptime, commands, connections, memory and CPU over time, and what needs attention. Plugins add their own cards.</td></tr>
+        <tr><td>Commands</td><td>Every registered command with its parameters, searchable.</td></tr>
+        <tr><td>Plugins</td><td>The server plugins installed and the command modules.</td></tr>
+        <tr><td>Terminal</td><td>The web CLI over the server's commands, in the dashboard's language.</td></tr>
+        <tr><td>Events</td><td>The live server events.</td></tr>
+        <tr><td>Logs</td><td>The server's logs, filtered by level and text, live.</td></tr>
+        <tr><td>Config</td><td>The server's configuration.</td></tr>
+    </tbody>
+</table>
+<p>The pages the server plugins add:</p>
+<table>
+    <thead>
+        <tr>
+            <th>Page</th>
+            <th>Plugin</th>
+            <th>Permission</th>
+            <th>What it does</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>Jobs</td><td>jobs</td><td><code>jobs:read</code></td><td>Jobs and their runs, schedules, logs and actions. Adds its counts, a runs chart and failing jobs to the Overview, and the jobs to the command palette.</td></tr>
+        <tr><td>Audit</td><td>audit (the users plugin adds it)</td><td><code>audit:read</code></td><td>The audit log, filtered.</td></tr>
+        <tr><td>Filesystem</td><td>server core, with the filesystem enabled</td><td><code>files:read</code></td><td>Browse, upload, download and delete files.</td></tr>
+        <tr><td>Data explorer</td><td>server core, with data explorer sources</td><td><code>data:query</code></td><td>Queries against SQL, MongoDB, Redis, Elasticsearch and other sources.</td></tr>
+        <tr><td>Databases</td><td>databases</td><td><code>databases:read</code></td><td>Size, load and largest tables of each database; its migrations, applied from the page. Adds a card and pending or failed migrations to the Overview.</td></tr>
+        <tr><td>Users</td><td>users</td><td><code>users:read</code></td><td>Users, groups and their permissions, signed-in sessions.</td></tr>
+        <tr><td>API tokens</td><td>users</td><td>none</td><td>Your API tokens, everyone's with <code>tokens:read</code>.</td></tr>
+        <tr><td>Account</td><td>users</td><td>none</td><td>In the account menu: your profile, your password and what you may do.</td></tr>
+    </tbody>
+</table>
+<p>
+    Where the host application signs users in or manages them (read-only users and groups), the Users and Account pages
+    only show them: no password forms and no edits.
+</p>
+<p>
+    A plugin's page is a module built in the dashboard's repository (<code>@qodalis/cli-dashboard-module-&lt;name&gt;</code>)
+    and embedded in the plugin's package; the server serves its files at <code>/qcli/modules/&lt;id&gt;</code>. To serve
+    another build of a page, or leave it out:
+</p>
+<div class="code-block">
+    <span class="code-label">Node</span>
+    <pre><code>new CliUsersBuilder().setUsersDashboardDir(false)   // no Users and Account pages
+cliServer.builder.setDashboardModuleDir('filesystem', './my-filesystem-build')</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">.NET</span>
+    <pre><code>cli.ConfigureDashboardModule("users", null);          // no Users and Account pages
+cli.ConfigureDashboardModule("filesystem", new PhysicalFileProvider("/srv/my-filesystem-build"));</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">Python</span>
+    <pre><code>CliUsersBuilder().set_users_dashboard_dir(False)      # no Users and Account pages
+CliServerOptions(dashboard_pages=&#123;"filesystem": "./my-filesystem-build"&#125;)</code></pre>
+</div>
+
+<h2 id="your-own-pages">Your own pages</h2>
+<p>
+    A plugin of yours (or the host application) adds pages the same way: it registers a <em>dashboard extension</em> and
+    serves an ES module. The dashboard lists the extension in its navigation, for users holding its permission, and at
+    <code>/x/&lt;id&gt;</code> loads the module and mounts it with its context: the signed-in user and permissions, the
+    theme, the language, routing below <code>/x/&lt;id&gt;</code>, notices, a confirm dialog, server events and
+    <code>fetch</code> with the dashboard's session.
+</p>
+<div class="code-block">
+    <span class="code-label">Node</span>
+    <pre><code>cliServer.builder.addDashboardExtension(&#123;
+    id: 'billing', title: 'Billing', titles: &#123; de: 'Abrechnung' &#125;, icon: '💳',
+    group: 'data', order: 30, permission: 'billing:read',
+    entry: '/billing/admin/extension.js', styles: ['/billing/admin/extension.css'],
+&#125;);</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">.NET</span>
+    <pre><code>cli.AddDashboardExtension(new CliDashboardExtension
+&#123;
+    Id = "billing", Title = "Billing", Icon = "💳", Group = "data", Permission = "billing:read",
+    Entry = "/billing/admin/extension.js", Styles = ["/billing/admin/extension.css"],
+&#125;);</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">Python</span>
+    <pre><code>builder.add_dashboard_extension(&#123;
+    "id": "billing", "title": "Billing", "icon": "💳", "group": "data", "permission": "billing:read",
+    "entry": "/billing/admin/extension.js", "styles": ["/billing/admin/extension.css"],
+&#125;)</code></pre>
+</div>
+<table>
+    <thead>
+        <tr>
+            <th>Field</th>
+            <th>Meaning</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>id</code></td><td>Lower case letters, digits and dashes; the page is at <code>/x/&lt;id&gt;</code>.</td></tr>
+        <tr><td><code>title</code>, <code>titles</code></td><td>The title, and its translations by language code.</td></tr>
+        <tr><td><code>icon</code></td><td>A character or an image URL.</td></tr>
+        <tr><td><code>group</code></td><td>The sidebar section: <code>overview</code>, <code>operations</code>, <code>data</code>, <code>access</code> or <code>system</code> (the default). <code>account</code> lists the page in the account menu instead of the sidebar.</td></tr>
+        <tr><td><code>order</code></td><td>Its place in the section (default 100).</td></tr>
+        <tr><td><code>permission</code></td><td>Only users holding it see the page (wildcards match).</td></tr>
+        <tr><td><code>entry</code>, <code>styles</code></td><td>The ES module and its stylesheets.</td></tr>
+        <tr><td><code>widgets</code></td><td><code>overview</code>: the module adds cards and attention items to the Overview; <code>palette</code>: entries in the command palette.</td></tr>
+        <tr><td><code>search</code></td><td>Where the page searches, e.g. <code>/?q=</code>: the command palette offers "Search Billing for …".</td></tr>
+    </tbody>
+</table>
+
+<h3 id="dashboard-kit">Build a page with the kit</h3>
+<p>
+    <code>&#64;qodalis/cli-server-dashboard-kit</code> holds the dashboard's components, theme (a Tailwind preset), the
+    texts of its components in eleven languages and the extension API, so a page looks and behaves like the dashboard's
+    own. Build it with Vite into <code>extension.js</code> and <code>extension.css</code>, and serve both from your plugin.
+</p>
+<div class="code-block">
+    <span class="code-label">src/index.tsx</span>
+    <pre><code>import &#123; PageHeader, StatCard, defineExtension, defineMessages, useApi, useAsync, useTranslations &#125; from '&#64;qodalis/cli-server-dashboard-kit';
+
+const messages = &#123;
+    billing: defineMessages(&#123;
+        en: &#123; title: 'Billing', open: 'Open invoices' &#125;,
+        de: &#123; title: 'Abrechnung', open: 'Offene Rechnungen' &#125;,
+    &#125;),
+&#125;;
+
+function Billing() &#123;
+    const api = useApi();                       // JSON with the dashboard's session
+    const &#123; t &#125; = useTranslations(messages);    // the dashboard's language
+    const &#123; data &#125; = useAsync(() =&gt; api.get&lt;&#123; open: number &#125;&gt;('/api/billing/stats'), [api]);
+    return &lt;PageHeader title=&#123;t('billing.title')&#125; subtitle=&#123;`$&#123;data?.open ?? '…'&#125;`&#125; /&gt;;
+&#125;
+
+function OpenInvoices() &#123;
+    const &#123; t &#125; = useTranslations(messages);
+    return &lt;StatCard label=&#123;t('billing.open')&#125; value=&#123;3&#125; /&gt;;
+&#125;
+
+export default defineExtension(Billing, &#123;
+    // With widgets: ["overview", "palette"] in the registration
+    overview: &#123;
+        cards: [&#123; id: 'open', size: 'stat', component: OpenInvoices &#125;],   // stat, half or full
+        attention: async () =&gt; [&#123; id: 'late', level: 'warning', title: '3 invoices late', path: '/?status=late' &#125;],
+    &#125;,
+    palette: async () =&gt; [&#123; id: 'inv-42', label: 'Invoice 42', path: '/42' &#125;],
+&#125;);</code></pre>
+</div>
+<p>
+    The kit also has the dashboard's hooks (<code>useQueryParams</code>, <code>usePaging</code>,
+    <code>useStoredState</code>, <code>useLiveReload</code> on server events), charts, and test helpers at
+    <code>&#64;qodalis/cli-server-dashboard-kit/testing</code> to mount a page with a fake context and server. The full
+    contract between server, dashboard and page is in
+    <a href="https://github.com/qodalis-solutions/cli-server-dashboard/blob/main/docs/extensions.md" target="_blank" rel="noopener">docs/extensions.md</a>,
+    and the kit's guide in its
+    <a href="https://github.com/qodalis-solutions/cli-server-dashboard/blob/main/kit/README.md" target="_blank" rel="noopener">README</a>.
+</p>

@@ -77,6 +77,7 @@ export const DOCS_NAV: NavItem[] = [
             { label: 'sidebar.dotnet-server', path: '/docs/server-integration/dotnet' },
             { label: 'sidebar.node-server', path: '/docs/server-integration/node' },
             { label: 'sidebar.python-server', path: '/docs/server-integration/python' },
+            { label: 'sidebar.admin-dashboard', path: '/docs/admin-dashboard' },
         ],
     },
 ];
