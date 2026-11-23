@@ -1,6 +1,6 @@
 /**
- * Client for a plugin marketplace (the catalog served by the server's
- * marketplace plugin, `https://plugins.qodalis.com/` by default). The JSON
+ * Client for a plugin marketplace: any server implementing the marketplace
+ * HTTP API (`https://plugins.qodalis.com/` by default). The JSON
  * types follow the contract in
  * `docs/superpowers/plans/2026-11-23-plugin-marketplace.md`.
  */
