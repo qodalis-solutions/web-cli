@@ -598,6 +598,16 @@ export const koTranslations: Record<string, string> = {
     'cli.pkg.source.help.show_current_source': '현재 소스 표시',
     'cli.pkg.source.help.set_preferred_source': '선호 소스 설정',
     'cli.pkg.help.install_package_2': '패키지 설치',
+    'cli.pkg.help.search_packages': '플러그인 마켓플레이스 검색',
+    'cli.pkg.help.show_package_info': '패키지 세부 정보 표시',
+    'cli.pkg.help.submit_package': 'npm 패키지를 마켓플레이스에 제출',
+    'cli.pkg.search.description': '플러그인 마켓플레이스 검색',
+    'cli.pkg.info.description': '패키지 세부 정보 표시',
+    'cli.pkg.publish.description': 'npm 패키지를 플러그인 마켓플레이스에 제출',
+    'cli.pkg.search.help.one_word': '단어 하나',
+    'cli.pkg.search.help.all_words': '모든 단어가 포함된 플러그인',
+    'cli.pkg.info.help.short_name': '짧은 이름',
+    'cli.pkg.info.help.full_name': '전체 이름',
 
     // ── Ps ───────────────────────────────────────────────────────────
     'cli.ps.description': '실행 중인 프로세스와 최근 프로세스 목록',
