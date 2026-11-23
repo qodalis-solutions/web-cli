@@ -148,11 +148,13 @@ cli.mountPlugin(databases);</code></pre>
 </div>
 <div class="code-block">
     <span class="code-label">.NET: Qodalis.Cli.Plugin.Databases</span>
-    <pre><code>cli.AddDatabases(d =&gt; d
-    .AddDatabase("main", db =&gt; db
+    <pre><code>cli.AddDatabases(databases =&gt;
+&#123;
+    databases.AddDatabase("main", db =&gt; db
         .UseConnection(_ =&gt; new NpgsqlConnection(connectionString))
-        .ApplyMigrationsOnStartup())
-    .AddSqlFolder("main", "./migrations"));</code></pre>
+        .ApplyMigrationsOnStartup());
+    databases.AddSqlFolder("main", "./migrations");
+&#125;);</code></pre>
 </div>
 <div class="code-block">
     <span class="code-label">Python: qodalis-cli-server-plugin-databases</span>
@@ -180,9 +182,11 @@ result.mount_plugin(databases)</code></pre>
 <p>These two come with the server itself: enable the filesystem, or add a data explorer source.</p>
 <div class="code-block">
     <span class="code-label">Node</span>
-    <pre><code>createCliServer(&#123; configure: (builder) =&gt; builder
-    .addFileSystem(&#123; allowedPaths: ['/srv/files'] &#125;)
-    .addDataExplorerProvider(new SqlDataExplorerProvider(&#123; type: 'sqlite', filename: './app.db' &#125;), &#123; name: 'app' &#125;) &#125;);</code></pre>
+    <pre><code>createCliServer(&#123;
+    configure: (builder) =&gt; builder
+        .addFileSystem(&#123; allowedPaths: ['/srv/files'] &#125;)
+        .addDataExplorerProvider(new SqlDataExplorerProvider(&#123; type: 'sqlite', filename: './app.db' &#125;), &#123; name: 'app' &#125;),
+&#125;);</code></pre>
 </div>
 <div class="code-block">
     <span class="code-label">.NET</span>
@@ -192,8 +196,10 @@ cli.AddDataExplorerSql("Data Source=app.db", o =&gt; o.Name = "app");</code></pr
 <div class="code-block">
     <span class="code-label">Python</span>
     <pre><code>def configure(builder):
-    builder.add_filesystem(FileSystemOptions(allowed_paths=["/srv/files"])) \
-        .add_data_explorer_provider(SqlDataExplorerProvider("./app.db"), DataExplorerProviderOptions(name="app"))</code></pre>
+    builder.add_filesystem(FileSystemOptions(allowed_paths=["/srv/files"]))
+    builder.add_data_explorer_provider(SqlDataExplorerProvider("./app.db"), DataExplorerProviderOptions(name="app"))
+
+result = create_cli_server(CliServerOptions(configure=configure))</code></pre>
 </div>
 <p>
     Plugins also add cards to the Overview and items to its <em>Needs attention</em> list: Jobs its runs of the last 24
