@@ -5,6 +5,9 @@ import { promptForPluginInfo, toPascalCase, PluginAnswers } from './prompts';
 import { scaffoldPlugin } from './scaffold';
 import { LIBRARY_VERSION } from './lib/version';
 
+/** The docs page on getting a plugin into the marketplace. */
+const PUBLISHING_GUIDE_URL = 'https://cli.qodalis.com/docs/publishing-plugins';
+
 const program = new Command();
 
 program
@@ -58,7 +61,10 @@ program
                 console.log(`  2. Implement your command in src/lib/processors/`);
                 console.log(`  3. ${pm === 'npm' ? 'npx' : pm} tsup`);
                 console.log(`  4. npm publish --access public`);
+                console.log(`  5. pkg publish @qodalis/cli-${answers.name}  (in any Qodalis CLI terminal: submits it to the marketplace)`);
             }
+
+            console.log(`\nPublishing to the plugin marketplace: ${PUBLISHING_GUIDE_URL}`);
         } catch (error) {
             if (error instanceof Error) {
                 console.error(`\nError: ${error.message}`);

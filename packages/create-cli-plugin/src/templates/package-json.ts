@@ -19,7 +19,8 @@ export function packageJsonTemplate(vars: TemplateVars, monorepo: boolean): stri
                 url: 'https://github.com/qodalis-solutions/web-cli',
             },
             homepage: 'https://qodalis.com',
-            keywords: ['cli', 'qodalis', 'terminal', vars.name],
+            // `qodalis-cli-plugin`: the plugin marketplace indexes packages with this keyword
+            keywords: ['qodalis-cli-plugin', 'cli', 'qodalis', 'terminal', vars.name],
             umd: `${out}/umd/index.global.js`,
             unpkg: `${out}/umd/index.global.js`,
             scripts: monorepo ? undefined : {
@@ -34,6 +35,11 @@ export function packageJsonTemplate(vars: TemplateVars, monorepo: boolean): stri
             },
             files: monorepo ? undefined : ['dist'],
             sideEffects: false,
+            // Read by the plugin marketplace: module API the bundle needs, category
+            qodalis: {
+                apiVersion: 2,
+                category: 'tools',
+            },
             main: `${out}/public-api.js`,
             module: `${out}/public-api.mjs`,
             types: `${out}/public-api.d.ts`,

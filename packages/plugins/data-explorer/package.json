@@ -10,6 +10,7 @@
   },
   "homepage": "https://qodalis.com",
   "keywords": [
+    "qodalis-cli-plugin",
     "cli",
     "qodalis",
     "terminal",
