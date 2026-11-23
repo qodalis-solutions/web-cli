@@ -35,6 +35,7 @@ function panel(config: object = {}) {
     return new CliPanelController({
         config,
         persistPosition: false,
+        persistTheme: false,
         viewport: () => ({ width: 1000, height: 800 }),
     });
 }

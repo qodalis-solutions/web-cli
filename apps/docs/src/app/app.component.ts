@@ -1,5 +1,5 @@
 import { Component, HostListener, ViewChild, effect, inject } from '@angular/core';
-import { CliLogLevel, ICliModule } from '@qodalis/cli-core';
+import { CliLogLevel, CliPanelThemeChange, ICliModule } from '@qodalis/cli-core';
 import { CliPanelComponent, CliPanelOptions } from '@qodalis/angular-cli';
 import { PanelRefService } from './services/panel-ref.service';
 import { ThemeService, ThemeMode } from './services/theme.service';
@@ -52,8 +52,11 @@ export class AppComponent {
     set panelComponent(panel: CliPanelComponent | undefined) {
         this.panel = panel;
         this.panelRef.panel = panel ?? null;
-        panel?.setTheme(this.theme.scheme());
+        this.syncPanelTheme();
     }
+
+    /** The site's theme as the panel last had it, so the two don't echo each other. */
+    private panelTheme = panelThemeOf(this.theme.mode());
 
     languages = LANGUAGES;
     currentLang: Language;
@@ -63,8 +66,8 @@ export class AppComponent {
         private translate: TranslateService,
         private panelRef: PanelRefService,
     ) {
-        // The panel follows the site's light/dark scheme
-        effect(() => this.panel?.setTheme(this.theme.scheme()));
+        // The panel follows the site's theme button
+        effect(() => this.syncPanelTheme(this.theme.mode()));
 
         const browserLangPrefix = navigator.language?.split('-')[0];
         const supportedCodes = LANGUAGES.map((l) => l.code);
@@ -92,6 +95,29 @@ export class AppComponent {
 
     toggleLangDropdown(): void {
         this.langDropdownOpen = !this.langDropdownOpen;
+    }
+
+    /** The site's theme reaches the panel, unless the panel already has it. */
+    private syncPanelTheme(mode: ThemeMode = this.theme.mode()): void {
+        const theme = panelThemeOf(mode);
+        if (!this.panel || theme === this.panelTheme) return;
+        this.panelTheme = theme;
+        this.panel.setTheme(theme);
+    }
+
+    /**
+     * A theme picked in the panel's own picker: the site follows it. A terminal
+     * theme (Dracula, Nord, ...) stays in the panel and the site takes its scheme.
+     */
+    onPanelThemeChange(change: CliPanelThemeChange): void {
+        const mode: ThemeMode =
+            change.theme === 'auto'
+                ? 'system'
+                : change.theme === 'light' || change.theme === 'dark'
+                  ? change.theme
+                  : change.scheme;
+        this.panelTheme = panelThemeOf(mode);
+        this.theme.setMode(mode);
     }
 
     /** Label key of the theme button: names the current mode. */
@@ -148,6 +174,11 @@ export class AppComponent {
         logLevel: CliLogLevel.DEBUG,
         position: 'right',
         isHidden: true,
-        theme: this.theme.scheme(),
+        theme: panelThemeOf(this.theme.mode()),
     };
+}
+
+/** The panel's name for the site's theme mode. */
+function panelThemeOf(mode: ThemeMode): 'auto' | 'light' | 'dark' {
+    return mode === 'system' ? 'auto' : mode;
 }

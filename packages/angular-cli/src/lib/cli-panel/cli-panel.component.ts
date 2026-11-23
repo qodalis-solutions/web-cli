@@ -18,6 +18,7 @@ import {
     CliPanelConfig,
     CliPanelPosition,
     CliPanelState,
+    CliPanelThemeChange,
     CliPanelThemeInput,
     ICliModule,
     ICliPanelRef,
@@ -42,6 +43,7 @@ import {
     PanelContextMenuItem,
     PanelHeaderMenuItem,
     PanelPositionOption,
+    PanelThemeOption,
     PanelStatusDropdown,
     PanelStatusIndicator,
     RESTORE_ICON,
@@ -68,6 +70,10 @@ import {
     positionOptions,
     runContextMenuAction,
     runHeaderMenuAction,
+    runThemeOption,
+    colorInputValue,
+    themeIcon,
+    themeOptions,
     statusIndicators,
 } from '@qodalis/cli';
 import { Subscription } from 'rxjs';
@@ -81,6 +87,8 @@ interface PanelView {
     indicators: PanelStatusIndicator[];
     positionOptions: Array<PanelPositionOption & { icon: SvgIcon }>;
     positionIcon: SvgIcon;
+    themeOptions: PanelThemeOption[];
+    themeIcon: SvgIcon;
     collapseIcon: SvgIcon;
     hideTabArrowIcon: SvgIcon;
     maximizeIcon: SvgIcon;
@@ -131,6 +139,8 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
 
     @Input() position?: CliPanelPosition;
     @Output() positionChange = new EventEmitter<CliPanelPosition>();
+    /** The user picked a theme in the panel's theme picker. */
+    @Output() themeChange = new EventEmitter<CliPanelThemeChange>();
 
     @Input() height?: number;
     @Output() heightChange = new EventEmitter<number>();
@@ -188,6 +198,7 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
                 onMaximizedChange: (v) => this.maximizedChange.emit(v),
                 onActiveTabIdChange: (v) => this.activeTabIdChange.emit(v),
                 onPositionChange: (v) => this.positionChange.emit(v),
+                onThemeChange: (change) => this.themeChange.emit(change),
                 onHeightChange: (v) => this.heightChange.emit(v),
                 onWidthChange: (v) => this.widthChange.emit(v),
                 onClose: () => this.onClose.emit(),
@@ -290,6 +301,20 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
     onHeaderMenuToggle(event: MouseEvent): void {
         event.stopPropagation();
         this.controller.toggleHeaderMenu(event.currentTarget as HTMLElement);
+    }
+
+    /** The theme button of the header. */
+    onThemeDropdownToggle(event: MouseEvent): void {
+        this.controller.toggleThemeDropdown(event.currentTarget as HTMLElement);
+    }
+
+    onThemeOption(option: PanelThemeOption): void {
+        runThemeOption(this.controller, option);
+    }
+
+    /** A color picker of the theme picker's Custom choice. */
+    onThemeColor(color: NonNullable<PanelThemeOption['color']>, event: Event): void {
+        this.controller.setCustomThemeColor(color.key, colorInputValue(event));
     }
 
     onHeaderMenuAction(item: PanelHeaderMenuItem): void {
@@ -413,6 +438,8 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             indicators: statusIndicators(s),
             positionOptions: positionOptions(s).map((opt) => ({ ...opt, icon: positionIcon(opt.position, 16) })),
             positionIcon: positionIcon(s.position),
+            themeOptions: s.themeDropdownOpen ? themeOptions(s) : [],
+            themeIcon: themeIcon(s.scheme, 20),
             collapseIcon: collapseChevronIcon(s.position, s.collapsed),
             hideTabArrowIcon: hideTabChevronIcon(s.position),
             maximizeIcon: s.maximized ? RESTORE_ICON : MAXIMIZE_ICON,

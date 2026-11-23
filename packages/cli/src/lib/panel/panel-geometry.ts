@@ -18,7 +18,7 @@ export const COMPACT_HEADER_BREAKPOINT = 480;
 export const HEADER_MENU_WIDTH = 220;
 
 /** Height the header menu is assumed to need when choosing whether it opens up or down. */
-export const HEADER_MENU_HEIGHT = 380;
+export const HEADER_MENU_HEIGHT = 600;
 
 /** Whether a panel this wide (px) shows the ⋮ menu instead of the action buttons. */
 export function isCompactHeaderWidth(width: number): boolean {
@@ -166,6 +166,39 @@ export function headerMenuAnchorStyle(
     return openUp
         ? { ...base, bottom: `${viewport.height - anchor.top + gap}px`, right, maxHeight: `${Math.max(above, 0)}px` }
         : { ...base, top: `${anchor.bottom + gap}px`, right, maxHeight: `${Math.max(below, 0)}px` };
+}
+
+/** Height below which the theme picker opens on the other side of its button, when that side is taller. */
+export const THEME_DROPDOWN_MIN_HEIGHT = 240;
+
+/** The theme picker scrolls beyond this height. */
+export const THEME_DROPDOWN_MAX_HEIGHT = 420;
+
+/**
+ * Side and height of the header's theme picker, opened from `anchor` (its
+ * button): toward the page (above a bottom panel, below a top one), or over
+ * the panel when the page side is too short (a tall panel) and the other is
+ * taller. `max-height` keeps it on screen; the stylesheet does the rest.
+ */
+export function themeDropdownAnchorStyle(
+    anchor: AnchorRect,
+    position: CliPanelPosition,
+    viewport: CliPanelViewport,
+): Record<string, string> {
+    const margin = 12;
+    const height = (room: number) => `${Math.min(Math.max(room, 0), THEME_DROPDOWN_MAX_HEIGHT)}px`;
+    // Side panels: the picker grows upward from the button's bottom edge
+    if (position === 'left' || position === 'right') {
+        return { maxHeight: height(anchor.bottom - margin) };
+    }
+    const above = anchor.top - margin;
+    const below = viewport.height - anchor.bottom - margin;
+    const towardPage = position === 'top' ? below : above;
+    const otherSide = position === 'top' ? above : below;
+    const openUp = (position === 'top') === (towardPage < THEME_DROPDOWN_MIN_HEIGHT && otherSide > towardPage);
+    return openUp
+        ? { top: 'auto', bottom: 'calc(100% + 4px)', maxHeight: height(above) }
+        : { top: 'calc(100% + 4px)', bottom: 'auto', maxHeight: height(below) };
 }
 
 /** "12m", "1h05m"-style uptime label. */

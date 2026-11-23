@@ -189,6 +189,7 @@ export * from './websocket-auth';
 export * from './panel-theme-sync';
 
 export * from './panel-position-store';
+export * from './panel-theme-store';
 
 export * from './ansi-utils';
 

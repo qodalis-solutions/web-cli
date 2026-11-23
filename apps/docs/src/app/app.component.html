@@ -129,5 +129,9 @@
 
 <!-- ===== PANEL (collapsible bottom) ===== -->
 @if (modulesReady) {
-  <cli-panel [options]="options" [modules]="modules" />
+  <cli-panel
+    [options]="options"
+    [modules]="modules"
+    (themeChange)="onPanelThemeChange($event)"
+  />
 }

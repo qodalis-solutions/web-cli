@@ -41,6 +41,11 @@ import {
     resolveCliHostConfig,
     runContextMenuAction,
     runHeaderMenuAction,
+    runThemeOption,
+    colorInputValue,
+    PanelThemeOption,
+    themeIcon,
+    themeOptions,
     statusIndicators,
     svgAttrs,
     PanelStatusIndicator,
@@ -83,7 +88,7 @@ export const CliPanel = defineComponent({
     emits: [
         'update:collapsed', 'update:hidden', 'update:maximized',
         'update:activeTabId', 'update:position', 'update:height', 'update:width',
-        'close', 'tab-added', 'tab-closed', 'pane-split', 'pane-closed',
+        'close', 'tab-added', 'tab-closed', 'pane-split', 'pane-closed', 'theme-change',
     ],
     setup(props, { expose, emit }) {
         const config = inject(CliConfigKey, null);
@@ -113,6 +118,7 @@ export const CliPanel = defineComponent({
                 onMaximizedChange: (v) => emit('update:maximized', v),
                 onActiveTabIdChange: (v) => emit('update:activeTabId', v),
                 onPositionChange: (v) => emit('update:position', v),
+                onThemeChange: (change) => emit('theme-change', change),
                 onHeightChange: (v) => emit('update:height', v),
                 onWidthChange: (v) => emit('update:width', v),
                 onClose: () => {
@@ -279,6 +285,7 @@ export const CliPanel = defineComponent({
                                   )
                                 : null,
                         ]),
+                        s.themePicker ? renderThemePicker(s) : null,
                         s.hideable
                             ? h('button', { class: 'cli-panel-btn cli-panel-btn-hide', title: PANEL_LABELS.hide, onClick: () => controller.hide() }, [icon(HIDE_ICON)])
                             : null,
@@ -333,6 +340,56 @@ export const CliPanel = defineComponent({
                 renderCollapseButton(s),
             ]);
 
+        /** A color picker of the theme picker's Custom choice. */
+        const renderColorRow = (key: string, className: string, label: string, color: NonNullable<PanelThemeOption['color']>) =>
+            h('label', { key, class: className }, [
+                h('span', label),
+                h('input', {
+                    type: 'color',
+                    value: color.value,
+                    onInput: (e: Event) => controller.setCustomThemeColor(color.key, colorInputValue(e)),
+                }),
+            ]);
+
+        const renderThemePicker = (s: CliPanelSnapshot) =>
+            h('div', { class: 'cli-panel-btn-theme-wrapper', onClick: stop }, [
+                h(
+                    'button',
+                    {
+                        type: 'button',
+                        class: 'cli-panel-btn cli-panel-btn-theme',
+                        title: PANEL_LABELS.changeTheme,
+                        'aria-label': PANEL_LABELS.changeTheme,
+                        'aria-haspopup': 'menu',
+                        'aria-expanded': String(s.themeDropdownOpen),
+                        onClick: (e: MouseEvent) => controller.toggleThemeDropdown(e.currentTarget as HTMLElement),
+                    },
+                    [icon(themeIcon(s.scheme, 20))],
+                ),
+                s.themeDropdownOpen
+                    ? h(
+                          'div',
+                          { class: 'cli-panel-theme-dropdown', role: 'menu', 'aria-label': PANEL_LABELS.theme, style: s.themeDropdownStyle },
+                          themeOptions(s).flatMap((opt) => [
+                              opt.separatorBefore ? h('div', { class: 'cli-panel-theme-dropdown-separator', role: 'separator' }) : null,
+                              opt.color ? renderColorRow(opt.key, opt.className, opt.label, opt.color) : h(
+                                  'button',
+                                  {
+                                      key: opt.key,
+                                      type: 'button',
+                                      class: opt.className,
+                                      role: opt.theme ? 'menuitemradio' : 'menuitem',
+                                      'aria-checked': opt.theme ? String(opt.checked) : undefined,
+                                      'aria-expanded': opt.expanded === undefined ? undefined : String(opt.expanded),
+                                      onClick: () => runThemeOption(controller, opt),
+                                  },
+                                  [icon(opt.icon), opt.label],
+                              ),
+                          ]),
+                      )
+                    : null,
+            ]);
+
         const renderHeaderMenu = (s: CliPanelSnapshot) =>
             h(
                 'div',
@@ -340,7 +397,7 @@ export const CliPanel = defineComponent({
                 headerMenuItems(s).flatMap((item) => [
                     item.separatorBefore ? h('div', { class: 'cli-panel-header-menu-separator', role: 'separator' }) : null,
                     item.heading ? h('div', { class: 'cli-panel-header-menu-heading', role: 'presentation' }, item.heading) : null,
-                    h(
+                    item.color ? renderColorRow(item.key, headerMenuItemClass(item), item.label, item.color) : h(
                         'button',
                         {
                             key: item.key,
@@ -348,6 +405,7 @@ export const CliPanel = defineComponent({
                             class: headerMenuItemClass(item),
                             role: item.role,
                             'aria-checked': item.role === 'menuitemradio' ? String(!!item.checked) : undefined,
+                            'aria-expanded': item.expanded === undefined ? undefined : String(item.expanded),
                             disabled: item.disabled,
                             onClick: () => runHeaderMenuAction(controller, item),
                         },

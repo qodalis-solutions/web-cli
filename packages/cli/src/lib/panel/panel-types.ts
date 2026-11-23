@@ -3,8 +3,10 @@ import {
     CliEngineSnapshot,
     CliNotification,
     CliPanelConfig,
+    CliPanelCustomColors,
     CliPanelHideAlignment,
     CliPanelPosition,
+    CliPanelThemeChange,
 } from '@qodalis/cli-core';
 
 /** One terminal inside a tab. */
@@ -101,6 +103,8 @@ export interface CliPanelCallbacks {
     onMaximizedChange?: (maximized: boolean) => void;
     onActiveTabIdChange?: (tabId: number) => void;
     onPositionChange?: (position: CliPanelPosition) => void;
+    /** The user picked a theme in the panel's theme picker (not fired for the host's own `setTheme`). */
+    onThemeChange?: (change: CliPanelThemeChange) => void;
     onHeightChange?: (height: number) => void;
     onWidthChange?: (width: number) => void;
     onClose?: () => void;
@@ -127,6 +131,11 @@ export interface CliPanelControllerOptions {
      * @default true
      */
     persistPosition?: boolean;
+    /**
+     * Restore and persist the theme picked in the theme picker through localStorage.
+     * @default true
+     */
+    persistTheme?: boolean;
 }
 
 /**
@@ -155,6 +164,14 @@ export interface CliPanelSnapshot {
     /** Theme the host set for the terminals; undefined leaves them alone. */
     terminalTheme?: ITheme;
     /**
+     * The theme picker's checked choice: `'auto'`, `'light'`, `'dark'`, `'custom'`
+     * (the user's own colors) or a terminal theme's name (also one the user applied
+     * with the `theme` command); empty for a host theme the picker does not list.
+     */
+    themeChoice: string;
+    /** The colors of the Custom choice, shown in its color pickers. */
+    customColors: CliPanelCustomColors;
+    /**
      * Height of the on-screen keyboard over the page (0 when closed), from the
      * visual viewport: the panel moves above it.
      */
@@ -174,6 +191,7 @@ export interface CliPanelSnapshot {
     hideable: boolean;
     hideAlignment: CliPanelHideAlignment;
     syncTheme: boolean;
+    themePicker: boolean;
 
     // ── Tabs & panes ──
     tabs: readonly CliPanelTab[];
@@ -184,6 +202,12 @@ export interface CliPanelSnapshot {
     // ── Menus ──
     contextMenu: CliPanelContextMenu;
     positionDropdownOpen: boolean;
+    /** The header's theme picker is open. */
+    themeDropdownOpen: boolean;
+    /** Side and `max-height` of the theme picker, from the room around its button. */
+    themeDropdownStyle: Record<string, string>;
+    /** The picker (header dropdown and ⋮ menu) lists the terminal themes under "More themes". */
+    themeListOpen: boolean;
     servicesDropdownOpen: boolean;
     servicesDropdownStyle: Record<string, string>;
     serversDropdownOpen: boolean;

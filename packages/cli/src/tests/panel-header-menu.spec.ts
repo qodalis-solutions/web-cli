@@ -15,6 +15,7 @@ function createController(config = {}) {
     return new CliPanelController({
         config,
         persistPosition: false,
+        persistTheme: false,
         viewport: () => ({ width: 412, height: 915 }),
     });
 }
@@ -91,7 +92,7 @@ describe('Panel compact header (⋮ menu)', () => {
         });
         const s = (patch: Partial<CliPanelSnapshot> = {}): CliPanelSnapshot => ({ ...base, ...patch });
 
-        it('lists maximize, the four positions, hide and close', () => {
+        it('lists maximize, the four positions, the theme picker, hide and close', () => {
             const items = headerMenuItems(s({ collapsed: false, position: 'bottom' }));
             expect(items.map((i) => i.key)).toEqual([
                 'maximize',
@@ -99,6 +100,11 @@ describe('Panel compact header (⋮ menu)', () => {
                 'position-top',
                 'position-left',
                 'position-right',
+                'theme-auto',
+                'theme-light',
+                'theme-dark',
+                'theme-custom',
+                'theme-list',
                 'hide',
                 'close',
             ]);

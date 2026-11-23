@@ -3,6 +3,23 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## v2.8.0
+
+### Panel: theme picker
+
+- The panel's header has a theme button, and the ⋮ menu of a narrow panel a Theme group: **Auto** (follows the device, live), **Light**, **Dark**, **Custom** and, under "More themes", the terminal themes of `theme list`. A pick restyles the panel and every terminal in it, with arrow keys, Home/End and Escape as in the ⋮ menu (#235).
+- **Custom** shows color pickers for the background, the text and the accent, starting from the current look and applied as they change. The colors are kept for the next time Custom is picked.
+- The pick is remembered (`localStorage`) and restored on the next load over the host's `theme`, which stays the default until someone picks. When the host changes its `theme` (or calls `setTheme()`), that applies again and the pick is forgotten.
+- The panel tells the host: `themeChange` output (Angular), `onThemeChange` prop (React), `theme-change` event (Vue), `onThemeChange` callback of `CliPanelController`, with `{ theme, scheme, colors? }`. `controller.pickTheme(name, colors?)` and `controller.setCustomThemeColor(key, color)` pick from code.
+- The picker and the `theme` command share the command's saved state: a terminal theme picked in the panel is saved as `theme apply <name>` and Custom as custom colors (`theme current` reports them, other terminals and browser tabs follow), Auto/Light/Dark clear it as `theme reset` does. In the other direction `theme apply` checks that theme in the picker, `theme set` shows its colors under Custom, and `theme reset` returns the panel to the host's theme.
+- `CliEngine.applyUserTheme(nameOrColors)` and `CliEngine.clearUserTheme()` apply or clear a theme as the `theme` command does, saved state included.
+- `themePicker: false` (`CliPanelConfig`) hides the picker for panels with a fixed brand theme.
+- The docs site's theme button and its panel follow each other.
+
+### Fixes
+
+- A host theme change (and a pick) now reaches a terminal that is still starting, e.g. while the users plugin's first-run wizard is open: the engine announces its terminal as soon as it exists (`qcli-terminal-ready`), instead of the panel learning about it only when `start()` resolves.
+
 ## v2.7.1
 
 ### Docs: connecting your own server from the app

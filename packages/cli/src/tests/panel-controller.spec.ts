@@ -53,6 +53,7 @@ function createController(callbacks: CliPanelCallbacks = {}, config = {}) {
         config,
         callbacks,
         persistPosition: false,
+        persistTheme: false,
         viewport: () => ({ width: 1000, height: 800 }),
     });
 }

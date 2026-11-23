@@ -483,6 +483,14 @@ const position = ref('bottom');
     </tr>
   </tbody>
 </table>
+<p>
+  A theme picked in the panel's
+  <a routerLink="/docs/configuration" fragment="panel-theme-picker">theme picker</a>
+  is reported as an event, not a bindable value: <code>themeChange</code>
+  (Angular), <code>onThemeChange</code> (React), <code>theme-change</code>
+  (Vue), with <code>&#123; theme, scheme &#125;</code>. The app's own
+  <code>setTheme()</code> and <code>theme</code> option do not fire it.
+</p>
 
 <!-- Hybrid Controlled/Uncontrolled -->
 <h2 id="controlled-uncontrolled">

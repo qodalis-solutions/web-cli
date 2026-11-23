@@ -67,6 +67,58 @@ export const MORE_ICON: SvgIcon = {
     shapes: [line('12', '5', '12', '5'), line('12', '12', '12', '12'), line('12', '19', '12', '19')],
 };
 
+/** A sun: the light theme. */
+export const LIGHT_THEME_ICON: SvgIcon = {
+    size: 18,
+    strokeWidth: 1.8,
+    shapes: [
+        rect({ x: '8', y: '8', width: '8', height: '8', rx: '4' }),
+        line('12', '2', '12', '4'),
+        line('12', '20', '12', '22'),
+        line('2', '12', '4', '12'),
+        line('20', '12', '22', '12'),
+        line('4.9', '4.9', '6.3', '6.3'),
+        line('17.7', '17.7', '19.1', '19.1'),
+        line('4.9', '19.1', '6.3', '17.7'),
+        line('17.7', '6.3', '19.1', '4.9'),
+    ],
+};
+
+/** A crescent moon: the dark theme. */
+export const DARK_THEME_ICON: SvgIcon = {
+    size: 18,
+    strokeWidth: 1.8,
+    shapes: [
+        polyline(
+            '11.1 3 8.9 3.5 6.9 4.6 5.2 6.1 4 7.9 3.2 10.1 3 12.3 3.4 14.5 4.3 16.6 5.6 18.4 7.4 19.7 9.5 20.6 11.7 21 13.9 20.8 16.1 20 17.9 18.8 19.4 17.1 20.5 15.1 21 12.9 19.2 14.4 17 15.3 14.7 15.5 12.5 14.8 10.6 13.4 9.2 11.5 8.5 9.3 8.7 7 9.6 4.8 11.1 3',
+        ),
+    ],
+};
+
+/** A screen: the theme follows the device. */
+export const AUTO_THEME_ICON: SvgIcon = {
+    size: 18,
+    strokeWidth: 1.8,
+    shapes: [rect({ x: '3', y: '4', width: '18', height: '12', rx: '2' }), line('8', '20', '16', '20'), line('12', '16', '12', '20')],
+};
+
+/** A color swatch: a terminal theme. */
+export const TERMINAL_THEME_ICON: SvgIcon = {
+    size: 18,
+    strokeWidth: 1.8,
+    shapes: [
+        rect({ x: '4', y: '4', width: '16', height: '16', rx: '3' }),
+        rect({ x: '8', y: '8', width: '8', height: '8', rx: '1', fill: 'currentColor', stroke: 'none', opacity: '0.5' }),
+    ],
+};
+
+/** Icon of a theme picker choice (`'auto'`, `'light'`, `'dark'` or a terminal theme's name). */
+export function themeIcon(theme: string, size = 18): SvgIcon {
+    const icon =
+        theme === 'auto' ? AUTO_THEME_ICON : theme === 'light' ? LIGHT_THEME_ICON : theme === 'dark' ? DARK_THEME_ICON : TERMINAL_THEME_ICON;
+    return { ...icon, size };
+}
+
 const CHEVRON_UP = '18 15 12 9 6 15';
 const CHEVRON_DOWN = '6 9 12 15 18 9';
 const CHEVRON_LEFT = '15 6 9 12 15 18';
@@ -110,6 +162,11 @@ export function hideTabChevronIcon(position: CliPanelPosition): SvgIcon {
             break;
     }
     return { size: 14, strokeWidth: 2.5, shapes: [polyline(points)] };
+}
+
+/** Chevron of the "More themes" row: down to open the list, up to close it. */
+export function expandChevronIcon(expanded: boolean, size = 18): SvgIcon {
+    return { size, strokeWidth: 2, shapes: [polyline(expanded ? CHEVRON_UP : CHEVRON_DOWN)] };
 }
 
 /** Square with a filled bar on the side the panel is docked to. */
