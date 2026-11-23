@@ -69,15 +69,19 @@
       <td><code>packageSources</code></td>
       <td>
         <code
-          >&#123; primary?: string, sources?: CliPackageSource[] &#125;</code
+          >&#123; primary?: string, sources?: CliPackageSource[], marketplace?:
+          string | false, marketplaceOnly?: boolean &#125;</code
         >
       </td>
-      <td>Built-in (unpkg, jsdelivr)</td>
+      <td>Built-in (unpkg, jsdelivr, npm, the qodalis marketplace)</td>
       <td>
-        Custom package sources for the <code>pkg</code> command. Set
-        <code>primary</code> to change the default source. Add entries to
-        <code>sources</code> with <code>name</code>, <code>url</code>, and
-        <code>kind</code> (<code>'registry'</code> or <code>'file'</code>).
+        Package sources for the <code>pkg</code> command. Set
+        <code>primary</code> to change the default download source. Add entries
+        to <code>sources</code> with <code>name</code>, <code>url</code>, and
+        <code>kind</code> (<code>'registry'</code>, <code>'file'</code> or
+        <code>'marketplace'</code>). <code>marketplace</code> and
+        <code>marketplaceOnly</code>: see
+        <a href="#plugin-marketplace">Plugin marketplace</a>.
       </td>
     </tr>
     <tr>
@@ -142,6 +146,80 @@
     </tr>
   </tbody>
 </table>
+
+<h2 id="plugin-marketplace">Plugin marketplace</h2>
+<p>
+  <code>pkg browse</code>, <code>pkg search</code>, <code>pkg info</code>,
+  <code>pkg add</code>, <code>pkg check</code> and <code>pkg update</code> read a
+  plugin marketplace: a catalog that lists reviewed plugins, records which CLI
+  API each version needs and the SHA-384 hash of its bundle. The built-in
+  source <code>qodalis</code> (kind <code>marketplace</code>) is
+  <a href="https://plugins.qodalis.com" target="_blank" rel="noopener"
+    >https://plugins.qodalis.com/</a
+  >. Plugins stay on npm: bundles are downloaded from the file sources (unpkg,
+  jsdelivr, yours) and checked against the recorded hash before they run.
+</p>
+<ul>
+  <li>
+    <strong>A version that does not fit</strong> this CLI, or that was flagged
+    or unlisted, is refused with the reason and the newest version that works.
+  </li>
+  <li>
+    <strong>A bundle whose hash differs</strong> from the recorded one is not
+    injected. Saved packages keep the hash and load with the
+    <code>integrity</code> attribute, so a changed file is refused by the
+    browser at startup; the package is reported and skipped.
+  </li>
+  <li>
+    <strong>Packages the marketplace does not list</strong> still install by
+    their full name, with a warning that they were not reviewed.
+  </li>
+  <li>
+    <strong>When the marketplace does not answer</strong> within 4 seconds,
+    <code>pkg</code> prints <code>Marketplace unreachable, searching npm</code>
+    once and works as before (npm search, CDN probes).
+  </li>
+</ul>
+
+<h3>A private marketplace</h3>
+<p>
+  Mount the marketplace plugin on your own Node server
+  (<code>&#64;qodalis/cli-server-plugin-marketplace</code>) and point the CLI at
+  it. The URL replaces the built-in one; a source of kind
+  <code>marketplace</code> in <code>sources</code> does the same.
+</p>
+<div class="code-block">
+  <span class="code-label">TypeScript</span>
+  <pre><code>const options: CliOptions = &#123;
+  packageSources: &#123;
+    marketplace: 'https://plugins.example.com/',
+    // or: sources: [&#123; name: 'acme', url: 'https://plugins.example.com/', kind: 'marketplace' &#125;]
+  &#125;,
+&#125;;</code></pre>
+</div>
+
+<h3>Only listed packages</h3>
+<p>
+  <code>marketplaceOnly: true</code> refuses packages the marketplace does not
+  list, and refuses installs and updates while the marketplace is unreachable.
+</p>
+<div class="code-block">
+  <span class="code-label">TypeScript</span>
+  <pre><code>packageSources: &#123; marketplaceOnly: true &#125;</code></pre>
+</div>
+
+<h3>Turning it off</h3>
+<p>
+  <code>marketplace: false</code> removes the built-in marketplace: the CLI
+  makes no request to <code>plugins.qodalis.com</code>, and <code>pkg</code>
+  searches npm and probes the CDNs as before.
+  <code>pkg source</code> shows which marketplace is in use, or
+  <code>off</code>.
+</p>
+<div class="code-block">
+  <span class="code-label">TypeScript</span>
+  <pre><code>packageSources: &#123; marketplace: false &#125;</code></pre>
+</div>
 
 <!-- CliServerConfig -->
 <h2>Server Configuration</h2>

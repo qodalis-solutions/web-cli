@@ -15,61 +15,142 @@
   <pre><code>pkg add &#64;qodalis/cli-guid</code></pre>
 </div>
 
-<h2>{{ "docs.plugins.utilities-title" | translate }}</h2>
-<table>
-  <thead>
-    <tr>
-      <th>{{ "docs.plugins.th-name" | translate }}</th>
-      <th>{{ "docs.plugins.th-package" | translate }}</th>
-      <th>{{ "docs.plugins.th-install" | translate }}</th>
-      <th>{{ "docs.plugins.th-description" | translate }}</th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (plugin of utilityPlugins; track plugin) {
-      <tr>
-        <td>
-          <a [routerLink]="'/docs/plugins/' + plugin.id">{{ plugin.name }}</a>
-        </td>
-        <td>
-          <code>{{ plugin.npmPackage }}</code>
-        </td>
-        <td>
-          <code>npm install {{ plugin.npmPackage }}</code>
-        </td>
-        <td>{{ plugin.description }}</td>
-      </tr>
+@if (catalog(); as plugins) {
+  <h2>{{ "docs.plugins.marketplace-title" | translate }}</h2>
+  <p>
+    {{ "docs.plugins.marketplace-desc" | translate }}
+    <a href="https://plugins.qodalis.com" target="_blank" rel="noopener"
+      >plugins.qodalis.com</a
+    >
+  </p>
+  <div class="catalog-tools">
+    <input
+      type="search"
+      [value]="query()"
+      (input)="onQuery($event)"
+      [attr.aria-label]="'docs.plugins.search' | translate"
+      [placeholder]="'docs.plugins.search' | translate"
+    />
+    @for (cat of categories(); track cat) {
+      <button
+        type="button"
+        class="catalog-chip"
+        [class.active]="category() === cat"
+        (click)="toggleCategory(cat)"
+      >
+        {{ cat }}
+      </button>
     }
-  </tbody>
-</table>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>{{ "docs.plugins.th-name" | translate }}</th>
+        <th>{{ "docs.plugins.th-category" | translate }}</th>
+        <th>{{ "docs.plugins.th-install" | translate }}</th>
+        <th>{{ "docs.plugins.th-description" | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (plugin of filtered(); track plugin.name) {
+        <tr>
+          <td>
+            @if (detailLink(plugin); as link) {
+              <a [routerLink]="link">{{ plugin.name }}</a>
+            } @else {
+              <a
+                [href]="'https://www.npmjs.com/package/' + plugin.name"
+                target="_blank"
+                rel="noopener"
+                >{{ plugin.name }}</a
+              >
+            }
+            @if (plugin.publisher.verified) {
+              <span
+                class="verified"
+                [title]="'docs.plugins.verified' | translate"
+                >✓</span
+              >
+            }
+          </td>
+          <td>{{ plugin.category }}</td>
+          <td>
+            <code>pkg add {{ installName(plugin) }}</code>
+          </td>
+          <td>{{ plugin.description }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="4" class="catalog-note">
+            {{ "docs.plugins.no-match" | translate }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  <p class="catalog-note">
+    {{ plugins.length }} {{ "docs.plugins.listed" | translate }}
+    <a routerLink="/docs/publishing-plugins">{{
+      "sidebar.publishing-plugins" | translate
+    }}</a>
+  </p>
+} @else {
+  <h2>{{ "docs.plugins.utilities-title" | translate }}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>{{ "docs.plugins.th-name" | translate }}</th>
+        <th>{{ "docs.plugins.th-package" | translate }}</th>
+        <th>{{ "docs.plugins.th-install" | translate }}</th>
+        <th>{{ "docs.plugins.th-description" | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (plugin of utilityPlugins; track plugin) {
+        <tr>
+          <td>
+            <a [routerLink]="'/docs/plugins/' + plugin.id">{{ plugin.name }}</a>
+          </td>
+          <td>
+            <code>{{ plugin.npmPackage }}</code>
+          </td>
+          <td>
+            <code>npm install {{ plugin.npmPackage }}</code>
+          </td>
+          <td>{{ plugin.description }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
 
-<h2>{{ "docs.plugins.games-title" | translate }}</h2>
-<table>
-  <thead>
-    <tr>
-      <th>{{ "docs.plugins.th-name" | translate }}</th>
-      <th>{{ "docs.plugins.th-package" | translate }}</th>
-      <th>{{ "docs.plugins.th-install" | translate }}</th>
-      <th>{{ "docs.plugins.th-description" | translate }}</th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (plugin of gamePlugins; track plugin) {
+  <h2>{{ "docs.plugins.games-title" | translate }}</h2>
+  <table>
+    <thead>
       <tr>
-        <td>
-          <a [routerLink]="'/docs/plugins/' + plugin.id">{{ plugin.name }}</a>
-        </td>
-        <td>
-          <code>{{ plugin.npmPackage }}</code>
-        </td>
-        <td>
-          <code>npm install {{ plugin.npmPackage }}</code>
-        </td>
-        <td>{{ plugin.description }}</td>
+        <th>{{ "docs.plugins.th-name" | translate }}</th>
+        <th>{{ "docs.plugins.th-package" | translate }}</th>
+        <th>{{ "docs.plugins.th-install" | translate }}</th>
+        <th>{{ "docs.plugins.th-description" | translate }}</th>
       </tr>
-    }
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      @for (plugin of gamePlugins; track plugin) {
+        <tr>
+          <td>
+            <a [routerLink]="'/docs/plugins/' + plugin.id">{{ plugin.name }}</a>
+          </td>
+          <td>
+            <code>{{ plugin.npmPackage }}</code>
+          </td>
+          <td>
+            <code>npm install {{ plugin.npmPackage }}</code>
+          </td>
+          <td>{{ plugin.description }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
 
 <h2>{{ "docs.plugins.usage-title" | translate }}</h2>
 <p>{{ "docs.plugins.usage-desc" | translate }}</p>

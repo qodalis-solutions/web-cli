@@ -98,7 +98,17 @@ export const BUILT_IN_GROUPS: CommandGroup[] = [
     },
     {
         label: 'Packages',
-        commands: ['pkg add', 'pkg ls', 'pkg remove'],
+        commands: [
+            'pkg browse',
+            'pkg search',
+            'pkg info',
+            'pkg add',
+            'pkg ls',
+            'pkg remove',
+            'pkg check',
+            'pkg update',
+            'pkg publish',
+        ],
     },
     {
         label: 'Servers',
@@ -256,9 +266,15 @@ export const COMMAND_CATEGORIES: CommandCategory[] = [
     {
         label: 'Packages',
         commands: [
-            { command: 'pkg add', description: 'Install a plugin package at runtime', aliases: 'packages add' },
+            { command: 'pkg browse', description: 'List the plugins the marketplace lists (npm and the CDNs when it does not answer), with version, category, verified publisher and whether each fits this CLI' },
+            { command: 'pkg search <text>', description: 'Search the marketplace by name, description and tags' },
+            { command: 'pkg info <name>', description: 'A plugin\'s publisher, category, versions and which fit this CLI, links and paired server packages' },
+            { command: 'pkg add <name>[@version]', description: 'Install a plugin at runtime: marketplace versions are checked for fit and the bundle against the recorded SHA-384 hash; unlisted packages install with a warning', aliases: 'packages add, pkg install' },
             { command: 'pkg ls', description: 'List installed packages' },
             { command: 'pkg remove', description: 'Remove an installed package' },
+            { command: 'pkg check', description: 'Updates that fit this CLI, and warnings about installed versions that were flagged or unlisted' },
+            { command: 'pkg update [name][@version]', description: 'Update one or all packages to the newest version that fits' },
+            { command: 'pkg publish <npm name>', description: 'Submit an npm package to the marketplace for indexing and review (it does not publish to npm)' },
         ],
     },
     {

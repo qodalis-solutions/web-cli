@@ -74,6 +74,13 @@ const routes: Routes = [
                     ),
             },
             {
+                path: 'publishing-plugins',
+                loadChildren: () =>
+                    import(
+                        './pages/publishing-plugins/publishing-plugins.module'
+                    ).then((m) => m.PublishingPluginsModule),
+            },
+            {
                 path: 'ai-plugin-development',
                 loadChildren: () =>
                     import('./pages/ai-plugin-development/ai-plugin-development.module').then(
