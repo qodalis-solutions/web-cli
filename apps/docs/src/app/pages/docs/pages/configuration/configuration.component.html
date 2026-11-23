@@ -330,6 +330,12 @@
       <td><code>'dark'</code></td>
       <td>Look of the panel and its terminals; see <a routerLink="/docs/configuration" fragment="panel-themes">Panel themes</a></td>
     </tr>
+    <tr>
+      <td><code>themePicker</code></td>
+      <td><code>boolean</code></td>
+      <td><code>true</code></td>
+      <td>Whether the panel offers its theme picker (Auto, Light, Dark, Custom colors and the terminal themes); see <a routerLink="/docs/configuration" fragment="panel-theme-picker">The theme picker</a></td>
+    </tr>
   </tbody>
 </table>
 <div class="code-block">
@@ -430,6 +436,58 @@
   <code>theme</code> option, terminals keep the saved theme and the panel uses
   the dark palette, or colors derived from the terminal with
   <code>syncTheme: true</code>.
+</p>
+<h3 id="panel-theme-picker">The theme picker</h3>
+<p>
+  The panel's header has a theme button (on a narrow panel, a Theme group in
+  the ⋮ menu): <strong>Auto</strong> (follows the device, live),
+  <strong>Light</strong>, <strong>Dark</strong>, <strong>Custom</strong> and,
+  under <em>More themes</em>, the terminal themes of <code>theme list</code>.
+  A pick restyles the panel and every terminal in it and is remembered in the
+  browser for the next visit.
+</p>
+<p>
+  <strong>Custom</strong> shows three color pickers, background, text and
+  accent, starting from the current look. Every change applies at once; the
+  terminal keeps the ANSI colors of the light or dark theme that suits the
+  background (or the ones set earlier with <code>theme set</code>). The colors
+  are kept when another theme is picked, for the next time Custom is chosen.
+</p>
+<p>
+  The picker and the <code>theme</code> command share one saved state, so they
+  never disagree: a terminal theme picked in the panel is saved as
+  <code>theme apply &lt;name&gt;</code> and Custom as custom colors (both
+  reported by <code>theme current</code>), while Auto, Light and Dark clear the
+  command's theme as <code>theme reset</code> does. The other way round,
+  <code>theme apply</code> checks that theme in the picker,
+  <code>theme set</code> shows its colors under Custom, and
+  <code>theme reset</code> returns the panel to the app's theme.
+</p>
+<p>
+  The app's <code>theme</code> is the default until someone picks. When the
+  app changes its <code>theme</code> afterwards (or calls
+  <code>setTheme</code>), the app's theme applies again and the pick is
+  forgotten. The panel reports a pick, so the rest of the page can follow it:
+  <code>(themeChange)</code> in Angular, <code>onThemeChange</code> in React,
+  <code>&#64;theme-change</code> in Vue, and the <code>onThemeChange</code>
+  callback of <code>CliPanelController</code>. The event carries the pick
+  (<code>theme</code>: <code>'auto'</code>, <code>'light'</code>,
+  <code>'dark'</code>, <code>'custom'</code> or a terminal theme's name),
+  whether the panel is now light or dark (<code>scheme</code>) and, for Custom,
+  the chosen <code>colors</code>. <code>theme reset</code> also reports the
+  app's theme it returns to.
+</p>
+<div class="code-block">
+  <span class="code-label">React</span>
+  <pre><code>&lt;CliPanel
+    options={{ '{' }}{{ '{' }} theme: appTheme {{ '}' }}{{ '}' }}
+    onThemeChange={{ '{' }}(&#123; theme, scheme &#125;) =&gt;
+        setAppTheme(theme === 'auto' ? 'system' : scheme){{ '}' }}
+/&gt;</code></pre>
+</div>
+<p>
+  A panel with a fixed brand theme turns the picker off with
+  <code>themePicker: false</code>.
 </p>
 <h3>CSS variables</h3>
 <p>

@@ -166,6 +166,63 @@
                 </div>
               }
             </div>
+            @if (s.themePicker) {
+              <div
+                class="cli-panel-btn-theme-wrapper"
+                (click)="$event.stopPropagation()"
+              >
+                <button
+                  type="button"
+                  class="cli-panel-btn cli-panel-btn-theme"
+                  [title]="labels.changeTheme"
+                  [attr.aria-label]="labels.changeTheme"
+                  aria-haspopup="menu"
+                  [attr.aria-expanded]="s.themeDropdownOpen"
+                  (click)="onThemeDropdownToggle($event)"
+                >
+                  <cli-panel-icon [icon]="view.themeIcon" />
+                </button>
+                @if (s.themeDropdownOpen) {
+                  <div
+                    class="cli-panel-theme-dropdown"
+                    role="menu"
+                    [attr.aria-label]="labels.theme"
+                    [ngStyle]="s.themeDropdownStyle"
+                  >
+                    @for (opt of view.themeOptions; track opt.key) {
+                      @if (opt.separatorBefore) {
+                        <div
+                          class="cli-panel-theme-dropdown-separator"
+                          role="separator"
+                        ></div>
+                      }
+                      @if (opt.color; as color) {
+                        <label [class]="opt.className">
+                          <span>{{ opt.label }}</span>
+                          <input
+                            type="color"
+                            [value]="color.value"
+                            (input)="onThemeColor(color, $event)"
+                          />
+                        </label>
+                      } @else {
+                        <button
+                          type="button"
+                          [class]="opt.className"
+                          [attr.role]="opt.theme ? 'menuitemradio' : 'menuitem'"
+                          [attr.aria-checked]="opt.theme ? opt.checked : null"
+                          [attr.aria-expanded]="opt.expanded ?? null"
+                          (click)="onThemeOption(opt)"
+                        >
+                          <cli-panel-icon [icon]="opt.icon" />
+                          {{ opt.label }}
+                        </button>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+            }
             @if (s.hideable) {
               <button
                 class="cli-panel-btn cli-panel-btn-hide"
@@ -346,19 +403,31 @@
             {{ item.heading }}
           </div>
         }
-        <button
-          type="button"
-          [class]="headerMenuItemClass(item)"
-          [attr.role]="item.role"
-          [attr.aria-checked]="
-            item.role === 'menuitemradio' ? !!item.checked : null
-          "
-          [disabled]="item.disabled"
-          (click)="onHeaderMenuAction(item)"
-        >
-          <cli-panel-icon [icon]="item.icon" />
-          {{ item.label }}
-        </button>
+        @if (item.color; as color) {
+          <label [class]="headerMenuItemClass(item)">
+            <span>{{ item.label }}</span>
+            <input
+              type="color"
+              [value]="color.value"
+              (input)="onThemeColor(color, $event)"
+            />
+          </label>
+        } @else {
+          <button
+            type="button"
+            [class]="headerMenuItemClass(item)"
+            [attr.role]="item.role"
+            [attr.aria-checked]="
+              item.role === 'menuitemradio' ? !!item.checked : null
+            "
+            [attr.aria-expanded]="item.expanded ?? null"
+            [disabled]="item.disabled"
+            (click)="onHeaderMenuAction(item)"
+          >
+            <cli-panel-icon [icon]="item.icon" />
+            {{ item.label }}
+          </button>
+        }
       }
     </div>
   }

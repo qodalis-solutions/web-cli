@@ -51,6 +51,8 @@ import { CliConfigProvider, CliPanel } from '@qodalis/react-cli';
 <CliPanel options={{ theme: { base: 'light', colors: { accent: '#0f766e' }, radius: '10px' } }} />
 ```
 
+The panel's theme picker (Auto, Light, Dark, Custom colors and the terminal themes, in sync with the `theme` command) lets the reader choose; `onThemeChange` reports the pick as `{ theme, scheme }` so your app can follow, and `themePicker: false` hides it.
+
 See [Panel themes](https://cli.qodalis.com/docs/configuration#panel-themes).
 
 ## Exports

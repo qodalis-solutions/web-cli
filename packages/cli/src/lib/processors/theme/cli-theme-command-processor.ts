@@ -15,6 +15,7 @@ import { DefaultLibraryAuthor } from '@qodalis/cli-core';
 import { ITheme } from '@xterm/xterm';
 import { themes, ThemeState, themeInfos } from './types';
 import {
+    announceTerminalThemeReset,
     applyUserTerminalTheme,
     initTerminalTheme,
     paintTerminalBackground,
@@ -408,6 +409,8 @@ export class CliThemeCommandProcessor implements ICliCommandProcessor {
                     resetTerminalTheme(context.terminal);
                     context.state.reset();
                     await context.state.persist();
+                    // A panel themed from its theme picker returns to the host's theme
+                    announceTerminalThemeReset(context.terminal);
                     context.writer.writeSuccess('Theme reset to default');
                 },
             },

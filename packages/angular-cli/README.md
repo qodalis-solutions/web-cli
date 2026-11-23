@@ -60,7 +60,7 @@ export const appConfig: ApplicationConfig = {
 
 `<cli-panel>` is a panel docked to an edge of the page (`'bottom' | 'top' | 'left' | 'right'`) with tabs and split panes.
 
-`options.theme` styles the panel and its terminals: `'dark'` (default), `'light'`, `'auto'` (follows the system), a terminal theme name such as `'dracula'`, or your own colors over a base palette (`{ base: 'light', colors: { accent: '#0f766e' } }`). To follow your app's setting, pass a new `options` object when it changes, or call `setTheme(theme)` on the component. See [Panel themes](https://cli.qodalis.com/docs/configuration#panel-themes).
+`options.theme` styles the panel and its terminals: `'dark'` (default), `'light'`, `'auto'` (follows the system), a terminal theme name such as `'dracula'`, or your own colors over a base palette (`{ base: 'light', colors: { accent: '#0f766e' } }`). To follow your app's setting, pass a new `options` object when it changes, or call `setTheme(theme)` on the component. The panel's theme picker (Auto, Light, Dark, Custom colors and the terminal themes, in sync with the `theme` command) lets the reader choose; `(themeChange)` reports the pick as `{ theme, scheme }` so your app can follow, and `themePicker: false` hides it. See [Panel themes](https://cli.qodalis.com/docs/configuration#panel-themes).
 
 ## Exports
 

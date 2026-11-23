@@ -9,6 +9,8 @@ import { FitAddon } from '@xterm/addon-fit';
 import { SerializeAddon } from '@xterm/addon-serialize';
 import {
     CliOptions,
+    DefaultThemes,
+    ICliStateStore,
     CliProvider,
     CliEngineSnapshot,
     ICliModule,
@@ -20,7 +22,13 @@ import {
 import { CliServerAuthService } from '../services/cli-server-auth.service';
 import { CliCommandExecutor } from '../executor/cli-command-executor';
 import { CliCommandProcessorRegistry } from '../registry/cli-command-processor-registry';
-import { setHostTerminalTheme } from '../processors/theme/terminal-theme';
+import {
+    CLI_TERMINAL_READY_EVENT,
+    applyUserTerminalTheme,
+    hasUserTerminalTheme,
+    resetTerminalTheme,
+    setHostTerminalTheme,
+} from '../processors/theme/terminal-theme';
 import { CliExecutionContext } from '../context/cli-execution-context';
 import {
     CliEnvironment,
@@ -277,6 +285,15 @@ export class CliEngine {
             );
         }
         this.handleResize();
+        // Panels theme the terminal from here on, not only once start() resolves
+        if (typeof CustomEvent === 'function') {
+            this.container.dispatchEvent(
+                new CustomEvent(CLI_TERMINAL_READY_EVENT, {
+                    bubbles: true,
+                    detail: this,
+                }),
+            );
+        }
     }
 
     /** 2. Service container, boot service, executor and execution context. */
@@ -587,6 +604,56 @@ export class CliEngine {
     setTheme(theme: ITheme): void {
         if (this.terminal) setHostTerminalTheme(this.terminal, theme);
         else this.container.style.background = theme.background ?? '';
+    }
+
+    /**
+     * Apply a theme as the `theme` command does: a built-in theme by name
+     * (`theme apply <name>`) or custom colors (`theme set`). It shows here,
+     * is saved in the command's state (`theme current` reports it) and the
+     * other terminals and browser tabs follow. Returns false for an unknown
+     * name or before the terminal exists.
+     */
+    applyUserTheme(theme: string | ITheme): boolean {
+        const themes: Record<string, ITheme> = DefaultThemes;
+        const colors = typeof theme === 'string' ? themes[theme] : theme;
+        if (!this.terminal || !colors) return false;
+        applyUserTerminalTheme(this.terminal, colors);
+        this.saveThemeState((store) =>
+            store.updateState(
+                typeof theme === 'string'
+                    ? { selectedTheme: theme, customOptions: null }
+                    : { selectedTheme: null, customOptions: theme },
+            ),
+        );
+        return true;
+    }
+
+    /**
+     * Forget a theme the user applied with the `theme` command, here and in
+     * its saved state (as `theme reset` does), so the host's theme shows
+     * again. Returns false when the terminal had no user theme.
+     */
+    clearUserTheme(): boolean {
+        if (!this.terminal || !hasUserTerminalTheme(this.terminal)) {
+            return false;
+        }
+        resetTerminalTheme(this.terminal);
+        this.saveThemeState((store) => store.reset());
+        return true;
+    }
+
+    /** Change the `theme` command's state and save it. */
+    private saveThemeState(change: (store: ICliStateStore) => void): void {
+        try {
+            const store = this.executionContext?.services
+                .getRequired<ICliStateStoreManager>(CliStateStoreManager_TOKEN)
+                .getStateStore('theme');
+            if (!store) return;
+            change(store);
+            store.persist().catch(() => {});
+        } catch {
+            // Services are not set up yet: the terminal alone has the theme
+        }
     }
 
     /**

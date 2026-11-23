@@ -29,6 +29,27 @@ function recordOf(terminal: Terminal): TerminalThemeRecord {
  */
 export const CLI_TERMINAL_THEME_EVENT = 'qcli-terminal-theme';
 
+/**
+ * Fired (bubbling) on a terminal's container as soon as its engine has created
+ * the terminal, long before `start()` resolves (modules boot, first-run
+ * wizards); the detail is the engine. Panels theme the terminal from then on.
+ */
+export const CLI_TERMINAL_READY_EVENT = 'qcli-terminal-ready';
+
+/**
+ * Fired (bubbling) on a terminal's container when the user runs `theme reset`.
+ * A panel whose theme was picked in its theme picker returns to the host's.
+ */
+export const CLI_TERMINAL_THEME_RESET_EVENT = 'qcli-terminal-theme-reset';
+
+/** Announce `theme reset` (see {@link CLI_TERMINAL_THEME_RESET_EVENT}). */
+export function announceTerminalThemeReset(terminal: Terminal): void {
+    const container = terminal.element?.closest<HTMLElement>('.terminal-container');
+    if (container && typeof CustomEvent === 'function') {
+        container.dispatchEvent(new CustomEvent(CLI_TERMINAL_THEME_RESET_EVENT, { bubbles: true }));
+    }
+}
+
 /** Paint the element around the terminal with its background color and announce the theme. */
 export function paintTerminalBackground(terminal: Terminal): void {
     const container = terminal.element?.closest<HTMLElement>('.terminal-container');
@@ -63,6 +84,11 @@ export function applyUserTerminalTheme(terminal: Terminal, theme: ITheme): void 
     recordOf(terminal).userChosen = true;
     terminal.options.theme = theme;
     paintTerminalBackground(terminal);
+}
+
+/** Whether the terminal shows a theme the user chose with the `theme` command. */
+export function hasUserTerminalTheme(terminal: Terminal): boolean {
+    return records.get(terminal)?.userChosen ?? false;
 }
 
 /** Forget the user's theme and show the base theme again. */

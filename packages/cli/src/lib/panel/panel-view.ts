@@ -1,7 +1,15 @@
-import { CliOptions, CliPanelPosition } from '@qodalis/cli-core';
+import {
+    CliOptions,
+    CliPanelCustomColors,
+    CliPanelPosition,
+    DefaultThemes,
+    PANEL_CUSTOM_COLOR_KEYS,
+    PANEL_CUSTOM_THEME,
+    PANEL_THEME_MODES,
+} from '@qodalis/cli-core';
 import { CliPanelController } from './cli-panel-controller';
 import { PANEL_POSITIONS } from './panel-geometry';
-import { CLOSE_ICON, HIDE_ICON, MAXIMIZE_ICON, RESTORE_ICON, SvgIcon, positionIcon } from './panel-icons';
+import { CLOSE_ICON, HIDE_ICON, MAXIMIZE_ICON, RESTORE_ICON, SvgIcon, expandChevronIcon, positionIcon, themeIcon } from './panel-icons';
 import { CliPanelSnapshot, CliPanelTab, CliPanelTabStatus } from './panel-types';
 
 /**
@@ -15,6 +23,16 @@ export const PANEL_LABELS = {
     movePanel: 'Move panel',
     moreActions: 'More actions',
     position: 'Position',
+    theme: 'Theme',
+    changeTheme: 'Change theme',
+    themeAuto: 'Auto',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeCustom: 'Custom',
+    customBackground: 'Background',
+    customForeground: 'Text',
+    customAccent: 'Accent',
+    moreThemes: 'More themes',
     hide: 'Hide',
     maximize: 'Maximize',
     restore: 'Restore',
@@ -226,27 +244,132 @@ export function positionOptions(s: CliPanelSnapshot): PanelPositionOption[] {
     }));
 }
 
+/* ─── Theme picker ──────────────────────────────────────────── */
+
+/**
+ * Terminal themes listed under "More themes": `default` and `light` are the
+ * Dark and Light choices, and an alias (`yellow`) is listed under its first name.
+ */
+export const PANEL_TERMINAL_THEMES: readonly string[] = Object.keys(DefaultThemes).filter(
+    (name, i, names) =>
+        name !== 'default' && name !== 'light' && names.findIndex((other) => DefaultThemes[other] === DefaultThemes[name]) === i,
+);
+
+/** "Auto", "Solarized Dark": the label of a theme picker choice. */
+export function themeLabel(theme: string): string {
+    if (theme === 'auto') return PANEL_LABELS.themeAuto;
+    if (theme === 'light') return PANEL_LABELS.themeLight;
+    if (theme === 'dark') return PANEL_LABELS.themeDark;
+    if (theme === PANEL_CUSTOM_THEME) return PANEL_LABELS.themeCustom;
+    return capitalize(theme.replace(/([a-z0-9])([A-Z])/g, '$1 $2'));
+}
+
+export interface PanelThemeOption {
+    /** Unique key (`theme-<name>`, `theme-color-<color>`, or `theme-list` for the "More themes" row). */
+    key: string;
+    /** The theme a click picks; absent on the "More themes" row, which opens the list, and on color rows. */
+    theme?: string;
+    /** A color of the Custom choice: the row is a color picker (`<input type="color">`). */
+    color?: { key: keyof CliPanelCustomColors; value: string };
+    label: string;
+    icon: SvgIcon;
+    /** The panel's current theme. */
+    checked: boolean;
+    /** The "More themes" row: whether the list is open (`aria-expanded`). */
+    expanded?: boolean;
+    /** Draw a separator above this row. */
+    separatorBefore: boolean;
+    /** Class of the row in the header's theme dropdown. */
+    className: string;
+}
+
+const CUSTOM_COLOR_LABELS: Record<keyof CliPanelCustomColors, string> = {
+    background: PANEL_LABELS.customBackground,
+    foreground: PANEL_LABELS.customForeground,
+    accent: PANEL_LABELS.customAccent,
+};
+
+/**
+ * Rows of the theme picker: Auto, Light, Dark, Custom (followed by its color
+ * pickers while it is the choice), then "More themes" and, once opened, the
+ * terminal themes (the list of `theme list`).
+ */
+export function themeOptions(s: CliPanelSnapshot): PanelThemeOption[] {
+    const option = (theme: string): PanelThemeOption => ({
+        key: `theme-${theme}`,
+        theme,
+        label: themeLabel(theme),
+        icon: themeIcon(theme),
+        checked: s.themeChoice === theme,
+        separatorBefore: false,
+        className: joinClasses('cli-panel-theme-dropdown-item', s.themeChoice === theme && 'active'),
+    });
+    const options = PANEL_THEME_MODES.map(option);
+    if (s.themeChoice === PANEL_CUSTOM_THEME) {
+        options.push(
+            ...PANEL_CUSTOM_COLOR_KEYS.map((key) => ({
+                key: `theme-color-${key}`,
+                color: { key, value: s.customColors[key] },
+                label: CUSTOM_COLOR_LABELS[key],
+                icon: themeIcon(PANEL_CUSTOM_THEME),
+                checked: false,
+                separatorBefore: false,
+                className: 'cli-panel-theme-dropdown-color',
+            })),
+        );
+    }
+    options.push({
+        key: 'theme-list',
+        label: PANEL_LABELS.moreThemes,
+        icon: expandChevronIcon(s.themeListOpen),
+        checked: false,
+        expanded: s.themeListOpen,
+        separatorBefore: true,
+        className: 'cli-panel-theme-dropdown-item',
+    });
+    if (s.themeListOpen) options.push(...PANEL_TERMINAL_THEMES.map(option));
+    return options;
+}
+
+/** Run a row of the header's theme dropdown: pick its theme, or open/close the list. */
+export function runThemeOption(controller: CliPanelController, option: PanelThemeOption): void {
+    if (option.color) return;
+    if (option.theme) controller.pickTheme(option.theme);
+    else controller.toggleThemeList();
+}
+
+/** Value of a color picker's `input` event. */
+export function colorInputValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
+}
+
 /* ─── Header ⋮ menu (compact header) ────────────────────────── */
 
-export type PanelHeaderMenuAction = 'maximize' | 'position' | 'hide' | 'close';
+export type PanelHeaderMenuAction = 'maximize' | 'position' | 'theme' | 'theme-color' | 'theme-list' | 'hide' | 'close';
 
 export interface PanelHeaderMenuItem {
-    /** Unique key (the action, or `position-<position>`). */
+    /** Unique key (the action, `position-<position>` or `theme-<theme>`). */
     key: string;
     action: PanelHeaderMenuAction;
     label: string;
     icon: SvgIcon;
-    /** `menuitemradio` for the position options, `menuitem` otherwise. */
+    /** `menuitemradio` for the position and theme options, `menuitem` otherwise. */
     role: 'menuitem' | 'menuitemradio';
     /** The position an option moves the panel to. */
     position?: CliPanelPosition;
-    /** The panel's current position (`aria-checked`). */
+    /** The theme an option picks. */
+    theme?: string;
+    /** A color of the Custom theme: the item is a color picker (`<input type="color">`), not a button. */
+    color?: { key: keyof CliPanelCustomColors; value: string };
+    /** The panel's current position or theme (`aria-checked`). */
     checked?: boolean;
+    /** The "More themes" row: whether the list is open (`aria-expanded`). */
+    expanded?: boolean;
     disabled: boolean;
     destructive: boolean;
     /** Draw a separator above this item. */
     separatorBefore: boolean;
-    /** Group label shown above this item (the position options). */
+    /** Group label shown above this item (the position and theme options). */
     heading?: string;
 }
 
@@ -257,8 +380,9 @@ export function headerMenuStyle(s: CliPanelSnapshot): Record<string, string> {
 
 /**
  * Items of the ⋮ menu that replaces the action buttons on a narrow panel:
- * maximize/restore, the four positions, hide (when hideable) and close (when
- * closable). Collapse/expand stays a button next to the ⋮.
+ * maximize/restore, the four positions, the theme picker (unless turned off),
+ * hide (when hideable) and close (when closable). Collapse/expand stays a
+ * button next to the ⋮.
  */
 export function headerMenuItems(s: CliPanelSnapshot): PanelHeaderMenuItem[] {
     const items: PanelHeaderMenuItem[] = [
@@ -288,6 +412,25 @@ export function headerMenuItems(s: CliPanelSnapshot): PanelHeaderMenuItem[] {
             heading: i === 0 ? PANEL_LABELS.position : undefined,
         });
     });
+    if (s.themePicker) {
+        themeOptions(s).forEach((option, i) => {
+            items.push({
+                key: option.key,
+                action: option.color ? 'theme-color' : option.theme ? 'theme' : 'theme-list',
+                color: option.color,
+                label: option.label,
+                icon: option.icon,
+                role: option.theme ? 'menuitemradio' : 'menuitem',
+                theme: option.theme,
+                checked: option.theme ? option.checked : undefined,
+                expanded: option.expanded,
+                disabled: false,
+                destructive: false,
+                separatorBefore: i === 0,
+                heading: i === 0 ? PANEL_LABELS.theme : undefined,
+            });
+        });
+    }
     if (s.hideable) {
         items.push({ key: 'hide', action: 'hide', label: PANEL_LABELS.hide, icon: HIDE_ICON, role: 'menuitem', disabled: false, destructive: false, separatorBefore: true });
     }
@@ -298,19 +441,35 @@ export function headerMenuItems(s: CliPanelSnapshot): PanelHeaderMenuItem[] {
 }
 
 export function headerMenuItemClass(item: PanelHeaderMenuItem): string {
+    if (item.color) return 'cli-panel-header-menu-color';
     return joinClasses('cli-panel-header-menu-item', item.checked && 'active', item.destructive && 'destructive');
 }
 
-/** Run a ⋮ menu item; the menu closes. */
+/**
+ * Run a ⋮ menu item; the menu closes, except for "More themes", which opens its
+ * list in place, and Custom, which shows its color pickers.
+ */
 export function runHeaderMenuAction(controller: CliPanelController, item: PanelHeaderMenuItem): void {
-    // The ⋮ button stays after maximize and position changes: keyboard users continue from it
-    controller.closeHeaderMenu(item.action === 'maximize' || item.action === 'position');
+    if (item.action === 'theme-color') return;
+    if (item.action === 'theme-list') {
+        controller.toggleThemeList();
+        return;
+    }
+    if (item.action === 'theme' && item.theme === PANEL_CUSTOM_THEME) {
+        controller.pickTheme(item.theme);
+        return;
+    }
+    // The ⋮ button stays after maximize, position and theme changes: keyboard users continue from it
+    controller.closeHeaderMenu(item.action === 'maximize' || item.action === 'position' || item.action === 'theme');
     switch (item.action) {
         case 'maximize':
             controller.toggleMaximize();
             break;
         case 'position':
             if (item.position) controller.setPosition(item.position);
+            break;
+        case 'theme':
+            if (item.theme) controller.pickTheme(item.theme);
             break;
         case 'hide':
             controller.hide();

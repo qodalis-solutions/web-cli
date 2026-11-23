@@ -426,10 +426,44 @@ export interface CliPanelConfig {
      * @default 'dark'
      */
     theme?: CliPanelThemeInput;
+
+    /**
+     * Whether the panel offers a theme picker (a header button, and a Theme group
+     * in the ⋮ menu of a narrow panel): Auto, Light, Dark, Custom (the user's own
+     * colors, from color pickers) and the terminal themes.
+     * A pick restyles the panel and its terminals, is remembered for the next
+     * visit and is reported to the host (`themeChange`). Turn it off when the
+     * panel has a fixed brand theme.
+     * @default true
+     */
+    themePicker?: boolean;
 }
 
 /** The built-in panel palettes. */
 export type CliPanelColorScheme = 'light' | 'dark';
+
+/** The colors of the theme picker's Custom choice (`#rrggbb`). */
+export interface CliPanelCustomColors {
+    /** Background of the terminals and the panel. */
+    background: string;
+    /** Text of the terminals and the panel. */
+    foreground: string;
+    /** Cursor, selection, active tab and highlights. */
+    accent: string;
+}
+
+/** A theme picked in the panel's theme picker, reported to the host. */
+export interface CliPanelThemeChange {
+    /**
+     * `'auto'`, `'light'`, `'dark'`, the name of a terminal theme (`'dracula'`, ...)
+     * or `'custom'` for colors the user chose.
+     */
+    theme: string;
+    /** The user's colors, when `theme` is `'custom'`. */
+    colors?: CliPanelCustomColors;
+    /** Whether the panel is now light or dark, for hosts that follow it. */
+    scheme: CliPanelColorScheme;
+}
 
 /** What {@link CliPanelConfig.theme} accepts. */
 export type CliPanelThemeInput =

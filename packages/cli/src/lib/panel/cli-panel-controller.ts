@@ -1,15 +1,27 @@
 import {
     CliPanelConfig,
+    CliPanelCustomColors,
     CliPanelPosition,
     CliPanelState,
     CliPanelThemeInput,
     CliResolvedPanelTheme,
+    DefaultThemes,
     ICliPanelRef,
+    PANEL_CUSTOM_THEME,
+    PANEL_THEME_MODES,
+    customPanelTheme,
     derivePanelThemeStyles,
+    isPanelThemeChoice,
+    normalizeHexColor,
+    normalizePanelCustomColors,
     prefersDarkScheme,
     resolvePanelTheme,
+    loadPanelCustomColors,
     loadPanelPosition,
+    loadPanelTheme,
+    savePanelCustomColors,
     savePanelPosition,
+    savePanelTheme,
 } from '@qodalis/cli-core';
 import type { ITheme } from '@xterm/xterm';
 import { CliEngine } from '../engine';
@@ -25,9 +37,10 @@ import {
     normalizePaneWidths,
     resizePaneWidths,
     resizedPanelSize,
+    themeDropdownAnchorStyle,
 } from './panel-geometry';
 import { CliPanelStatusTracker, interruptCommand, killProcess } from './panel-status';
-import { CLI_TERMINAL_THEME_EVENT } from '../processors/theme/terminal-theme';
+import { CLI_TERMINAL_READY_EVENT, CLI_TERMINAL_THEME_EVENT, CLI_TERMINAL_THEME_RESET_EVENT } from '../processors/theme/terminal-theme';
 import {
     CliPanelCallbacks,
     CliPanelControlledState,
@@ -72,7 +85,8 @@ const PANE_RESIZING_BODY_CLASS = 'cli-pane-resizing';
 const DARK_SCHEME_QUERY = '(prefers-color-scheme: dark)';
 
 const HEADER_MENU_SELECTOR = '.cli-panel-header-menu';
-const HEADER_MENU_ITEM_SELECTOR = '[role^="menuitem"]:not(:disabled)';
+const THEME_DROPDOWN_SELECTOR = '.cli-panel-theme-dropdown';
+const HEADER_MENU_ITEM_SELECTOR = '[role^="menuitem"]:not(:disabled), input[type="color"]';
 
 /** The root element as an event target (view roots are elements; test doubles may not be). */
 function asEventTarget(node: ParentNode | null): EventTarget | null {
@@ -112,6 +126,19 @@ function sameTerminalTheme(a: ITheme | undefined, b: ITheme | undefined): boolea
     return !!a && !!b && a.background === b.background && a.foreground === b.foreground && a.cursor === b.cursor;
 }
 
+/** The theme picker's choice for a theme input; empty for a custom theme it does not list. */
+function themeChoiceOf(input: CliPanelThemeInput | undefined): string {
+    if (input === undefined) return 'dark';
+    return typeof input === 'string' ? input : '';
+}
+
+/** The theme picker's choice for a terminal theme: a built-in one's name, or Custom for the user's own colors. */
+function terminalThemeChoice(theme: ITheme): string {
+    const themes: Record<string, ITheme> = DefaultThemes;
+    const name = Object.keys(themes).find((key) => sameTerminalTheme(themes[key], theme));
+    return name === 'default' ? 'dark' : (name ?? PANEL_CUSTOM_THEME);
+}
+
 /** Smaller gaps are browser toolbars sliding, not a keyboard. */
 const MIN_KEYBOARD_INSET = 80;
 
@@ -149,6 +176,11 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     private readonly tracker: CliPanelStatusTracker;
     private readonly viewport: () => CliPanelViewport;
     private readonly persistPosition: boolean;
+    private readonly persistTheme: boolean;
+    /** The user has chosen custom colors before (now or on an earlier visit). */
+    private customColorsSaved = false;
+    /** Engines whose terminal exists but that have not finished starting (boot, first-run wizards). */
+    private readonly startingEngines = new Set<CliEngine>();
 
     private nextTabId = 1;
     private nextPaneId = 1;
@@ -161,8 +193,19 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     private documentListenersAttached = false;
     private rootElement: ParentNode | null = null;
     private themeObserver?: MutationObserver;
-    /** The host's theme (`config.theme`); undefined leaves the terminals' own theme alone. */
+    /** `config.theme` as the host last gave it. */
+    private hostTheme?: CliPanelThemeInput;
+    /**
+     * The theme in effect: the host's, or the one picked in the theme picker.
+     * Undefined leaves the terminals' own theme alone.
+     */
     private themeInput?: CliPanelThemeInput;
+    /** The theme in effect is the picker's Custom choice (`themeInput` is built from the user's colors). */
+    private customPicked = false;
+    /** Custom terminal colors the user set with the `theme` command; the Custom choice keeps the ones it has no picker for. */
+    private customTerminal?: ITheme;
+    /** A pick is being applied to the terminals; their theme is read when it is done. */
+    private pickingTheme = false;
     private resolvedTheme: CliResolvedPanelTheme;
     private schemeQuery?: MediaQueryList;
     private visualViewport?: VisualViewport;
@@ -170,6 +213,8 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     private observedPanel: Element | null = null;
     /** The ⋮ button that opened the header menu; focus returns to it on Escape. */
     private headerMenuAnchor: HTMLElement | null = null;
+    /** The button that opened the theme picker; focus returns to it on Escape and after a pick. */
+    private themeDropdownAnchor: HTMLElement | null = null;
 
     constructor(options: CliPanelControllerOptions = {}) {
         const config = options.config ?? {};
@@ -177,8 +222,21 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         this.controlled = options.controlled ?? {};
         this.viewport = options.viewport ?? defaultViewport;
         this.persistPosition = options.persistPosition ?? true;
-        this.themeInput = config.theme;
-        this.resolvedTheme = resolvePanelTheme(config.theme, prefersDarkScheme());
+        this.persistTheme = options.persistTheme ?? true;
+        this.hostTheme = config.theme;
+        // The theme picked on an earlier visit wins over the host's default
+        const picked = this.persistTheme && (config.themePicker ?? true) ? loadPanelTheme() : null;
+        this.themeInput = picked ?? config.theme;
+        this.resolvedTheme = resolvePanelTheme(this.themeInput, prefersDarkScheme());
+        // The Custom choice starts from the look it replaces
+        const savedColors = this.persistTheme ? loadPanelCustomColors() : null;
+        this.customColorsSaved = savedColors !== null;
+        const customColors = normalizePanelCustomColors(savedColors, this.resolvedColors());
+        if (picked === PANEL_CUSTOM_THEME) {
+            this.customPicked = true;
+            this.themeInput = customPanelTheme(customColors);
+            this.resolvedTheme = resolvePanelTheme(this.themeInput, prefersDarkScheme());
+        }
         this.watchSystemScheme();
         this.watchVisualViewport();
 
@@ -210,10 +268,12 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             isHorizontal: false,
             showStatusIndicators: true,
             panelResizing: false,
-            // Without a host theme the stylesheet's colors (and its overrides) apply
-            themeStyles: config.theme === undefined ? {} : this.resolvedTheme.styles,
+            // Without a theme the stylesheet's colors (and its overrides) apply
+            themeStyles: this.themeInput === undefined ? {} : this.resolvedTheme.styles,
             scheme: this.resolvedTheme.scheme,
-            terminalTheme: config.theme === undefined ? undefined : this.resolvedTheme.terminal,
+            terminalTheme: this.themeInput === undefined ? undefined : this.resolvedTheme.terminal,
+            themeChoice: this.ownThemeChoice,
+            customColors,
             ...visualViewportFields(),
             compactHeader: false,
             ...this.configFields(config),
@@ -223,6 +283,9 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             paneResizing: false,
             contextMenu: { visible: false, x: 0, y: 0, tabId: 0 },
             positionDropdownOpen: false,
+            themeDropdownOpen: false,
+            themeDropdownStyle: {},
+            themeListOpen: false,
             servicesDropdownOpen: false,
             servicesDropdownStyle: {},
             serversDropdownOpen: false,
@@ -253,7 +316,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
 
     /** Apply a new panel configuration (chrome buttons, theme, theme sync). */
     setOptions(config: CliPanelConfig | undefined): void {
-        if (themeKey(config?.theme) !== themeKey(this.themeInput)) this.setTheme(config?.theme);
+        if (themeKey(config?.theme) !== themeKey(this.hostTheme)) this.setTheme(config?.theme);
         const fields = this.configFields(config ?? {});
         const s = this.snapshot;
         if (
@@ -261,11 +324,12 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             fields.resizable === s.resizable &&
             fields.hideable === s.hideable &&
             fields.hideAlignment === s.hideAlignment &&
-            fields.syncTheme === s.syncTheme
+            fields.syncTheme === s.syncTheme &&
+            fields.themePicker === s.themePicker
         ) {
             return;
         }
-        this.commit(fields);
+        this.commit(fields.themePicker ? fields : { ...fields, themeDropdownOpen: false });
         if (this.followsTerminalTheme) this.startThemeSync();
         else this.stopThemeSync();
     }
@@ -273,9 +337,14 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     /**
      * Restyle the panel and every terminal in it (see `CliPanelConfig.theme`).
      * `undefined` returns to the default palette and leaves the terminals' theme alone.
+     * This is the host's theme: it replaces a theme picked in the theme picker, which
+     * is forgotten, so the host's own setting and the panel agree on the next visit too.
      */
     setTheme(theme: CliPanelThemeInput | undefined): void {
+        this.hostTheme = theme;
         this.themeInput = theme;
+        this.customPicked = false;
+        if (this.persistTheme) savePanelTheme(null);
         this.watchSystemScheme();
         this.applyTheme();
         if (this.followsTerminalTheme) this.startThemeSync();
@@ -283,8 +352,79 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     }
 
     /**
+     * The user picks a theme in the theme picker: `'auto'`, `'light'`, `'dark'`,
+     * a terminal theme's name, or `'custom'` for their own colors (the saved ones,
+     * or the current look to start from; `colors` replaces any of them). The panel
+     * and every terminal in it change, a theme applied with the `theme` command
+     * gives way to it, the pick is remembered for the next visit and the host is
+     * told (`onThemeChange`). The picker stays open on Custom, for its color pickers.
+     */
+    pickTheme(theme: string, colors?: Partial<CliPanelCustomColors>): void {
+        if (!isPanelThemeChoice(theme)) return;
+        const custom = theme === PANEL_CUSTOM_THEME;
+        let customColors = this.snapshot.customColors;
+        if (custom) {
+            // Picked for the first time, Custom keeps the look it replaces
+            const current =
+                this.snapshot.themeChoice === PANEL_CUSTOM_THEME || this.customColorsSaved ? customColors : this.resolvedColors();
+            customColors = normalizePanelCustomColors({ ...current, ...colors }, current);
+            this.customColorsSaved = true;
+            if (this.persistTheme) savePanelCustomColors(customColors);
+        }
+        const anchor = !custom && this.snapshot.themeDropdownOpen ? this.themeDropdownAnchor : null;
+        if (!custom) {
+            this.themeDropdownAnchor = null;
+            if (this.snapshot.themeDropdownOpen) this.commit({ themeDropdownOpen: false });
+        }
+        this.customPicked = custom;
+        this.themeInput = custom ? customPanelTheme(customColors, this.customTerminal) : theme;
+        if (this.persistTheme) savePanelTheme(theme);
+        this.watchSystemScheme();
+        // The `theme` command's saved state says the same as the picker: Auto, Light
+        // and Dark are its default (`theme reset`), a terminal theme is `theme apply
+        // <name>` and Custom its custom colors, so `theme current`, the other
+        // terminals and other browser tabs agree with the panel
+        const engines = this.allEngines();
+        const mode = !custom && PANEL_THEME_MODES.includes(theme);
+        // The terminals pass through their old theme on the way: follow them once they are done
+        this.pickingTheme = true;
+        try {
+            if (mode) engines.forEach((engine) => engine.clearUserTheme());
+            if (custom) this.commit({ customColors });
+            this.applyTheme();
+            if (!mode) engines.forEach((engine) => engine.applyUserTheme(custom ? this.resolvedTheme.terminal : theme));
+        } finally {
+            this.pickingTheme = false;
+        }
+        this.startThemeSync();
+        anchor?.focus();
+        const scheme = this.resolvedTheme.scheme;
+        this.callbacks.onThemeChange?.(custom ? { theme, scheme, colors: customColors } : { theme, scheme });
+    }
+
+    /** A color picker of the Custom choice changed: `color` is `#rrggbb`. */
+    setCustomThemeColor(key: keyof CliPanelCustomColors, color: string): void {
+        this.pickTheme(PANEL_CUSTOM_THEME, { [key]: color });
+    }
+
+    /** The picker's choice for the theme in effect, when the terminals show it. */
+    private get ownThemeChoice(): string {
+        return this.customPicked ? PANEL_CUSTOM_THEME : themeChoiceOf(this.themeInput);
+    }
+
+    /** Background, text and accent of the theme in effect, as colors a color picker takes. */
+    private resolvedColors(): CliPanelCustomColors {
+        const { terminal, styles } = this.resolvedTheme;
+        return {
+            background: normalizeHexColor(terminal.background) ?? '#070b14',
+            foreground: normalizeHexColor(terminal.foreground) ?? '#e2e8f0',
+            accent: normalizeHexColor(styles['--cli-panel-accent']) ?? '#818cf8',
+        };
+    }
+
+    /**
      * Whether the panel's colors follow its first terminal: with `syncTheme`, or
-     * with a host theme so a theme the user applies restyles the panel too.
+     * with a theme so a theme the user applies restyles the panel too.
      */
     private get followsTerminalTheme(): boolean {
         return this.snapshot.syncTheme || this.themeInput !== undefined;
@@ -309,10 +449,14 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         if (element === this.rootElement) return;
         const previous = asEventTarget(this.rootElement);
         previous?.removeEventListener(CLI_TERMINAL_THEME_EVENT, this.onTerminalTheme);
+        previous?.removeEventListener(CLI_TERMINAL_READY_EVENT, this.onTerminalReady);
+        previous?.removeEventListener(CLI_TERMINAL_THEME_RESET_EVENT, this.onTerminalThemeReset);
         previous?.removeEventListener('wheel', this.onPanelWheel);
         this.rootElement = element;
         const next = asEventTarget(element);
         next?.addEventListener(CLI_TERMINAL_THEME_EVENT, this.onTerminalTheme);
+        next?.addEventListener(CLI_TERMINAL_READY_EVENT, this.onTerminalReady);
+        next?.addEventListener(CLI_TERMINAL_THEME_RESET_EVENT, this.onTerminalThemeReset);
         next?.addEventListener('wheel', this.onPanelWheel, { passive: false });
         if (element && this.followsTerminalTheme) this.startThemeSync();
     }
@@ -324,6 +468,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
      */
     destroy(): void {
         this.tracker.destroy();
+        this.startingEngines.clear();
         this.stopThemeSync();
         this.schemeQuery?.removeEventListener('change', this.onSystemSchemeChange);
         this.schemeQuery = undefined;
@@ -428,7 +573,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     }
 
     setPosition(position: CliPanelPosition): void {
-        this.commit({ positionDropdownOpen: false, headerMenuOpen: false });
+        this.commit({ positionDropdownOpen: false, themeDropdownOpen: false, headerMenuOpen: false });
         this.internal.position = position;
         if (this.persistPosition) savePanelPosition(position);
         this.commit({});
@@ -584,6 +729,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         if (!this.findTab(tabId)) return;
         // Views may report the same engine again when they re-render
         const known = this.engines.get(paneId) === engine;
+        this.startingEngines.delete(engine);
         this.engines.set(paneId, engine);
         this.tracker.registerEngine(tabId, paneId, engine);
         if (this.snapshot.terminalTheme && !known) engine.setTheme(this.snapshot.terminalTheme);
@@ -620,6 +766,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         this.commit({
             contextMenu: { visible: true, x, y, tabId },
             positionDropdownOpen: false,
+            themeDropdownOpen: false,
             headerMenuOpen: false,
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
@@ -634,10 +781,52 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     togglePositionDropdown(): void {
         this.commit({
             positionDropdownOpen: !this.snapshot.positionDropdownOpen,
+            themeDropdownOpen: false,
             headerMenuOpen: false,
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
         });
+    }
+
+    /**
+     * The header's theme button: open or close the theme picker. `anchor` is the
+     * button; focus moves to the current choice and returns to the button on
+     * Escape and after a pick.
+     */
+    toggleThemeDropdown(anchor?: HTMLElement | null): void {
+        if (this.snapshot.themeDropdownOpen) {
+            this.themeDropdownAnchor = null;
+            this.commit({ themeDropdownOpen: false });
+            return;
+        }
+        this.themeDropdownAnchor = anchor ?? null;
+        this.commit({
+            themeDropdownOpen: true,
+            themeDropdownStyle: anchor ? themeDropdownAnchorStyle(anchor.getBoundingClientRect(), this.snapshot.position, this.viewport()) : {},
+            themeListOpen: this.terminalThemeChosen,
+            contextMenu: { ...this.snapshot.contextMenu, visible: false },
+            positionDropdownOpen: false,
+            headerMenuOpen: false,
+            servicesDropdownOpen: false,
+            serversDropdownOpen: false,
+        });
+        // The views render the picker on this change; focus the current choice after that
+        setTimeout(() => {
+            if (!this.snapshot.themeDropdownOpen) return;
+            const items = this.openMenuElements();
+            (items.find((item) => item.getAttribute('aria-checked') === 'true') ?? items[0])?.focus();
+        }, 0);
+    }
+
+    /** The "More themes" row: show or hide the terminal themes in the theme picker. */
+    toggleThemeList(): void {
+        this.commit({ themeListOpen: !this.snapshot.themeListOpen });
+    }
+
+    /** The current choice is a terminal theme: the picker opens with its list shown. */
+    private get terminalThemeChosen(): boolean {
+        const choice = this.snapshot.themeChoice;
+        return choice !== '' && !PANEL_THEME_MODES.includes(choice);
     }
 
     /**
@@ -668,6 +857,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             servicesDropdownOpen: open,
             serversDropdownOpen: false,
             positionDropdownOpen: false,
+            themeDropdownOpen: false,
             headerMenuOpen: false,
             servicesDropdownStyle: open ? this.anchorStyle(anchor) : {},
         });
@@ -679,6 +869,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             serversDropdownOpen: open,
             servicesDropdownOpen: false,
             positionDropdownOpen: false,
+            themeDropdownOpen: false,
             headerMenuOpen: false,
             serversDropdownStyle: open ? this.anchorStyle(anchor) : {},
         });
@@ -700,12 +891,14 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             headerMenuStyle: anchor ? headerMenuAnchorStyle(anchor.getBoundingClientRect(), this.snapshot.position, this.viewport()) : {},
             contextMenu: { ...this.snapshot.contextMenu, visible: false },
             positionDropdownOpen: false,
+            themeDropdownOpen: false,
+            themeListOpen: this.terminalThemeChosen,
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
         });
         // The views render the menu on this change; focus its first item after that
         setTimeout(() => {
-            if (this.snapshot.headerMenuOpen) this.headerMenuElements()[0]?.focus();
+            if (this.snapshot.headerMenuOpen) this.openMenuElements()[0]?.focus();
         }, 0);
     }
 
@@ -721,13 +914,22 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     /** Close the context menu and every dropdown. */
     closeMenus(): void {
         const s = this.snapshot;
-        if (!s.contextMenu.visible && !s.positionDropdownOpen && !s.servicesDropdownOpen && !s.serversDropdownOpen && !s.headerMenuOpen) {
+        if (
+            !s.contextMenu.visible &&
+            !s.positionDropdownOpen &&
+            !s.themeDropdownOpen &&
+            !s.servicesDropdownOpen &&
+            !s.serversDropdownOpen &&
+            !s.headerMenuOpen
+        ) {
             return;
         }
         this.headerMenuAnchor = null;
+        this.themeDropdownAnchor = null;
         this.commit({
             contextMenu: { ...s.contextMenu, visible: false },
             positionDropdownOpen: false,
+            themeDropdownOpen: false,
             servicesDropdownOpen: false,
             serversDropdownOpen: false,
             headerMenuOpen: false,
@@ -768,7 +970,8 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         const compact = isCompactHeaderWidth(width);
         if (compact === this.snapshot.compactHeader) return;
         if (!compact) this.headerMenuAnchor = null;
-        this.commit(compact ? { compactHeader: true } : { compactHeader: false, headerMenuOpen: false });
+        // Each header has its own theme picker (button or ⋮ menu): close the one that goes away
+        this.commit(compact ? { compactHeader: true, themeDropdownOpen: false } : { compactHeader: false, headerMenuOpen: false });
     }
 
     /* ─── Drag resizing ─────────────────────────────────────── */
@@ -859,27 +1062,29 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     private readonly onDocumentClick = (): void => this.closeMenus();
 
     private readonly onDocumentKeydown = (event: KeyboardEvent): void => {
-        if (this.snapshot.headerMenuOpen && this.moveHeaderMenuFocus(event)) return;
+        const s = this.snapshot;
+        if ((s.headerMenuOpen || s.themeDropdownOpen) && this.moveMenuFocus(event)) return;
         if (event.key !== 'Escape') return;
-        const restoreFocus = this.snapshot.headerMenuOpen ? this.headerMenuAnchor : null;
+        const restoreFocus = s.headerMenuOpen ? this.headerMenuAnchor : s.themeDropdownOpen ? this.themeDropdownAnchor : null;
         this.closeMenus();
         this.cancelRename();
         restoreFocus?.focus();
     };
 
-    private headerMenuElements(): HTMLElement[] {
+    /** Items of the open ⋮ menu or theme picker. */
+    private openMenuElements(): HTMLElement[] {
         if (typeof document === 'undefined') return [];
-        const menu = document.querySelector(HEADER_MENU_SELECTOR);
+        const menu = document.querySelector(this.snapshot.headerMenuOpen ? HEADER_MENU_SELECTOR : THEME_DROPDOWN_SELECTOR);
         return menu ? Array.from(menu.querySelectorAll<HTMLElement>(HEADER_MENU_ITEM_SELECTOR)) : [];
     }
 
-    /** Arrow keys, Home and End move between the ⋮ menu's items; Tab leaves and closes it. */
-    private moveHeaderMenuFocus(event: KeyboardEvent): boolean {
+    /** Arrow keys, Home and End move between the items of the ⋮ menu or the theme picker; Tab leaves and closes it. */
+    private moveMenuFocus(event: KeyboardEvent): boolean {
         if (event.key === 'Tab') {
-            this.closeHeaderMenu();
+            this.closeMenus();
             return true;
         }
-        const items = this.headerMenuElements();
+        const items = this.openMenuElements();
         if (items.length === 0) return false;
         const current = items.indexOf(document.activeElement as HTMLElement);
         let next: number;
@@ -910,6 +1115,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         const needed =
             s.contextMenu.visible ||
             s.positionDropdownOpen ||
+            s.themeDropdownOpen ||
             s.servicesDropdownOpen ||
             s.serversDropdownOpen ||
             s.headerMenuOpen ||
@@ -934,17 +1140,30 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
 
     /** Read the first terminal's theme (or use `theme`) and derive the panel colours from it. */
     syncThemeFromEngine(theme?: ITheme): void {
+        if (this.pickingTheme) return;
         if (!theme) {
-            const engine = this.engines.values().next().value as CliEngine | undefined;
+            const engine = (this.engines.values().next().value ?? this.allEngines()[0]) as CliEngine | undefined;
             theme = engine?.getTerminal().options.theme;
         }
         if (!theme) return;
-        // The host's own terminal theme keeps the host's panel colors
-        const styles = sameTerminalTheme(theme, this.resolvedTheme.terminal)
-            ? this.resolvedTheme.styles
-            : derivePanelThemeStyles(theme);
-        if (sameRecord(styles, this.snapshot.themeStyles)) return;
-        this.commit({ themeStyles: styles });
+        // The panel's own terminal theme keeps the panel's colors; a theme the user
+        // applied with the `theme` command restyles the panel and shows in the picker
+        const own = sameTerminalTheme(theme, this.resolvedTheme.terminal);
+        const styles = own ? this.resolvedTheme.styles : derivePanelThemeStyles(theme);
+        const themeChoice = own ? this.ownThemeChoice : terminalThemeChoice(theme);
+        // Colors set with `theme set` (or imported) show in the Custom choice's color pickers
+        let customColors = this.snapshot.customColors;
+        if (!own) this.customTerminal = themeChoice === PANEL_CUSTOM_THEME ? theme : undefined;
+        if (!own && themeChoice === PANEL_CUSTOM_THEME) {
+            customColors = normalizePanelCustomColors(
+                { background: theme.background, foreground: theme.foreground, accent: theme.cursor },
+                customColors,
+            );
+        }
+        if (sameRecord(styles, this.snapshot.themeStyles) && themeChoice === this.snapshot.themeChoice && customColors === this.snapshot.customColors) {
+            return;
+        }
+        this.commit({ themeStyles: styles, themeChoice, customColors });
     }
 
     /**
@@ -967,8 +1186,8 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
         const terminalTheme = this.themeInput === undefined ? undefined : resolved.terminal;
         const terminalChanged = !!terminalTheme && !sameTerminalTheme(terminalTheme, this.snapshot.terminalTheme);
         const themeStyles = this.themeInput === undefined ? {} : resolved.styles;
-        this.commit({ themeStyles, scheme: resolved.scheme, terminalTheme });
-        if (terminalChanged) this.engines.forEach((engine) => engine.setTheme(terminalTheme!));
+        this.commit({ themeStyles, scheme: resolved.scheme, terminalTheme, themeChoice: this.ownThemeChoice });
+        if (terminalChanged) this.allEngines().forEach((engine) => engine.setTheme(terminalTheme!));
         if (this.followsTerminalTheme) this.syncThemeFromEngine();
     }
 
@@ -985,6 +1204,53 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
     }
 
     private readonly onSystemSchemeChange = (): void => this.applyTheme();
+
+    /** Registered engines, then those still starting (dropping the ones whose terminal is gone). */
+    private allEngines(): CliEngine[] {
+        for (const engine of Array.from(this.startingEngines)) {
+            let connected = false;
+            try {
+                connected = !!engine.getTerminal()?.element?.isConnected;
+            } catch {
+                /* destroyed */
+            }
+            if (!connected) this.startingEngines.delete(engine);
+        }
+        return [...this.engines.values(), ...this.startingEngines];
+    }
+
+    /**
+     * A terminal was created in the panel. Its engine registers only once it has
+     * started, which waits for the modules to boot (and a first-run wizard to be
+     * answered): theme it from now on.
+     */
+    private readonly onTerminalReady = (event: Event): void => {
+        const engine = (event as CustomEvent<CliEngine>).detail;
+        if (!engine || typeof engine.setTheme !== 'function') return;
+        if (Array.from(this.engines.values()).includes(engine)) return;
+        this.startingEngines.add(engine);
+        if (this.snapshot.terminalTheme) engine.setTheme(this.snapshot.terminalTheme);
+        if (this.followsTerminalTheme) this.startThemeSync();
+    };
+
+    /**
+     * `theme reset` in a terminal: a theme picked in the theme picker is forgotten
+     * and the panel returns to the host's theme, which the host is told when it is
+     * one of the picker's choices.
+     */
+    private readonly onTerminalThemeReset = (): void => {
+        if (themeKey(this.themeInput) === themeKey(this.hostTheme)) return;
+        this.themeInput = this.hostTheme;
+        this.customPicked = false;
+        this.customTerminal = undefined;
+        if (this.persistTheme) savePanelTheme(null);
+        this.watchSystemScheme();
+        this.applyTheme();
+        if (this.followsTerminalTheme) this.startThemeSync();
+        else this.stopThemeSync();
+        const theme = themeChoiceOf(this.hostTheme);
+        if (this.hostTheme !== undefined && theme) this.callbacks.onThemeChange?.({ theme, scheme: this.resolvedTheme.scheme });
+    };
 
     /** A terminal in the panel changed theme: follow the first one. */
     private readonly onTerminalTheme = (event: Event): void => {
@@ -1152,6 +1418,7 @@ export class CliPanelController implements ICliPanelRef<CliEngine> {
             hideable: config.hideable ?? true,
             hideAlignment: config.hideAlignment ?? 'center',
             syncTheme: config.syncTheme ?? false,
+            themePicker: config.themePicker ?? true,
         };
     }
 

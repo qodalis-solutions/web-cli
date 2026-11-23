@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react';
-import { ICliModule, CliPanelConfig, CliPanelPosition, ICliPanelRef } from '@qodalis/cli-core';
+import { ICliModule, CliPanelConfig, CliPanelPosition, CliPanelThemeChange, ICliPanelRef } from '@qodalis/cli-core';
 import {
     CliEngine,
     CliEngineOptions,
@@ -41,9 +41,13 @@ import {
     resolveCliHostConfig,
     runContextMenuAction,
     runHeaderMenuAction,
+    runThemeOption,
     statusIndicators,
+    themeIcon,
+    themeOptions,
     svgAttrs,
     PanelStatusIndicator,
+    PanelThemeOption,
 } from '@qodalis/cli';
 import { Cli } from './Cli';
 import { CliContext } from './CliContext';
@@ -70,6 +74,8 @@ export interface CliPanelProps {
     onActiveTabIdChange?: (tabId: number) => void;
     position?: CliPanelPosition;
     onPositionChange?: (position: CliPanelPosition) => void;
+    /** The user picked a theme in the panel's theme picker. */
+    onThemeChange?: (change: CliPanelThemeChange) => void;
     height?: number;
     onHeightChange?: (height: number) => void;
     width?: number;
@@ -152,6 +158,7 @@ export const CliPanel = React.forwardRef<ICliPanelRef<CliEngine>, CliPanelProps>
             onMaximizedChange: props.onMaximizedChange,
             onActiveTabIdChange: props.onActiveTabIdChange,
             onPositionChange: props.onPositionChange,
+            onThemeChange: props.onThemeChange,
             onHeightChange: props.onHeightChange,
             onWidthChange: props.onWidthChange,
             onClose: props.onClose,
@@ -358,20 +365,45 @@ function HeaderMenu({ controller, s }: { controller: CliPanelController; s: CliP
                             {item.heading}
                         </div>
                     )}
-                    <button
-                        type="button"
-                        className={headerMenuItemClass(item)}
-                        role={item.role}
-                        aria-checked={item.role === 'menuitemradio' ? !!item.checked : undefined}
-                        disabled={item.disabled}
-                        onClick={() => runHeaderMenuAction(controller, item)}
-                    >
-                        <Icon icon={item.icon} />
-                        {item.label}
-                    </button>
+                    {item.color ? (
+                        <ColorRow controller={controller} className={headerMenuItemClass(item)} label={item.label} color={item.color} />
+                    ) : (
+                        <button
+                            type="button"
+                            className={headerMenuItemClass(item)}
+                            role={item.role}
+                            aria-checked={item.role === 'menuitemradio' ? !!item.checked : undefined}
+                            aria-expanded={item.expanded}
+                            disabled={item.disabled}
+                            onClick={() => runHeaderMenuAction(controller, item)}
+                        >
+                            <Icon icon={item.icon} />
+                            {item.label}
+                        </button>
+                    )}
                 </React.Fragment>
             ))}
         </div>
+    );
+}
+
+/** A color picker of the theme picker's Custom choice. */
+function ColorRow({
+    controller,
+    className,
+    label,
+    color,
+}: {
+    controller: CliPanelController;
+    className: string;
+    label: string;
+    color: NonNullable<PanelThemeOption['color']>;
+}) {
+    return (
+        <label className={className}>
+            <span>{label}</span>
+            <input type="color" value={color.value} onChange={(e) => controller.setCustomThemeColor(color.key, e.target.value)} />
+        </label>
     );
 }
 
@@ -552,6 +584,45 @@ function PanelHeader({
                                 </div>
                             )}
                         </div>
+                        {s.themePicker && (
+                            <div className="cli-panel-btn-theme-wrapper" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                    type="button"
+                                    className="cli-panel-btn cli-panel-btn-theme"
+                                    title={PANEL_LABELS.changeTheme}
+                                    aria-label={PANEL_LABELS.changeTheme}
+                                    aria-haspopup="menu"
+                                    aria-expanded={s.themeDropdownOpen}
+                                    onClick={(e) => controller.toggleThemeDropdown(e.currentTarget)}
+                                >
+                                    <Icon icon={themeIcon(s.scheme, 20)} />
+                                </button>
+                                {s.themeDropdownOpen && (
+                                    <div className="cli-panel-theme-dropdown" role="menu" aria-label={PANEL_LABELS.theme} style={asStyle(s.themeDropdownStyle)}>
+                                        {themeOptions(s).map((opt) => (
+                                            <React.Fragment key={opt.key}>
+                                                {opt.separatorBefore && <div className="cli-panel-theme-dropdown-separator" role="separator" />}
+                                                {opt.color ? (
+                                                    <ColorRow controller={controller} className={opt.className} label={opt.label} color={opt.color} />
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        className={opt.className}
+                                                        role={opt.theme ? 'menuitemradio' : 'menuitem'}
+                                                        aria-checked={opt.theme ? opt.checked : undefined}
+                                                        aria-expanded={opt.expanded}
+                                                        onClick={() => runThemeOption(controller, opt)}
+                                                    >
+                                                        <Icon icon={opt.icon} />
+                                                        {opt.label}
+                                                    </button>
+                                                )}
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         {s.hideable && (
                             <button className="cli-panel-btn cli-panel-btn-hide" title={PANEL_LABELS.hide} onClick={() => controller.hide()}>
                                 <Icon icon={HIDE_ICON} />
