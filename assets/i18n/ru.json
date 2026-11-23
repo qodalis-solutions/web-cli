@@ -119,6 +119,7 @@
   "sidebar.dotnet-server": "Сервер .NET",
   "sidebar.node-server": "Сервер Node.js",
   "sidebar.python-server": "Сервер Python",
+  "sidebar.admin-dashboard": "Панель Администратора",
 
   "docs.getting-started.title": "Начало Работы",
   "docs.getting-started.intro": "Qodalis CLI — это мультифреймворковый компонент терминала для веба. Он предоставляет полностью интерактивный терминал на базе xterm.js с архитектурой плагинов, встроенными командами и нативными обёртками для Angular, React и Vue.",
@@ -546,6 +547,7 @@
   "docs.playground.open": "Playground",
   "sidebar.android-app": "Приложение для Android",
   "sidebar.connect-your-server": "Подключение своего сервера",
+  "sidebar.publishing-plugins": "Публикация плагина",
   "docs.android-app.title": "Qodalis CLI для Android",
   "docs.android-app.intro": "Терминал Qodalis CLI в виде приложения для телефона: команды, файлы, редактор и игры работают офлайн на устройстве, а после привязки — и ваши собственные серверы.",
   "docs.android-app.open-pwa": "Открыть в браузере (PWA)",

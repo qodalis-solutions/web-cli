@@ -69,6 +69,8 @@ const { dark } = useAppSettings();
 ```
 
 - The host's `theme` is the default. A theme the user applies with the `theme` command (`theme apply dracula`, `theme set`, `theme import`) wins over it, is saved, and restyles the panel too; `theme reset` returns to the host's theme, which follows the host again from then on. Without a host `theme`, the terminals keep the user's saved theme and the panel uses the dark palette (or, with `syncTheme: true`, colors derived from the terminal).
+- **Theme picker**: the panel's header has a theme button (a Theme group in the ⋮ menu of a narrow panel) with Auto, Light, Dark, Custom and, under "More themes", the terminal themes. A pick restyles the panel and all its terminals, is remembered in `localStorage` and wins over the host's `theme` on the next load; the host's next `theme` change (or `setTheme()`) applies again and forgets it. **Custom** shows color pickers for background, text and accent (starting from the current look, kept for the next time). The picker and the `theme` command share the command's saved state: a terminal theme is saved as `theme apply <name>`, Custom as custom colors, Auto/Light/Dark clear it as `theme reset` does; `theme apply` checks that theme in the picker, `theme set` shows its colors under Custom, `theme reset` returns the panel to the host's theme. The panel reports a pick as `{ theme, scheme, colors? }`: `(themeChange)` in Angular, `onThemeChange` in React, `@theme-change` in Vue, `callbacks.onThemeChange` on `CliPanelController` (`controller.pickTheme(name, colors?)` and `setCustomThemeColor(key, '#rrggbb')` pick from code). The host's own theme changes do not fire it. `themePicker: false` hides the picker.
+- **Send key** (phones): the panel's keyboard button (Send key in the ⋮ menu of a narrow panel) lists the keys phone keyboards lack: Ctrl+C, Ctrl+L, Ctrl+A/E/U/K/W/Y/D, Esc, Tab, Shift+Tab, ↑/↓ (history), and "Ctrl + key" (the next letter typed gets Ctrl; the button shows it). The keys of the full-screen command running (its `controls.keys`, e.g. nano's Save and Exit) come first. Keys are sent as real keydowns to the active terminal, which keeps the focus. `sendKeys: false` hides it. The same helpers are exported for hosts with their own key bars: `sendTerminalKey`, `sendTerminalKeyPress`, `CLI_SEND_KEYS`, `CLI_KEY_PRESSES`, `ctrlLetterPress`, `CliStickyModifier`, `applyStickyCtrlToKeyboard`.
 - The dropdowns and the context menu use the theme too. Stylesheets can override the CSS variables (`--cli-panel-bg`, `--cli-panel-accent`, `--cli-panel-font`, `--cli-panel-radius`, ... listed at the top of `@qodalis/cli/assets/cli-panel.css`).
 - `resolvePanelTheme(theme, prefersDark)` and `CliPanelPalettes` (from `@qodalis/cli-core`) give the resolved CSS variables and terminal theme, for hosts that style other parts of the page to match.
 
@@ -799,6 +801,37 @@ bootCliModule(module);
 - `bootCliModule(module)` registers the module with the running terminal's module registry; it does nothing outside a browser terminal.
 - UMD bundles must not use Angular decorators; use plain classes.
 
+### Publishing to the plugin marketplace
+
+The marketplace (`https://plugins.qodalis.com/`, the built-in `pkg` source `qodalis` of kind `marketplace`) indexes plugins from npm, records each version's module API and the SHA-384 of its bundle, and lists a plugin after review. Plugins stay on npm; the marketplace hosts no code.
+
+```json
+{
+  "name": "@acme/cli-weather",
+  "keywords": ["qodalis-cli-plugin"],
+  "unpkg": "dist/umd/index.global.js",
+  "peerDependencies": { "@qodalis/cli-core": "^2.8.0" },
+  "qodalis": {
+    "apiVersion": 2,
+    "category": "tools",
+    "serverPackages": [{ "ecosystem": "npm", "name": "@acme/cli-server-plugin-weather" }]
+  }
+}
+```
+
+```bash
+npm publish --access public
+pkg publish @acme/cli-weather    # in a Qodalis terminal: queue it for indexing and review (does not publish to npm)
+pkg search weather               # once listed
+pkg info weather                 # publisher, versions and which fit this CLI, server packages
+pkg add weather                  # short names resolve through the marketplace
+```
+
+- The keyword `qodalis-cli-plugin` is how the indexer finds the package; `@qodalis/create-cli-plugin` writes it and the `qodalis` block.
+- `qodalis.apiVersion` is the module API the bundle needs (falls back to the major of the `@qodalis/cli-core` peer range, then 2). The `@qodalis/cli-core` peer range decides which CLIs a version runs on: set it to the oldest core you built against (`^2.8.0`), never `*`. `category`: `tools`, `data`, `games`, `language`, `server` or `other`. `icon` / `screenshots` are package paths or URLs.
+- `pkg add` installs the newest listed version whose API matches the CLI and whose core peer range accepts the running `@qodalis/cli-core`, refuses one that does not (`needs CLI 2.9.0 or newer`) or was flagged/unlisted (naming the newest that works), and refuses a bundle whose SHA-384 differs from the recorded one. The hash is saved (`Package.integrity`) and the bundle is loaded with the `integrity` attribute at every start.
+- A package the marketplace does not list installs by full name with a warning, unless the host set `packageSources.marketplaceOnly: true`. `packageSources.marketplace` takes the base URL of any server implementing the marketplace HTTP API (public endpoints under `<base>api/v1/qcli/marketplace`: `GET /plugins`, `/plugins/{name}`, `/plugins/{name}/versions/{version}`, `/resolve?name=`, `/categories`, `/stats`, `POST /submissions`; documented on the Publishing a plugin page) or `false` (off). When the marketplace does not answer within 4 s, `pkg` prints `Marketplace unreachable, searching npm` and uses npm and the CDNs.
+
 ### Testing with CliTestHarness
 
 `CliTestHarness` (from `@qodalis/cli`) runs commands through the real parser and executor without xterm or DOM, capturing output.
@@ -854,6 +887,7 @@ pnpm nx lint <name>
 
 - Mark `@qodalis/cli-core` as external in the library build (the scaffolded `tsup.config.ts` does); the IIFE build bundles everything (`noExternal: [/.*/]`).
 - `@qodalis/cli-core` is a dependency; standalone plugins pin `^<scaffolder version>` (all `@qodalis/*` web packages share one version).
+- To be found by `pkg browse` / `pkg search`, keep the `qodalis-cli-plugin` keyword and submit the name with `pkg publish <name>` (see "Publishing to the plugin marketplace").
 
 ### Conventions for web plugins
 
@@ -1771,6 +1805,26 @@ Since 1.0.0-beta.19 every server answers read-only endpoints the admin dashboard
 - `GET /api/v1/qcli/commands/stats` (core, same access as `GET /commands`): executions, failures (non-zero exit, exception, unknown command), average duration and last run of each root command since the server started; `known` is false for commands the registry does not have.
 - `GET /api/v1/qcli/audit` takes `from` and `to` (ISO 8601 or epoch ms); a custom audit store applies them from `AuditQueryOptions`.
 
+### Admin dashboard: pages, plugin pages and extensions (all servers)
+
+The admin plugin serves the dashboard at `/qcli/admin`. Its own pages: Overview, Commands, Plugins, Terminal, Events, Logs, Config. Every other page is a module (`@qodalis/cli-dashboard-module-<name>`, built in the cli-server-dashboard repo) embedded in the plugin that owns its API, served at `/qcli/modules/<id>` and registered when the plugin is mounted, so a server shows the page only when it has the plugin:
+
+| Page | Plugin | Permission |
+|---|---|---|
+| Jobs (`/x/jobs`) | jobs | `jobs:read` |
+| Audit (`/x/audit`) | audit (the users plugin adds it) | `audit:read` |
+| Filesystem (`/x/filesystem`) | core, with the filesystem enabled | `files:read` |
+| Data explorer (`/x/data-explorer`) | core, with data explorer sources | `data:query` |
+| Databases (`/x/databases`, served at `/qcli/databases`) | databases | `databases:read` |
+| Users (`/x/users`: users, groups, sessions) | users | `users:read` |
+| API tokens (`/x/tokens`) | users | none |
+| Account (`/x/account`, in the account menu: profile, password, permissions) | users | none |
+
+- Sign-in: with the users plugin, the user's own account and `admin:access`; without it, the admin plugin's single account. With an auth adapter (the host signs users in, `GET /api/v1/qcli/auth/mode` answers `external`) the dashboard links to the host's sign-in and takes its `#token=`; the Users and Account pages then only show (no password forms, no edits), as with read-only user and group stores. A login answer with `mustChangePassword: true` asks for a new password (`PUT /api/v1/qcli/users/<name>/password` with `currentPassword`) before the dashboard opens.
+- Another build of a page, or none: Node `builder.setDashboardModuleDir('filesystem' | 'data-explorer', dir | false)` and the plugins' own options (`setUsersDashboardDir(false)`, ...); .NET `cli.ConfigureDashboardModule(id, fileProvider | null)`; Python `CliServerOptions(dashboard_pages={"filesystem": dir | False})` and the plugins' options (`set_users_dashboard_dir(False)`).
+- Your own page: register a dashboard extension and serve its ES module. Node `builder.addDashboardExtension({ id, title, titles, icon, group, order, permission, entry, styles, widgets, search })`, .NET `cli.AddDashboardExtension(new CliDashboardExtension { Id = ..., Entry = ... })`, Python `builder.add_dashboard_extension({...})`; listed by `GET /api/v1/qcli/dashboard/extensions`. `group` is a sidebar section (`overview`, `operations`, `data`, `access`, `system`, the default) or `account` (the account menu); `permission` hides the page from users without it; `widgets: ["overview"]` lets the module add Overview cards (`stat`, `half`, `full`) and attention items, `["palette"]` command palette entries; `search: "/?q="` adds "Search <title> for …" to the palette. The page is mounted at `/x/<id>` with the dashboard's context (user, permissions, theme, language, routing, `fetch` with the session, notices, confirm dialog, server events).
+- Build pages with `@qodalis/cli-server-dashboard-kit`: the dashboard's components, theme (Tailwind preset), texts in 11 languages, `defineExtension(App, { overview: { cards, attention }, palette })`, `useDashboard`, `useApi`, `useTranslations`/`defineMessages`, hooks (`useAsync`, `useQueryParams`, `usePaging`, `useLiveReload`) and test helpers (`@qodalis/cli-server-dashboard-kit/testing`). Contract: cli-server-dashboard `docs/extensions.md`.
+
 ### Admin dashboard: name and icon (all servers)
 
 The dashboard is "Qodalis Cli Admin" with the Qodalis Solutions logo unless the admin plugin sets its branding: the name and icon (browser tab, sidebar, sign-in page) and the terminal's name in its welcome banner.
@@ -1877,6 +1931,7 @@ describe('dice', () => {
 ```bash
 npx tsup                      # dist/public-api.{js,mjs,d.ts} + dist/umd/index.global.js
 npm publish --access public   # then in any Qodalis terminal: pkg add @qodalis/cli-dice
+                              # (pkg publish @qodalis/cli-dice lists it in the plugin marketplace after review)
 ```
 
 ```tsx

@@ -119,6 +119,7 @@
   "sidebar.dotnet-server": "Servidor .NET",
   "sidebar.node-server": "Servidor Node.js",
   "sidebar.python-server": "Servidor Python",
+  "sidebar.admin-dashboard": "Panel de Administración",
 
   "docs.getting-started.title": "Primeros Pasos",
   "docs.getting-started.intro": "Qodalis CLI es un componente de terminal multi-framework para la web. Proporciona un terminal completamente interactivo basado en xterm.js con una arquitectura de plugins, comandos integrados y wrappers nativos para Angular, React y Vue.",
@@ -546,6 +547,7 @@
   "docs.playground.open": "Playground",
   "sidebar.android-app": "Aplicación Android",
   "sidebar.connect-your-server": "Conecta tu propio servidor",
+  "sidebar.publishing-plugins": "Publicar un plugin",
   "docs.android-app.title": "Qodalis CLI para Android",
   "docs.android-app.intro": "El terminal de Qodalis CLI como aplicación para el móvil: comandos, archivos, un editor y juegos que funcionan sin conexión en el dispositivo, y tus propios servidores cuando los vinculas.",
   "docs.android-app.open-pwa": "Abrir en el navegador (PWA)",

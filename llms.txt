@@ -9,6 +9,7 @@ Commands are registered through modules: a web plugin exports an `ICliModule` wh
 - [llms-full.txt](https://cli.qodalis.com/llms-full.txt): Complete plugin development reference in one Markdown file (web plugins, server plugins, recipes)
 - [Build plugins with AI](https://cli.qodalis.com/docs/ai-plugin-development): MCP developer tools, setup for Claude Code, example prompts
 - [Create a plugin](https://cli.qodalis.com/docs/plugins/create-your-own): Scaffolding, structure, building and publishing a web plugin
+- [Publishing a plugin](https://cli.qodalis.com/docs/publishing-plugins): The plugin marketplace: keyword, `qodalis` block, `pkg publish`, review, versions and integrity
 - [Command processors](https://cli.qodalis.com/docs/core-concepts/command-processors): The `ICliCommandProcessor` interface
 - [Execution context](https://cli.qodalis.com/docs/core-concepts/execution-context): What a command can access while it runs
 - [Writer API](https://cli.qodalis.com/docs/core-concepts/writer-api): Terminal output helpers
@@ -26,6 +27,6 @@ Commands are registered through modules: a web plugin exports an `ICliModule` wh
 
 ## Optional
 
-- [Plugins](https://cli.qodalis.com/docs/plugins): Official plugins (`@qodalis/cli-<name>`)
+- [Plugins](https://cli.qodalis.com/docs/plugins): The marketplace catalog and the official plugins (`@qodalis/cli-<name>`)
 - [API reference](https://cli.qodalis.com/api/): TypeDoc for all packages
 - [Source code](https://github.com/qodalis-solutions/web-cli): web-cli monorepo, `AGENTS.md` for contributors

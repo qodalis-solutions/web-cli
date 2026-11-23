@@ -2102,9 +2102,12 @@ interface CliPackageSource {
      * The kind of source.
      * - 'registry': npm-compatible registry with search API (e.g. npmjs.org, Verdaccio)
      * - 'file': static file server, packages are discovered by probing known paths
+     * - 'marketplace': a plugin marketplace (base URL, e.g. 'https://plugins.qodalis.com/'):
+     *   the catalog `pkg browse`, `search`, `info`, `add`, `check` and `update` read;
+     *   bundles are still downloaded from the file sources
      * @default 'file'
      */
-    kind?: 'registry' | 'file';
+    kind?: 'registry' | 'file' | 'marketplace';
 }
 /**
  * Represents a log level for the CLI
@@ -2200,6 +2203,20 @@ type CliOptions = Record<string, any> & {
          * Additional custom sources
          */
         sources?: CliPackageSource[];
+        /**
+         * The plugin marketplace `pkg` reads (built in: `qodalis`,
+         * `https://plugins.qodalis.com/`). A URL replaces it with another
+         * (private) marketplace; `false` turns the built-in one off, and `pkg`
+         * then works from npm and the CDNs only.
+         */
+        marketplace?: string | false;
+        /**
+         * Refuse packages the marketplace does not list (and refuse installs
+         * while the marketplace is unreachable). By default an unlisted package
+         * installs by its full name with a warning.
+         * @default false
+         */
+        marketplaceOnly?: boolean;
     };
     /**
      * Servers the user links from the terminal (`server add`): `true` (default),
@@ -2250,6 +2267,12 @@ interface Package {
      * The dependencies for the module
      */
     dependencies?: Package[];
+    /**
+     * Subresource integrity of the bundle (`sha384-<base64>`), recorded by the
+     * marketplace and checked at install. Startup loads the bundle with this
+     * `integrity` attribute, so a changed bundle is refused by the browser.
+     */
+    integrity?: string;
 }
 /**
  * Represents command processor metadata
@@ -2449,9 +2472,49 @@ interface CliPanelConfig {
      * @default 'dark'
      */
     theme?: CliPanelThemeInput;
+    /**
+     * Whether the panel offers a theme picker (a header button, and a Theme group
+     * in the ⋮ menu of a narrow panel): Auto, Light, Dark, Custom (the user's own
+     * colors, from color pickers) and the terminal themes.
+     * A pick restyles the panel and its terminals, is remembered for the next
+     * visit and is reported to the host (`themeChange`). Turn it off when the
+     * panel has a fixed brand theme.
+     * @default true
+     */
+    themePicker?: boolean;
+    /**
+     * A Send key button in the header (in the ⋮ menu of a narrow panel), for the
+     * keys phone keyboards lack: a list of the prompt's shortcuts (Ctrl+C, Ctrl+L,
+     * Ctrl+A/E, Ctrl+U/K/W, Esc, Tab, ↑/↓ history, ...), "Ctrl + key" for any
+     * other one (the next letter typed gets Ctrl), and the keys of the full-screen
+     * command running (an editor's Save and Exit).
+     * @default true
+     */
+    sendKeys?: boolean;
 }
 /** The built-in panel palettes. */
 type CliPanelColorScheme = 'light' | 'dark';
+/** The colors of the theme picker's Custom choice (`#rrggbb`). */
+interface CliPanelCustomColors {
+    /** Background of the terminals and the panel. */
+    background: string;
+    /** Text of the terminals and the panel. */
+    foreground: string;
+    /** Cursor, selection, active tab and highlights. */
+    accent: string;
+}
+/** A theme picked in the panel's theme picker, reported to the host. */
+interface CliPanelThemeChange {
+    /**
+     * `'auto'`, `'light'`, `'dark'`, the name of a terminal theme (`'dracula'`, ...)
+     * or `'custom'` for colors the user chose.
+     */
+    theme: string;
+    /** The user's colors, when `theme` is `'custom'`. */
+    colors?: CliPanelCustomColors;
+    /** Whether the panel is now light or dark, for hosts that follow it. */
+    scheme: CliPanelColorScheme;
+}
 /** What {@link CliPanelConfig.theme} accepts. */
 type CliPanelThemeInput = CliPanelColorScheme | 'auto' | (string & {}) | CliPanelTheme;
 /** Colors of the panel's chrome (header, tabs, menus, hide tab). Any CSS color. */
@@ -3938,6 +4001,11 @@ declare function satisfiesMinVersion(installed: string, required: string): boole
  * If range looks like a plain version (no operators), treats it as >= that version.
  */
 declare function satisfiesVersionRange(installed: string, range: string | undefined): boolean;
+/**
+ * The lowest version a semver range accepts (`^2.7.0` -> `2.7.0`,
+ * `>=2.8.0-beta.1 <3` -> `2.8.0-beta.1`), or `undefined` for an invalid range.
+ */
+declare function minVersionOfRange(range: string): string | undefined;
 
 /**
  * Describes the version information returned by a CLI server's discovery endpoint.
@@ -4073,6 +4141,37 @@ declare function savePanelPosition(position: CliPanelPosition): void;
  * Get the next position in the cycle: bottom -> right -> top -> left -> bottom
  */
 declare function nextPanelPosition(current: CliPanelPosition): CliPanelPosition;
+
+/** The theme picker's choice for the user's own colors. */
+declare const PANEL_CUSTOM_THEME = "custom";
+/** The choices of the panel's theme picker that are not terminal themes. */
+declare const PANEL_THEME_MODES: readonly string[];
+/** The colors of the Custom choice, in the order the picker shows them. */
+declare const PANEL_CUSTOM_COLOR_KEYS: ReadonlyArray<keyof CliPanelCustomColors>;
+/** Whether `theme` is something the panel's theme picker offers. */
+declare function isPanelThemeChoice(theme: unknown): theme is string;
+/**
+ * Load the theme the user picked in the panel from localStorage.
+ * Returns null if none is saved or localStorage is unavailable.
+ */
+declare function loadPanelTheme(): string | null;
+/** Save the theme the user picked in the panel; `null` forgets it. */
+declare function savePanelTheme(theme: string | null): void;
+/** `#rrggbb` in lower case (what a color input takes) for a hex color, or null for anything else. */
+declare function normalizeHexColor(color: unknown): string | null;
+/** Custom colors with every color valid; invalid or missing ones come from `fallback`. */
+declare function normalizePanelCustomColors(colors: unknown, fallback: CliPanelCustomColors): CliPanelCustomColors;
+/** Load the colors of the Custom choice; null if none are saved. */
+declare function loadPanelCustomColors(): Partial<CliPanelCustomColors> | null;
+/** Save the colors of the Custom choice. They are kept when another theme is picked. */
+declare function savePanelCustomColors(colors: CliPanelCustomColors): void;
+/**
+ * The panel theme of the Custom choice: the terminal takes the background, the
+ * text and (as cursor and selection) the accent. Its other colors are those of
+ * `terminal` (custom colors the user already had, e.g. from `theme set`), or the
+ * ANSI colors of the light or dark terminal theme, whichever suits the background.
+ */
+declare function customPanelTheme(colors: CliPanelCustomColors, terminal?: ITheme): CliPanelTheme;
 
 /**
  * Strip all ANSI escape sequences from a string.
@@ -4370,7 +4469,7 @@ interface CliThemeInfo {
 
 declare const DefaultThemeInfos: Record<string, CliThemeInfo>;
 
-declare const LIBRARY_VERSION = "2.7.1";
+declare const LIBRARY_VERSION = "2.8.0";
 declare const API_VERSION = 2;
 
 /**
@@ -4431,5 +4530,5 @@ declare class BrowserFileTransferService implements ICliFileTransferService {
     private _pickFile;
 }
 
-export { API_VERSION, BrowserFileTransferService, CANCELLATION_ERROR_MESSAGE, CLI_CONFIGURE_STORE_NAME, CLI_WS_TICKET_PATH, CancellablePromise, CliAccessDeniedError, CliBackgroundColor, CliForegroundColor, CliHttpError, CliIcon, CliKeyData, CliLogLevel, CliModuleRegistry, CliPanelPalettes, CliServerPermissions, CliUsersPermissions, DEFAULT_DIR_PERMISSIONS, DEFAULT_FILE_PERMISSIONS, DefaultLibraryAuthor, DefaultThemeInfos, DefaultThemes, ICliAuditService_TOKEN, ICliAuthService_TOKEN, ICliAuthorizationService_TOKEN, ICliCommandGuard_TOKEN, ICliCompletionProvider_TOKEN, ICliDragDropService_TOKEN, ICliEventBus_TOKEN, ICliFilePickerProvider_TOKEN, ICliFileTransferService_TOKEN, ICliGroupsStoreService_TOKEN, ICliHttpClient_TOKEN, ICliKeyValueStore_TOKEN, ICliPermissionRegistry_TOKEN, ICliPermissionService_TOKEN, ICliSecretStore_TOKEN, ICliServerAuthService_TOKEN, ICliServerAuthTokenProvider_TOKEN, ICliServerManager_TOKEN, ICliSessionsService_TOKEN, ICliTranslationService_TOKEN, ICliUserEventService_TOKEN, ICliUserSessionService_TOKEN, ICliUsersStoreService_TOKEN, LIBRARY_VERSION, ObjectDescriber, ServerVersionNegotiator, appendQueryParams, bootCliModule, buildAuthenticatedWebSocketUrl, buildServerWebSocketUrl, clearTerminalLine, cliAccessMetadataGuards, cliAuthorize, cliCanAccess, cliDefaultServer, cliEvaluateAccess, cliHasPermission, cliMergePermissions, cliMissingPermissions, cliPermissionMatches, cliRequireAuthGuard, cliRequiredGroupsGuard, cliRequiredPermissionsGuard, colorFirstWord, colorSchemeOf, colorizeJson, compareVersions, constants, createCliToken, createWorkerService, delay, derivePanelColors, derivePanelThemeStyles, enums, formatJson, getConfigValue, getParameterValue, getPluginConfigValue, getRightOfWord, highlightTextWithBg, initializeBrowserEnvironment, isCliAccessDeniedError, joinShellWords, loadPanelPosition, nextPanelPosition, panelColorStyles, prefersDarkScheme, quoteShellWord, resolveConfigurationCategories, resolveHeaders, resolvePanelTheme, resolveServerHeaders, resolveServerWebSocketUrl, satisfiesMinVersion, satisfiesVersionRange, savePanelPosition, splitShellWords, stripAnsi, toQueryString, truncateToWidth, unquoteRawArgument, utils, visibleLength, writeExamples, writeHint, writeUsage, writeWrapped };
-export type { CliAccessAction, CliAddUser, CliBackgroundServiceStatus, CliBackgroundServiceType, CliBootOptions, CliBranding, CliCommandGuardResult, CliDateOptions, CliEmitOptions, CliEngineSnapshot, CliEvent, CliEventData, CliEventHandler, CliEventMap, CliEventType, CliFactoryProvider, CliFilePickerOptions, CliFileResult, CliFullScreenOptions, CliHeadersProvider, CliHelpRow, CliHttpRequestOptions, CliLineOptions, CliMultiSelectOption, CliMultiSelectOptions, CliNotification, CliNotificationLevel, CliNumberOptions, CliOptions, CliPackageSource, CliPanelColorScheme, CliPanelColors, CliPanelConfig, CliPanelHideAlignment, CliPanelPaneState, CliPanelPosition, CliPanelState, CliPanelTabState, CliPanelTheme, CliPanelThemeInput, CliPercentageProgressBarUpdateValueOptions, CliPermissionDefinition, CliProcessCommand, CliProcessorMetadata, CliProvider, CliResolvedPanelTheme, CliSelectOption, CliSelectOptions, CliServerCapabilities, CliServerCommandDescriptor, CliServerConfig, CliServerHealthCheckOptions, CliServerOutput, CliServerResponse, CliServerTablePage, CliServiceEventHandler, CliServiceExecutionMode, CliServiceLogLevel, CliState, CliStateConfiguration, CliStateScope, CliStateStoreOptions, CliTableOptions, CliTextAnimatorOptions, CliTheme, CliThemeCategory, CliThemeInfo, CliToken, CliTypeProvider, CliUpdateUser, CliValueProvider, CliWebSocketAuthOptions, CliWorkerInboundMessage, CliWorkerOutboundMessage, CustomEventType, DefaultThemesType, ICliAuditEntry, ICliAuditService, ICliAuthService, ICliAuthorizationService, ICliBackgroundService, ICliBackgroundServiceInfo, ICliBackgroundServiceRegistry, ICliClipboard, ICliCommandAuthor, ICliCommandChildProcessor, ICliCommandControls, ICliCommandExecutorService, ICliCommandGuard, ICliCommandKey, ICliCommandParameterDescriptor, ICliCommandProcessor, ICliCommandProcessorRegistry, ICliCompletionContext, ICliCompletionProvider, ICliConfigurableModule, ICliConfigurationOption, ICliDragDropService, ICliEventBus, ICliExecutionContext, ICliExecutionProcess, ICliFileEntry, ICliFilePickerProvider, ICliFileTransferService, ICliGlobalParameterHandler, ICliGroup, ICliGroupsStoreService, ICliHttpClient, ICliInputReader, ICliKeyValueStore, ICliLogger, ICliManagedInterval, ICliManagedTimer, ICliModule, ICliNotifier, ICliOwnership, ICliPanelRef, ICliPercentageProgressBar, ICliPermissionRegistry, ICliPermissionService, ICliPingServerService, ICliPrincipal, ICliProcessEntry, ICliProcessRegisterOptions, ICliProcessRegistry, ICliProcessorHook, ICliProgressBar, ICliProtectedResource, ICliSecretStore, ICliServerAuthService, ICliServerAuthTokenProvider, ICliServerManager, ICliServiceContext, ICliServiceEvent, ICliServiceLogEntry, ICliServiceProvider, ICliSessionInfo, ICliSessionsService, ICliSpinner, ICliStateStore, ICliTerminalWriter, ICliTextAnimator, ICliTranslationService, ICliUser, ICliUserCredentials, ICliUserEvent, ICliUserEventService, ICliUserSession, ICliUserSessionService, ICliUsersStoreService, ISyntaxHighlightRule, ISyntaxHighlighter, ISyntaxTheme, LineState, Package, ServerVersionInfo, WorkerServiceContext };
+export { API_VERSION, BrowserFileTransferService, CANCELLATION_ERROR_MESSAGE, CLI_CONFIGURE_STORE_NAME, CLI_WS_TICKET_PATH, CancellablePromise, CliAccessDeniedError, CliBackgroundColor, CliForegroundColor, CliHttpError, CliIcon, CliKeyData, CliLogLevel, CliModuleRegistry, CliPanelPalettes, CliServerPermissions, CliUsersPermissions, DEFAULT_DIR_PERMISSIONS, DEFAULT_FILE_PERMISSIONS, DefaultLibraryAuthor, DefaultThemeInfos, DefaultThemes, ICliAuditService_TOKEN, ICliAuthService_TOKEN, ICliAuthorizationService_TOKEN, ICliCommandGuard_TOKEN, ICliCompletionProvider_TOKEN, ICliDragDropService_TOKEN, ICliEventBus_TOKEN, ICliFilePickerProvider_TOKEN, ICliFileTransferService_TOKEN, ICliGroupsStoreService_TOKEN, ICliHttpClient_TOKEN, ICliKeyValueStore_TOKEN, ICliPermissionRegistry_TOKEN, ICliPermissionService_TOKEN, ICliSecretStore_TOKEN, ICliServerAuthService_TOKEN, ICliServerAuthTokenProvider_TOKEN, ICliServerManager_TOKEN, ICliSessionsService_TOKEN, ICliTranslationService_TOKEN, ICliUserEventService_TOKEN, ICliUserSessionService_TOKEN, ICliUsersStoreService_TOKEN, LIBRARY_VERSION, ObjectDescriber, PANEL_CUSTOM_COLOR_KEYS, PANEL_CUSTOM_THEME, PANEL_THEME_MODES, ServerVersionNegotiator, appendQueryParams, bootCliModule, buildAuthenticatedWebSocketUrl, buildServerWebSocketUrl, clearTerminalLine, cliAccessMetadataGuards, cliAuthorize, cliCanAccess, cliDefaultServer, cliEvaluateAccess, cliHasPermission, cliMergePermissions, cliMissingPermissions, cliPermissionMatches, cliRequireAuthGuard, cliRequiredGroupsGuard, cliRequiredPermissionsGuard, colorFirstWord, colorSchemeOf, colorizeJson, compareVersions, constants, createCliToken, createWorkerService, customPanelTheme, delay, derivePanelColors, derivePanelThemeStyles, enums, formatJson, getConfigValue, getParameterValue, getPluginConfigValue, getRightOfWord, highlightTextWithBg, initializeBrowserEnvironment, isCliAccessDeniedError, isPanelThemeChoice, joinShellWords, loadPanelCustomColors, loadPanelPosition, loadPanelTheme, minVersionOfRange, nextPanelPosition, normalizeHexColor, normalizePanelCustomColors, panelColorStyles, prefersDarkScheme, quoteShellWord, resolveConfigurationCategories, resolveHeaders, resolvePanelTheme, resolveServerHeaders, resolveServerWebSocketUrl, satisfiesMinVersion, satisfiesVersionRange, savePanelCustomColors, savePanelPosition, savePanelTheme, splitShellWords, stripAnsi, toQueryString, truncateToWidth, unquoteRawArgument, utils, visibleLength, writeExamples, writeHint, writeUsage, writeWrapped };
+export type { CliAccessAction, CliAddUser, CliBackgroundServiceStatus, CliBackgroundServiceType, CliBootOptions, CliBranding, CliCommandGuardResult, CliDateOptions, CliEmitOptions, CliEngineSnapshot, CliEvent, CliEventData, CliEventHandler, CliEventMap, CliEventType, CliFactoryProvider, CliFilePickerOptions, CliFileResult, CliFullScreenOptions, CliHeadersProvider, CliHelpRow, CliHttpRequestOptions, CliLineOptions, CliMultiSelectOption, CliMultiSelectOptions, CliNotification, CliNotificationLevel, CliNumberOptions, CliOptions, CliPackageSource, CliPanelColorScheme, CliPanelColors, CliPanelConfig, CliPanelCustomColors, CliPanelHideAlignment, CliPanelPaneState, CliPanelPosition, CliPanelState, CliPanelTabState, CliPanelTheme, CliPanelThemeChange, CliPanelThemeInput, CliPercentageProgressBarUpdateValueOptions, CliPermissionDefinition, CliProcessCommand, CliProcessorMetadata, CliProvider, CliResolvedPanelTheme, CliSelectOption, CliSelectOptions, CliServerCapabilities, CliServerCommandDescriptor, CliServerConfig, CliServerHealthCheckOptions, CliServerOutput, CliServerResponse, CliServerTablePage, CliServiceEventHandler, CliServiceExecutionMode, CliServiceLogLevel, CliState, CliStateConfiguration, CliStateScope, CliStateStoreOptions, CliTableOptions, CliTextAnimatorOptions, CliTheme, CliThemeCategory, CliThemeInfo, CliToken, CliTypeProvider, CliUpdateUser, CliValueProvider, CliWebSocketAuthOptions, CliWorkerInboundMessage, CliWorkerOutboundMessage, CustomEventType, DefaultThemesType, ICliAuditEntry, ICliAuditService, ICliAuthService, ICliAuthorizationService, ICliBackgroundService, ICliBackgroundServiceInfo, ICliBackgroundServiceRegistry, ICliClipboard, ICliCommandAuthor, ICliCommandChildProcessor, ICliCommandControls, ICliCommandExecutorService, ICliCommandGuard, ICliCommandKey, ICliCommandParameterDescriptor, ICliCommandProcessor, ICliCommandProcessorRegistry, ICliCompletionContext, ICliCompletionProvider, ICliConfigurableModule, ICliConfigurationOption, ICliDragDropService, ICliEventBus, ICliExecutionContext, ICliExecutionProcess, ICliFileEntry, ICliFilePickerProvider, ICliFileTransferService, ICliGlobalParameterHandler, ICliGroup, ICliGroupsStoreService, ICliHttpClient, ICliInputReader, ICliKeyValueStore, ICliLogger, ICliManagedInterval, ICliManagedTimer, ICliModule, ICliNotifier, ICliOwnership, ICliPanelRef, ICliPercentageProgressBar, ICliPermissionRegistry, ICliPermissionService, ICliPingServerService, ICliPrincipal, ICliProcessEntry, ICliProcessRegisterOptions, ICliProcessRegistry, ICliProcessorHook, ICliProgressBar, ICliProtectedResource, ICliSecretStore, ICliServerAuthService, ICliServerAuthTokenProvider, ICliServerManager, ICliServiceContext, ICliServiceEvent, ICliServiceLogEntry, ICliServiceProvider, ICliSessionInfo, ICliSessionsService, ICliSpinner, ICliStateStore, ICliTerminalWriter, ICliTextAnimator, ICliTranslationService, ICliUser, ICliUserCredentials, ICliUserEvent, ICliUserEventService, ICliUserSession, ICliUserSessionService, ICliUsersStoreService, ISyntaxHighlightRule, ISyntaxHighlighter, ISyntaxTheme, LineState, Package, ServerVersionInfo, WorkerServiceContext };

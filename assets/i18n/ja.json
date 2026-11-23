@@ -119,6 +119,7 @@
   "sidebar.dotnet-server": ".NET サーバー",
   "sidebar.node-server": "Node.js サーバー",
   "sidebar.python-server": "Python サーバー",
+  "sidebar.admin-dashboard": "管理ダッシュボード",
 
   "docs.getting-started.title": "はじめに",
   "docs.getting-started.intro": "Qodalis CLI は Web 向けのマルチフレームワークターミナルコンポーネントです。プラグインアーキテクチャ、組み込みコマンド、Angular、React、Vue 向けのネイティブラッパーを備えた完全にインタラクティブな xterm.js ベースのターミナルを提供します。",
@@ -546,6 +547,7 @@
   "docs.playground.open": "Playground",
   "sidebar.android-app": "Android アプリ",
   "sidebar.connect-your-server": "自分のサーバーに接続",
+  "sidebar.publishing-plugins": "プラグインの公開",
   "docs.android-app.title": "Android 版 Qodalis CLI",
   "docs.android-app.intro": "Qodalis CLI のターミナルをスマートフォンアプリで。コマンド、ファイル、エディター、ゲームが端末上でオフラインで動作し、リンクすれば自分のサーバーも使えます。",
   "docs.android-app.open-pwa": "ブラウザーで開く (PWA)",
