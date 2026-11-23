@@ -44,6 +44,11 @@ import {
     PanelHeaderMenuItem,
     PanelPositionOption,
     PanelThemeOption,
+    PanelSendKeyItem,
+    KEYBOARD_ICON,
+    runSendKeyItem,
+    sendKeyMenuItems,
+    sendKeyMenuStyle,
     PanelStatusDropdown,
     PanelStatusIndicator,
     RESTORE_ICON,
@@ -89,6 +94,8 @@ interface PanelView {
     positionIcon: SvgIcon;
     themeOptions: PanelThemeOption[];
     themeIcon: SvgIcon;
+    sendKeyMenuItems: PanelSendKeyItem[];
+    sendKeyMenuStyle: Record<string, string>;
     collapseIcon: SvgIcon;
     hideTabArrowIcon: SvgIcon;
     maximizeIcon: SvgIcon;
@@ -303,6 +310,18 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
         this.controller.toggleHeaderMenu(event.currentTarget as HTMLElement);
     }
 
+    readonly keyboardIcon = KEYBOARD_ICON;
+
+    /** The Send key button of the header. */
+    onSendKeyMenuToggle(event: MouseEvent): void {
+        event.stopPropagation();
+        this.controller.toggleSendKeyMenu(event.currentTarget as HTMLElement);
+    }
+
+    onSendKey(item: PanelSendKeyItem): void {
+        runSendKeyItem(this.controller, item);
+    }
+
     /** The theme button of the header. */
     onThemeDropdownToggle(event: MouseEvent): void {
         this.controller.toggleThemeDropdown(event.currentTarget as HTMLElement);
@@ -440,6 +459,8 @@ export class CliPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDe
             positionIcon: positionIcon(s.position),
             themeOptions: s.themeDropdownOpen ? themeOptions(s) : [],
             themeIcon: themeIcon(s.scheme, 20),
+            sendKeyMenuItems: s.sendKeyMenuOpen ? sendKeyMenuItems(s) : [],
+            sendKeyMenuStyle: sendKeyMenuStyle(s),
             collapseIcon: collapseChevronIcon(s.position, s.collapsed),
             hideTabArrowIcon: hideTabChevronIcon(s.position),
             maximizeIcon: s.maximized ? RESTORE_ICON : MAXIMIZE_ICON,

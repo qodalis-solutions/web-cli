@@ -437,6 +437,16 @@ export interface CliPanelConfig {
      * @default true
      */
     themePicker?: boolean;
+
+    /**
+     * A Send key button in the header (in the ⋮ menu of a narrow panel), for the
+     * keys phone keyboards lack: a list of the prompt's shortcuts (Ctrl+C, Ctrl+L,
+     * Ctrl+A/E, Ctrl+U/K/W, Esc, Tab, ↑/↓ history, ...), "Ctrl + key" for any
+     * other one (the next letter typed gets Ctrl), and the keys of the full-screen
+     * command running (an editor's Save and Exit).
+     * @default true
+     */
+    sendKeys?: boolean;
 }
 
 /** The built-in panel palettes. */

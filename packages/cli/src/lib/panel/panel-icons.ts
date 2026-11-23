@@ -67,6 +67,20 @@ export const MORE_ICON: SvgIcon = {
     shapes: [line('12', '5', '12', '5'), line('12', '12', '12', '12'), line('12', '19', '12', '19')],
 };
 
+/** A keyboard: send a key. Zero-length lines are drawn as round dots. */
+export const KEYBOARD_ICON: SvgIcon = {
+    size: 20,
+    strokeWidth: 1.8,
+    shapes: [
+        rect({ x: '2', y: '5', width: '20', height: '14', rx: '2' }),
+        line('6', '9.5', '6', '9.5'),
+        line('10', '9.5', '10', '9.5'),
+        line('14', '9.5', '14', '9.5'),
+        line('18', '9.5', '18', '9.5'),
+        line('8', '15', '16', '15'),
+    ],
+};
+
 /** A sun: the light theme. */
 export const LIGHT_THEME_ICON: SvgIcon = {
     size: 18,

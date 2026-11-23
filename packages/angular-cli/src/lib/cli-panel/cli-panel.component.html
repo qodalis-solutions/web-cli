@@ -166,6 +166,22 @@
                 </div>
               }
             </div>
+            @if (s.sendKeys) {
+              <button
+                type="button"
+                class="cli-panel-btn cli-panel-btn-send-key"
+                [title]="
+                  s.ctrlModifier !== 'off' ? labels.ctrlHeld : labels.sendKey
+                "
+                [attr.aria-label]="labels.sendKey"
+                aria-haspopup="menu"
+                [attr.aria-expanded]="s.sendKeyMenuOpen"
+                (pointerdown)="$event.preventDefault()"
+                (click)="onSendKeyMenuToggle($event)"
+              >
+                <cli-panel-icon [icon]="keyboardIcon" />
+              </button>
+            }
             @if (s.themePicker) {
               <div
                 class="cli-panel-btn-theme-wrapper"
@@ -364,6 +380,37 @@
       </div>
     }
   </div>
+  @if (s.sendKeyMenuOpen) {
+    <div
+      class="cli-panel-send-key-menu"
+      role="menu"
+      [attr.aria-label]="labels.sendKey"
+      [ngStyle]="view.sendKeyMenuStyle"
+      (click)="$event.stopPropagation()"
+    >
+      @for (item of view.sendKeyMenuItems; track item.id) {
+        @if (item.separatorBefore) {
+          <div class="cli-panel-send-key-separator" role="separator"></div>
+        }
+        @if (item.heading) {
+          <div class="cli-panel-send-key-heading" role="presentation">
+            {{ item.heading }}
+          </div>
+        }
+        <!-- A tap must not take the focus from the terminal: the keyboard stays open -->
+        <button
+          type="button"
+          class="cli-panel-send-key-item"
+          role="menuitem"
+          (pointerdown)="$event.preventDefault()"
+          (click)="onSendKey(item)"
+        >
+          <kbd>{{ item.label }}</kbd>
+          <span>{{ item.description }}</span>
+        </button>
+      }
+    </div>
+  }
   <!-- Menus are rendered outside the panel to escape its transform/overflow clipping -->
   @if (s.contextMenu.visible) {
     <div

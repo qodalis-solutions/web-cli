@@ -9,7 +9,18 @@ import {
 } from '@qodalis/cli-core';
 import { CliPanelController } from './cli-panel-controller';
 import { PANEL_POSITIONS } from './panel-geometry';
-import { CLOSE_ICON, HIDE_ICON, MAXIMIZE_ICON, RESTORE_ICON, SvgIcon, expandChevronIcon, positionIcon, themeIcon } from './panel-icons';
+import {
+    CLOSE_ICON,
+    HIDE_ICON,
+    KEYBOARD_ICON,
+    MAXIMIZE_ICON,
+    RESTORE_ICON,
+    SvgIcon,
+    expandChevronIcon,
+    positionIcon,
+    themeIcon,
+} from './panel-icons';
+import { CLI_SEND_KEYS, CliSendKey } from '../keys';
 import { CliPanelSnapshot, CliPanelTab, CliPanelTabStatus } from './panel-types';
 
 /**
@@ -33,6 +44,9 @@ export const PANEL_LABELS = {
     customForeground: 'Text',
     customAccent: 'Accent',
     moreThemes: 'More themes',
+    sendKey: 'Send key',
+    ctrlHeld: 'Ctrl is held for the next key',
+    keys: 'Keys',
     hide: 'Hide',
     maximize: 'Maximize',
     restore: 'Restore',
@@ -84,6 +98,8 @@ export function panelWrapperClass(s: CliPanelSnapshot, extra?: string): string {
         s.maximized && 'maximized',
         s.panelResizing && 'resizing',
         s.compactHeader && 'compact-header',
+        // "Ctrl + key": the Send key button (or the ⋮) shows that the next letter gets Ctrl
+        s.ctrlModifier !== 'off' && 'ctrl-held',
         extra,
     );
 }
@@ -345,7 +361,7 @@ export function colorInputValue(event: Event): string {
 
 /* ─── Header ⋮ menu (compact header) ────────────────────────── */
 
-export type PanelHeaderMenuAction = 'maximize' | 'position' | 'theme' | 'theme-color' | 'theme-list' | 'hide' | 'close';
+export type PanelHeaderMenuAction = 'maximize' | 'position' | 'theme' | 'theme-color' | 'theme-list' | 'send-key' | 'hide' | 'close';
 
 export interface PanelHeaderMenuItem {
     /** Unique key (the action, `position-<position>` or `theme-<theme>`). */
@@ -381,8 +397,8 @@ export function headerMenuStyle(s: CliPanelSnapshot): Record<string, string> {
 /**
  * Items of the ⋮ menu that replaces the action buttons on a narrow panel:
  * maximize/restore, the four positions, the theme picker (unless turned off),
- * hide (when hideable) and close (when closable). Collapse/expand stays a
- * button next to the ⋮.
+ * Send key (unless turned off), hide (when hideable) and close (when
+ * closable). Collapse/expand stays a button next to the ⋮.
  */
 export function headerMenuItems(s: CliPanelSnapshot): PanelHeaderMenuItem[] {
     const items: PanelHeaderMenuItem[] = [
@@ -431,6 +447,18 @@ export function headerMenuItems(s: CliPanelSnapshot): PanelHeaderMenuItem[] {
             });
         });
     }
+    if (s.sendKeys) {
+        items.push({
+            key: 'send-key',
+            action: 'send-key',
+            label: PANEL_LABELS.sendKey,
+            icon: KEYBOARD_ICON,
+            role: 'menuitem',
+            disabled: false,
+            destructive: false,
+            separatorBefore: true,
+        });
+    }
     if (s.hideable) {
         items.push({ key: 'hide', action: 'hide', label: PANEL_LABELS.hide, icon: HIDE_ICON, role: 'menuitem', disabled: false, destructive: false, separatorBefore: true });
     }
@@ -451,6 +479,10 @@ export function headerMenuItemClass(item: PanelHeaderMenuItem): string {
  */
 export function runHeaderMenuAction(controller: CliPanelController, item: PanelHeaderMenuItem): void {
     if (item.action === 'theme-color') return;
+    if (item.action === 'send-key') {
+        controller.openSendKeyMenuFromHeaderMenu();
+        return;
+    }
     if (item.action === 'theme-list') {
         controller.toggleThemeList();
         return;
@@ -478,6 +510,57 @@ export function runHeaderMenuAction(controller: CliPanelController, item: PanelH
             controller.close();
             break;
     }
+}
+
+/* ─── Send key (phones) ─────────────────────────────────────── */
+
+export interface PanelSendKeyItem {
+    /** Unique key. */
+    id: string;
+    /** `'Ctrl+C'`, or the button text of a command's key. */
+    label: string;
+    description: string;
+    /** Group label shown above this item. */
+    heading?: string;
+    separatorBefore: boolean;
+    send: CliSendKey | { data: string };
+}
+
+/** Fixed position and theme variables of the Send key menu, rendered outside the panel. */
+export function sendKeyMenuStyle(s: CliPanelSnapshot): Record<string, string> {
+    return { ...s.themeStyles, ...s.sendKeyMenuStyle };
+}
+
+/**
+ * Items of the Send key menu: the keys of the full-screen command running
+ * (an editor's Save and Exit), then the prompt's shortcuts and "Ctrl + key".
+ */
+export function sendKeyMenuItems(s: CliPanelSnapshot): PanelSendKeyItem[] {
+    const items: PanelSendKeyItem[] = s.commandKeys.map((key, i) => ({
+        id: `command-${i}`,
+        label: key.key ?? key.label,
+        description: key.description ?? key.label,
+        heading: i === 0 ? s.commandName || undefined : undefined,
+        separatorBefore: false,
+        send: { data: key.data },
+    }));
+    const commandKeys = items.length > 0;
+    CLI_SEND_KEYS.forEach((key, i) =>
+        items.push({
+            id: `key-${key.label}`,
+            label: key.label,
+            description: key.description,
+            heading: i === 0 && commandKeys ? PANEL_LABELS.keys : undefined,
+            separatorBefore: i === 0 && commandKeys,
+            send: key,
+        }),
+    );
+    return items;
+}
+
+/** Send an item of the Send key menu; the pointer press must not take the focus from the terminal. */
+export function runSendKeyItem(controller: CliPanelController, item: PanelSendKeyItem): void {
+    controller.sendKey(item.send);
 }
 
 /* ─── Context menu ──────────────────────────────────────────── */

@@ -19,6 +19,10 @@ import {
     collapseChevronIcon,
     contextMenuItems,
     contextMenuStyle,
+    runSendKeyItem,
+    sendKeyMenuItems,
+    sendKeyMenuStyle,
+    KEYBOARD_ICON,
     glowLineClass,
     handleRenameKey,
     headerMenuItemClass,
@@ -285,6 +289,25 @@ export const CliPanel = defineComponent({
                                   )
                                 : null,
                         ]),
+                        s.sendKeys
+                            ? h(
+                                  'button',
+                                  {
+                                      type: 'button',
+                                      class: 'cli-panel-btn cli-panel-btn-send-key',
+                                      title: s.ctrlModifier !== 'off' ? PANEL_LABELS.ctrlHeld : PANEL_LABELS.sendKey,
+                                      'aria-label': PANEL_LABELS.sendKey,
+                                      'aria-haspopup': 'menu',
+                                      'aria-expanded': String(s.sendKeyMenuOpen),
+                                      onPointerdown: (e: PointerEvent) => e.preventDefault(),
+                                      onClick: (e: MouseEvent) => {
+                                          e.stopPropagation();
+                                          controller.toggleSendKeyMenu(e.currentTarget as HTMLElement);
+                                      },
+                                  },
+                                  [icon(KEYBOARD_ICON)],
+                              )
+                            : null,
                         s.themePicker ? renderThemePicker(s) : null,
                         s.hideable
                             ? h('button', { class: 'cli-panel-btn cli-panel-btn-hide', title: PANEL_LABELS.hide, onClick: () => controller.hide() }, [icon(HIDE_ICON)])
@@ -473,6 +496,29 @@ export const CliPanel = defineComponent({
                 h('button', { class: 'cli-panel-add-tab', title: PANEL_LABELS.newTerminal, onClick: () => controller.addTab() }, '+'),
             ]);
 
+        const renderSendKeyMenu = (s: CliPanelSnapshot) =>
+            h(
+                'div',
+                { class: 'cli-panel-send-key-menu', role: 'menu', 'aria-label': PANEL_LABELS.sendKey, style: sendKeyMenuStyle(s), onClick: stop },
+                sendKeyMenuItems(s).flatMap((item) => [
+                    item.separatorBefore ? h('div', { class: 'cli-panel-send-key-separator', role: 'separator' }) : null,
+                    item.heading ? h('div', { class: 'cli-panel-send-key-heading', role: 'presentation' }, item.heading) : null,
+                    h(
+                        'button',
+                        {
+                            key: item.id,
+                            type: 'button',
+                            class: 'cli-panel-send-key-item',
+                            role: 'menuitem',
+                            // A tap must not take the focus from the terminal: the keyboard stays open
+                            onPointerdown: (e: PointerEvent) => e.preventDefault(),
+                            onClick: () => runSendKeyItem(controller, item),
+                        },
+                        [h('kbd', item.label), h('span', item.description)],
+                    ),
+                ]),
+            );
+
         const renderInstances = (s: CliPanelSnapshot) =>
             h(
                 'div',
@@ -646,6 +692,7 @@ export const CliPanel = defineComponent({
                 ),
                 s.contextMenu.visible ? renderContextMenu(s) : null,
                 s.headerMenuOpen ? renderHeaderMenu(s) : null,
+                s.sendKeyMenuOpen ? renderSendKeyMenu(s) : null,
                 renderStatusDropdown(s),
             ]);
         };
