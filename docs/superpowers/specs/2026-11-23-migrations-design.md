@@ -136,7 +136,7 @@ Plugins register their schema as a `code` source on a database the host names (o
 
 | Store | Today | With the plugin |
 |---|---|---|
-| Node `users-postgres` (not released yet) | own `runPostgresMigrations` (`qcli_schema_migrations`) | `code` source `qcli-users` with the new names from the start (no rename: never released) |
+| Node `users-postgres` (not on npm yet, but live on plugins.qodalis.com) | own `runPostgresMigrations` (`qcli_schema_migrations`) | `code` source `qcli-users`: migration 1 renames the `qcli_*` tables when present, the history rows of `qcli_schema_migrations` are taken over |
 | Node/Python/.NET `filesystem-sqlite` | `CREATE TABLE IF NOT EXISTS` | `code` source `qcli-filesystem` (migration 1 = today's schema, `IF NOT EXISTS`) |
 | .NET `users-efcore`, `jobs-efcore`, `audit-efcore`, `filesystem-efcore`, `public-api-efcore` | `EnsureCreated` + `UpgradeSchema` | each ships a `code` source with SQL per dialect (`IF NOT EXISTS`, so tables a host already made are adopted); `EnsureCreated` stays as the default when the migrations plugin is not used |
 
