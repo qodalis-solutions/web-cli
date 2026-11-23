@@ -1,6 +1,6 @@
 export type CdnSourceName = string;
 
-export type SourceKind = 'registry' | 'file';
+export type SourceKind = 'registry' | 'file' | 'marketplace';
 
 export interface SourceEntry {
     url: string;
@@ -11,6 +11,7 @@ const BUILTIN_SOURCES: Record<string, SourceEntry> = {
     unpkg: { url: 'https://unpkg.com/', kind: 'file' },
     jsdelivr: { url: 'https://cdn.jsdelivr.net/npm/', kind: 'file' },
     npm: { url: 'https://registry.npmjs.org/', kind: 'registry' },
+    qodalis: { url: 'https://plugins.qodalis.com/', kind: 'marketplace' },
 };
 
 export class ScriptLoaderService {
@@ -30,6 +31,14 @@ export class ScriptLoaderService {
             url: url.endsWith('/') ? url : url + '/',
             kind,
         });
+    }
+
+    /**
+     * Removes a source (e.g. the built-in marketplace when a host turns it off).
+     */
+    removeSource(name: string): void {
+        this.sources.delete(name);
+        if (this.primary === name) this.primary = 'unpkg';
     }
 
     /**
@@ -70,7 +79,9 @@ export class ScriptLoaderService {
      * Sets the preferred CDN source. The other sources become fallbacks.
      */
     setCdnSource(preferred: CdnSourceName): void {
-        if (this.sources.has(preferred)) {
+        // A marketplace serves metadata, never downloads
+        const entry = this.sources.get(preferred);
+        if (entry && entry.kind !== 'marketplace') {
             this.primary = preferred;
         }
     }
@@ -82,9 +93,17 @@ export class ScriptLoaderService {
         return this.primary;
     }
 
-    injectScript(src: string): Promise<void> {
+    /**
+     * Load a script by URL. With `integrity` (`sha384-...`) the browser
+     * refuses the script when its content differs.
+     */
+    injectScript(src: string, integrity?: string): Promise<void> {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
+            if (integrity) {
+                script.integrity = integrity;
+                script.crossOrigin = 'anonymous';
+            }
             script.src = src;
             script.async = true;
             script.onload = () => resolve();
@@ -217,9 +236,12 @@ export class ScriptLoaderService {
     /**
      * Tries to inject a script tag from multiple CDN sources, falling back on failure.
      */
-    injectScriptWithFallback(packagePath: string): Promise<void> {
+    injectScriptWithFallback(
+        packagePath: string,
+        integrity?: string,
+    ): Promise<void> {
         const urls = this.getCdnUrls(packagePath);
-        return this.injectScriptFromUrls(urls);
+        return this.injectScriptFromUrls(urls, integrity);
     }
 
     private async getScriptFromUrls(
@@ -245,11 +267,14 @@ export class ScriptLoaderService {
         throw lastError;
     }
 
-    private async injectScriptFromUrls(urls: string[]): Promise<void> {
+    private async injectScriptFromUrls(
+        urls: string[],
+        integrity?: string,
+    ): Promise<void> {
         let lastError: any;
         for (const url of urls) {
             try {
-                return await this.injectScript(url);
+                return await this.injectScript(url, integrity);
             } catch (e) {
                 lastError = e;
             }

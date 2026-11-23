@@ -24,9 +24,12 @@ export interface CliPackageSource {
      * The kind of source.
      * - 'registry': npm-compatible registry with search API (e.g. npmjs.org, Verdaccio)
      * - 'file': static file server, packages are discovered by probing known paths
+     * - 'marketplace': a plugin marketplace (base URL, e.g. 'https://plugins.qodalis.com/'):
+     *   the catalog `pkg browse`, `search`, `info`, `add`, `check` and `update` read;
+     *   bundles are still downloaded from the file sources
      * @default 'file'
      */
-    kind?: 'registry' | 'file';
+    kind?: 'registry' | 'file' | 'marketplace';
 }
 
 /**
@@ -135,6 +138,22 @@ export type CliOptions = Record<string, any> & {
          * Additional custom sources
          */
         sources?: CliPackageSource[];
+
+        /**
+         * The plugin marketplace `pkg` reads (built in: `qodalis`,
+         * `https://plugins.qodalis.com/`). A URL replaces it with another
+         * (private) marketplace; `false` turns the built-in one off, and `pkg`
+         * then works from npm and the CDNs only.
+         */
+        marketplace?: string | false;
+
+        /**
+         * Refuse packages the marketplace does not list (and refuse installs
+         * while the marketplace is unreachable). By default an unlisted package
+         * installs by its full name with a warning.
+         * @default false
+         */
+        marketplaceOnly?: boolean;
     };
 
     /**
@@ -191,6 +210,13 @@ export interface Package {
      * The dependencies for the module
      */
     dependencies?: Package[];
+
+    /**
+     * Subresource integrity of the bundle (`sha384-<base64>`), recorded by the
+     * marketplace and checked at install. Startup loads the bundle with this
+     * `integrity` attribute, so a changed bundle is refused by the browser.
+     */
+    integrity?: string;
 }
 
 /**
