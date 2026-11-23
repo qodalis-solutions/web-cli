@@ -1,6 +1,6 @@
 # Plugin marketplace (catalog server, `pkg` source, moderation, docs)
 
-Date: 2026-11-23. Status: design, waiting for approval. Issue: web-cli#230.
+Date: 2026-11-23. Status: approved 2026-11-23 (D2-D6 as recommended; D1 changed: the service is private, see below). Issue: web-cli#230.
 
 ## Intent
 
@@ -90,7 +90,8 @@ what the docs site embeds at build time (Part 4).
 
 Each has a recommendation; the design below assumes it.
 
-- **D1. Which servers get the plugin.** *Recommended: Node only in v1*, published as
+- **D1 (decided: a private Qodalis service, not a published server plugin; the HTTP API is documented so others
+  can implement a marketplace).** Originally: **Which servers get the plugin.** *Recommended: Node only in v1*, published as
   `@qodalis/cli-server-plugin-marketplace`, with the HTTP contract written so the .NET and Python servers can
   follow. The indexer talks to npm and unpkg, the hosted instance needs one implementation, and a private
   marketplace can run the Node server (or its Docker image) whatever the host's own stack is. This is the
@@ -105,8 +106,7 @@ Each has a recommendation; the design below assumes it.
 - **D3. Bundles.** *Recommended: not mirrored.* The marketplace stores the bundle's path, size and SHA-384;
   the CLI downloads from the npm CDNs (with its existing fallback between them) and checks the hash.
   Mirroring would make the marketplace a code host with storage, bandwidth and takedown duties.
-- **D4. Hosting.** *Recommended: `plugins.qodalis.com`* on the apps VM next to RateBell (Docker, auto-deploy,
-  covered by the nightly backup), behind the existing proxy. Needs a DNS record and your go-ahead; nothing is
+- **D4. Hosting.** *Recommended: `plugins.qodalis.com`* on Qodalis' own infrastructure. Needs a DNS record and your go-ahead; nothing is
   deployed before that.
 - **D5. Packages the marketplace does not list.** *Recommended: still installable by full name, with a
   one-line warning* ("not listed in the marketplace, not reviewed"), as today. A host can set
