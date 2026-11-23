@@ -903,6 +903,26 @@ Since 1.0.0-beta.19 every server answers read-only endpoints the admin dashboard
 - `GET /api/v1/qcli/commands/stats` (core, same access as `GET /commands`): executions, failures (non-zero exit, exception, unknown command), average duration and last run of each root command since the server started; `known` is false for commands the registry does not have.
 - `GET /api/v1/qcli/audit` takes `from` and `to` (ISO 8601 or epoch ms); a custom audit store applies them from `AuditQueryOptions`.
 
+### Admin dashboard: pages, plugin pages and extensions (all servers)
+
+The admin plugin serves the dashboard at `/qcli/admin`. Its own pages: Overview, Commands, Plugins, Terminal, Events, Logs, Config. Every other page is a module (`@qodalis/cli-dashboard-module-<name>`, built in the cli-server-dashboard repo) embedded in the plugin that owns its API, served at `/qcli/modules/<id>` and registered when the plugin is mounted, so a server shows the page only when it has the plugin:
+
+| Page | Plugin | Permission |
+|---|---|---|
+| Jobs (`/x/jobs`) | jobs | `jobs:read` |
+| Audit (`/x/audit`) | audit (the users plugin adds it) | `audit:read` |
+| Filesystem (`/x/filesystem`) | core, with the filesystem enabled | `files:read` |
+| Data explorer (`/x/data-explorer`) | core, with data explorer sources | `data:query` |
+| Databases (`/x/databases`, served at `/qcli/databases`) | databases | `databases:read` |
+| Users (`/x/users`: users, groups, sessions) | users | `users:read` |
+| API tokens (`/x/tokens`) | users | none |
+| Account (`/x/account`, in the account menu: profile, password, permissions) | users | none |
+
+- Sign-in: with the users plugin, the user's own account and `admin:access`; without it, the admin plugin's single account. With an auth adapter (the host signs users in, `GET /api/v1/qcli/auth/mode` answers `external`) the dashboard links to the host's sign-in and takes its `#token=`; the Users and Account pages then only show (no password forms, no edits), as with read-only user and group stores. A login answer with `mustChangePassword: true` asks for a new password (`PUT /api/v1/qcli/users/<name>/password` with `currentPassword`) before the dashboard opens.
+- Another build of a page, or none: Node `builder.setDashboardModuleDir('filesystem' | 'data-explorer', dir | false)` and the plugins' own options (`setUsersDashboardDir(false)`, ...); .NET `cli.ConfigureDashboardModule(id, fileProvider | null)`; Python `CliServerOptions(dashboard_pages={"filesystem": dir | False})` and the plugins' options (`set_users_dashboard_dir(False)`).
+- Your own page: register a dashboard extension and serve its ES module. Node `builder.addDashboardExtension({ id, title, titles, icon, group, order, permission, entry, styles, widgets, search })`, .NET `cli.AddDashboardExtension(new CliDashboardExtension { Id = ..., Entry = ... })`, Python `builder.add_dashboard_extension({...})`; listed by `GET /api/v1/qcli/dashboard/extensions`. `group` is a sidebar section (`overview`, `operations`, `data`, `access`, `system`, the default) or `account` (the account menu); `permission` hides the page from users without it; `widgets: ["overview"]` lets the module add Overview cards (`stat`, `half`, `full`) and attention items, `["palette"]` command palette entries; `search: "/?q="` adds "Search <title> for …" to the palette. The page is mounted at `/x/<id>` with the dashboard's context (user, permissions, theme, language, routing, `fetch` with the session, notices, confirm dialog, server events).
+- Build pages with `@qodalis/cli-server-dashboard-kit`: the dashboard's components, theme (Tailwind preset), texts in 11 languages, `defineExtension(App, { overview: { cards, attention }, palette })`, `useDashboard`, `useApi`, `useTranslations`/`defineMessages`, hooks (`useAsync`, `useQueryParams`, `usePaging`, `useLiveReload`) and test helpers (`@qodalis/cli-server-dashboard-kit/testing`). Contract: cli-server-dashboard `docs/extensions.md`.
+
 ### Admin dashboard: name and icon (all servers)
 
 The dashboard is "Qodalis Cli Admin" with the Qodalis Solutions logo unless the admin plugin sets its branding: the name and icon (browser tab, sidebar, sign-in page) and the terminal's name in its welcome banner.

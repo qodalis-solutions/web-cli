@@ -119,6 +119,7 @@
   "sidebar.dotnet-server": ".NET サーバー",
   "sidebar.node-server": "Node.js サーバー",
   "sidebar.python-server": "Python サーバー",
+  "sidebar.admin-dashboard": "管理ダッシュボード",
 
   "docs.getting-started.title": "はじめに",
   "docs.getting-started.intro": "Qodalis CLI は Web 向けのマルチフレームワークターミナルコンポーネントです。プラグインアーキテクチャ、組み込みコマンド、Angular、React、Vue 向けのネイティブラッパーを備えた完全にインタラクティブな xterm.js ベースのターミナルを提供します。",

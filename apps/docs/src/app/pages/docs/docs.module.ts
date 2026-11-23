@@ -102,6 +102,13 @@ const routes: Routes = [
                     ).then((m) => m.ServerIntegrationModule),
             },
             {
+                path: 'admin-dashboard',
+                loadChildren: () =>
+                    import('./pages/admin-dashboard/admin-dashboard.module').then(
+                        (m) => m.AdminDashboardModule,
+                    ),
+            },
+            {
                 path: 'server-integration/:server',
                 loadChildren: () =>
                     import('./pages/server-detail/server-detail.module').then(
