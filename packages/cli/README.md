@@ -48,7 +48,7 @@ Tests can run commands without a browser terminal through `CliTestHarness`.
 
 - Command line with history, completion, readline shortcuts, `&&`, `||`, `;`, pipes and `>`/`>>` redirects.
 - Built-in commands: `help`, `theme`, `pkg`, `history`, `alias`, `json`, `diff`, `random`, `timestamp`, `convert`, `color`, `clipboard`, `ps`, `kill`, `htop`, `nano` and more ([full list](https://cli.qodalis.com/docs/built-in-commands)).
-- `pkg`: installs plugins from npm at runtime.
+- `pkg`: installs plugins from npm at runtime; `pkg browse`/`search`/`info` read the plugin marketplace (`packageSources.marketplace`: a private one's URL, or `false`), and installs from it are checked for fit and against the bundle's recorded SHA-384.
 - Server connections (`servers` option): remote commands, streamed output, `ssh` shell sessions.
 - The dockable panel with tabs and split panes used by the wrappers: light, dark, `auto` and custom themes (`theme` option), touch resizing, and it stays above the on-screen keyboard on phones.
 - `theme` option: `'dark'`, `'light'`, `'auto'`, a terminal theme name or a `CliPanelTheme`; it is the default, and a theme the user applies with the `theme` command wins over it until `theme reset`. The panel's theme picker (`themePicker`, on by default) offers Auto, Light, Dark, Custom colors and the terminal themes, shares the `theme` command's saved state, remembers the pick and reports it through `onThemeChange`. On phones, its Send key menu (`sendKeys`) sends Ctrl, Esc, Tab and the arrows the on-screen keyboard lacks.

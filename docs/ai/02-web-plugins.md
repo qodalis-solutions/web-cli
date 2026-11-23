@@ -715,6 +715,37 @@ bootCliModule(module);
 - `bootCliModule(module)` registers the module with the running terminal's module registry; it does nothing outside a browser terminal.
 - UMD bundles must not use Angular decorators; use plain classes.
 
+### Publishing to the plugin marketplace
+
+The marketplace (`https://plugins.qodalis.com/`, the built-in `pkg` source `qodalis` of kind `marketplace`) indexes plugins from npm, records each version's module API and the SHA-384 of its bundle, and lists a plugin after review. Plugins stay on npm; the marketplace hosts no code.
+
+```json
+{
+  "name": "@acme/cli-weather",
+  "keywords": ["qodalis-cli-plugin"],
+  "unpkg": "dist/umd/index.global.js",
+  "peerDependencies": { "@qodalis/cli-core": "^2.8.0" },
+  "qodalis": {
+    "apiVersion": 2,
+    "category": "tools",
+    "serverPackages": [{ "ecosystem": "npm", "name": "@acme/cli-server-plugin-weather" }]
+  }
+}
+```
+
+```bash
+npm publish --access public
+pkg publish @acme/cli-weather    # in a Qodalis terminal: queue it for indexing and review (does not publish to npm)
+pkg search weather               # once listed
+pkg info weather                 # publisher, versions and which fit this CLI, server packages
+pkg add weather                  # short names resolve through the marketplace
+```
+
+- The keyword `qodalis-cli-plugin` is how the indexer finds the package; `@qodalis/create-cli-plugin` writes it and the `qodalis` block.
+- `qodalis.apiVersion` is the module API the bundle needs (falls back to the major of the `@qodalis/cli-core` peer range, then 2). `category`: `tools`, `data`, `games`, `language`, `server` or `other`. `icon` / `screenshots` are package paths or URLs.
+- `pkg add` installs the newest listed version whose API matches the CLI, refuses a version that needs another API or was flagged/unlisted (naming the newest that works), and refuses a bundle whose SHA-384 differs from the recorded one. The hash is saved (`Package.integrity`) and the bundle is loaded with the `integrity` attribute at every start.
+- A package the marketplace does not list installs by full name with a warning, unless the host set `packageSources.marketplaceOnly: true`. `packageSources.marketplace` takes a URL (a private marketplace) or `false` (off). When the marketplace does not answer within 4 s, `pkg` prints `Marketplace unreachable, searching npm` and uses npm and the CDNs.
+
 ### Testing with CliTestHarness
 
 `CliTestHarness` (from `@qodalis/cli`) runs commands through the real parser and executor without xterm or DOM, capturing output.
@@ -770,6 +801,7 @@ pnpm nx lint <name>
 
 - Mark `@qodalis/cli-core` as external in the library build (the scaffolded `tsup.config.ts` does); the IIFE build bundles everything (`noExternal: [/.*/]`).
 - `@qodalis/cli-core` is a dependency; standalone plugins pin `^<scaffolder version>` (all `@qodalis/*` web packages share one version).
+- To be found by `pkg browse` / `pkg search`, keep the `qodalis-cli-plugin` keyword and submit the name with `pkg publish <name>` (see "Publishing to the plugin marketplace").
 
 ### Conventions for web plugins
 
