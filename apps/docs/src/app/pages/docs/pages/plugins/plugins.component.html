@@ -15,14 +15,20 @@
   <pre><code>pkg add &#64;qodalis/cli-guid</code></pre>
 </div>
 
+<p>
+  {{ "docs.plugins.marketplace-link" | translate }}
+  <a href="https://plugins.qodalis.com" target="_blank" rel="noopener"
+    >plugins.qodalis.com</a
+  >
+  ·
+  <a routerLink="/docs/publishing-plugins">{{
+    "sidebar.publishing-plugins" | translate
+  }}</a>
+</p>
+
 @if (catalog(); as plugins) {
   <h2>{{ "docs.plugins.marketplace-title" | translate }}</h2>
-  <p>
-    {{ "docs.plugins.marketplace-desc" | translate }}
-    <a href="https://plugins.qodalis.com" target="_blank" rel="noopener"
-      >plugins.qodalis.com</a
-    >
-  </p>
+  <p>{{ "docs.plugins.marketplace-desc" | translate }}</p>
   <div class="catalog-tools">
     <input
       type="search"

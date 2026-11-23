@@ -138,11 +138,23 @@ npm publish --access public</code></pre>
 </p>
 
 <h2>Versions and compatibility</h2>
+<p>
+  <strong
+    >The <code>&#64;qodalis/cli-core</code> peer range decides which CLIs a
+    version runs on, so set it honestly</strong
+  >: to the oldest core you built and tested against (<code>^2.8.0</code> when
+  you use an API added in 2.8.0), not to <code>*</code>. The marketplace and
+  <code>pkg</code> trust it.
+</p>
 <ul>
   <li>
     <code>pkg add</code> installs the newest listed version whose
-    <code>apiVersion</code> matches the running CLI; a version that needs
-    another CLI is refused with the reason and the newest one that works.
+    <code>apiVersion</code> matches the running CLI <em>and</em> whose core peer
+    range accepts the running <code>&#64;qodalis/cli-core</code> version
+    (<code>^</code>, <code>~</code>, <code>&gt;=</code>, <code>&lt;</code>,
+    x-ranges and <code>||</code>). A version that does not fit is refused with
+    the reason (<code>needs CLI 2.9.0 or newer</code>) and the newest one that
+    works; <code>pkg check</code> and <code>pkg update</code> never offer it.
   </li>
   <li>
     The CLI downloads the bundle from the npm CDNs and compares its SHA-384 with
@@ -161,8 +173,145 @@ npm publish --access public</code></pre>
   A package the marketplace does not list still installs by its full name (<code
     >pkg add &#64;acme/cli-weather</code
   >) with a warning that it was not reviewed, unless the host set
-  <code>marketplaceOnly</code>. Hosts can also run their own marketplace: see
+  <code>marketplaceOnly</code>. Hosts can also point the CLI at their own
+  marketplace: see
   <a routerLink="/docs/configuration" fragment="plugin-marketplace"
     >Configuration → Plugin marketplace</a
   >.
+</p>
+
+<h2 id="marketplace-api">The marketplace API</h2>
+<p>
+  A marketplace is identified by its base URL
+  (<code>https://plugins.qodalis.com/</code>); the API lives under
+  <code>&lt;base&gt;api/v1/qcli/marketplace</code>. Any server that answers
+  these public endpoints can serve as a private marketplace
+  (<code>packageSources.marketplace</code>). Responses are JSON, errors are
+  <code>&#123; "error": "&lt;text&gt;" &#125;</code> with a 4xx/5xx status, and
+  the CLI sends no credentials, so allow CORS from the pages that embed the
+  terminal.
+</p>
+<table>
+  <thead>
+    <tr>
+      <th>Request</th>
+      <th>Answer</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <code
+          >GET
+          /plugins?query=&amp;category=&amp;apiVersion=&amp;coreVersion=&amp;page=1&amp;pageSize=24&amp;sort=</code
+        >
+      </td>
+      <td>
+        <code>Page&lt;MarketplacePluginSummary&gt;</code>: listed plugins.
+        <code>query</code> matches name, short name, description and tags (all
+        words). <code>sort</code>: <code>relevance</code>,
+        <code>downloads</code>, <code>updated</code>, <code>name</code>.
+        <code>pageSize</code> 1-100.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>GET /plugins/&#123;name&#125;?apiVersion=&amp;coreVersion=</code>
+      </td>
+      <td>
+        <code>MarketplacePlugin</code>, 404 when not listed.
+        <code>&#123;name&#125;</code> is URL-encoded
+        (<code>%40acme%2Fcli-weather</code>).
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>GET /plugins/&#123;name&#125;/versions/&#123;version&#125;</code>
+      </td>
+      <td>
+        <code>MarketplaceVersion</code> (listed or flagged), 404 otherwise
+      </td>
+    </tr>
+    <tr>
+      <td><code>GET /resolve?name=</code></td>
+      <td>
+        <code>&#123; matches: MarketplacePluginSummary[] &#125;</code>: listed
+        plugins whose name or short name equals the input, an official one first
+      </td>
+    </tr>
+    <tr>
+      <td><code>GET /categories</code></td>
+      <td><code>&#123; categories: &#123; id, count &#125;[] &#125;</code></td>
+    </tr>
+    <tr>
+      <td><code>GET /stats</code></td>
+      <td>
+        <code
+          >&#123; plugins, publishers, weeklyDownloads, indexedAt &#125;</code
+        >
+      </td>
+    </tr>
+    <tr>
+      <td><code>POST /submissions</code></td>
+      <td>
+        Body <code>&#123; "name": "&lt;npm name&gt;" &#125;</code> → 202
+        <code
+          >&#123; status: 'queued' | 'known', plugin?: &#123; name, status
+          &#125; &#125;</code
+        >; 400 for an invalid name, 429 when rate limited
+      </td>
+    </tr>
+  </tbody>
+</table>
+<div class="code-block">
+  <span class="code-label">TypeScript</span>
+  <pre><code>interface MarketplaceVersion &#123;
+  version: string;           // semver
+  apiVersion: number;        // module API the bundle needs (today 2)
+  coreRange: string | null;  // peer range on &#64;qodalis/cli-core
+  bundle: string;            // path inside the package, e.g. "umd/index.global.js"
+  integrity: string;         // "sha384-&lt;base64&gt;" of the bundle's bytes
+  size: number;
+  publishedAt: string;       // ISO date
+  status: 'pending' | 'listed' | 'flagged' | 'unlisted' | 'rejected';
+  note?: string;             // why it was flagged or unlisted
+  deprecated?: string;
+&#125;
+
+interface MarketplacePluginSummary &#123;
+  name: string;              // npm name
+  shortName: string;         // "&#64;acme/cli-weather" -&gt; "weather"
+  description: string;
+  category: 'tools' | 'data' | 'games' | 'language' | 'server' | 'other';
+  tags: string[];
+  publisher: &#123; id: string; name: string; verified: boolean &#125;;
+  official: boolean;
+  featured: boolean;
+  icon?: string;
+  downloads: &#123; weekly: number &#125;;
+  latest: string | null;     // newest listed version
+  compatible: boolean;       // a listed version fits apiVersion and coreVersion
+  version: string | null;    // newest listed version that fits
+  reason?: string;           // why none fits: "needs CLI API 3 (this CLI has 2)"
+  updatedAt: string;
+&#125;
+
+interface MarketplacePlugin extends MarketplacePluginSummary &#123;
+  status: 'listed';
+  author?: string;
+  homepage?: string;
+  repository?: string;
+  license?: string;
+  screenshots: string[];
+  serverPackages: &#123; ecosystem: 'npm' | 'pypi' | 'nuget'; name: string; install: string &#125;[];
+  readme: string;            // markdown, rendered without raw HTML
+  versions: MarketplaceVersion[]; // newest first: listed and flagged
+  createdAt: string;
+&#125;
+
+interface Page&lt;T&gt; &#123; items: T[]; total: number; page: number; pageSize: number &#125;</code></pre>
+</div>
+<p>
+  <code>pkg</code> checks every version itself too (API, core range, status,
+  hash), so a private marketplace only has to report what it knows.
 </p>
