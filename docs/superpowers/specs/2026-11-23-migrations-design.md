@@ -35,35 +35,35 @@ knex/Alembic adapters can follow).
 
 ## History tables (per database)
 
-Named by the plugin table rule below (cli-server-dotnet#99): prefix `Cli` + PascalCase, PascalCase columns.
+Named by the plugin table rule below (cli-server-dotnet#99): prefix `Qcli` + PascalCase, PascalCase columns.
 
 ```
-CliMigrations      (Source, Id, Name, Checksum, AppliedAt, DurationMs, AppliedBy, RunId)   PK (Source, Id)
-CliMigrationRuns   (Id, Direction, Target, Trigger, Actor, StartedAt, FinishedAt, Status, Error, Applied)
+QcliMigrations     (Source, Id, Name, Checksum, AppliedAt, DurationMs, AppliedBy, RunId)   PK (Source, Id)
+QcliMigrationRuns  (Id, Direction, Target, Trigger, Actor, StartedAt, FinishedAt, Status, Error, Applied)
 ```
 
-EF Core sources write `CliMigrationRuns` only (history stays in `__EFMigrationsHistory`, so `dotnet ef` keeps
+EF Core sources write `QcliMigrationRuns` only (history stays in `__EFMigrationsHistory`, so `dotnet ef` keeps
 working).
 
 ## Plugin table names (cli-server-dotnet#99, cli-server-node#77, cli-server-python#83)
 
-Every table a CLI plugin creates is `Cli` + PascalCase with PascalCase columns, the same in the three servers:
+Every table a CLI plugin creates is `Qcli` + PascalCase (decided 2026-11-23, replacing #99's `Cli`) with PascalCase columns, the same in the three servers:
 
 | Today | New |
 |---|---|
-| `files` (filesystem-efcore, filesystem-sqlite) | `CliFiles` |
-| `job_executions`, `job_log_entries`, `job_states` | `CliJobExecutions`, `CliJobLogEntries`, `CliJobStates` |
-| `api_tokens` | `CliApiTokens` |
-| `audit_entries` | `CliAuditEntries` |
-| `qcli_api_usage` | `CliApiUsage` |
-| `qcli_users`, `qcli_groups`, `qcli_credentials`, `qcli_sessions`, `qcli_api_tokens`, `qcli_audit` (Node users-postgres) | `CliUsers`, `CliGroups`, `CliCredentials`, `CliSessions`, `CliApiTokens`, `CliAuditEntries` |
+| `files` (filesystem-efcore, filesystem-sqlite) | `QcliFiles` |
+| `job_executions`, `job_log_entries`, `job_states` | `QcliJobExecutions`, `QcliJobLogEntries`, `QcliJobStates` |
+| `api_tokens` | `QcliApiTokens` |
+| `audit_entries` | `QcliAuditEntries` |
+| `qcli_api_usage` | `QcliApiUsage` |
+| `qcli_users`, `qcli_groups`, `qcli_credentials`, `qcli_sessions`, `qcli_api_tokens`, `qcli_audit` (Node users-postgres) | `QcliUsers`, `QcliGroups`, `QcliCredentials`, `QcliSessions`, `QcliApiTokens`, `QcliAuditEntries` |
 
-Indexes and keys follow (`IX_CliJobExecutions_JobId`, `PK_CliFiles`). Columns: `created_at` → `CreatedAt`, etc.
+Indexes and keys follow (`IX_QcliJobExecutions_JobId`, `PK_QcliFiles`). Columns: `created_at` → `CreatedAt`, etc.
 
-Options, one shared helper per server (abstractions: `CliTableNames`): a global prefix (`tablePrefix` /
-`table_prefix` / `TablePrefix`, default `Cli`, `''` = plain PascalCase), per-table overrides on each store's options
+Options, one shared helper per server (abstractions: `QcliTableNames`): a global prefix (`tablePrefix` /
+`table_prefix` / `TablePrefix`, default `Qcli`, `''` = plain PascalCase), per-table overrides on each store's options
 (`tables: { files: 'MyFiles' }` / `Tables.Files`), a schema where the database has them (`schema` / `Schema`), and
-`legacyTableNames` to keep the old names. Names are validated (identifier characters) and always quoted.
+`legacyTableNames` to keep the old names (opt-in: by default an upgrade migrates). Names are validated (identifier characters) and always quoted.
 
 Upgrade keeps the data: each store's first migration renames the old table and its columns when the old table
 exists and the new one does not (`ALTER TABLE … RENAME TO` / `RENAME COLUMN`, SQLite ≥ 3.25, `sp_rename` on SQL
