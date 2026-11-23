@@ -546,6 +546,7 @@
   "docs.playground.open": "Playground",
   "sidebar.android-app": "App Android",
   "sidebar.connect-your-server": "Collega il tuo server",
+  "sidebar.publishing-plugins": "Pubblicare un plugin",
   "docs.android-app.title": "Qodalis CLI per Android",
   "docs.android-app.intro": "Il terminale Qodalis CLI come app per smartphone: comandi, file, un editor e giochi che funzionano offline sul dispositivo, e i tuoi server quando li colleghi.",
   "docs.android-app.open-pwa": "Apri nel browser (PWA)",

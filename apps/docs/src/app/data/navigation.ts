@@ -60,6 +60,7 @@ export const DOCS_NAV: NavItem[] = [
     { label: 'sidebar.engine-api', path: '/docs/engine-api' },
     { label: 'sidebar.playground', path: '/docs/playground' },
     { label: 'sidebar.create-a-plugin', path: '/docs/plugins/create-your-own' },
+    { label: 'sidebar.publishing-plugins', path: '/docs/publishing-plugins' },
     { label: 'sidebar.ai-plugin-development', path: '/docs/ai-plugin-development' },
     {
         label: 'sidebar.language-packs',

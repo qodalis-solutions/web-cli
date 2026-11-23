@@ -1,0 +1,168 @@
+<h1>Publishing a plugin</h1>
+<p>
+  Plugins are published to npm, as any package. The
+  <a href="https://plugins.qodalis.com" target="_blank" rel="noopener"
+    >plugin marketplace</a
+  >
+  indexes them from there: it reads <code>package.json</code>, records the hash
+  of the browser bundle and which CLI version each release needs, and lists a
+  plugin once a moderator has reviewed it. Users then find it with
+  <code>pkg browse</code> / <code>pkg search</code> and install it by its short
+  name with <code>pkg add</code>. The marketplace never hosts code.
+</p>
+
+<h2>1. Mark the package</h2>
+<p>
+  Plugins scaffolded with
+  <a routerLink="/docs/plugins/create-your-own"
+    ><code>&#64;qodalis/create-cli-plugin</code></a
+  >
+  already have all of this. For an existing plugin, add to
+  <code>package.json</code>:
+</p>
+<ul>
+  <li>
+    The keyword <code>qodalis-cli-plugin</code>: the marketplace's indexer
+    searches npm for it.
+  </li>
+  <li>
+    A browser bundle: <code>unpkg</code>, <code>umd</code> or
+    <code>main</code> (read in that order, a <code>.js</code> file) pointing at
+    the IIFE build that registers the module. A package without one is rejected.
+  </li>
+  <li>
+    The peer dependency on <code>&#64;qodalis/cli-core</code>, and optionally a
+    <code>qodalis</code> block.
+  </li>
+</ul>
+<div class="code-block">
+  <span class="code-label">package.json</span>
+  <pre><code>&#123;
+  "name": "&#64;acme/cli-weather",
+  "keywords": ["qodalis-cli-plugin"],
+  "unpkg": "dist/umd/index.global.js",
+  "peerDependencies": &#123; "&#64;qodalis/cli-core": "^2.8.0" &#125;,
+  "qodalis": &#123;
+    "apiVersion": 2,
+    "category": "tools",
+    "icon": "assets/icon.svg",
+    "screenshots": ["assets/shot-1.png"],
+    "serverPackages": [&#123; "ecosystem": "npm", "name": "&#64;acme/cli-server-plugin-weather" &#125;]
+  &#125;
+&#125;</code></pre>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>apiVersion</code></td>
+      <td>
+        The module API the bundle needs (the <code>apiVersion</code> of your
+        <code>ICliModule</code>, today <code>2</code>). Without it the
+        marketplace takes the major of the core peer range (<code>^2.8.0</code>
+        → 2), then 2.
+      </td>
+    </tr>
+    <tr>
+      <td><code>category</code></td>
+      <td>
+        One of <code>tools</code>, <code>data</code>, <code>games</code>,
+        <code>language</code>, <code>server</code>, <code>other</code>. Anything
+        else becomes <code>other</code>.
+      </td>
+    </tr>
+    <tr>
+      <td><code>icon</code>, <code>screenshots</code></td>
+      <td>Paths inside the package (served from jsdelivr) or absolute URLs.</td>
+    </tr>
+    <tr>
+      <td><code>serverPackages</code></td>
+      <td>
+        Server-side packages that go with the plugin (<code>npm</code>,
+        <code>pypi</code> or <code>nuget</code>). They are listed with their
+        install command by <code>pkg info</code> and on the marketplace;
+        <code>pkg</code> does not install them.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>2. Publish to npm</h2>
+<div class="code-block">
+  <span class="code-label">shell</span>
+  <pre><code>npm run build
+npm publish --access public</code></pre>
+</div>
+
+<h2>3. Submit it</h2>
+<p>
+  The indexer finds packages with the keyword every 30 minutes. To queue yours
+  at once, submit its name from any Qodalis CLI terminal, or with the form on
+  <a href="https://plugins.qodalis.com/publish" target="_blank" rel="noopener"
+    >plugins.qodalis.com/publish</a
+  >:
+</p>
+<div class="code-block">
+  <span class="code-label">Terminal</span>
+  <pre><code>pkg publish &#64;acme/cli-weather</code></pre>
+</div>
+<p>
+  <code>pkg publish</code> only sends the package name (it does not publish to
+  npm) and is rate-limited.
+</p>
+
+<h2>4. Review</h2>
+<p>A moderator checks the first version of a plugin before it is listed:</p>
+<ul>
+  <li>
+    the bundle is a browser build that registers an <code>ICliModule</code>;
+  </li>
+  <li>
+    the commands do what the description says, and nothing else (no hidden
+    network calls, no reading of unrelated storage);
+  </li>
+  <li>name, description, category and links are accurate.</li>
+</ul>
+<p>
+  Publishers whose plugins were reviewed can be marked
+  <strong>verified</strong> (✓ in <code>pkg browse</code>); their new versions
+  are listed as soon as they are indexed. Other new versions wait for review. A
+  version can later be <strong>flagged</strong> or <strong>unlisted</strong>:
+  <code>pkg add</code> refuses it and <code>pkg check</code> warns users who
+  installed it.
+</p>
+
+<h2>Versions and compatibility</h2>
+<ul>
+  <li>
+    <code>pkg add</code> installs the newest listed version whose
+    <code>apiVersion</code> matches the running CLI; a version that needs
+    another CLI is refused with the reason and the newest one that works.
+  </li>
+  <li>
+    The CLI downloads the bundle from the npm CDNs and compares its SHA-384 with
+    the hash the marketplace recorded. Republishing the same version is
+    impossible on npm, so a mismatch means the file changed after review: the
+    install stops. The hash is saved and checked again at every start.
+  </li>
+  <li>
+    Deprecating a version on npm, or unpublishing it, unlists it in the
+    marketplace at the next index.
+  </li>
+</ul>
+
+<h2>Without the marketplace</h2>
+<p>
+  A package the marketplace does not list still installs by its full name (<code
+    >pkg add &#64;acme/cli-weather</code
+  >) with a warning that it was not reviewed, unless the host set
+  <code>marketplaceOnly</code>. Hosts can also run their own marketplace: see
+  <a routerLink="/docs/configuration" fragment="plugin-marketplace"
+    >Configuration → Plugin marketplace</a
+  >.
+</p>

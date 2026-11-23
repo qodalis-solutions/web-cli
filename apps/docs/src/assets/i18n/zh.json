@@ -546,6 +546,7 @@
   "docs.playground.open": "Playground",
   "sidebar.android-app": "Android 应用",
   "sidebar.connect-your-server": "连接自己的服务器",
+  "sidebar.publishing-plugins": "发布插件",
   "docs.android-app.title": "Qodalis CLI Android 版",
   "docs.android-app.intro": "手机上的 Qodalis CLI 终端：命令、文件、编辑器和游戏都在设备上离线运行，关联后还能使用你自己的服务器。",
   "docs.android-app.open-pwa": "在浏览器中打开 (PWA)",

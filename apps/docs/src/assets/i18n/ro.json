@@ -546,6 +546,7 @@
   "docs.playground.open": "Playground",
   "sidebar.android-app": "Aplicația Android",
   "sidebar.connect-your-server": "Conectează-ți serverul",
+  "sidebar.publishing-plugins": "Publicarea unui plugin",
   "docs.android-app.title": "Qodalis CLI pentru Android",
   "docs.android-app.intro": "Terminalul Qodalis CLI ca aplicație de telefon: comenzi, fișiere, un editor și jocuri care rulează offline pe dispozitiv, plus propriile servere, după ce le conectezi.",
   "docs.android-app.open-pwa": "Deschide în browser (PWA)",
