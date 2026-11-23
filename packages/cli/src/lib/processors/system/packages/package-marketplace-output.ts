@@ -151,7 +151,7 @@ export function writeMarketplaceInfo(
                 v.deprecated ? 'deprecated' : '',
             ].filter(Boolean);
             writer.writeln(
-                `  ${writer.wrapInColor(`v${v.version}`.padEnd(width), CliForegroundColor.White)}API ${v.apiVersion}  ${state}${tags.length ? `  [${tags.join(', ')}]` : ''}`,
+                `  ${writer.wrapInColor(`v${v.version}`.padEnd(width), CliForegroundColor.White)}API ${v.apiVersion}${v.coreRange ? `, core ${v.coreRange}` : ''}  ${state}${tags.length ? `  [${tags.join(', ')}]` : ''}`,
             );
         }
         if (plugin.versions.length > versions.length) {

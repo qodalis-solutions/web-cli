@@ -11,9 +11,9 @@ import { CliBootLog } from '../../../services/cli-boot-log';
 import { CliBootLog_TOKEN } from '../../../tokens';
 import { CliPackageManagerService } from '../../../services/cli-package-manager';
 import { isNewerVersion, toFullPackageName } from './package-utils';
-import { API_VERSION } from '../../../version';
 import {
     chooseMarketplaceVersion,
+    CLI_RUNTIME,
     MarketplaceClient,
     MarketplacePlugin,
     MarketplacePluginSummary,
@@ -343,7 +343,7 @@ export class CliPackageInstaller {
                 return undefined;
             }
             plugin = await session.run(
-                (client) => client.plugin(picked.name, API_VERSION, signal),
+                (client) => client.plugin(picked.name, CLI_RUNTIME, signal),
                 'using npm',
                 signal,
             );
@@ -394,7 +394,7 @@ export class CliPackageInstaller {
         signal?: AbortSignal,
     ): Promise<PackageCheck> {
         const plugin = await session.run(
-            (client) => client.plugin(pkg.name, API_VERSION, signal),
+            (client) => client.plugin(pkg.name, CLI_RUNTIME, signal),
             'using npm',
             signal,
         );
@@ -451,7 +451,7 @@ export class CliPackageInstaller {
 
             const marketplace = session ?? this.marketplaceSession(context);
             const plugin = await marketplace.run(
-                (client) => client.plugin(current.name, API_VERSION, signal),
+                (client) => client.plugin(current.name, CLI_RUNTIME, signal),
                 'using npm',
                 signal,
             );

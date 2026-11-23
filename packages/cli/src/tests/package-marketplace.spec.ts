@@ -2,11 +2,14 @@ import {
     CliModuleRegistry,
     ICliExecutionContext,
     ICliCommandProcessor,
+    LIBRARY_VERSION as CORE_VERSION,
     Package,
 } from '@qodalis/cli-core';
 import {
     applyMarketplaceOptions,
     chooseMarketplaceVersion,
+    CLI_RUNTIME,
+    coreRangeFits,
     MarketplaceClient,
     MarketplacePlugin,
     MarketplacePluginSummary,
@@ -23,6 +26,10 @@ import { CliPackagesCommandProcessor } from '../lib/processors/system/cli-packag
 
 const BASE = 'https://plugins.example.com/';
 const API = `${BASE}api/v1/qcli/marketplace`;
+/** Query string of a request that carries the running CLI's API and core versions. */
+const RT = `apiVersion=2&coreVersion=${encodeURIComponent(CORE_VERSION)}`;
+/** A runtime pinned for the version-choice specs. */
+const RUNTIME_2_8 = { apiVersion: 2, coreVersion: '2.8.0' };
 
 type Route = { status: number; body?: unknown } | 'hang' | 'network-error';
 
@@ -194,9 +201,9 @@ describe('pkg marketplace', () => {
             const client = new MarketplaceClient(BASE);
 
             await client.search({ query: 'chart', apiVersion: 2 });
-            expect(await client.plugin('@acme/cli-x', 2)).toBeNull();
+            expect(await client.plugin('@acme/cli-x', CLI_RUNTIME)).toBeNull();
             expect(String(fetchSpy.calls.mostRecent().args[0])).toBe(
-                `${API}/plugins/%40acme%2Fcli-x?apiVersion=2`,
+                `${API}/plugins/%40acme%2Fcli-x?${RT}`,
             );
         });
 
@@ -235,12 +242,12 @@ describe('pkg marketplace', () => {
         ]);
 
         it('picks the newest listed version that fits', () => {
-            const choice = chooseMarketplaceVersion(p, undefined, 2);
+            const choice = chooseMarketplaceVersion(p, undefined, RUNTIME_2_8);
             expect(choice.ok && choice.version.version).toBe('2.0.0');
         });
 
         it('refuses an incompatible version with the newest working one', () => {
-            const choice = chooseMarketplaceVersion(p, '3.0.0', 2);
+            const choice = chooseMarketplaceVersion(p, '3.0.0', RUNTIME_2_8);
             expect(choice.ok).toBeFalse();
             if (!choice.ok) {
                 expect(choice.reason).toContain(
@@ -251,10 +258,44 @@ describe('pkg marketplace', () => {
         });
 
         it('refuses flagged and unlisted versions', () => {
-            const flagged = chooseMarketplaceVersion(p, '2.1.0', 2);
-            const missing = chooseMarketplaceVersion(p, '0.9.0', 2);
+            const flagged = chooseMarketplaceVersion(p, '2.1.0', RUNTIME_2_8);
+            const missing = chooseMarketplaceVersion(p, '0.9.0', RUNTIME_2_8);
             expect(!flagged.ok && flagged.reason).toContain('leaks tokens');
             expect(!missing.ok && missing.reason).toContain('not listed');
+        });
+
+        it('checks the core peer range: ^, ~, >=, <, x-ranges, || and prereleases', () => {
+            expect(coreRangeFits('^2.7.0', '2.8.0')).toBeTrue();
+            expect(coreRangeFits('^2.9.0', '2.8.0')).toBeFalse();
+            expect(coreRangeFits('~2.8.1', '2.8.0')).toBeFalse();
+            expect(coreRangeFits('~2.8.0', '2.8.5')).toBeTrue();
+            expect(coreRangeFits('>=2.0.0 <3', '2.8.0')).toBeTrue();
+            expect(coreRangeFits('<2.0.0', '2.8.0')).toBeFalse();
+            expect(coreRangeFits('2.x', '2.8.0')).toBeTrue();
+            expect(coreRangeFits('1.x || ^2.8.0', '2.8.0')).toBeTrue();
+            expect(coreRangeFits('^3.0.0 || ^4.0.0', '2.8.0')).toBeFalse();
+            expect(coreRangeFits('>=2.8.0-beta.1', '2.8.0')).toBeTrue();
+            expect(coreRangeFits('^2.8.0', '2.8.0-beta.3')).toBeTrue();
+            expect(coreRangeFits(null, '2.8.0')).toBeTrue();
+            expect(coreRangeFits('*', '2.8.0')).toBeTrue();
+        });
+
+        it('refuses a version whose core range needs a newer CLI', () => {
+            const q = plugin('@acme/cli-q', [
+                version('1.2.0', { coreRange: '^2.9.0' }),
+                version('1.1.0', { coreRange: '^2.7.0' }),
+            ]);
+            const newest = chooseMarketplaceVersion(q, undefined, RUNTIME_2_8);
+            expect(newest.ok && newest.version.version).toBe('1.1.0');
+
+            const refused = chooseMarketplaceVersion(q, '1.2.0', RUNTIME_2_8);
+            expect(refused.ok).toBeFalse();
+            if (!refused.ok) {
+                expect(refused.reason).toContain(
+                    'needs CLI 2.9.0 or newer (this CLI has 2.8.0)',
+                );
+                expect(refused.suggestion?.version).toBe('1.1.0');
+            }
         });
 
         it('resolves names: exact, single, the official one, else ambiguous', () => {
@@ -361,7 +402,7 @@ describe('pkg marketplace', () => {
                     status: 200,
                     body: { matches: [summary(name)] },
                 },
-                [`GET /plugins/${encodeURIComponent(name)}?apiVersion=2`]: {
+                [`GET /plugins/${encodeURIComponent(name)}?${RT}`]: {
                     status: 200,
                     body: plugin(name, versions),
                 },
@@ -506,10 +547,11 @@ describe('pkg marketplace', () => {
                 },
             ];
             fakeMarketplace({
-                'GET /plugins/%40acme%2Fcli-x?apiVersion=2': {
+                [`GET /plugins/%40acme%2Fcli-x?${RT}`]: {
                     status: 200,
                     body: plugin('@acme/cli-x', [
                         version('3.0.0', { apiVersion: 3 }),
+                        version('2.0.0', { coreRange: '^99.0.0' }),
                         version('1.1.0'),
                         version('1.0.0', {
                             status: 'flagged',
@@ -531,10 +573,11 @@ describe('pkg marketplace', () => {
         it('updates to the newest fitting version with an integrity check', async () => {
             installed = [{ name: '@acme/cli-x', version: '1.0.0', url: '' }];
             fakeMarketplace({
-                'GET /plugins/%40acme%2Fcli-x?apiVersion=2': {
+                [`GET /plugins/%40acme%2Fcli-x?${RT}`]: {
                     status: 200,
                     body: plugin('@acme/cli-x', [
                         version('3.0.0', { apiVersion: 3 }),
+                        version('2.0.0', { coreRange: '>=99.0.0' }),
                         version('1.1.0', {
                             integrity: await sha384Integrity(CODE),
                         }),
@@ -633,7 +676,7 @@ describe('pkg marketplace', () => {
 
         it('pkg search lists plugins with version, category, verified mark and fit', async () => {
             fakeMarketplace({
-                'GET /plugins?query=chart&apiVersion=2&pageSize=50': {
+                [`GET /plugins?query=chart&${RT}&pageSize=50`]: {
                     status: 200,
                     body: {
                         items: [
@@ -678,7 +721,7 @@ describe('pkg marketplace', () => {
 
         it('pkg browse writes one block per plugin on a narrow terminal', async () => {
             fakeMarketplace({
-                'GET /plugins?apiVersion=2&page=1&pageSize=100&sort=name': {
+                [`GET /plugins?${RT}&page=1&pageSize=100&sort=name`]: {
                     status: 200,
                     body: {
                         items: [summary('@qodalis/cli-guid')],
@@ -698,8 +741,7 @@ describe('pkg marketplace', () => {
 
         it('pkg search falls back to npm with one line', async () => {
             fakeMarketplace({
-                'GET /plugins?query=guid&apiVersion=2&pageSize=50':
-                    'network-error',
+                [`GET /plugins?query=guid&${RT}&pageSize=50`]: 'network-error',
             });
             const loader: ScriptLoaderService = (processor as any).loader;
             spyOn(loader, 'getScript').and.callFake(async (url: string) => {
@@ -749,7 +791,7 @@ describe('pkg marketplace', () => {
                     status: 200,
                     body: { matches: [summary('@acme/cli-x')] },
                 },
-                'GET /plugins/%40acme%2Fcli-x?apiVersion=2': {
+                [`GET /plugins/%40acme%2Fcli-x?${RT}`]: {
                     status: 200,
                     body: plugin(
                         '@acme/cli-x',
