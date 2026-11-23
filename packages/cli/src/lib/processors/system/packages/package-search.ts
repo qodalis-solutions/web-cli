@@ -12,6 +12,11 @@ export interface AvailablePackage {
 
 /** Registry document of a package (`GET <registry>/<name>`). */
 export interface PackageRegistryDocument {
+    name?: string;
+    description?: string;
+    homepage?: string;
+    license?: string;
+    repository?: { url?: string } | string;
     versions?: Record<string, unknown>;
     time?: Record<string, string>;
     'dist-tags'?: Record<string, string>;
@@ -155,4 +160,16 @@ export async function fetchRegistryDocument(
 
     if (lastError) throw lastError;
     return undefined;
+}
+
+/** Packages whose name or description contains every word of `text` (the npm fallback of `pkg search`). */
+export function filterPackages(
+    packages: readonly AvailablePackage[],
+    text: string,
+): AvailablePackage[] {
+    const words = text.toLowerCase().split(/\s+/).filter(Boolean);
+    return packages.filter((pkg) => {
+        const haystack = `${pkg.name} ${pkg.description}`.toLowerCase();
+        return words.every((word) => haystack.includes(word));
+    });
 }

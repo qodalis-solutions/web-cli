@@ -20,7 +20,11 @@ export function writeNoPackages(context: ICliExecutionContext): void {
     const t = context.translator;
     context.writer.writeInfo('📦 No packages installed');
     context.writer.writeln();
-    writeHint(context, 'pkg add <name>', t.t('cli.pkg.help.install_package_2', 'to install a package'));
+    writeHint(
+        context,
+        'pkg add <name>',
+        t.t('cli.pkg.help.install_package_2', 'to install a package'),
+    );
 }
 
 /** Current download source and its fallbacks. */
@@ -33,12 +37,22 @@ export function writeSourceSummary(
     writer.writeln(
         `🌐 Current source: ${writer.wrapInColor(current, CliForegroundColor.Cyan)}`,
     );
-    const fallbacks = loader.getSources().filter((s) => s !== current);
+    const fallbacks = loader
+        .getSources()
+        .filter(
+            (s) => s !== current && loader.getSource(s)?.kind !== 'marketplace',
+        );
     if (fallbacks.length > 0) {
         writer.writeln(
             `   Fallbacks: ${fallbacks.map((s) => writer.wrapInColor(s, CliForegroundColor.Yellow)).join(', ')}`,
         );
     }
+    const [marketplace] = loader.getSourcesByKind('marketplace');
+    writer.writeln(
+        marketplace
+            ? `🛒 Marketplace: ${writer.wrapInColor(marketplace.name, CliForegroundColor.Cyan)} ${marketplace.url}`
+            : '🛒 Marketplace: off',
+    );
 }
 
 /** Every configured source with its kind and URL. */
@@ -53,7 +67,7 @@ export function writeSourceList(
     for (const name of names) {
         const entry = loader.getSource(name);
         writer.writeln(
-            `  ${writer.wrapInColor(name.padEnd(width), CliForegroundColor.Cyan)}${writer.wrapInColor(`[${entry?.kind ?? '?'}]`.padEnd(12), CliForegroundColor.Yellow)}${entry?.url ?? ''}`,
+            `  ${writer.wrapInColor(name.padEnd(width), CliForegroundColor.Cyan)}${writer.wrapInColor(`[${entry?.kind ?? '?'}]`.padEnd(15), CliForegroundColor.Yellow)}${entry?.url ?? ''}`,
         );
     }
 }
