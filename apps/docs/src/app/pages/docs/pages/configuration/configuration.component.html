@@ -161,8 +161,10 @@
 </p>
 <ul>
   <li>
-    <strong>A version that does not fit</strong> this CLI, or that was flagged
-    or unlisted, is refused with the reason and the newest version that works.
+    <strong>A version that does not fit</strong> this CLI (its module API, or
+    its <code>&#64;qodalis/cli-core</code> peer range against the running core),
+    or that was flagged or unlisted, is refused with the reason and the newest
+    version that works.
   </li>
   <li>
     <strong>A bundle whose hash differs</strong> from the recorded one is not
@@ -183,10 +185,15 @@
 
 <h3>A private marketplace</h3>
 <p>
-  Mount the marketplace plugin on your own Node server
-  (<code>&#64;qodalis/cli-server-plugin-marketplace</code>) and point the CLI at
-  it. The URL replaces the built-in one; a source of kind
-  <code>marketplace</code> in <code>sources</code> does the same.
+  Point <code>packageSources.marketplace</code> at any server that implements
+  the marketplace HTTP API (its public endpoints are listed in
+  <a routerLink="/docs/publishing-plugins" fragment="marketplace-api"
+    >Publishing a plugin → The marketplace API</a
+  >). The URL is the marketplace's base URL and replaces the built-in one; a
+  source of kind <code>marketplace</code> in <code>sources</code> does the same.
+  <code>pkg</code> only reads the public endpoints (and posts to
+  <code>/submissions</code> for <code>pkg publish</code>), so a private
+  marketplace can be as small as a static catalog behind those routes.
 </p>
 <div class="code-block">
   <span class="code-label">TypeScript</span>
