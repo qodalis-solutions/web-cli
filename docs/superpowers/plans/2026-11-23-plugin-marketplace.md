@@ -1,7 +1,7 @@
 # Plugin marketplace: implementation plan and contract
 
 Design: `docs/superpowers/specs/2026-11-23-plugin-marketplace-design.md` (decisions D1-D6 approved on 2026-11-23 as
-recommended; D4 hosting: `https://plugins.qodalis.com` on the apps VM 104 on pve1). Added on 2026-11-23: a **public
+recommended, except D1: the service is not a public server plugin but a private Qodalis service). Hosted at `https://plugins.qodalis.com`. Added on 2026-11-23: a **public
 web interface** (browse, search, plugin pages, publishing guide, submit form) served by the marketplace plugin at
 the root of `plugins.qodalis.com`. Moderation stays in the admin dashboard.
 
@@ -9,10 +9,10 @@ This file pins the contract every part builds against. Four parts are built in p
 
 | Part | Repo, branch | What |
 |---|---|---|
-| Server | cli-server-node, `feature/plugin-marketplace` | `plugins/marketplace` (`@qodalis/cli-server-plugin-marketplace`), the hosted app in `deploy/marketplace/` |
+| Server | private repo | Catalog service, indexer, public and moderation API, hosting |
 | CLI | web-cli, `feature/panel-theme-picker` (PR #237) | `pkg` changes, `create-cli-plugin`, docs |
 | Moderation | cli-server-dashboard, `feature/plugin-marketplace` | Marketplace page in the dashboard |
-| Site | cli-server-dashboard, `feature/plugin-marketplace` | `marketplace/` workspace, `@qodalis/cli-server-marketplace-site` |
+| Site | private repo | Public web interface of plugins.qodalis.com |
 
 ## Base URL
 
@@ -148,19 +148,24 @@ others tools). Indexed sources: npm search `keywords:qodalis-cli-plugin` and `sc
 
 ## Web interface (marketplace site)
 
-Vite + React + Tailwind like `cli-server-dashboard/portal`, built to `marketplace/dist` with a single
-`<base href="/" />` the plugin rewrites to its mount. Routes: `/` (search box, category chips, featured row,
+Routes: `/` (search box, category chips, featured row,
 grid of cards), `/plugins/<name>` (header with icon, publisher + verified mark, description, `pkg add <shortName>`
 copy line, readme rendered with markdown and no raw HTML, versions table with API version and status, server
 packages with install commands, links), `/publish` (guide + a form posting `/submissions`). Reads the API with
-relative URLs (`api/v1/qcli/marketplace/...` against the base). Light/dark from the system. The plugin serves it
-like the portal plugin serves its site (`site/` copied by `scripts/copy-site.js` from the sibling
-`cli-server-dashboard/marketplace/dist` or the npm package).
+relative URLs (`api/v1/qcli/marketplace/...` against the base).
 
 ## Hosted instance
 
-`cli-server-node/deploy/marketplace/`: a small server (`server.ts`) built on `createCliServer` with the users
-plugin (admin seeded from `MARKETPLACE_ADMIN_USER` / `MARKETPLACE_ADMIN_PASSWORD`), the admin plugin
-(dashboard at `/qcli/admin`) and the marketplace plugin with the JSON-file store at `MARKETPLACE_DATA`
-(`/data/marketplace.json`) and the site at `/`. Dockerfile, compose example. Runs on the apps VM in
-`/opt/apps/marketplace` on port 8120, proxied by NPM (pve2) for `plugins.qodalis.com`.
+A private Qodalis service at `https://plugins.qodalis.com`: the catalog, the public site at `/` and the admin
+dashboard (users and admin plugins) for moderation. Its source and deployment are not in this repository.
+
+## Contract updates (2026-11-23, during the build)
+
+- `GET /plugins` takes `featured=true` (featured listed plugins only).
+- Compatibility: endpoints taking `apiVersion` also take `coreVersion` (the running `@qodalis/cli-core`). A version
+  fits when its `apiVersion` **equals** the requested one (the CLI skips older modules) and, when both are known,
+  `coreVersion` satisfies its `coreRange`. Reasons: `needs CLI API N (this CLI has M)`, `built for CLI API N (this
+  CLI has M)`, `needs CLI X or newer (this CLI has Y)`. The CLI checks `coreRange` again before installing.
+- Moderation transitions (others answer 409): version pending → approve/reject, listed → flag/unlist,
+  flagged → relist/unlist, unlisted → relist, rejected → approve; plugin pending → approve/reject,
+  listed → unlist, unlisted → relist, rejected → approve. Reject and flag require a note (400 without one).
