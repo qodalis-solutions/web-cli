@@ -1733,3 +1733,15 @@ html
     margin-top: 6px
     font-size: 0.85rem
     color: $text-secondary
+
+  // Desktop screenshots: across the content, or two side by side
+  &--wide
+    max-width: 100%
+    margin: 0 0 24px
+
+  &--half
+    max-width: calc(50% - 8px)
+    flex: 1 1 320px
+
+    @media (max-width: 720px)
+      max-width: 100%
