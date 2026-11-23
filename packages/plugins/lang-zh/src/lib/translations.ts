@@ -590,6 +590,16 @@ export const zhTranslations: Record<string, string> = {
     'cli.pkg.source.help.show_current_source': '显示当前源',
     'cli.pkg.source.help.set_preferred_source': '设置首选源',
     'cli.pkg.help.install_package_2': '安装软件包',
+    'cli.pkg.help.search_packages': '搜索插件市场',
+    'cli.pkg.help.show_package_info': '显示软件包详情',
+    'cli.pkg.help.submit_package': '将 npm 软件包提交到市场',
+    'cli.pkg.search.description': '搜索插件市场',
+    'cli.pkg.info.description': '显示软件包详情',
+    'cli.pkg.publish.description': '将 npm 软件包提交到插件市场',
+    'cli.pkg.search.help.one_word': '一个词',
+    'cli.pkg.search.help.all_words': '包含所有词的插件',
+    'cli.pkg.info.help.short_name': '短名称',
+    'cli.pkg.info.help.full_name': '完整名称',
 
     // ── Ps ───────────────────────────────────────────────────────────
     'cli.ps.description': '列出正在运行和最近的进程',

@@ -625,6 +625,16 @@ export const ruTranslations: Record<string, string> = {
     'cli.pkg.source.help.show_current_source': 'Показать текущий источник',
     'cli.pkg.source.help.set_preferred_source': 'Задать предпочитаемый источник',
     'cli.pkg.help.install_package_2': 'для установки пакета',
+    'cli.pkg.help.search_packages': 'Поиск в маркетплейсе плагинов',
+    'cli.pkg.help.show_package_info': 'Показать сведения о пакете',
+    'cli.pkg.help.submit_package': 'Отправить npm-пакет в маркетплейс',
+    'cli.pkg.search.description': 'Поиск в маркетплейсе плагинов',
+    'cli.pkg.info.description': 'Показать сведения о пакете',
+    'cli.pkg.publish.description': 'Отправить npm-пакет в маркетплейс плагинов',
+    'cli.pkg.search.help.one_word': 'Одно слово',
+    'cli.pkg.search.help.all_words': 'Плагины, содержащие все слова',
+    'cli.pkg.info.help.short_name': 'Короткое имя',
+    'cli.pkg.info.help.full_name': 'Полное имя',
 
     // ── Ps ───────────────────────────────────────────────────────────
     'cli.ps.description': 'Показать запущенные и недавние процессы',

@@ -629,6 +629,16 @@ export const itTranslations: Record<string, string> = {
     'cli.pkg.source.help.show_current_source': 'Mostrare la sorgente attuale',
     'cli.pkg.source.help.set_preferred_source': 'Impostare la sorgente preferita',
     'cli.pkg.help.install_package_2': 'per installare un pacchetto',
+    'cli.pkg.help.search_packages': 'Cerca nel marketplace dei plugin',
+    'cli.pkg.help.show_package_info': 'Mostra i dettagli di un pacchetto',
+    'cli.pkg.help.submit_package': 'Invia un pacchetto npm al marketplace',
+    'cli.pkg.search.description': 'Cerca nel marketplace dei plugin',
+    'cli.pkg.info.description': 'Mostra i dettagli di un pacchetto',
+    'cli.pkg.publish.description': 'Invia un pacchetto npm al marketplace dei plugin',
+    'cli.pkg.search.help.one_word': 'Una parola',
+    'cli.pkg.search.help.all_words': 'Plugin che contengono tutte le parole',
+    'cli.pkg.info.help.short_name': 'Nome breve',
+    'cli.pkg.info.help.full_name': 'Nome completo',
 
     // ── Ps ───────────────────────────────────────────────────────────
     'cli.ps.description': 'Elencare i processi in esecuzione e recenti',

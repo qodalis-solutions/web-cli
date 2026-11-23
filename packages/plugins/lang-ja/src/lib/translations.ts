@@ -597,6 +597,16 @@ export const jaTranslations: Record<string, string> = {
     'cli.pkg.source.help.show_current_source': '現在のソースを表示',
     'cli.pkg.source.help.set_preferred_source': '優先ソースを設定',
     'cli.pkg.help.install_package_2': 'でパッケージをインストール',
+    'cli.pkg.help.search_packages': 'プラグインマーケットプレイスを検索',
+    'cli.pkg.help.show_package_info': 'パッケージの詳細を表示',
+    'cli.pkg.help.submit_package': 'npm パッケージをマーケットプレイスに申請',
+    'cli.pkg.search.description': 'プラグインマーケットプレイスを検索',
+    'cli.pkg.info.description': 'パッケージの詳細を表示',
+    'cli.pkg.publish.description': 'npm パッケージをプラグインマーケットプレイスに申請',
+    'cli.pkg.search.help.one_word': '1 つの単語',
+    'cli.pkg.search.help.all_words': 'すべての単語を含むプラグイン',
+    'cli.pkg.info.help.short_name': '短い名前',
+    'cli.pkg.info.help.full_name': '完全な名前',
 
     // ── Ps ───────────────────────────────────────────────────────────
     'cli.ps.description': '実行中および最近のプロセスを一覧表示',

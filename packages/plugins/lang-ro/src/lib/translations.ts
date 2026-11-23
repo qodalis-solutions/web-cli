@@ -634,6 +634,16 @@ export const roTranslations: Record<string, string> = {
     'cli.pkg.source.help.show_current_source': 'Afișează sursa curentă',
     'cli.pkg.source.help.set_preferred_source': 'Setează sursa preferată',
     'cli.pkg.help.install_package_2': 'pentru a instala un pachet',
+    'cli.pkg.help.search_packages': 'Caută în marketplace-ul de pluginuri',
+    'cli.pkg.help.show_package_info': 'Afișează detaliile unui pachet',
+    'cli.pkg.help.submit_package': 'Trimite un pachet npm în marketplace',
+    'cli.pkg.search.description': 'Caută în marketplace-ul de pluginuri',
+    'cli.pkg.info.description': 'Afișează detaliile unui pachet',
+    'cli.pkg.publish.description': 'Trimite un pachet npm în marketplace-ul de pluginuri',
+    'cli.pkg.search.help.one_word': 'Un cuvânt',
+    'cli.pkg.search.help.all_words': 'Pluginuri care conțin toate cuvintele',
+    'cli.pkg.info.help.short_name': 'Nume scurt',
+    'cli.pkg.info.help.full_name': 'Nume complet',
 
     // ── Ps ───────────────────────────────────────────────────────────
     'cli.ps.description': 'Afișează procesele în execuție și cele recente',
