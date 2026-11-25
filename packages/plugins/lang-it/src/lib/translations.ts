@@ -282,6 +282,8 @@ export const itTranslations: Record<string, string> = {
     'cli.server.jobs.edit.description': 'Modificare le impostazioni di un job in modo interattivo',
     'cli.server.jobs.watch.description':
         'Vista in tempo reale degli eventi dei job tramite WebSocket',
+    'cli.server.jobs.runs.description': 'Mostra le esecuzioni recenti di tutti i job',
+    'cli.server.jobs.stats.description': 'Mostra le statistiche di esecuzione delle ultime 24 ore',
     'cli.server.help.see_everything_you_can': 'per vedere tutto ciò che puoi fare',
     'cli.server.help.connect_terminal_remote_cli':
         'Collega il terminale a server CLI remoti (.NET, Node.js, Python) ed esegue i loro comandi.',
@@ -386,6 +388,19 @@ export const itTranslations: Record<string, string> = {
     'cli.server.jobs.history.help.page_through_older_runs': 'Scorrere le esecuzioni più vecchie',
     'cli.server.jobs.history.help.only_failed_runs': 'Solo le esecuzioni fallite',
     'cli.server.jobs.history.help.last_5_runs': 'Le ultime 5 esecuzioni',
+    'cli.server.jobs.history.help.clear_runs': 'Elimina le esecuzioni terminate di un job (solo quelle con --status)',
+    'cli.server.jobs.history.help.rm_run': 'Elimina un’esecuzione (il suo ID o l’ID breve di history)',
+    'cli.server.jobs.history.help.clear_failed_runs': 'Elimina le esecuzioni fallite di cleanup',
+    'cli.server.jobs.history.help.rm_run_no_prompt': 'Elimina un’esecuzione senza chiedere',
+    'cli.server.jobs.history.help.delete_note': 'clear e rm chiedono conferma tranne con --yes. Le esecuzioni in corso non vengono mai eliminate. Su un server protetto, eliminare richiede jobs:manage.',
+    'cli.server.jobs.runs.help.list_runs_all_jobs': 'Elenca le ultime esecuzioni di tutti i job, le più recenti per prime: job, ID esecuzione, stato, inizio, durata, tentativo e l’inizio del messaggio di errore. --job tiene le esecuzioni di un job (nome o ID), --status quelle con uno stato.',
+    'cli.server.jobs.runs.help.last_20_runs': 'Le ultime 20 esecuzioni di tutti i job',
+    'cli.server.jobs.runs.help.filtered': 'Filtrate; -n da 1 a 100',
+    'cli.server.jobs.runs.help.failed_runs': 'Errori recenti di qualsiasi job',
+    'cli.server.jobs.runs.help.cleanup_runs': 'Le ultime 5 esecuzioni di cleanup',
+    'cli.server.jobs.stats.help.show_stats': 'Mostra come sono andati i job nelle ultime 24 ore: esecuzioni, successi, fallimenti, annullamenti, tasso di successo e durata (media e 95° percentile), in totale e per job.',
+    'cli.server.jobs.stats.help.all_servers': 'Statistiche di tutti i server connessi',
+    'cli.server.jobs.stats.help.node_only': 'Solo il server node',
     'cli.server.jobs.logs.help.print_log_entries_latest':
         'Stampa le voci di log dell\'ultima esecuzione di un job, o di una scelta tramite il suo ID di esecuzione (da history).',
     'cli.server.jobs.logs.help.logs_latest_run': 'Log dell\'ultima esecuzione',

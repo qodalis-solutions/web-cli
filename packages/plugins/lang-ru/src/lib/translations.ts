@@ -282,6 +282,8 @@ export const ruTranslations: Record<string, string> = {
     'cli.server.jobs.edit.description': 'Интерактивно изменить настройки задания',
     'cli.server.jobs.watch.description':
         'Просмотр событий заданий в реальном времени через WebSocket',
+    'cli.server.jobs.runs.description': 'Показать недавние запуски всех заданий',
+    'cli.server.jobs.stats.description': 'Показать статистику запусков за последние 24 часа',
     'cli.server.help.see_everything_you_can': 'для просмотра всех возможностей',
     'cli.server.help.connect_terminal_remote_cli':
         'Подключите терминал к удалённым серверам CLI (.NET, Node.js, Python) и выполняйте их команды.',
@@ -387,6 +389,19 @@ export const ruTranslations: Record<string, string> = {
     'cli.server.jobs.history.help.page_through_older_runs': 'Листать более старые запуски',
     'cli.server.jobs.history.help.only_failed_runs': 'Только неудачные запуски',
     'cli.server.jobs.history.help.last_5_runs': 'Последние 5 запусков',
+    'cli.server.jobs.history.help.clear_runs': 'Удалить завершённые запуски задания (только с --status)',
+    'cli.server.jobs.history.help.rm_run': 'Удалить один запуск (его ID или короткий ID из history)',
+    'cli.server.jobs.history.help.clear_failed_runs': 'Удалить неудачные запуски cleanup',
+    'cli.server.jobs.history.help.rm_run_no_prompt': 'Удалить запуск без подтверждения',
+    'cli.server.jobs.history.help.delete_note': 'clear и rm запрашивают подтверждение, если не указан --yes. Выполняющиеся запуски никогда не удаляются. На защищённом сервере для удаления нужно jobs:manage.',
+    'cli.server.jobs.runs.help.list_runs_all_jobs': 'Показать последние запуски всех заданий, новые первыми: задание, ID запуска, статус, начало, длительность, попытка и начало сообщения об ошибке. --job оставляет запуски одного задания (имя или ID), --status — запуски с одним статусом.',
+    'cli.server.jobs.runs.help.last_20_runs': 'Последние 20 запусков всех заданий',
+    'cli.server.jobs.runs.help.filtered': 'С фильтрами; -n от 1 до 100',
+    'cli.server.jobs.runs.help.failed_runs': 'Недавние сбои любых заданий',
+    'cli.server.jobs.runs.help.cleanup_runs': 'Последние 5 запусков cleanup',
+    'cli.server.jobs.stats.help.show_stats': 'Показать, как выполнялись задания за последние 24 часа: запуски, успехи, сбои, отмены, доля успешных и длительность (средняя и 95-й процентиль), всего и по заданиям.',
+    'cli.server.jobs.stats.help.all_servers': 'Статистика всех подключённых серверов',
+    'cli.server.jobs.stats.help.node_only': 'Только сервер node',
     'cli.server.jobs.logs.help.print_log_entries_latest':
         'Вывести записи журнала последнего запуска задания или одного запуска, выбранного по ID выполнения (из history).',
     'cli.server.jobs.logs.help.logs_latest_run': 'Журналы последнего запуска',

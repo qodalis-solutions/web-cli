@@ -284,6 +284,8 @@ export const roTranslations: Record<string, string> = {
     'cli.server.jobs.edit.description': 'Editează interactiv setările unui job',
     'cli.server.jobs.watch.description':
         'Vizualizare în direct a evenimentelor joburilor prin WebSocket',
+    'cli.server.jobs.runs.description': 'Afișează rulările recente ale tuturor joburilor',
+    'cli.server.jobs.stats.description': 'Afișează statisticile rulărilor din ultimele 24 de ore',
     'cli.server.help.see_everything_you_can': 'pentru a vedea tot ce puteți face',
     'cli.server.help.connect_terminal_remote_cli':
         'Conectează terminalul la servere CLI la distanță (.NET, Node.js, Python) și rulează comenzile lor.',
@@ -390,6 +392,19 @@ export const roTranslations: Record<string, string> = {
         'Parcurge pagină cu pagină rulările mai vechi',
     'cli.server.jobs.history.help.only_failed_runs': 'Doar rulările eșuate',
     'cli.server.jobs.history.help.last_5_runs': 'Ultimele 5 rulări',
+    'cli.server.jobs.history.help.clear_runs': 'Șterge rulările încheiate ale unui job (doar cele cu --status)',
+    'cli.server.jobs.history.help.rm_run': 'Șterge o rulare (ID-ul ei sau ID-ul scurt din history)',
+    'cli.server.jobs.history.help.clear_failed_runs': 'Șterge rulările eșuate ale cleanup',
+    'cli.server.jobs.history.help.rm_run_no_prompt': 'Șterge o rulare fără confirmare',
+    'cli.server.jobs.history.help.delete_note': 'clear și rm cer confirmare, în afară de cazul cu --yes. Rulările în desfășurare nu se șterg niciodată. Pe un server protejat, ștergerea necesită jobs:manage.',
+    'cli.server.jobs.runs.help.list_runs_all_jobs': 'Listează ultimele rulări ale tuturor joburilor, cele mai noi primele: job, ID-ul rulării, stare, început, durată, reîncercare și începutul mesajului de eroare. --job păstrează rulările unui job (nume sau ID), --status pe cele cu o stare.',
+    'cli.server.jobs.runs.help.last_20_runs': 'Ultimele 20 de rulări ale tuturor joburilor',
+    'cli.server.jobs.runs.help.filtered': 'Filtrate; -n de la 1 la 100',
+    'cli.server.jobs.runs.help.failed_runs': 'Eșecurile recente ale oricărui job',
+    'cli.server.jobs.runs.help.cleanup_runs': 'Ultimele 5 rulări ale cleanup',
+    'cli.server.jobs.stats.help.show_stats': 'Arată cum au rulat joburile în ultimele 24 de ore: rulări, reușite, eșecuri, anulări, rata de reușită și durata (medie și percentila 95), în total și pe job.',
+    'cli.server.jobs.stats.help.all_servers': 'Statisticile tuturor serverelor conectate',
+    'cli.server.jobs.stats.help.node_only': 'Doar serverul node',
     'cli.server.jobs.logs.help.print_log_entries_latest':
         'Afișează intrările de jurnal ale ultimei rulări a unui job sau ale unei rulări alese după ID-ul execuției (din history).',
     'cli.server.jobs.logs.help.logs_latest_run': 'Jurnalele ultimei rulări',
