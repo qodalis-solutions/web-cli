@@ -193,6 +193,17 @@ export const SERVER_PLUGIN_COMMANDS: ServerPluginCommands[] = [
         ],
     },
     {
+        id: 'portal',
+        name: 'Portal',
+        serverPackage: '@qodalis/cli-server-plugin-portal',
+        intro:
+            'The documentation portal at a glance: where it is mounted, whether its site was found and where from, the sections it publishes (docs with the page count, the API reference) and the branding. The portal stays public; the command needs config:read because it shows the portal\'s settings. Change the branding with config set portal.branding.<key> <value> (name, logoUrl, themeMode, footerLinks): it applies to the next /portal.json, no restart. The site\'s content comes from the docs and public-api commands.',
+        commands: [
+            { syntax: 'portal, portal status [--json]', description: 'Path, site (found, where from), sections, branding; --json: portal.json with docs.pageCount, and site { path, found, source, dir }', permission: 'config:read', source: SERVER },
+            { syntax: 'config set portal.branding.name|logoUrl|themeMode|footerLinks <value>', description: 'Change the branding live (the builder\'s values are the defaults; config reset brings them back)', permission: 'config:write', source: SERVER },
+        ],
+    },
+    {
         id: 'public-api',
         name: 'Public API',
         serverPackage: '@qodalis/cli-server-plugin-public-api',
@@ -236,7 +247,6 @@ export const SERVER_PLUGIN_COMMANDS: ServerPluginCommands[] = [
 
 /** Plugins with nothing to do from a terminal. */
 export const PLUGINS_WITHOUT_COMMANDS: { name: string; note: string }[] = [
-    { name: 'Portal', note: 'Serves the documentation site; its content comes from the docs and public-api plugins, whose commands are above.' },
     { name: 'Data explorer providers (sql, postgres, mysql, mssql, mongo, redis, elasticsearch)', note: 'Data sources of the data explorer: use data-explorer.' },
     { name: 'Filesystem storage (filesystem-json, filesystem-s3, filesystem-sqlite)', note: 'Where the filesystem API keeps files: use scp.' },
     { name: 'users-postgres', note: 'Stores the users plugin\'s data in PostgreSQL: use the users commands.' },
