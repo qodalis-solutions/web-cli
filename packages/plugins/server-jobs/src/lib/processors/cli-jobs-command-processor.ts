@@ -15,9 +15,10 @@ import {
     writeUsage,
     writeWrapped,
     joinShellWords,
+    splitShellWords,
 } from '@qodalis/cli-core';
 import { CliJobsService, parseTagArgs } from '../services/cli-jobs-service';
-import { JobDto, JobExecutionDto, UpdateJobRequest } from '../models';
+import { JobDto, JobExecutionDto, JobRunSummaryDto, UpdateJobRequest } from '../models';
 
 /**
  * Resolve connected server URLs and optional headers from the CliServerManager.
@@ -238,6 +239,40 @@ const serverParam: ICliCommandParameterDescriptor = {
     required: false,
     type: 'string',
 };
+
+const yesParam: ICliCommandParameterDescriptor = {
+    name: 'yes',
+    aliases: ['y'],
+    description: 'Do not ask for confirmation',
+    required: false,
+    type: 'boolean',
+};
+
+/** Statuses a run can have, for `--status`. */
+export const RUN_STATUSES = ['running', 'completed', 'failed', 'cancelled', 'timed_out'];
+
+/** Whether a boolean flag is set (`--yes`, `--yes=true`). */
+function isSet(value: unknown): boolean {
+    return value === true || value === 'true' || value === '';
+}
+
+/** A success rate (0..1) as `97.5%`, or `-`. */
+export function formatRate(rate: number | null | undefined): string {
+    if (rate == null || !Number.isFinite(rate)) return '-';
+    const pct = rate * 100;
+    return `${Number.isInteger(pct) ? pct : pct.toFixed(1)}%`;
+}
+
+/**
+ * The `-n`/`--limit` of `runs`: a whole number from 1 to 100 (20 when absent),
+ * or null when it is not one.
+ */
+export function parseRunsLimit(value: unknown): number | null {
+    if (value === undefined || value === null || value === '') return 20;
+    const n = typeof value === 'number' ? value : Number(String(value).trim());
+    if (!Number.isInteger(n) || n < 1 || n > 100) return null;
+    return n;
+}
 
 export class CliJobsCommandProcessor implements ICliCommandProcessor {
     command = 'server';
@@ -512,12 +547,21 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 writeUsage(context, [
                     ['server jobs history <name|id>', t.t('cli.server.jobs.history.help.last_20_runs', 'The last 20 runs')],
                     ['server jobs history <name|id> --limit <n> --offset <n>', t.t('cli.server.jobs.history.help.page_through_older_runs', 'Page through older runs')],
+                    ['server jobs history clear <name|id> [--status <s>] [--yes]', t.t('cli.server.jobs.history.help.clear_runs', 'Delete the finished runs of a job (only those with --status)')],
+                    ['server jobs history rm <name|id> <run-id> [--yes]', t.t('cli.server.jobs.history.help.rm_run', 'Delete one run (its ID, or the short ID from history)')],
                 ]);
                 context.writer.writeln();
                 writeExamples(context, [
                     ['server jobs history cleanup --status failed', t.t('cli.server.jobs.history.help.only_failed_runs', 'Only failed runs')],
                     ['server jobs history cleanup --limit 5', t.t('cli.server.jobs.history.help.last_5_runs', 'The last 5 runs')],
+                    ['server jobs history clear cleanup --status failed', t.t('cli.server.jobs.history.help.clear_failed_runs', 'Delete the failed runs of cleanup')],
+                    ['server jobs history rm cleanup 3f2a9c1e --yes', t.t('cli.server.jobs.history.help.rm_run_no_prompt', 'Delete one run without asking')],
                 ]);
+                context.writer.writeln();
+                writeWrapped(
+                    context,
+                    t.t('cli.server.jobs.history.help.delete_note', 'clear and rm ask for confirmation unless --yes is given. Running runs are never deleted. Deleting runs needs jobs:manage on a protected server.'),
+                );
             },
             valueRequired: true,
             parameters: [
@@ -542,6 +586,7 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                     required: false,
                     type: 'string',
                 },
+                yesParam,
             ],
             processCommand: async (
                 cmd: CliProcessCommand,
@@ -618,6 +663,83 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
                 context: ICliExecutionContext,
             ) => {
                 await this.handleEdit(cmd, context);
+            },
+        },
+        // runs
+        {
+            command: 'runs',
+            description: 'List recent runs across all jobs',
+            writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
+                writeWrapped(
+                    context,
+                    t.t('cli.server.jobs.runs.help.list_runs_all_jobs', 'List the latest runs of every job, newest first: job, run ID, status, start time, duration, retry attempt and the start of the error message. --job keeps the runs of one job (name or ID), --status those with one status.'),
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs runs', t.t('cli.server.jobs.runs.help.last_20_runs', 'The last 20 runs of every job')],
+                    ['server jobs runs [--job <name|id>] [--status <s>] [-n <count>]', t.t('cli.server.jobs.runs.help.filtered', 'Filtered; -n from 1 to 100')],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs runs --status failed', t.t('cli.server.jobs.runs.help.failed_runs', 'Recent failures of any job')],
+                    ['server jobs runs --job cleanup -n 5', t.t('cli.server.jobs.runs.help.cleanup_runs', 'The last 5 runs of cleanup')],
+                ]);
+            },
+            parameters: [
+                serverParam,
+                {
+                    name: 'job',
+                    description: 'Only the runs of this job (name or ID)',
+                    required: false,
+                    type: 'string',
+                },
+                {
+                    name: 'status',
+                    description: `Only runs with this status (${RUN_STATUSES.join(', ')})`,
+                    required: false,
+                    type: 'string',
+                },
+                {
+                    name: 'limit',
+                    aliases: ['n'],
+                    description: 'Number of runs to show (1-100, default 20)',
+                    required: false,
+                    type: 'number',
+                },
+            ],
+            processCommand: async (
+                cmd: CliProcessCommand,
+                context: ICliExecutionContext,
+            ) => {
+                await this.handleRuns(cmd, context);
+            },
+        },
+        // stats
+        {
+            command: 'stats',
+            description: 'Show run statistics of the last 24 hours',
+            writeDescription: (context: ICliExecutionContext) => {
+                const t = context.translator;
+                writeWrapped(
+                    context,
+                    t.t('cli.server.jobs.stats.help.show_stats', 'Show how the jobs ran in the last 24 hours: runs, successes, failures, cancellations, success rate and durations (average and 95th percentile), in total and per job.'),
+                );
+                context.writer.writeln();
+                writeUsage(context, [
+                    ['server jobs stats', t.t('cli.server.jobs.stats.help.all_servers', 'Statistics of every connected server')],
+                ]);
+                context.writer.writeln();
+                writeExamples(context, [
+                    ['server jobs stats --server node', t.t('cli.server.jobs.stats.help.node_only', 'Only the node server')],
+                ]);
+            },
+            parameters: [serverParam],
+            processCommand: async (
+                cmd: CliProcessCommand,
+                context: ICliExecutionContext,
+            ) => {
+                await this.handleStats(cmd, context);
             },
         },
         // watch
@@ -880,6 +1002,19 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         cmd: CliProcessCommand,
         context: ICliExecutionContext,
     ): Promise<void> {
+        // `history clear <job>` and `history rm <job> <run-id>`; a lone `clear`
+        // or `rm` is the history of a job of that name
+        const words = cmd.positionals ?? splitShellWords(cmd.value ?? '');
+        const verb = words[0]?.toLowerCase();
+        if (words.length > 1 && verb === 'clear') {
+            await this.handleHistoryClear(cmd, context, words.slice(1));
+            return;
+        }
+        if (words.length > 1 && (verb === 'rm' || verb === 'delete')) {
+            await this.handleHistoryRm(cmd, context, words.slice(1));
+            return;
+        }
+
         const nameOrId = joinShellWords(cmd.value ?? '');
         if (!nameOrId) {
             context.writer.writeError('Usage: server jobs history <id|name>');
@@ -1180,6 +1315,231 @@ export class CliJobsCommandProcessor implements ICliCommandProcessor {
         }
     }
 
+    // ── History clear / rm ───────────────────────────────────────────
+
+    /**
+     * Asks before deleting unless --yes. True to go on; false (after saying
+     * so) when the user declines or cancels.
+     */
+    private async confirmDelete(
+        cmd: CliProcessCommand,
+        context: ICliExecutionContext,
+        question: string,
+    ): Promise<boolean> {
+        if (isSet(cmd.args['yes']) || isSet(cmd.args['y'])) return true;
+        const answer = await context.reader.readConfirm(question, false);
+        if (!answer) {
+            context.writer.writeInfo('Cancelled. Nothing was deleted.');
+            return false;
+        }
+        return true;
+    }
+
+    private async handleHistoryClear(
+        cmd: CliProcessCommand,
+        context: ICliExecutionContext,
+        words: string[],
+    ): Promise<void> {
+        const nameOrId = words.join(' ');
+        const status = cmd.args['status'] as string | undefined;
+        if (status !== undefined && !RUN_STATUSES.includes(String(status))) {
+            context.writer.writeError(
+                `Unknown status "${status}". Use one of: ${RUN_STATUSES.join(', ')}.`,
+            );
+            return;
+        }
+
+        const services = getServices(context, cmd.args);
+        if (services.length === 0) {
+            context.writer.writeInfo('No connected servers.');
+            return;
+        }
+
+        const matches = await findJobOnServers(context, services, nameOrId);
+        for (const { name, service, job } of matches) {
+            const where = services.length > 1 ? ` on server ${name}` : '';
+            const which = status ? `${status} runs` : 'finished runs';
+            if (!(await this.confirmDelete(cmd, context, `Delete the ${which} of job "${job.name}"${where}?`))) {
+                return;
+            }
+            try {
+                const deleted = await service.clearHistory(job.id, status);
+                context.writer.writeSuccess(
+                    deleted === 0
+                        ? `No ${which} of "${job.name}" to delete${where}.`
+                        : `Deleted ${deleted} ${deleted === 1 ? 'run' : 'runs'} of "${job.name}"${where}.`,
+                );
+            } catch (e: any) {
+                context.writer.writeError(`Failed to clear history on ${name}: ${e.message}`);
+            }
+        }
+    }
+
+    private async handleHistoryRm(
+        cmd: CliProcessCommand,
+        context: ICliExecutionContext,
+        words: string[],
+    ): Promise<void> {
+        if (words.length < 2) {
+            context.writer.writeError('Usage: server jobs history rm <name|id> <run-id>');
+            return;
+        }
+        const runId = words[words.length - 1];
+        const nameOrId = words.slice(0, -1).join(' ');
+
+        const services = getServices(context, cmd.args);
+        if (services.length === 0) {
+            context.writer.writeInfo('No connected servers.');
+            return;
+        }
+
+        const matches = await findJobOnServers(context, services, nameOrId);
+        for (const { name, service, job } of matches) {
+            const where = services.length > 1 ? ` on server ${name}` : '';
+            try {
+                const execId = await resolveRunId(service, job.id, runId);
+                if (execId === null) {
+                    context.writer.writeError(
+                        `Run ID "${runId}" matches several runs of "${job.name}"${where}; give more characters.`,
+                    );
+                    continue;
+                }
+                if (!(await this.confirmDelete(cmd, context, `Delete run ${execId} of job "${job.name}"${where}?`))) {
+                    return;
+                }
+                await service.deleteRun(job.id, execId);
+                context.writer.writeSuccess(`Deleted run ${execId} of "${job.name}"${where}.`);
+            } catch (e: any) {
+                context.writer.writeError(`Failed to delete the run on ${name}: ${e.message}`);
+            }
+        }
+    }
+
+    // ── Runs ─────────────────────────────────────────────────────────
+
+    private async handleRuns(
+        cmd: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        const limit = parseRunsLimit(cmd.args['limit'] ?? cmd.args['n']);
+        if (limit === null) {
+            context.writer.writeError('-n must be a whole number from 1 to 100.');
+            return;
+        }
+        const status = cmd.args['status'] as string | undefined;
+        if (status !== undefined && !RUN_STATUSES.includes(String(status))) {
+            context.writer.writeError(
+                `Unknown status "${status}". Use one of: ${RUN_STATUSES.join(', ')}.`,
+            );
+            return;
+        }
+        const jobArg = cmd.args['job'];
+        if (jobArg === true || (typeof jobArg === 'string' && !jobArg.trim())) {
+            context.writer.writeError('--job needs a job name or ID.');
+            return;
+        }
+
+        const services = getServices(context, cmd.args);
+        if (services.length === 0) {
+            context.writer.writeInfo('No connected servers.');
+            return;
+        }
+
+        // With --job, only the servers that have the job, each with its ID there
+        const targets: { name: string; service: CliJobsService; jobIds?: string[] }[] =
+            jobArg === undefined
+                ? services
+                : (await findJobOnServers(context, services, String(jobArg))).map((m) => ({
+                      name: m.name,
+                      service: m.service,
+                      jobIds: [m.job.id],
+                  }));
+
+        for (const { name, service, jobIds } of targets) {
+            try {
+                if (services.length > 1) {
+                    writeServerHeader(context, name);
+                }
+                const result = await service.listRuns({ jobIds, status, limit });
+                if (result.items.length === 0) {
+                    context.writer.writeInfo('No runs found.');
+                    continue;
+                }
+                context.writer.writeln(
+                    `Showing ${result.items.length} of ${result.total} runs:`,
+                );
+                context.writer.writeTable(
+                    ['Job', 'ID', 'Status', 'Started', 'Duration', 'Retry', 'Error'],
+                    result.items.map((exec) => [
+                        exec.jobName ?? exec.jobId,
+                        exec.id.substring(0, 8),
+                        statusColor(exec.status, context.writer),
+                        formatRelativeTime(exec.startedAt),
+                        formatDuration(exec.duration),
+                        String(exec.retryAttempt ?? 0),
+                        exec.error ? exec.error.substring(0, 40) : '-',
+                    ]),
+                );
+            } catch (e: any) {
+                context.writer.writeError(`Failed to list runs on ${name}: ${e.message}`);
+            }
+        }
+    }
+
+    // ── Stats ────────────────────────────────────────────────────────
+
+    private async handleStats(
+        cmd: CliProcessCommand,
+        context: ICliExecutionContext,
+    ): Promise<void> {
+        const services = getServices(context, cmd.args);
+        if (services.length === 0) {
+            context.writer.writeInfo('No connected servers.');
+            return;
+        }
+
+        for (const { name, service } of services) {
+            try {
+                if (services.length > 1) {
+                    writeServerHeader(context, name);
+                }
+                const stats = await service.getStats();
+                if (!stats?.totals || stats.totals.total === 0) {
+                    context.writer.writeInfo('No runs in the last 24 hours.');
+                    continue;
+                }
+                const totals = stats.totals;
+                const lines: [string, string][] = [
+                    ['Runs', String(totals.total)],
+                    ['Succeeded', String(totals.succeeded)],
+                    ['Failed', String(totals.failed)],
+                    ['Cancelled', String(totals.cancelled)],
+                    ['Running', String(totals.running)],
+                    ['Success Rate', formatRate(totals.successRate)],
+                    ['Avg Duration', formatDuration(totals.avgDuration ?? undefined)],
+                    ['P95 Duration', formatDuration(totals.p95Duration ?? undefined)],
+                    ['Last Failure', formatRelativeTime(totals.lastFailureAt ?? undefined)],
+                ];
+                context.writer.writeln('Last 24 hours:');
+                for (const [label, value] of lines) {
+                    context.writer.writeln(
+                        `  ${context.writer.wrapInColor(label.padEnd(14), CliForegroundColor.Yellow)} ${value}`,
+                    );
+                }
+                const jobs = (stats.jobs ?? []).filter((j) => j.total > 0);
+                if (jobs.length > 0) {
+                    context.writer.writeln();
+                    context.writer.writeTable(
+                        ['Job', 'Runs', 'Succeeded', 'Failed', 'Cancelled', 'Success', 'Avg', 'P95'],
+                        jobs.map((j) => statsRow(j.jobName ?? j.jobId, j)),
+                    );
+                }
+            } catch (e: any) {
+                context.writer.writeError(`Failed to read statistics on ${name}: ${e.message}`);
+            }
+        }
+    }
+
     // ── Watch ────────────────────────────────────────────────────────
 
     /**
@@ -1377,3 +1737,38 @@ const PAST_TENSE: Record<string, string> = {
     stop: 'stopped',
     cancel: 'cancelled',
 };
+
+/** A row of the per-job statistics table. */
+function statsRow(job: string, s: JobRunSummaryDto): string[] {
+    return [
+        job,
+        String(s.total),
+        String(s.succeeded),
+        String(s.failed),
+        String(s.cancelled),
+        formatRate(s.successRate),
+        formatDuration(s.avgDuration ?? undefined),
+        formatDuration(s.p95Duration ?? undefined),
+    ];
+}
+
+/**
+ * The full ID of a run from its ID or a prefix of it (the short ID `history`
+ * shows), looked up among the job's latest 100 runs. An ID that matches none
+ * is returned as given (the server answers whether it exists); null when the
+ * prefix matches several runs.
+ */
+export async function resolveRunId(
+    service: CliJobsService,
+    jobId: string,
+    runId: string,
+): Promise<string | null> {
+    const history = await service.getHistory(jobId, { limit: 100 });
+    const items = history?.items ?? [];
+    if (items.some((r) => r.id === runId)) return runId;
+    const lower = runId.toLowerCase();
+    const found = items.filter((r) => r.id.toLowerCase().startsWith(lower));
+    if (found.length === 1) return found[0].id;
+    if (found.length > 1) return null;
+    return runId;
+}

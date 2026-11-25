@@ -66,3 +66,50 @@ export interface UpdateJobRequest {
     overlapPolicy?: string;
     maxConcurrentRuns?: number;
 }
+
+/** A run in a cross-job list (`GET /executions`): without its logs. */
+export interface JobRunListResponse {
+    items: JobExecutionDto[];
+    total: number;
+    limit: number;
+    offset: number;
+}
+
+/** Counts and durations of a set of runs (`GET /stats`). */
+export interface JobRunSummaryDto {
+    total: number;
+    succeeded: number;
+    failed: number;
+    cancelled: number;
+    running: number;
+    /** 0..1, or null without finished runs */
+    successRate: number | null;
+    avgDuration: number | null;
+    p95Duration: number | null;
+    maxDuration: number | null;
+    lastFailureAt: string | null;
+}
+
+export interface JobStatsBucketDto {
+    start: string;
+    succeeded: number;
+    failed: number;
+    cancelled: number;
+    running: number;
+}
+
+export interface JobStatsJobDto extends JobRunSummaryDto {
+    jobId: string;
+    jobName: string;
+    recent: { id: string; status: string; startedAt: string; duration: number | null }[];
+}
+
+/** `GET /api/v1/qcli/jobs/stats` (servers 1.0.0-beta.19): runs of the last 24 hours by default. */
+export interface JobStatsResponse {
+    since: string;
+    until: string;
+    bucketMs: number;
+    buckets: JobStatsBucketDto[];
+    totals: JobRunSummaryDto;
+    jobs: JobStatsJobDto[];
+}
