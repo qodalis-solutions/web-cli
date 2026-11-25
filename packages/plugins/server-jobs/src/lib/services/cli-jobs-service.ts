@@ -2,6 +2,8 @@ import {
     JobDto,
     JobExecutionDto,
     JobHistoryResponse,
+    JobRunListResponse,
+    JobStatsResponse,
     UpdateJobRequest,
 } from '../models';
 
@@ -132,6 +134,48 @@ export class CliJobsService {
     ): Promise<JobExecutionDto> {
         return this.request<JobExecutionDto>(
             `/${encodeURIComponent(jobId)}/history/${encodeURIComponent(execId)}`,
+        );
+    }
+
+    /**
+     * Runs of every job, newest first (`GET /executions`); `jobIds` limits them to some jobs,
+     * `status` to one status.
+     */
+    async listRuns(opts?: {
+        jobIds?: string[];
+        status?: string;
+        limit?: number;
+        offset?: number;
+    }): Promise<JobRunListResponse> {
+        const params = new URLSearchParams();
+        for (const id of opts?.jobIds ?? []) params.append('job', id);
+        if (opts?.status) params.set('status', opts.status);
+        if (opts?.limit != null) params.set('limit', String(opts.limit));
+        if (opts?.offset != null) params.set('offset', String(opts.offset));
+        const qs = params.toString();
+        return this.request<JobRunListResponse>(`/executions${qs ? `?${qs}` : ''}`);
+    }
+
+    /** Run statistics of the last 24 hours (`GET /stats`). */
+    async getStats(): Promise<JobStatsResponse> {
+        return this.request<JobStatsResponse>('/stats');
+    }
+
+    /** Deletes the runs of a job (only those with `status` when given); the number deleted. */
+    async clearHistory(jobId: string, status?: string): Promise<number> {
+        const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+        const result = await this.request<{ deleted?: number }>(
+            `/${encodeURIComponent(jobId)}/history${qs}`,
+            { method: 'DELETE' },
+        );
+        return result?.deleted ?? 0;
+    }
+
+    /** Deletes one run of a job. */
+    async deleteRun(jobId: string, execId: string): Promise<void> {
+        await this.request<void>(
+            `/${encodeURIComponent(jobId)}/history/${encodeURIComponent(execId)}`,
+            { method: 'DELETE' },
         );
     }
 }

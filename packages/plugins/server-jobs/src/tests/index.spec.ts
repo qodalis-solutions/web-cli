@@ -1,9 +1,14 @@
 import { ICliCommandProcessor, ICliServerAuthService_TOKEN } from '@qodalis/cli-core';
 import { Subject } from 'rxjs';
-import { CliJobsCommandProcessor } from '../lib/processors/cli-jobs-command-processor';
+import {
+    CliJobsCommandProcessor,
+    formatRate,
+    parseRunsLimit,
+    resolveRunId,
+} from '../lib/processors/cli-jobs-command-processor';
 import { CliJobNameCompletionProvider } from '../lib/completion/cli-job-name-completion-provider';
 import { CliJobsService } from '../lib/services/cli-jobs-service';
-import { JobDto } from '../lib/models';
+import { JobDto, JobExecutionDto, JobStatsResponse } from '../lib/models';
 
 // ── Fakes ───────────────────────────────────────────────────
 
@@ -180,6 +185,8 @@ describe('CliJobsCommandProcessor structure', () => {
             'history',
             'logs',
             'edit',
+            'runs',
+            'stats',
             'watch',
         ]);
     });
@@ -188,7 +195,7 @@ describe('CliJobsCommandProcessor structure', () => {
         for (const p of jobsProcessor().processors!) {
             const params = (p.parameters ?? []).map((x) => x.name);
             expect(params).toContain('server');
-            if (p.command === 'list' || p.command === 'watch') {
+            if (['list', 'watch', 'runs', 'stats'].includes(p.command)) {
                 expect(p.valueRequired).toBeFalsy();
             } else {
                 expect(p.valueRequired).toBeTrue();
@@ -1031,6 +1038,432 @@ describe('CliJobsService', () => {
         const service = new CliJobsService('http://srv1.test');
         await expectAsync(service.getJob('a b/c')).toBeRejected();
         expect(calls[0].url).toBe(`${BASE}/a%20b%2Fc`);
+    });
+});
+
+// ── runs / stats / history clear / history rm ───────────────
+
+const RUN_A: JobExecutionDto = {
+    id: 'aaaa1111-0000-0000-0000-000000000001',
+    jobId: 'job-1',
+    jobName: 'Cleanup',
+    status: 'failed',
+    startedAt: new Date(Date.now() - 60_000).toISOString(),
+    duration: 1500,
+    error: 'disk full',
+    retryAttempt: 1,
+    logCount: 3,
+};
+
+const RUN_B: JobExecutionDto = {
+    ...RUN_A,
+    id: 'bbbb2222-0000-0000-0000-000000000002',
+    jobId: 'job-2',
+    jobName: 'Report',
+    status: 'completed',
+    error: undefined,
+    retryAttempt: 0,
+};
+
+function runsPage(items: JobExecutionDto[], total = items.length) {
+    return { items, total, limit: 20, offset: 0 };
+}
+
+describe('server jobs runs', () => {
+    it('lists the latest runs of every job with the default limit', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}/executions?limit=20`]: { body: runsPage([RUN_A, RUN_B], 42) },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+
+        await run('runs', context);
+
+        expect(calls.map((c) => c.url)).toEqual([`${BASE}/executions?limit=20`]);
+        expect(out.lines).toContain('Showing 2 of 42 runs:');
+        expect(out.tables[0].headers).toEqual(['Job', 'ID', 'Status', 'Started', 'Duration', 'Retry', 'Error']);
+        expect(out.tables[0].rows[0]).toEqual(['Cleanup', 'aaaa1111', 'failed', '1m ago', '1.5s', '1', 'disk full']);
+        expect(out.tables[0].rows[1][0]).toBe('Report');
+        expect(out.error).toEqual([]);
+    });
+
+    it('--job resolves the name to the ID, --status and -n go to the server', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [JOB, OTHER] },
+            [`GET ${BASE}/executions?job=job-1&status=failed&limit=5`]: { body: runsPage([RUN_A]) },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+
+        await run('runs', context, undefined, { job: 'cleanup', status: 'failed', n: 5 });
+
+        expect(calls.map((c) => c.url)).toEqual([BASE, `${BASE}/executions?job=job-1&status=failed&limit=5`]);
+        expect(out.tables[0].rows.length).toBe(1);
+    });
+
+    it('accepts --limit as the long form of -n', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}/executions?limit=100`]: { body: runsPage([]) },
+        });
+        const { context } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('runs', context, undefined, { limit: '100' });
+        expect(calls[0].url).toBe(`${BASE}/executions?limit=100`);
+    });
+
+    it('says so when there are no runs', async () => {
+        installFetch({ [`GET ${BASE}/executions?limit=20`]: { body: runsPage([]) } });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('runs', context);
+        expect(out.info).toEqual(['No runs found.']);
+        expect(out.tables.length).toBe(0);
+    });
+
+    it('reports a server error', async () => {
+        installFetch({ [`GET ${BASE}/executions?limit=20`]: { status: 403, body: { error: 'forbidden' } } });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('runs', context);
+        expect(out.error).toEqual(['Failed to list runs on one: forbidden']);
+    });
+
+    it('rejects a bad -n, an unknown status and an empty --job without calling the server', async () => {
+        const calls = installFetch({});
+        for (const args of [{ n: 0 }, { n: 101 }, { n: 'abc' }, { n: 2.5 }, { status: 'weird' }, { job: true }, { job: ' ' }]) {
+            const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+            await run('runs', context, undefined, args);
+            expect(out.error.length).withContext(JSON.stringify(args)).toBe(1);
+        }
+        expect(calls.length).toBe(0);
+    });
+
+    it('reports a --job that no server has', async () => {
+        installFetch({ [`GET ${BASE}`]: { body: [JOB] } });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('runs', context, undefined, { job: 'missing' });
+        expect(out.error).toEqual(['Job "missing" not found on server one.']);
+        expect(out.tables.length).toBe(0);
+    });
+
+    it('shows each server under its header and says when none is connected', async () => {
+        installFetch({
+            [`GET ${BASE}/executions?limit=20`]: { body: runsPage([RUN_A]) },
+            [`GET ${BASE2}/executions?limit=20`]: { body: runsPage([]) },
+        });
+        const { context, out } = createContext([
+            { name: 'one', url: 'http://srv1.test' },
+            { name: 'two', url: 'http://srv2.test' },
+        ]);
+        await run('runs', context);
+        expect(out.lines).toContain('Server: one');
+        expect(out.lines).toContain('Server: two');
+        expect(out.info).toEqual(['No runs found.']);
+
+        const none = createContext([]);
+        await run('runs', none.context);
+        expect(none.out.info).toEqual(['No connected servers.']);
+    });
+});
+
+const STATS: JobStatsResponse = {
+    since: '2026-11-24T10:00:00.000Z',
+    until: '2026-11-25T10:00:00.000Z',
+    bucketMs: 3_600_000,
+    buckets: [],
+    totals: {
+        total: 10,
+        succeeded: 8,
+        failed: 1,
+        cancelled: 1,
+        running: 0,
+        successRate: 0.8,
+        avgDuration: 1200,
+        p95Duration: 3000,
+        maxDuration: 4000,
+        lastFailureAt: null,
+    },
+    jobs: [
+        {
+            jobId: 'job-1',
+            jobName: 'Cleanup',
+            total: 10,
+            succeeded: 8,
+            failed: 1,
+            cancelled: 1,
+            running: 0,
+            successRate: 0.8,
+            avgDuration: 1200,
+            p95Duration: 3000,
+            maxDuration: 4000,
+            lastFailureAt: null,
+            recent: [],
+        },
+        {
+            jobId: 'job-2',
+            jobName: 'Report',
+            total: 0,
+            succeeded: 0,
+            failed: 0,
+            cancelled: 0,
+            running: 0,
+            successRate: null,
+            avgDuration: null,
+            p95Duration: null,
+            maxDuration: null,
+            lastFailureAt: null,
+            recent: [],
+        },
+    ],
+};
+
+describe('server jobs stats', () => {
+    it('prints the totals and a row per job that ran', async () => {
+        const calls = installFetch({ [`GET ${BASE}/stats`]: { body: STATS } });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+
+        await run('stats', context);
+
+        expect(calls.map((c) => c.url)).toEqual([`${BASE}/stats`]);
+        expect(out.lines).toContain('Last 24 hours:');
+        expect(out.lines.some((l) => l.includes('Success Rate') && l.endsWith('80%'))).toBeTrue();
+        expect(out.lines.some((l) => l.includes('P95 Duration') && l.endsWith('3.0s'))).toBeTrue();
+        expect(out.tables[0].headers).toEqual(['Job', 'Runs', 'Succeeded', 'Failed', 'Cancelled', 'Success', 'Avg', 'P95']);
+        expect(out.tables[0].rows).toEqual([['Cleanup', '10', '8', '1', '1', '80%', '1.2s', '3.0s']]);
+    });
+
+    it('says so when nothing ran', async () => {
+        installFetch({
+            [`GET ${BASE}/stats`]: { body: { ...STATS, totals: { ...STATS.totals, total: 0 }, jobs: [] } },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('stats', context);
+        expect(out.info).toEqual(['No runs in the last 24 hours.']);
+        expect(out.tables.length).toBe(0);
+    });
+
+    it('reports a server error and goes on with the other servers', async () => {
+        installFetch({
+            [`GET ${BASE}/stats`]: { status: 500, body: { error: 'boom' } },
+            [`GET ${BASE2}/stats`]: { body: STATS },
+        });
+        const { context, out } = createContext([
+            { name: 'one', url: 'http://srv1.test' },
+            { name: 'two', url: 'http://srv2.test' },
+        ]);
+        await run('stats', context);
+        expect(out.error).toEqual(['Failed to read statistics on one: boom']);
+        expect(out.tables.length).toBe(1);
+    });
+
+    it('--server limits it to one server', async () => {
+        const calls = installFetch({ [`GET ${BASE2}/stats`]: { body: STATS } });
+        const { context } = createContext([
+            { name: 'one', url: 'http://srv1.test' },
+            { name: 'two', url: 'http://srv2.test' },
+        ]);
+        await run('stats', context, undefined, { server: 'two' });
+        expect(calls.map((c) => c.url)).toEqual([`${BASE2}/stats`]);
+    });
+});
+
+describe('server jobs history clear', () => {
+    afterEach(() => jasmine.getEnv().allowRespy(false));
+
+    it('asks, then deletes the finished runs of the job', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`DELETE ${BASE}/job-1/history`]: { body: { deleted: 7 } },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        const confirm = spyOn(context.reader, 'readConfirm').and.resolveTo(true);
+
+        await run('history', context, 'clear cleanup');
+
+        expect(confirm).toHaveBeenCalledWith('Delete the finished runs of job "Cleanup"?', false);
+        expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual([`GET ${BASE}`, `DELETE ${BASE}/job-1/history`]);
+        expect(out.success).toEqual(['Deleted 7 runs of "Cleanup".']);
+    });
+
+    it('deletes nothing when the user declines or cancels', async () => {
+        jasmine.getEnv().allowRespy(true);
+        for (const answer of [false, null]) {
+            const calls = installFetch({ [`GET ${BASE}`]: { body: [JOB] } });
+            const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }], { confirm: answer });
+            await run('history', context, 'clear cleanup');
+            expect(calls.some((c) => c.method === 'DELETE')).toBeFalse();
+            expect(out.info).toEqual(['Cancelled. Nothing was deleted.']);
+        }
+    });
+
+    it('--yes (or -y) skips the question; --status deletes only those runs', async () => {
+        jasmine.getEnv().allowRespy(true);
+        for (const yes of [{ yes: true }, { y: true }]) {
+            const calls = installFetch({
+                [`GET ${BASE}`]: { body: [JOB] },
+                [`DELETE ${BASE}/job-1/history?status=failed`]: { body: { deleted: 1 } },
+            });
+            const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+            const confirm = spyOn(context.reader, 'readConfirm');
+            await run('history', context, 'clear cleanup', { ...yes, status: 'failed' });
+            expect(confirm).not.toHaveBeenCalled();
+            expect(calls[1].url).toBe(`${BASE}/job-1/history?status=failed`);
+            expect(out.success).toEqual(['Deleted 1 run of "Cleanup".']);
+        }
+    });
+
+    it('says when there was nothing to delete', async () => {
+        installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`DELETE ${BASE}/job-1/history`]: { body: { deleted: 0 } },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('history', context, 'clear cleanup', { yes: true });
+        expect(out.success).toEqual(['No finished runs of "Cleanup" to delete.']);
+    });
+
+    it('reports a server error', async () => {
+        installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`DELETE ${BASE}/job-1/history`]: { status: 403, body: { error: 'missing permission jobs:manage' } },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('history', context, 'clear cleanup', { yes: true });
+        expect(out.error).toEqual(['Failed to clear history on one: missing permission jobs:manage']);
+    });
+
+    it('rejects an unknown status and reports a missing job', async () => {
+        const calls = installFetch({ [`GET ${BASE}`]: { body: [JOB] } });
+        const bad = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('history', bad.context, 'clear cleanup', { status: 'nope' });
+        expect(bad.out.error[0]).toContain('Unknown status "nope"');
+        expect(calls.length).toBe(0);
+
+        const missing = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('history', missing.context, 'clear ghost', { yes: true });
+        expect(missing.out.error).toEqual(['Job "ghost" not found on server one.']);
+        expect(calls.some((c) => c.method === 'DELETE')).toBeFalse();
+    });
+
+    it('a lone "clear" is still the history of a job called clear', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [{ ...JOB, id: 'job-c', name: 'clear' }] },
+            [`GET ${BASE}/job-c/history?limit=20&offset=0`]: { body: { items: [], total: 0, limit: 20, offset: 0 } },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('history', context, 'clear', { limit: 20, offset: 0 });
+        expect(calls.some((c) => c.method === 'DELETE')).toBeFalse();
+        expect(out.info).toEqual(['No execution history for "clear".']);
+    });
+});
+
+describe('server jobs history rm', () => {
+    const HISTORY = { items: [RUN_A, { ...RUN_A, id: 'aaaa1111-ffff-0000-0000-000000000009' }, { ...RUN_A, id: 'cccc3333-0000-0000-0000-000000000003' }], total: 3, limit: 100, offset: 0 };
+
+    it('resolves the short ID, asks, then deletes the run', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`GET ${BASE}/job-1/history?limit=100`]: { body: HISTORY },
+            [`DELETE ${BASE}/job-1/history/cccc3333-0000-0000-0000-000000000003`]: { body: { message: 'Run deleted' } },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        const confirm = spyOn(context.reader, 'readConfirm').and.resolveTo(true);
+
+        await run('history', context, 'rm cleanup cccc3333');
+
+        expect(confirm).toHaveBeenCalledWith('Delete run cccc3333-0000-0000-0000-000000000003 of job "Cleanup"?', false);
+        expect(calls.map((c) => c.method)).toEqual(['GET', 'GET', 'DELETE']);
+        expect(out.success).toEqual(['Deleted run cccc3333-0000-0000-0000-000000000003 of "Cleanup".']);
+    });
+
+    it('takes a quoted job name with spaces and --yes', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [{ ...JOB, name: 'Nightly Cleanup' }] },
+            [`GET ${BASE}/job-1/history?limit=100`]: { body: HISTORY },
+            [`DELETE ${BASE}/job-1/history/cccc3333-0000-0000-0000-000000000003`]: { body: { message: 'Run deleted' } },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        const confirm = spyOn(context.reader, 'readConfirm');
+        await run('history', context, 'rm "Nightly Cleanup" cccc3333', { yes: true });
+        expect(confirm).not.toHaveBeenCalled();
+        expect(calls.length).toBe(3);
+        expect(out.success.length).toBe(1);
+    });
+
+    it('deletes nothing when the user declines', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`GET ${BASE}/job-1/history?limit=100`]: { body: HISTORY },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }], { confirm: false });
+        await run('history', context, 'rm cleanup cccc3333');
+        expect(calls.some((c) => c.method === 'DELETE')).toBeFalse();
+        expect(out.info).toEqual(['Cancelled. Nothing was deleted.']);
+    });
+
+    it('refuses an ambiguous short ID', async () => {
+        const calls = installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`GET ${BASE}/job-1/history?limit=100`]: { body: HISTORY },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('history', context, 'rm cleanup aaaa1111', { yes: true });
+        expect(out.error).toEqual(['Run ID "aaaa1111" matches several runs of "Cleanup"; give more characters.']);
+        expect(calls.some((c) => c.method === 'DELETE')).toBeFalse();
+    });
+
+    it('reports the server error for an unknown run', async () => {
+        installFetch({
+            [`GET ${BASE}`]: { body: [JOB] },
+            [`GET ${BASE}/job-1/history?limit=100`]: { body: HISTORY },
+            [`DELETE ${BASE}/job-1/history/zzzz`]: { status: 404, body: { error: 'Execution not found' } },
+        });
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('history', context, 'rm cleanup zzzz', { yes: true });
+        expect(out.error).toEqual(['Failed to delete the run on one: Execution not found']);
+    });
+
+    it('needs a job and a run ID', async () => {
+        const calls = installFetch({});
+        const { context, out } = createContext([{ name: 'one', url: 'http://srv1.test' }]);
+        await run('history', context, 'rm cleanup');
+        expect(out.error).toEqual(['Usage: server jobs history rm <name|id> <run-id>']);
+        expect(calls.length).toBe(0);
+    });
+});
+
+describe('server jobs helpers', () => {
+    it('parseRunsLimit', () => {
+        expect(parseRunsLimit(undefined)).toBe(20);
+        expect(parseRunsLimit('')).toBe(20);
+        expect(parseRunsLimit(1)).toBe(1);
+        expect(parseRunsLimit('100')).toBe(100);
+        expect(parseRunsLimit(0)).toBeNull();
+        expect(parseRunsLimit(101)).toBeNull();
+        expect(parseRunsLimit('x')).toBeNull();
+        expect(parseRunsLimit(true)).toBeNull();
+    });
+
+    it('formatRate', () => {
+        expect(formatRate(null)).toBe('-');
+        expect(formatRate(1)).toBe('100%');
+        expect(formatRate(0.975)).toBe('97.5%');
+    });
+
+    it('resolveRunId keeps a full ID and passes an unknown one through', async () => {
+        const service = jasmine.createSpyObj<CliJobsService>('service', ['getHistory']);
+        service.getHistory.and.resolveTo({ items: [RUN_A], total: 1, limit: 100, offset: 0 });
+        expect(await resolveRunId(service, 'job-1', RUN_A.id)).toBe(RUN_A.id);
+        expect(await resolveRunId(service, 'job-1', 'AAAA1111')).toBe(RUN_A.id);
+        expect(await resolveRunId(service, 'job-1', 'other')).toBe('other');
+    });
+
+    it('the service encodes run IDs and statuses', async () => {
+        const calls = installFetch({});
+        const service = new CliJobsService('http://srv1.test');
+        await expectAsync(service.deleteRun('a b', 'c/d')).toBeRejected();
+        await expectAsync(service.clearHistory('a b', 'timed_out')).toBeRejected();
+        await expectAsync(service.listRuns({ jobIds: ['x', 'y'], offset: 5 })).toBeRejected();
+        expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual([
+            `DELETE ${BASE}/a%20b/history/c%2Fd`,
+            `DELETE ${BASE}/a%20b/history?status=timed_out`,
+            `GET ${BASE}/executions?job=x&job=y&offset=5`,
+        ]);
     });
 });
 
