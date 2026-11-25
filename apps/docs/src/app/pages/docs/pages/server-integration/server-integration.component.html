@@ -783,6 +783,240 @@ CliAdminBuilder().set_branding(&#123;"name": "RateBell", "icon_url": "/favicon.s
     with its requests.
 </p>
 
+<h2 id="config-providers">Configuration providers</h2>
+<p>
+    The server's settings are read and changed through <strong>config providers</strong> that the server, its plugins
+    and your application register. The admin dashboard's Config page, the <code>config</code> command and the
+    <code>config_*</code> MCP tools all show what they return, and the Node, .NET and Python servers share the contract
+    and the JSON. A provider has sections and a section has entries (settings). A provider is read-only unless it also
+    implements the writer; each entry says whether it can change and whether a change needs a restart. Writable
+    settings are kept in the server's <strong>config store</strong> and applied again at startup.
+</p>
+
+<h3 id="config-contract">The contract</h3>
+<p>From the abstractions packages (<code>&#64;qodalis/cli-server-abstractions</code>, <code>Qodalis.Cli.Abstractions</code>, <code>qodalis-cli-server-abstractions</code>):</p>
+<div class="code-block">
+    <span class="code-label">TypeScript</span>
+    <pre><code>type CliConfigEntryType = 'string' | 'number' | 'boolean' | 'string[]' | 'enum' | 'secret' | 'json' | 'duration' | 'url';
+type CliConfigSource = 'default' | 'file' | 'environment' | 'database' | 'runtime';
+
+interface CliConfigEntry &#123;
+    key: string;
+    label?: string;              // default: key
+    description?: string;
+    type: CliConfigEntryType;
+    value?: CliConfigValue;      // JSON; a duration is a string such as '30m'
+    default?: CliConfigValue;
+    source?: CliConfigSource;    // default 'default'
+    mutable?: boolean;
+    requiresRestart?: boolean;
+    sensitive?: boolean;         // every 'secret' is sensitive: its value is never returned
+    isSet?: boolean;             // a sensitive entry whose value is left out
+    validation?: &#123; min?: number; max?: number; pattern?: string; options?: string[]; required?: boolean &#125;;
+    editor?: string;             // 'tags', 'origins', 'textarea', 'cron', 'code', ...
+&#125;
+
+interface CliConfigSection &#123;
+    id: string;
+    title?: string;
+    description?: string;
+    entries: CliConfigEntry[];
+    version?: string;            // writable sections: a change against an older version gets 409
+    allowCustomKeys?: boolean;   // free key/value section
+&#125;
+
+interface ICliConfigProvider &#123;
+    readonly id: string;                    // lower case: letters, digits, _ and -
+    readonly title: string;
+    readonly description?: string;
+    readonly order?: number;                // default 100
+    readonly requiredPermission?: string;   // needed besides config:read / config:write
+    getSections(context: CliConfigContext): CliConfigSection[] | Promise&lt;CliConfigSection[]&gt;;
+&#125;
+
+interface ICliConfigWriter &#123;               // optional, on the same object
+    validate(sectionId: string, changes: Record&lt;string, CliConfigValue&gt;, context: CliConfigContext): CliConfigErrors | Promise&lt;CliConfigErrors&gt;;
+    update(sectionId: string, changes: Record&lt;string, CliConfigValue&gt;, expectedVersion: string | undefined,
+           context: CliConfigContext): Promise&lt;&#123; applied: string[]; requiresRestart: boolean; version: string &#125;&gt;;
+&#125;</code></pre>
+</div>
+<p>
+    <code>null</code> in <code>changes</code> resets a setting to its default (clears a secret, removes a free key).
+    Before calling the writer the server checks the permissions, that each key exists and is mutable, and the value's
+    type and rules (numbers: <code>min</code>/<code>max</code> on the value; strings and secrets: on the length;
+    lists: on the item count; durations such as <code>500ms</code>, <code>30s</code>, <code>15m</code>,
+    <code>12h</code>, <code>7d</code>: in milliseconds; <code>enum</code> needs <code>options</code>). A writer throws
+    <code>CliConfigConflictError(currentVersion)</code> for a stale version and <code>CliConfigValidationError(errors)</code>
+    for late errors.
+</p>
+
+<h3 id="config-register">Registering a provider</h3>
+<p>
+    <code>CliStoredConfigProvider</code> describes settings in code: the server attaches its store when the provider is
+    registered and calls <code>apply</code> with every stored value, then after each change. Any object implementing
+    the provider (and the writer) works too; modules bring providers in their <code>configProviders</code>. A provider
+    registered under a built-in id replaces the built-in one.
+</p>
+<div class="code-block">
+    <span class="code-label">Node</span>
+    <pre><code>import &#123; CliStoredConfigProvider, JsonFileConfigStore &#125; from '&#64;qodalis/cli-server-node';
+
+createCliServer(&#123;
+    configure: (builder) =&gt; &#123;
+        builder.setConfigStore(new JsonFileConfigStore('./data/config.json'));
+        builder.addConfigProvider(new CliStoredConfigProvider(&#123;
+            id: 'billing',
+            title: 'Billing',
+            sections: [&#123;
+                id: 'invoices',
+                title: 'Invoices',
+                settings: [
+                    &#123; key: 'dueDays', type: 'number', default: 30, validation: &#123; min: 1, max: 90 &#125;, apply: (v) =&gt; (billing.dueDays = v as number) &#125;,
+                    &#123; key: 'apiKey', type: 'secret', apply: (v) =&gt; billing.setKey(v as string | null) &#125;,
+                ],
+            &#125;],
+        &#125;));
+    &#125;,
+&#125;);</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">.NET</span>
+    <pre><code>builder.Services.AddControllers().AddCli(cli =&gt;
+&#123;
+    cli.AddConfigProvider&lt;BillingConfigProvider&gt;();      // your ICliConfigProvider (+ ICliConfigWriter)
+    cli.AddConfigProvider(new CliStoredConfigProvider(new CliStoredConfigProviderOptions
+    &#123;
+        Id = "billing", Title = "Billing",
+        Sections = [new() &#123; Id = "invoices", Settings = [
+            new() &#123; Key = "dueDays", Type = CliConfigEntryTypes.Number, Default = 30,
+                    Validation = new() &#123; Min = 1, Max = 90 &#125;, Apply = v =&gt; billing.DueDays = (int)v! &#125;,
+            new() &#123; Key = "apiKey", Type = CliConfigEntryTypes.Secret &#125;,
+        ] &#125;],
+    &#125;));
+&#125;);</code></pre>
+</div>
+<div class="code-block">
+    <span class="code-label">Python</span>
+    <pre><code>builder.add_config_provider(CliStoredConfigProvider(
+    id="billing", title="Billing",
+    sections=[CliConfigSectionDefinition(id="invoices", settings=[
+        CliConfigSettingDefinition(key="dueDays", type="number", default=30,
+            validation=CliConfigValidation(min=1, max=90),
+            apply=lambda v: setattr(billing, "due_days", v)),
+        CliConfigSettingDefinition(key="apiKey", type="secret"),
+    ])],
+))</code></pre>
+</div>
+
+<h3 id="config-stores">Stores</h3>
+<table>
+    <thead>
+        <tr><th>Store</th><th>Source</th><th>Where</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>InMemoryConfigStore</code> (default)</td><td><code>runtime</code></td><td>Memory: changes apply at once and are lost on restart</td></tr>
+        <tr><td><code>JsonFileConfigStore(path)</code></td><td><code>file</code></td><td>One JSON file, rewritten on every change (temp file and rename, mode 0600)</td></tr>
+        <tr><td><code>CliDatabaseConfigStore</code> (databases plugin)</td><td><code>database</code></td><td>Table <code>QcliConfig</code> (PostgreSQL, MySQL, SQL Server, SQLite), one row per section, changed in a transaction with the row locked; migration source <code>qcli-config</code></td></tr>
+    </tbody>
+</table>
+<p>
+    A store keeps only the values changed from their defaults, with a version per section. Set it before the server is
+    created: <code>builder.setConfigStore(store)</code> (Node; then <code>await server.config.ready()</code> before
+    listening), <code>cli.SetConfigStore(...)</code> (.NET), <code>builder.set_config_store(store)</code> (Python).
+    Secrets are stored as given: keep the file or table readable by the server only.
+</p>
+
+<h3 id="config-builtin">Built-in providers</h3>
+<table>
+    <thead>
+        <tr><th>Provider</th><th>Order</th><th>Sections and settings</th><th>Writable</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>server</code></td><td>0</td><td><code>runtime</code>: platform, version, pid, hostname, os, startedAt, uptime</td><td>no</td></tr>
+        <tr><td><code>auth</code> (admin plugin)</td><td>10</td><td><code>admin</code>: sign-in mode, username, defaultCredentials, signInUrl</td><td>no</td></tr>
+        <tr><td><code>host</code></td><td>20</td><td><code>options</code>: basePath, cliRoutes, enableShell, trustProxy, protected, ...; <code>environment</code>: the environment variables, secrets masked</td><td>no</td></tr>
+        <tr><td><code>cors</code></td><td>30</td><td><code>cors</code>: mode, allowedOrigins</td><td>allowedOrigins (CORS, WebSocket upgrades, MCP and CSRF checks follow at once)</td></tr>
+        <tr><td><code>mcp</code></td><td>40</td><td><code>mcp</code>: enabled, path, tools, exclude, instructions, readOnly</td><td>when MCP is on</td></tr>
+        <tr><td><code>filesystem</code></td><td>50</td><td><code>filesystem</code>: storage, allowedPaths, maxUploadBytes</td><td>maxUploadBytes</td></tr>
+        <tr><td><code>jobs</code> (jobs plugin)</td><td>60</td><td><code>history</code>: maxAge, maxRunsPerJob, failedMaxAge, failedMaxRunsPerJob, pruneInterval</td><td>the retention defaults</td></tr>
+        <tr><td><code>users</code> (users plugin)</td><td>70</td><td><code>sessions</code>, <code>security</code> (lockout, minimum password length), <code>access</code></td><td>sessions and security</td></tr>
+        <tr><td><code>logs</code> (admin plugin)</td><td>80</td><td><code>buffer</code>: capacity, minLevel</td><td>yes</td></tr>
+        <tr><td><code>custom</code></td><td>1000</td><td><code>custom</code>: free keys</td><td>yes</td></tr>
+    </tbody>
+</table>
+
+<h3 id="config-api">API</h3>
+<p>
+    Served by the admin plugin, behind the dashboard's sign-in; on a protected server GET also needs
+    <code>config:read</code> and PATCH <code>config:write</code>.
+</p>
+<table>
+    <thead>
+        <tr><th>Method</th><th>Path</th><th>Answer</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>GET</td><td><code>/api/v1/qcli/config</code></td><td><code>&#123; "providers": [provider, ...] &#125;</code>: the providers the caller may see, by order then id</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/qcli/config/&#123;provider&#125;</code></td><td>One provider</td></tr>
+        <tr><td>PATCH</td><td><code>/api/v1/qcli/config/&#123;provider&#125;/&#123;section&#125;</code></td><td>Body <code>&#123; "changes": &#123; "key": value &#125;, "version": "3" &#125;</code> (<code>version</code> optional)</td></tr>
+    </tbody>
+</table>
+<div class="code-block">
+    <span class="code-label">GET /api/v1/qcli/config</span>
+    <pre><code>&#123;
+  "providers": [
+    &#123;
+      "id": "cors", "title": "CORS", "description": "Origins allowed to call the server from a browser ...",
+      "order": 30, "writable": true,
+      "sections": [
+        &#123;
+          "id": "cors", "title": "CORS", "description": "", "mutable": true, "version": "2", "allowCustomKeys": false,
+          "entries": [
+            &#123;
+              "key": "allowedOrigins", "label": "Allowed origins", "description": "Exact origins ...",
+              "type": "string[]", "value": ["https://app.example"], "default": [], "source": "database",
+              "mutable": true, "requiresRestart": false, "sensitive": false, "editor": "origins"
+            &#125;,
+            &#123;
+              "key": "apiKey", "label": "apiKey", "description": "", "type": "secret", "value": null, "default": null,
+              "source": "runtime", "mutable": true, "requiresRestart": false, "sensitive": true, "isSet": true
+            &#125;
+          ]
+        &#125;
+      ]
+    &#125;
+  ]
+&#125;</code></pre>
+</div>
+<p>
+    Every entry has all of <code>key</code>, <code>label</code>, <code>description</code>, <code>type</code>,
+    <code>value</code>, <code>default</code>, <code>source</code>, <code>mutable</code>, <code>requiresRestart</code> and
+    <code>sensitive</code>; <code>validation</code> and <code>editor</code> when set; <code>isSet</code> for sensitive
+    entries, whose <code>value</code> and <code>default</code> are always <code>null</code>. A read-only section's
+    <code>version</code> is <code>null</code>; a provider is <code>writable</code> when it implements the writer and the
+    caller holds <code>config:write</code>.
+</p>
+<table>
+    <thead>
+        <tr><th>PATCH answer</th><th>Body</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>200</td><td><code>&#123; "provider": "cors", "section": &#123; ... &#125;, "applied": ["allowedOrigins"], "requiresRestart": false, "version": "3" &#125;</code></td></tr>
+        <tr><td>400</td><td><code>&#123; "error": "validation failed", "errors": &#123; "allowedOrigins": "..." &#125; &#125;</code>; also a read-only provider or section, or an empty <code>changes</code></td></tr>
+        <tr><td>403</td><td><code>&#123; "error": "forbidden: missing permission config:write" &#125;</code> (or the provider's own permission)</td></tr>
+        <tr><td>404</td><td><code>&#123; "error": "unknown config provider: x" &#125;</code>, <code>&#123; "error": "unknown config section: cors.x" &#125;</code></td></tr>
+        <tr><td>409</td><td><code>&#123; "error": "version conflict", "version": "4" &#125;</code></td></tr>
+    </tbody>
+</table>
+
+<h3 id="config-security">Permissions, audit, events and MCP</h3>
+<ul>
+    <li><strong>Permissions</strong> (catalog group Config): <code>config:read</code> to see the providers (secrets stay hidden), <code>config:write</code> to change them, plus a provider's own <code>requiredPermission</code> for both. An open server allows everything.</li>
+    <li><strong>Audit</strong>: every change writes <code>config.update</code> to the users plugin's audit log (or the store set with <code>setConfigAuditStore</code>): the caller, target <code>config:&lt;provider&gt;.&lt;section&gt;</code>, the changed keys with old and new values, secrets as <code>***</code>.</li>
+    <li><strong>Event</strong>: <code>config:changed</code> <code>&#123; provider, section, keys, version, requiresRestart, user &#125;</code>, audience <code>config:read</code>, never values: open dashboards reload the provider.</li>
+    <li><strong>MCP</strong> (when on): <code>config_list</code> and <code>config_get</code> (<code>provider</code>, <code>section?</code>, <code>key?</code>) need <code>config:read</code>; <code>config_set</code> (<code>provider</code>, <code>section</code>, <code>changes</code>, <code>version?</code>) needs <code>config:write</code> and is hidden by a read-only MCP client or endpoint.</li>
+    <li><strong>Terminal</strong>: <code>config list</code>, <code>config get &lt;provider&gt;[.&lt;section&gt;[.&lt;key&gt;]]</code>, <code>config set &lt;provider&gt;.&lt;section&gt;.&lt;key&gt; &lt;value&gt; [--expected-version v]</code>, <code>config reset &lt;provider&gt;.&lt;section&gt;.&lt;key&gt;</code>; see <a routerLink="/docs/server-plugin-commands" fragment="config">Server plugin commands</a> for every plugin's commands.</li>
+</ul>
+
 <h2>{{ 'docs.server-integration.aws-plugin' | translate }}</h2>
 <p>{{ 'docs.server-integration.aws-plugin-desc' | translate }}</p>
 <table>
