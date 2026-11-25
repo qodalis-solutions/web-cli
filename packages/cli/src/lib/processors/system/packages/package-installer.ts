@@ -20,6 +20,7 @@ import {
     MarketplaceSession,
     MarketplaceVersion,
     newestWorkingVersion,
+    otherKindInstallHint,
     pickResolvedPlugin,
     sha384Integrity,
 } from './marketplace';
@@ -349,6 +350,18 @@ export class CliPackageInstaller {
             );
             if (signal?.aborted) return undefined;
         } else if (matches) {
+            // Not a CLI plugin: a dashboard or server plugin of that name installs elsewhere, say where
+            // (a marketplace refusing `kind=all` changes nothing: today's warning follows)
+            const others = await session
+                .run((client) => client.resolve(name, signal, 'all'), 'using npm', signal)
+                .catch(() => undefined);
+            if (signal?.aborted) return undefined;
+            const hint = others?.map(otherKindInstallHint).find((h) => !!h);
+            if (hint) {
+                progressBar.complete();
+                writer.writeError(hint);
+                return undefined;
+            }
             plugin = null;
         }
 

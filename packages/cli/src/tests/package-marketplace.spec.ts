@@ -505,6 +505,57 @@ describe('pkg marketplace', () => {
             );
         });
 
+        it('says where a dashboard or a server plugin installs instead of installing it from npm', async () => {
+            fakeMarketplace({
+                'GET /resolve?name=jobs': { status: 200, body: { matches: [] } },
+                'GET /resolve?name=jobs&kind=all': {
+                    status: 200,
+                    body: { matches: [{ name: '@qodalis/cli-dashboard-module-jobs', kind: 'dashboard' }] },
+                },
+                'GET /resolve?name=weather': { status: 200, body: { matches: [] } },
+                'GET /resolve?name=weather&kind=all': {
+                    status: 200,
+                    body: { matches: [{ name: 'weather', kind: 'server' }] },
+                },
+            });
+            const fetchInfo = spyOn(installer, 'fetchInfo');
+            const { context, errors, warnings } = fakeContext();
+
+            await installer.install('jobs', context);
+            await installer.install('weather', context);
+
+            expect(errors[0]).toBe(
+                "@qodalis/cli-dashboard-module-jobs is a dashboard plugin, not a CLI plugin: install it from your server's dashboard (Plugins → Marketplace) or on the server with: admin dashboard install @qodalis/cli-dashboard-module-jobs",
+            );
+            expect(errors[1]).toBe(
+                'weather is a server plugin, not a CLI plugin: install it on the server from its dashboard (Plugins → Marketplace → Server plugins) or with: admin plugins install weather',
+            );
+            expect(warnings).toEqual([]);
+            expect(fetchInfo).not.toHaveBeenCalled();
+            expect(manager.addPackage).not.toHaveBeenCalled();
+        });
+
+        it('keeps the not-listed warning when kind=all finds only web plugins or is refused', async () => {
+            fakeMarketplace({
+                'GET /resolve?name=x': { status: 200, body: { matches: [] } },
+                'GET /resolve?name=x&kind=all': { status: 400, body: { error: 'invalid kind' } },
+            });
+            spyOn(installer, 'fetchInfo').and.resolveTo({
+                name: '@qodalis/cli-x',
+                version: '1.0.0',
+                unpkg: 'umd/index.js',
+            });
+            const { context, warnings, errors } = fakeContext();
+
+            await installer.install('x', context);
+
+            expect(errors).toEqual([]);
+            expect(warnings).toEqual([
+                '@qodalis/cli-x is not listed in the marketplace and has not been reviewed',
+            ]);
+            expect(manager.addPackage).toHaveBeenCalled();
+        });
+
         it('falls back to npm when the marketplace is unreachable', async () => {
             fakeMarketplace({ 'GET /resolve?name=x': 'network-error' });
             spyOn(installer, 'fetchInfo').and.resolveTo({

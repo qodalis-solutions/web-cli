@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
+### `pkg add` of a dashboard or server plugin
+
+- `pkg add <name>` no longer falls back to npm for a name the marketplace lists as a dashboard or server plugin: it says it is not a CLI plugin and where it installs instead (the server's dashboard, Plugins → Marketplace, or `admin dashboard install <name>` / `admin plugins install <name>` on the server). It asks the marketplace's `/resolve` with `kind=all` only when no CLI plugin matched; a marketplace without dashboard and server plugins keeps today's "not listed" warning.
+
 ### Server jobs: runs, stats and deleting runs
 
 - `server jobs runs [--job <name|id>] [--status <s>] [-n 20]` lists the latest runs of every job, newest first, with the job, short run ID, status, start, duration, retry attempt and error (`GET /api/v1/qcli/jobs/executions`). `-n` takes 1 to 100.

@@ -47,8 +47,13 @@ export interface MarketplaceVersion {
     deprecated?: string;
 }
 
+/** What a plugin extends: the web CLI (`pkg add`), a server's dashboard, or a server. */
+export type MarketplacePluginKind = 'web' | 'dashboard' | 'server';
+
 export interface MarketplacePluginSummary {
     name: string;
+    /** Left out by marketplaces written before dashboard and server plugins: web. */
+    kind?: MarketplacePluginKind;
     shortName: string;
     description: string;
     category: MarketplaceCategory;
@@ -216,14 +221,18 @@ export class MarketplaceClient {
         }
     }
 
-    /** Listed plugins whose name or short name is `name` (an official one first). */
+    /**
+     * Listed plugins whose name or short name is `name` (an official one first): web plugins, or every kind with
+     * `kind: 'all'` (a marketplace written before dashboard and server plugins ignores it and answers web ones).
+     */
     async resolve(
         name: string,
         signal?: AbortSignal,
+        kind?: 'all',
     ): Promise<MarketplacePluginSummary[]> {
         const result = await this.request<{
             matches?: MarketplacePluginSummary[];
-        }>(`/resolve?name=${encodeURIComponent(name)}`, { signal });
+        }>(`/resolve?name=${encodeURIComponent(name)}${kind ? `&kind=${kind}` : ''}`, { signal });
         return result.matches ?? [];
     }
 
@@ -483,4 +492,18 @@ export async function sha384Integrity(text: string): Promise<string> {
         binary += String.fromCharCode(bytes[i]);
     }
     return `sha384-${btoa(binary)}`;
+}
+
+/**
+ * Where a plugin `pkg add` cannot install goes instead: a dashboard plugin installs from a server's dashboard, a
+ * server plugin on the server. `undefined` for a web plugin.
+ */
+export function otherKindInstallHint(plugin: MarketplacePluginSummary): string | undefined {
+    if (plugin.kind === 'dashboard') {
+        return `${plugin.name} is a dashboard plugin, not a CLI plugin: install it from your server's dashboard (Plugins → Marketplace) or on the server with: admin dashboard install ${plugin.name}`;
+    }
+    if (plugin.kind === 'server') {
+        return `${plugin.name} is a server plugin, not a CLI plugin: install it on the server from its dashboard (Plugins → Marketplace → Server plugins) or with: admin plugins install ${plugin.name}`;
+    }
+    return undefined;
 }
