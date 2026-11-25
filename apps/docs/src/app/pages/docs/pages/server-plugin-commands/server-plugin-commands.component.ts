@@ -61,13 +61,14 @@ export const SERVER_PLUGIN_COMMANDS: ServerPluginCommands[] = [
         name: 'Admin',
         serverPackage: '@qodalis/cli-server-plugin-admin',
         intro:
-            'The server\'s status, plugins, connected clients and log history, as the dashboard shows them. The root command needs admin:access, so every sub-command does. The server\'s settings are the core config command. The live log stream is a web-cli command.',
+            'The server\'s status, command modules, connected clients and log history, read from the same services as the admin routes. Every sub-command needs admin:access; admin logs also needs logs:read. Lists take --json (the payload of the matching route). The server\'s settings are the core config command; the live log stream is a web-cli command.',
         commands: [
-            { syntax: 'admin status [--history]', description: 'Server name and version, uptime, platform, memory and CPU; --history summarises the recent samples (count, min/avg/max memory and CPU)', permission: 'admin:access', source: SERVER },
-            { syntax: 'admin plugins, admin plugins list', description: 'Installed plugins: id, name, version, enabled or disabled', permission: 'admin:access', source: SERVER },
-            { syntax: 'admin plugins enable <id>, admin plugins disable <id>', description: 'Turn a plugin on or off (says so when it already is)', permission: 'admin:access', source: SERVER },
-            { syntax: 'admin clients', description: 'Connected WebSocket clients', permission: 'admin:access', source: SERVER },
-            { syntax: 'admin logs [--level <lvl>] [--search <text>] [-n|--limit 50] [--since <iso|5m|1h|1d>]', description: 'Query the log history (the provider of GET /logs; Seq on .NET with logs-seq)', permission: 'admin:access, logs:read', source: SERVER },
+            { syntax: 'admin, admin status [--json]', description: 'Server package and version, platform, uptime, memory, CPU, connections, commands, jobs, features (GET /status)', permission: 'admin:access', source: SERVER },
+            { syntax: 'admin status --history [--minutes 1-1440] [--json]', description: 'Summary of the status samples of the last minutes (default 60): count, min/avg/max memory and CPU, peak connections', permission: 'admin:access', source: SERVER },
+            { syntax: 'admin plugins, admin plugins list [--json]', description: 'Command modules: id, name, version, enabled or disabled, commands', permission: 'admin:access', source: SERVER },
+            { syntax: 'admin plugins enable <id>, admin plugins disable <id>', description: 'Turn a module\'s commands on or off; idempotent (says when it already is). The admin module cannot be disabled from the terminal', permission: 'admin:access', source: SERVER },
+            { syntax: 'admin clients [--json]', description: 'Connected WebSocket clients: id, type, connected since, address', permission: 'admin:access', source: SERVER },
+            { syntax: 'admin logs [--level warn,error] [--search <text>] [--service <source>] [--since 5m|1h|7d|<ISO date>] [-n 1-1000] [--json]', description: 'The newest matching log entries (default 50), oldest first, from the log history', permission: 'admin:access, logs:read', source: SERVER },
             { syntax: 'server logs [--level <lvl>] [--pattern <regex>] [--server <name>] [--file]', description: 'Stream the server\'s log lines live until Ctrl+C', permission: 'logs:read', source: '@qodalis/cli-server-logs' },
         ],
     },
@@ -87,7 +88,7 @@ export const SERVER_PLUGIN_COMMANDS: ServerPluginCommands[] = [
         name: 'AWS',
         serverPackage: '@qodalis/cli-server-plugin-aws',
         intro:
-            'AWS from the server\'s credentials. Every command needs aws:read (on the root aws command); the ones that change something also need aws:write. Common flags: --region (-r), --output table|json|text (-o), --dry-run on destructive commands.',
+            'AWS from the server\'s credentials. Every command needs aws:read (on the root aws command); aws configure set, s3 cp/rm/mb/rb, ec2 start/stop/reboot, lambda invoke, sqs send/purge and sns publish also need aws:write. Common flags: --region (-r), --output table|json|text (-o), --dry-run on destructive commands.',
         commands: [
             awsWrite('aws configure set', 'Set the AWS credentials and region'),
             awsRead('aws configure get', 'Current configuration, secrets masked'),
@@ -141,22 +142,22 @@ export const SERVER_PLUGIN_COMMANDS: ServerPluginCommands[] = [
         serverPackage: '@qodalis/cli-server-plugin-databases',
         intro: 'The databases the server knows, their load and their migrations. <db> can be left out when there is one database.',
         commands: [
-            { syntax: 'databases, databases list', description: 'The databases: size, applied and pending migrations', permission: 'databases:read', source: SERVER },
+            { syntax: 'databases, databases list (alias db)', description: 'The databases: size, applied and pending migrations', permission: 'databases:read', source: SERVER },
             { syntax: 'databases stats [<db>]', description: 'Size, connections, load counters and largest tables', permission: 'databases:read', source: SERVER },
             { syntax: 'databases migrations [<db>]', description: 'The migrations of a database and their status', permission: 'databases:read', source: SERVER },
-            { syntax: 'databases up [<db>] [--to <id>] [--dry-run] [--force]', description: 'Apply the pending migrations (--dry-run shows the SQL)', permission: 'databases:read, databases:migrate', source: SERVER },
-            { syntax: 'databases down [<db>] --to <id> [--dry-run] [--force]', description: 'Roll back the migrations after --to', permission: 'databases:read, databases:migrate', source: SERVER },
-            { syntax: 'databases runs [<db>] [-n 20] [--json]', description: 'Migration run history: time, direction, status, count, who ran it, error', permission: 'databases:read', source: SERVER },
+            { syntax: 'databases runs [<db>] [-n 1-100] [--json]', description: 'Migration run history, newest first (default 20): start, direction, status, migrations run, trigger and who ran it, target, error', permission: 'databases:read', source: SERVER },
+            { syntax: 'databases up [<db>] [--to <id>] [--dry-run] [--force]', description: 'Apply the pending migrations (--dry-run prints the SQL)', permission: 'databases:migrate', source: SERVER },
+            { syntax: 'databases down [<db>] --to <id|base> [--dry-run]', description: 'Roll back what came after --to', permission: 'databases:migrate', source: SERVER },
         ],
     },
     {
         id: 'docs',
         name: 'Docs',
         serverPackage: '@qodalis/cli-server-plugin-docs',
-        intro: 'The documentation pages the docs plugin serves, readable in the terminal.',
+        intro: 'The documentation pages the docs plugin serves, readable in the terminal. The pages are public, so no permission is needed.',
         commands: [
-            { syntax: 'docs, docs list [--group <name>] [--json]', description: 'The pages by group: slug and title', permission: '', source: SERVER },
-            { syntax: 'docs read <slug> [--json]', description: 'One page as markdown, variables replaced', permission: '', source: SERVER },
+            { syntax: 'docs, docs list (alias ls) [--group <group>] [--json]', description: 'Slug and title of every page, by group, in page order', permission: '', source: SERVER },
+            { syntax: 'docs read <slug> (aliases show, cat) [--json]', description: 'The page\'s markdown with the variables replaced', permission: '', source: SERVER },
         ],
     },
     {
@@ -195,10 +196,10 @@ export const SERVER_PLUGIN_COMMANDS: ServerPluginCommands[] = [
         id: 'public-api',
         name: 'Public API',
         serverPackage: '@qodalis/cli-server-plugin-public-api',
-        intro: 'Your public REST API: its guarded routes and the requests counted per token.',
+        intro: 'Requests counted per token and UTC day by the public API guard. The guarded routes are the host\'s own, so the plugin does not list them.',
         commands: [
-            { syntax: 'api routes', description: 'The guarded routes and the permission each needs (where the server knows them)', permission: '', source: SERVER },
-            { syntax: 'api usage [--user <name|id>] [--days 7]', description: 'Requests per token and day, with the account\'s quota; your own tokens, or a user\'s with --user', permission: 'your tokens: sign-in; --user: tokens:read', source: SERVER },
+            { syntax: 'api, api usage [--days 1-30] [--json]', description: 'Your requests per token and day (default 7 days, today included), totals, today\'s requests of every token (revoked ones too) and your quota', permission: '', source: SERVER },
+            { syntax: 'api usage --user <name|id> [--days 1-30] [--json]', description: 'The same for another account', permission: 'tokens:read', source: SERVER },
         ],
     },
     {

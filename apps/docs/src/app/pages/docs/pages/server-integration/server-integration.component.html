@@ -934,7 +934,7 @@ createCliServer(&#123;
     <tbody>
         <tr><td><code>server</code></td><td>0</td><td><code>runtime</code>: platform, version, pid, hostname, os, startedAt, uptime</td><td>no</td></tr>
         <tr><td><code>auth</code> (admin plugin)</td><td>10</td><td><code>admin</code>: sign-in mode, username, defaultCredentials, signInUrl</td><td>no</td></tr>
-        <tr><td><code>host</code></td><td>20</td><td><code>options</code>: basePath, cliRoutes, enableShell, trustProxy, protected, ...; <code>environment</code>: the environment variables, secrets masked</td><td>no</td></tr>
+        <tr><td><code>host</code></td><td>20</td><td><code>options</code>: basePath, cliRoutes, enableShell, trustProxy, protected, ...; <code>environment</code>: an allowlist of environment variables (<code>QCLI_*</code>, <code>NODE_ENV</code>, <code>PORT</code>, <code>HOST</code>, <code>TZ</code>, <code>LANG</code>; add names with <code>config.environment.allow</code>), secrets masked</td><td>no</td></tr>
         <tr><td><code>cors</code></td><td>30</td><td><code>cors</code>: mode, allowedOrigins</td><td>allowedOrigins (CORS, WebSocket upgrades, MCP and CSRF checks follow at once)</td></tr>
         <tr><td><code>mcp</code></td><td>40</td><td><code>mcp</code>: enabled, path, tools, exclude, instructions, readOnly</td><td>when MCP is on</td></tr>
         <tr><td><code>filesystem</code></td><td>50</td><td><code>filesystem</code>: storage, allowedPaths, maxUploadBytes</td><td>maxUploadBytes</td></tr>
