@@ -105,6 +105,8 @@ usersModule.configure({
 | `token list` | `ls` | login, server mode | List your API tokens |
 | `token revoke <id>` | `rm` | login, server mode | Revoke a token (own, or any with `tokens:revoke`) |
 | `token permissions` | | login, server mode | Permissions you can put on a token, from the server's list |
+| `link approve <code>` | | login, server mode | Approve another terminal's link request: shows it, asks, creates an API token acting as you for it |
+| `link deny <code>` | | login, server mode | Deny another terminal's link request |
 | `last [user]` | | `audit:read` | Sign-in history (logins, logouts, failures) |
 | `audit` | | `audit:read` | Security audit log, newest first |
 | `audit clear` | | `audit:clear` | Clear the audit log (asks first) |
@@ -128,6 +130,7 @@ usersModule.configure({
 | `--remove-groups` | `-r` | `usermod` | | Remove from groups |
 | `--disable`, `--enable` | | `usermod` | | Disable (ends its sessions) or enable the account |
 | `--force` | `-f` | `userdel` | `false` | Do not ask for confirmation |
+| `--yes` | `-y` | `link approve` | `false` | Do not ask for confirmation |
 | `--query` | `-q` | `listusers` | | Filter by name or email |
 | `--skip`, `--take` | | `listusers` | | Page the list |
 | `--description` | `-d` | `groupadd`, `groupmod` | | Group description |
@@ -203,6 +206,10 @@ In code, use `cliAuthorize(context, 'deploy:rollback')` and `cliCanAccess` from 
 In server mode, `token create` makes long-lived, revocable bearer tokens (`qcli_pat_...`) for MCP clients such as Claude Code, CI jobs and scripts. A token acts as the user who created it, with that user's live permissions; `--permissions` narrows it to permissions you hold. The token is printed once, together with a ready-to-paste `claude mcp add --transport http qcli <server>/api/qcli/mcp ...` command. Local mode has no tokens; custom backends opt in by implementing `listApiTokens`, `createApiToken` and `revokeApiToken`.
 
 With servers 1.0.0-beta.29, `token create <name> --select` picks the token's permissions from the server's permission catalog (`GET /api/v1/qcli/permissions`): a searchable list of the permissions you hold, grouped and described, sent in the server's order. `token permissions` prints that list, `--all` every permission the server knows (`users:read`). Entries the host application registered for its own routes are marked `(host)`, and so are `host` tokens in `token list`: the host issues those itself, and the server's CLI routes refuse them. Against an older server both commands say which server version they need; custom backends opt in with `listPermissions`.
+
+## Approving a terminal link
+
+`server add <url>` in another terminal (a phone, a second browser) links it to a server through a code such as `ABCD-2345`, normally approved on the server's admin page. `link approve <code>` approves it from a terminal that is already signed in to that server: it shows the request (terminal name, origin, address, the permissions asked for and when it expires), asks, then creates an API token for you named `link <terminal>`, listed by `token list` and revoked with `token revoke`. `--yes` skips the question. `link deny <code>` refuses it, and the other terminal is told. The code is read in any case, with or without the dash. Approving needs a signed-in session on the server (an API token cannot approve); local mode has no links, and custom backends opt in with `getLinkRequest`, `approveLinkRequest` and `denyLinkRequest`.
 
 ## Rules
 

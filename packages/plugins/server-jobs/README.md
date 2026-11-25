@@ -58,6 +58,10 @@ A job is picked by name (any case) or ID and looked up on every connected server
 | `server jobs stop <name\|id>` | | Take the job off its schedule and cancel the run in progress |
 | `server jobs cancel <name\|id>` | | Cancel the run in progress; the job stays scheduled |
 | `server jobs history <name\|id>` | | List past runs: status, start, duration, attempt, error |
+| `server jobs history clear <name\|id>` | | Delete the finished runs of a job (only those with `--status`); asks unless `--yes` |
+| `server jobs history rm <name\|id> <run-id>` | `delete` | Delete one run, by its ID or the short ID `history` shows; asks unless `--yes` |
+| `server jobs runs` | | List the latest runs of every job, newest first (`--job`, `--status`, `-n`) |
+| `server jobs stats` | | Run statistics of the last 24 hours: runs, outcomes, success rate, average and p95 duration, in total and per job |
 | `server jobs logs <name\|id>` | | Print the log entries of the latest run, or of one run |
 | `server jobs edit <name\|id>` | | Interactively edit description, group, tags (comma-separated, `-` clears them), cron schedule or interval, max retries, timeout and overlap policy (`skip`, `queue`, `cancel`) |
 | `server jobs watch` | | Follow job events live; Ctrl+C stops |
@@ -69,8 +73,13 @@ A job is picked by name (any case) or ID and looked up on every connected server
 | `--tag` | `list` | | Only jobs that have this tag; repeat it (`--tag a --tag b`) or separate tags with commas, and a job must have every one (ignoring case). `list` shows a Tags column when a job has tags (servers with job tags), `info` always has a Tags row |
 | `--limit` | `history` | `20` | Number of runs to show |
 | `--offset` | `history` | `0` | Offset for paging through older runs |
-| `--status` | `history` | | Only runs with this status (`running`, `completed`, `failed`, `cancelled`, `timed_out`) |
+| `--status` | `history`, `history clear`, `runs` | | Only runs with this status (`running`, `completed`, `failed`, `cancelled`, `timed_out`) |
+| `--job` | `runs` | every job | Only the runs of this job (name or ID) |
+| `-n`, `--limit` | `runs` | `20` | Number of runs to show (1-100) |
+| `--yes`, `-y` | `history clear`, `history rm` | | Do not ask for confirmation |
 | `--exec` | `logs` | latest run | Execution ID (from `history`) to show logs for |
+
+`history clear` and `history rm` ask before deleting unless `--yes` is given; running runs are never deleted, and deleting needs `jobs:manage` on a protected server (servers 1.0.0-beta.21). `runs` and `stats` need `jobs:read`. A job named `clear` or `rm` still shows its history with `server jobs history clear`.
 
 `edit` asks for each setting; press Enter to keep a value and Ctrl+C or Escape to cancel. Nothing is sent until you confirm. A job that exists on several servers needs `--server`.
 
@@ -87,6 +96,11 @@ server jobs logs cleanup --exec=3f2a91c0
 server jobs pause cleanup
 server jobs resume cleanup
 server jobs edit cleanup --server=node
+server jobs runs --status failed
+server jobs runs --job cleanup -n 5
+server jobs stats
+server jobs history clear cleanup --status failed
+server jobs history rm cleanup 3f2a91c0 --yes
 server jobs watch
 ```
 

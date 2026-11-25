@@ -3,6 +3,18 @@
 This document records all notable changes to the [Qodalis CLI](https://cli.qodalis.com/docs/) ecosystem.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Server jobs: runs, stats and deleting runs
+
+- `server jobs runs [--job <name|id>] [--status <s>] [-n 20]` lists the latest runs of every job, newest first, with the job, short run ID, status, start, duration, retry attempt and error (`GET /api/v1/qcli/jobs/executions`). `-n` takes 1 to 100.
+- `server jobs stats` prints the last 24 hours of runs: totals, outcomes, success rate, average and p95 duration, and a row per job that ran (`GET /api/v1/qcli/jobs/stats`).
+- `server jobs history clear <name|id> [--status <s>]` deletes the finished runs of a job, or only those with the status; `server jobs history rm <name|id> <run-id>` deletes one run, by its ID or the short ID `history` prints. Both ask first unless `--yes` (`-y`), and need `jobs:manage` on a protected server.
+
+### Users: approve a terminal link from the terminal
+
+- `link approve <code>` shows another terminal's link request (`server add` there), asks, then approves it, creating an API token acting as you named `link <terminal>`; `--yes` skips the question. `link deny <code>` refuses it. The code is read in any case, with or without the dash. Server mode only; custom backends opt in with `getLinkRequest`, `approveLinkRequest` and `denyLinkRequest`.
+
 ## v2.8.0
 
 ### Panel: theme picker
