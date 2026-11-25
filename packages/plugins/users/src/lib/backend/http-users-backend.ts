@@ -14,6 +14,8 @@ import {
     CliBackendSession,
     CliBackendUpdateUser,
     CliBackendUserPermissions,
+    CliLinkApproval,
+    CliLinkRequest,
     CliServerPermission,
     CliUsersError,
     ICliUsersBackend,
@@ -193,6 +195,20 @@ export class CliHttpUsersBackend implements ICliUsersBackend {
 
     listPermissions(token: string, options?: { all?: boolean }): Promise<CliServerPermission[]> {
         return this.call('GET', `/permissions${options?.all ? '?all=true' : ''}`, token);
+    }
+
+    // ── terminal links ───────────────────────────────────────────────
+
+    getLinkRequest(token: string, code: string): Promise<CliLinkRequest> {
+        return this.call('GET', `/link/code/${enc(code)}`, token);
+    }
+
+    approveLinkRequest(token: string, code: string): Promise<CliLinkApproval> {
+        return this.call('POST', `/link/code/${enc(code)}/approve`, token, {});
+    }
+
+    async denyLinkRequest(token: string, code: string): Promise<void> {
+        await this.call('POST', `/link/code/${enc(code)}/deny`, token, {});
     }
 
     // ── transport ────────────────────────────────────────────────────

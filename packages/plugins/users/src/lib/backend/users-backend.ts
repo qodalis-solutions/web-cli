@@ -66,6 +66,14 @@ export interface ICliUsersBackend {
     /** GET /permissions: the catalog entries the caller holds (`all`: every entry, requires users:read) */
     listPermissions?(token: string, options?: { all?: boolean }): Promise<CliServerPermission[]>;
 
+    // ── terminal links (server backends) ─────────────────────────────
+    /** GET /link/code/{code}: a pending link request (`server add` in another terminal) */
+    getLinkRequest?(token: string, code: string): Promise<CliLinkRequest>;
+    /** POST /link/code/{code}/approve (session only): creates the caller's API token for that terminal */
+    approveLinkRequest?(token: string, code: string): Promise<CliLinkApproval>;
+    /** POST /link/code/{code}/deny */
+    denyLinkRequest?(token: string, code: string): Promise<void>;
+
     // ── audit ────────────────────────────────────────────────────────
     listAudit(token: string, options?: { limit?: number; event?: string; username?: string }): Promise<ICliAuditEntry[]>;
     clearAudit(token: string): Promise<void>;
@@ -138,6 +146,26 @@ export interface CliCreatedApiToken {
     /** The bearer token (`qcli_pat_…`), shown once */
     token: string;
     apiToken: CliApiToken;
+}
+
+/** A pending terminal link request as the approver sees it (`GET /link/code/{code}`). */
+export interface CliLinkRequest {
+    /** e.g. `ABCD-2345` */
+    userCode: string;
+    /** The terminal's name, e.g. `Qodalis CLI on Pixel 7` */
+    client: string;
+    origin: string | null;
+    remoteAddress: string | null;
+    /** Scope asked for; null: the approver's full permissions */
+    permissions: string[] | null;
+    createdAt: number;
+    expiresAt: number;
+}
+
+/** What approving a link request created: the approver's API token for the terminal. */
+export interface CliLinkApproval {
+    tokenId: string;
+    tokenName: string;
 }
 
 export interface CliBackendCreateUser {
