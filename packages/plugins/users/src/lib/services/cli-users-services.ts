@@ -27,6 +27,8 @@ import {
     CliBackendLogin,
     CliCreateApiToken,
     CliCreatedApiToken,
+    CliLinkApproval,
+    CliLinkRequest,
     CliServerPermission,
     CliUsersError,
     ICliUsersBackend,
@@ -378,6 +380,10 @@ export const CliApiTokensService_TOKEN =
 export const API_TOKENS_LOCAL_MESSAGE =
     'API tokens are available when the CLI is connected to a server (usersModule.configure({ server }))';
 
+/** Message shown when the backend cannot approve terminal links (local mode). */
+export const LINKS_LOCAL_MESSAGE =
+    'terminal links are approved when the CLI is connected to a server (usersModule.configure({ server }))';
+
 /** Message shown when the server predates `GET /permissions` (it answers 404). */
 export const PERMISSIONS_UNSUPPORTED_MESSAGE =
     'this server does not list its permissions (needs server 1.0.0-beta.29 or later)';
@@ -431,11 +437,38 @@ export class CliApiTokensService extends CliUsersServiceBase {
         }
     }
 
+    /** Whether the backend can approve terminal link requests (`link approve|deny`) */
+    get linksSupported(): boolean {
+        return !!(this.backend.getLinkRequest && this.backend.approveLinkRequest && this.backend.denyLinkRequest);
+    }
+
+    /** A pending terminal link request by its code (`ABCD-2345`). */
+    linkRequest(code: string): Promise<CliLinkRequest> {
+        return this.requireLink('getLinkRequest')(this.token, code);
+    }
+
+    /** Approves a link request: creates the caller's API token for that terminal. */
+    approveLink(code: string): Promise<CliLinkApproval> {
+        return this.requireLink('approveLinkRequest')(this.token, code);
+    }
+
+    denyLink(code: string): Promise<void> {
+        return this.requireLink('denyLinkRequest')(this.token, code);
+    }
+
     private require<K extends 'listApiTokens' | 'createApiToken' | 'revokeApiToken' | 'listPermissions'>(
         method: K,
     ): NonNullable<ICliUsersBackend[K]> {
         const fn = this.backend[method];
         if (!fn) throw new CliUsersError(501, API_TOKENS_LOCAL_MESSAGE);
+        return fn.bind(this.backend) as NonNullable<ICliUsersBackend[K]>;
+    }
+
+    private requireLink<K extends 'getLinkRequest' | 'approveLinkRequest' | 'denyLinkRequest'>(
+        method: K,
+    ): NonNullable<ICliUsersBackend[K]> {
+        const fn = this.backend[method];
+        if (!fn) throw new CliUsersError(501, LINKS_LOCAL_MESSAGE);
         return fn.bind(this.backend) as NonNullable<ICliUsersBackend[K]>;
     }
 }
