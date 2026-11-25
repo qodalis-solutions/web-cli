@@ -120,6 +120,7 @@
   "sidebar.node-server": "Servidor Node.js",
   "sidebar.python-server": "Servidor Python",
   "sidebar.admin-dashboard": "Panel de Administración",
+  "sidebar.server-plugin-commands": "Comandos de los plugins de servidor",
 
   "docs.getting-started.title": "Primeros Pasos",
   "docs.getting-started.intro": "Qodalis CLI es un componente de terminal multi-framework para la web. Proporciona un terminal completamente interactivo basado en xterm.js con una arquitectura de plugins, comandos integrados y wrappers nativos para Angular, React y Vue.",

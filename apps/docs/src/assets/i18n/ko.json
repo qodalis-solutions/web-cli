@@ -120,6 +120,7 @@
   "sidebar.node-server": "Node.js 서버",
   "sidebar.python-server": "Python 서버",
   "sidebar.admin-dashboard": "관리 대시보드",
+  "sidebar.server-plugin-commands": "서버 플러그인 명령",
 
   "docs.getting-started.title": "시작하기",
   "docs.getting-started.intro": "Qodalis CLI는 웹을 위한 멀티 프레임워크 터미널 컴포넌트입니다. 플러그인 아키텍처, 기본 제공 명령, Angular, React, Vue용 네이티브 래퍼를 갖춘 완전히 인터랙티브한 xterm.js 기반 터미널을 제공합니다.",
