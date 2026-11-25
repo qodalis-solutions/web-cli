@@ -120,6 +120,7 @@
   "sidebar.node-server": "Node.js 服务器",
   "sidebar.python-server": "Python 服务器",
   "sidebar.admin-dashboard": "管理仪表板",
+  "sidebar.server-plugin-commands": "服务器插件命令",
 
   "docs.getting-started.title": "快速入门",
   "docs.getting-started.intro": "Qodalis CLI 是一个面向 Web 的多框架终端组件。它提供基于 xterm.js 的全交互式终端，具有插件架构、内置命令以及 Angular、React 和 Vue 的原生封装。",

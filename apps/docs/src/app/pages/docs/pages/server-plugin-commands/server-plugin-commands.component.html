@@ -1,0 +1,75 @@
+<h1>{{ 'docs.server-plugin-commands.title' | translate }}</h1>
+<p>{{ 'docs.server-plugin-commands.intro' | translate }}</p>
+<p>
+    Every server plugin can be driven from the terminal. A command comes from one of two places:
+</p>
+<ul>
+    <li>
+        <strong>Server</strong>: a command processor of the server plugin, the same on the Node, .NET and Python servers.
+        The web CLI lists it once connected to the server (<code>server add</code>) and runs it there. On a protected
+        server it needs <code>commands:execute</code> plus the permission shown, checked along the command chain (the
+        root command's permission covers its sub-commands).
+    </li>
+    <li>
+        <strong>A web-cli package</strong> (<code>&#64;qodalis/cli-server-jobs</code>, <code>&#64;qodalis/cli-users</code>, ...):
+        a client command that calls the plugin's REST API. Add the package's module to the terminal (or
+        <code>pkg add</code> it); the server checks the permission shown on each request.
+    </li>
+</ul>
+<p>
+    "Permission" is what a protected server checks (users plugin); an open server allows everything. Empty means
+    nothing beyond <code>commands:execute</code>. Run <code>help &lt;command&gt;</code> in the terminal for every flag.
+    For the server's REST API and MCP tools, see <a routerLink="/docs/server-integration">Server Integration</a>.
+</p>
+
+<nav class="plugin-commands-toc">
+    <strong>Plugins:</strong>
+    <ng-container *ngFor="let plugin of plugins; let last = last">
+        <a routerLink="/docs/server-plugin-commands" [fragment]="plugin.id">{{ plugin.name }}</a><span *ngIf="!last"> · </span>
+    </ng-container>
+    · <a routerLink="/docs/server-plugin-commands" fragment="no-commands">Plugins without commands</a>
+</nav>
+
+<ng-container *ngFor="let plugin of plugins">
+    <h2 [id]="plugin.id">{{ plugin.name }}</h2>
+    <p><small>Server package: <code>{{ plugin.serverPackage }}</code></small></p>
+    <p>{{ plugin.intro }}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Command</th>
+                    <th>What it does</th>
+                    <th>Permission</th>
+                    <th>Runs</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let cmd of plugin.commands">
+                    <td><code>{{ cmd.syntax }}</code></td>
+                    <td>{{ cmd.description }}</td>
+                    <td><code *ngIf="cmd.permission">{{ cmd.permission }}</code><span *ngIf="!cmd.permission">-</span></td>
+                    <td>
+                        <span *ngIf="cmd.source === 'server'">on the server</span>
+                        <span *ngIf="cmd.source !== 'server'">web CLI: <code>{{ cmd.source }}</code></span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+</ng-container>
+
+<h2 id="no-commands">Plugins without commands</h2>
+<p>These plugins have nothing to do from a terminal; use the plugin they serve.</p>
+<table>
+    <thead>
+        <tr>
+            <th>Plugin</th>
+            <th>Why</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let p of withoutCommands">
+            <td>{{ p.name }}</td>
+            <td>{{ p.note }}</td>
+        </tr>
+    </tbody>
+</table>

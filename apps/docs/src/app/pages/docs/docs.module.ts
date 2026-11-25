@@ -109,6 +109,13 @@ const routes: Routes = [
                     ),
             },
             {
+                path: 'server-plugin-commands',
+                loadChildren: () =>
+                    import(
+                        './pages/server-plugin-commands/server-plugin-commands.module'
+                    ).then((m) => m.ServerPluginCommandsModule),
+            },
+            {
                 path: 'server-integration/:server',
                 loadChildren: () =>
                     import('./pages/server-detail/server-detail.module').then(
