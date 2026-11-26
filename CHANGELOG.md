@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## v2.9.0
 
+### `pkg add` under a Content-Security-Policy
+
+- A package installed with `pkg add` runs from a `blob:` URL instead of an inline script, so pages with a Content-Security-Policy can allow it with `script-src blob:` without allowing inline scripts (the server dashboard's policy does). Where `blob:` is refused, it falls back to the inline script as before. `ScriptLoaderService.injectBodyScript` now returns a promise that resolves once the code has run.
+
 ### `pkg add` of a dashboard or server plugin
 
 - `pkg add <name>` no longer falls back to npm for a name the marketplace lists as a dashboard or server plugin: it says it is not a CLI plugin and where it installs instead (the server's dashboard, Plugins → Marketplace, or `admin dashboard install <name>` / `admin plugins install <name>` on the server). It asks the marketplace's `/resolve` with `kind=all` only when no CLI plugin matched; a marketplace without dashboard and server plugins keeps today's "not listed" warning.

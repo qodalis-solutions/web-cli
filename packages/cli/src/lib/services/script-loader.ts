@@ -184,16 +184,41 @@ export class ScriptLoaderService {
     }
 
     /**
-     * Inject an inline script into the page.
+     * Run a script's code in the page.
+     *
+     * The code runs from a `blob:` URL, which a Content-Security-Policy can allow (`script-src blob:`) without
+     * allowing inline scripts; only the page's own code can create such a URL. When the blob is refused (a policy
+     * without `blob:`) it falls back to an inline script, as before.
      *
      * **Security:** This runs `code` in the host page context with full
      * DOM access. Only call with trusted content (e.g. verified UMD bundles
      * loaded via the package manager). Never pass user-supplied strings.
      */
-    injectBodyScript(code: string): void {
-        const script = document.createElement('script');
-        script.text = code;
-        document.head.appendChild(script);
+    async injectBodyScript(code: string): Promise<void> {
+        const inline = () => {
+            const script = document.createElement('script');
+            script.text = code;
+            document.head.appendChild(script);
+        };
+        if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+            inline();
+            return;
+        }
+        const url = URL.createObjectURL(
+            new Blob([code], { type: 'text/javascript' }),
+        );
+        const ran = await new Promise<boolean>((resolve) => {
+            const script = document.createElement('script');
+            script.src = url;
+            script.onload = () => resolve(true);
+            script.onerror = () => {
+                script.remove();
+                resolve(false);
+            };
+            document.head.appendChild(script);
+        });
+        URL.revokeObjectURL(url);
+        if (!ran) inline();
     }
 
     /**
