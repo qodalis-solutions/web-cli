@@ -723,7 +723,7 @@ export class CliPackageInstaller {
         progressBar.setText(`Injecting package ${pkg.name}`);
         beforeInject?.();
         if (response.content) {
-            this.loader.injectBodyScript(response.content);
+            await this.loader.injectBodyScript(response.content);
         }
 
         return pkg;
