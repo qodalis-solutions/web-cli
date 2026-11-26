@@ -24,13 +24,13 @@
 
 <nav class="plugin-commands-toc">
     <strong>Plugins:</strong>
-    <ng-container *ngFor="let plugin of plugins; let last = last">
-        <a routerLink="/docs/server-plugin-commands" [fragment]="plugin.id">{{ plugin.name }}</a><span *ngIf="!last"> · </span>
-    </ng-container>
+    @for (plugin of plugins; track plugin.id; let last = $last) {
+        <a routerLink="/docs/server-plugin-commands" [fragment]="plugin.id">{{ plugin.name }}</a>@if (!last) {<span> · </span>}
+    }
     · <a routerLink="/docs/server-plugin-commands" fragment="no-commands">Plugins without commands</a>
 </nav>
 
-<ng-container *ngFor="let plugin of plugins">
+@for (plugin of plugins; track plugin.id) {
     <h2 [id]="plugin.id">{{ plugin.name }}</h2>
     <p><small>Server package: <code>{{ plugin.serverPackage }}</code></small></p>
     <p>{{ plugin.intro }}</p>
@@ -44,18 +44,23 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let cmd of plugin.commands">
+                @for (cmd of plugin.commands; track cmd.syntax) {
+                <tr>
                     <td><code>{{ cmd.syntax }}</code></td>
                     <td>{{ cmd.description }}</td>
-                    <td><code *ngIf="cmd.permission">{{ cmd.permission }}</code><span *ngIf="!cmd.permission">-</span></td>
+                    <td>@if (cmd.permission) {<code>{{ cmd.permission }}</code>} @else {<span>-</span>}</td>
                     <td>
-                        <span *ngIf="cmd.source === 'server'">on the server</span>
-                        <span *ngIf="cmd.source !== 'server'">web CLI: <code>{{ cmd.source }}</code></span>
+                        @if (cmd.source === 'server') {
+                            <span>on the server</span>
+                        } @else {
+                            <span>web CLI: <code>{{ cmd.source }}</code></span>
+                        }
                     </td>
                 </tr>
+                }
             </tbody>
         </table>
-</ng-container>
+}
 
 <h2 id="no-commands">Plugins without commands</h2>
 <p>These plugins have nothing to do from a terminal; use the plugin they serve.</p>
@@ -67,9 +72,11 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let p of withoutCommands">
+        @for (p of withoutCommands; track p.name) {
+        <tr>
             <td>{{ p.name }}</td>
             <td>{{ p.note }}</td>
         </tr>
+        }
     </tbody>
 </table>
