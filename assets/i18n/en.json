@@ -125,6 +125,7 @@
   "sidebar.node-server": "Node.js Server",
   "sidebar.python-server": "Python Server",
   "sidebar.admin-dashboard": "Admin Dashboard",
+  "sidebar.server-plugin-commands": "Server Plugin Commands",
 
   "docs.getting-started.title": "Getting Started",
   "docs.getting-started.intro": "Qodalis CLI is a multi-framework terminal component for the web. It provides a fully interactive xterm.js-based terminal with a plugin architecture, built-in commands, and native wrappers for Angular, React, and Vue.",
@@ -847,5 +848,7 @@
   "docs.getting-started.android-app-hint": "Just want to use the terminal on a phone? That is what the app is for:",
   "docs.getting-started.next-android": "Android app — the terminal on your phone, with your own server",
   "docs.admin-dashboard.title": "Admin dashboard",
-  "docs.admin-dashboard.intro": "The web dashboard every server can serve: its pages, sign-in, the pages plugins add, and how to add your own."
+  "docs.admin-dashboard.intro": "The web dashboard every server can serve: its pages, sign-in, the pages plugins add, and how to add your own.",
+  "docs.server-plugin-commands.title": "Server plugin commands",
+  "docs.server-plugin-commands.intro": "The terminal commands of every server plugin: syntax, what each does, the permission it needs and whether it runs on the server or comes from a web-cli package."
 }
