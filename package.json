@@ -69,10 +69,10 @@
     "@types/node": "^22.13.11",
     "@types/semver": "^7.7.1",
     "angular-eslint": "^22.6.0",
-    "eslint": "^10.13.0",
+    "eslint": "^10.15.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "globals": "^17.13.0",
+    "globals": "^17.14.0",
     "jasmine-core": "~5.13.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
@@ -82,11 +82,11 @@
     "monaco-editor": "0.57.0",
     "ng-packagr": "^22.2.5",
     "nx": "^24.0.1",
-    "prettier": "^3.4.2",
+    "prettier": "^3.10.1",
     "sass": "^1.106.1",
     "tsup": "^9.0.0",
     "typedoc": "^0.28.20",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.72.0"
+    "typescript-eslint": "^8.73.0"
   }
 }
