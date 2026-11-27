@@ -1,5 +1,6 @@
 {
   "nav.docs": "ドキュメント",
+  "nav.plugins": "プラグイン",
   "nav.npm": "npm",
   "nav.github": "GitHub",
   "nav.home": "\u30db\u30fc\u30e0",
@@ -12,6 +13,7 @@
   "footer.qodalis": "qodalis.com",
   "footer.github": "GitHub",
   "footer.docs": "\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8",
+  "footer.plugins": "プラグイン",
   "footer.privacy": "\u30d7\u30e9\u30a4\u30d0\u30b7\u30fc",
   "docs.back-home": "\u30db\u30fc\u30e0\u306b\u623b\u308b",
   "docs.menu": "\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\u30e1\u30cb\u30e5\u30fc",
@@ -74,6 +76,10 @@
   "home.plugins.games": "ゲーム",
   "home.plugins.language-packs": "言語パック",
   "home.plugins.language-packs-desc": "CLIインターフェースを10言語に翻訳。",
+  "home.marketplace.title": "プラグインマーケットプレイス",
+  "home.marketplace.desc": "CLI、管理ダッシュボード、Node・Python・.NET サーバー向けのプラグインを plugins.qodalis.com で探したり、自作のプラグインを公開したりできます。ターミナルから pkg add でインストールできます。",
+  "home.marketplace.browse": "プラグインを探す",
+  "home.marketplace.publish": "プラグインを公開",
 
   "home.create-plugin.heading": "独自のプラグインを作成",
   "home.create-plugin.subheading": "1つのコマンドで完全なプラグインプロジェクトを生成。ビルド設定、コマンドプロセッサ、テスト、ブラウザ対応のIIFEバンドルを生成します。",
