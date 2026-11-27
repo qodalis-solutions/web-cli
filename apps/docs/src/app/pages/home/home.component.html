@@ -267,6 +267,30 @@
         </a>
       }
     </div>
+
+    <div class="marketplace-callout">
+      <div class="marketplace-text">
+        <h3 class="marketplace-title">
+          {{ "home.marketplace.title" | translate }}
+        </h3>
+        <p class="marketplace-desc">
+          {{ "home.marketplace.desc" | translate }}
+        </p>
+        <code class="marketplace-cmd">pkg browse · pkg add &lt;name&gt;</code>
+      </div>
+      <div class="marketplace-actions">
+        <a
+          href="https://plugins.qodalis.com"
+          target="_blank"
+          rel="noopener"
+          class="btn btn-primary"
+          >{{ "home.marketplace.browse" | translate }}</a
+        >
+        <a routerLink="/docs/publishing-plugins" class="btn btn-ghost">{{
+          "home.marketplace.publish" | translate
+        }}</a>
+      </div>
+    </div>
   </div>
 </section>
 

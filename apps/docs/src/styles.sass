@@ -334,6 +334,9 @@ body
   @media (max-width: 520px)
     padding: 6px 8px
 
+  @media (max-width: 420px)
+    padding: 6px
+
   &:hover
     color: $text
     background: $hover
@@ -359,11 +362,20 @@ body
 
   // Narrow phones: the logo leads home and npm is linked from the docs
   &.nav-link-npm
-    @media (max-width: 600px)
+    @media (max-width: 720px)
       display: none
 
   &.nav-link-home
-    @media (max-width: 420px)
+    @media (max-width: 540px)
+      display: none
+
+  // Phones: the marketplace takes GitHub's place (GitHub stays in the footer)
+  &.gh-link
+    @media (max-width: 600px)
+      display: none
+
+  &.nav-link-plugins
+    @media (max-width: 380px)
       display: none
 
 .theme-btn
@@ -981,6 +993,46 @@ html
   line-height: 1.5
   color: $text-secondary
   margin: 0
+
+.marketplace-callout
+  margin-top: 48px
+  display: flex
+  align-items: center
+  justify-content: space-between
+  gap: 24px
+  padding: 28px 32px
+  background: $accent-soft
+  border: 1px solid $accent-border
+  border-radius: $radius
+
+  @media (max-width: 640px)
+    flex-direction: column
+    align-items: flex-start
+    padding: 24px 20px
+
+.marketplace-title
+  font-size: 1.15rem
+  font-weight: 700
+  color: $text-strong
+  margin: 0 0 8px
+
+.marketplace-desc
+  font-size: 0.88rem
+  line-height: 1.6
+  color: $text-secondary
+  margin: 0 0 12px
+  max-width: 560px
+
+.marketplace-cmd
+  font-family: $mono
+  font-size: 0.78rem
+  color: $accent
+
+.marketplace-actions
+  display: flex
+  flex-wrap: wrap
+  gap: 12px
+  flex-shrink: 0
 
 // ─── Create Plugin ───
 .create-plugin-section

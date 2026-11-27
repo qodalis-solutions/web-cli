@@ -1,5 +1,6 @@
 {
   "nav.docs": "Documentație",
+  "nav.plugins": "Pluginuri",
   "nav.npm": "npm",
   "nav.github": "GitHub",
   "nav.home": "Acas\u0103",
@@ -12,6 +13,7 @@
   "footer.qodalis": "qodalis.com",
   "footer.github": "GitHub",
   "footer.docs": "Docs",
+  "footer.plugins": "Pluginuri",
   "footer.privacy": "Confiden\u021bialitate",
   "docs.back-home": "\u00cenapoi acas\u0103",
   "docs.menu": "Meniul documenta\u021biei",
@@ -74,6 +76,10 @@
   "home.plugins.games": "Jocuri",
   "home.plugins.language-packs": "Pachete de Limbă",
   "home.plugins.language-packs-desc": "Traduce interfața CLI în 10 limbi.",
+  "home.marketplace.title": "Marketplace de pluginuri",
+  "home.marketplace.desc": "Găsește mai multe pluginuri pentru CLI, panoul de administrare și serverele Node, Python și .NET pe plugins.qodalis.com sau publică-l pe al tău. Instalează-le din terminal cu pkg add.",
+  "home.marketplace.browse": "Explorează pluginurile",
+  "home.marketplace.publish": "Publică un plugin",
 
   "home.create-plugin.heading": "Creează-ți Propriul Plugin",
   "home.create-plugin.subheading": "Generează un proiect complet de plugin cu o singură comandă. Generează configurare de build, procesor de comenzi, teste și un bundle IIFE gata pentru browser.",
