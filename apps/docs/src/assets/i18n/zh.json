@@ -1,5 +1,6 @@
 {
   "nav.docs": "文档",
+  "nav.plugins": "插件",
   "nav.npm": "npm",
   "nav.github": "GitHub",
   "nav.home": "\u9996\u9875",
@@ -12,6 +13,7 @@
   "footer.qodalis": "qodalis.com",
   "footer.github": "GitHub",
   "footer.docs": "\u6587\u6863",
+  "footer.plugins": "插件",
   "footer.privacy": "\u9690\u79c1",
   "docs.back-home": "\u8fd4\u56de\u9996\u9875",
   "docs.menu": "\u6587\u6863\u83dc\u5355",
@@ -74,6 +76,10 @@
   "home.plugins.games": "游戏",
   "home.plugins.language-packs": "语言包",
   "home.plugins.language-packs-desc": "将 CLI 界面翻译为 10 种语言。",
+  "home.marketplace.title": "插件市场",
+  "home.marketplace.desc": "在 plugins.qodalis.com 上为 CLI、管理面板以及 Node、Python 和 .NET 服务器寻找更多插件，或发布你自己的插件。在终端中使用 pkg add 安装。",
+  "home.marketplace.browse": "浏览插件",
+  "home.marketplace.publish": "发布插件",
 
   "home.create-plugin.heading": "创建你自己的插件",
   "home.create-plugin.subheading": "用一条命令生成完整的插件项目。生成构建配置、命令处理器、测试和浏览器可用的 IIFE 包。",

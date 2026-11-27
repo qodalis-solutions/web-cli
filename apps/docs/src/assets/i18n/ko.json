@@ -1,5 +1,6 @@
 {
   "nav.docs": "문서",
+  "nav.plugins": "플러그인",
   "nav.npm": "npm",
   "nav.github": "GitHub",
   "nav.home": "\ud648",
@@ -12,6 +13,7 @@
   "footer.qodalis": "qodalis.com",
   "footer.github": "GitHub",
   "footer.docs": "\ubb38\uc11c",
+  "footer.plugins": "플러그인",
   "footer.privacy": "\uac1c\uc778\uc815\ubcf4",
   "docs.back-home": "\ud648\uc73c\ub85c \ub3cc\uc544\uac00\uae30",
   "docs.menu": "\ubb38\uc11c \uba54\ub274",
@@ -74,6 +76,10 @@
   "home.plugins.games": "게임",
   "home.plugins.language-packs": "언어 팩",
   "home.plugins.language-packs-desc": "CLI 인터페이스를 10개 언어로 번역합니다.",
+  "home.marketplace.title": "플러그인 마켓플레이스",
+  "home.marketplace.desc": "plugins.qodalis.com에서 CLI, 관리 대시보드, Node·Python·.NET 서버용 플러그인을 더 찾아보거나 직접 만든 플러그인을 게시하세요. 터미널에서 pkg add로 설치할 수 있습니다.",
+  "home.marketplace.browse": "플러그인 둘러보기",
+  "home.marketplace.publish": "플러그인 게시",
 
   "home.create-plugin.heading": "나만의 플러그인 만들기",
   "home.create-plugin.subheading": "단일 명령으로 완전한 플러그인 프로젝트를 생성합니다. 빌드 설정, 명령 프로세서, 테스트, 브라우저용 IIFE 번들을 생성합니다.",

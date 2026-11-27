@@ -1,5 +1,6 @@
 {
   "nav.docs": "Documentación",
+  "nav.plugins": "Plugins",
   "nav.npm": "npm",
   "nav.github": "GitHub",
   "nav.home": "Inicio",
@@ -12,6 +13,7 @@
   "footer.qodalis": "qodalis.com",
   "footer.github": "GitHub",
   "footer.docs": "Docs",
+  "footer.plugins": "Plugins",
   "footer.privacy": "Privacidad",
   "docs.back-home": "Volver al inicio",
   "docs.menu": "Men\u00fa de la documentaci\u00f3n",
@@ -74,6 +76,10 @@
   "home.plugins.games": "Juegos",
   "home.plugins.language-packs": "Paquetes de Idiomas",
   "home.plugins.language-packs-desc": "Traduce la interfaz CLI a 10 idiomas.",
+  "home.marketplace.title": "Mercado de plugins",
+  "home.marketplace.desc": "Encuentra más plugins para la CLI, el panel de administración y los servidores Node, Python y .NET en plugins.qodalis.com, o publica el tuyo. Instálalos desde la terminal con pkg add.",
+  "home.marketplace.browse": "Explorar plugins",
+  "home.marketplace.publish": "Publicar un plugin",
 
   "home.create-plugin.heading": "Crea Tu Propio Plugin",
   "home.create-plugin.subheading": "Genera un proyecto de plugin completo con un solo comando. Genera configuración de compilación, procesador de comandos, tests y un bundle IIFE listo para el navegador.",
